@@ -1,0 +1,85 @@
+NOTICE
+
+AI-Driven Development Lifecycle (AI-DLC) Translations
+======================================================
+
+This directory contains Japanese translations of the AI-Driven Development
+Lifecycle (AI-DLC) whitepaper.
+
+Original Work:
+- Title: AI-Driven Development Lifecycle (AI-DLC) Method Definition
+- Author: Raju SP, Amazon Web Services
+- Source: https://prod.d13rzhkk8cj2z0.amplifyapp.com
+
+License Status:
+The original whitepaper does not contain explicit license information.
+
+Copyright:
+The copyright of the original work belongs to Amazon Web Services and
+the author Raju SP. The translations are derivative works based on the
+original content.
+
+Usage:
+Since there is no explicit license, all use is at your own risk.
+Educational and research purposes may fall under fair use doctrine in
+some jurisdictions, but this is not guaranteed.
+
+If you are considering commercial use or redistribution, you MUST contact
+AWS or the original author for permission.
+
+Recommended Usage:
+- ✅ Personal learning and reference (with link to original)
+- ⚠️ Sharing within organizations (requires confirmation)
+- ❌ Commercial use (explicit permission required)
+- ❌ Public redistribution without proper attribution
+
+For permissions, please contact:
+- Amazon Web Services: https://aws.amazon.com/contact-us/
+- Original author: Raju SP
+
+Translation and Maintenance:
+- Translator: Keisuke Isono
+- Repository: https://github.com/ikeisuke/ai-dlc-starter-kit
+- Last Updated: 2025-11-06
+
+---
+
+AI駆動開発ライフサイクル（AI-DLC）翻訳文書
+======================================================
+
+このディレクトリには、AI駆動開発ライフサイクル（AI-DLC）ホワイトペーパーの
+日本語翻訳が含まれています。
+
+原著：
+- タイトル: AI-Driven Development Lifecycle (AI-DLC) Method Definition
+- 著者: Raju SP, Amazon Web Services
+- 出典: https://prod.d13rzhkk8cj2z0.amplifyapp.com
+
+ライセンス状況：
+オリジナルのホワイトペーパーには明示的なライセンス情報が記載されていません。
+
+著作権：
+オリジナル著作物の著作権は Amazon Web Services および著者 Raju SP に
+帰属します。翻訳文書はオリジナルコンテンツに基づく派生物です。
+
+利用について：
+明示的なライセンスがないため、すべての利用は自己責任となります。
+教育・研究目的の利用は一部の法域でフェアユース（公正利用）の範囲内と
+される場合がありますが、保証されるものではありません。
+
+商用利用や再配布を検討する場合は、必ず AWS または原著者に確認してください。
+
+推奨される利用方法：
+- ✅ 個人的な学習・参考（オリジナルへのリンクと併用）
+- ⚠️ 組織内での共有（要確認）
+- ❌ 商用利用（明示的な許可が必要）
+- ❌ 適切な出典表記のない公開再配布
+
+許可については、以下にお問い合わせください：
+- Amazon Web Services: https://aws.amazon.com/jp/contact-us/
+- 原著者: Raju SP
+
+翻訳およびメンテナンス：
+- 翻訳者: Keisuke Isono
+- リポジトリ: https://github.com/ikeisuke/ai-dlc-starter-kit
+- 最終更新: 2025-11-06
