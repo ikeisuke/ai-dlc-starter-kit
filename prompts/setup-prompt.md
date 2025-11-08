@@ -139,78 +139,29 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 
 ##### inception.md（Inception Phase専用）
 - 役割：{{ROLE_INCEPTION}}
-- **最初に必ず実行すること**:
-  - 追加ルールの確認（`prompts/additional-rules.md` を読み込み）
-  - 既存成果物の確認（冪等性の保証）:
-    - `requirements/intent.md`
-    - `design-artifacts/existing-system-model.md`（brownfield のみ）
-    - `story-artifacts/user_stories.md`
-    - `story-artifacts/units/*.md`
-    - `requirements/prfaq.md`
-  - 既存ファイルがある場合は内容を読み込んで差分のみ更新
-  - 完了済みのステップはスキップ
-- フロー：
-  1. Intent明確化（テンプレート: `templates/intent_template.md`）
-  2. 既存コード分析（{{DEVELOPMENT_TYPE}} が brownfield の場合のみ）
-  3. ユーザーストーリー作成（テンプレート: `templates/user_stories_template.md`）
-  4. Unit定義（テンプレート: `templates/unit_definition_template.md`）
-  5. PRFAQ作成（テンプレート: `templates/prfaq_template.md`）
-- 各ステップの実行ルール：
-  - 計画ファイルを `plans/` に作成（チェックボックス付きタスクリスト）
-  - 人間の承認後に実行
-  - 実行履歴を `prompts/history.md` に記録
-- 完了基準：
-  - すべてのステップの成果物が作成されている
-  - 技術スタック（greenfield の場合）が決定され `common.md` に記載されている
-  - 実行履歴が記録されている
+- **最初に必ず実行すること**: 追加ルールの確認、既存成果物の確認（冪等性保証）、差分のみ更新
+- **フロー**: Intent明確化 → 既存コード分析（brownfield のみ）→ ユーザーストーリー作成 → Unit定義 → PRFAQ作成（各テンプレートを参照）
+- **実行ルール**: 計画作成 → 人間の承認 → 実行 → 履歴記録（詳細は `common.md` を参照）
+- **完了基準**: すべての成果物作成、技術スタック決定（greenfield の場合）
+- **次のステップ**: Construction Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 
 ##### construction.md（Construction Phase専用）
 - 役割：{{ROLE_CONSTRUCTION}}
-- **最初に必ず実行すること**（5ステップ）:
-  - **ステップ1**: 追加ルールの確認（`prompts/additional-rules.md`）
-  - **ステップ2**: Inception Phase 完了確認（`requirements/intent.md`, `story-artifacts/units/` の存在確認）
-  - **ステップ3**: 全 Unit の進捗状況を自動分析（完了/進行中/未着手を判定）
-  - **ステップ4**: 対象 Unit の決定（進行中 → 継続、未着手 → ユーザーに選択、完了 → Operations へ）
-  - **ステップ5**: 実行前確認（計画作成 → 人間の承認）
-- フロー（選択された1つの Unit に対してのみ実行）：
-  1. ドメインモデル設計（DDD原則、テンプレート: `templates/domain_model_template.md`）
-  2. 論理設計（NFR反映、テンプレート: `templates/logical_design_template.md`）
-  3. コード生成
-  4. テスト生成（BDD/TDD）
-  5. 統合とレビュー（テンプレート: `templates/implementation_record_template.md`）
-- iOS プロジェクトの場合: ビルド前にシミュレータ情報を確認・記録（`common.md` の技術的制約セクション）
-- 各ステップの実行ルール：
-  - 計画ファイルを `plans/` に作成
-  - 人間の承認後に実行
-  - 実行履歴を `prompts/history.md` に記録
-- 完了基準（Unit単位）：
-  - ドメインモデル、論理設計、コード、テスト、実装記録がすべて完成
-  - ビルド成功、テストパス
-  - 実装記録に「完了」と明記
-- 次のステップ: 全 Unit 完了後、Operations Phase へ移行
+- **最初に必ず実行すること**（5ステップ）: 追加ルール確認 → Inception完了確認 → 全Unit進捗分析 → 対象Unit決定 → 実行前確認
+- **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成 → テスト生成 → 統合とレビュー（各テンプレートを参照）
+- **iOS注意**: ビルド前にシミュレータ情報確認（`xcrun simctl list devices available`）
+- **実行ルール**: 計画作成 → 人間の承認 → 実行 → 履歴記録（詳細は `common.md` を参照）
+- **完了基準**: すべて完成、ビルド成功、テストパス、実装記録に「完了」明記
+- **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 
 ##### operations.md（Operations Phase専用）
 - 役割：{{ROLE_OPERATIONS}}
-- **最初に必ず実行すること**（3ステップ）:
-  - **ステップ1**: 追加ルールの確認（`prompts/additional-rules.md`）
-  - **ステップ2**: Construction Phase 完了確認（全 Unit の実装記録が「完了」、ビルド成功、テストパス）
-  - **ステップ3**: 既存成果物の確認（冪等性の保証）
-- フロー：
-  1. デプロイ準備（テンプレート: `templates/deployment_checklist_template.md`）
-  2. CI/CD構築
-  3. 監視・ロギング戦略（テンプレート: `templates/monitoring_strategy_template.md`）
-  4. 配布（該当する場合、テンプレート: `templates/distribution_feedback_template.md`）
-  5. リリース後の運用（テンプレート: `templates/post_release_operations_template.md`）
-- 各ステップの実行ルール：
-  - 計画ファイルを `plans/` に作成
-  - 人間の承認後に実行
-  - 実行履歴を `prompts/history.md` に記録
-- 完了基準：
-  - すべてのステップの成果物が作成されている
-  - デプロイ完了、CI/CD 動作確認、監視開始
-  - 実行履歴が記録されている
+- **最初に必ず実行すること**（3ステップ）: 追加ルール確認 → Construction完了確認 → 既存成果物確認（冪等性保証）
+- **フロー**: デプロイ準備 → CI/CD構築 → 監視・ロギング戦略 → 配布（該当する場合）→ リリース後の運用（各テンプレートを参照）
+- **実行ルール**: 計画作成 → 人間の承認 → 実行 → 履歴記録（詳細は `common.md` を参照）
+- **完了基準**: すべて完成、デプロイ完了、CI/CD動作、監視開始
 - **AI-DLCサイクル完了**: フィードバック収集 → 分析 → 改善点洗い出し → 次期バージョン計画
-- **次のサイクル**: 新バージョンディレクトリ作成 → プロンプトコピー → 変数更新 → Inception Phase 開始
+- **次のサイクル**: 新バージョンディレクトリ作成、プロンプトコピー、変数更新後にInception Phase開始
 
 ##### history.md（プロンプト実行履歴）
 - 初期テンプレートを作成
