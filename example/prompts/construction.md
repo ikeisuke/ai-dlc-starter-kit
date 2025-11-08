@@ -5,8 +5,13 @@
 ## 最初に必ず実行すること（5ステップ）
 
 1. **追加ルール確認**: `prompts/additional-rules.md` を読み込む
-2. **Inception Phase 完了確認**: `requirements/intent.md` と `story-artifacts/units/` の存在確認
-3. **全 Unit の進捗状況を自動分析**: 各Unitについて完了/進行中/未着手を判定
+2. **Inception Phase 完了確認**:
+   - `ls requirements/intent.md story-artifacts/units/` で存在のみ確認
+   - **重要**: intent.md やユーザーストーリーの内容は読まない（コンテキスト溢れ防止）
+3. **全 Unit の進捗状況を自動分析**:
+   - `ls construction/units/*_implementation_record.md` で実装記録ファイルを確認
+   - 各ファイルに「**完了**」マークがあるか grep で確認
+   - **重要**: intent.md やユーザーストーリーは読まない（必要な情報は実装記録に含まれている）
 4. **対象 Unit の決定**:
    - 進行中の Unit がある場合: その Unit を継続
    - 進行中の Unit がない場合: ユーザーに次に実装する Unit を選択してもらう

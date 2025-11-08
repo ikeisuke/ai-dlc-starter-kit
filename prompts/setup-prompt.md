@@ -155,7 +155,12 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 
 ##### construction.md（Construction Phase専用）
 - 役割：{{ROLE_CONSTRUCTION}}
-- **最初に必ず実行すること**（5ステップ）: 追加ルール確認 → Inception完了確認 → 全Unit進捗分析 → 対象Unit決定 → 実行前確認
+- **最初に必ず実行すること**（5ステップ）:
+  1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
+  2. Inception完了確認: `ls requirements/intent.md story-artifacts/units/` で存在のみ確認（**内容は読まない**）
+  3. 全Unit進捗分析: `ls construction/units/*_implementation_record.md` で実装記録ファイルを確認し、各ファイルに「**完了**」マークがあるか grep で確認（**intent.mdやユーザーストーリーは読まない**）
+  4. 対象Unit決定: 進行中の Unit 継続 or ユーザーに選択してもらう
+  5. 実行前確認: 選択された Unit について計画ファイルを `plans/` に作成し、人間の承認を待つ
 - **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成 → テスト生成 → 統合とレビュー（各テンプレートを参照）
 - **プラットフォーム固有の注意**（{{PROJECT_TYPE}} の場合のみ以下を含める）:
   - **ios の場合**:
