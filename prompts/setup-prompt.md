@@ -148,8 +148,10 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 ##### construction.md（Construction Phase専用）
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（5ステップ）: 追加ルール確認 → Inception完了確認 → 全Unit進捗分析 → 対象Unit決定 → 実行前確認
-- **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成 → テスト生成 → 統合とレビュー（各テンプレートを参照）
-- **iOS注意**: ビルド前にシミュレータ情報確認（`xcrun simctl list devices available`）
+- **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成（iOS: ローカライゼーション考慮）→ テスト生成 → 統合とレビュー（各テンプレートを参照）
+- **iOS注意**:
+  - コード生成時: ローカライゼーションを考慮（文字列は Localizable.strings に定義し、NSLocalizedString を使用）
+  - ビルド前にシミュレータ情報確認（`xcrun simctl list devices available`）
 - **実行ルール**: 計画作成 → 人間の承認 → 実行 → 履歴記録（詳細は `common.md` を参照）
 - **完了基準**: すべて完成、ビルド成功、テストパス、実装記録に「完了」明記
 - **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
