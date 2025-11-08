@@ -36,49 +36,14 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 技術スタックは Inception Phase で決定します。
 
 ### ディレクトリ構成
-
-#### ドキュメント構成
-```
-example/
-├── prompts/              # 各フェーズのプロンプトと履歴
-│   ├── common.md
-│   ├── inception.md
-│   ├── construction.md
-│   ├── operations.md
-│   ├── additional-rules.md
-│   └── history.md
-├── templates/            # テンプレートファイル
-├── plans/                # 実行計画
-├── requirements/         # 要件定義
-├── story-artifacts/      # ユーザーストーリー
-│   └── units/           # Unit別
-├── design-artifacts/     # 設計成果物
-│   ├── domain-models/
-│   ├── logical-designs/
-│   └── architecture/
-├── construction/         # 構築記録
-│   └── units/
-└── operations/           # 運用関連
-```
-
-#### ソースコード構成
-Inception Phase で決定します。
+- `prompts/`: プロンプトファイル（common.md, inception.md, construction.md, operations.md, additional-rules.md, history.md）
+- `templates/`: テンプレートファイル
+- `requirements/`, `story-artifacts/`, `design-artifacts/`, `construction/`, `operations/`: 各フェーズの成果物
+- ソースコード構成: Inception Phase で決定
 
 ### 制約事項
-
-#### 技術的制約
-- Inception Phase で決定
-
-#### データライセンス
-- MIT License（プロンプトテンプレート等）
-- AI-DLC 翻訳文書は学習・参考目的での利用を想定
-
-#### セキュリティ
-- セキュリティスキャンの実施
-- シークレット情報の適切な管理
-
-#### 開発制約
-- なし
+- 技術的制約: Inception Phase で決定
+- セキュリティ: スキャン実施、シークレット管理
 
 
 ## 開発ルール
@@ -107,64 +72,11 @@ Inception Phase で決定します。
 
 ## フェーズの責務分離
 
-### Inception Phase
-**やること**:
-- Intent（開発意図）の明確化
-- 既存コード分析（brownfield の場合）
-- ユーザーストーリーの作成
-- Unit 定義
-- PRFAQ 作成
-- 技術スタック決定（greenfield の場合）
+- **Inception**: Intent/ユーザーストーリー/Unit定義/PRFAQ作成（設計・実装はしない）
+- **Construction**: ドメインモデル/論理設計/コード/テスト生成（要件定義・デプロイはしない）
+- **Operations**: デプロイ/CI/CD/監視/運用（要件定義・実装はしない）
 
-**やらないこと**:
-- 詳細設計
-- コード実装
-- デプロイ
-
-**成果物**:
-- requirements/intent.md
-- design-artifacts/existing-system-model.md（brownfield のみ）
-- story-artifacts/user_stories.md
-- story-artifacts/units/*.md
-- requirements/prfaq.md
-
-### Construction Phase
-**やること**:
-- ドメインモデル設計
-- 論理設計
-- コード生成
-- テスト生成
-- ビルド・テスト実行
-- 実装記録作成
-
-**やらないこと**:
-- 要件定義（Inception で完了済み）
-- デプロイ（Operations で実施）
-
-**成果物**:
-- design-artifacts/domain-models/<unit>_domain_model.md
-- design-artifacts/logical-designs/<unit>_logical_design.md
-- ソースコード
-- テストコード
-- construction/units/<unit>_implementation_record.md
-
-### Operations Phase
-**やること**:
-- デプロイ準備
-- CI/CD 構築
-- 監視・ロギング設定
-- 配布（該当する場合）
-- リリース後の運用
-
-**やらないこと**:
-- 要件定義（Inception で完了済み）
-- コード実装（Construction で完了済み）
-
-**成果物**:
-- operations/deployment_checklist.md
-- operations/monitoring_strategy.md
-- operations/distribution_feedback.md
-- operations/post_release_operations.md
+詳細は各フェーズのプロンプトファイル（inception.md, construction.md, operations.md）を参照。
 
 ## 進捗管理と冪等性
 
@@ -186,16 +98,4 @@ Inception Phase で決定します。
 
 ## テンプレート参照
 
-詳細なテンプレートは `example/templates/` 配下を参照してください：
-
-- `intent_template.md` - Intent（開発意図）
-- `user_stories_template.md` - ユーザーストーリー
-- `unit_definition_template.md` - Unit 定義
-- `prfaq_template.md` - PRFAQ
-- `domain_model_template.md` - ドメインモデル
-- `logical_design_template.md` - 論理設計
-- `implementation_record_template.md` - 実装記録
-- `deployment_checklist_template.md` - デプロイチェックリスト
-- `monitoring_strategy_template.md` - 監視・ロギング戦略
-- `distribution_feedback_template.md` - 配布記録
-- `post_release_operations_template.md` - リリース後の運用記録
+詳細なテンプレートは `example/templates/` 配下を参照してください。
