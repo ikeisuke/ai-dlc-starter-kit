@@ -12,6 +12,7 @@ PROJECT_NAME = AI-DLC Starter Kit
 VERSION = v1
 BRANCH = feature/example
 DEVELOPMENT_TYPE = greenfield
+PROJECT_TYPE = ios
 DOCS_ROOT = docs/example
 LANGUAGE = 日本語
 PROJECT_README = /README.md
@@ -24,6 +25,13 @@ ROLE_OPERATIONS = DevOpsエンジニア兼SRE
 
 ADDITIONAL_RULES = docs/example/prompts/additional-rules.md
 ```
+
+**PROJECT_TYPE の値**:
+- `ios`: iOSアプリ開発
+- `android`: Androidアプリ開発
+- `web`: Webアプリケーション開発
+- `backend`: バックエンドAPI開発
+- `general`: 汎用（プラットフォーム固有の指示なし）
 
 ---
 
@@ -148,10 +156,15 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 ##### construction.md（Construction Phase専用）
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（5ステップ）: 追加ルール確認 → Inception完了確認 → 全Unit進捗分析 → 対象Unit決定 → 実行前確認
-- **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成（iOS: ローカライゼーション考慮）→ テスト生成 → 統合とレビュー（各テンプレートを参照）
-- **iOS注意**:
-  - コード生成時: ローカライゼーションを考慮（文字列は Localizable.strings に定義し、NSLocalizedString を使用）
-  - ビルド前にシミュレータ情報確認（`xcrun simctl list devices available`）
+- **フロー**（1つのUnitのみ）: ドメインモデル設計 → 論理設計 → コード生成 → テスト生成 → 統合とレビュー（各テンプレートを参照）
+- **プラットフォーム固有の注意**（{{PROJECT_TYPE}} の場合のみ以下を含める）:
+  - **ios の場合**:
+    - コード生成時: ローカライゼーションを考慮（文字列は Localizable.strings に定義し、NSLocalizedString を使用）
+    - ビルド実行前: シミュレータ情報確認（`xcrun simctl list devices available`）
+  - **android の場合**:
+    - コード生成時: ローカライゼーションを考慮（文字列は strings.xml に定義）
+    - ビルド実行前: エミュレータ情報確認（`adb devices`）
+  - **web/backend/general の場合**: プラットフォーム固有の注意は含めない
 - **実行ルール**: 計画作成 → 人間の承認 → 実行 → 履歴記録（詳細は `common.md` を参照）
 - **完了基準**: すべて完成、ビルド成功、テストパス、実装記録に「完了」明記
 - **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）

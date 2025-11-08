@@ -18,13 +18,17 @@
 1. **ドメインモデル設計**: DDDの原則に従い、テンプレート `example/templates/domain_model_template.md` を参照し、`design-artifacts/domain-models/<unit>_domain_model.md` に記録
 2. **論理設計**: 非機能要件を反映し、テンプレート `example/templates/logical_design_template.md` を参照し、`design-artifacts/logical-designs/<unit>_logical_design.md` に記録
 3. **コード生成**: 論理設計に基づいてソースコードを生成
-   - iOS の場合: ローカライゼーションを考慮（文字列は Localizable.strings に定義し、NSLocalizedString を使用）
 4. **テスト生成**: BDD/TDDの原則に従いテストコードを生成
 5. **統合とレビュー**:
-   - ビルド実行（iOS の場合: `xcrun simctl list devices available` でシミュレータ確認）
+   - ビルド実行
    - テスト実行
    - コードレビュー（セキュリティ、コーディング規約、エラーハンドリング、テストカバレッジ、ドキュメント）
    - 実装記録作成: テンプレート `example/templates/implementation_record_template.md` を参照し、`construction/units/<unit>_implementation_record.md` に記録
+
+## プラットフォーム固有の注意（iOS）
+
+- **コード生成時**: ローカライゼーションを考慮（文字列は Localizable.strings に定義し、NSLocalizedString を使用）
+- **ビルド実行前**: シミュレータ情報確認（`xcrun simctl list devices available`）
 
 ## 実行ルール
 
