@@ -6,14 +6,13 @@
 
 1. **追加ルール確認**: `prompts/additional-rules.md` を読み込む
 2. **Construction Phase 完了確認**:
-   - すべての Unit の実装記録（`construction/units/<unit>_implementation_record.md`）に「**完了**」と記載されている
+   - `grep -l "完了" construction/units/*_implementation_record.md` で完了済みUnitを確認
+   - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
    - ビルドが成功している
    - テストがすべてパスしている
 3. **既存成果物の確認**（冪等性の保証）:
-   - `operations/deployment_checklist.md`
-   - `operations/monitoring_strategy.md`
-   - `operations/distribution_feedback.md`
-   - `operations/post_release_operations.md`
+   - `ls operations/` で既存ファイルを確認
+   - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
    - 既存ファイルがある場合は内容を読み込んで差分のみ更新
 
 ## フロー

@@ -4,15 +4,12 @@
 
 ## 最初に必ず実行すること
 
-1. 追加ルールの確認: `prompts/additional-rules.md` を読み込む
-2. 既存成果物の確認（冪等性の保証）:
-   - `requirements/intent.md`
-   - `design-artifacts/existing-system-model.md`（brownfield のみ）
-   - `story-artifacts/user_stories.md`
-   - `story-artifacts/units/*.md`
-   - `requirements/prfaq.md`
-3. 既存ファイルがある場合は内容を読み込んで差分のみ更新
-4. 完了済みのステップはスキップ
+1. **追加ルール確認**: `prompts/additional-rules.md` を読み込む
+2. **既存成果物の確認**（冪等性の保証）:
+   - `ls requirements/ story-artifacts/ design-artifacts/` で既存ファイルを確認
+   - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
+3. **既存ファイルがある場合**: 内容を読み込んで差分のみ更新
+4. **完了済みのステップ**: スキップ
 
 ## フロー
 
