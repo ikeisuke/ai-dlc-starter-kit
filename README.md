@@ -14,25 +14,23 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 ```
 ai-dlc-starter-kit/
 ├── docs/
-│   └── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
-│       ├── README.md
-│       ├── AI-DLC_I_CONTEXT_Translation.md
-│       ├── AI-DLC_II_KEY_PRINCIPLES_Translation.md
-│       ├── AI-DLC_III_CORE_FRAMEWORK_Translation.md
-│       ├── AI-DLC_IV_IN_ACTION_Translation.md
-│       ├── AI-DLC_V_IN_ACTION_BrownField_Translation.md
-│       ├── AI-DLC_VI_Adopting_Translation.md
-│       ├── AI-DLC_AppendixA_ja.md
-│       └── AI-Driven_Development_Lifecycle_Summary.md
+│   ├── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
+│   │   ├── README.md
+│   │   ├── AI-DLC_I_CONTEXT_Translation.md
+│   │   ├── AI-DLC_II_KEY_PRINCIPLES_Translation.md
+│   │   ├── AI-DLC_III_CORE_FRAMEWORK_Translation.md
+│   │   ├── AI-DLC_IV_IN_ACTION_Translation.md
+│   │   ├── AI-DLC_V_IN_ACTION_BrownField_Translation.md
+│   │   ├── AI-DLC_VI_Adopting_Translation.md
+│   │   ├── AI-DLC_AppendixA_ja.md
+│   │   └── AI-Driven_Development_Lifecycle_Summary.md
+│   │
+│   └── example/               # セットアップ後に生成される例（参考用）
+│       ├── prompts/           # 各フェーズのプロンプト
+│       └── templates/         # ドキュメントテンプレート
 │
-└── prompts/                   # プロンプトテンプレート
-    ├── setup-prompt.md        # セットアッププロンプト
-    ├── common.md              # 全フェーズ共通
-    ├── inception.md           # Inception Phase
-    ├── construction.md        # Construction Phase
-    ├── operations.md          # Operations Phase
-    ├── additional-rules.md    # 追加ルール
-    └── history.md             # 実行履歴テンプレート
+└── prompts/
+    └── setup-prompt.md        # セットアッププロンプト（これだけ使います）
 ```
 
 ## 🚀 クイックスタート
@@ -55,52 +53,100 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 
 ### 2. プロジェクトをセットアップ
 
-`prompts/setup-prompt.md` を Claude に読み込ませて、プロジェクトのセットアップを実行します：
+別プロジェクトのルートディレクトリで、`prompts/setup-prompt.md` を Claude に読み込ませます：
 
 ```markdown
 以下のファイルを読み込んで、AI-DLC 開発環境をセットアップしてください：
-- prompts/setup-prompt.md
-
-変数は以下の通りです：
-- PROJECT_NAME = あなたのプロジェクト名
-- VERSION = v1.0
-- BRANCH = main（または releases/v1.0）
-- DEVELOPMENT_TYPE = greenfield（または brownfield）
-- DOCS_ROOT = docs
+/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
 ```
+
+セットアップ時に変数の確認があるので、プロジェクトに合わせて変更してください：
+- `PROJECT_NAME`: プロジェクト名
+- `PROJECT_TYPE`: `ios` / `android` / `web` / `backend` / `general`
+- `DEVELOPMENT_TYPE`: `greenfield`（新規） / `brownfield`（既存）
+- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs`）
+
+セットアップが完了すると、以下が作成されます：
+- `prompts/` - 各フェーズのプロンプトファイル
+- `templates/` - ドキュメントテンプレート（11ファイル）
+- 各成果物用のディレクトリ（plans/, requirements/, story-artifacts/, 等）
+
+**重要**: セットアップ完了後、`prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）。
 
 ### 3. 開発を開始
 
-セットアップが完了したら、各フェーズのプロンプトを使用して開発を進めます：
+**各フェーズは新しいセッションで開始**してください（コンテキストリセット）：
 
-#### Inception Phase
+#### Inception Phase（要件定義）
 ```markdown
 以下のファイルを読み込んで、Inception Phase を開始してください：
-- docs/prompts/common.md
-- docs/prompts/inception.md
-
-（プロジェクト名） （バージョン） の開発を開始します。
-まず Intent（開発意図）を明確化し、ユーザーストーリーと Unit 定義を行います。
+prompts/common.md
+prompts/inception.md
 ```
 
-#### Construction Phase
+AIが以下を実施します：
+- **対話形式でIntentを作成**: 不明点は `[Question]`/`[Answer]` タグで記録し、質問してきます
+- ユーザーストーリー作成
+- Unit定義
+- PRFAQ作成
+
+**完了後**: 自動的にGitコミットが作成されます
+
+#### Construction Phase（実装）
 ```markdown
 以下のファイルを読み込んで、Construction Phase を開始してください：
-- docs/prompts/common.md
-- docs/prompts/construction.md
-
-進捗状況を自動的に分析し、次に実装すべき Unit を決定してください。
+prompts/common.md
+prompts/construction.md
 ```
 
-#### Operations Phase
+AIが以下を実施します：
+- 全Unit進捗を自動分析（コンテキスト溢れ防止のため、最小限のファイルのみ読み込み）
+- 対象Unitを選択
+- **対話形式でドメインモデル設計・論理設計**: 不明点を質問してきます
+- コード生成、テスト生成
+- ビルド、テスト実行
+
+**各Unit完了後**: 自動的にGitコミットが作成されます
+**重要**: 1つのUnit完了後、新しいセッションで次のUnitを実施してください
+
+#### Operations Phase（デプロイ・運用）
 ```markdown
 以下のファイルを読み込んで、Operations Phase を開始してください：
-- docs/prompts/common.md
-- docs/prompts/operations.md
-
-すべての Unit の Construction が完了しました。
-デプロイ準備、CI/CD構築、監視設定、リリースを実施します。
+prompts/common.md
+prompts/operations.md
 ```
+
+AIが以下を実施します：
+- Construction完了確認（コンテキスト溢れ防止のため、最小限のファイルのみ読み込み）
+- **対話形式でデプロイ準備、CI/CD構築、監視設定**: 不明点を質問してきます
+- リリース後の運用
+
+**完了後**: 自動的にGitコミットが作成されます
+
+## ✨ 主要な機能
+
+### 1. 対話形式による開発
+- AIが独自判断をせず、不明点は `[Question]`/`[Answer]` タグで質問
+- ユーザーとの対話を通じて要件や設計を明確化
+
+### 2. コンテキスト溢れ防止
+- 各フェーズで必要最小限のファイルのみ読み込み
+- `ls` / `grep` コマンドで効率的に情報取得
+- 指定されたDOCS_ROOT配下のファイルのみ読み込む制限
+
+### 3. 人間の承認プロセス
+- 計画作成後、必ず「進めてよろしいですか？」と質問
+- 承認なしで次のステップに進まない
+
+### 4. 自動Gitコミット
+- セットアップ完了時
+- Inception Phase完了時
+- 各Unit完了時
+- Operations Phase完了時
+
+### 5. プラットフォーム対応
+- `PROJECT_TYPE` 変数でプラットフォームを指定
+- iOS/Android固有の注意事項（ローカライゼーション等）を自動表示
 
 ## 📚 ドキュメント
 
@@ -116,26 +162,22 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 - [導入方法](docs/translations/AI-DLC_VI_Adopting_Translation.md) - 組織への導入戦略
 - [付録A](docs/translations/AI-DLC_AppendixA_ja.md) - プロンプトテンプレート集
 
-### プロンプトテンプレート
+### セットアッププロンプト
 
-- [setup-prompt.md](prompts/setup-prompt.md) - 環境セットアップ用プロンプト
-- [common.md](prompts/common.md) - 全フェーズ共通の知識ベース
-- [inception.md](prompts/inception.md) - Inception Phase 用プロンプト
-- [construction.md](prompts/construction.md) - Construction Phase 用プロンプト
-- [operations.md](prompts/operations.md) - Operations Phase 用プロンプト
+- [setup-prompt.md](prompts/setup-prompt.md) - 環境セットアップ用プロンプト（これだけ読み込めば、プロジェクトに合わせたプロンプトとテンプレートが自動生成されます）
 
-## 🎯 AI-DLC の主要原則
+## 🎯 このスターターキットの設計原則
 
-1. **再構築（Reimagine not Retrofit）** - 既存手法の改良ではなく、AI時代に合わせた根本的な再設計
-2. **会話の反転（Reverse the Conversation）** - AI が計画を提示し、人間が承認・判断
-3. **設計技法の統合（Integrate Design Techniques）** - DDD・BDD・TDD を AI が自動適用
-4. **AI の現実的な能力に合わせる** - AI の強みと限界を理解した設計
-5. **複雑なシステム開発を対象とする** - 大規模・複雑なシステムに適用
-6. **人間との共創を維持する** - AI が提案、人間が検証・承認
-7. **学習容易性** - 既存の知識を活用し、段階的に学習可能
-8. **役割の集約** - 専門特化された役割を最小限に
-9. **ステージを最小化してフローを最大化** - 短サイクルで高速イテレーション
-10. **固定プロセスを廃止** - AI が状況に応じて最適なプロセスを提案
+1. **会話の反転（Reverse the Conversation）** - AIが作業計画を提示し、人間が承認・判断する
+2. **対話による明確化** - AIが独自判断をせず、不明点は質問して明確化する
+3. **設計技法の統合** - DDD・BDD・TDDをAIが自動適用
+4. **短サイクル反復** - 各フェーズを短いサイクルで反復し、継続的に価値を提供
+5. **人間との共創** - リスク管理や重要判断は人間が担当
+6. **冪等性の保証** - 各ステップで既存成果物を確認し、差分のみ更新
+7. **コンテキスト効率** - 必要最小限のファイルのみ読み込み、コンテキスト溢れを防止
+8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成し、進捗を記録
+9. **プラットフォーム対応** - iOS/Android等の固有要件を自動で含める
+10. **カスタマイズ可能** - プロジェクト固有のルールを additional-rules.md に記述可能
 
 ## 🔗 関連リンク
 
