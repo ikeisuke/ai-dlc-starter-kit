@@ -16,14 +16,11 @@ PROJECT_TYPE = ios
 DOCS_ROOT = docs/example
 LANGUAGE = 日本語
 PROJECT_README = /README.md
-OTHER_DOCS = /LICENSE
 
 DEVELOPER_EXPERTISE = ソフトウェア開発
 ROLE_INCEPTION = プロダクトマネージャー兼ビジネスアナリスト
 ROLE_CONSTRUCTION = ソフトウェアアーキテクト兼エンジニア
 ROLE_OPERATIONS = DevOpsエンジニア兼SRE
-
-ADDITIONAL_RULES = docs/example/prompts/additional-rules.md
 ```
 
 **PROJECT_TYPE の値**:
@@ -50,7 +47,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 #### 主要原則
 1. **会話の反転（Reverse the Conversation）**: AIが作業計画を提示し、人間が承認・判断する
 2. **設計技法の統合**: DDD・BDD・TDDをAIが自動適用
-3. **短サイクル反復**: 数時間〜数日の短い反復（Bolt）で進行
+3. **短サイクル反復**: 各フェーズを短いサイクルで反復し、継続的に価値を提供
 4. **人間との共創**: リスク管理や重要判断は人間が担当
 5. **冪等性の保証**: 各ステップで既存成果物を確認し、差分のみ更新
 
@@ -76,7 +73,6 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 #### 主要アーティファクト
 - **Intent**: 開発の目的と狙い（例: 「顧客レコメンドエンジンを開発する」）
 - **Unit**: 独立した価値提供ブロック（Scrumの「Epic」やDDDの「Subdomain」に相当）
-- **Bolt**: 最小の開発反復単位（数時間〜数日）
 - **Domain Design**: DDDの原則に従ったビジネスロジックの構造化
 - **Logical Design**: 非機能要件を反映した設計層
 
