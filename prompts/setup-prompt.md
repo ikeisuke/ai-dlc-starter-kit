@@ -195,26 +195,10 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
      - `ls templates/intent_template.md templates/user_stories_template.md templates/unit_definition_template.md templates/prfaq_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**: ユーザーに以下を伝える:
-       ```
-       必要なテンプレートが見つかりません。新しいセッションで以下を実行してテンプレートを生成してください：
-
-       以下のファイルを読み込んでテンプレートを生成してください：
-       /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-       変数設定：
-       MODE = template
-       TEMPLATE_NAME = intent_template
-       DOCS_ROOT = {{DOCS_ROOT}}
-
-       （他のテンプレートも同様に TEMPLATE_NAME を変更して生成）
-       - user_stories_template
-       - unit_definition_template
-       - prfaq_template
-
-       生成完了後、このセッションに戻ってInception Phaseを続行してください。
-       ```
-     - テンプレート生成完了を待ってから次のステップに進む
+     - **テンプレートが存在しない場合**:
+       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
+       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝える
+       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. 既存成果物の確認（冪等性の保証）:
      - `ls requirements/ story-artifacts/ design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
@@ -242,25 +226,10 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
      - `ls templates/domain_model_template.md templates/logical_design_template.md templates/implementation_record_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**: ユーザーに以下を伝える:
-       ```
-       必要なテンプレートが見つかりません。新しいセッションで以下を実行してテンプレートを生成してください：
-
-       以下のファイルを読み込んでテンプレートを生成してください：
-       /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-       変数設定：
-       MODE = template
-       TEMPLATE_NAME = domain_model_template
-       DOCS_ROOT = {{DOCS_ROOT}}
-
-       （他のテンプレートも同様に TEMPLATE_NAME を変更して生成）
-       - logical_design_template
-       - implementation_record_template
-
-       生成完了後、このセッションに戻ってConstruction Phaseを続行してください。
-       ```
-     - テンプレート生成完了を待ってから次のステップに進む
+     - **テンプレートが存在しない場合**:
+       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
+       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
+       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Inception完了確認: `ls requirements/intent.md story-artifacts/units/` で存在のみ確認（**内容は読まない**）
   4. 全Unit進捗分析: `ls construction/units/*_implementation_record.md` で実装記録ファイルを確認し、各ファイルに「**完了**」マークがあるか grep で確認（**intent.mdやユーザーストーリーは読まない**）
   5. 対象Unit決定: 進行中の Unit 継続 or ユーザーに選択してもらう
@@ -292,26 +261,10 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   2. テンプレート確認（JIT生成）:
      - `ls templates/deployment_checklist_template.md templates/monitoring_strategy_template.md templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
      - モバイルアプリの場合は `templates/distribution_feedback_template.md` も確認
-     - **テンプレートが存在しない場合**: ユーザーに以下を伝える:
-       ```
-       必要なテンプレートが見つかりません。新しいセッションで以下を実行してテンプレートを生成してください：
-
-       以下のファイルを読み込んでテンプレートを生成してください：
-       /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-       変数設定：
-       MODE = template
-       TEMPLATE_NAME = deployment_checklist_template
-       DOCS_ROOT = {{DOCS_ROOT}}
-
-       （他のテンプレートも同様に TEMPLATE_NAME を変更して生成）
-       - monitoring_strategy_template
-       - post_release_operations_template
-       - distribution_feedback_template（モバイルアプリの場合）
-
-       生成完了後、このセッションに戻ってOperations Phaseを続行してください。
-       ```
-     - テンプレート生成完了を待ってから次のステップに進む
+     - **テンプレートが存在しない場合**:
+       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
+       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝える
+       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Construction Phase 完了確認:
      - `grep -l "完了" construction/units/*_implementation_record.md` で完了済みUnitを確認
      - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
@@ -1203,7 +1156,13 @@ sequenceDiagram
 
 ## テンプレート生成方法（JIT: Just-In-Time）
 
-テンプレートは必要な時に生成します。新しいセッションで以下を実行してください：
+テンプレートは必要な時に自動生成されます：
+
+### 自動生成（推奨）
+各フェーズ開始時、AIが自動的に必要なテンプレートをチェックします。不足している場合は自動生成し、「再度プロンプトを読み込んでください」と通知します。
+
+### 手動生成（オプション）
+テンプレートを事前に生成したい場合：
 
 \`\`\`
 以下のファイルを読み込んでテンプレートを生成してください：
@@ -1278,25 +1237,28 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **使用タイミング**: リリース後の運用ステップ
 - **生成コマンド**: `TEMPLATE_NAME = post_release_operations_template`
 
-## よくある使い方
+## テンプレート生成の仕組み
 
-### 例1: Inception開始前に必要なテンプレートをまとめて生成
+### 自動生成（推奨）
 
-Intent、ユーザーストーリー、Unit定義、PRFAQのテンプレートを生成：
+各フェーズの開始時、AIが自動的に必要なテンプレートの有無を確認します。テンプレートが不足している場合は：
+
+1. AIが自動的にテンプレートを生成
+2. 生成完了後、ユーザーに「再度プロンプトを読み込んでください」と通知
+3. ユーザーが同じセッションでプロンプトを再読み込み
+4. フェーズ処理を継続
+
+この方法により、初回セットアップが軽量化され、必要なテンプレートのみを必要な時に生成できます。
+
+### 手動生成（オプション）
+
+テンプレートを事前に生成したい場合は、以下を実行：
 
 \`\`\`
-# 新しいセッションで以下を4回実行（TEMPLATE_NAMEを変更して）
 MODE = template
-TEMPLATE_NAME = intent_template  # 1回目
-# TEMPLATE_NAME = user_stories_template  # 2回目
-# TEMPLATE_NAME = unit_definition_template  # 3回目
-# TEMPLATE_NAME = prfaq_template  # 4回目
+TEMPLATE_NAME = intent_template  # 生成したいテンプレート名
 DOCS_ROOT = (あなたのDOCS_ROOT)
 \`\`\`
-
-### 例2: 必要になった時点で1つずつ生成（推奨）
-
-各ステップ開始時に、必要なテンプレートのみを生成します。これにより初回セットアップが軽量化されます。
 ```
 
 #### 4. 重要な設計原則

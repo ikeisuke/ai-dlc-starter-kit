@@ -12,28 +12,10 @@
 ### 2. テンプレート確認（JIT生成）
 `ls templates/intent_template.md templates/user_stories_template.md templates/unit_definition_template.md templates/prfaq_template.md` で必要なテンプレートの存在を確認してください。
 
-**テンプレートが存在しない場合**: ユーザーに以下を伝えてください:
-
-```
-必要なテンプレートが見つかりません。新しいセッションで以下を実行してテンプレートを生成してください：
-
-以下のファイルを読み込んでテンプレートを生成してください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-変数設定：
-MODE = template
-TEMPLATE_NAME = intent_template
-DOCS_ROOT = docs/example
-
-（他のテンプレートも同様に TEMPLATE_NAME を変更して生成）
-- user_stories_template
-- unit_definition_template
-- prfaq_template
-
-生成完了後、このセッションに戻ってInception Phaseを続行してください。
-```
-
-テンプレート生成完了を待ってから次のステップに進んでください。
+**テンプレートが存在しない場合**:
+- setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（intent_template, user_stories_template, unit_definition_template, prfaq_template）
+- 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝えてください
+- **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機してください
 
 ### 3. 既存成果物の確認（冪等性の保証）
 `ls requirements/ story-artifacts/ design-artifacts/` で既存ファイルを確認してください。
@@ -101,7 +83,7 @@ feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義�
 
 Construction Phase へ移行します。
 
-新しいセッションで以下を実行してください：
+以下を実行してください：
 ```
 以下のファイルを読み込んで、Construction Phase を開始してください：
 prompts/common.md

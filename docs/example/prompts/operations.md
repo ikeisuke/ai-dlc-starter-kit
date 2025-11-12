@@ -14,28 +14,10 @@
 
 モバイルアプリの場合は `templates/distribution_feedback_template.md` も確認してください。
 
-**テンプレートが存在しない場合**: ユーザーに以下を伝えてください:
-
-```
-必要なテンプレートが見つかりません。新しいセッションで以下を実行してテンプレートを生成してください：
-
-以下のファイルを読み込んでテンプレートを生成してください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-変数設定：
-MODE = template
-TEMPLATE_NAME = deployment_checklist_template
-DOCS_ROOT = docs/example
-
-（他のテンプレートも同様に TEMPLATE_NAME を変更して生成）
-- monitoring_strategy_template
-- post_release_operations_template
-- distribution_feedback_template（モバイルアプリの場合）
-
-生成完了後、このセッションに戻ってOperations Phaseを続行してください。
-```
-
-テンプレート生成完了を待ってから次のステップに進んでください。
+**テンプレートが存在しない場合**:
+- setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
+- 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝えてください
+- **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機してください
 
 ### 3. Construction Phase 完了確認
 `grep -l "完了" construction/units/*_implementation_record.md` で完了済み Unit を確認してください。
@@ -121,7 +103,7 @@ chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
 
 新バージョンディレクトリを作成し、プロンプトをコピー、変数を更新後に Inception Phase を開始します。
 
-新しいセッションで以下を実行してください：
+以下を実行してください：
 ```
 以下のファイルを読み込んで、Inception Phase を開始してください：
 prompts/common.md
