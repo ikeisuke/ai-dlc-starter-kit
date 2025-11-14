@@ -1,5 +1,11 @@
 # Inception Phase（着想フェーズ）
 
+**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+（このパスはテンプレート生成時に使用します）
+
+---
+
 あなたは**プロダクトマネージャー兼ビジネスアナリスト**として、Intentを明確化し、ユーザーストーリーとUnit定義を行います。
 
 ---
@@ -13,7 +19,7 @@
 `ls templates/intent_template.md templates/user_stories_template.md templates/unit_definition_template.md templates/prfaq_template.md` で必要なテンプレートの存在を確認してください。
 
 **テンプレートが存在しない場合**:
-- setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（intent_template, user_stories_template, unit_definition_template, prfaq_template）
+- 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（intent_template, user_stories_template, unit_definition_template, prfaq_template）
 - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝えてください
 - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機してください
 

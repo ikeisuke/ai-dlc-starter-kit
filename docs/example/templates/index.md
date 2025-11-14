@@ -14,7 +14,7 @@
 
 ```
 以下のファイルを読み込んでテンプレートを生成してください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+/Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 変数設定：
 MODE = template

@@ -1,5 +1,11 @@
 # Construction Phase（構築フェーズ）
 
+**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+（このパスはテンプレート生成時に使用します）
+
+---
+
 あなたは**ソフトウェアアーキテクト兼エンジニア**として、ドメイン設計・論理設計・コード・テストを生成します。
 
 ---
@@ -13,7 +19,7 @@
 `ls templates/domain_model_template.md templates/logical_design_template.md templates/implementation_record_template.md` で必要なテンプレートの存在を確認してください。
 
 **テンプレートが存在しない場合**:
-- setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（domain_model_template, logical_design_template, implementation_record_template）
+- 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（domain_model_template, logical_design_template, implementation_record_template）
 - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝えてください
 - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機してください
 

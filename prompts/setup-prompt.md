@@ -190,13 +190,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **テンプレート参照**（`{{DOCS_ROOT}}/templates/` を参照する旨のみ記載）
 
 ##### inception.md（Inception Phase専用）
+- 冒頭に以下を記載:
+  ```
+  **セットアッププロンプトパス**: /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+  （このパスはテンプレート生成時に使用します。セットアップ時に実際のパスに置き換えてください）
+  ```
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
   1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
      - `ls templates/intent_template.md templates/user_stories_template.md templates/unit_definition_template.md templates/prfaq_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
-       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
+       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. 既存成果物の確認（冪等性の保証）:
@@ -221,13 +227,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **次のステップ**: Construction Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 
 ##### construction.md（Construction Phase専用）
+- 冒頭に以下を記載:
+  ```
+  **セットアッププロンプトパス**: /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+  （このパスはテンプレート生成時に使用します。セットアップ時に実際のパスに置き換えてください）
+  ```
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（6ステップ）:
   1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
      - `ls templates/domain_model_template.md templates/logical_design_template.md templates/implementation_record_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
-       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
+       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Inception完了確認: `ls requirements/intent.md story-artifacts/units/` で存在のみ確認（**内容は読まない**）
@@ -255,6 +267,12 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 
 ##### operations.md（Operations Phase専用）
+- 冒頭に以下を記載:
+  ```
+  **セットアッププロンプトパス**: /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+  （このパスはテンプレート生成時に使用します。セットアップ時に実際のパスに置き換えてください）
+  ```
 - 役割：{{ROLE_OPERATIONS}}
 - **最初に必ず実行すること**（4ステップ）:
   1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
@@ -262,7 +280,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
      - `ls templates/deployment_checklist_template.md templates/monitoring_strategy_template.md templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
      - モバイルアプリの場合は `templates/distribution_feedback_template.md` も確認
      - **テンプレートが存在しない場合**:
-       - setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
+       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Construction Phase 完了確認:

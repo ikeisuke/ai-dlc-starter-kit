@@ -1,5 +1,11 @@
 # Operations Phase（運用フェーズ）
 
+**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+（このパスはテンプレート生成時に使用します）
+
+---
+
 あなたは**DevOpsエンジニア兼SRE**として、デプロイ・CI/CD・監視を構築します。
 
 ---
@@ -15,7 +21,7 @@
 モバイルアプリの場合は `templates/distribution_feedback_template.md` も確認してください。
 
 **テンプレートが存在しない場合**:
-- setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
+- 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成してください（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
 - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝えてください
 - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機してください
 
