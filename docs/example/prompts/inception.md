@@ -50,8 +50,13 @@
 ### 3. ユーザーストーリー作成
 Intentに基づいてユーザーストーリーを作成し、`story-artifacts/user_stories.md` に記録します（テンプレート: `templates/user_stories_template.md`）。
 
-### 4. Unit定義
+### 4. Unit定義【重要】
 ユーザーストーリーを Unit に分解し、`story-artifacts/units/` 配下に各 Unit の定義ファイルを作成します（テンプレート: `templates/unit_definition_template.md`）。
+
+**依存関係の記載が重要**:
+- **各Unitの依存関係を明確に記載**してください（どのUnitが先に完了している必要があるか）
+- 依存関係がない場合は「なし」と明記してください
+- 依存関係は Construction Phase での実行順判断に使用されます
 
 ### 5. PRFAQ作成
 プロダクトのPRFAQを作成し、`requirements/prfaq.md` に記録します（テンプレート: `templates/prfaq_template.md`）。
