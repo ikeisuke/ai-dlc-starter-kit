@@ -84,23 +84,38 @@
 
 ## フロー（1つのUnitのみ）
 
-### 1. ドメインモデル設計【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら設計します。
+### Phase 1: 設計【対話形式、コードは書かない】
+
+#### 1. ドメインモデル設計
+不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら**構造と責務を定義**します。
+
+**重要**: この段階では**コードは書きません**。エンティティ、値オブジェクト、集約等の構造と責務を箇条書きで記述します。
 
 成果物: `design-artifacts/domain-models/[unit_name]_domain_model.md`（テンプレート: `templates/domain_model_template.md`）
 
-### 2. 論理設計【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら設計します。
+#### 2. 論理設計
+不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら**コンポーネント構成とインターフェースを定義**します。
+
+**重要**: この段階では**具体的なコード（SQL、JSON等）は書きません**。インターフェース定義、データモデル概要、処理フロー概要を記述します。
 
 成果物: `design-artifacts/logical-designs/[unit_name]_logical_design.md`（テンプレート: `templates/logical_design_template.md`）
 
-### 3. コード生成
-設計に基づいて実装します。
+#### 3. 設計レビュー
+設計内容をユーザーに提示し、承認を得ます。
 
-### 4. テスト生成
-BDD/TDD に従ってテストを作成します。
+**重要**: **承認なしで実装フェーズに進んではいけません**。
 
-### 5. 統合とレビュー
+---
+
+### Phase 2: 実装【設計を参照してコード生成】
+
+#### 4. コード生成
+設計ファイル（`design-artifacts/domain-models/[unit_name]_domain_model.md` と `design-artifacts/logical-designs/[unit_name]_logical_design.md`）を読み込み、それに基づいて実装コードを生成します。
+
+#### 5. テスト生成
+BDD/TDD に従ってテストコードを作成します。
+
+#### 6. 統合とレビュー
 ビルド、テスト実行、レビューを行います。
 
 ---
