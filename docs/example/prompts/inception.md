@@ -61,6 +61,17 @@ Intentに基づいてユーザーストーリーを作成し、`story-artifacts/
 ### 5. PRFAQ作成
 プロダクトのPRFAQを作成し、`requirements/prfaq.md` に記録します（テンプレート: `templates/prfaq_template.md`）。
 
+### 6. 進捗管理ファイル作成【重要】
+全Unit定義完了後、`construction/progress.md` を作成します。
+
+**内容**:
+- Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
+- 全Unitの初期状態は「未着手」
+- 実行可能なUnitセクション（初回は依存関係なしのUnitを記載）
+- 最終更新日時
+
+このファイルは Construction Phase で進捗管理の中心として使用されます。
+
 ---
 
 ## 実行ルール
@@ -74,18 +85,18 @@ Intentに基づいてユーザーストーリーを作成し、`story-artifacts/
 
 ## 完了基準
 
-- すべての成果物が作成されている（Intent、ユーザーストーリー、Unit定義、PRFAQ）
+- すべての成果物が作成されている（Intent、ユーザーストーリー、Unit定義、PRFAQ、**進捗管理ファイル**）
 - greenfield の場合、技術スタックが決定されている
 
 ---
 
 ## 完了時の必須作業【重要】
 
-Inception Phaseで作成したすべてのファイルをGitコミットしてください。
+Inception Phaseで作成したすべてのファイル（**progress.mdを含む**）をGitコミットしてください。
 
 コミットメッセージ例:
 ```
-feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
+feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成
 ```
 
 ---
