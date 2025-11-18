@@ -33,7 +33,7 @@ ROLE_OPERATIONS = DevOpsエンジニア兼SRE
 - `backend`: バックエンドAPI開発
 - `general`: 汎用（プラットフォーム固有の指示なし）
 
-> **重要**: セットアップ完了後、`prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズすることを忘れないでください。詳細はファイル末尾の「セットアップ完了後の重要なステップ」を参照してください。
+> **重要**: セットアップ完了後、`{{DOCS_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズすることを忘れないでください。詳細はファイル末尾の「セットアップ完了後の重要なステップ」を参照してください。
 
 ---
 
@@ -237,15 +237,15 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
-  1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{DOCS_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls templates/intent_template.md templates/user_stories_template.md templates/unit_definition_template.md templates/prfaq_template.md` で必要なテンプレートの存在を確認
+     - `ls {{DOCS_ROOT}}/templates/intent_template.md {{DOCS_ROOT}}/templates/user_stories_template.md {{DOCS_ROOT}}/templates/unit_definition_template.md {{DOCS_ROOT}}/templates/prfaq_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. 既存成果物の確認（冪等性の保証）:
-     - `ls requirements/ story-artifacts/ design-artifacts/` で既存ファイルを確認
+     - `ls {{DOCS_ROOT}}/requirements/ {{DOCS_ROOT}}/story-artifacts/ {{DOCS_ROOT}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
   4. 既存ファイルがある場合は内容を読み込んで差分のみ更新
   5. 完了済みのステップはスキップ
@@ -264,12 +264,12 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
      - 依存関係は Construction Phase での実行順判断に使用される
   5. PRFAQ作成
   6. **進捗管理ファイル作成【重要】**:
-     - 全Unit定義完了後、`construction/progress.md` を作成
+     - 全Unit定義完了後、`{{DOCS_ROOT}}/construction/progress.md` を作成
      - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
      - 全Unitの初期状態は「未着手」
      - Construction Phaseで使用する進捗管理の中心ファイル
   （各ステップはテンプレートを参照）
-- **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行 → 履歴記録（詳細は `common.md` を参照）
+- **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行 → 履歴記録（詳細は共通ルールを参照）
 - **完了基準**: すべての成果物作成、技術スタック決定（greenfield の場合）、**進捗管理ファイル作成**
 - **完了時の必須作業【重要】**: Inception Phaseで作成したすべてのファイル（**progress.mdを含む**）をGitコミット（メッセージ例: "feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成"）
 - **次のステップ**: Construction Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
@@ -283,16 +283,16 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（6ステップ）:
-  1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{DOCS_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls templates/domain_model_template.md templates/logical_design_template.md templates/implementation_record_template.md` で必要なテンプレートの存在を確認
+     - `ls {{DOCS_ROOT}}/templates/domain_model_template.md {{DOCS_ROOT}}/templates/logical_design_template.md {{DOCS_ROOT}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
-  3. Inception完了確認: `ls requirements/intent.md story-artifacts/units/` で存在のみ確認（**内容は読まない**）
+  3. Inception完了確認: `ls {{DOCS_ROOT}}/requirements/intent.md {{DOCS_ROOT}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
   4. **進捗管理ファイル読み込み【重要】**:
-     - `construction/progress.md` を読み込む
+     - `{{DOCS_ROOT}}/construction/progress.md` を読み込む
      - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載されている
      - **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
   5. 対象Unit決定（progress.mdの情報に基づく）:
@@ -302,11 +302,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
        1. 実行可能Unitが0個: 「全Unit完了」と判断
        2. 実行可能Unitが1個: 自動的にそのUnitを選択
        3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
-  6. 実行前確認【重要】: 選択された Unit について計画ファイルを `plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
+  6. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{DOCS_ROOT}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
 - **フロー**（1つのUnitのみ）:
   - **Phase 1: 設計【対話形式、コードは書かない】**
-    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら構造と責務を定義（成果物: `design-artifacts/domain-models/[unit_name]_domain_model.md`）
-    2. 論理設計: 同様に対話しながらコンポーネント構成とインターフェースを定義（成果物: `design-artifacts/logical-designs/[unit_name]_logical_design.md`）
+    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら構造と責務を定義（成果物: `{{DOCS_ROOT}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
+    2. 論理設計: 同様に対話しながらコンポーネント構成とインターフェースを定義（成果物: `{{DOCS_ROOT}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`）
     3. **設計レビュー**: 設計内容をユーザーに提示し、承認を得る（**承認なしで実装フェーズに進んではいけない**）
   - **Phase 2: 実装【設計を参照してコード生成】**
     4. コード生成: 設計ファイルを読み込み、それに基づいて実装コードを生成
@@ -339,19 +339,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_OPERATIONS}}
 - **最初に必ず実行すること**（4ステップ）:
-  1. 追加ルール確認: `prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{DOCS_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls templates/deployment_checklist_template.md templates/monitoring_strategy_template.md templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
-     - モバイルアプリの場合は `templates/distribution_feedback_template.md` も確認
+     - `ls {{DOCS_ROOT}}/templates/deployment_checklist_template.md {{DOCS_ROOT}}/templates/monitoring_strategy_template.md {{DOCS_ROOT}}/templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
+     - モバイルアプリの場合は `{{DOCS_ROOT}}/templates/distribution_feedback_template.md` も確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Construction Phase 完了確認:
-     - `grep -l "完了" construction/units/*_implementation_record.md` で完了済みUnitを確認
+     - `grep -l "完了" {{DOCS_ROOT}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
      - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
   4. 既存成果物の確認（冪等性の保証）:
-     - `ls operations/` で既存ファイルを確認
+     - `ls {{DOCS_ROOT}}/operations/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
      - 既存ファイルがある場合は内容を読み込んで差分のみ更新
 - **フロー**:
@@ -374,7 +374,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   - **末尾**: 実際の履歴エントリ
 - 記録ルール：
   - **重要**: 履歴は**必ずファイル末尾に追記**する（既存の履歴を絶対に削除・上書きしてはいけない）
-  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a prompts/history.md`) または `echo >> prompts/history.md` を使用
+  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{DOCS_ROOT}}/prompts/history.md`) または `echo >> {{DOCS_ROOT}}/prompts/history.md` を使用
   - **ファイルを読み込む必要はない**（テンプレートが先頭にあるため）
   - 日時取得：`date '+%Y-%m-%d %H:%M:%S'` コマンドを必ず使用
   - 記録項目：日時、フェーズ名、実行内容、プロンプト、成果物、備考
@@ -1373,7 +1373,7 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 
 ## ⚠️ 重要: カスタマイズが必要です
 
-Inception Phase を開始する前に、**必ず `prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください**。
+Inception Phase を開始する前に、**必ず `{{DOCS_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください**。
 
 カスタマイズすべき項目：
 1. **コーディング規約**（命名規則、フォーマットルール等）
@@ -1403,7 +1403,7 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 
 セットアップ完了後、**必ず以下のファイルをプロジェクトに合わせてカスタマイズしてください**：
 
-#### `prompts/additional-rules.md`
+#### `{{DOCS_ROOT}}/prompts/additional-rules.md`
 プロジェクト固有のルールや制約を記載してください：
 - コーディング規約（命名規則、フォーマットルール等）
 - 使用するライブラリやフレームワークの制約
@@ -1427,7 +1427,7 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 - API キーは環境変数で管理
 ```
 
-#### `prompts/common.md` の技術スタック（greenfield の場合）
+#### `{{DOCS_ROOT}}/prompts/common.md` の技術スタック（greenfield の場合）
 Inception Phase 完了後、決定した技術スタックを記載してください：
 ```markdown
 ### 技術スタック
@@ -1442,7 +1442,7 @@ Inception Phase 完了後、決定した技術スタックを記載してくだ�
 ```
 
 #### テンプレートファイル（オプション）
-必要に応じて `templates/` 配下のテンプレートをプロジェクトに合わせて調整してください。
+必要に応じて `{{DOCS_ROOT}}/templates/` 配下のテンプレートをプロジェクトに合わせて調整してください。
 
 ---
 
