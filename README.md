@@ -26,8 +26,10 @@ ai-dlc-starter-kit/
 │   │   └── AI-Driven_Development_Lifecycle_Summary.md
 │   │
 │   └── example/               # セットアップ後に生成される例（参考用）
-│       ├── prompts/           # 各フェーズのプロンプト
-│       └── templates/         # ドキュメントテンプレート
+│       └── v1/                # バージョン単位で管理
+│           ├── prompts/       # 各フェーズのプロンプト
+│           ├── templates/     # ドキュメントテンプレート
+│           └── ...            # その他の成果物
 │
 └── prompts/
     └── setup-prompt.md        # セットアッププロンプト（これだけ使います）
@@ -62,16 +64,27 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 
 セットアップ時に変数の確認があるので、プロジェクトに合わせて変更してください：
 - `PROJECT_NAME`: プロジェクト名
+- `VERSION`: バージョン番号（例: `v1.0`, `1.0.0`）
 - `PROJECT_TYPE`: `ios` / `android` / `web` / `backend` / `general`
 - `DEVELOPMENT_TYPE`: `greenfield`（新規） / `brownfield`（既存）
-- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs`）
+- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs`, `ai-dlc`）
 
-セットアップが完了すると、以下が作成されます：
-- `prompts/` - 各フェーズのプロンプトファイル（common.md, inception.md, construction.md, operations.md, additional-rules.md, history.md）
-- `templates/` - ドキュメントテンプレート（**JIT自動生成**：必要な時に自動的に作成されます）
-- 各成果物用のディレクトリ（plans/, requirements/, story-artifacts/, design-artifacts/, construction/, operations/）
+セットアップが完了すると、`{DOCS_ROOT}/{VERSION}/` 配下に以下が作成されます：
+```
+{DOCS_ROOT}/{VERSION}/
+├── prompts/              # 各フェーズのプロンプトファイル
+├── templates/            # ドキュメントテンプレート（JIT自動生成）
+├── plans/                # 実行計画
+├── requirements/         # 要件定義
+├── story-artifacts/      # ユーザーストーリー、Unit定義
+├── design-artifacts/     # ドメインモデル、論理設計
+├── construction/         # 実装記録、progress.md
+└── operations/           # デプロイ、CI/CD、監視設定
+```
 
-**重要**: セットアップ完了後、`prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）。
+**重要**:
+- セットアップ完了後、`{DOCS_ROOT}/{VERSION}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
+- **このスターターキットはバージョン単位で環境を構築します**。新バージョン開発時は新しい`VERSION`でsetup-prompt.mdを再実行します
 
 ### 3. 開発を開始
 
@@ -127,6 +140,27 @@ AIが以下を実施します：
 - リリース後の運用
 
 **完了後**: 自動的にGitコミットが作成されます
+
+### 4. 次バージョンの開発（ライフサイクルの継続）
+
+Operations Phase完了後、フィードバックを収集して次バージョンの開発を開始します：
+
+```markdown
+以下のファイルを読み込んで、{PROJECT_NAME} v2.0 の AI-DLC 環境をセットアップしてください：
+/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+
+変数を以下に設定してください：
+- VERSION = v2.0
+- DOCS_ROOT = {前バージョンと同じ}
+- その他の変数も適宜設定
+```
+
+**必要に応じて前バージョンのファイルを引き継ぐ**:
+- `{DOCS_ROOT}/v1.0/prompts/additional-rules.md` → v2.0にコピーしてカスタマイズを引き継ぐ
+- `{DOCS_ROOT}/v1.0/requirements/intent.md` → 参照して改善点を反映
+- その他、引き継ぎたいファイルがあればコピー
+
+セットアップ完了後、新しいセッションで Inception Phase を開始し、**Inception → Construction → Operations → (次バージョン)** のライフサイクルを継続します。
 
 ## ✨ 主要な機能
 
