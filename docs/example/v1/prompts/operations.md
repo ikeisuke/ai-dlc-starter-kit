@@ -42,29 +42,29 @@
 ## フロー
 
 ### 1. デプロイ準備【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら準備します。
+不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備します（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）。
 
 成果物: `operations/deployment_checklist.md`（テンプレート: `templates/deployment_checklist_template.md`）
 
 ### 2. CI/CD構築【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら構築します。
+不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構築します。
 
 成果物: CI/CD設定ファイル（例: `.github/workflows/`, `Jenkinsfile`, 等）
 
 ### 3. 監視・ロギング戦略【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら設定します。
+不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら設定します。
 
 成果物: `operations/monitoring_strategy.md`（テンプレート: `templates/monitoring_strategy_template.md`）
 
 ### 4. 配布（該当する場合）【対話形式】
 モバイルアプリの場合、App Store / Google Play への配布を準備します。
 
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら準備します。
+不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備します。
 
 成果物: `operations/distribution_feedback.md`（テンプレート: `templates/distribution_feedback_template.md`）
 
 ### 5. リリース後の運用【対話形式】
-不明点は `[Question]` / `[Answer]` タグで記録し、ユーザーと対話しながら運用体制を構築します。
+不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら運用体制を構築します。
 
 成果物: `operations/post_release_operations.md`（テンプレート: `templates/post_release_operations_template.md`）
 
