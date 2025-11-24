@@ -10,19 +10,16 @@
 
 ## 最初に必ず実行すること（6ステップ）
 
-1. **追加ルール確認**: `docs/versions/v1.0.0/prompts/additional-rules.md` を読み込む
+1. **追加ルール確認**: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
 
-2. **テンプレート確認（JIT生成）**:
-   - `ls docs/versions/v1.0.0/templates/domain_model_template.md docs/versions/v1.0.0/templates/logical_design_template.md docs/versions/v1.0.0/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
-   - **テンプレートが存在しない場合**:
-     - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
-     - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
-     - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
+2. **テンプレート確認**:
+   - `ls {{AIDLC_ROOT}}/templates/domain_model_template.md {{AIDLC_ROOT}}/templates/logical_design_template.md {{AIDLC_ROOT}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
+   - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
 
-3. **Inception完了確認**: `ls docs/versions/v1.0.0/requirements/intent.md docs/versions/v1.0.0/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
+3. **Inception完了確認**: `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
 
 4. **進捗管理ファイル読み込み【重要】**:
-   - `docs/versions/v1.0.0/construction/progress.md` を読み込む
+   - `{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
    - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載されている
    - **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
 
@@ -34,7 +31,7 @@
      2. 実行可能Unitが1個: 自動的にそのUnitを選択
      3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
 
-6. **実行前確認【重要】**: 選択された Unit について計画ファイルを `docs/versions/v1.0.0/plans/construction_[unit_name]_plan.md` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
+6. **実行前確認【重要】**: 選択された Unit について計画ファイルを `{{VERSIONS_ROOT}}/{{VERSION}}/plans/construction_[unit_name]_plan.md` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
 
 ## フロー（1つのUnitのみ）
 
@@ -46,16 +43,16 @@
 - **1つの質問をして回答を待ち、複数の質問をまとめて提示しない**
 - エンティティ、値オブジェクト、集約、ドメインサービス、リポジトリインターフェースを定義
 - **重要**: この段階では**コードは書かない**、構造と責務の定義のみ
-- 成果物: `docs/versions/v1.0.0/design-artifacts/domain-models/[unit_name]_domain_model.md`
-- テンプレート: `docs/versions/v1.0.0/templates/domain_model_template.md` を参照
+- 成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/[unit_name]_domain_model.md`
+- テンプレート: `{{AIDLC_ROOT}}/templates/domain_model_template.md` を参照
 
 #### ステップ2: 論理設計
 
 - 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義
 - アーキテクチャパターン、コンポーネント構成、インターフェース設計、データモデル概要、処理フロー、NFR対応策を記述
 - **重要**: この段階では**コードは書かない**、設計のみ
-- 成果物: `docs/versions/v1.0.0/design-artifacts/logical-designs/[unit_name]_logical_design.md`
-- テンプレート: `docs/versions/v1.0.0/templates/logical_design_template.md` を参照
+- 成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`
+- テンプレート: `{{AIDLC_ROOT}}/templates/logical_design_template.md` を参照
 
 #### ステップ3: 設計レビュー
 
@@ -80,8 +77,8 @@
 - ビルドを実行し、成功を確認
 - テストを実行し、すべてパスすることを確認
 - コードレビュー（セキュリティ、コーディング規約、エラーハンドリング、テストカバレッジ）
-- 実装記録を作成: `docs/versions/v1.0.0/construction/units/[unit_name]_implementation_record.md`
-- テンプレート: `docs/versions/v1.0.0/templates/implementation_record_template.md` を参照
+- 実装記録を作成: `{{VERSIONS_ROOT}}/{{VERSION}}/construction/units/[unit_name]_implementation_record.md`
+- テンプレート: `{{AIDLC_ROOT}}/templates/implementation_record_template.md` を参照
 
 ## プラットフォーム固有の注意
 
@@ -92,7 +89,7 @@
 1. **計画作成**: まず実行計画を作成
 2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後、計画に従って実行
-4. **履歴記録**: 完了後、`docs/versions/v1.0.0/prompts/history.md` に履歴を追記（heredoc使用）
+4. **履歴記録**: 完了後、`{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用）
 
 ## 完了基準
 
@@ -129,6 +126,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 新しいセッション（コンテキストリセット）で以下を実行してください：
 ```
 以下のファイルを読み込んで、Operations Phase を開始してください：
-docs/versions/v1.0.0/prompts/common.md
-docs/versions/v1.0.0/prompts/operations.md
+{{AIDLC_ROOT}}/prompts/common.md
+{{AIDLC_ROOT}}/prompts/operations.md
 ```
