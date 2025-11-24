@@ -27,9 +27,6 @@ ai-dlc-starter-kit/
 │   │   ├── AI-DLC_AppendixA_ja.md
 │   │   └── AI-Driven_Development_Lifecycle_Summary.md
 │   │
-│   ├── example/               # 旧バージョンで生成された参考例（そのまま保持）
-│   │   └── v1/
-│   │
 │   ├── aidlc/                 # バージョン非依存の共通ファイル
 │   │   ├── prompts/          # 各フェーズのプロンプト（全バージョン共通）
 │   │   └── templates/        # ドキュメントテンプレート（全バージョン共通）
