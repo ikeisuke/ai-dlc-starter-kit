@@ -27,24 +27,17 @@ ai-dlc-starter-kit/
 │   │   ├── AI-DLC_AppendixA_ja.md
 │   │   └── AI-Driven_Development_Lifecycle_Summary.md
 │   │
-│   ├── aidlc/                 # バージョン非依存の共通ファイル
-│   │   ├── prompts/          # 各フェーズのプロンプト（全バージョン共通）
-│   │   └── templates/        # ドキュメントテンプレート（全バージョン共通）
+│   ├── aidlc/                 # v1.0.0で追加予定: バージョン非依存の共通ファイル
 │   │
-│   └── versions/              # バージョン管理されたプロジェクトファイル
-│       └── v1.0.0/            # バージョン単位で管理
-│           ├── plans/         # 実行計画
-│           ├── requirements/  # 要件定義
-│           ├── story-artifacts/  # ユーザーストーリー、Unit定義
-│           ├── design-artifacts/ # ドメインモデル、論理設計
-│           ├── construction/  # 実装記録、progress.md
-│           └── operations/    # デプロイ、CI/CD、監視設定
+│   └── versions/              # v1.0.0で追加予定: バージョン管理されたプロジェクトファイル
 │
 └── prompts/
     └── setup-prompt.md        # セットアッププロンプト（これだけ使います）
 ```
 
-## 🚀 クイックスタート
+**注**: 現在のバージョンは v0.1.0 です。v1.0.0 は開発中で、完成すると `docs/aidlc/` と `docs/versions/` を使った新しいディレクトリ構造になります。
+
+## 🚀 クイックスタート (v0.1.0)
 
 ### 1. AI-DLC について学ぶ
 
@@ -73,33 +66,31 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 
 セットアップ時に変数の確認があるので、プロジェクトに合わせて変更してください：
 - `PROJECT_NAME`: プロジェクト名
-- `VERSION`: バージョン番号（例: `v1.0.0`）
+- `VERSION`: バージョン番号（例: `v1`）
 - `PROJECT_TYPE`: `ios` / `android` / `web` / `backend` / `general`
 - `DEVELOPMENT_TYPE`: `greenfield`（新規） / `brownfield`（既存）
-- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs`）
+- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs/example`）
 
-セットアップが完了すると、以下が作成されます：
+セットアップが完了すると、指定した `DOCS_ROOT` 配下に以下が作成されます：
 ```
-docs/
-├── aidlc/                     # バージョン非依存の共通ファイル
-│   ├── prompts/              # 各フェーズのプロンプトファイル
-│   │   ├── inception.md
-│   │   ├── construction.md
-│   │   ├── operations.md
-│   │   └── additional-rules.md
-│   └── templates/            # ドキュメントテンプレート（JIT自動生成）
-│
-└── versions/v1.0.0/          # バージョン固有の成果物
-    ├── plans/                # 実行計画
-    ├── requirements/         # 要件定義
-    ├── story-artifacts/      # ユーザーストーリー、Unit定義
-    ├── design-artifacts/     # ドメインモデル、論理設計
-    ├── construction/         # 実装記録、progress.md
-    └── operations/           # デプロイ、CI/CD、監視設定
+docs/example/v1/              # バージョン単位で管理
+├── prompts/                  # 各フェーズのプロンプトファイル
+│   ├── common.md            # 共通知識
+│   ├── inception.md         # Inception Phase用
+│   ├── construction.md      # Construction Phase用
+│   ├── operations.md        # Operations Phase用
+│   └── additional-rules.md  # プロジェクト固有ルール
+├── templates/               # ドキュメントテンプレート（JIT自動生成）
+├── plans/                   # 実行計画
+├── requirements/            # 要件定義
+├── story-artifacts/         # ユーザーストーリー、Unit定義
+├── design-artifacts/        # ドメインモデル、論理設計
+├── construction/            # 実装記録、progress.md
+└── operations/              # デプロイ、CI/CD、監視設定
 ```
 
 **重要**:
-- セットアップ完了後、`docs/aidlc/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
+- セットアップ完了後、`{DOCS_ROOT}/{VERSION}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
 - **このスターターキットはバージョン単位で環境を構築します**。新バージョン開発時は新しい`VERSION`でsetup-prompt.mdを再実行します
 
 ### 3. 開発を開始
@@ -109,7 +100,8 @@ docs/
 #### Inception Phase（要件定義）
 ```markdown
 以下のファイルを読み込んで、Inception Phase を開始してください：
-docs/aidlc/prompts/inception.md
+{DOCS_ROOT}/{VERSION}/prompts/common.md
+{DOCS_ROOT}/{VERSION}/prompts/inception.md
 ```
 
 AIが以下を実施します：
@@ -124,7 +116,8 @@ AIが以下を実施します：
 #### Construction Phase（実装）
 ```markdown
 以下のファイルを読み込んで、Construction Phase を開始してください：
-docs/aidlc/prompts/construction.md
+{DOCS_ROOT}/{VERSION}/prompts/common.md
+{DOCS_ROOT}/{VERSION}/prompts/construction.md
 ```
 
 AIが以下を実施します：
@@ -144,7 +137,8 @@ AIが以下を実施します：
 #### Operations Phase（デプロイ・運用）
 ```markdown
 以下のファイルを読み込んで、Operations Phase を開始してください：
-docs/aidlc/prompts/operations.md
+{DOCS_ROOT}/{VERSION}/prompts/common.md
+{DOCS_ROOT}/{VERSION}/prompts/operations.md
 ```
 
 AIが以下を実施します：
@@ -159,18 +153,18 @@ AIが以下を実施します：
 Operations Phase完了後、フィードバックを収集して次バージョンの開発を開始します：
 
 ```markdown
-以下のファイルを読み込んで、{PROJECT_NAME} v2.0.0 の AI-DLC 環境をセットアップしてください：
+以下のファイルを読み込んで、{PROJECT_NAME} v2 の AI-DLC 環境をセットアップしてください：
 /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 変数を以下に設定してください：
-- VERSION = v2.0.0
-- DOCS_ROOT = docs（前バージョンと同じ）
+- VERSION = v2
+- DOCS_ROOT = docs/example（前バージョンと同じ）
 - その他の変数も適宜設定
 ```
 
 **必要に応じて前バージョンのファイルを引き継ぐ**:
-- `docs/aidlc/prompts/additional-rules.md` → 既存のカスタマイズがそのまま引き継がれる（バージョン非依存）
-- `docs/versions/v1.0.0/requirements/intent.md` → 参照して改善点を反映
+- `docs/example/v1/prompts/additional-rules.md` → v2にコピーしてカスタマイズ
+- `docs/example/v1/requirements/intent.md` → 参照して改善点を反映
 - その他、引き継ぎたいファイルがあればコピー
 
 セットアップ完了後、新しいセッションで Inception Phase を開始し、**Inception → Construction → Operations → (次バージョン)** のライフサイクルを継続します。
@@ -181,23 +175,23 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 - AIが独自判断をせず、不明点は `[Question]`/`[Answer]` タグで質問
 - ユーザーとの対話を通じて要件や設計を明確化
 
-### 2. 進捗管理の一元化（NEW）
+### 2. 進捗管理の一元化
 - Inception Phaseで `construction/progress.md` を自動生成
 - Unit一覧、状態、依存関係、優先度、見積もりを1つのファイルで管理
 - Construction Phase実行時に1ファイル読むだけで全体状況を把握（コンテキスト削減）
 - 各Unit完了後に自動更新（次回実行可能なUnit候補を再計算）
 
-### 3. Unit依存関係の自動管理（NEW）
+### 3. Unit依存関係の自動管理
 - Inception PhaseでUnit間の依存関係を定義
 - Construction PhaseでAIが依存関係を解析し、実行可能なUnitを自動判断
 - 複数のUnitが実行可能な場合は優先度と見積もりを提示し、推奨を提案
 
-### 4. 設計と実装の明確な分離（NEW）
+### 4. 設計と実装の明確な分離
 - **Phase 1（設計）**: コードは書かず、構造・責務・インターフェースのみを定義
 - **Phase 2（実装）**: 設計ファイルを参照してコードを生成
 - 設計時点でのコード大量生成を防止し、レビューしやすい設計書を作成
 
-### 5. JIT（Just-In-Time）テンプレート生成（NEW）
+### 5. JIT（Just-In-Time）テンプレート生成
 - 初回セットアップ時はテンプレートを生成せず軽量化
 - 各フェーズ実行時に必要なテンプレートのみを自動生成
 - 同一セッション内で生成完了後、プロンプト再読み込みで継続
@@ -222,7 +216,7 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 - `PROJECT_TYPE` 変数でプラットフォームを指定
 - iOS/Android固有の注意事項（ローカライゼーション等）を自動表示
 
-### 10. 履歴管理の簡素化（NEW）
+### 10. 履歴管理の簡素化
 - Bash heredoc (`cat <<'EOF' | tee -a`) で履歴を追記
 - ファイルを読み込まずに追記可能（テンプレートがファイル先頭に配置）
 
@@ -256,6 +250,16 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成し、進捗を記録
 9. **プラットフォーム対応** - iOS/Android等の固有要件を自動で含める
 10. **カスタマイズ可能** - プロジェクト固有のルールを additional-rules.md に記述可能
+
+## 🔜 v1.0.0 開発中
+
+現在、v1.0.0 の開発を進めています。v1.0.0 では以下の改善が予定されています：
+
+- **プロンプトの共通化**: `docs/aidlc/prompts/` に全バージョン共通のプロンプトを配置
+- **成果物の分離**: `docs/versions/{VERSION}/` にバージョン固有の成果物を配置
+- **メンテナンス性向上**: スターターキット改善時に全バージョンに自動反映
+
+開発状況は `docs/versions/v1.0.0/` で確認できます（AI-DLC v0.1.0 を使って v1.0.0 を開発中）。
 
 ## 🔗 関連リンク
 
