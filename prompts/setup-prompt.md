@@ -24,6 +24,10 @@ DEVELOPER_EXPERTISE = ソフトウェア開発
 ROLE_INCEPTION = プロダクトマネージャー兼ビジネスアナリスト
 ROLE_CONSTRUCTION = ソフトウェアアーキテクト兼エンジニア
 ROLE_OPERATIONS = DevOpsエンジニア兼SRE
+
+# 派生変数（v1.0.0以降）
+AIDLC_ROOT = ${DOCS_ROOT}/aidlc        # 共通プロンプト・テンプレートのルート
+VERSIONS_ROOT = ${DOCS_ROOT}/versions  # バージョン固有成果物のルート
 ```
 
 **PROJECT_TYPE の値**:
@@ -33,7 +37,7 @@ ROLE_OPERATIONS = DevOpsエンジニア兼SRE
 - `backend`: バックエンドAPI開発
 - `general`: 汎用（プラットフォーム固有の指示なし）
 
-> **重要**: セットアップ完了後、`{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズすることを忘れないでください。詳細はファイル末尾の「セットアップ完了後の重要なステップ」を参照してください。
+> **重要**: セットアップ完了後、`{{AIDLC_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズすることを忘れないでください。詳細はファイル末尾の「セットアップ完了後の重要なステップ」を参照してください。
 
 ---
 
@@ -42,12 +46,12 @@ ROLE_OPERATIONS = DevOpsエンジニア兼SRE
 **【重要】まず MODE 変数を確認してください：**
 
 ### MODE = list の場合
-templates/index.md の内容を表示して終了してください。index.mdが存在しない場合は、「まず MODE=setup で初回セットアップを実行してください」と伝えてください。
+`{{AIDLC_ROOT}}/templates/index.md` の内容を表示して終了してください。index.mdが存在しない場合は、「まず MODE=setup で初回セットアップを実行してください」と伝えてください。
 
 ### MODE = template の場合
 TEMPLATE_NAME で指定されたテンプレートのみを生成してください。
 1. TEMPLATE_NAME が指定されているか確認
-2. `{{DOCS_ROOT}}/{{VERSION}}/templates/{{TEMPLATE_NAME}}.md` の存在を確認
+2. `{{AIDLC_ROOT}}/templates/{{TEMPLATE_NAME}}.md` の存在を確認
 3. 存在する場合: 「既に存在します。上書きしますか？」と確認
 4. 存在しない場合 or 上書き承認: このファイルの「#### 3. テンプレートファイルの作成」セクションから該当テンプレートを生成
 5. 生成完了を報告して終了
@@ -144,48 +148,63 @@ AI-DLCに基づいた開発環境を構築してください：
 
 以下の構造を作成：
 ```
-{{DOCS_ROOT}}/{{VERSION}}/
-├── prompts/              # 各フェーズのプロンプトと履歴
-├── templates/            # テンプレートファイル
-├── plans/                # 実行計画
-├── requirements/         # 要件定義
-├── story-artifacts/      # ユーザーストーリー
-│   └── units/           # Unit別
-├── design-artifacts/     # 設計成果物
+{{AIDLC_ROOT}}/                    # 共通プロンプト・テンプレート
+├── prompts/
+│   ├── inception.md
+│   ├── construction.md
+│   ├── operations.md
+│   └── additional-rules.md
+├── templates/
+│   ├── index.md
+│   └── （その他テンプレート、JIT生成）
+└── version.txt
+
+{{VERSIONS_ROOT}}/{{VERSION}}/     # バージョン固有成果物
+├── plans/
+├── requirements/
+├── story-artifacts/
+│   └── units/
+├── design-artifacts/
 │   ├── domain-models/
 │   ├── logical-designs/
 │   └── architecture/
-├── construction/         # 構築記録
+├── construction/
 │   └── units/
-└── operations/           # 運用関連
+├── operations/
+├── history.md
+└── additional-rules.md (オプション)
 ```
 
 **ディレクトリ作成手順**:
 1. 上記のディレクトリを `mkdir -p` コマンドで作成
 2. 各ディレクトリに `.gitkeep` ファイルを配置（空のディレクトリをGitで管理するため）
 
-対象ディレクトリ:
-- `{{DOCS_ROOT}}/{{VERSION}}/prompts/`
-- `{{DOCS_ROOT}}/{{VERSION}}/templates/`
-- `{{DOCS_ROOT}}/{{VERSION}}/plans/`
-- `{{DOCS_ROOT}}/{{VERSION}}/requirements/`
-- `{{DOCS_ROOT}}/{{VERSION}}/story-artifacts/`
-- `{{DOCS_ROOT}}/{{VERSION}}/story-artifacts/units/`
-- `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/`
-- `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/`
-- `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/`
-- `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/architecture/`
-- `{{DOCS_ROOT}}/{{VERSION}}/construction/`
-- `{{DOCS_ROOT}}/{{VERSION}}/construction/units/`
-- `{{DOCS_ROOT}}/{{VERSION}}/operations/`
+対象ディレクトリ（共通）:
+- `{{AIDLC_ROOT}}/prompts/`
+- `{{AIDLC_ROOT}}/templates/`
+
+対象ディレクトリ（バージョン固有）:
+- `{{VERSIONS_ROOT}}/{{VERSION}}/plans/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/requirements/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/architecture/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/construction/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/construction/units/`
+- `{{VERSIONS_ROOT}}/{{VERSION}}/operations/`
 
 #### 2. プロンプトファイルの作成
 
-`{{DOCS_ROOT}}/{{VERSION}}/prompts/` 配下に以下を作成：
+`{{AIDLC_ROOT}}/prompts/` 配下に以下を作成：
 
-##### common.md（全フェーズで読み込む共通知識）
+**重要**: 各フェーズプロンプト（inception.md, construction.md, operations.md）には、共通知識（common部分）を先頭に直接埋め込みます。common.mdという中間ファイルは生成しません。
 
-以下のセクションを含むドキュメントを作成：
+##### 共通知識部分（各フェーズプロンプトの先頭に埋め込む内容）
+
+以下のセクションを各フェーズプロンプトの先頭に含めます：
 
 **AI-DLC手法の要約**（以下の内容をそのまま含める）:
 ```markdown
@@ -226,7 +245,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   - プロンプト履歴管理【重要】: **必ずファイル末尾に追記**（既存履歴を絶対に削除・上書きしない）。Bash heredoc (`cat <<EOF | tee -a prompts/history.md`) で追記。先頭にテンプレートがあるため読み込み不要。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 - **フェーズの責務分離**（各フェーズを1行で簡潔に説明、詳細は各フェーズのプロンプトファイルを参照）
 - **進捗管理と冪等性**（チェックリスト、既存成果物の確認手順、差分のみ更新するルール）
-- **テンプレート参照**（`{{DOCS_ROOT}}/{{VERSION}}/templates/` を参照する旨のみ記載）
+- **テンプレート参照**（`{{AIDLC_ROOT}}/templates/` を参照する旨のみ記載）
 
 ##### inception.md（Inception Phase専用）
 - 冒頭に以下を記載:
@@ -237,15 +256,15 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
-  1. 追加ルール確認: `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls {{DOCS_ROOT}}/{{VERSION}}/templates/intent_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/user_stories_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/unit_definition_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/prfaq_template.md` で必要なテンプレートの存在を確認
+     - `ls {{AIDLC_ROOT}}/templates/intent_template.md {{AIDLC_ROOT}}/templates/user_stories_template.md {{AIDLC_ROOT}}/templates/unit_definition_template.md {{AIDLC_ROOT}}/templates/prfaq_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. 既存成果物の確認（冪等性の保証）:
-     - `ls {{DOCS_ROOT}}/{{VERSION}}/requirements/ {{DOCS_ROOT}}/{{VERSION}}/story-artifacts/ {{DOCS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
+     - `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/ {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/ {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
   4. 既存ファイルがある場合は内容を読み込んで差分のみ更新
   5. 完了済みのステップはスキップ
@@ -265,7 +284,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
      - 依存関係は Construction Phase での実行順判断に使用される
   5. PRFAQ作成
   6. **進捗管理ファイル作成【重要】**:
-     - 全Unit定義完了後、`{{DOCS_ROOT}}/{{VERSION}}/construction/progress.md` を作成
+     - 全Unit定義完了後、`{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を作成
      - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
      - 全Unitの初期状態は「未着手」
      - Construction Phaseで使用する進捗管理の中心ファイル
@@ -284,16 +303,16 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（6ステップ）:
-  1. 追加ルール確認: `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls {{DOCS_ROOT}}/{{VERSION}}/templates/domain_model_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/logical_design_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
+     - `ls {{AIDLC_ROOT}}/templates/domain_model_template.md {{AIDLC_ROOT}}/templates/logical_design_template.md {{AIDLC_ROOT}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
-  3. Inception完了確認: `ls {{DOCS_ROOT}}/{{VERSION}}/requirements/intent.md {{DOCS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
+  3. Inception完了確認: `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
   4. **進捗管理ファイル読み込み【重要】**:
-     - `{{DOCS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
+     - `{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
      - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載されている
      - **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
   5. 対象Unit決定（progress.mdの情報に基づく）:
@@ -303,11 +322,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
        1. 実行可能Unitが0個: 「全Unit完了」と判断
        2. 実行可能Unitが1個: 自動的にそのUnitを選択
        3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
-  6. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{DOCS_ROOT}}/{{VERSION}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
+  6. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{VERSIONS_ROOT}}/{{VERSION}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
 - **フロー**（1つのUnitのみ）:
   - **Phase 1: 設計【対話形式、コードは書かない】**
-    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）（成果物: `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
-    2. 論理設計: 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義（成果物: `{{DOCS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`）
+    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）（成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
+    2. 論理設計: 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義（成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`）
     3. **設計レビュー**: 設計内容をユーザーに提示し、承認を得る（**承認なしで実装フェーズに進んではいけない**）
   - **Phase 2: 実装【設計を参照してコード生成】**
     4. コード生成: 設計ファイルを読み込み、それに基づいて実装コードを生成
@@ -340,19 +359,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   ```
 - 役割：{{ROLE_OPERATIONS}}
 - **最初に必ず実行すること**（4ステップ）:
-  1. 追加ルール確認: `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` を読み込む
+  1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. テンプレート確認（JIT生成）:
-     - `ls {{DOCS_ROOT}}/{{VERSION}}/templates/deployment_checklist_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/monitoring_strategy_template.md {{DOCS_ROOT}}/{{VERSION}}/templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
-     - モバイルアプリの場合は `{{DOCS_ROOT}}/{{VERSION}}/templates/distribution_feedback_template.md` も確認
+     - `ls {{AIDLC_ROOT}}/templates/deployment_checklist_template.md {{AIDLC_ROOT}}/templates/monitoring_strategy_template.md {{AIDLC_ROOT}}/templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
+     - モバイルアプリの場合は `{{AIDLC_ROOT}}/templates/distribution_feedback_template.md` も確認
      - **テンプレートが存在しない場合**:
        - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
        - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝える
        - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
   3. Construction Phase 完了確認:
-     - `grep -l "完了" {{DOCS_ROOT}}/{{VERSION}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
+     - `grep -l "完了" {{VERSIONS_ROOT}}/{{VERSION}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
      - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
   4. 既存成果物の確認（冪等性の保証）:
-     - `ls {{DOCS_ROOT}}/{{VERSION}}/operations/` で既存ファイルを確認
+     - `ls {{VERSIONS_ROOT}}/{{VERSION}}/operations/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
      - 既存ファイルがある場合は内容を読み込んで差分のみ更新
 - **フロー**:
@@ -382,7 +401,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
        ```
      - **必要に応じて前バージョンのファイルをコピー/参照**:
        - `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` → 新バージョンにコピーしてカスタマイズを引き継ぐ
-       - `{{DOCS_ROOT}}/{{VERSION}}/requirements/intent.md` → 新バージョンで参照して改善点を反映
+       - `{{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md` → 新バージョンで参照して改善点を反映
        - その他、引き継ぎたいファイルがあればコピー
      - セットアップ完了後、新しいセッションで Inception Phase を開始
   5. **ライフサイクルの継続**: Inception → Construction → Operations → (次バージョン) を繰り返し、継続的に価値を提供
@@ -394,7 +413,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   - **末尾**: 実際の履歴エントリ
 - 記録ルール：
   - **重要**: 履歴は**必ずファイル末尾に追記**する（既存の履歴を絶対に削除・上書きしてはいけない）
-  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{DOCS_ROOT}}/{{VERSION}}/prompts/history.md`) または `echo >> {{DOCS_ROOT}}/{{VERSION}}/prompts/history.md` を使用
+  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{VERSIONS_ROOT}}/{{VERSION}}/history.md`) または `echo >> {{VERSIONS_ROOT}}/{{VERSION}}/history.md` を使用
   - **ファイルを読み込む必要はない**（テンプレートが先頭にあるため）
   - 日時取得：`date '+%Y-%m-%d %H:%M:%S'` コマンドを必ず使用
   - 記録項目：日時、フェーズ名、実行内容、プロンプト、成果物、備考
@@ -412,8 +431,8 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 #### 3. テンプレートファイルの作成
 
 **【MODE=setupの場合】**
-- `{{DOCS_ROOT}}/{{VERSION}}/templates/` ディレクトリのみ作成（中身は空）
-- `{{DOCS_ROOT}}/{{VERSION}}/templates/index.md` のみ作成（後述）
+- `{{AIDLC_ROOT}}/templates/` ディレクトリのみ作成（中身は空）
+- `{{AIDLC_ROOT}}/templates/index.md` のみ作成（後述）
 - 個別のテンプレートファイルは**作成しない**（JIT生成するため）
 
 **【MODE=templateの場合】**
@@ -421,9 +440,9 @@ TEMPLATE_NAMEで指定されたテンプレートのみを以下から生成：
 
 ---
 
-`{{DOCS_ROOT}}/{{VERSION}}/templates/` 配下に以下のテンプレートファイルを作成可能：
+`{{AIDLC_ROOT}}/templates/` 配下に以下のテンプレートファイルを作成可能：
 
-各テンプレートは、プロンプトファイルから「詳細は `{{DOCS_ROOT}}/{{VERSION}}/templates/xxx_template.md` を参照」として参照されます。
+各テンプレートは、プロンプトファイルから「詳細は `{{AIDLC_ROOT}}/templates/xxx_template.md` を参照」として参照されます。
 
 ##### templates/intent_template.md
 
@@ -802,8 +821,8 @@ classDiagram
 - [...]
 
 ### 設計ドキュメント
-- {{DOCS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/<unit>_domain_model.md
-- {{DOCS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/<unit>_logical_design.md
+- {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/<unit>_domain_model.md
+- {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/<unit>_logical_design.md
 
 ## ビルド結果
 [成功 / 失敗]
@@ -1347,14 +1366,24 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 \`\`\`
 ```
 
-#### 4. 重要な設計原則
+#### 4. バージョン記録ファイルの作成
+
+`{{AIDLC_ROOT}}/version.txt` を作成し、スターターキットのバージョンを記録します：
+
+```
+echo "1.0.0" > {{AIDLC_ROOT}}/version.txt
+```
+
+このファイルは、将来的にスターターキットの更新を確認するために使用されます。
+
+#### 5. 重要な設計原則
 
 - **フェーズごとに必要な情報のみ**：各 .md は該当フェーズに必要な情報だけを含める
 - **コンテキストリセット前提**：common.md + 該当フェーズの .md のみ読み込む設計
 - **AI-DLC原則の反映**：会話の反転、短サイクル、設計技法統合
 - **言語統一**：すべてのドキュメント・コメントは {{LANGUAGE}} で記述
 
-#### 5. 初回の history.md 記録
+#### 6. 初回の history.md 記録
 
 このセットアップ作業自体を history.md に記録してください：
 - 実行日時（`date` コマンドで取得）
@@ -1363,7 +1392,7 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - このプロンプト全体
 - 作成したファイル一覧
 
-#### 6. 完了確認と次のステップの表示
+#### 7. 完了確認と次のステップの表示
 
 すべての準備が完了したら、以下を実行してください：
 
@@ -1380,20 +1409,24 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 🎉 AI-DLC環境のセットアップが完了しました！
 
 作成されたファイル:
-- prompts/common.md - 全フェーズ共通知識
-- prompts/inception.md - Inception Phase用プロンプト
-- prompts/construction.md - Construction Phase用プロンプト
-- prompts/operations.md - Operations Phase用プロンプト
-- prompts/additional-rules.md - 追加ルール
-- prompts/history.md - 実行履歴
-- templates/ - テンプレートファイル（11ファイル）
+
+共通ファイル（{{AIDLC_ROOT}}/）:
+- prompts/inception.md - Inception Phase用プロンプト（共通知識を含む）
+- prompts/construction.md - Construction Phase用プロンプト（共通知識を含む）
+- prompts/operations.md - Operations Phase用プロンプト（共通知識を含む）
+- prompts/additional-rules.md - 共通の追加ルール
+- templates/index.md - テンプレート一覧
+- version.txt - スターターキットバージョン（1.0.0）
+
+バージョン固有ファイル（{{VERSIONS_ROOT}}/{{VERSION}}/）:
+- history.md - 実行履歴
 - plans/, requirements/, story-artifacts/, design-artifacts/, construction/, operations/ ディレクトリ
 
 ---
 
 ## ⚠️ 重要: カスタマイズが必要です
 
-Inception Phase を開始する前に、**必ず `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください**。
+Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください**。
 
 カスタマイズすべき項目：
 1. **コーディング規約**（命名規則、フォーマットルール等）
@@ -1423,7 +1456,7 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 
 セットアップ完了後、**必ず以下のファイルをプロジェクトに合わせてカスタマイズしてください**：
 
-#### `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md`
+#### `{{AIDLC_ROOT}}/prompts/additional-rules.md`
 プロジェクト固有のルールや制約を記載してください：
 - コーディング規約（命名規則、フォーマットルール等）
 - 使用するライブラリやフレームワークの制約
@@ -1447,22 +1480,10 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 - API キーは環境変数で管理
 ```
 
-#### `{{DOCS_ROOT}}/{{VERSION}}/prompts/common.md` の技術スタック（greenfield の場合）
-Inception Phase 完了後、決定した技術スタックを記載してください：
-```markdown
-### 技術スタック
-**開発タイプ**: greenfield
-**プロジェクトタイプ**: iOS
-
-- **言語**: Swift 5.9
-- **フレームワーク**: SwiftUI, Combine
-- **アーキテクチャ**: MVVM + Clean Architecture
-- **テスト**: XCTest, ViewInspector
-- **CI/CD**: GitHub Actions
-```
+**注意**: 共通のadditional-rules.mdは全バージョンで共有されます。バージョン固有のルールが必要な場合は、`{{VERSIONS_ROOT}}/{{VERSION}}/additional-rules.md` を作成してください。
 
 #### テンプレートファイル（オプション）
-必要に応じて `{{DOCS_ROOT}}/{{VERSION}}/templates/` 配下のテンプレートをプロジェクトに合わせて調整してください。
+必要に応じて `{{AIDLC_ROOT}}/templates/` 配下のテンプレートをプロジェクトに合わせて調整してください。
 
 ---
 
@@ -1472,11 +1493,12 @@ Inception Phase 完了後、決定した技術スタックを記載してくだ�
 
 ```
 以下のファイルを読み込んで、Inception Phase を開始してください：
-- {{DOCS_ROOT}}/{{VERSION}}/prompts/common.md
-- {{DOCS_ROOT}}/{{VERSION}}/prompts/inception.md
+{{AIDLC_ROOT}}/prompts/inception.md
 
 {{PROJECT_NAME}} {{VERSION}} の開発を開始します。
 まず Intent（開発意図）を明確化し、ユーザーストーリーと Unit 定義を行います。
+
+注意: inception.mdには共通知識が含まれているため、このファイルだけで開始できます。
 ```
 
 ---
