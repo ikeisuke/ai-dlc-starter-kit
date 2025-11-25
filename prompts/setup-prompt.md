@@ -242,7 +242,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   - Gitコミットのタイミング【必須】: 以下のタイミングで**必ず**Gitコミットを作成する - ①セットアップ完了時、②Inception Phase完了時、③各Unit完了時、④Operations Phase完了時。コミットメッセージは変更内容を明確に記述
   - コード品質基準
   - Git運用の原則と例
-  - プロンプト履歴管理【重要】: **必ずファイル末尾に追記**（既存履歴を絶対に削除・上書きしない）。Bash heredoc (`cat <<EOF | tee -a prompts/history.md`) で追記。先頭にテンプレートがあるため読み込み不要。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
+  - プロンプト履歴管理【重要】: **history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記**（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a {{VERSIONS_ROOT}}/{{VERSION}}/history.md`)。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 - **フェーズの責務分離**（各フェーズを1行で簡潔に説明、詳細は各フェーズのプロンプトファイルを参照）
 - **進捗管理と冪等性**（チェックリスト、既存成果物の確認手順、差分のみ更新するルール）
 - **テンプレート参照**（`{{AIDLC_ROOT}}/templates/` を参照する旨のみ記載）
@@ -257,12 +257,9 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認（JIT生成）:
+  2. テンプレート確認:
      - `ls {{AIDLC_ROOT}}/templates/intent_template.md {{AIDLC_ROOT}}/templates/user_stories_template.md {{AIDLC_ROOT}}/templates/unit_definition_template.md {{AIDLC_ROOT}}/templates/prfaq_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**:
-       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（intent_template, user_stories_template, unit_definition_template, prfaq_template）
-       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + inception.md）を読み込んでInception Phaseを続行してください」と伝える
-       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
+     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
   3. 既存成果物の確認（冪等性の保証）:
      - `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/ {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/ {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
@@ -304,12 +301,9 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_CONSTRUCTION}}
 - **最初に必ず実行すること**（6ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認（JIT生成）:
+  2. テンプレート確認:
      - `ls {{AIDLC_ROOT}}/templates/domain_model_template.md {{AIDLC_ROOT}}/templates/logical_design_template.md {{AIDLC_ROOT}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**:
-       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（domain_model_template, logical_design_template, implementation_record_template）
-       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + construction.md）を読み込んでConstruction Phaseを続行してください」と伝える
-       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
+     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
   3. Inception完了確認: `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
   4. **進捗管理ファイル読み込み【重要】**:
      - `{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
@@ -360,13 +354,10 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_OPERATIONS}}
 - **最初に必ず実行すること**（4ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認（JIT生成）:
+  2. テンプレート確認:
      - `ls {{AIDLC_ROOT}}/templates/deployment_checklist_template.md {{AIDLC_ROOT}}/templates/monitoring_strategy_template.md {{AIDLC_ROOT}}/templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
      - モバイルアプリの場合は `{{AIDLC_ROOT}}/templates/distribution_feedback_template.md` も確認
-     - **テンプレートが存在しない場合**:
-       - 上記の「セットアッププロンプトパス」に記載されているパスから setup-prompt.md を MODE=template で読み込み、不足しているテンプレートを自動生成する（deployment_checklist_template, monitoring_strategy_template, post_release_operations_template, distribution_feedback_template（モバイルの場合））
-       - 生成完了後、ユーザーに「テンプレート生成が完了しました。再度このプロンプト（common.md + operations.md）を読み込んでOperations Phaseを続行してください」と伝える
-       - **重要**: テンプレート生成後は処理を中断し、ユーザーがプロンプトを再読み込みするまで待機する
+     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
   3. Construction Phase 完了確認:
      - `grep -l "完了" {{VERSIONS_ROOT}}/{{VERSION}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
      - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
@@ -407,14 +398,14 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   5. **ライフサイクルの継続**: Inception → Construction → Operations → (次バージョン) を繰り返し、継続的に価値を提供
 
 ##### history.md（プロンプト実行履歴）
-- 初期テンプレートを作成（以下の構造）：
+- **初回セットアップ時**: 初期テンプレートを作成（以下の構造）：
   - **先頭**: 記録テンプレート（フォーマット例）
   - **中間**: `## 実行履歴` セクション
-  - **末尾**: 実際の履歴エントリ
+  - **末尾**: 実際の履歴エントリは空（これから追記される）
+- **以降の各フェーズ**: 既存のhistory.mdファイルに履歴を追記
 - 記録ルール：
   - **重要**: 履歴は**必ずファイル末尾に追記**する（既存の履歴を絶対に削除・上書きしてはいけない）
   - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{VERSIONS_ROOT}}/{{VERSION}}/history.md`) または `echo >> {{VERSIONS_ROOT}}/{{VERSION}}/history.md` を使用
-  - **ファイルを読み込む必要はない**（テンプレートが先頭にあるため）
   - 日時取得：`date '+%Y-%m-%d %H:%M:%S'` コマンドを必ず使用
   - 記録項目：日時、フェーズ名、実行内容、プロンプト、成果物、備考
   - フォーマット: 先頭のテンプレートを参照し、heredoc で追記
@@ -431,16 +422,16 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 #### 3. テンプレートファイルの作成
 
 **【MODE=setupの場合】**
-- `{{AIDLC_ROOT}}/templates/` ディレクトリのみ作成（中身は空）
-- `{{AIDLC_ROOT}}/templates/index.md` のみ作成（後述）
-- 個別のテンプレートファイルは**作成しない**（JIT生成するため）
+- `{{AIDLC_ROOT}}/templates/` ディレクトリを作成
+- **すべてのテンプレートファイルを作成**（以下の一覧を参照）
+- `{{AIDLC_ROOT}}/templates/index.md` も作成（後述）
 
 **【MODE=templateの場合】**
-TEMPLATE_NAMEで指定されたテンプレートのみを以下から生成：
+TEMPLATE_NAMEで指定されたテンプレートのみを以下から生成（再生成または追加生成用）：
 
 ---
 
-`{{AIDLC_ROOT}}/templates/` 配下に以下のテンプレートファイルを作成可能：
+`{{AIDLC_ROOT}}/templates/` 配下に以下のテンプレートファイルを作成：
 
 各テンプレートは、プロンプトファイルから「詳細は `{{AIDLC_ROOT}}/templates/xxx_template.md` を参照」として参照されます。
 
