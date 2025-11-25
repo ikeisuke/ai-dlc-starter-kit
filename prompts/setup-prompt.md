@@ -257,14 +257,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認:
-     - `ls {{AIDLC_ROOT}}/templates/intent_template.md {{AIDLC_ROOT}}/templates/user_stories_template.md {{AIDLC_ROOT}}/templates/unit_definition_template.md {{AIDLC_ROOT}}/templates/prfaq_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
-  3. 既存成果物の確認（冪等性の保証）:
+  2. 既存成果物の確認（冪等性の保証）:
      - `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/ {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/ {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
-  4. 既存ファイルがある場合は内容を読み込んで差分のみ更新
-  5. 完了済みのステップはスキップ
+  3. 既存ファイルがある場合は内容を読み込んで差分のみ更新
+  4. 完了済みのステップはスキップ
 - **フロー**:
   1. Intent明確化【重要】:
      - ユーザーと対話形式でIntentを作成
@@ -299,24 +296,21 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   （このパスはテンプレート生成時に使用します。セットアップ時に実際のパスに置き換えてください）
   ```
 - 役割：{{ROLE_CONSTRUCTION}}
-- **最初に必ず実行すること**（6ステップ）:
+- **最初に必ず実行すること**（5ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認:
-     - `ls {{AIDLC_ROOT}}/templates/domain_model_template.md {{AIDLC_ROOT}}/templates/logical_design_template.md {{AIDLC_ROOT}}/templates/implementation_record_template.md` で必要なテンプレートの存在を確認
-     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
-  3. Inception完了確認: `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
-  4. **進捗管理ファイル読み込み【重要】**:
+  2. Inception完了確認: `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/` で存在のみ確認（**内容は読まない**）
+  3. **進捗管理ファイル読み込み【重要】**:
      - `{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
      - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載されている
      - **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
-  5. 対象Unit決定（progress.mdの情報に基づく）:
+  4. 対象Unit決定（progress.mdの情報に基づく）:
      - progress.mdに記載されている「実行可能なUnit」セクションを確認
      - **進行中のUnitがある場合**: そのUnitを継続（優先）
      - **進行中のUnitがない場合**: progress.mdの「次回実行可能なUnit候補」から選択
        1. 実行可能Unitが0個: 「全Unit完了」と判断
        2. 実行可能Unitが1個: 自動的にそのUnitを選択
        3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
-  6. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{VERSIONS_ROOT}}/{{VERSION}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
+  5. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{VERSIONS_ROOT}}/{{VERSION}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
 - **フロー**（1つのUnitのみ）:
   - **Phase 1: 設計【対話形式、コードは書かない】**
     1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）（成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
@@ -352,16 +346,12 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   （このパスはテンプレート生成時に使用します。セットアップ時に実際のパスに置き換えてください）
   ```
 - 役割：{{ROLE_OPERATIONS}}
-- **最初に必ず実行すること**（4ステップ）:
+- **最初に必ず実行すること**（3ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. テンプレート確認:
-     - `ls {{AIDLC_ROOT}}/templates/deployment_checklist_template.md {{AIDLC_ROOT}}/templates/monitoring_strategy_template.md {{AIDLC_ROOT}}/templates/post_release_operations_template.md` で必要なテンプレートの存在を確認
-     - モバイルアプリの場合は `{{AIDLC_ROOT}}/templates/distribution_feedback_template.md` も確認
-     - **テンプレートが存在しない場合**: 初期セットアップが未完了です。setup-prompt.md を実行してテンプレートを生成してください
-  3. Construction Phase 完了確認:
+  2. Construction Phase 完了確認:
      - `grep -l "完了" {{VERSIONS_ROOT}}/{{VERSION}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
      - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
-  4. 既存成果物の確認（冪等性の保証）:
+  3. 既存成果物の確認（冪等性の保証）:
      - `ls {{VERSIONS_ROOT}}/{{VERSION}}/operations/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
      - 既存ファイルがある場合は内容を読み込んで差分のみ更新
