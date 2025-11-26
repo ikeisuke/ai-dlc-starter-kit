@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](./VERSION)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./docs/aidlc/version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -27,17 +27,35 @@ ai-dlc-starter-kit/
 │   │   ├── AI-DLC_AppendixA_ja.md
 │   │   └── AI-Driven_Development_Lifecycle_Summary.md
 │   │
-│   └── example/               # セットアップ後に生成される例（参考用）
-│       └── v1/                # バージョン単位で管理
-│           ├── prompts/       # 各フェーズのプロンプト
-│           ├── templates/     # ドキュメントテンプレート
-│           └── ...            # その他の成果物
+│   ├── aidlc/                 # 全サイクル共通の共通ファイル（v1.0.0から）
+│   │   ├── prompts/           # 共通プロンプト（inception.md, construction.md, operations.md等）
+│   │   ├── templates/         # 全テンプレートファイル（セットアップ時に事前作成）
+│   │   └── version.txt        # スターターキットバージョン（1.0.0）
+│   │
+│   ├── cycles/                # サイクル固有成果物（v1.0.0から）
+│   │   └── {{CYCLE}}/         # サイクル識別子で管理（例: v1.0.0, 2024-12, feature-x）
+│   │       ├── inception/
+│   │       │   └── progress.md       # Inception進捗管理（v1.0.0新機能）
+│   │       ├── requirements/         # 要件定義成果物
+│   │       ├── story-artifacts/      # ユーザーストーリー、Unit定義
+│   │       ├── design-artifacts/     # ドメインモデル、論理設計
+│   │       ├── construction/
+│   │       │   ├── progress.md       # Construction進捗管理
+│   │       │   └── units/            # Unit実装記録
+│   │       ├── operations/
+│   │       │   └── progress.md       # Operations進捗管理（v1.0.0新機能）
+│   │       └── history.md            # 開発履歴
+│   │
+│   └── versions/              # このプロジェクト自体の開発記録（参考資料）
+│       └── v1.0.0/            # v0.1.0を使ってv1.0.0を開発した記録
 │
 └── prompts/
-    └── setup-prompt.md        # セットアッププロンプト（これだけ使います）
+    └── setup-prompt.md        # セットアッププロンプト（v1.0.0）
 ```
 
-## 🚀 クイックスタート
+**注**: 現在のバージョンは **v1.0.0** です。`docs/versions/v1.0.0/` は v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録で、参考資料として残してあります。v1.0.0 を使ってセットアップすると `docs/aidlc/` に共通プロンプトが配置され、`docs/cycles/{{CYCLE}}/` にサイクル固有の成果物が作成されます。
+
+## 🚀 クイックスタート (v1.0.0)
 
 ### 1. AI-DLC について学ぶ
 
@@ -57,7 +75,7 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 
 ### 2. プロジェクトをセットアップ
 
-別プロジェクトのルートディレクトリで、`prompts/setup-prompt.md` を Claude に読み込ませます：
+別プロジェクトのルートディレクトリで、このスターターキットの `prompts/setup-prompt.md` を Claude に読み込ませます：
 
 ```markdown
 以下のファイルを読み込んで、AI-DLC 開発環境をセットアップしてください：
@@ -66,27 +84,41 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 
 セットアップ時に変数の確認があるので、プロジェクトに合わせて変更してください：
 - `PROJECT_NAME`: プロジェクト名
-- `VERSION`: バージョン番号（例: `v1.0`, `1.0.0`）
+- `CYCLE`: **サイクル識別子**（例: `v1.0.0`, `2024-12`, `feature-x` など自由に命名可能）
 - `PROJECT_TYPE`: `ios` / `android` / `web` / `backend` / `general`
 - `DEVELOPMENT_TYPE`: `greenfield`（新規） / `brownfield`（既存）
-- `DOCS_ROOT`: プロンプトとテンプレートを配置するディレクトリ（例: `docs`, `ai-dlc`）
+- `DOCS_ROOT`: ドキュメントルート（例: `docs`）
+  - `docs/aidlc/` に共通プロンプト・テンプレート
+  - `docs/cycles/` にサイクル固有成果物
 
-セットアップが完了すると、`{DOCS_ROOT}/{VERSION}/` 配下に以下が作成されます：
+セットアップが完了すると、以下のディレクトリ構造が作成されます：
 ```
-{DOCS_ROOT}/{VERSION}/
-├── prompts/              # 各フェーズのプロンプトファイル
-├── templates/            # ドキュメントテンプレート（JIT自動生成）
-├── plans/                # 実行計画
-├── requirements/         # 要件定義
-├── story-artifacts/      # ユーザーストーリー、Unit定義
-├── design-artifacts/     # ドメインモデル、論理設計
-├── construction/         # 実装記録、progress.md
-└── operations/           # デプロイ、CI/CD、監視設定
+docs/
+├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成）
+│   ├── prompts/              # 各フェーズのプロンプトファイル
+│   │   ├── inception.md      # Inception Phase用
+│   │   ├── construction.md   # Construction Phase用
+│   │   ├── operations.md     # Operations Phase用
+│   │   └── additional-rules.md  # プロジェクト固有ルール
+│   └── templates/            # ドキュメントテンプレート（セットアップ時に事前作成）
+│
+└── cycles/{{CYCLE}}/         # サイクル固有成果物
+    ├── inception/
+    │   └── progress.md       # Inception進捗管理
+    ├── requirements/         # 要件定義
+    ├── story-artifacts/      # ユーザーストーリー、Unit定義
+    ├── design-artifacts/     # ドメインモデル、論理設計
+    ├── construction/
+    │   ├── progress.md       # Construction進捗管理
+    │   └── units/            # Unit実装記録
+    ├── operations/
+    │   └── progress.md       # Operations進捗管理
+    └── history.md            # 開発履歴
 ```
 
 **重要**:
-- セットアップ完了後、`{DOCS_ROOT}/{VERSION}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
-- **このスターターキットはバージョン単位で環境を構築します**。新バージョン開発時は新しい`VERSION`でsetup-prompt.mdを再実行します
+- セットアップ完了後、`docs/aidlc/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
+- **このスターターキットはサイクル単位で環境を構築します**。新サイクル開発時は新しい`CYCLE`でsetup-prompt.mdを再実行します
 
 ### 3. 開発を開始
 
@@ -95,28 +127,27 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 #### Inception Phase（要件定義）
 ```markdown
 以下のファイルを読み込んで、Inception Phase を開始してください：
-prompts/common.md
-prompts/inception.md
+docs/aidlc/prompts/inception.md
 ```
 
 AIが以下を実施します：
+- **進捗管理ファイル（inception/progress.md）を確認**: 6ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
 - **対話形式でIntentを作成**: 不明点は `[Question]`/`[Answer]` タグで記録し、質問してきます
 - ユーザーストーリー作成
 - Unit定義（依存関係、優先度、見積もりを含む）
 - PRFAQ作成
-- **進捗管理ファイル（progress.md）作成**: 全Unit情報を1つのファイルで管理
+- **Construction用進捗管理ファイル（construction/progress.md）作成**: 全Unit情報を1つのファイルで管理
 
 **完了後**: 自動的にGitコミットが作成されます
 
 #### Construction Phase（実装）
 ```markdown
 以下のファイルを読み込んで、Construction Phase を開始してください：
-prompts/common.md
-prompts/construction.md
+docs/aidlc/prompts/construction.md
 ```
 
 AIが以下を実施します：
-- **進捗管理ファイル（progress.md）を読み込み**: 1つのファイルで全Unit状態を把握
+- **進捗管理ファイル（construction/progress.md）を読み込み**: 1つのファイルで全Unit状態を把握
 - **Unit依存関係に基づいて実行順を自動判断**（複数実行可能な場合はユーザーに提案）
 - **Phase 1: 設計**（コードは書かない）
   - **対話形式でドメインモデル設計**: 構造と責務を定義
@@ -129,40 +160,44 @@ AIが以下を実施します：
 **各Unit完了後**: 自動的にGitコミットが作成されます
 **重要**: 1つのUnit完了後、新しいセッションで次のUnitを実施してください
 
+**バックトラック**: Unit追加が必要になった場合は、Inception Phaseに戻ってUnit定義を追加できます
+
 #### Operations Phase（デプロイ・運用）
 ```markdown
 以下のファイルを読み込んで、Operations Phase を開始してください：
-prompts/common.md
-prompts/operations.md
+docs/aidlc/prompts/operations.md
 ```
 
 AIが以下を実施します：
+- **進捗管理ファイル（operations/progress.md）を確認**: 5ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
 - Construction完了確認（コンテキスト溢れ防止のため、最小限のファイルのみ読み込み）
 - **対話形式でデプロイ準備、CI/CD構築、監視設定**: 不明点を質問してきます
 - リリース後の運用
 
 **完了後**: 自動的にGitコミットが作成されます
 
-### 4. 次バージョンの開発（ライフサイクルの継続）
+**バックトラック**: バグ修正が必要になった場合は、Construction Phaseに戻って修正できます
 
-Operations Phase完了後、フィードバックを収集して次バージョンの開発を開始します：
+### 4. 次サイクルの開発（ライフサイクルの継続）
+
+Operations Phase完了後、フィードバックを収集して次サイクルの開発を開始します：
 
 ```markdown
-以下のファイルを読み込んで、{PROJECT_NAME} v2.0 の AI-DLC 環境をセットアップしてください：
+以下のファイルを読み込んで、{PROJECT_NAME} の次サイクル の AI-DLC 環境をセットアップしてください：
 /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 変数を以下に設定してください：
-- VERSION = v2.0
-- DOCS_ROOT = {前バージョンと同じ}
+- CYCLE = v2.0.0（または 2024-12、feature-y など）
+- DOCS_ROOT = docs（前サイクルと同じ）
 - その他の変数も適宜設定
 ```
 
-**必要に応じて前バージョンのファイルを引き継ぐ**:
-- `{DOCS_ROOT}/v1.0/prompts/additional-rules.md` → v2.0にコピーしてカスタマイズを引き継ぐ
-- `{DOCS_ROOT}/v1.0/requirements/intent.md` → 参照して改善点を反映
+**必要に応じて前サイクルのファイルを引き継ぐ**:
+- `docs/aidlc/prompts/additional-rules.md` は全サイクル共通なので引き継がれます
+- `docs/cycles/v1.0.0/requirements/intent.md` → 参照して改善点を反映
 - その他、引き継ぎたいファイルがあればコピー
 
-セットアップ完了後、新しいセッションで Inception Phase を開始し、**Inception → Construction → Operations → (次バージョン)** のライフサイクルを継続します。
+セットアップ完了後、新しいセッションで Inception Phase を開始し、**Inception → Construction → Operations → (次サイクル)** のライフサイクルを継続します。
 
 ## ✨ 主要な機能
 
@@ -170,26 +205,29 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 - AIが独自判断をせず、不明点は `[Question]`/`[Answer]` タグで質問
 - ユーザーとの対話を通じて要件や設計を明確化
 
-### 2. 進捗管理の一元化（NEW）
-- Inception Phaseで `construction/progress.md` を自動生成
-- Unit一覧、状態、依存関係、優先度、見積もりを1つのファイルで管理
+### 2. 進捗管理の一元化（v1.0.0新機能）
+- **全フェーズでprogress.mdを自動管理**
+  - Inception Phase: 6ステップの進捗（`inception/progress.md`）
+  - Construction Phase: Unit一覧、状態、依存関係、優先度、見積もりを1つのファイルで管理（`construction/progress.md`）
+  - Operations Phase: 5ステップの進捗（`operations/progress.md`）
+- **コンテキストオーバーフロー対策**: 長いセッションで中断しても、progress.mdを読み込むだけで未完了ステップから自動再開
 - Construction Phase実行時に1ファイル読むだけで全体状況を把握（コンテキスト削減）
 - 各Unit完了後に自動更新（次回実行可能なUnit候補を再計算）
 
-### 3. Unit依存関係の自動管理（NEW）
+### 3. Unit依存関係の自動管理
 - Inception PhaseでUnit間の依存関係を定義
 - Construction PhaseでAIが依存関係を解析し、実行可能なUnitを自動判断
 - 複数のUnitが実行可能な場合は優先度と見積もりを提示し、推奨を提案
 
-### 4. 設計と実装の明確な分離（NEW）
+### 4. 設計と実装の明確な分離
 - **Phase 1（設計）**: コードは書かず、構造・責務・インターフェースのみを定義
 - **Phase 2（実装）**: 設計ファイルを参照してコードを生成
 - 設計時点でのコード大量生成を防止し、レビューしやすい設計書を作成
 
-### 5. JIT（Just-In-Time）テンプレート生成（NEW）
-- 初回セットアップ時はテンプレートを生成せず軽量化
-- 各フェーズ実行時に必要なテンプレートのみを自動生成
-- 同一セッション内で生成完了後、プロンプト再読み込みで継続
+### 5. テンプレートの事前作成（v1.0.0で変更）
+- セットアップ時に全テンプレートを `docs/aidlc/templates/` に作成
+- 各フェーズで必要なテンプレートを即座に利用可能
+- **v0.1.0からの変更**: JIT生成から事前作成に変更し、セットアップを一度で完結
 
 ### 6. コンテキスト溢れ防止
 - 各フェーズで必要最小限のファイルのみ読み込み
@@ -211,7 +249,15 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 - `PROJECT_TYPE` 変数でプラットフォームを指定
 - iOS/Android固有の注意事項（ローカライゼーション等）を自動表示
 
-### 10. 履歴管理の簡素化（NEW）
+### 10. バックトラック機能（v1.0.0新機能）
+- **フェーズ間を柔軟に行き来できる仕組み**
+  - Inception ← Construction: Unit追加・拡張が必要な場合
+  - Construction ← Operations: バグ修正が必要な場合
+- 各フェーズプロンプトに「このフェーズに戻る場合」セクションを追加
+- progress.mdを活用して、既存成果物を保持しながら追加作業が可能
+- 短サイクル開発と要件変更への柔軟な対応をサポート
+
+### 11. 履歴管理の簡素化
 - Bash heredoc (`cat <<'EOF' | tee -a`) で履歴を追記
 - ファイルを読み込まずに追記可能（テンプレートがファイル先頭に配置）
 
@@ -245,6 +291,67 @@ Operations Phase完了後、フィードバックを収集して次バージョ�
 8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成し、進捗を記録
 9. **プラットフォーム対応** - iOS/Android等の固有要件を自動で含める
 10. **カスタマイズ可能** - プロジェクト固有のルールを additional-rules.md に記述可能
+
+## 🔄 v0.1.0 から v1.0.0 への移行
+
+### 破壊的変更（BREAKING CHANGES）
+
+v1.0.0 では以下の破壊的変更があります：
+
+#### 1. 変数名の変更
+- `VERSION` → `CYCLE`（開発サイクル識別子）
+- `VERSIONS_ROOT` → `CYCLES_ROOT`
+- **理由**: 「バージョン」概念はモバイルアプリには適応的だが、Web/バックエンド開発には馴染まないため、より汎用的な「サイクル」に変更
+
+#### 2. ディレクトリ構造の変更
+```
+# v0.1.0
+docs/example/v1/
+├── prompts/
+├── templates/
+└── ...
+
+# v1.0.0
+docs/
+├── aidlc/              # 全サイクル共通（新規）
+│   ├── prompts/
+│   └── templates/
+└── cycles/v1.0.0/      # サイクル固有
+    ├── inception/
+    ├── requirements/
+    └── ...
+```
+
+### v1.0.0 の新機能
+
+1. **全フェーズでのprogress.md対応**
+   - Inception/Operations Phaseでも進捗管理
+   - コンテキストオーバーフロー時の自動再開
+
+2. **バックトラック機能**
+   - Inception ← Construction（Unit追加）
+   - Construction ← Operations（バグ修正）
+   - フェーズ間を柔軟に行き来できる
+
+3. **テンプレートの事前作成**
+   - v0.1.0: JIT（Just-In-Time）生成
+   - v1.0.0: セットアップ時に全テンプレート作成
+
+4. **共通プロンプトの分離**
+   - `docs/aidlc/` に全サイクル共通ファイルを配置
+   - メンテナンス性とスケーラビリティの向上
+
+### 既存プロジェクトの移行
+
+v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移行できます：
+
+1. **変数の読み替え**: `VERSION` → `CYCLE` として継続使用可能
+2. **新規サイクル作成時**: 新しい `CYCLE` で v1.0.0 の setup-prompt.md を実行
+3. **既存成果物**: v0.1.0 で作成したファイルは参考資料として保持可能
+
+### 開発履歴
+
+`docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
 
 ## 🔗 関連リンク
 
