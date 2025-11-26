@@ -1296,6 +1296,86 @@ classDiagram
 [特記事項があれば]
 ```
 
+##### templates/inception_progress_template.md
+
+```markdown
+# Inception Phase 進捗管理
+
+## ステップ一覧
+
+| ステップ | 状態 | 成果物 | 完了日 |
+|---------|------|--------|--------|
+| 1. Intent明確化 | 未着手 | requirements/intent.md | - |
+| 2. 既存コード分析 | 未着手 | requirements/existing_analysis.md | - |
+| 3. ユーザーストーリー作成 | 未着手 | story-artifacts/user_stories.md | - |
+| 4. Unit定義 | 未着手 | story-artifacts/units/*.md | - |
+| 5. PRFAQ作成 | 未着手 | requirements/prfaq.md | - |
+| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+
+## 現在のステップ
+
+次回: 1. Intent明確化
+
+## 完了済みステップ
+
+なし
+
+## 次回実行時の指示
+
+Intent明確化から開始してください。
+
+## 最終更新
+
+日時: [自動設定: date '+%Y-%m-%d %H:%M:%S']
+```
+
+**注意**:
+- greenfieldの場合、ステップ2（既存コード分析）を「スキップ」に設定
+- 各ステップ開始時に「進行中」、完了時に「完了」に更新
+- 完了日は完了時に自動記録
+
+##### templates/operations_progress_template.md
+
+```markdown
+# Operations Phase 進捗管理
+
+## ステップ一覧
+
+| ステップ | 状態 | 成果物 | 完了日 |
+|---------|------|--------|--------|
+| 1. デプロイ準備 | 未着手 | operations/deployment_checklist.md | - |
+| 2. CI/CD構築 | 未着手 | operations/cicd_setup.md | - |
+| 3. 監視・ロギング戦略 | 未着手 | operations/monitoring_strategy.md | - |
+| 4. 配布 | 未着手 | operations/distribution_plan.md | - |
+| 5. リリース後の運用 | 未着手 | operations/post_release_operations.md | - |
+
+## 現在のステップ
+
+次回: 1. デプロイ準備
+
+## 完了済みステップ
+
+なし
+
+## 次回実行時の指示
+
+デプロイ準備から開始してください。
+
+## プロジェクト種別による差異
+
+- モバイルアプリ（ios/android）: 全ステップ実施
+- Web/バックエンド（web/backend/general）: ステップ4（配布）をスキップ
+
+## 最終更新
+
+日時: [自動設定: date '+%Y-%m-%d %H:%M:%S']
+```
+
+**注意**:
+- PROJECT_TYPEがweb/backend/generalの場合、ステップ4を「スキップ」に設定
+- 各ステップ開始時に「進行中」、完了時に「完了」に更新
+- 完了日は完了時に自動記録
+
 ##### templates/index.md
 
 **【MODE=setupの場合、このファイルのみ作成】**
@@ -1349,6 +1429,11 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **使用タイミング**: PRFAQ作成ステップ
 - **生成コマンド**: `TEMPLATE_NAME = prfaq_template`
 
+#### inception_progress_template
+- **説明**: Inception Phaseの進捗管理（6ステップの状態管理）
+- **使用タイミング**: Inception Phase開始時に自動作成
+- **生成コマンド**: `TEMPLATE_NAME = inception_progress_template`
+
 ### Construction Phase
 
 #### domain_model_template
@@ -1387,6 +1472,11 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **説明**: リリース後の運用とフィードバック分析
 - **使用タイミング**: リリース後の運用ステップ
 - **生成コマンド**: `TEMPLATE_NAME = post_release_operations_template`
+
+#### operations_progress_template
+- **説明**: Operations Phaseの進捗管理（5ステップの状態管理）
+- **使用タイミング**: Operations Phase開始時に自動作成
+- **生成コマンド**: `TEMPLATE_NAME = operations_progress_template`
 
 ## テンプレート生成の仕組み
 
