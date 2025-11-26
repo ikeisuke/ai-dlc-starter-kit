@@ -257,38 +257,65 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_INCEPTION}}
 - **最初に必ず実行すること**:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. 既存成果物の確認（冪等性の保証）:
+  2. **進捗管理ファイル確認【重要】**:
+     - `{{VERSIONS_ROOT}}/{{VERSION}}/inception/progress.md` が存在するか確認
+     - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
+     - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
+  3. 既存成果物の確認（冪等性の保証）:
      - `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/ {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/ {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
-  3. 既存ファイルがある場合は内容を読み込んで差分のみ更新
-  4. 完了済みのステップはスキップ
-- **フロー**:
+  4. 既存ファイルがある場合は内容を読み込んで差分のみ更新
+  5. 完了済みのステップはスキップ
+- **フロー**（各ステップ完了時にprogress.mdを更新）:
   1. Intent明確化【重要】:
+     - ステップ開始時: progress.mdでステップ1を「進行中」に更新
      - ユーザーと対話形式でIntentを作成
      - 不明点は `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
      - **一問一答形式**：1つの質問をして回答を待ち、複数の質問をまとめて提示しない
      - **独自の判断や詳細調査はせず、質問で明確化する**
      - 回答を得てからintent.mdを作成
-  2. 既存コード分析（brownfield のみ）
-  3. ユーザーストーリー作成
+     - ステップ完了時: progress.mdでステップ1を「完了」に更新、完了日を記録
+  2. 既存コード分析（brownfield のみ、greenfield はスキップ）:
+     - ステップ開始時: progress.mdでステップ2を「進行中」に更新
+     - 既存コードベースを分析
+     - ステップ完了時: progress.mdでステップ2を「完了」に更新、完了日を記録
+  3. ユーザーストーリー作成:
+     - ステップ開始時: progress.mdでステップ3を「進行中」に更新
+     - ユーザーストーリーを作成
+     - ステップ完了時: progress.mdでステップ3を「完了」に更新、完了日を記録
   4. Unit定義【重要】:
+     - ステップ開始時: progress.mdでステップ4を「進行中」に更新
      - ユーザーストーリーを独立した価値提供ブロック（Unit）に分解
      - **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
      - 依存関係がない場合は「なし」と明記
      - 依存関係は Construction Phase での実行順判断に使用される
-  5. PRFAQ作成
-  6. **進捗管理ファイル作成【重要】**:
+     - ステップ完了時: progress.mdでステップ4を「完了」に更新、完了日を記録
+  5. PRFAQ作成:
+     - ステップ開始時: progress.mdでステップ5を「進行中」に更新
+     - PRFAQを作成
+     - ステップ完了時: progress.mdでステップ5を「完了」に更新、完了日を記録
+  6. **Construction用進捗管理ファイル作成【重要】**:
+     - ステップ開始時: progress.mdでステップ6を「進行中」に更新
      - 全Unit定義完了後、`{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を作成
      - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
      - 全Unitの初期状態は「未着手」
      - Construction Phaseで使用する進捗管理の中心ファイル
+     - ステップ完了時: progress.mdでステップ6を「完了」に更新、完了日を記録
   （各ステップはテンプレートを参照）
 - **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行
 - **完了基準**: すべての成果物作成、技術スタック決定（greenfield の場合）、**進捗管理ファイル作成**
 - **完了時の必須作業【重要】**:
   1. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
-  2. **Gitコミット**: Inception Phaseで作成したすべてのファイル（**progress.mdとhistory.mdを含む**）をコミット（メッセージ例: "feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成"）
+  2. **Gitコミット**: Inception Phaseで作成したすべてのファイル（**inception/progress.md、construction/progress.md、history.mdを含む**）をコミット（メッセージ例: "feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成"）
 - **次のステップ**: Construction Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
+- **このフェーズに戻る場合【バックトラック】**:
+  Construction PhaseやOperations Phaseから戻ってきた場合の手順：
+  1. **progress.md確認**: `{{VERSIONS_ROOT}}/{{VERSION}}/inception/progress.md` を読み込み、完了済みステップを確認
+  2. **既存成果物読み込み**: `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/user_stories.md` と既存Unit定義を確認
+  3. **差分作業**: ステップ3（ユーザーストーリー作成）またはステップ4（Unit定義）から再開し、新しいストーリー・Unit定義を追加
+  4. **progress.md更新**: construction/progress.mdに新しいUnitを追加
+  5. **履歴記録とコミット**: Inception Phaseの変更を記録
+  完了後、Construction Phaseに戻る場合: `{{AIDLC_ROOT}}/prompts/construction.md` を読み込み
 
 ##### construction.md（Construction Phase専用）
 - 冒頭に以下を記載:
@@ -339,6 +366,17 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   4. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
   5. **Gitコミット**: 各Unitで作成・変更したすべてのファイル（**progress.mdとhistory.mdを含む**）をコミット（メッセージ例: "feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成"）
 - **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
+- **このフェーズに戻る場合【バックトラック】**:
+  1. **Inceptionに戻る必要がある場合**（Unit追加・拡張）:
+     - 現在のprogress.mdを確認
+     - `{{AIDLC_ROOT}}/prompts/inception.md` を読み込み
+     - Inception Phaseの「このフェーズに戻る場合」セクションの手順に従う
+  2. **Operations Phaseからバグ修正で戻ってきた場合**:
+     - progress.mdを読み込み、修正対象Unitを「進行中」に変更
+     - Unit修正（設計レビュー→実装→テスト）
+     - progress.mdを更新（Unitを「完了」に戻す）
+     - 履歴記録とコミット
+     - Operations Phaseに戻る: `{{AIDLC_ROOT}}/prompts/operations.md` を読み込み
 
 ##### operations.md（Operations Phase専用）
 - 冒頭に以下を記載:
@@ -350,25 +388,48 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 役割：{{ROLE_OPERATIONS}}
 - **最初に必ず実行すること**（3ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
-  2. Construction Phase 完了確認:
-     - `grep -l "完了" {{VERSIONS_ROOT}}/{{VERSION}}/construction/units/*_implementation_record.md` で完了済みUnitを確認
-     - **重要**: すべてのUnit実装記録を読み込まない（grepで完了マークのみ確認）
+  2. **進捗管理ファイル確認【重要】**:
+     - `{{VERSIONS_ROOT}}/{{VERSION}}/operations/progress.md` が存在するか確認
+     - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
+     - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
   3. 既存成果物の確認（冪等性の保証）:
      - `ls {{VERSIONS_ROOT}}/{{VERSION}}/operations/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
      - 既存ファイルがある場合は内容を読み込んで差分のみ更新
-- **フロー**:
-  1. デプロイ準備【対話形式】: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-  2. CI/CD構築【対話形式】: 同様に**一問一答形式**で対話
-  3. 監視・ロギング戦略【対話形式】: 同様に**一問一答形式**で対話
-  4. 配布（該当する場合）【対話形式】: 同様に**一問一答形式**で対話
-  5. リリース後の運用【対話形式】: 同様に**一問一答形式**で対話
+- **フロー**（各ステップ完了時にprogress.mdを更新）:
+  1. デプロイ準備【対話形式】:
+     - ステップ開始時: progress.mdでステップ1を「進行中」に更新
+     - 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
+     - ステップ完了時: progress.mdでステップ1を「完了」に更新、完了日を記録
+  2. CI/CD構築【対話形式】:
+     - ステップ開始時: progress.mdでステップ2を「進行中」に更新
+     - 同様に**一問一答形式**で対話
+     - ステップ完了時: progress.mdでステップ2を「完了」に更新、完了日を記録
+  3. 監視・ロギング戦略【対話形式】:
+     - ステップ開始時: progress.mdでステップ3を「進行中」に更新
+     - 同様に**一問一答形式**で対話
+     - ステップ完了時: progress.mdでステップ3を「完了」に更新、完了日を記録
+  4. 配布（モバイルの場合のみ、それ以外はスキップ）【対話形式】:
+     - ステップ開始時: progress.mdでステップ4を「進行中」に更新
+     - 同様に**一問一答形式**で対話
+     - ステップ完了時: progress.mdでステップ4を「完了」に更新、完了日を記録
+  5. リリース後の運用【対話形式】:
+     - ステップ開始時: progress.mdでステップ5を「進行中」に更新
+     - 同様に**一問一答形式**で対話
+     - ステップ完了時: progress.mdでステップ5を「完了」に更新、完了日を記録
   （各ステップはテンプレートを参照）
 - **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行
 - **完了基準**: すべて完成、デプロイ完了、CI/CD動作、監視開始
 - **完了時の必須作業【重要】**:
   1. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
-  2. **Gitコミット**: Operations Phaseで作成したすべてのファイル（**history.mdを含む**）をコミット（メッセージ例: "chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築"）
+  2. **Gitコミット**: Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット（メッセージ例: "chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築"）
+- **このフェーズに戻る場合【バックトラック】**:
+  Constructionに戻る必要がある場合（バグ修正・機能修正）:
+  1. 現在のprogress.mdを確認
+  2. `{{AIDLC_ROOT}}/prompts/construction.md` を読み込み
+  3. Construction Phaseの「このフェーズに戻る場合 - Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
+  4. 修正完了後、`{{AIDLC_ROOT}}/prompts/operations.md` を読み込んで再開
+  5. operations/progress.mdを読み込んで、未完了ステップから再開
 - **AI-DLCサイクル完了【重要】**:
   1. **フィードバック収集**: ユーザーからのフィードバック、メトリクス、課題を収集
   2. **分析と改善点洗い出し**: 次期バージョンで対応すべき改善点をリストアップ

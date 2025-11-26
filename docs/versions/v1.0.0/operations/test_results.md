@@ -115,5 +115,79 @@ progress.mdの読み込みのみで十分。progress.mdが存在しない場合�
 
 ---
 
+## 改善要望
+
+### 要望1: 各フェーズでの進捗管理とコンテキストオーバーフロー対策
+
+**背景**:
+現在、progress.mdはConstruction Phaseのみで使用されている。
+コンテキストオーバーフローした際の再開が、Inception PhaseとOperations Phaseで困難。
+
+**要望内容**:
+1. 全フェーズで進捗管理ファイルを導入
+   - `docs/versions/v1.0.0/inception/progress.md` - Inceptionの各ステップ（Intent明確化、既存分析、ストーリー作成、Unit定義、PRFAQ作成）の進捗管理
+   - `docs/versions/v1.0.0/construction/progress.md` - 既存（Unit管理）
+   - `docs/versions/v1.0.0/operations/progress.md` - Operationsの各ステップ（デプロイ準備、CI/CD、監視、配布、運用）の進捗管理
+
+2. 各フェーズプロンプトを読み込めば途中から自動再開
+   - progress.mdを読んで、完了済みステップをスキップ
+   - 未完了・進行中のステップから再開
+
+**期待効果**:
+- コンテキストオーバーフロー時に、フェーズプロンプトを読み込むだけで途中から再開可能
+- 全フェーズで一貫した進捗管理
+
+**実装内容**:
+- Inception Phase:
+  - progress.md自動作成・読み込み機能追加
+  - 各ステップ開始時・完了時にprogress.md更新
+  - バックトラックセクション追加（Unit追加・拡張）
+- Operations Phase:
+  - progress.md自動作成・読み込み機能追加
+  - 各ステップ開始時・完了時にprogress.md更新
+  - バックトラックセクション追加（バグ修正）
+- Construction Phase:
+  - バックトラックセクション追加（Inceptionに戻る、Operationsからのバグ修正）
+
+**対応状況**:
+- [x] 設計検討完了
+- [x] プロンプト実装完了
+- [ ] テンプレート追加
+
+---
+
+### 要望2: フェーズ間を戻る仕組み（バックトラック）
+
+**背景**:
+開発中に以下のようなケースで前のフェーズに戻る必要がある：
+- Construction中にUnit追加・拡張が必要になった → Inceptionに戻る
+- Operations中にバグ発見 → Constructionに戻る
+- Construction中に要件変更 → Inceptionに戻る
+
+**要望内容**:
+フェーズを戻るための標準的な手順とプロンプトを用意
+
+案1: 戻り専用プロンプト
+- `docs/aidlc/prompts/back_to_inception.md` - Inceptionに戻る
+- `docs/aidlc/prompts/back_to_construction.md` - Constructionに戻る
+
+案2: 各フェーズプロンプトに「戻り方」セクションを追加
+- Inception Phase: 「このフェーズに戻る場合」セクション
+- Construction Phase: 「このフェーズに戻る場合」「Inceptionに戻る場合」セクション
+- Operations Phase: 「このフェーズに戻る場合」「Constructionに戻る場合」セクション
+
+**期待効果**:
+- 柔軟な開発フロー（前のフェーズに戻って修正可能）
+- Unit追加・要件変更に対応可能
+
+**実装内容**:
+要望1と統合して実装済み（各フェーズプロンプトに「このフェーズに戻る場合」セクション追加）
+
+**対応状況**:
+- [x] 設計検討完了
+- [x] 実装完了
+
+---
+
 ## その他の問題
 （追加予定）
