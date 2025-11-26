@@ -12,11 +12,11 @@ MODE = setup  # setup: 初回セットアップ / template: テンプレート�
 TEMPLATE_NAME =  # MODE=templateの場合のみ指定（例: intent_template）
 
 PROJECT_NAME = AI-DLC Starter Kit
-VERSION = v1
+CYCLE = v1  # 開発サイクル識別子（v1.0.0, 2024-12, feature-x など自由に命名可能）
 BRANCH = feature/example
 DEVELOPMENT_TYPE = greenfield
 PROJECT_TYPE = ios
-DOCS_ROOT = docs/example
+DOCS_ROOT = docs  # ドキュメントルート（aidlc/cycles は派生変数で自動決定）
 LANGUAGE = 日本語
 PROJECT_README = /README.md
 
@@ -26,8 +26,9 @@ ROLE_CONSTRUCTION = ソフトウェアアーキテクト兼エンジニア
 ROLE_OPERATIONS = DevOpsエンジニア兼SRE
 
 # 派生変数（v1.0.0以降）
-AIDLC_ROOT = ${DOCS_ROOT}/aidlc        # 共通プロンプト・テンプレートのルート
-VERSIONS_ROOT = ${DOCS_ROOT}/versions  # バージョン固有成果物のルート
+# 注意: DOCS_ROOT は "docs" のように指定し、"docs/aidlc" としないこと
+AIDLC_ROOT = ${DOCS_ROOT}/aidlc      # 共通プロンプト・テンプレートのルート
+CYCLES_ROOT = ${DOCS_ROOT}/cycles    # サイクル固有成果物のルート
 ```
 
 **PROJECT_TYPE の値**:
@@ -101,7 +102,7 @@ cd /path/to/your-project
 ---
 
 あなたは{{DEVELOPER_EXPERTISE}}に精通した開発者です。
-これから {{BRANCH}} ブランチで {{PROJECT_NAME}} の {{VERSION}} を開発します。
+これから {{BRANCH}} ブランチで {{PROJECT_NAME}} の {{CYCLE}} を開発します。
 
 ### 前提知識: AI-DLC（AI-Driven Development Lifecycle）
 
@@ -159,7 +160,7 @@ AI-DLCに基づいた開発環境を構築してください：
 │   └── （その他テンプレート、JIT生成）
 └── version.txt
 
-{{VERSIONS_ROOT}}/{{VERSION}}/     # バージョン固有成果物
+{{CYCLES_ROOT}}/{{CYCLE}}/     # サイクル固有成果物
 ├── plans/
 ├── requirements/
 ├── story-artifacts/
@@ -183,18 +184,18 @@ AI-DLCに基づいた開発環境を構築してください：
 - `{{AIDLC_ROOT}}/prompts/`
 - `{{AIDLC_ROOT}}/templates/`
 
-対象ディレクトリ（バージョン固有）:
-- `{{VERSIONS_ROOT}}/{{VERSION}}/plans/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/requirements/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/units/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/architecture/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/construction/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/construction/units/`
-- `{{VERSIONS_ROOT}}/{{VERSION}}/operations/`
+対象ディレクトリ（サイクル固有）:
+- `{{CYCLES_ROOT}}/{{CYCLE}}/plans/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/requirements/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/architecture/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/construction/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/operations/`
 
 #### 2. プロンプトファイルの作成
 
@@ -234,7 +235,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **技術スタック**（{{DEVELOPMENT_TYPE}} が brownfield の場合は既存スタック、greenfield の場合は Inception Phase で決定）
 - **ディレクトリ構成**（簡潔に箇条書き）
 - **制約事項**（以下を含む）:
-  - ドキュメント読み込み制限: **ユーザーから明示的に指示されない限り、`{{DOCS_ROOT}}/{{VERSION}}/` 配下のファイルのみを読み込むこと**。他のバージョンのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
+  - ドキュメント読み込み制限: **ユーザーから明示的に指示されない限り、`{{DOCS_ROOT}}/{{CYCLE}}/` 配下のファイルのみを読み込むこと**。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
   - その他のプロジェクト固有の制約（簡潔に箇条書き）
 - **開発ルール**（以下を含む）:
   - 人間の承認プロセス【重要】: 計画作成後、必ず以下を実行する - ①計画ファイルのパスをユーザーに提示、②「この計画で進めてよろしいですか？」と明示的に質問、③ユーザーが「承認」「OK」「進めてください」などの肯定的な返答をするまで待機、④**承認なしで次のステップを開始してはいけない**
@@ -242,7 +243,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   - Gitコミットのタイミング【必須】: 以下のタイミングで**必ず**Gitコミットを作成する - ①セットアップ完了時、②Inception Phase完了時、③各Unit完了時、④Operations Phase完了時。コミットメッセージは変更内容を明確に記述
   - コード品質基準
   - Git運用の原則と例
-  - プロンプト履歴管理【重要】: **history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記**（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a {{VERSIONS_ROOT}}/{{VERSION}}/history.md`)。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
+  - プロンプト履歴管理【重要】: **history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記**（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md`)。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 - **フェーズの責務分離**（各フェーズを1行で簡潔に説明、詳細は各フェーズのプロンプトファイルを参照）
 - **進捗管理と冪等性**（チェックリスト、既存成果物の確認手順、差分のみ更新するルール）
 - **テンプレート参照**（`{{AIDLC_ROOT}}/templates/` を参照する旨のみ記載）
@@ -258,11 +259,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **最初に必ず実行すること**:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. **進捗管理ファイル確認【重要】**:
-     - `{{VERSIONS_ROOT}}/{{VERSION}}/inception/progress.md` が存在するか確認
+     - `{{CYCLES_ROOT}}/{{CYCLE}}/inception/progress.md` が存在するか確認
      - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
      - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
   3. 既存成果物の確認（冪等性の保証）:
-     - `ls {{VERSIONS_ROOT}}/{{VERSION}}/requirements/ {{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/ {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/` で既存ファイルを確認
+     - `ls {{CYCLES_ROOT}}/{{CYCLE}}/requirements/ {{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/ {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
   4. 既存ファイルがある場合は内容を読み込んで差分のみ更新
   5. 完了済みのステップはスキップ
@@ -296,7 +297,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
      - ステップ完了時: progress.mdでステップ5を「完了」に更新、完了日を記録
   6. **Construction用進捗管理ファイル作成【重要】**:
      - ステップ開始時: progress.mdでステップ6を「進行中」に更新
-     - 全Unit定義完了後、`{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を作成
+     - 全Unit定義完了後、`{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を作成
      - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
      - 全Unitの初期状態は「未着手」
      - Construction Phaseで使用する進捗管理の中心ファイル
@@ -305,13 +306,13 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行
 - **完了基準**: すべての成果物作成、技術スタック決定（greenfield の場合）、**進捗管理ファイル作成**
 - **完了時の必須作業【重要】**:
-  1. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+  1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
   2. **Gitコミット**: Inception Phaseで作成したすべてのファイル（**inception/progress.md、construction/progress.md、history.mdを含む**）をコミット（メッセージ例: "feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成"）
 - **次のステップ**: Construction Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 - **このフェーズに戻る場合【バックトラック】**:
   Construction PhaseやOperations Phaseから戻ってきた場合の手順：
-  1. **progress.md確認**: `{{VERSIONS_ROOT}}/{{VERSION}}/inception/progress.md` を読み込み、完了済みステップを確認
-  2. **既存成果物読み込み**: `{{VERSIONS_ROOT}}/{{VERSION}}/story-artifacts/user_stories.md` と既存Unit定義を確認
+  1. **progress.md確認**: `{{CYCLES_ROOT}}/{{CYCLE}}/inception/progress.md` を読み込み、完了済みステップを確認
+  2. **既存成果物読み込み**: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/user_stories.md` と既存Unit定義を確認
   3. **差分作業**: ステップ3（ユーザーストーリー作成）またはステップ4（Unit定義）から再開し、新しいストーリー・Unit定義を追加
   4. **progress.md更新**: construction/progress.mdに新しいUnitを追加
   5. **履歴記録とコミット**: Inception Phaseの変更を記録
@@ -328,7 +329,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **最初に必ず実行すること**（4ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. **進捗管理ファイル読み込み【重要】**:
-     - `{{VERSIONS_ROOT}}/{{VERSION}}/construction/progress.md` を読み込む
+     - `{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を読み込む
      - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載されている
      - **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
   3. 対象Unit決定（progress.mdの情報に基づく）:
@@ -338,11 +339,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
        1. 実行可能Unitが0個: 「全Unit完了」と判断
        2. 実行可能Unitが1個: 自動的にそのUnitを選択
        3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
-  4. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{VERSIONS_ROOT}}/{{VERSION}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
+  4. 実行前確認【重要】: 選択された Unit について計画ファイルを `{{CYCLES_ROOT}}/{{CYCLE}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ（**承認なしで次のステップを開始してはいけない**）
 - **フロー**（1つのUnitのみ）:
   - **Phase 1: 設計【対話形式、コードは書かない】**
-    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）（成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
-    2. 論理設計: 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義（成果物: `{{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`）
+    1. ドメインモデル設計: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）（成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/[unit_name]_domain_model.md`）
+    2. 論理設計: 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義（成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`）
     3. **設計レビュー**: 設計内容をユーザーに提示し、承認を得る（**承認なしで実装フェーズに進んではいけない**）
   - **Phase 2: 実装【設計を参照してコード生成】**
     4. コード生成: 設計ファイルを読み込み、それに基づいて実装コードを生成
@@ -363,7 +364,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
   1. **progress.mdを更新**: 完了したUnitの状態を「完了」に変更し、完了日を記録
   2. **実行可能Unitを再計算**: 依存関係に基づいて次回実行可能なUnit候補を更新
   3. **最終更新日時を記録**: progress.mdの最終更新セクションを更新
-  4. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+  4. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
   5. **Gitコミット**: 各Unitで作成・変更したすべてのファイル（**progress.mdとhistory.mdを含む**）をコミット（メッセージ例: "feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成"）
 - **次のステップ**: 次のUnit継続 or Operations Phase へ移行（簡潔に記載、詳細なコードブロックは不要）
 - **このフェーズに戻る場合【バックトラック】**:
@@ -389,11 +390,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **最初に必ず実行すること**（3ステップ）:
   1. 追加ルール確認: `{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
   2. **進捗管理ファイル確認【重要】**:
-     - `{{VERSIONS_ROOT}}/{{VERSION}}/operations/progress.md` が存在するか確認
+     - `{{CYCLES_ROOT}}/{{CYCLE}}/operations/progress.md` が存在するか確認
      - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
      - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
   3. 既存成果物の確認（冪等性の保証）:
-     - `ls {{VERSIONS_ROOT}}/{{VERSION}}/operations/` で既存ファイルを確認
+     - `ls {{CYCLES_ROOT}}/{{CYCLE}}/operations/` で既存ファイルを確認
      - **重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
      - 既存ファイルがある場合は内容を読み込んで差分のみ更新
 - **フロー**（各ステップ完了時にprogress.mdを更新）:
@@ -421,7 +422,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **実行ルール**: 計画作成 → 人間の承認【重要: 計画ファイルのパスを提示し「進めてよろしいですか？」と明示的に質問、承認を待つ】→ 実行
 - **完了基準**: すべて完成、デプロイ完了、CI/CD動作、監視開始
 - **完了時の必須作業【重要】**:
-  1. **履歴記録**: `{{VERSIONS_ROOT}}/{{VERSION}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+  1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
   2. **Gitコミット**: Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット（メッセージ例: "chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築"）
 - **このフェーズに戻る場合【バックトラック】**:
   Constructionに戻る必要がある場合（バグ修正・機能修正）:
@@ -433,7 +434,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **AI-DLCサイクル完了【重要】**:
   1. **フィードバック収集**: ユーザーからのフィードバック、メトリクス、課題を収集
   2. **分析と改善点洗い出し**: 次期バージョンで対応すべき改善点をリストアップ
-  3. **次期バージョンの計画**: 新しいバージョン番号を決定（例: v1.0 → v2.0）
+  3. **次期サイクルの計画**: 新しいサイクル識別子を決定（例: v1.0 → v2.0, 2024-12 → 2025-01）
   4. **次のサイクル開始【重要】**:
      - 新しいセッションで以下を実行してください：
        ```markdown
@@ -446,11 +447,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
        - その他の変数も適宜設定
        ```
      - **必要に応じて前バージョンのファイルをコピー/参照**:
-       - `{{DOCS_ROOT}}/{{VERSION}}/prompts/additional-rules.md` → 新バージョンにコピーしてカスタマイズを引き継ぐ
-       - `{{VERSIONS_ROOT}}/{{VERSION}}/requirements/intent.md` → 新バージョンで参照して改善点を反映
+       - `{{DOCS_ROOT}}/{{CYCLE}}/prompts/additional-rules.md` → 新サイクルにコピーしてカスタマイズを引き継ぐ
+       - `{{CYCLES_ROOT}}/{{CYCLE}}/requirements/intent.md` → 新サイクルで参照して改善点を反映
        - その他、引き継ぎたいファイルがあればコピー
      - セットアップ完了後、新しいセッションで Inception Phase を開始
-  5. **ライフサイクルの継続**: Inception → Construction → Operations → (次バージョン) を繰り返し、継続的に価値を提供
+  5. **ライフサイクルの継続**: Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供
 
 ##### history.md（プロンプト実行履歴）
 - **初回セットアップ時**: 初期テンプレートを作成（以下の構造）：
@@ -460,7 +461,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **以降の各フェーズ**: 既存のhistory.mdファイルに履歴を追記
 - 記録ルール：
   - **重要**: 履歴は**必ずファイル末尾に追記**する（既存の履歴を絶対に削除・上書きしてはいけない）
-  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{VERSIONS_ROOT}}/{{VERSION}}/history.md`) または `echo >> {{VERSIONS_ROOT}}/{{VERSION}}/history.md` を使用
+  - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md`) または `echo >> {{CYCLES_ROOT}}/{{CYCLE}}/history.md` を使用
   - 日時取得：`date '+%Y-%m-%d %H:%M:%S'` コマンドを必ず使用
   - 記録項目：日時、フェーズ名、実行内容、プロンプト、成果物、備考
   - フォーマット: 先頭のテンプレートを参照し、heredoc で追記
@@ -867,8 +868,8 @@ classDiagram
 - [...]
 
 ### 設計ドキュメント
-- {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/domain-models/<unit>_domain_model.md
-- {{VERSIONS_ROOT}}/{{VERSION}}/design-artifacts/logical-designs/<unit>_logical_design.md
+- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/<unit>_domain_model.md
+- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/<unit>_logical_design.md
 
 ## ビルド結果
 [成功 / 失敗]
@@ -1554,7 +1555,7 @@ echo "1.0.0" > {{AIDLC_ROOT}}/version.txt
 - templates/index.md - テンプレート一覧
 - version.txt - スターターキットバージョン（1.0.0）
 
-バージョン固有ファイル（{{VERSIONS_ROOT}}/{{VERSION}}/）:
+サイクル固有ファイル（{{CYCLES_ROOT}}/{{CYCLE}}/）:
 - history.md - 実行履歴
 - plans/, requirements/, story-artifacts/, design-artifacts/, construction/, operations/ ディレクトリ
 
@@ -1616,7 +1617,7 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 - API キーは環境変数で管理
 ```
 
-**注意**: 共通のadditional-rules.mdは全バージョンで共有されます。バージョン固有のルールが必要な場合は、`{{VERSIONS_ROOT}}/{{VERSION}}/additional-rules.md` を作成してください。
+**注意**: 共通のadditional-rules.mdは全サイクルで共有されます。サイクル固有のルールが必要な場合は、`{{CYCLES_ROOT}}/{{CYCLE}}/additional-rules.md` を作成してください。
 
 #### テンプレートファイル（オプション）
 必要に応じて `{{AIDLC_ROOT}}/templates/` 配下のテンプレートをプロジェクトに合わせて調整してください。
@@ -1631,7 +1632,7 @@ AI-DLC では、各フェーズの開始時にコンテキストをリセット�
 以下のファイルを読み込んで、Inception Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/inception.md
 
-{{PROJECT_NAME}} {{VERSION}} の開発を開始します。
+{{PROJECT_NAME}} {{CYCLE}} の開発を開始します。
 まず Intent（開発意図）を明確化し、ユーザーストーリーと Unit 定義を行います。
 
 注意: inception.mdには共通知識が含まれているため、このファイルだけで開始できます。

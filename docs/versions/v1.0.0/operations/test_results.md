@@ -189,5 +189,83 @@ progress.mdの読み込みのみで十分。progress.mdが存在しない場合�
 
 ---
 
+### 問題5: docs/aidlc/aidlc のような二重ディレクトリが作成される
+
+**症状**:
+セットアップ実行時に `docs/aidlc/aidlc/` のような二重ディレクトリが作成されてしまう
+
+**原因**:
+ユーザーが `DOCS_ROOT = docs/aidlc` と設定した場合、派生変数が以下のようになる：
+```
+AIDLC_ROOT = ${DOCS_ROOT}/aidlc = docs/aidlc/aidlc  # 二重に！
+VERSIONS_ROOT = ${DOCS_ROOT}/versions = docs/aidlc/versions
+```
+
+正しくは `DOCS_ROOT = docs` と設定すべきだが、変数名が紛らわしい。
+
+**修正方針**:
+1. setup-prompt.mdに注意書きを追加
+2. または、DOCS_ROOTのデフォルト値を `docs` にして、aidlc/versionsは派生変数で自動的に決まることを明示
+
+**修正内容**:
+- DOCS_ROOTのデフォルト値を `docs/example` → `docs` に変更
+- コメントで「aidlc/cycles は派生変数で自動決定」と明記
+- 派生変数定義に「DOCS_ROOTは "docs" のように指定し、"docs/aidlc" としないこと」と注意書き追加
+
+**対応状況**:
+- [x] 原因調査完了
+- [x] 修正完了
+
+---
+
+## 改善要望（追加）
+
+### 要望3: VERSION変数をCYCLEに変更
+
+**背景**:
+- Web/バックエンドプロジェクトでは「バージョン」という概念があまり馴染まない
+- モバイルアプリは厳密なバージョン管理が必要だが、Webは継続的デプロイが一般的
+- 「VERSION」という名前がセマンティックバージョニングを連想させるが、実際は開発サイクルの識別子
+
+**要望内容**:
+`VERSION` → `CYCLE` に変更
+
+理由:
+- AI-Driven Development **Lifecycle** → **CYCLE** の繋がり
+- バージョン感がなく、プロジェクトタイプに依存しない
+- 開発サイクルの繰り返しを表現
+
+**変更内容**:
+- 変数名: `VERSION` → `CYCLE`
+- ディレクトリ: `docs/versions/` → `docs/cycles/`
+- 派生変数: `VERSIONS_ROOT` → `CYCLES_ROOT`
+- プロンプト内の表記すべて
+
+**使用例**:
+```
+CYCLE = v1.0.0      # モバイル（セマンティックバージョニング風）
+CYCLE = 2024-12     # Web（年月）
+CYCLE = feature-x   # 機能名ベース
+CYCLE = phase-1     # フェーズ名
+```
+
+**実装内容**:
+- 変数名: `VERSION` → `CYCLE`, `VERSIONS_ROOT` → `CYCLES_ROOT`
+- プロンプト内の全置換完了（約100箇所）
+- ディレクトリ構造のコメント更新
+- 「バージョン固有」→「サイクル固有」
+- 「全バージョン」→「全サイクル」
+- 「次バージョン」→「次サイクル」
+
+**対応状況**:
+- [x] 設計確認完了
+- [x] 実装完了
+
+**破壊的変更**:
+- 既存プロジェクトで `VERSION` 変数を使用している場合、`CYCLE` に変更が必要
+- ディレクトリ名 `docs/versions/` は既存プロジェクトでは変更不要（新規プロジェクトのみ `docs/cycles/` を使用）
+
+---
+
 ## その他の問題
 （追加予定）
