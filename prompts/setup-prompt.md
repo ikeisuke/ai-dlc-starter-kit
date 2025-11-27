@@ -193,6 +193,7 @@ AI-DLCに基づいた開発環境を構築してください：
 - `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/`
 - `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/`
 - `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/architecture/`
+- `{{CYCLES_ROOT}}/{{CYCLE}}/inception/`
 - `{{CYCLES_ROOT}}/{{CYCLE}}/construction/`
 - `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/`
 - `{{CYCLES_ROOT}}/{{CYCLE}}/operations/`
@@ -462,7 +463,26 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - 記録ルール：
   - **重要**: 履歴は**必ずファイル末尾に追記**する（既存の履歴を絶対に削除・上書きしてはいけない）
   - 追記方法: Bash の heredoc (`cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md`) または `echo >> {{CYCLES_ROOT}}/{{CYCLE}}/history.md` を使用
-  - 日時取得：`date '+%Y-%m-%d %H:%M:%S'` コマンドを必ず使用
+  - 日時取得：以下の方法を推奨
+    - **推奨方法**: heredoc外で日付（タイムゾーン付き）を取得し、変数に格納
+      ```bash
+      TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+      cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md
+      ---
+      ## ${TIMESTAMP}
+      ...
+      EOF
+      ```
+    - **代替方法**: heredocでダブルクォート（`<<EOF`）を使用し、コマンド置換を有効化
+      ```bash
+      cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md
+      ---
+      ## $(date '+%Y-%m-%d %H:%M:%S %Z')
+      ...
+      EOF
+      ```
+    - **注意**: heredocでシングルクォート（`<<'EOF'`）を使用すると、コマンド置換が無効化されるため避ける
+    - **タイムゾーン**: `%Z` でタイムゾーン略称（JST, UTC等）を表示
   - 記録項目：日時、フェーズ名、実行内容、プロンプト、成果物、備考
   - フォーマット: 先頭のテンプレートを参照し、heredoc で追記
 

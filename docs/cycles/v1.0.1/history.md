@@ -120,3 +120,38 @@ docs/aidlc/prompts/inception.md
 - 対話形式でIntentを明確化し、途中で目的を2つ追加（テストとバグ対応、プロンプト活用徹底）
 - 7つのUnit定義完了、依存関係: Unit3→Unit2, Unit5→Unit4
 - 次回実行可能なUnit候補: Unit 1, 2, 4, 6, 7（Unit 1推奨）
+
+---
+## 2025-11-27 23:02:19 JST
+
+### フェーズ
+Construction
+
+### 実行内容
+Unit 1: セットアップバグ修正の実装完了
+
+### プロンプト
+docs/aidlc/prompts/construction.md
+
+### 成果物
+**設計ドキュメント:**
+- docs/cycles/v1.0.1/design-artifacts/domain-models/unit1_setup_bugfix_domain_model.md
+- docs/cycles/v1.0.1/design-artifacts/logical-designs/unit1_setup_bugfix_logical_design.md
+
+**修正ファイル:**
+- prompts/setup-prompt.md - ディレクトリ作成リストに inception/ を追加、日付取得方法を明確化
+- docs/aidlc/prompts/inception.md - 履歴記録の日付取得方法を明確化（タイムゾーン付き）
+- docs/aidlc/prompts/construction.md - 履歴記録の日付取得方法を明確化（タイムゾーン付き）
+- docs/aidlc/prompts/operations.md - 履歴記録の日付取得方法を明確化（タイムゾーン付き）
+
+**実装記録:**
+- docs/cycles/v1.0.1/construction/units/unit1_setup_bugfix_implementation.md
+
+**進捗管理:**
+- docs/cycles/v1.0.1/construction/progress.md（更新）
+
+### 備考
+- バグ1: セットアップ時に inception/ ディレクトリが作成されない問題を修正
+- バグ2: 日付取得方法を明確化（タイムゾーン情報付き: %Y-%m-%d %H:%M:%S %Z）
+- テスト結果: すべて成功
+- 次回実行可能Unit: Unit 6, 2, 4, 7（Unit 6推奨）

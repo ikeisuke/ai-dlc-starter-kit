@@ -62,7 +62,16 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/v1.0.1/history.md`)。日時は `date '+%Y-%m-%d %H:%M:%S'` で取得。記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
+- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/v1.0.1/history.md`)。日時取得の推奨方法:
+  ```bash
+  TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+  cat <<EOF | tee -a docs/cycles/v1.0.1/history.md
+  ---
+  ## ${TIMESTAMP}
+  ...
+  EOF
+  ```
+  記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
 - コード品質基準、Git運用の原則は `docs/aidlc/prompts/additional-rules.md` を参照
 
