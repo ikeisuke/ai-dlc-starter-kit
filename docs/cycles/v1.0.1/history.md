@@ -222,3 +222,32 @@ Phase 2:
 - Phase 2: 次サイクルへのタスクリスト管理（バックログ管理の仕組みを構築）
 - サイクル横断のバックログファイル（docs/cycles/backlog.md, backlog_completed.md）
 - Operations Phase完了時にタスクを記録、Inception Phase開始時に参照
+---
+
+## 2025-11-28 02:10:20 JST
+
+**フェーズ**: Inception Phase（バックトラック）
+
+**実行内容**: Construction PhaseからInception Phaseに戻り、Unit 8を緊急追加
+
+**プロンプト**:
+```
+docs/aidlc/prompts/construction.md を読み込み中、Unit 2実行準備時にセットアップファイルの読み込み問題が発覚。
+docs/aidlc/prompts/inception.md にバックトラックし、Unit 8を追加。
+```
+
+**成果物**:
+- ユーザーストーリー追加: Epic 7「セットアップファイルの最適化」、ストーリー 8.1
+- Unit定義: docs/cycles/v1.0.1/story-artifacts/units/unit8_setup_file_optimization.md
+- 計画ファイル: docs/cycles/v1.0.1/plans/inception_unit8_setup_file_split_plan.md
+- 進捗管理更新:
+  - docs/cycles/v1.0.1/construction/progress.md（Unit 8追加）
+  - docs/cycles/v1.0.1/inception/progress.md（バックトラック履歴追加）
+
+**備考**:
+- 背景: setup-prompt.mdが1746行に達し、Claude Codeでの読み込みに支障
+- 緊急性: Critical（全フェーズの起点であるため最優先）
+- 方針決定: 案6（メンテナンス性最適化版）採用
+  - 圧縮 + フェーズ別分割（5ファイル構成）
+  - 最終構成: setup-prompt.md（300行）、inception.md（500行）、construction.md（500行）、operations.md（500行）、common.md（200行）
+- 次のアクション: Construction PhaseでUnit 8を最優先実施
