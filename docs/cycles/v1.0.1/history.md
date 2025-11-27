@@ -155,3 +155,70 @@ docs/aidlc/prompts/construction.md
 - バグ2: 日付取得方法を明確化（タイムゾーン情報付き: %Y-%m-%d %H:%M:%S %Z）
 - テスト結果: すべて成功
 - 次回実行可能Unit: Unit 6, 2, 4, 7（Unit 6推奨）
+
+---
+
+## 2025-11-28 00:27:08 JST
+
+**フェーズ**: Construction Phase
+
+**実行内容**: Unit 4 Phase 1（サイクル指定方法の改善）の実装完了
+
+**プロンプト**:
+```
+docs/aidlc/prompts/construction.md を読み込み、Unit 4 Phase 1の実装を実施。
+計画ファイル: docs/cycles/v1.0.1/plans/unit4_cycle_management_phase1_plan.md
+```
+
+**成果物**:
+- 設計ドキュメント:
+  - docs/cycles/v1.0.1/design-artifacts/domain-models/unit4_phase1_cycle_specification_domain_model.md
+  - docs/cycles/v1.0.1/design-artifacts/logical-designs/unit4_phase1_cycle_specification_logical_design.md
+- 修正ファイル:
+  - prompts/setup-prompt.md（サイクル確認ステップを追加）
+- 実装記録:
+  - docs/cycles/v1.0.1/construction/units/unit4_phase1_cycle_specification_implementation.md
+- 進捗管理:
+  - docs/cycles/v1.0.1/construction/progress.md（更新）
+
+**備考**:
+- Phase 1のみ実装完了（サイクル指定方法の改善）
+- setup-prompt.mdに各フェーズプロンプトのサイクル確認ステップを追加
+- 将来のセットアップ時にサイクル名のハードコードが解消される
+- 続けてPhase 2（次サイクルへのタスクリスト管理）を実装予定
+
+---
+
+## 2025-11-28 01:33:18 JST
+
+**フェーズ**: Construction Phase
+
+**実行内容**: Unit 4 Phase 2（次サイクルへのタスクリスト管理）の実装完了、Unit 4全体完了
+
+**プロンプト**:
+```
+docs/aidlc/prompts/construction.md を読み込み、Unit 4 Phase 2の実装を実施。
+計画ファイル: docs/cycles/v1.0.1/plans/unit4_phase2_next_cycle_tasks_plan.md
+```
+
+**成果物**:
+Phase 2:
+- 設計ドキュメント:
+  - docs/cycles/v1.0.1/design-artifacts/domain-models/unit4_phase2_next_cycle_tasks_domain_model.md
+  - docs/cycles/v1.0.1/design-artifacts/logical-designs/unit4_phase2_next_cycle_tasks_logical_design.md
+- 修正ファイル:
+  - prompts/setup-prompt.md（バックログ確認・記録ステップを追加）
+- テンプレートファイル:
+  - docs/aidlc/templates/backlog_template.md
+  - docs/aidlc/templates/backlog_completed_template.md
+- 実装記録:
+  - docs/cycles/v1.0.1/construction/units/unit4_phase2_next_cycle_tasks_implementation.md
+- 進捗管理:
+  - docs/cycles/v1.0.1/construction/progress.md（更新）
+
+**備考**:
+- Unit 4全体完了（Phase 1 + Phase 2）
+- Phase 1: サイクル指定方法の改善（サイクル確認ステップを追加）
+- Phase 2: 次サイクルへのタスクリスト管理（バックログ管理の仕組みを構築）
+- サイクル横断のバックログファイル（docs/cycles/backlog.md, backlog_completed.md）
+- Operations Phase完了時にタスクを記録、Inception Phase開始時に参照
