@@ -303,3 +303,26 @@ Construction Phase - Unit 8: セットアップファイル最適化
 - 受け入れテスト/E2Eテストの記録フォーマットを提供
 - バグ種類（設計/実装/環境）に応じた対応フローを文書化
 - フェーズ間のバックトラック手順を強化
+
+---
+
+## 2025-11-28 22:41:25 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 2: バージョンアップ基盤
+
+### 実行内容
+バージョンアップ基盤の実装
+
+### 成果物
+- `/CHANGELOG.md` - スターターキットの変更履歴（新規作成）
+- `/version.txt` - スターターキットのバージョン（新規作成）
+- `prompts/setup-prompt.md` - バージョン確認フロー追加
+- `docs/cycles/v1.0.1/plans/unit2_version_upgrade_foundation_plan.md` - 計画書（改訂版）
+- `docs/cycles/v1.0.1/construction/units/unit2_version_upgrade_implementation.md` - 実装記録
+
+### 備考
+- 当初計画から大幅に簡略化
+- スクリプトによる自動化 → プロンプトベースの手動確認に変更
+- upgrade-guide.md → セットアッププロンプト内に統合
+- 4ケース対応（新規/最新版/要更新/開発版）
