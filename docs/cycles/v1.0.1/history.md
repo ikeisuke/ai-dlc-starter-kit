@@ -347,3 +347,22 @@ Construction Phase - Unit 8: セットアップファイル最適化
 - 当初計画（8時間）から大幅簡略化（実際は約30分）
 - ハッシュ管理、差分ツールカスタマイズは不採用
 - シンプルな「ルール明示」で解決
+
+---
+## 2025-11-28 23:48:20 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 5 延期処理
+
+**詳細**:
+- Unit 5「Issue駆動統合設計」を次サイクル以降に延期
+- 延期理由: AI-DLCがもっと成熟してから導入した方が効果的と判断
+- ドメインモデル設計途中で中断
+
+**成果物**:
+- docs/cycles/backlog.md（新規作成）
+- docs/cycles/v1.0.1/construction/progress.md（更新）
+- docs/cycles/v1.0.1/plans/unit5_issue_driven_integration_plan.md（延期ステータス追記）
+- docs/cycles/v1.0.1/design-artifacts/domain-models/unit5_issue_driven_domain_model.md（部分成果物として保持）
+
+**備考**: 残り1 Unit（Unit 7: プロンプト参照ガイド）
