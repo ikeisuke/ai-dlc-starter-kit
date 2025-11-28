@@ -251,3 +251,28 @@ docs/aidlc/prompts/inception.md にバックトラックし、Unit 8を追加。
   - 圧縮 + フェーズ別分割（5ファイル構成）
   - 最終構成: setup-prompt.md（300行）、inception.md（500行）、construction.md（500行）、operations.md（500行）、common.md（200行）
 - 次のアクション: Construction PhaseでUnit 8を最優先実施
+
+---
+## 2025-11-28 19:35:09 JST
+
+### フェーズ
+Construction Phase - Unit 8: セットアップファイル最適化
+
+### 実行内容
+- セットアップファイル（1746行）をフェーズ別に5ファイルに分割
+- MODE機能（setup/template/list）を削除してセットアップ専用に簡潔化
+- 分割後の行数: 合計1707行（39行削減）
+
+### 成果物
+- prompts/setup-prompt.md（219行）- メインファイル
+- prompts/setup/inception.md（327行）- Inception Phase セットアップ
+- prompts/setup/construction.md（377行）- Construction Phase セットアップ
+- prompts/setup/operations.md（480行）- Operations Phase セットアップ
+- prompts/setup/common.md（304行）- 共通処理
+- docs/cycles/v1.0.1/design-artifacts/domain-models/unit8_domain_model.md
+- docs/cycles/v1.0.1/design-artifacts/logical-designs/unit8_logical_design.md
+- docs/cycles/v1.0.1/plans/construction_unit8_setup_file_optimization.md
+- docs/cycles/v1.0.1/construction/units/unit8_implementation.md
+
+### 備考
+- Unit 8 完了、残り5 Unit（Unit 2, 3, 5, 6, 7）
