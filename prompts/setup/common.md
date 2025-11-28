@@ -4,6 +4,47 @@
 
 ---
 
+## 変数置換ルール【重要】
+
+### 表記揺れ防止の原則
+
+プロンプトファイル生成時は以下を**厳守**：
+1. テンプレート（コードブロック内）を**そのままコピー**する
+2. 下記の変数（`{{VAR}}`形式）**のみ**を対応する値に置換する
+3. **文章の修正・改善・言い換えは禁止**
+4. 変数以外の部分は**一切変更しない**
+
+### 置換対象の変数一覧
+
+| 変数名 | 説明 | 例 |
+|--------|------|-----|
+| `{{PROJECT_NAME}}` | プロジェクト名 | AI-DLC Starter Kit |
+| `{{CYCLE}}` | サイクル識別子 | v1.0.1 |
+| `{{BRANCH}}` | ブランチ名 | feature/v1.0.1 |
+| `{{DEVELOPMENT_TYPE}}` | 開発タイプ | greenfield / brownfield |
+| `{{PROJECT_TYPE}}` | プロジェクトタイプ | ios / android / web / backend / general |
+| `{{AIDLC_ROOT}}` | 共通ファイルルート | docs/aidlc |
+| `{{CYCLES_ROOT}}` | サイクルルート | docs/cycles |
+| `{{ROLE_INCEPTION}}` | Inception役割 | プロダクトマネージャー兼ビジネスアナリスト |
+| `{{ROLE_CONSTRUCTION}}` | Construction役割 | ソフトウェアアーキテクト兼エンジニア |
+| `{{ROLE_OPERATIONS}}` | Operations役割 | DevOpsエンジニア兼SRE |
+| `{{SETUP_PROMPT_PATH}}` | セットアッププロンプトのパス | /path/to/setup-prompt.md |
+| `{{PROJECT_SUMMARY}}` | プロジェクト概要（1行） | [セットアップ時に設定] |
+| `{{LANGUAGE}}` | 使用言語 | 日本語 |
+| `{{DEVELOPER_EXPERTISE}}` | 開発者の専門分野 | ソフトウェア開発 |
+| `{{PROJECT_README}}` | プロジェクトREADMEパス | /README.md |
+
+### 禁止事項
+
+- テンプレートの文章構造を変更する
+- 説明を追加・削除する
+- 表現を「より良く」しようとする
+- 変数以外の部分を編集する
+
+**理由**: 表記揺れを防ぎ、バージョンアップ時の差分を最小限にするため
+
+---
+
 ## 1. ディレクトリ構成の作成
 
 以下の構造を作成：

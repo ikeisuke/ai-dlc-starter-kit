@@ -326,3 +326,24 @@ Construction Phase - Unit 8: セットアップファイル最適化
 - スクリプトによる自動化 → プロンプトベースの手動確認に変更
 - upgrade-guide.md → セットアッププロンプト内に統合
 - 4ケース対応（新規/最新版/要更新/開発版）
+
+---
+
+## 2025-11-28 23:06:14 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 3: 表記揺れ対策
+
+### 実行内容
+表記揺れ防止のための変数置換ルール明示
+
+### 成果物
+- `prompts/setup/common.md` - 変数置換ルール追加（変数一覧15項目、禁止事項4項目）
+- `prompts/setup-prompt.md` - 表記揺れ防止ルール追加（冒頭）
+- `docs/cycles/v1.0.1/plans/unit3_notation_consistency_plan.md` - 計画書
+- `docs/cycles/v1.0.1/construction/units/unit3_notation_consistency_implementation.md` - 実装記録
+
+### 備考
+- 当初計画（8時間）から大幅簡略化（実際は約30分）
+- ハッシュ管理、差分ツールカスタマイズは不採用
+- シンプルな「ルール明示」で解決
