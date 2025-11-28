@@ -238,8 +238,13 @@ docs/aidlc/prompts/operations.md
 
 ### 2. Operations Phaseからバグ修正で戻ってきた場合
 
+**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+
 - progress.mdを読み込み、修正対象Unitを「進行中」に変更
-- Unit修正（設計レビュー→実装→テスト）
+- バグ種類に応じて修正:
+  - **設計バグ**: ドメインモデル/論理設計を修正 → 設計レビュー → 実装修正
+  - **実装バグ**: コードを修正 → テスト追加
+- ビルド・テスト実行で修正を確認
 - progress.mdを更新（Unitを「完了」に戻す）
 - 履歴記録とコミット
 - Operations Phaseに戻る: `docs/aidlc/prompts/operations.md` を読み込み

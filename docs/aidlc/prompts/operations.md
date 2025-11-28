@@ -88,6 +88,14 @@ Inception/Construction Phaseで決定済み
 ### テンプレート参照
 ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
 
+### テスト記録とバグ対応【重要】
+- **テスト記録テンプレート**: `docs/aidlc/templates/test_record_template.md`
+  - 受け入れテスト/E2Eテスト実施時に使用
+  - テスト結果を統一形式で記録
+- **バグ対応フロー**: `docs/aidlc/bug-response-flow.md`
+  - バグ発見時の分類基準と対応手順
+  - どのフェーズに戻るかの判断基準
+
 ---
 
 ## あなたの役割
@@ -197,11 +205,18 @@ chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
 
 Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
-1. 現在のprogress.mdを確認
-2. `docs/aidlc/prompts/construction.md` を読み込み
-3. Construction Phaseの「このフェーズに戻る場合 - Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
-4. 修正完了後、`docs/aidlc/prompts/operations.md` を読み込んで再開
-5. operations/progress.mdを読み込んで、未完了ステップから再開
+**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+
+1. **バグを記録**: テスト記録ファイルにバグ詳細を記載
+2. **バグ種類を判定**: バグ対応フローの分類ガイドに従って判定
+   - 設計バグ → Construction Phase（設計）に戻る
+   - 実装バグ → Construction Phase（実装）に戻る
+   - 環境バグ → Operations Phaseで修正
+3. **Construction Phaseに戻る場合**:
+   - `docs/aidlc/prompts/construction.md` を読み込み
+   - Construction Phaseの「このフェーズに戻る場合 - Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
+4. **修正完了後**: `docs/aidlc/prompts/operations.md` を読み込んで再開
+5. **再テスト実施**: テスト記録テンプレートを使用して再テストを記録
 
 ---
 
