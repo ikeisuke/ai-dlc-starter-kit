@@ -4,6 +4,18 @@
 
 ---
 
+## 生成するファイル
+
+1. **プロンプトファイル**: `{{AIDLC_ROOT}}/prompts/inception.md`
+2. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+   - `intent_template.md`
+   - `user_stories_template.md`
+   - `unit_definition_template.md`
+   - `prfaq_template.md`
+   - `inception_progress_template.md`
+
+---
+
 ## inception.md プロンプト生成
 
 `{{AIDLC_ROOT}}/prompts/inception.md` を作成：

@@ -4,6 +4,16 @@
 
 ---
 
+## 生成するファイル
+
+1. **プロンプトファイル**: `{{AIDLC_ROOT}}/prompts/construction.md`
+2. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+   - `domain_model_template.md`
+   - `logical_design_template.md`
+   - `implementation_record_template.md`
+
+---
+
 ## construction.md プロンプト生成
 
 `{{AIDLC_ROOT}}/prompts/construction.md` を作成：

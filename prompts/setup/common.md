@@ -338,36 +338,31 @@ EOF
 ```markdown
 # AI-DLC テンプレート一覧
 
-このディレクトリには、AI-DLC開発で使用するドキュメントテンプレートが格納されます。
-
-## テンプレート生成方法（JIT: Just-In-Time）
-
-テンプレートは必要な時に自動生成されます：
-- 各フェーズ開始時、AIが自動的に必要なテンプレートをチェック
-- 不足している場合は自動生成
+このディレクトリには、AI-DLC開発で使用するドキュメントテンプレートが格納されています。
 
 ## 利用可能なテンプレート
 
 ### Inception Phase
-- **intent_template**: 開発の目的、ターゲットユーザー、ビジネス価値
-- **user_stories_template**: ユーザーストーリーとEpic、受け入れ基準
-- **unit_definition_template**: Unit（独立した価値提供ブロック）の定義
-- **prfaq_template**: プレスリリース形式での製品説明とFAQ
-- **inception_progress_template**: Inception Phaseの進捗管理
+- **intent_template.md**: 開発の目的、ターゲットユーザー、ビジネス価値
+- **user_stories_template.md**: ユーザーストーリーとEpic、受け入れ基準
+- **unit_definition_template.md**: Unit（独立した価値提供ブロック）の定義
+- **prfaq_template.md**: プレスリリース形式での製品説明とFAQ
+- **inception_progress_template.md**: Inception Phaseの進捗管理
 
 ### Construction Phase
-- **domain_model_template**: DDDに基づくドメインモデル設計
-- **logical_design_template**: 非機能要件を反映した論理設計
-- **implementation_record_template**: 実装記録
+- **domain_model_template.md**: DDDに基づくドメインモデル設計
+- **logical_design_template.md**: 非機能要件を反映した論理設計
+- **implementation_record_template.md**: 実装記録
 
 ### Operations Phase
-- **deployment_checklist_template**: デプロイ前チェックリストと手順
-- **monitoring_strategy_template**: 監視とロギングの戦略
-- **distribution_feedback_template**: 配布とフィードバック収集の記録
-- **post_release_operations_template**: リリース後の運用とフィードバック分析
-- **operations_progress_template**: Operations Phaseの進捗管理
-- **backlog_template**: 次サイクル以降のタスク管理
-- **backlog_completed_template**: 完了済みバックログタスク
+- **deployment_checklist_template.md**: デプロイ前チェックリストと手順
+- **monitoring_strategy_template.md**: 監視とロギングの戦略
+- **distribution_feedback_template.md**: 配布とフィードバック収集の記録
+- **post_release_operations_template.md**: リリース後の運用とフィードバック分析
+- **operations_progress_template.md**: Operations Phaseの進捗管理
+- **backlog_template.md**: 次サイクル以降のタスク管理
+- **backlog_completed_template.md**: 完了済みバックログタスク
+- **test_record_template.md**: テスト記録
 ```
 
 ---

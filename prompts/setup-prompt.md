@@ -146,9 +146,11 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。
 │   ├── inception.md
 │   ├── construction.md
 │   ├── operations.md
-│   └── additional-rules.md
+│   ├── additional-rules.md
+│   └── prompt-reference-guide.md
 ├── templates/
-│   └── index.md
+│   ├── index.md
+│   └── *_template.md（各フェーズ用テンプレート）
 └── version.txt
 
 {{CYCLES_ROOT}}/{{CYCLE}}/
@@ -232,7 +234,9 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/construction.md - Construction Phase用プロンプト
 - prompts/operations.md - Operations Phase用プロンプト
 - prompts/additional-rules.md - 共通の追加ルール
+- prompts/prompt-reference-guide.md - プロンプト参照ガイド
 - templates/index.md - テンプレート一覧
+- templates/*_template.md - 各フェーズ用テンプレート
 - version.txt - スターターキットバージョン
 
 サイクル固有ファイル（{{CYCLES_ROOT}}/{{CYCLE}}/）:
