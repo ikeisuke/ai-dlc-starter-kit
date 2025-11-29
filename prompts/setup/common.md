@@ -54,7 +54,8 @@
 │   ├── inception.md
 │   ├── construction.md
 │   ├── operations.md
-│   └── additional-rules.md
+│   ├── additional-rules.md
+│   └── prompt-reference-guide.md
 ├── templates/
 │   └── index.md
 └── version.txt
@@ -232,6 +233,104 @@ EOF
 
 ---
 
+### prompt-reference-guide.md（プロンプト参照ガイド）
+
+`{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を作成：
+
+```markdown
+# プロンプト参照ガイド
+
+このガイドでは、AI-DLC Starter Kitのフェーズプロンプトを正しく活用する方法を説明します。
+
+---
+
+## 1. 概要
+
+### AI-DLCのフェーズ構成
+
+\`\`\`
+┌─────────────┐     ┌─────────────────┐     ┌────────────────┐
+│  Inception  │ ──▶ │  Construction   │ ──▶ │   Operations   │
+│  (要件定義)  │     │    (実装)       │     │    (運用)      │
+└─────────────┘     └─────────────────┘     └────────────────┘
+       │                                              │
+       └──────────────── 次サイクル ◀─────────────────┘
+\`\`\`
+
+### プロンプトファイル一覧
+
+| フェーズ | プロンプトファイル | 役割 |
+|---------|-------------------|------|
+| Inception | `{{AIDLC_ROOT}}/prompts/inception.md` | 要件定義・Unit分解 |
+| Construction | `{{AIDLC_ROOT}}/prompts/construction.md` | 設計・実装・テスト |
+| Operations | `{{AIDLC_ROOT}}/prompts/operations.md` | デプロイ・運用・監視 |
+
+---
+
+## 2. 各フェーズプロンプトの使い方
+
+### Inception Phase
+
+**開始方法**:
+\`\`\`
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
+{{AIDLC_ROOT}}/prompts/inception.md
+\`\`\`
+
+### Construction Phase
+
+**開始方法**:
+\`\`\`
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Construction Phase を開始してください：
+{{AIDLC_ROOT}}/prompts/construction.md
+\`\`\`
+
+### Operations Phase
+
+**開始方法**:
+\`\`\`
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase を開始してください：
+{{AIDLC_ROOT}}/prompts/operations.md
+\`\`\`
+
+---
+
+## 3. フェーズ間の移行方法
+
+各フェーズ完了時、**新しいセッション（コンテキストリセット）** で次フェーズのプロンプトを読み込んでください。
+
+---
+
+## 4. よくある間違いと対策
+
+### 間違い1: 独自プロンプトを作成してしまう
+
+**対策**: 公式のフェーズプロンプトを直接読み込む。プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載。
+
+### 間違い2: 複数のフェーズプロンプトを同時に読み込む
+
+**対策**: 1つのセッションでは1つのフェーズプロンプトのみ読み込む。
+
+### 間違い3: コンテキストリセットをしない
+
+**対策**: フェーズ移行時は必ず新しいセッションで開始。
+
+---
+
+## 5. プロンプトのカスタマイズ方法
+
+プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください。
+
+---
+
+## 補足
+
+- 各フェーズプロンプトは冪等性を持つよう設計されています（途中から再開可能）
+- 不明点があれば、AIに質問してください
+```
+
+---
+
 ### templates/index.md（テンプレート一覧）
 
 `{{AIDLC_ROOT}}/templates/index.md` を作成：
@@ -312,6 +411,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/construction.md - Construction Phase用プロンプト
 - prompts/operations.md - Operations Phase用プロンプト
 - prompts/additional-rules.md - 共通の追加ルール
+- prompts/prompt-reference-guide.md - プロンプト参照ガイド
 - templates/index.md - テンプレート一覧
 - version.txt - スターターキットバージョン
 

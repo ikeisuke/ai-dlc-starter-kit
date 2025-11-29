@@ -11,6 +11,12 @@
 ```markdown
 # Inception Phase プロンプト
 
+> **重要: このプロンプトについて**
+> - これはAI-DLC Starter Kitの公式フェーズプロンプトです
+> - 独自のプロンプトを作成せず、このファイルを直接読み込んでください
+> - プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください
+> - 詳細は `{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を参照
+
 **セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
 
 （このパスはテンプレート生成時に使用します）

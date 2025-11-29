@@ -366,3 +366,24 @@ Construction Phase - Unit 8: セットアップファイル最適化
 - docs/cycles/v1.0.1/design-artifacts/domain-models/unit5_issue_driven_domain_model.md（部分成果物として保持）
 
 **備考**: 残り1 Unit（Unit 7: プロンプト参照ガイド）
+
+---
+## 2025-11-29 11:40:28 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 7 プロンプト参照ガイド 完了
+
+**詳細**:
+- プロンプト参照ガイドテンプレートを prompts/setup/common.md に追加
+- 各フェーズプロンプトテンプレートに注意書きを追加（inception, construction, operations）
+- メタ開発として、セットアップテンプレートを更新（次回セットアップ時に反映）
+
+**成果物**:
+- prompts/setup/common.md（更新）
+- prompts/setup/inception.md（更新）
+- prompts/setup/construction.md（更新）
+- prompts/setup/operations.md（更新）
+- docs/cycles/v1.0.1/design-artifacts/unit7_prompt_guide_design.md
+- docs/cycles/v1.0.1/construction/units/unit7_implementation.md
+
+**備考**: Construction Phase完了（7 Unit完了、1 Unit延期）、Operations Phaseへ移行可能
