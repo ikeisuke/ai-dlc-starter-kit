@@ -181,7 +181,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 - 次のUnitが残っている場合: 次のUnit継続
 - 全Unit完了の場合: Operations Phase へ移行
 \`\`\`
-以下のファイルを読み込んで、Operations Phase を開始してください：
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/operations.md
 \`\`\`
 

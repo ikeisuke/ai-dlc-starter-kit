@@ -426,7 +426,7 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 
 カスタマイズ完了後、**新しいセッション**で以下を実行してください：
 
-以下のファイルを読み込んで、Inception Phase を開始してください：
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/inception.md
 ```
 
