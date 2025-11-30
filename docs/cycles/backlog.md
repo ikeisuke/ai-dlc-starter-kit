@@ -21,6 +21,21 @@
 
 ---
 
+## 技術的負債・修正タスク
+
+### construction.md のパス参照不整合
+- **発見日**: 2025-11-30
+- **発見サイクル**: v1.1.0 Construction Phase
+- **概要**: construction.md（または読み込み側の想定）でUnit定義ファイルのパスが実際の構造と異なる
+- **詳細**:
+  - 想定パス: `docs/cycles/{version}/units/`
+  - 実際のパス: `docs/cycles/{version}/story-artifacts/units/`
+- **影響**: AIがUnit定義を最初に見つけられず、Globで探索が必要になる
+- **修正案**: construction.md のパス参照を修正、またはInception Phaseのテンプレート出力パスを調整
+- **優先度**: 低（動作に支障なし、利便性の問題）
+
+---
+
 ## 次サイクルで検討するタスク
 
 ### v1.0.1 サイクル完了時のフィードバック（2025-11-30）

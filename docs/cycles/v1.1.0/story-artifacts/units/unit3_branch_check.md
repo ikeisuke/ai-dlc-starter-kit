@@ -31,12 +31,13 @@
 - **可用性**: Gitリポジトリでない場合はスキップ
 
 ## 技術的考慮事項
-- `setup-prompt.md` の「実行環境の確認」セクションに追加
+- `setup-prompt.md` に「Git環境の確認」セクションを新設
 - 確認ロジック:
-  1. `git branch --show-current` で現在のブランチを取得
-  2. `CYCLE` がブランチ名に含まれているか確認
-  3. 含まれていない場合、警告を表示
-  4. `feature/{CYCLE}` 形式のブランチへの切り替えを提案
+  1. `git rev-parse --git-dir` でGitリポジトリか確認（リポジトリでない場合は警告 + `git init` 提案）
+  2. `git branch --show-current` で現在のブランチを取得
+  3. `CYCLE` がブランチ名に含まれているか確認
+  4. 含まれていない場合、警告を表示
+  5. `cycle/{CYCLE}` 形式のブランチへの切り替えを提案
 
 ## 実装優先度
 Medium

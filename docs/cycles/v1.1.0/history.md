@@ -79,3 +79,29 @@ v1.1.0 サイクルの Inception Phase を完了
 
 ### 備考
 4つのUnit（Operations再利用性、Lite版、ブランチ確認、コンテキストリセット）を定義
+
+---
+
+## 2025-12-01 00:52:40 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 3 - ブランチ確認機能
+
+### 実行内容
+- ドメインモデル設計
+- 論理設計
+- 設計レビュー（Gitリポジトリでない場合の警告追加を決定）
+- setup-prompt.md に「Git環境の確認」セクションを追加
+- 実装記録の作成
+
+### 成果物
+- `prompts/setup-prompt.md` - Git環境確認セクション追加
+- `docs/cycles/v1.1.0/design-artifacts/domain-models/unit3_branch_check_domain_model.md`
+- `docs/cycles/v1.1.0/design-artifacts/logical-designs/unit3_branch_check_logical_design.md`
+- `docs/cycles/v1.1.0/construction/units/unit3_branch_check_implementation.md`
+- `docs/cycles/v1.1.0/plans/unit3_branch_check_plan.md`
+
+### 備考
+- ブランチ形式は `cycle/{CYCLE}` に決定（ユーザー要望）
+- Gitリポジトリでない場合は警告 + `git init` 提案を追加（設計レビュー時に決定）
+- バックログにconstruction.mdのパス参照不整合を記録
