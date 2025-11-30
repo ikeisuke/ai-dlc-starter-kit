@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./docs/aidlc/version.txt)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](./docs/aidlc/version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
