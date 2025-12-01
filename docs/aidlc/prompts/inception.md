@@ -75,6 +75,35 @@ Inception Phaseで決定
 
 - コード品質基準、Git運用の原則は `docs/aidlc/prompts/additional-rules.md` を参照
 
+- **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
+  - 「継続プロンプト」「リセットしたい」
+  - 「コンテキストが溢れそう」「コンテキストオーバーフロー」
+  - 「長くなってきた」「一旦区切りたい」
+
+  **対応手順**:
+  1. 現在の作業状態を確認（どのステップか）
+  2. progress.mdを更新（現在のステップを「進行中」のまま保持）
+  3. 履歴記録（history.mdに中断状態を追記）
+  4. 継続用プロンプトを提示（下記フォーマット）
+
+  ```markdown
+  ---
+  ## コンテキストリセット - 作業継続
+
+  現在の作業状態を保存しました。コンテキストをリセットして作業を継続できます。
+
+  **現在の状態**:
+  - フェーズ: Inception Phase
+  - ステップ: [ステップ名]
+
+  **作業を継続するプロンプト**:
+  ```
+  以下のファイルを読み込んで、サイクル vX.X.X の Inception Phase を継続してください：
+  docs/aidlc/prompts/inception.md
+  ```
+  ---
+  ```
+
 ### フェーズの責務分離
 - **Inception Phase**: 要件定義とUnit分解（このフェーズ）
 - **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
@@ -214,12 +243,16 @@ feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義�
 
 ---
 
-## 次のステップ
+## 次のステップ【コンテキストリセット推奨】
 
-Construction Phase へ移行：
+Inception Phaseが完了しました。コンテキストをリセットして次のステップを開始することを推奨します。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
+
+**Construction Phaseを開始するプロンプト**:
 
 ```markdown
-以下のファイルを読み込んで、Construction Phase を開始してください：
+以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を開始してください：
 docs/aidlc/prompts/construction.md
 ```
 

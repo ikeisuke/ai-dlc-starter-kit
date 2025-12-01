@@ -105,3 +105,26 @@ v1.1.0 サイクルの Inception Phase を完了
 - ブランチ形式は `cycle/{CYCLE}` に決定（ユーザー要望）
 - Gitリポジトリでない場合は警告 + `git init` 提案を追加（設計レビュー時に決定）
 - バックログにconstruction.mdのパス参照不整合を記録
+
+---
+## 2025-12-01 09:47:56 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 4: コンテキストリセット提案機能の実装完了
+
+### 成果物
+- docs/cycles/v1.1.0/plans/unit4_context_reset_plan.md（計画）
+- docs/cycles/v1.1.0/design-artifacts/domain-models/unit4_context_reset_domain_model.md（ドメインモデル）
+- docs/cycles/v1.1.0/design-artifacts/logical-designs/unit4_context_reset_logical_design.md（論理設計）
+- docs/aidlc/prompts/inception.md（更新）
+- docs/aidlc/prompts/construction.md（更新）
+- docs/aidlc/prompts/operations.md（更新）
+- docs/cycles/v1.1.0/construction/units/unit4_context_reset_implementation.md（実装記録）
+
+### 備考
+- フェーズ完了時のリセット推奨機能を実装
+- ユーザー要求（キーワード検知）によるリセット対応機能を追加
+- 全3つのフェーズプロンプトに統一フォーマットで追加

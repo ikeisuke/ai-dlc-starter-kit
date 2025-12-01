@@ -75,6 +75,36 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - コード品質基準、Git運用の原則は `docs/aidlc/prompts/additional-rules.md` を参照
 
+- **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
+  - 「継続プロンプト」「リセットしたい」
+  - 「コンテキストが溢れそう」「コンテキストオーバーフロー」
+  - 「長くなってきた」「一旦区切りたい」
+
+  **対応手順**:
+  1. 現在の作業状態を確認（どのUnitの何ステップか）
+  2. progress.mdを更新（現在のUnitとステップを「進行中」のまま保持）
+  3. 履歴記録（history.mdに中断状態を追記）
+  4. 継続用プロンプトを提示（下記フォーマット）
+
+  ```markdown
+  ---
+  ## コンテキストリセット - 作業継続
+
+  現在の作業状態を保存しました。コンテキストをリセットして作業を継続できます。
+
+  **現在の状態**:
+  - フェーズ: Construction Phase
+  - Unit: [Unit名]
+  - ステップ: [ステップ名]
+
+  **作業を継続するプロンプト**:
+  ```
+  以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
+  docs/aidlc/prompts/construction.md
+  ```
+  ---
+  ```
+
 ### フェーズの責務分離
 - **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
 - **Construction Phase**: 実装とテスト（このフェーズ）
@@ -214,17 +244,36 @@ progress.mdの最終更新セクションを更新
 feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
+### 6. コンテキストリセット推奨
+Unitが完了しました。コンテキストをリセットして次の作業を開始することを推奨します。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
+
+**次のUnitを開始するプロンプト**:
+```markdown
+以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
+docs/aidlc/prompts/construction.md
+```
+
 ---
 
-## 次のステップ
+## 次のステップ【コンテキストリセット推奨】
 
-- **次のUnitが残っている場合**: 次のUnit継続（新しいセッションで `docs/aidlc/prompts/construction.md` を読み込み）
-- **全Unit完了の場合**: Operations Phase へ移行
+- **次のUnitが残っている場合**: コンテキストをリセットして次のUnitを開始
 
-```markdown
-以下のファイルを読み込んで、Operations Phase を開始してください：
-docs/aidlc/prompts/operations.md
-```
+  ```markdown
+  以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
+  docs/aidlc/prompts/construction.md
+  ```
+
+- **全Unit完了の場合**: コンテキストをリセットしてOperations Phaseへ移行
+
+  全Unitが完了しました。コンテキストをリセットしてOperations Phaseを開始することを推奨します。
+
+  ```markdown
+  以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase を開始してください：
+  docs/aidlc/prompts/operations.md
+  ```
 
 ---
 
