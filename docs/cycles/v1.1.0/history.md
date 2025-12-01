@@ -153,3 +153,27 @@ Unit 1: Operations Phase再利用性の実装完了
 
 ### 備考
 残りはUnit 2（軽量サイクル Lite版）のみ
+---
+## 2025-12-01 18:16:55 JST
+
+### フェーズ
+Construction Phase - Unit 2
+
+### 実行内容
+Unit 2: 軽量サイクル（Lite版）の実装完了
+
+### 成果物
+- docs/aidlc/prompts/lite/inception.md（新規）
+- docs/aidlc/prompts/lite/construction.md（新規）
+- docs/aidlc/prompts/lite/operations.md（新規）
+- prompts/setup-prompt.md（CYCLE_TYPE変数追加）
+- prompts/setup/common.md（Lite版対応追加）
+- docs/cycles/v1.1.0/design-artifacts/domain-models/unit2_lite_cycle_domain_model.md
+- docs/cycles/v1.1.0/design-artifacts/logical-designs/unit2_lite_cycle_logical_design.md
+- docs/cycles/v1.1.0/construction/units/unit2_lite_cycle_implementation.md
+- docs/cycles/v1.1.0/plans/unit2_lite_cycle_plan.md
+
+### 備考
+- Full版参照+差分指示方式を採用
+- .liteファイルでサイクルタイプを識別
+- 全Unit完了、Construction Phase完了

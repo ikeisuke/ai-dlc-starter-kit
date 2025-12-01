@@ -26,6 +26,7 @@ CYCLE = v1  # 開発サイクル識別子（v1.0.0, 2024-12, feature-x など自
 BRANCH = feature/example
 DEVELOPMENT_TYPE = greenfield  # greenfield / brownfield
 PROJECT_TYPE = ios  # ios / android / web / backend / general
+CYCLE_TYPE = Full  # Full / Lite
 DOCS_ROOT = docs  # ドキュメントルート
 LANGUAGE = 日本語
 PROJECT_README = /README.md
@@ -46,6 +47,10 @@ CYCLES_ROOT = ${DOCS_ROOT}/cycles    # サイクル固有成果物のルート
 - `web`: Webアプリケーション開発
 - `backend`: バックエンドAPI開発
 - `general`: 汎用
+
+**CYCLE_TYPE の値**:
+- `Full`: 全ステップを実行する完全版サイクル（新機能開発向け）
+- `Lite`: 一部ステップを省略する軽量版サイクル（バグ修正・軽微な変更向け）
 
 > **重要**: セットアップ完了後、`{{AIDLC_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください。
 
@@ -303,8 +308,13 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 
 カスタマイズ完了後、**新しいセッション**で以下を実行してください：
 
-以下のファイルを読み込んで、Inception Phase を開始してください：
+【Full版の場合】
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/inception.md
+
+【Lite版の場合】
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase (Lite) を開始してください：
+{{AIDLC_ROOT}}/prompts/lite/inception.md
 
 {{PROJECT_NAME}} {{CYCLE}} の開発を開始します。
 ```
