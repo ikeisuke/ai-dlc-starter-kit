@@ -6,8 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル**: `{{AIDLC_ROOT}}/prompts/inception.md`
-2. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/inception.md`
+2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/inception.md`
+3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
    - `intent_template.md`
    - `user_stories_template.md`
    - `unit_definition_template.md`
@@ -343,3 +344,104 @@ Intent明確化から開始してください。
 ```
 
 **注意**: greenfieldの場合、ステップ2を「スキップ」に設定
+
+---
+
+## Lite版プロンプト生成
+
+`{{AIDLC_ROOT}}/prompts/lite/inception.md` を作成：
+
+```markdown
+# Inception Phase プロンプト（Lite版）
+
+> **重要: このプロンプトについて**
+> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
+> - 軽微なバグ修正や小さな変更向けの簡略化フローです
+> - Full版: `{{AIDLC_ROOT}}/prompts/inception.md`
+
+**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+
+---
+
+## Lite版の特徴
+
+Lite版は以下の場合に使用します：
+- 軽微なバグ修正
+- 小さな機能追加
+- ドキュメント修正
+- リファクタリング
+
+---
+
+## プロジェクト情報
+
+### プロジェクト概要
+{{PROJECT_SUMMARY}}
+
+### ディレクトリ構成
+- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
+- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+
+### 開発ルール（Lite版でも維持）
+- **人間の承認プロセス【重要】**: 重要な決定時は承認を得る
+- **Gitコミットのタイミング【必須】**: 各フェーズ完了時
+- **プロンプト履歴管理【重要】**: history.mdは必ず追記のみ
+
+---
+
+## あなたの役割
+
+あなたは{{ROLE_INCEPTION}}です。
+
+---
+
+## 最初に必ず実行すること
+
+### 1. 追加ルール確認
+`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+
+### 2. 進捗管理ファイル確認
+- `{{CYCLES_ROOT}}/{{CYCLE}}/inception/progress.md` が存在するか確認
+- 存在する場合は読み込んで継続、存在しない場合は作成
+
+---
+
+## Lite版フロー（簡略化）
+
+1. **Intent明確化（簡潔版）**: 要点のみ1ファイルで記述
+   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/requirements/intent.md`
+2. **ユーザーストーリー作成（簡略版）**: 箇条書きレベルでOK
+   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/user_stories.md`
+3. **Unit定義（1ファイル）**: 個別ファイル不要、1ファイルにまとめる
+   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/all_units.md`
+4. **Construction用progress.md作成**
+   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md`
+
+**スキップ**: PRFAQ作成、詳細な既存コード分析
+
+---
+
+## 完了基準
+
+- Intent作成済み（簡潔版）
+- 簡易ユーザーストーリー作成済み
+- Unit定義（1ファイル）作成済み
+- construction/progress.md作成済み
+
+---
+
+## 完了時の必須作業【重要】
+
+1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+2. **Gitコミット**: 作成したすべてのファイルをコミット
+
+---
+
+## 次のステップ
+
+Construction Phase (Lite) へ移行:
+\`\`\`
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Construction Phase (Lite) を開始してください：
+{{AIDLC_ROOT}}/prompts/lite/construction.md
+\`\`\`
+```

@@ -6,8 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル**: `{{AIDLC_ROOT}}/prompts/operations.md`
-2. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/operations.md`
+2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/operations.md`
+3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
    - `deployment_checklist_template.md`
    - `monitoring_strategy_template.md`
    - `distribution_feedback_template.md`
@@ -795,4 +796,111 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 - **秘密情報は記載しない**: APIキー、パスワード等は環境変数や秘密管理ツールで管理
 - **実設定ファイルとの関係**: このファイルは設定の「方針・概要」を記載。実際の設定ファイル（`.github/workflows/` 等）は別途管理
+```
+
+---
+
+## Lite版プロンプト生成
+
+`{{AIDLC_ROOT}}/prompts/lite/operations.md` を作成：
+
+```markdown
+# Operations Phase プロンプト（Lite版）
+
+> **重要: このプロンプトについて**
+> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
+> - Lite版ではOperations Phase自体が**任意**です
+> - Full版: `{{AIDLC_ROOT}}/prompts/operations.md`
+
+**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+
+---
+
+## Lite版の特徴
+
+Lite版では**Operations Phase自体が任意**です。
+
+**スキップ可能な条件**:
+- CI/CDが既に構築済み
+- 監視・ロギングが既に設定済み
+- 配布プロセスが確立済み
+- 軽微な変更でデプロイ手順の変更が不要
+
+---
+
+## プロジェクト情報
+
+### プロジェクト概要
+{{PROJECT_SUMMARY}}
+
+### ディレクトリ構成
+- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
+- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+
+### 開発ルール（Lite版でも維持）
+- **Gitコミットのタイミング【必須】**: フェーズ完了時
+- **プロンプト履歴管理【重要】**: history.mdは必ず追記のみ
+
+---
+
+## あなたの役割
+
+あなたは{{ROLE_OPERATIONS}}です。
+
+---
+
+## 最初に必ず実行すること
+
+### 1. Operations Phaseの要否確認
+ユーザーに以下を質問：
+「Operations Phaseは必要ですか？（CI/CD、監視、デプロイが既に構築済みならスキップ可能）」
+
+- **スキップの場合**: サイクル完了へ進む
+- **実施の場合**: 必要なステップのみ選択して実施
+
+---
+
+## 実施する場合（必要なステップのみ選択）
+
+1. **デプロイ準備**（必要な場合のみ）
+   - 環境変数の追加・変更がある場合
+   - 依存関係の追加がある場合
+
+2. **リリース後確認**（推奨）
+   - 変更が正しく反映されたか確認
+   - エラーが発生していないか確認
+
+---
+
+## 完了基準
+
+以下のいずれかを満たすこと：
+
+1. **スキップの場合**: 「Operations Phaseをスキップ」を明示的に選択・記録
+2. **実施の場合**: 必要な運用作業の完了
+
+---
+
+## 完了時の必須作業【重要】
+
+1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+2. **Gitコミット**: 作成したすべてのファイルをコミット
+
+---
+
+## サイクル完了
+
+Operations Phase (Lite) が完了（またはスキップ）したら、サイクルは完了です。
+
+### 次のサイクル開始
+
+新しいサイクルを開始する場合：
+\`\`\`
+以下のファイルを読み込んで、AI-DLC の次サイクル の環境をセットアップしてください：
+{{SETUP_PROMPT_PATH}}
+
+変数を以下に設定してください：
+- CYCLE = vX.X.X（次のサイクル識別子）
+- CYCLE_TYPE = Full または Lite
+\`\`\`
 ```
