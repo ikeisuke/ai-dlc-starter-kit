@@ -128,3 +128,28 @@ Unit 4: コンテキストリセット提案機能の実装完了
 - フェーズ完了時のリセット推奨機能を実装
 - ユーザー要求（キーワード検知）によるリセット対応機能を追加
 - 全3つのフェーズプロンプトに統一フォーマットで追加
+---
+## 2025-12-01 14:36:02 JST
+
+### フェーズ
+Construction Phase - Unit 1
+
+### 実行内容
+Unit 1: Operations Phase再利用性の実装完了
+
+- 運用引き継ぎ情報の格納場所（docs/aidlc/operations/）の定義
+- Operations Phase開始時の既存設定確認フローの追加
+- 再利用/更新/新規作成の選択肢提示機能の追加
+- 運用引き継ぎテンプレート（handover.md, README.md）の作成
+
+### 成果物
+- docs/cycles/v1.1.0/plans/unit1_operations_reusability_plan.md
+- docs/cycles/v1.1.0/design-artifacts/domain-models/unit1_operations_reusability_domain_model.md
+- docs/cycles/v1.1.0/design-artifacts/logical-designs/unit1_operations_reusability_logical_design.md
+- docs/cycles/v1.1.0/construction/units/unit1_operations_reusability_implementation.md
+- prompts/setup/operations.md（変更）
+- prompts/setup/common.md（変更）
+- prompts/setup-prompt.md（変更）
+
+### 備考
+残りはUnit 2（軽量サイクル Lite版）のみ

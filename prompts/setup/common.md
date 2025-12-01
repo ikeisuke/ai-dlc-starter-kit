@@ -58,6 +58,9 @@
 │   └── prompt-reference-guide.md
 ├── templates/
 │   └── index.md
+├── operations/                    # 運用引き継ぎ情報
+│   ├── handover.md
+│   └── README.md
 └── version.txt
 
 {{CYCLES_ROOT}}/{{CYCLE}}/         # サイクル固有成果物
@@ -83,6 +86,7 @@
 対象ディレクトリ（共通）:
 - `{{AIDLC_ROOT}}/prompts/`
 - `{{AIDLC_ROOT}}/templates/`
+- `{{AIDLC_ROOT}}/operations/`
 
 対象ディレクトリ（サイクル固有）:
 - `{{CYCLES_ROOT}}/{{CYCLE}}/plans/`

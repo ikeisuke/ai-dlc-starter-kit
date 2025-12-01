@@ -196,6 +196,9 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。
 ├── templates/
 │   ├── index.md
 │   └── *_template.md（各フェーズ用テンプレート）
+├── operations/                    # 運用引き継ぎ情報
+│   ├── handover.md
+│   └── README.md
 └── version.txt
 
 {{CYCLES_ROOT}}/{{CYCLE}}/
