@@ -217,11 +217,14 @@ ls docs/cycles/v1.0.1/operations/
 
 ## 完了時の必須作業【重要】
 
-### 1. 履歴記録
+### 1. バージョン更新
+`docs/aidlc/version.txt` のバージョンをサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
+
+### 2. 履歴記録
 `docs/cycles/v1.0.1/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 2. Gitコミット
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
+### 3. Gitコミット
+Operations Phaseで作成したすべてのファイル（**version.txt、operations/progress.md、history.mdを含む**）をコミット
 
 コミットメッセージ例:
 ```
