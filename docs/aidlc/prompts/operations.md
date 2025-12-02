@@ -38,11 +38,11 @@ Inception/Construction Phaseで決定済み
 
 ### ディレクトリ構成
 - `docs/aidlc/`: 全サイクル共通の共通プロンプト・テンプレート
-- `docs/cycles/v1.0.1/`: サイクル固有成果物
+- `docs/cycles/{{CYCLE}}/`: サイクル固有成果物
 - プロジェクトルートディレクトリ: 実装コード
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/v1.0.1/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
 - プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
@@ -62,10 +62,10 @@ Inception/Construction Phaseで決定済み
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/v1.0.1/history.md`)。日時取得の推奨方法:
+- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。日時取得の推奨方法:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/v1.0.1/history.md
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
   ---
   ## ${TIMESTAMP}
   ...
@@ -140,7 +140,7 @@ Inception/Construction Phaseで決定済み
 
 ### 2. 進捗管理ファイル確認【重要】
 
-`docs/cycles/v1.0.1/operations/progress.md` が存在するか確認：
+`docs/cycles/{{CYCLE}}/operations/progress.md` が存在するか確認：
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
@@ -148,7 +148,7 @@ Inception/Construction Phaseで決定済み
 ### 3. 既存成果物の確認（冪等性の保証）
 
 ```bash
-ls docs/cycles/v1.0.1/operations/
+ls docs/cycles/{{CYCLE}}/operations/
 ```
 
 で既存ファイルを確認。**重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
@@ -165,42 +165,42 @@ ls docs/cycles/v1.0.1/operations/
 
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-- **成果物**: `docs/cycles/v1.0.1/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
 ### ステップ2: CI/CD構築【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/v1.0.1/operations/cicd_setup.md`、CI/CD設定ファイル
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/cicd_setup.md`、CI/CD設定ファイル
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: 監視・ロギング戦略【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/v1.0.1/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
 ### ステップ4: 配布（PROJECT_TYPE=general の場合はスキップ）【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/v1.0.1/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: リリース後の運用【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/v1.0.1/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
 ---
 
 ## 実行ルール
 
-1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/v1.0.1/plans/` に作成
+1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成
 2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後に実行
 
@@ -221,7 +221,7 @@ ls docs/cycles/v1.0.1/operations/
 `docs/aidlc/version.txt` のバージョンをサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
 
 ### 2. 履歴記録
-`docs/cycles/v1.0.1/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 3. Gitコミット
 Operations Phaseで作成したすべてのファイル（**version.txt、operations/progress.md、history.mdを含む**）をコミット

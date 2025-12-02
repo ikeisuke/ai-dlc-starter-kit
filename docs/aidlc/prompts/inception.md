@@ -38,11 +38,11 @@ Inception Phaseで決定
 
 ### ディレクトリ構成
 - `docs/aidlc/`: 全サイクル共通の共通プロンプト・テンプレート
-- `docs/cycles/v1.0.1/`: サイクル固有成果物
+- `docs/cycles/{{CYCLE}}/`: サイクル固有成果物
 - `prompts/`: セットアッププロンプト
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/v1.0.1/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
 - プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
@@ -62,10 +62,10 @@ Inception Phaseで決定
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/v1.0.1/history.md`)。日時取得の推奨方法:
+- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。日時取得の推奨方法:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/v1.0.1/history.md
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
   ---
   ## ${TIMESTAMP}
   ...
@@ -132,7 +132,7 @@ Inception Phaseで決定
 
 ### 2. 進捗管理ファイル確認【重要】
 
-`docs/cycles/v1.0.1/inception/progress.md` が存在するか確認：
+`docs/cycles/{{CYCLE}}/inception/progress.md` が存在するか確認：
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
@@ -140,7 +140,7 @@ Inception Phaseで決定
 ### 3. 既存成果物の確認（冪等性の保証）
 
 ```bash
-ls docs/cycles/v1.0.1/requirements/ docs/cycles/v1.0.1/story-artifacts/ docs/cycles/v1.0.1/design-artifacts/
+ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/
 ```
 
 で既存ファイルを確認。**重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
@@ -164,21 +164,21 @@ ls docs/cycles/v1.0.1/requirements/ docs/cycles/v1.0.1/story-artifacts/ docs/cyc
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
 - **一問一答形式**: 1つの質問をして回答を待ち、複数の質問をまとめて提示しない
 - **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
-- **Intent作成**: 回答を得てから `docs/cycles/v1.0.1/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
+- **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
 ### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
 
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
 - 既存コードベースを分析
-- `docs/cycles/v1.0.1/requirements/existing_analysis.md` を作成
+- `docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` を作成
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: ユーザーストーリー作成
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
 - Intentに基づいてユーザーストーリーを作成
-- `docs/cycles/v1.0.1/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
+- `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
 ### ステップ4: Unit定義【重要】
@@ -188,20 +188,20 @@ ls docs/cycles/v1.0.1/requirements/ docs/cycles/v1.0.1/story-artifacts/ docs/cyc
 - **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
-- 各Unitは `docs/cycles/v1.0.1/story-artifacts/units/<unit_name>.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+- 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/<unit_name>.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: PRFAQ作成
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - プレスリリース形式でプロジェクトを説明
-- `docs/cycles/v1.0.1/requirements/prfaq.md` を作成（テンプレート: `docs/aidlc/templates/prfaq_template.md`）
+- `docs/cycles/{{CYCLE}}/requirements/prfaq.md` を作成（テンプレート: `docs/aidlc/templates/prfaq_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
 ### ステップ6: Construction用進捗管理ファイル作成【重要】
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
-- 全Unit定義完了後、`docs/cycles/v1.0.1/construction/progress.md` を作成
+- 全Unit定義完了後、`docs/cycles/{{CYCLE}}/construction/progress.md` を作成
 - **記載内容**:
   - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
   - 全Unitの初期状態は「未着手」
@@ -214,7 +214,7 @@ ls docs/cycles/v1.0.1/requirements/ docs/cycles/v1.0.1/story-artifacts/ docs/cyc
 
 ## 実行ルール
 
-1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/v1.0.1/plans/` に作成
+1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成
 2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後に実行
 
@@ -231,7 +231,7 @@ ls docs/cycles/v1.0.1/requirements/ docs/cycles/v1.0.1/story-artifacts/ docs/cyc
 ## 完了時の必須作業【重要】
 
 ### 1. 履歴記録
-`docs/cycles/v1.0.1/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 2. Gitコミット
 Inception Phaseで作成したすべてのファイル（**inception/progress.md、construction/progress.md、history.mdを含む**）をコミット
@@ -263,10 +263,10 @@ docs/aidlc/prompts/construction.md
 Construction PhaseやOperations Phaseから戻ってきた場合の手順：
 
 ### 1. progress.md確認
-`docs/cycles/v1.0.1/inception/progress.md` を読み込み、完了済みステップを確認
+`docs/cycles/{{CYCLE}}/inception/progress.md` を読み込み、完了済みステップを確認
 
 ### 2. 既存成果物読み込み
-`docs/cycles/v1.0.1/story-artifacts/user_stories.md` と既存Unit定義を確認
+`docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` と既存Unit定義を確認
 
 ### 3. 差分作業
 ステップ3（ユーザーストーリー作成）またはステップ4（Unit定義）から再開し、新しいストーリー・Unit定義を追加

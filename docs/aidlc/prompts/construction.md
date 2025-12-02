@@ -38,11 +38,11 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ### ディレクトリ構成
 - `docs/aidlc/`: 全サイクル共通の共通プロンプト・テンプレート
-- `docs/cycles/v1.0.1/`: サイクル固有成果物
+- `docs/cycles/{{CYCLE}}/`: サイクル固有成果物
 - プロジェクトルートディレクトリ: 実装コード
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/v1.0.1/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
 - プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
@@ -62,10 +62,10 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/v1.0.1/history.md`)。日時取得の推奨方法:
+- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。日時取得の推奨方法:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/v1.0.1/history.md
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
   ---
   ## ${TIMESTAMP}
   ...
@@ -133,7 +133,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ### 2. 進捗管理ファイル読み込み【重要】
 
-`docs/cycles/v1.0.1/construction/progress.md` を読み込む
+`docs/cycles/{{CYCLE}}/construction/progress.md` を読み込む
 
 このファイルには以下が記載されている：
 - 全Unit一覧
@@ -155,7 +155,7 @@ progress.mdに記載されている「実行可能なUnit」セクションを�
 
 ### 4. 実行前確認【重要】
 
-選択されたUnitについて計画ファイルを `docs/cycles/v1.0.1/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ
+選択されたUnitについて計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ
 
 **承認なしで次のステップを開始してはいけない**
 
@@ -168,13 +168,13 @@ progress.mdに記載されている「実行可能なUnit」セクションを�
 #### ステップ1: ドメインモデル設計
 
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら構造と責務を定義（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-- **成果物**: `docs/cycles/v1.0.1/design-artifacts/domain-models/[unit_name]_domain_model.md`（テンプレート: `docs/aidlc/templates/domain_model_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/design-artifacts/domain-models/[unit_name]_domain_model.md`（テンプレート: `docs/aidlc/templates/domain_model_template.md`）
 - **重要**: **コードは書かず**、エンティティ・値オブジェクト・集約・ドメインサービスの構造と責務のみを定義
 
 #### ステップ2: 論理設計
 
 - **対話形式**: 同様に**一問一答形式**で対話しながらコンポーネント構成とインターフェースを定義
-- **成果物**: `docs/cycles/v1.0.1/design-artifacts/logical-designs/[unit_name]_logical_design.md`（テンプレート: `docs/aidlc/templates/logical_design_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`（テンプレート: `docs/aidlc/templates/logical_design_template.md`）
 - **重要**: **コードは書かず**、アーキテクチャパターン、コンポーネント構成、API設計の概要のみを定義
 
 #### ステップ3: 設計レビュー
@@ -200,13 +200,13 @@ BDD/TDDに従ってテストコードを作成
 - ビルド実行
 - テスト実行
 - コードレビュー
-- `docs/cycles/v1.0.1/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
+- `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
 
 ---
 
 ## 実行ルール
 
-1. **計画作成**: Unit開始前に計画ファイルを `docs/cycles/v1.0.1/plans/` に作成
+1. **計画作成**: Unit開始前に計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成
 2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後に実行
 
@@ -234,7 +234,7 @@ BDD/TDDに従ってテストコードを作成
 progress.mdの最終更新セクションを更新
 
 ### 4. 履歴記録
-`docs/cycles/v1.0.1/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 5. Gitコミット
 各Unitで作成・変更したすべてのファイル（**progress.mdとhistory.mdを含む**）をコミット
