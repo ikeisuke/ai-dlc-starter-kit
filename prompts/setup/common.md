@@ -33,6 +33,7 @@
 | `{{LANGUAGE}}` | 使用言語 | 日本語 |
 | `{{DEVELOPER_EXPERTISE}}` | 開発者の専門分野 | ソフトウェア開発 |
 | `{{PROJECT_README}}` | プロジェクトREADMEパス | /README.md |
+| `{{CYCLE_TYPE}}` | サイクルタイプ | Full / Lite |
 
 ### 禁止事項
 
@@ -55,12 +56,20 @@
 │   ├── construction.md
 │   ├── operations.md
 │   ├── additional-rules.md
-│   └── prompt-reference-guide.md
+│   ├── prompt-reference-guide.md
+│   └── lite/                      # Lite版プロンプト
+│       ├── inception.md
+│       ├── construction.md
+│       └── operations.md
 ├── templates/
 │   └── index.md
+├── operations/                    # 運用引き継ぎ情報
+│   ├── handover.md
+│   └── README.md
 └── version.txt
 
 {{CYCLES_ROOT}}/{{CYCLE}}/         # サイクル固有成果物
+├── .lite                          # Lite版サイクルの場合のみ作成
 ├── plans/
 ├── requirements/
 ├── story-artifacts/
@@ -79,10 +88,13 @@
 **作成手順**:
 1. `mkdir -p` で各ディレクトリを作成
 2. 各ディレクトリに `.gitkeep` ファイルを配置
+3. **Lite版サイクルの場合のみ**: `{{CYCLES_ROOT}}/{{CYCLE}}/.lite` ファイルを作成（内容: 「このサイクルはLite版です。」）
 
 対象ディレクトリ（共通）:
 - `{{AIDLC_ROOT}}/prompts/`
+- `{{AIDLC_ROOT}}/prompts/lite/`
 - `{{AIDLC_ROOT}}/templates/`
+- `{{AIDLC_ROOT}}/operations/`
 
 対象ディレクトリ（サイクル固有）:
 - `{{CYCLES_ROOT}}/{{CYCLE}}/plans/`
@@ -405,6 +417,9 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/inception.md - Inception Phase用プロンプト
 - prompts/construction.md - Construction Phase用プロンプト
 - prompts/operations.md - Operations Phase用プロンプト
+- prompts/lite/inception.md - Inception Phase用プロンプト（Lite版）
+- prompts/lite/construction.md - Construction Phase用プロンプト（Lite版）
+- prompts/lite/operations.md - Operations Phase用プロンプト（Lite版）
 - prompts/additional-rules.md - 共通の追加ルール
 - prompts/prompt-reference-guide.md - プロンプト参照ガイド
 - templates/index.md - テンプレート一覧
@@ -426,8 +441,13 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 
 カスタマイズ完了後、**新しいセッション**で以下を実行してください：
 
+【Full版の場合】
 以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/inception.md
+
+【Lite版の場合】
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase (Lite) を開始してください：
+{{AIDLC_ROOT}}/prompts/lite/inception.md
 ```
 
 ---

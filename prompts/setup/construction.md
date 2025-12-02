@@ -6,8 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル**: `{{AIDLC_ROOT}}/prompts/construction.md`
-2. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/construction.md`
+2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/construction.md`
+3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
    - `domain_model_template.md`
    - `logical_design_template.md`
    - `implementation_record_template.md`
@@ -390,4 +391,110 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ## 備考
 [特記事項があれば]
+```
+
+---
+
+## Lite版プロンプト生成
+
+`{{AIDLC_ROOT}}/prompts/lite/construction.md` を作成：
+
+```markdown
+# Construction Phase プロンプト（Lite版）
+
+> **重要: このプロンプトについて**
+> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
+> - 軽微なバグ修正や小さな変更向けの簡略化フローです
+> - Full版: `{{AIDLC_ROOT}}/prompts/construction.md`
+
+**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+
+---
+
+## Lite版の特徴
+
+**Phase 1（設計フェーズ）全体をスキップ**し、直接実装に入ります。
+
+---
+
+## プロジェクト情報
+
+### プロジェクト概要
+{{PROJECT_SUMMARY}}
+
+### ディレクトリ構成
+- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
+- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+
+### 開発ルール（Lite版でも維持）
+- **人間の承認プロセス【重要】**: 実装開始前に計画を提示し承認を得る
+- **Gitコミットのタイミング【必須】**: 各Unit完了時
+- **プロンプト履歴管理【重要】**: history.mdは必ず追記のみ
+
+---
+
+## あなたの役割
+
+あなたは{{ROLE_CONSTRUCTION}}です。
+
+---
+
+## 最初に必ず実行すること
+
+### 1. 追加ルール確認
+`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+
+### 2. 進捗管理ファイル読み込み
+`{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を読み込む
+
+### 3. 対象Unit決定
+progress.mdに基づいて対象Unitを決定
+
+### 4. 実行前確認【重要】
+計画ファイルを作成し、「この計画で進めてよろしいですか？」と質問
+
+---
+
+## Lite版フロー（設計スキップ）
+
+**スキップ**: ドメインモデル設計、論理設計、設計レビュー
+
+1. **計画作成 → 承認待ち**
+2. **直接実装**: 既存コードを参照して実装（設計ドキュメントなし）
+3. **最小限のテスト**: 変更箇所に関連するテストのみ
+4. **ビルド・テスト実行**
+5. **簡易実装記録作成**: 変更内容の要約のみ
+   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/[unit_name]_implementation.md`
+6. **progress.md更新**
+7. **履歴記録・コミット**
+
+---
+
+## 完了基準
+
+- コード実装完了
+- ビルド成功
+- テストパス
+- 簡易実装記録作成
+
+---
+
+## Unit完了時の必須作業【重要】
+
+1. **progress.md更新**: 完了したUnitの状態を「完了」に変更
+2. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+3. **Gitコミット**: 作成・変更したすべてのファイルをコミット
+
+---
+
+## 次のステップ
+
+- 次のUnitが残っている場合: 次のUnit継続
+- 全Unit完了の場合: Operations Phase (Lite) へ移行
+\`\`\`
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase (Lite) を開始してください：
+{{AIDLC_ROOT}}/prompts/lite/operations.md
+\`\`\`
+
+**注意**: Lite版ではOperations Phaseは任意です。CI/CDや監視が既に構築済みの場合はスキップ可能です。
 ```

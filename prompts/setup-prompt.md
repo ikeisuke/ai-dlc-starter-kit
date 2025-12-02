@@ -26,6 +26,7 @@ CYCLE = v1  # 開発サイクル識別子（v1.0.0, 2024-12, feature-x など自
 BRANCH = feature/example
 DEVELOPMENT_TYPE = greenfield  # greenfield / brownfield
 PROJECT_TYPE = ios  # ios / android / web / backend / general
+CYCLE_TYPE = Full  # Full / Lite
 DOCS_ROOT = docs  # ドキュメントルート
 LANGUAGE = 日本語
 PROJECT_README = /README.md
@@ -46,6 +47,10 @@ CYCLES_ROOT = ${DOCS_ROOT}/cycles    # サイクル固有成果物のルート
 - `web`: Webアプリケーション開発
 - `backend`: バックエンドAPI開発
 - `general`: 汎用
+
+**CYCLE_TYPE の値**:
+- `Full`: 全ステップを実行する完全版サイクル（新機能開発向け）
+- `Lite`: 一部ステップを省略する軽量版サイクル（バグ修正・軽微な変更向け）
 
 > **重要**: セットアップ完了後、`{{AIDLC_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください。
 
@@ -74,6 +79,51 @@ pwd
 ```
 
 ユーザーが「はい」と明示的に承認するまで、セットアップ処理を開始しないでください。
+
+---
+
+## Git環境の確認
+
+### 1. Gitリポジトリの確認
+
+まず、現在のディレクトリがGitリポジトリかを確認してください：
+
+```bash
+git rev-parse --git-dir 2>/dev/null
+```
+
+**Gitリポジトリでない場合**:
+- 警告を表示: 「このディレクトリはGitリポジトリではありません」
+- `git init` での初期化を提案
+- ユーザーに「初期化する / バージョン管理なしで続行」を選択させる
+
+### 2. ブランチ名の確認
+
+Gitリポジトリの場合、現在のブランチ名がサイクル名（`CYCLE`）と整合しているか確認してください：
+
+```bash
+git branch --show-current
+```
+
+**確認ロジック**:
+1. 現在のブランチ名を取得
+2. ブランチ名に `CYCLE` の値が含まれているか確認
+3. 含まれていない場合、以下を実行：
+   - 警告を表示: 「現在のブランチ名にサイクル名が含まれていません」
+   - `cycle/{CYCLE}` 形式のブランチへの切り替えを提案
+   - ユーザーに「切り替える / 現在のブランチで続行」を選択させる
+
+**表示例（不一致の場合）**:
+```
+警告: 現在のブランチ「main」にサイクル名「v1.1.0」が含まれていません。
+
+推奨: cycle/v1.1.0 ブランチで作業することを推奨します。
+
+1. 新しいブランチを作成して切り替える: git checkout -b cycle/v1.1.0
+2. 現在のブランチで続行する
+
+どちらを選択しますか？
+```
 
 ---
 
@@ -151,6 +201,9 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。
 ├── templates/
 │   ├── index.md
 │   └── *_template.md（各フェーズ用テンプレート）
+├── operations/                    # 運用引き継ぎ情報
+│   ├── handover.md
+│   └── README.md
 └── version.txt
 
 {{CYCLES_ROOT}}/{{CYCLE}}/
@@ -255,8 +308,13 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 
 カスタマイズ完了後、**新しいセッション**で以下を実行してください：
 
-以下のファイルを読み込んで、Inception Phase を開始してください：
+【Full版の場合】
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
 {{AIDLC_ROOT}}/prompts/inception.md
+
+【Lite版の場合】
+以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase (Lite) を開始してください：
+{{AIDLC_ROOT}}/prompts/lite/inception.md
 
 {{PROJECT_NAME}} {{CYCLE}} の開発を開始します。
 ```
