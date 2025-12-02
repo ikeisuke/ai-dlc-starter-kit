@@ -168,9 +168,10 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ## 完了時の必須作業【重要】
 
-1. **運用引き継ぎ情報の更新**: 今回決定した設定方針を `{{AIDLC_ROOT}}/operations/handover.md` に反映（次サイクルで参照可能にする）
-2. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
-3. **Gitコミット**: 作成したすべてのファイルをコミット
+1. **バージョン更新**: `{{AIDLC_ROOT}}/version.txt` をサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
+2. **運用引き継ぎ情報の更新**: 今回決定した設定方針を `{{AIDLC_ROOT}}/operations/handover.md` に反映（次サイクルで参照可能にする）
+3. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
+4. **Gitコミット**: 作成したすべてのファイル（**version.txt含む**）をコミット
 
 ---
 
