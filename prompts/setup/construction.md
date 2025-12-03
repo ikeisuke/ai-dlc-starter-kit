@@ -122,6 +122,9 @@ Inception Phaseで決定済み、または既存スタックを使用
   - 1個: 自動選択
   - 複数: ユーザーに選択肢を提示
 
+**Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
+- パス: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+
 ### 4. 実行前確認【重要】
 選択されたUnitについて計画ファイルを `{{CYCLES_ROOT}}/{{CYCLE}}/plans/` に作成し、「この計画で進めてよろしいですか？」と質問、承認を待つ
 
@@ -449,6 +452,9 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ### 3. 対象Unit決定
 progress.mdに基づいて対象Unitを決定
+
+**Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
+- パス: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/[unit_name].md`
 
 ### 4. 実行前確認【重要】
 計画ファイルを作成し、「この計画で進めてよろしいですか？」と質問

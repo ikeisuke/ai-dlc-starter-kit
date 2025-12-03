@@ -80,3 +80,15 @@ v1.2.0 サイクルの要件定義を完了
 ### 備考
 - v1.1.0で対応済みの項目をバックログで更新
 - 7つのUnitを定義（合計見積もり: 11.5時間）
+
+---
+## 2025-12-04 02:30:46 JST
+**フェーズ**: Construction Phase
+**Unit**: Unit 1 - パス参照不整合修正
+**実行内容**: Unit定義ファイルパスをconstruction.mdに追加
+**成果物**:
+- docs/aidlc/prompts/construction.md（修正）
+- prompts/setup/construction.md（修正）
+- docs/cycles/v1.2.0/plans/unit1_path_fix_plan.md（計画ファイル）
+- docs/cycles/v1.2.0/construction/progress.md（更新）
+**備考**: 設計フェーズはスキップ（単純なドキュメント修正のため）

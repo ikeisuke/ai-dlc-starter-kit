@@ -153,6 +153,9 @@ progress.mdに記載されている「実行可能なUnit」セクションを�
   2. 実行可能Unitが1個: 自動的にそのUnitを選択
   3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
 
+**Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
+- パス: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+
 ### 4. 実行前確認【重要】
 
 選択されたUnitについて計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ
