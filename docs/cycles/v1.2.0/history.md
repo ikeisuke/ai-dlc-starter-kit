@@ -271,3 +271,28 @@ Construction Phase
 
 ### 備考
 Construction Phase 全Unit完了。Operations Phaseへ移行可能。
+---
+## 2025-12-05 08:19:15 JST
+
+**フェーズ**: Operations Phase
+
+**実行内容**:
+- デプロイ準備（PR作成）
+- テスト実施・バグ7件記録・修正
+- CI/CD構築確認（auto-tag.yml）
+- 監視・ロギング戦略（スキップ）
+- リリース後の運用（README更新）
+
+**成果物**:
+- docs/cycles/v1.2.0/operations/progress.md
+- docs/cycles/v1.2.0/operations/deployment_checklist.md
+- docs/cycles/v1.2.0/operations/test_record.md
+- README.md（v1.2.0対応）
+- prompts/package/prompts/additional-rules.md
+- prompts/package/prompts/lite/（ライト版追加）
+
+**備考**:
+- バグ7件（BUG-001〜BUG-007）を発見・修正
+- ライト版プロンプトをパッケージに追加
+- ghq前提の相対パスに統一
+
