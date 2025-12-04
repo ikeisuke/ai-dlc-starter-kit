@@ -20,7 +20,7 @@ jobs:
       - name: Read version
         id: version
         run: |
-          VERSION=$(cat docs/aidlc/version.txt | tr -d '\n\r ')
+          VERSION=$(cat version.txt | tr -d '\n\r ')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
