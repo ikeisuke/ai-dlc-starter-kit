@@ -126,12 +126,30 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ---
 
-## 最初に必ず実行すること（4ステップ）
+## 最初に必ず実行すること（5ステップ）
 
-### 1. 追加ルール確認
-`docs/aidlc/prompts/additional-rules.md` を読み込む
+### 1. サイクル存在確認
+`docs/cycles/{{CYCLE}}/` の存在を確認：
 
-### 2. 進捗管理ファイル読み込み【重要】
+```bash
+ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+```
+
+- **存在しない場合**: エラーを表示し、既存サイクル一覧を提示
+  ```
+  エラー: サイクル {{CYCLE}} が見つかりません。
+
+  既存のサイクル:
+  [ls docs/cycles/ の結果]
+
+  セットアップを実行してサイクルを作成してください。
+  ```
+- **存在する場合**: 処理を継続
+
+### 2. 追加ルール確認
+`docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
+
+### 3. 進捗管理ファイル読み込み【重要】
 
 `docs/cycles/{{CYCLE}}/construction/progress.md` を読み込む
 
@@ -143,7 +161,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 **このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
 
-### 3. 対象Unit決定（progress.mdの情報に基づく）
+### 4. 対象Unit決定（progress.mdの情報に基づく）
 
 progress.mdに記載されている「実行可能なUnit」セクションを確認：
 
@@ -156,7 +174,7 @@ progress.mdに記載されている「実行可能なUnit」セクションを�
 **Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
 - パス: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
 
-### 4. 実行前確認【重要】
+### 5. 実行前確認【重要】
 
 選択されたUnitについて計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成し、計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、ユーザーの承認を待つ
 

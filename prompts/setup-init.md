@@ -56,16 +56,20 @@ git branch --show-current
 
 ユーザーとの対話で以下の情報を収集してください。**一問一答形式**で質問します。
 
+**重要**: デフォルト値がある場合、ユーザーが「OK」「はい」「デフォルトで」などと答えた場合は、デフォルト値を採用して次に進んでください。すべての質問に対して「全部デフォルトで」と言われた場合は、残りの質問をスキップしてデフォルト値を採用してください。
+
 ### 4.1 基本情報
 
 #### 質問 1: プロジェクト名
 ```
-プロジェクト名を入力してください（デフォルト: [リポジトリ名 or ディレクトリ名]）:
+プロジェクト名: [リポジトリ名 or ディレクトリ名]
+
+このプロジェクト名でよろしいですか？（変更する場合は新しい名前を入力）
 ```
 
 #### 質問 2: プロジェクト概要
 ```
-プロジェクトの概要を1-2文で入力してください:
+プロジェクトの概要を1-2文で入力してください（スキップする場合は「スキップ」）:
 ```
 
 ### 4.2 技術スタック（任意）
@@ -167,7 +171,9 @@ mkdir -p docs/aidlc/operations
 
 スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` にコピー。
 
-#### 6.2.1 フェーズプロンプト
+**重要**: プロジェクト固有のファイルは上書きしないこと。
+
+#### 6.2.1 フェーズプロンプト（上書きOK）
 
 | ソース | 出力先 |
 |--------|--------|
@@ -175,23 +181,31 @@ mkdir -p docs/aidlc/operations
 | prompts/package/prompts/construction.md | docs/aidlc/prompts/construction.md |
 | prompts/package/prompts/operations.md | docs/aidlc/prompts/operations.md |
 
-コマンド例:
-```bash
-cp -r [スターターキットパス]/prompts/package/prompts/* docs/aidlc/prompts/
-```
+これらのファイルは上書きして最新版に更新します。
 
-#### 6.2.2 ドキュメントテンプレート
+#### 6.2.2 ドキュメントテンプレート（上書きOK）
 
 | ソース | 出力先 |
 |--------|--------|
 | prompts/package/templates/ | docs/aidlc/templates/ |
 
-コマンド例:
-```bash
-cp -r [スターターキットパス]/prompts/package/templates/* docs/aidlc/templates/
-```
+テンプレートは上書きして最新版に更新します。
 
-**注意**: パッケージファイルはコピーするだけで使用可能。変数置換は不要
+#### 6.2.3 プロジェクト固有ファイル（存在する場合はスキップ）
+
+以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
+
+| ファイル | 説明 |
+|--------|------|
+| `docs/aidlc/prompts/additional-rules.md` | プロジェクト固有の追加ルール |
+
+**コピー前に存在確認**:
+```bash
+# additional-rules.md が存在しない場合のみコピー
+if [ ! -f docs/aidlc/prompts/additional-rules.md ]; then
+  cp [スターターキットパス]/prompts/package/prompts/additional-rules.md docs/aidlc/prompts/
+fi
+```
 
 ### 6.3 バージョンファイルの配置
 
@@ -201,8 +215,8 @@ cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 
 ### 6.4 その他の共通ファイル
 
-- `docs/aidlc/prompts/additional-rules.md` - 追加ルールテンプレート
-- `docs/aidlc/prompts/prompt-reference-guide.md` - プロンプト参照ガイド
+以下のファイルもコピー:
+- `docs/aidlc/prompts/prompt-reference-guide.md` - プロンプト参照ガイド（上書きOK）
 - `docs/aidlc/templates/index.md` - テンプレート一覧
 - `docs/aidlc/operations/README.md` - 運用ディレクトリ説明
 
@@ -218,8 +232,31 @@ cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 最初のサイクルバージョンを入力してください（例: v1.0.0）:
 ```
 
-### 7.2 ブランチの確認
+### 7.2 ブランチの確認と整合性チェック
 
+現在のブランチを確認し、サイクルバージョンとの整合性をチェック:
+
+```bash
+git branch --show-current
+```
+
+**整合性チェック**:
+- 現在のブランチが `cycle/[バージョン]` または `feature/[バージョン]` パターンの場合、ブランチ名からバージョンを抽出
+- 入力されたサイクルバージョンとブランチ名が異なる場合、警告を表示:
+
+```
+警告: サイクルバージョンとブランチ名が一致しません。
+
+入力されたサイクル: [入力バージョン]
+現在のブランチ: [ブランチ名]
+
+どうしますか？
+1. サイクルバージョンをブランチ名に合わせる（推奨）
+2. 新しいブランチ cycle/[入力バージョン] を作成
+3. 不一致のまま続行（非推奨）
+```
+
+**ブランチ操作**:
 ```
 現在のブランチ: [ブランチ名]
 
