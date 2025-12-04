@@ -163,32 +163,43 @@ mkdir -p docs/aidlc/templates
 mkdir -p docs/aidlc/operations
 ```
 
-### 6.2 フェーズプロンプトのコピー
+### 6.2 パッケージファイルのコピー
 
-スターターキットの `prompts/setup/` ディレクトリから以下のファイルを生成:
+スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` にコピー。
+
+#### 6.2.1 フェーズプロンプト
 
 | ソース | 出力先 |
 |--------|--------|
-| prompts/setup/inception.md | docs/aidlc/prompts/inception.md |
-| prompts/setup/construction.md | docs/aidlc/prompts/construction.md |
-| prompts/setup/operations.md | docs/aidlc/prompts/operations.md |
+| prompts/package/prompts/inception.md | docs/aidlc/prompts/inception.md |
+| prompts/package/prompts/construction.md | docs/aidlc/prompts/construction.md |
+| prompts/package/prompts/operations.md | docs/aidlc/prompts/operations.md |
 
-**重要**: 各ファイル生成時に変数置換を実行:
-- `{{AIDLC_ROOT}}` → `docs/aidlc`
-- `{{CYCLES_ROOT}}` → `docs/cycles`
-- その他の変数は prompts/setup/common.md を参照
+コマンド例:
+```bash
+cp -r [スターターキットパス]/prompts/package/prompts/* docs/aidlc/prompts/
+```
 
-### 6.3 テンプレートのコピー
+#### 6.2.2 ドキュメントテンプレート
 
-スターターキットの `templates/` ディレクトリから `docs/aidlc/templates/` にコピー。
+| ソース | 出力先 |
+|--------|--------|
+| prompts/package/templates/ | docs/aidlc/templates/ |
 
-### 6.4 バージョンファイルの配置
+コマンド例:
+```bash
+cp -r [スターターキットパス]/prompts/package/templates/* docs/aidlc/templates/
+```
+
+**注意**: パッケージファイルはコピーするだけで使用可能。変数置換は不要
+
+### 6.3 バージョンファイルの配置
 
 ```bash
 cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 ```
 
-### 6.5 その他の共通ファイル
+### 6.4 その他の共通ファイル
 
 - `docs/aidlc/prompts/additional-rules.md` - 追加ルールテンプレート
 - `docs/aidlc/prompts/prompt-reference-guide.md` - プロンプト参照ガイド
@@ -285,7 +296,9 @@ AI-DLC環境のセットアップが完了しました！
 
 共通ファイル（docs/aidlc/）:
 - project.toml - プロジェクト設定
-- prompts/ - フェーズプロンプト
+- prompts/inception.md - Inception Phase プロンプト
+- prompts/construction.md - Construction Phase プロンプト
+- prompts/operations.md - Operations Phase プロンプト
 - templates/ - ドキュメントテンプレート
 - version.txt - スターターキットバージョン
 

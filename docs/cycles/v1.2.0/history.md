@@ -197,3 +197,26 @@ Unit 4: フェーズプロンプト改修を完了
 ### 備考
 - 変数置換が完全に廃止され、テンプレート管理が簡素化
 - 次回セットアップ時に改修版のプロンプトが生成される
+---
+## 2025-12-04 23:44:24 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 5: プロンプト分割・短縮化 完了
+
+### 成果物
+- prompts/package/prompts/ - フェーズプロンプトのソース
+- prompts/package/templates/ - ドキュメントテンプレートのソース
+- prompts/setup-init.md - コピー処理に更新
+- prompts/setup/*.md - フロー制御のみに簡素化
+- docs/cycles/v1.2.0/design-artifacts/domain-models/unit5_domain_model.md
+- docs/cycles/v1.2.0/design-artifacts/logical-designs/unit5_logical_design.md
+- docs/cycles/v1.2.0/plans/unit5_prompt_split_plan.md
+
+### 備考
+- インラインテンプレートを外部ファイル化
+- prompts/package/ ディレクトリを導入
+- セットアップ時はコピーするだけで確実に配置可能に
+
