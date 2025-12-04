@@ -251,3 +251,23 @@ Unit 5: 中断 - setup/ ディレクトリ整理のため進行中に戻す
 
 **備考**: Unit 5 完了
 
+
+---
+## 2025-12-05 00:25:22 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+- Unit 6「バージョン管理」をスキップ（単純コピー方式に変更したため不要）
+- Unit 7「タグ付け自動化」を完了
+- バックログに新機能アイデアを追加
+
+### 成果物
+- .github/workflows/auto-tag.yml（新規作成）
+- docs/cycles/v1.2.0/construction/units/unit7_auto_tagging_implementation.md
+- docs/cycles/v1.2.0/plans/unit7_auto_tagging_plan.md
+- docs/cycles/backlog.md（新機能アイデア追加）
+
+### 備考
+Construction Phase 全Unit完了。Operations Phaseへ移行可能。
