@@ -180,8 +180,11 @@ mkdir -p docs/aidlc/operations
 | prompts/package/prompts/inception.md | docs/aidlc/prompts/inception.md |
 | prompts/package/prompts/construction.md | docs/aidlc/prompts/construction.md |
 | prompts/package/prompts/operations.md | docs/aidlc/prompts/operations.md |
+| prompts/package/prompts/lite/ | docs/aidlc/prompts/lite/ |
 
 これらのファイルは上書きして最新版に更新します。
+
+**注意**: `lite/` ディレクトリはライト版プロンプト（簡易版）です。
 
 #### 6.2.2 ドキュメントテンプレート（上書きOK）
 
