@@ -152,3 +152,20 @@ Unit 2: 設定アーキテクチャ設計 完了
 
 ### 備考
 後続Unit（Unit 3, 4, 5）で実装を行う
+
+---
+
+## 2025-12-04 15:29:18 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 3 - セットアップ分離 完了
+**成果物**:
+- prompts/setup-prompt.md（エントリーポイントに修正）
+- prompts/setup-init.md（新規：初回セットアップ用）
+- prompts/setup-cycle.md（新規：サイクル開始用）
+- docs/cycles/v1.2.0/design-artifacts/domain-models/unit3_domain_model.md
+- docs/cycles/v1.2.0/design-artifacts/logical-designs/unit3_logical_design.md
+- docs/cycles/v1.2.0/construction/units/unit3_implementation.md
+- docs/cycles/v1.2.0/plans/unit3_setup_separation_plan.md
+
+**備考**: 初回セットアップとサイクル開始を分離し、project.toml を中心とした設定管理の基盤を構築
