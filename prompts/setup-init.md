@@ -1,20 +1,37 @@
-# AI-DLC 初回セットアップ
+# AI-DLC 初回セットアップ / アップグレード
 
-このファイルはプロジェクトへの AI-DLC 初回導入を行います。
+このファイルはプロジェクトへの AI-DLC 初回導入、またはアップグレードを行います。
 
 **前提**: setup-prompt.md から誘導されてこのファイルを読み込んでいること
 
 ---
 
-## 1. スターターキットのバージョン確認
+## 1. モード判定
+
+以下のコマンドで現在の状態を確認してください:
+
+```bash
+ls docs/aidlc/project.toml 2>/dev/null && echo "UPGRADE_MODE" || echo "INITIAL_MODE"
+```
+
+| 結果 | モード | 説明 |
+|------|--------|------|
+| INITIAL_MODE | 初回セットアップ | project.toml を新規作成 |
+| UPGRADE_MODE | アップグレード | project.toml を保持、プロンプト・テンプレートのみ更新 |
+
+**アップグレードモードの場合**: セクション 3（プロジェクト情報の収集）と 4（project.toml の生成）をスキップしてください。
+
+---
+
+## 2. スターターキットのバージョン確認
 
 このファイル（setup-init.md）のディレクトリから `../version.txt` を読み込み、スターターキットのバージョンを確認してください。
 
 ---
 
-## 2. Git環境の確認
+## 3. Git環境の確認
 
-### 2.1 Gitリポジトリの確認
+### 3.1 Gitリポジトリの確認
 
 ```bash
 git rev-parse --git-dir 2>/dev/null && echo "GIT_REPO" || echo "NOT_GIT_REPO"
@@ -25,7 +42,7 @@ git rev-parse --git-dir 2>/dev/null && echo "GIT_REPO" || echo "NOT_GIT_REPO"
 - `git init` での初期化を提案
 - ユーザーに「初期化する / バージョン管理なしで続行」を選択させる
 
-### 2.2 現在のブランチ確認
+### 3.2 現在のブランチ確認
 
 Gitリポジトリの場合:
 
@@ -35,11 +52,11 @@ git branch --show-current
 
 ---
 
-## 3. プロジェクト情報の収集
+## 4. プロジェクト情報の収集【初回のみ】
 
 ユーザーとの対話で以下の情報を収集してください。**一問一答形式**で質問します。
 
-### 3.1 基本情報
+### 4.1 基本情報
 
 #### 質問 1: プロジェクト名
 ```
@@ -51,7 +68,7 @@ git branch --show-current
 プロジェクトの概要を1-2文で入力してください:
 ```
 
-### 3.2 技術スタック（任意）
+### 4.2 技術スタック（任意）
 
 #### 質問 3: 使用言語
 ```
@@ -65,7 +82,7 @@ git branch --show-current
 スキップする場合は Enter:
 ```
 
-### 3.3 開発ルール（任意）
+### 4.3 開発ルール（任意）
 
 #### 質問 5: 命名規則
 ```
@@ -77,17 +94,17 @@ git branch --show-current
 
 ---
 
-## 4. project.toml の生成
+## 5. project.toml の生成【初回のみ】
 
 収集した情報を元に `docs/aidlc/project.toml` を生成します。
 
-### 4.1 ディレクトリ作成
+### 5.1 ディレクトリ作成
 
 ```bash
 mkdir -p docs/aidlc
 ```
 
-### 4.2 project.toml の内容
+### 5.2 project.toml の内容
 
 以下のテンプレートを使用し、収集した情報で置換してください:
 
@@ -136,9 +153,9 @@ language = "日本語"
 
 ---
 
-## 5. 共通ファイルの配置
+## 6. 共通ファイルの配置
 
-### 5.1 ディレクトリ構造の作成
+### 6.1 ディレクトリ構造の作成
 
 ```bash
 mkdir -p docs/aidlc/prompts
@@ -146,7 +163,7 @@ mkdir -p docs/aidlc/templates
 mkdir -p docs/aidlc/operations
 ```
 
-### 5.2 フェーズプロンプトのコピー
+### 6.2 フェーズプロンプトのコピー
 
 スターターキットの `prompts/setup/` ディレクトリから以下のファイルを生成:
 
@@ -161,17 +178,17 @@ mkdir -p docs/aidlc/operations
 - `{{CYCLES_ROOT}}` → `docs/cycles`
 - その他の変数は prompts/setup/common.md を参照
 
-### 5.3 テンプレートのコピー
+### 6.3 テンプレートのコピー
 
 スターターキットの `templates/` ディレクトリから `docs/aidlc/templates/` にコピー。
 
-### 5.4 バージョンファイルの配置
+### 6.4 バージョンファイルの配置
 
 ```bash
 cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 ```
 
-### 5.5 その他の共通ファイル
+### 6.5 その他の共通ファイル
 
 - `docs/aidlc/prompts/additional-rules.md` - 追加ルールテンプレート
 - `docs/aidlc/prompts/prompt-reference-guide.md` - プロンプト参照ガイド
@@ -180,17 +197,17 @@ cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 
 ---
 
-## 6. サイクル開始処理
+## 7. サイクル開始処理
 
 初回セットアップ完了後、続けてサイクル開始処理を実行します。
 
-### 6.1 サイクルバージョンの確認
+### 7.1 サイクルバージョンの確認
 
 ```
 最初のサイクルバージョンを入力してください（例: v1.0.0）:
 ```
 
-### 6.2 ブランチの確認
+### 7.2 ブランチの確認
 
 ```
 現在のブランチ: [ブランチ名]
@@ -200,7 +217,7 @@ cp [スターターキットパス]/version.txt docs/aidlc/version.txt
 2. 現在のブランチで続行する
 ```
 
-### 6.3 サイクルディレクトリの作成
+### 7.3 サイクルディレクトリの作成
 
 ```bash
 mkdir -p docs/cycles/[バージョン]/plans
@@ -216,7 +233,7 @@ mkdir -p docs/cycles/[バージョン]/operations
 
 各ディレクトリに `.gitkeep` を配置。
 
-### 6.4 history.md の初期化
+### 7.4 history.md の初期化
 
 `docs/cycles/[バージョン]/history.md` を作成:
 
@@ -243,18 +260,23 @@ mkdir -p docs/cycles/[バージョン]/operations
 
 ---
 
-## 7. Git コミット
+## 8. Git コミット
 
-セットアップで作成したすべてのファイルをコミット:
+セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
 git add docs/aidlc/ docs/cycles/
-git commit -m "feat: AI-DLC初回セットアップ完了"
 ```
+
+**コミットメッセージ**（モードに応じて選択）:
+- **初回**: `git commit -m "feat: AI-DLC初回セットアップ完了"`
+- **アップグレード**: `git commit -m "chore: AI-DLCをバージョンX.X.Xにアップグレード"`
 
 ---
 
-## 8. 完了メッセージ
+## 9. 完了メッセージ
+
+### 初回セットアップの場合
 
 ```
 AI-DLC環境のセットアップが完了しました！
@@ -263,15 +285,31 @@ AI-DLC環境のセットアップが完了しました！
 
 共通ファイル（docs/aidlc/）:
 - project.toml - プロジェクト設定
-- prompts/inception.md - Inception Phase用プロンプト
-- prompts/construction.md - Construction Phase用プロンプト
-- prompts/operations.md - Operations Phase用プロンプト
+- prompts/ - フェーズプロンプト
 - templates/ - ドキュメントテンプレート
 - version.txt - スターターキットバージョン
 
 サイクル固有ファイル（docs/cycles/[バージョン]/）:
 - history.md - 実行履歴
 - 各種ディレクトリ
+```
+
+### アップグレードの場合
+
+```
+AI-DLCのアップグレードが完了しました！
+
+更新されたファイル:
+- prompts/ - フェーズプロンプト
+- templates/ - ドキュメントテンプレート
+- version.txt - スターターキットバージョン
+
+※ project.toml は保持されています（変更なし）
+
+サイクル固有ファイル（docs/cycles/[バージョン]/）:
+- history.md - 実行履歴
+- 各種ディレクトリ
+```
 
 ---
 
@@ -279,6 +317,7 @@ AI-DLC環境のセットアップが完了しました！
 
 新しいセッションで以下を実行してください：
 
+```
 以下のファイルを読み込んで、サイクル [バージョン] の Inception Phase を開始してください：
 docs/aidlc/prompts/inception.md
 ```
