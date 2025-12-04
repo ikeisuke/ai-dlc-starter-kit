@@ -6,9 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/inception.md`
-2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/inception.md`
-3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `docs/aidlc/prompts/inception.md`
+2. **プロンプトファイル（Lite版）**: `docs/aidlc/prompts/lite/inception.md`
+3. **テンプレートファイル**（`docs/aidlc/templates/` に作成）:
    - `intent_template.md`
    - `user_stories_template.md`
    - `unit_definition_template.md`
@@ -19,20 +19,31 @@
 
 ## inception.md プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/inception.md` を作成：
+`docs/aidlc/prompts/inception.md` を作成：
 
 ```markdown
 # Inception Phase プロンプト
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter Kitの公式フェーズプロンプトです
-> - 独自のプロンプトを作成せず、このファイルを直接読み込んでください
-> - プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください
-> - 詳細は `{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を参照
-
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
 （このパスはテンプレート生成時に使用します）
+
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+このファイルから以下の情報を取得:
+- プロジェクト名・概要
+- 技術スタック
+- コーディング規約
+- セキュリティ要件
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -61,19 +72,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### 技術スタック
 Inception Phaseで決定、または既存スタックを使用
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 - プロジェクトルート: 実装コード
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`{{CYCLES_ROOT}}/{{CYCLE}}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
-- プロジェクト固有の制約は `{{AIDLC_ROOT}}/prompts/additional-rules.md` を参照
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{サイクル}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
+- プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
 - **人間の承認プロセス【重要】**: 計画作成後、必ず ①計画ファイルのパス提示、②「この計画で進めてよろしいですか？」と質問、③承認まで待機、④**承認なしで次のステップを開始しない**
@@ -83,8 +94,8 @@ Inception Phaseで決定、または既存スタックを使用
 
 ### フェーズの責務分離
 - **Inception Phase**: 要件定義とUnit分解（このフェーズ）
-- **Construction Phase**: 実装とテスト（`{{AIDLC_ROOT}}/prompts/construction.md`）
-- **Operations Phase**: デプロイと運用（`{{AIDLC_ROOT}}/prompts/operations.md`）
+- **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
+- **Operations Phase**: デプロイと運用（`docs/aidlc/prompts/operations.md`）
 
 ### 進捗管理と冪等性
 - 各ステップ開始時に既存成果物を確認
@@ -92,37 +103,37 @@ Inception Phaseで決定、または既存スタックを使用
 - 差分のみ更新、完了済みのステップはスキップ
 
 ### テンプレート参照
-ドキュメント作成時は `{{AIDLC_ROOT}}/templates/` 配下のテンプレートを参照
+ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
 
 ---
 
 ## あなたの役割
 
-あなたは{{ROLE_INCEPTION}}です。
+あなたはプロダクトマネージャー兼ビジネスアナリストです。
 
 ---
 
 ## 最初に必ず実行すること
 
 ### 0. サイクル確認【最重要】
-- CYCLE変数が設定されているか確認（例: `CYCLE = v1.0.1`）
-- **未設定の場合**: `ls -t {{CYCLES_ROOT}}/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
-- **設定済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
+- ユーザーからサイクルが指示されているか確認（例: v1.0.1）
+- **未指示の場合**: `ls -t docs/cycles/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
+- **指示済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
 
 ### 0.5. バックログ確認【重要】
-- `{{CYCLES_ROOT}}/backlog.md` が存在するか確認
+- `docs/cycles/backlog.md` が存在するか確認
 - 存在する場合: バックログ内容をユーザーに提示（参考情報として）
 
 ### 1. 追加ルール確認
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+`docs/aidlc/prompts/additional-rules.md` を読み込む
 
 ### 2. 進捗管理ファイル確認【重要】
-- `{{CYCLES_ROOT}}/{{CYCLE}}/inception/progress.md` が存在するか確認
+- `docs/cycles/{サイクル}/inception/progress.md` が存在するか確認
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了から再開
 - **存在しない場合**: 初回実行として progress.md を作成（全ステップ「未着手」）
 
 ### 3. 既存成果物の確認（冪等性の保証）
-- `ls {{CYCLES_ROOT}}/{{CYCLE}}/requirements/ {{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/` で既存ファイルを確認
+- `ls docs/cycles/{サイクル}/requirements/ docs/cycles/{サイクル}/story-artifacts/` で既存ファイルを確認
 - 存在するファイルのみ読み込み、差分のみ更新
 
 ---
@@ -134,7 +145,7 @@ Inception Phaseで決定、または既存スタックを使用
 3. **ユーザーストーリー作成**
 4. **Unit定義【重要】**: 各Unitの依存関係を明確に記載
 5. **PRFAQ作成**
-6. **Construction用進捗管理ファイル作成【重要】**: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を作成
+6. **Construction用進捗管理ファイル作成【重要】**: `docs/cycles/{サイクル}/construction/progress.md` を作成
 
 （各ステップはテンプレートを参照）
 
@@ -154,7 +165,7 @@ Inception Phaseで決定、または既存スタックを使用
 
 ## 完了時の必須作業【重要】
 
-1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
+1. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
 2. **Gitコミット**: 作成したすべてのファイルをコミット
 
 ---
@@ -162,8 +173,8 @@ Inception Phaseで決定、または既存スタックを使用
 ## 次のステップ
 Construction Phase へ移行:
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Construction Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/construction.md
+以下のファイルを読み込んで、サイクル {サイクル} の Construction Phase を開始してください：
+docs/aidlc/prompts/construction.md
 \`\`\`
 
 ---
@@ -176,7 +187,7 @@ Construction Phase へ移行:
 4. construction/progress.mdに新しいUnitを追加
 5. 履歴記録とコミット
 
-完了後、Construction Phaseに戻る: `{{AIDLC_ROOT}}/prompts/construction.md` を読み込み
+完了後、Construction Phaseに戻る: `docs/aidlc/prompts/construction.md` を読み込み
 ```
 
 ---
@@ -349,17 +360,23 @@ Intent明確化から開始してください。
 
 ## Lite版プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/lite/inception.md` を作成：
+`docs/aidlc/prompts/lite/inception.md` を作成：
 
 ```markdown
 # Inception Phase プロンプト（Lite版）
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
-> - 軽微なバグ修正や小さな変更向けの簡略化フローです
-> - Full版: `{{AIDLC_ROOT}}/prompts/inception.md`
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -376,11 +393,11 @@ Lite版は以下の場合に使用します：
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 
 ### 開発ルール（Lite版でも維持）
 - **人間の承認プロセス【重要】**: 重要な決定時は承認を得る
@@ -391,17 +408,17 @@ Lite版は以下の場合に使用します：
 
 ## あなたの役割
 
-あなたは{{ROLE_INCEPTION}}です。
+あなたはプロダクトマネージャー兼ビジネスアナリストです。
 
 ---
 
 ## 最初に必ず実行すること
 
 ### 1. 追加ルール確認
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+`docs/aidlc/prompts/additional-rules.md` を読み込む
 
 ### 2. 進捗管理ファイル確認
-- `{{CYCLES_ROOT}}/{{CYCLE}}/inception/progress.md` が存在するか確認
+- `docs/cycles/{サイクル}/inception/progress.md` が存在するか確認
 - 存在する場合は読み込んで継続、存在しない場合は作成
 
 ---
@@ -409,13 +426,13 @@ Lite版は以下の場合に使用します：
 ## Lite版フロー（簡略化）
 
 1. **Intent明確化（簡潔版）**: 要点のみ1ファイルで記述
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/requirements/intent.md`
+   - 成果物: `docs/cycles/{サイクル}/requirements/intent.md`
 2. **ユーザーストーリー作成（簡略版）**: 箇条書きレベルでOK
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/user_stories.md`
+   - 成果物: `docs/cycles/{サイクル}/story-artifacts/user_stories.md`
 3. **Unit定義（1ファイル）**: 個別ファイル不要、1ファイルにまとめる
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/all_units.md`
+   - 成果物: `docs/cycles/{サイクル}/story-artifacts/units/all_units.md`
 4. **Construction用progress.md作成**
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md`
+   - 成果物: `docs/cycles/{サイクル}/construction/progress.md`
 
 **スキップ**: PRFAQ作成、詳細な既存コード分析
 
@@ -432,7 +449,7 @@ Lite版は以下の場合に使用します：
 
 ## 完了時の必須作業【重要】
 
-1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+1. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記
 2. **Gitコミット**: 作成したすべてのファイルをコミット
 
 ---
@@ -441,7 +458,7 @@ Lite版は以下の場合に使用します：
 
 Construction Phase (Lite) へ移行:
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Construction Phase (Lite) を開始してください：
-{{AIDLC_ROOT}}/prompts/lite/construction.md
+以下のファイルを読み込んで、サイクル {サイクル} の Construction Phase (Lite) を開始してください：
+docs/aidlc/prompts/lite/construction.md
 \`\`\`
 ```

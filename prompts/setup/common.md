@@ -4,45 +4,19 @@
 
 ---
 
-## 変数置換ルール【重要】
+## 設定参照ルール【重要】
 
-### 表記揺れ防止の原則
+### 設定ファイル
+プロジェクト設定は `docs/aidlc/project.toml` に集約されています。
+フェーズプロンプトは実行時にこのファイルを読み込んで情報を取得します。
 
-プロンプトファイル生成時は以下を**厳守**：
-1. テンプレート（コードブロック内）を**そのままコピー**する
-2. 下記の変数（`{{VAR}}`形式）**のみ**を対応する値に置換する
-3. **文章の修正・改善・言い換えは禁止**
-4. 変数以外の部分は**一切変更しない**
+### パス規約
+- 共通プロンプト・テンプレート: `docs/aidlc/`
+- サイクル固有成果物: `docs/cycles/{サイクル}/`
 
-### 置換対象の変数一覧
-
-| 変数名 | 説明 | 例 |
-|--------|------|-----|
-| `{{PROJECT_NAME}}` | プロジェクト名 | AI-DLC Starter Kit |
-| `{{CYCLE}}` | サイクル識別子 | v1.0.1 |
-| `{{BRANCH}}` | ブランチ名 | feature/v1.0.1 |
-| `{{DEVELOPMENT_TYPE}}` | 開発タイプ | greenfield / brownfield |
-| `{{PROJECT_TYPE}}` | プロジェクトタイプ | ios / android / web / backend / general |
-| `{{AIDLC_ROOT}}` | 共通ファイルルート | docs/aidlc |
-| `{{CYCLES_ROOT}}` | サイクルルート | docs/cycles |
-| `{{ROLE_INCEPTION}}` | Inception役割 | プロダクトマネージャー兼ビジネスアナリスト |
-| `{{ROLE_CONSTRUCTION}}` | Construction役割 | ソフトウェアアーキテクト兼エンジニア |
-| `{{ROLE_OPERATIONS}}` | Operations役割 | DevOpsエンジニア兼SRE |
-| `{{SETUP_PROMPT_PATH}}` | セットアッププロンプトのパス | /path/to/setup-prompt.md |
-| `{{PROJECT_SUMMARY}}` | プロジェクト概要（1行） | [セットアップ時に設定] |
-| `{{LANGUAGE}}` | 使用言語 | 日本語 |
-| `{{DEVELOPER_EXPERTISE}}` | 開発者の専門分野 | ソフトウェア開発 |
-| `{{PROJECT_README}}` | プロジェクトREADMEパス | /README.md |
-| `{{CYCLE_TYPE}}` | サイクルタイプ | Full / Lite |
-
-### 禁止事項
-
-- テンプレートの文章構造を変更する
-- 説明を追加・削除する
-- 表現を「より良く」しようとする
-- 変数以外の部分を編集する
-
-**理由**: 表記揺れを防ぎ、バージョンアップ時の差分を最小限にするため
+### サイクルの特定
+サイクルはユーザーからの指示で特定します。
+例: 「サイクル v1.2.0 の Construction Phase を継続してください」
 
 ---
 
@@ -50,7 +24,7 @@
 
 以下の構造を作成：
 ```
-{{AIDLC_ROOT}}/                    # 共通プロンプト・テンプレート
+docs/aidlc/                        # 共通プロンプト・テンプレート
 ├── prompts/
 │   ├── inception.md
 │   ├── construction.md
@@ -66,9 +40,10 @@
 ├── operations/                    # 運用引き継ぎ情報
 │   ├── handover.md
 │   └── README.md
+├── project.toml                   # プロジェクト設定
 └── version.txt
 
-{{CYCLES_ROOT}}/{{CYCLE}}/         # サイクル固有成果物
+docs/cycles/{サイクル}/            # サイクル固有成果物
 ├── .lite                          # Lite版サイクルの場合のみ作成
 ├── plans/
 ├── requirements/
@@ -88,27 +63,27 @@
 **作成手順**:
 1. `mkdir -p` で各ディレクトリを作成
 2. 各ディレクトリに `.gitkeep` ファイルを配置
-3. **Lite版サイクルの場合のみ**: `{{CYCLES_ROOT}}/{{CYCLE}}/.lite` ファイルを作成（内容: 「このサイクルはLite版です。」）
+3. **Lite版サイクルの場合のみ**: `docs/cycles/{サイクル}/.lite` ファイルを作成（内容: 「このサイクルはLite版です。」）
 
 対象ディレクトリ（共通）:
-- `{{AIDLC_ROOT}}/prompts/`
-- `{{AIDLC_ROOT}}/prompts/lite/`
-- `{{AIDLC_ROOT}}/templates/`
-- `{{AIDLC_ROOT}}/operations/`
+- `docs/aidlc/prompts/`
+- `docs/aidlc/prompts/lite/`
+- `docs/aidlc/templates/`
+- `docs/aidlc/operations/`
 
 対象ディレクトリ（サイクル固有）:
-- `{{CYCLES_ROOT}}/{{CYCLE}}/plans/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/requirements/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/architecture/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/inception/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/construction/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/`
-- `{{CYCLES_ROOT}}/{{CYCLE}}/operations/`
+- `docs/cycles/{サイクル}/plans/`
+- `docs/cycles/{サイクル}/requirements/`
+- `docs/cycles/{サイクル}/story-artifacts/`
+- `docs/cycles/{サイクル}/story-artifacts/units/`
+- `docs/cycles/{サイクル}/design-artifacts/`
+- `docs/cycles/{サイクル}/design-artifacts/domain-models/`
+- `docs/cycles/{サイクル}/design-artifacts/logical-designs/`
+- `docs/cycles/{サイクル}/design-artifacts/architecture/`
+- `docs/cycles/{サイクル}/inception/`
+- `docs/cycles/{サイクル}/construction/`
+- `docs/cycles/{サイクル}/construction/units/`
+- `docs/cycles/{サイクル}/operations/`
 
 ---
 
@@ -116,7 +91,7 @@
 
 ### history.md（プロンプト実行履歴）
 
-`{{CYCLES_ROOT}}/{{CYCLE}}/history.md` を作成：
+`docs/cycles/{サイクル}/history.md` を作成：
 
 ```markdown
 # プロンプト実行履歴
@@ -153,7 +128,7 @@
 **履歴追記方法**:
 ```bash
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-cat <<EOF | tee -a {{CYCLES_ROOT}}/{{CYCLE}}/history.md
+cat <<EOF | tee -a docs/cycles/{サイクル}/history.md
 ---
 ## ${TIMESTAMP}
 ...
@@ -164,7 +139,7 @@ EOF
 
 ### additional-rules.md（追加ルール）
 
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を作成：
+`docs/aidlc/prompts/additional-rules.md` を作成：
 
 ```markdown
 # 追加ルール
@@ -247,7 +222,7 @@ EOF
 
 ### prompt-reference-guide.md（プロンプト参照ガイド）
 
-`{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を作成：
+`docs/aidlc/prompts/prompt-reference-guide.md` を作成：
 
 ```markdown
 # プロンプト参照ガイド
@@ -273,9 +248,9 @@ EOF
 
 | フェーズ | プロンプトファイル | 役割 |
 |---------|-------------------|------|
-| Inception | `{{AIDLC_ROOT}}/prompts/inception.md` | 要件定義・Unit分解 |
-| Construction | `{{AIDLC_ROOT}}/prompts/construction.md` | 設計・実装・テスト |
-| Operations | `{{AIDLC_ROOT}}/prompts/operations.md` | デプロイ・運用・監視 |
+| Inception | `docs/aidlc/prompts/inception.md` | 要件定義・Unit分解 |
+| Construction | `docs/aidlc/prompts/construction.md` | 設計・実装・テスト |
+| Operations | `docs/aidlc/prompts/operations.md` | デプロイ・運用・監視 |
 
 ---
 
@@ -285,24 +260,24 @@ EOF
 
 **開始方法**:
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/inception.md
+以下のファイルを読み込んで、サイクル {サイクル} の Inception Phase を開始してください：
+docs/aidlc/prompts/inception.md
 \`\`\`
 
 ### Construction Phase
 
 **開始方法**:
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Construction Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/construction.md
+以下のファイルを読み込んで、サイクル {サイクル} の Construction Phase を開始してください：
+docs/aidlc/prompts/construction.md
 \`\`\`
 
 ### Operations Phase
 
 **開始方法**:
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/operations.md
+以下のファイルを読み込んで、サイクル {サイクル} の Operations Phase を開始してください：
+docs/aidlc/prompts/operations.md
 \`\`\`
 
 ---
@@ -317,7 +292,7 @@ EOF
 
 ### 間違い1: 独自プロンプトを作成してしまう
 
-**対策**: 公式のフェーズプロンプトを直接読み込む。プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載。
+**対策**: 公式のフェーズプロンプトを直接読み込む。プロジェクト固有のルールは `docs/aidlc/prompts/additional-rules.md` に記載。
 
 ### 間違い2: 複数のフェーズプロンプトを同時に読み込む
 
@@ -331,7 +306,7 @@ EOF
 
 ## 5. プロンプトのカスタマイズ方法
 
-プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください。
+プロジェクト固有のルールは `docs/aidlc/prompts/additional-rules.md` に記載してください。
 
 ---
 
@@ -345,7 +320,7 @@ EOF
 
 ### templates/index.md（テンプレート一覧）
 
-`{{AIDLC_ROOT}}/templates/index.md` を作成：
+`docs/aidlc/templates/index.md` を作成：
 
 ```markdown
 # AI-DLC テンプレート一覧
@@ -381,10 +356,10 @@ EOF
 
 ### version.txt（バージョン記録）
 
-`{{AIDLC_ROOT}}/version.txt` を作成：
+`docs/aidlc/version.txt` を作成：
 
 ```
-echo "1.0.0" > {{AIDLC_ROOT}}/version.txt
+echo "1.0.0" > docs/aidlc/version.txt
 ```
 
 ---
@@ -413,7 +388,7 @@ AI-DLC環境のセットアップが完了しました！
 
 作成されたファイル:
 
-共通ファイル（{{AIDLC_ROOT}}/）:
+共通ファイル（docs/aidlc/）:
 - prompts/inception.md - Inception Phase用プロンプト
 - prompts/construction.md - Construction Phase用プロンプト
 - prompts/operations.md - Operations Phase用プロンプト
@@ -423,17 +398,12 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/additional-rules.md - 共通の追加ルール
 - prompts/prompt-reference-guide.md - プロンプト参照ガイド
 - templates/index.md - テンプレート一覧
+- project.toml - プロジェクト設定
 - version.txt - スターターキットバージョン
 
-サイクル固有ファイル（{{CYCLES_ROOT}}/{{CYCLE}}/）:
+サイクル固有ファイル（docs/cycles/{サイクル}/）:
 - history.md - 実行履歴
 - 各種ディレクトリ
-
----
-
-## ⚠️ 重要: カスタマイズが必要です
-
-Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください**。
 
 ---
 
@@ -442,12 +412,12 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 カスタマイズ完了後、**新しいセッション**で以下を実行してください：
 
 【Full版の場合】
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/inception.md
+以下のファイルを読み込んで、サイクル {サイクル} の Inception Phase を開始してください：
+docs/aidlc/prompts/inception.md
 
 【Lite版の場合】
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase (Lite) を開始してください：
-{{AIDLC_ROOT}}/prompts/lite/inception.md
+以下のファイルを読み込んで、サイクル {サイクル} の Inception Phase (Lite) を開始してください：
+docs/aidlc/prompts/lite/inception.md
 ```
 
 ---
@@ -457,4 +427,4 @@ Inception Phase を開始する前に、**必ず `{{AIDLC_ROOT}}/prompts/additio
 - **フェーズごとに必要な情報のみ**: 各 .md は該当フェーズに必要な情報だけを含める
 - **コンテキストリセット前提**: 該当フェーズの .md のみ読み込む設計
 - **AI-DLC原則の反映**: 会話の反転、短サイクル、設計技法統合
-- **言語統一**: すべてのドキュメント・コメントは {{LANGUAGE}} で記述
+- **設定ファイル参照**: プロジェクト情報は project.toml から取得

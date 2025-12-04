@@ -6,9 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/operations.md`
-2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/operations.md`
-3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `docs/aidlc/prompts/operations.md`
+2. **プロンプトファイル（Lite版）**: `docs/aidlc/prompts/lite/operations.md`
+3. **テンプレートファイル**（`docs/aidlc/templates/` に作成）:
    - `deployment_checklist_template.md`
    - `monitoring_strategy_template.md`
    - `distribution_feedback_template.md`
@@ -17,7 +17,7 @@
    - `backlog_template.md`
    - `backlog_completed_template.md`
    - `test_record_template.md`
-3. **運用引き継ぎファイル**（`{{AIDLC_ROOT}}/operations/` に作成）:
+3. **運用引き継ぎファイル**（`docs/aidlc/operations/` に作成）:
    - `handover.md`
    - `README.md`
 
@@ -25,20 +25,31 @@
 
 ## operations.md プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/operations.md` を作成：
+`docs/aidlc/prompts/operations.md` を作成：
 
 ```markdown
 # Operations Phase プロンプト
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter Kitの公式フェーズプロンプトです
-> - 独自のプロンプトを作成せず、このファイルを直接読み込んでください
-> - プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください
-> - 詳細は `{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を参照
-
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
 （このパスはテンプレート生成時に使用します）
+
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+このファイルから以下の情報を取得:
+- プロジェクト名・概要
+- 技術スタック
+- コーディング規約
+- セキュリティ要件
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -67,19 +78,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### 技術スタック
 Inception Phaseで決定済み、または既存スタックを使用
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 - プロジェクトルート: 実装コード
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`{{CYCLES_ROOT}}/{{CYCLE}}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
-- プロジェクト固有の制約は `{{AIDLC_ROOT}}/prompts/additional-rules.md` を参照
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{サイクル}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
+- プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
 - **人間の承認プロセス【重要】**: 計画作成後、必ず ①計画ファイルのパス提示、②「この計画で進めてよろしいですか？」と質問、③承認まで待機、④**承認なしで次のステップを開始しない**
@@ -88,8 +99,8 @@ Inception Phaseで決定済み、または既存スタックを使用
 - **プロンプト履歴管理【重要】**: history.mdは必ず追記のみ（既存履歴を削除・上書きしない）。日時は `date '+%Y-%m-%d %H:%M:%S %Z'` で取得
 
 ### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`{{AIDLC_ROOT}}/prompts/inception.md`）
-- **Construction Phase**: 実装とテスト（`{{AIDLC_ROOT}}/prompts/construction.md`）
+- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
+- **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
 - **Operations Phase**: デプロイと運用（このフェーズ）
 
 ### 進捗管理と冪等性
@@ -98,28 +109,28 @@ Inception Phaseで決定済み、または既存スタックを使用
 - 差分のみ更新、完了済みのステップはスキップ
 
 ### テンプレート参照
-ドキュメント作成時は `{{AIDLC_ROOT}}/templates/` 配下のテンプレートを参照
+ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
 
 ---
 
 ## あなたの役割
 
-あなたは{{ROLE_OPERATIONS}}です。
+あなたはDevOpsエンジニア兼SREです。
 
 ---
 
 ## 最初に必ず実行すること（6ステップ）
 
 ### 0. サイクル確認【最重要】
-- CYCLE変数が設定されているか確認（例: `CYCLE = v1.0.1`）
-- **未設定の場合**: `ls -t {{CYCLES_ROOT}}/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
-- **設定済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
+- ユーザーからサイクルが指示されているか確認（例: v1.0.1）
+- **未指示の場合**: `ls -t docs/cycles/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
+- **指示済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
 
 ### 1. 追加ルール確認
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+`docs/aidlc/prompts/additional-rules.md` を読み込む
 
 ### 2. 運用引き継ぎ情報の確認【重要】
-- `{{AIDLC_ROOT}}/operations/handover.md` が存在するか確認
+- `docs/aidlc/operations/handover.md` が存在するか確認
 - **存在する場合**: 読み込んで前回サイクルの設定方針を確認し、ユーザーに通知
 - **存在しない場合**: 初回実行として、各ステップで新規に設定を決定
 
@@ -134,12 +145,12 @@ Inception Phaseで決定済み、または既存スタックを使用
 検出結果に応じて、各設定について「再利用 / 更新 / 新規作成」の選択肢を提示
 
 ### 4. 進捗管理ファイル確認【重要】
-- `{{CYCLES_ROOT}}/{{CYCLE}}/operations/progress.md` が存在するか確認
+- `docs/cycles/{サイクル}/operations/progress.md` が存在するか確認
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了から再開
 - **存在しない場合**: 初回実行として progress.md を作成（PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
 
 ### 5. 既存成果物の確認（冪等性の保証）
-- `ls {{CYCLES_ROOT}}/{{CYCLE}}/operations/` で既存ファイルを確認
+- `ls docs/cycles/{サイクル}/operations/` で既存ファイルを確認
 - 存在するファイルのみ読み込み、差分のみ更新
 
 ---
@@ -168,9 +179,9 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ## 完了時の必須作業【重要】
 
-1. **バージョン更新**: `{{AIDLC_ROOT}}/version.txt` をサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
-2. **運用引き継ぎ情報の更新**: 今回決定した設定方針を `{{AIDLC_ROOT}}/operations/handover.md` に反映（次サイクルで参照可能にする）
-3. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
+1. **バージョン更新**: `docs/aidlc/version.txt` をサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
+2. **運用引き継ぎ情報の更新**: 今回決定した設定方針を `docs/aidlc/operations/handover.md` に反映（次サイクルで参照可能にする）
+3. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
 4. **Gitコミット**: 作成したすべてのファイル（**version.txt含む**）をコミット
 
 ---
@@ -179,9 +190,9 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 Constructionに戻る必要がある場合（バグ修正・機能修正）:
 1. 現在のprogress.mdを確認
-2. `{{AIDLC_ROOT}}/prompts/construction.md` を読み込み
+2. `docs/aidlc/prompts/construction.md` を読み込み
 3. Construction Phaseの「Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
-4. 修正完了後、`{{AIDLC_ROOT}}/prompts/operations.md` を読み込んで再開
+4. 修正完了後、`docs/aidlc/prompts/operations.md` を読み込んで再開
 
 ---
 
@@ -194,8 +205,8 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次サイクル以降で対応すべきタスクをバックログに記録:
 - タスクの集約（課題、改善点、バグ、機能リクエスト）
 - ユーザーに質問: 「次サイクル以降で対応すべきタスクはありますか？」
-- バックログファイル（`{{CYCLES_ROOT}}/backlog.md`）に追記
-- 完了したタスクは `{{CYCLES_ROOT}}/backlog_completed.md` に移動
+- バックログファイル（`docs/cycles/backlog.md`）に追記
+- 完了したタスクは `docs/cycles/backlog_completed.md` に移動
 
 3. **次期サイクルの計画**: 新しいサイクル識別子を決定
 4. **次のサイクル開始【重要】**: 新しいセッションでセットアップを実行
@@ -644,7 +655,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 ### handover.md（運用引き継ぎ情報）
 
-`{{AIDLC_ROOT}}/operations/handover.md` を作成：
+`docs/aidlc/operations/handover.md` を作成：
 
 ```markdown
 # 運用引き継ぎ情報
@@ -762,7 +773,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 ### README.md（運用ディレクトリの説明）
 
-`{{AIDLC_ROOT}}/operations/README.md` を作成：
+`docs/aidlc/operations/README.md` を作成：
 
 ```markdown
 # Operations ディレクトリ
@@ -803,17 +814,23 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 ## Lite版プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/lite/operations.md` を作成：
+`docs/aidlc/prompts/lite/operations.md` を作成：
 
 ```markdown
 # Operations Phase プロンプト（Lite版）
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
-> - Lite版ではOperations Phase自体が**任意**です
-> - Full版: `{{AIDLC_ROOT}}/prompts/operations.md`
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -832,11 +849,11 @@ Lite版では**Operations Phase自体が任意**です。
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 
 ### 開発ルール（Lite版でも維持）
 - **Gitコミットのタイミング【必須】**: フェーズ完了時
@@ -846,7 +863,7 @@ Lite版では**Operations Phase自体が任意**です。
 
 ## あなたの役割
 
-あなたは{{ROLE_OPERATIONS}}です。
+あなたはDevOpsエンジニア兼SREです。
 
 ---
 
@@ -884,7 +901,7 @@ Lite版では**Operations Phase自体が任意**です。
 
 ## 完了時の必須作業【重要】
 
-1. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+1. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記
 2. **Gitコミット**: 作成したすべてのファイルをコミット
 
 ---
@@ -898,7 +915,7 @@ Operations Phase (Lite) が完了（またはスキップ）したら、サイ�
 新しいサイクルを開始する場合：
 \`\`\`
 以下のファイルを読み込んで、AI-DLC の次サイクル の環境をセットアップしてください：
-{{SETUP_PROMPT_PATH}}
+prompts/setup-prompt.md
 
 変数を以下に設定してください：
 - CYCLE = vX.X.X（次のサイクル識別子）

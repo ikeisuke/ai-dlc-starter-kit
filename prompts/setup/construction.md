@@ -6,9 +6,9 @@
 
 ## 生成するファイル
 
-1. **プロンプトファイル（Full版）**: `{{AIDLC_ROOT}}/prompts/construction.md`
-2. **プロンプトファイル（Lite版）**: `{{AIDLC_ROOT}}/prompts/lite/construction.md`
-3. **テンプレートファイル**（`{{AIDLC_ROOT}}/templates/` に作成）:
+1. **プロンプトファイル（Full版）**: `docs/aidlc/prompts/construction.md`
+2. **プロンプトファイル（Lite版）**: `docs/aidlc/prompts/lite/construction.md`
+3. **テンプレートファイル**（`docs/aidlc/templates/` に作成）:
    - `domain_model_template.md`
    - `logical_design_template.md`
    - `implementation_record_template.md`
@@ -17,20 +17,31 @@
 
 ## construction.md プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/construction.md` を作成：
+`docs/aidlc/prompts/construction.md` を作成：
 
 ```markdown
 # Construction Phase プロンプト
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter Kitの公式フェーズプロンプトです
-> - 独自のプロンプトを作成せず、このファイルを直接読み込んでください
-> - プロジェクト固有のルールは `{{AIDLC_ROOT}}/prompts/additional-rules.md` に記載してください
-> - 詳細は `{{AIDLC_ROOT}}/prompts/prompt-reference-guide.md` を参照
-
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
 （このパスはテンプレート生成時に使用します）
+
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+このファイルから以下の情報を取得:
+- プロジェクト名・概要
+- 技術スタック
+- コーディング規約
+- セキュリティ要件
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -59,19 +70,19 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### 技術スタック
 Inception Phaseで決定済み、または既存スタックを使用
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 - プロジェクトルート: 実装コード
 
 ### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`{{CYCLES_ROOT}}/{{CYCLE}}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
-- プロジェクト固有の制約は `{{AIDLC_ROOT}}/prompts/additional-rules.md` を参照
+- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{サイクル}/` 配下のファイルのみを読み込む（コンテキスト溢れ防止）
+- プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
 
 ### 開発ルール
 - **人間の承認プロセス【重要】**: 計画作成後、必ず ①計画ファイルのパス提示、②「この計画で進めてよろしいですか？」と質問、③承認まで待機、④**承認なしで次のステップを開始しない**
@@ -80,9 +91,9 @@ Inception Phaseで決定済み、または既存スタックを使用
 - **プロンプト履歴管理【重要】**: history.mdは必ず追記のみ（既存履歴を削除・上書きしない）。日時は `date '+%Y-%m-%d %H:%M:%S %Z'` で取得
 
 ### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`{{AIDLC_ROOT}}/prompts/inception.md`）
+- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
 - **Construction Phase**: 実装とテスト（このフェーズ）
-- **Operations Phase**: デプロイと運用（`{{AIDLC_ROOT}}/prompts/operations.md`）
+- **Operations Phase**: デプロイと運用（`docs/aidlc/prompts/operations.md`）
 
 ### 進捗管理と冪等性
 - 各ステップ開始時に既存成果物を確認
@@ -90,28 +101,28 @@ Inception Phaseで決定済み、または既存スタックを使用
 - 差分のみ更新、完了済みのステップはスキップ
 
 ### テンプレート参照
-ドキュメント作成時は `{{AIDLC_ROOT}}/templates/` 配下のテンプレートを参照
+ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
 
 ---
 
 ## あなたの役割
 
-あなたは{{ROLE_CONSTRUCTION}}です。
+あなたはソフトウェアアーキテクト兼エンジニアです。
 
 ---
 
 ## 最初に必ず実行すること（4ステップ）
 
 ### 0. サイクル確認【最重要】
-- CYCLE変数が設定されているか確認（例: `CYCLE = v1.0.1`）
-- **未設定の場合**: `ls -t {{CYCLES_ROOT}}/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
-- **設定済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
+- ユーザーからサイクルが指示されているか確認（例: v1.0.1）
+- **未指示の場合**: `ls -t docs/cycles/ | head -5` で既存サイクル一覧を表示し、ユーザーに選択を促す
+- **指示済みの場合**: サイクルディレクトリの存在を確認し、存在すれば継続
 
 ### 1. 追加ルール確認
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+`docs/aidlc/prompts/additional-rules.md` を読み込む
 
 ### 2. 進捗管理ファイル読み込み【重要】
-- `{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を読み込む
+- `docs/cycles/{サイクル}/construction/progress.md` を読み込む
 - このファイルには全Unit一覧、依存関係、状態（未着手/進行中/完了）、実行可能Unitが記載
 - **このファイルだけで進捗状況を完全に把握できる**
 
@@ -123,10 +134,10 @@ Inception Phaseで決定済み、または既存スタックを使用
   - 複数: ユーザーに選択肢を提示
 
 **Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
-- パス: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+- パス: `docs/cycles/{サイクル}/story-artifacts/units/[unit_name].md`
 
 ### 4. 実行前確認【重要】
-選択されたUnitについて計画ファイルを `{{CYCLES_ROOT}}/{{CYCLE}}/plans/` に作成し、「この計画で進めてよろしいですか？」と質問、承認を待つ
+選択されたUnitについて計画ファイルを `docs/cycles/{サイクル}/plans/` に作成し、「この計画で進めてよろしいですか？」と質問、承認を待つ
 
 ---
 
@@ -134,16 +145,16 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ### Phase 1: 設計【対話形式、コードは書かない】
 1. **ドメインモデル設計**: 不明点は `[Question]`/`[Answer]` で記録、**一問一答形式**で対話
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/[unit_name]_domain_model.md`
+   - 成果物: `docs/cycles/{サイクル}/design-artifacts/domain-models/[unit_name]_domain_model.md`
 2. **論理設計**: 同様に**一問一答形式**で対話
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/[unit_name]_logical_design.md`
+   - 成果物: `docs/cycles/{サイクル}/design-artifacts/logical-designs/[unit_name]_logical_design.md`
 3. **設計レビュー**: 設計内容をユーザーに提示し、承認を得る（**承認なしで実装フェーズに進まない**）
 
 ### Phase 2: 実装【設計を参照してコード生成】
 4. **コード生成**: 設計ファイルを読み込み、実装コードを生成
 5. **テスト生成**: BDD/TDDに従ってテストコードを作成
 6. **統合とレビュー**: ビルド、テスト実行、レビュー
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/[unit_name]_implementation.md`
+   - 成果物: `docs/cycles/{サイクル}/construction/units/[unit_name]_implementation.md`
 
 ---
 
@@ -176,7 +187,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 1. **progress.md更新**: 完了したUnitの状態を「完了」に変更、完了日を記録
 2. **実行可能Unitを再計算**: 依存関係に基づいて次回実行可能なUnit候補を更新
 3. **最終更新日時を記録**
-4. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
+4. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S %Z'`）
 5. **Gitコミット**: 作成・変更したすべてのファイルをコミット
 
 ---
@@ -185,8 +196,8 @@ Inception Phaseで決定済み、または既存スタックを使用
 - 次のUnitが残っている場合: 次のUnit継続
 - 全Unit完了の場合: Operations Phase へ移行
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase を開始してください：
-{{AIDLC_ROOT}}/prompts/operations.md
+以下のファイルを読み込んで、サイクル {サイクル} の Operations Phase を開始してください：
+docs/aidlc/prompts/operations.md
 \`\`\`
 
 ---
@@ -195,7 +206,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ### Inceptionに戻る必要がある場合（Unit追加・拡張）
 1. 現在のprogress.mdを確認
-2. `{{AIDLC_ROOT}}/prompts/inception.md` を読み込み
+2. `docs/aidlc/prompts/inception.md` を読み込み
 3. Inception Phaseの「このフェーズに戻る場合」セクションの手順に従う
 
 ### Operations Phaseからバグ修正で戻ってきた場合
@@ -203,7 +214,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 2. Unit修正（設計レビュー→実装→テスト）
 3. progress.mdを更新（Unitを「完了」に戻す）
 4. 履歴記録とコミット
-5. Operations Phaseに戻る: `{{AIDLC_ROOT}}/prompts/operations.md` を読み込み
+5. Operations Phaseに戻る: `docs/aidlc/prompts/operations.md` を読み込み
 ```
 
 ---
@@ -400,17 +411,23 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ## Lite版プロンプト生成
 
-`{{AIDLC_ROOT}}/prompts/lite/construction.md` を作成：
+`docs/aidlc/prompts/lite/construction.md` を作成：
 
 ```markdown
 # Construction Phase プロンプト（Lite版）
 
-> **重要: このプロンプトについて**
-> - これはAI-DLC Starter KitのLite版フェーズプロンプトです
-> - 軽微なバグ修正や小さな変更向けの簡略化フローです
-> - Full版: `{{AIDLC_ROOT}}/prompts/construction.md`
+**セットアッププロンプトパス**: prompts/setup-prompt.md
 
-**セットアッププロンプトパス**: {{SETUP_PROMPT_PATH}}
+---
+
+## 最初に読み込むファイル【必須】
+
+### 1. プロジェクト設定
+`docs/aidlc/project.toml` を読み込む
+
+### 2. サイクル特定
+ユーザーから指示されたサイクルバージョンに基づいて、
+サイクルディレクトリ `docs/cycles/{サイクル}` を特定
 
 ---
 
@@ -423,11 +440,11 @@ Inception Phaseで決定済み、または既存スタックを使用
 ## プロジェクト情報
 
 ### プロジェクト概要
-{{PROJECT_SUMMARY}}
+project.toml の [project] セクションを参照
 
 ### ディレクトリ構成
-- `{{AIDLC_ROOT}}/`: 共通プロンプト・テンプレート
-- `{{CYCLES_ROOT}}/{{CYCLE}}/`: サイクル固有成果物
+- `docs/aidlc/`: 共通プロンプト・テンプレート
+- `docs/cycles/{サイクル}/`: サイクル固有成果物
 
 ### 開発ルール（Lite版でも維持）
 - **人間の承認プロセス【重要】**: 実装開始前に計画を提示し承認を得る
@@ -438,23 +455,23 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ## あなたの役割
 
-あなたは{{ROLE_CONSTRUCTION}}です。
+あなたはソフトウェアアーキテクト兼エンジニアです。
 
 ---
 
 ## 最初に必ず実行すること
 
 ### 1. 追加ルール確認
-`{{AIDLC_ROOT}}/prompts/additional-rules.md` を読み込む
+`docs/aidlc/prompts/additional-rules.md` を読み込む
 
 ### 2. 進捗管理ファイル読み込み
-`{{CYCLES_ROOT}}/{{CYCLE}}/construction/progress.md` を読み込む
+`docs/cycles/{サイクル}/construction/progress.md` を読み込む
 
 ### 3. 対象Unit決定
 progress.mdに基づいて対象Unitを決定
 
 **Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
-- パス: `{{CYCLES_ROOT}}/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+- パス: `docs/cycles/{サイクル}/story-artifacts/units/[unit_name].md`
 
 ### 4. 実行前確認【重要】
 計画ファイルを作成し、「この計画で進めてよろしいですか？」と質問
@@ -470,7 +487,7 @@ progress.mdに基づいて対象Unitを決定
 3. **最小限のテスト**: 変更箇所に関連するテストのみ
 4. **ビルド・テスト実行**
 5. **簡易実装記録作成**: 変更内容の要約のみ
-   - 成果物: `{{CYCLES_ROOT}}/{{CYCLE}}/construction/units/[unit_name]_implementation.md`
+   - 成果物: `docs/cycles/{サイクル}/construction/units/[unit_name]_implementation.md`
 6. **progress.md更新**
 7. **履歴記録・コミット**
 
@@ -488,7 +505,7 @@ progress.mdに基づいて対象Unitを決定
 ## Unit完了時の必須作業【重要】
 
 1. **progress.md更新**: 完了したUnitの状態を「完了」に変更
-2. **履歴記録**: `{{CYCLES_ROOT}}/{{CYCLE}}/history.md` に追記
+2. **履歴記録**: `docs/cycles/{サイクル}/history.md` に追記
 3. **Gitコミット**: 作成・変更したすべてのファイルをコミット
 
 ---
@@ -498,8 +515,8 @@ progress.mdに基づいて対象Unitを決定
 - 次のUnitが残っている場合: 次のUnit継続
 - 全Unit完了の場合: Operations Phase (Lite) へ移行
 \`\`\`
-以下のファイルを読み込んで、サイクル {{CYCLE}} の Operations Phase (Lite) を開始してください：
-{{AIDLC_ROOT}}/prompts/lite/operations.md
+以下のファイルを読み込んで、サイクル {サイクル} の Operations Phase (Lite) を開始してください：
+docs/aidlc/prompts/lite/operations.md
 \`\`\`
 
 **注意**: Lite版ではOperations Phaseは任意です。CI/CDや監視が既に構築済みの場合はスキップ可能です。

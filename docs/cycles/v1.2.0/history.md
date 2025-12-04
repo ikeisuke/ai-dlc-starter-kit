@@ -169,3 +169,31 @@ Unit 2: 設定アーキテクチャ設計 完了
 - docs/cycles/v1.2.0/plans/unit3_setup_separation_plan.md
 
 **備考**: 初回セットアップとサイクル開始を分離し、project.toml を中心とした設定管理の基盤を構築
+---
+## 2025-12-04 16:28:10 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 4: フェーズプロンプト改修を完了
+
+変数置換方式（`{{VAR}}`形式）を廃止し、設定ファイル参照方式に移行:
+- 変数置換ルールセクションを設定参照ルールに変更
+- 各フェーズプロンプトに「最初に読み込むファイル【必須】」セクションを追加
+- パス変数を固定パスに変更（docs/aidlc、docs/cycles）
+- 役割変数を固定値に変更
+
+### 成果物
+- prompts/setup/common.md（改修）
+- prompts/setup/inception.md（改修）
+- prompts/setup/construction.md（改修）
+- prompts/setup/operations.md（改修）
+- docs/cycles/v1.2.0/design-artifacts/domain-models/unit4_domain_model.md
+- docs/cycles/v1.2.0/design-artifacts/logical-designs/unit4_logical_design.md
+- docs/cycles/v1.2.0/plans/unit4_phase_prompt_revision_plan.md
+- docs/cycles/v1.2.0/construction/units/unit4_implementation.md
+
+### 備考
+- 変数置換が完全に廃止され、テンプレート管理が簡素化
+- 次回セットアップ時に改修版のプロンプトが生成される
