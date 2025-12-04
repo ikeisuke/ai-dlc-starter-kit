@@ -42,8 +42,32 @@ prompts/package/templates/* → docs/aidlc/templates/
 - `prompts/setup/construction.md` - 簡素化
 - `prompts/setup/operations.md` - 簡素化
 
+## 残作業
+
+### setup/ ディレクトリの整理
+
+`prompts/setup/*.md` と `setup-init.md` で内容が重複している。
+
+**現状**:
+```
+prompts/
+├── setup-prompt.md
+├── setup-init.md      # コピー処理を定義
+├── setup-cycle.md
+├── setup/             # ← 重複、不要？
+│   ├── common.md
+│   ├── inception.md
+│   ├── construction.md
+│   └── operations.md
+└── package/
+```
+
+**対応案**:
+- `setup/` ディレクトリを削除
+- 必要な情報は `setup-init.md` に集約
+
 ---
 
 **作成日**: 2025-12-04
 **更新日**: 2025-12-04
-**ステータス**: 完了
+**ステータス**: 進行中（setup/ 整理が残）
