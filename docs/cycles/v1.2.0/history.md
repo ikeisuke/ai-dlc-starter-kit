@@ -92,3 +92,39 @@ v1.2.0 サイクルの要件定義を完了
 - docs/cycles/v1.2.0/plans/unit1_path_fix_plan.md（計画ファイル）
 - docs/cycles/v1.2.0/construction/progress.md（更新）
 **備考**: 設計フェーズはスキップ（単純なドキュメント修正のため）
+---
+## 2025-12-04 10:07:18 JST
+
+### フェーズ
+Inception Phase（バックトラック）
+
+### 実行内容
+Unit構成の再編成 - 変数管理の設計議論を踏まえてUnit 2-7を再定義
+
+### 背景
+Unit 2（変数具体例削除）の設計議論を通じて、以下が明らかになった：
+- 変数には「プロジェクト固定」と「サイクル固有」の2種類がある
+- 変数には「ハードな値」と「ソフトな値」がある
+- フェーズは設定の「消費者」であり、変数置換よりAIが設定ファイルを読む形式が自然
+
+### 成果物
+- docs/cycles/v1.2.0/plans/unit_restructure_plan.md（再編成計画）
+- docs/cycles/v1.2.0/story-artifacts/units/unit2_config_architecture.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/unit3_setup_separation.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/unit4_phase_prompt_revision.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/unit5_prompt_split.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/unit6_version_management.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/unit7_auto_tagging.md（新規）
+- docs/cycles/v1.2.0/story-artifacts/units/archived/（旧Unit定義をアーカイブ）
+- docs/cycles/v1.2.0/construction/progress.md（更新）
+- docs/cycles/v1.2.0/story-artifacts/user_stories.md（更新）
+
+### 備考
+新しいUnit構成:
+1. Unit 1: パス参照不整合修正（完了済み）
+2. Unit 2: 設定アーキテクチャ設計
+3. Unit 3: セットアップ分離
+4. Unit 4: フェーズプロンプト改修
+5. Unit 5: プロンプト分割・短縮化
+6. Unit 6: バージョン管理
+7. Unit 7: タグ付け自動化
