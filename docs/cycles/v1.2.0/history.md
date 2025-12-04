@@ -234,3 +234,20 @@ Unit 5: 中断 - setup/ ディレクトリ整理のため進行中に戻す
 - setup/ ディレクトリの整理が残っている
 - コンテキストリセット後に継続
 
+
+---
+
+## 2025-12-04 23:58:35 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 5 - プロンプト分割・短縮化
+**実行内容**: setup/ディレクトリ整理（残作業完了）
+**成果物**:
+- prompts/setup/ ディレクトリを削除（重複情報のため不要）
+
+**変更概要**:
+- setup/common.md, inception.md, construction.md, operations.md を削除
+- setup-init.md に情報が集約されており、影響なし
+
+**備考**: Unit 5 完了
+

@@ -54,7 +54,7 @@ prompts/
 ├── setup-prompt.md
 ├── setup-init.md      # コピー処理を定義
 ├── setup-cycle.md
-├── setup/             # ← 重複、不要？
+├── setup/             # ← 重複、不要
 │   ├── common.md
 │   ├── inception.md
 │   ├── construction.md
@@ -62,12 +62,30 @@ prompts/
 └── package/
 ```
 
-**対応案**:
-- `setup/` ディレクトリを削除
-- 必要な情報は `setup-init.md` に集約
+**調査結果**:
+- `setup-prompt.md` は `setup/` 配下のファイルを参照していない
+- `setup/` 配下のファイルはすべて「詳細は setup-init.md のセクション 6.2 を参照」としており、重複情報のみ
+- エントリーポイント → `setup-init.md` / `setup-cycle.md` の流れで完結
+
+**対応計画**:
+
+1. **削除対象**:
+   - `prompts/setup/common.md`
+   - `prompts/setup/inception.md`
+   - `prompts/setup/construction.md`
+   - `prompts/setup/operations.md`
+   - `prompts/setup/` ディレクトリ自体
+
+2. **影響なし**:
+   - `setup-prompt.md` は変更不要（`setup/` を参照していない）
+   - `setup-init.md` は変更不要（すでに完全な情報を持っている）
+   - `setup-cycle.md` も変更不要
+
+3. **確認項目**:
+   - 削除後にセットアップフローが動作することを確認
 
 ---
 
 **作成日**: 2025-12-04
 **更新日**: 2025-12-04
-**ステータス**: 進行中（setup/ 整理が残）
+**ステータス**: 完了
