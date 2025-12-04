@@ -1,8 +1,6 @@
 # Operations Phase プロンプト
 
-**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-（このパスはテンプレート生成時に使用します）
+**セットアッププロンプトパス**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 ---
 
@@ -133,19 +131,37 @@ Inception/Construction Phaseで決定済み
 
 ---
 
-## 最初に必ず実行すること（3ステップ）
+## 最初に必ず実行すること（4ステップ）
 
-### 1. 追加ルール確認
-`docs/aidlc/prompts/additional-rules.md` を読み込む
+### 1. サイクル存在確認
+`docs/cycles/{{CYCLE}}/` の存在を確認：
 
-### 2. 進捗管理ファイル確認【重要】
+```bash
+ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+```
+
+- **存在しない場合**: エラーを表示し、既存サイクル一覧を提示
+  ```
+  エラー: サイクル {{CYCLE}} が見つかりません。
+
+  既存のサイクル:
+  [ls docs/cycles/ の結果]
+
+  セットアップを実行してサイクルを作成してください。
+  ```
+- **存在する場合**: 処理を継続
+
+### 2. 追加ルール確認
+`docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
+
+### 3. 進捗管理ファイル確認【重要】
 
 `docs/cycles/{{CYCLE}}/operations/progress.md` が存在するか確認：
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
 
-### 3. 既存成果物の確認（冪等性の保証）
+### 4. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/operations/
@@ -260,25 +276,32 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 ### 2. 分析と改善点洗い出し
 次期バージョンで対応すべき改善点をリストアップ
 
-### 3. 次期サイクルの計画
+### 3. バックログ記録
+次サイクルに引き継ぐタスクがある場合、`docs/cycles/backlog.md` に記録：
+
+- **ファイルが存在しない場合**: テンプレート（`docs/aidlc/templates/backlog_template.md`）から作成
+- **ファイルが存在する場合**: 追記
+
+記録項目:
+- タスク内容
+- 優先度（高/中/低）
+- 理由（なぜ今回対応できなかったか）
+- 推奨対応サイクル
+
+### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
 
-### 4. 次のサイクル開始【コンテキストリセット推奨】
+### 5. 次のサイクル開始【コンテキストリセット推奨】
 
 このサイクルが完了しました。コンテキストをリセットして次のサイクルを開始することを推奨します。
 
 **理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
 
-**次のサイクルを開始するプロンプト**:
+**次のサイクルを開始するプロンプト**（冒頭の「セットアッププロンプトパス」を使用）:
 
 ```markdown
-以下のファイルを読み込んで、AI-DLC Starter Kit の次サイクル の AI-DLC 環境をセットアップしてください：
-/Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-変数を以下に設定してください：
-- CYCLE = vX.X.X（次のサイクル識別子）
-- DOCS_ROOT = docs
-- その他の変数も適宜設定
+以下のファイルを読み込んで、次サイクルの AI-DLC 環境をセットアップしてください：
+[セットアッププロンプトパス]
 ```
 
 **必要に応じて前バージョンのファイルをコピー/参照**:
@@ -288,5 +311,5 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 セットアップ完了後、新しいセッションで Inception Phase を開始
 
-### 5. ライフサイクルの継続
+### 6. ライフサイクルの継続
 Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供

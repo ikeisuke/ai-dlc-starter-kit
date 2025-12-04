@@ -1,8 +1,4 @@
-# Operations Phase プロンプト
-
-**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-（このパスはテンプレート生成時に使用します）
+# Inception Phase プロンプト
 
 ---
 
@@ -34,12 +30,12 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発プロセスの中心に据えた新しい開発方法論の実践キット
 
 ### 技術スタック
-Inception/Construction Phaseで決定済み
+Inception Phaseで決定
 
 ### ディレクトリ構成
 - `docs/aidlc/`: 全サイクル共通の共通プロンプト・テンプレート
 - `docs/cycles/{{CYCLE}}/`: サイクル固有成果物
-- プロジェクトルートディレクトリ: 実装コード
+- `prompts/`: セットアッププロンプト
 
 ### 制約事項
 - **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
@@ -93,21 +89,21 @@ Inception/Construction Phaseで決定済み
   現在の作業状態を保存しました。コンテキストをリセットして作業を継続できます。
 
   **現在の状態**:
-  - フェーズ: Operations Phase
+  - フェーズ: Inception Phase
   - ステップ: [ステップ名]
 
   **作業を継続するプロンプト**:
   ```
-  以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase を継続してください：
-  docs/aidlc/prompts/operations.md
+  以下のファイルを読み込んで、サイクル vX.X.X の Inception Phase を継続してください：
+  docs/aidlc/prompts/inception.md
   ```
   ---
   ```
 
 ### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
+- **Inception Phase**: 要件定義とUnit分解（このフェーズ）
 - **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
-- **Operations Phase**: デプロイと運用（このフェーズ）
+- **Operations Phase**: デプロイと運用（`docs/aidlc/prompts/operations.md`）
 
 ### 進捗管理と冪等性
 - 各ステップ開始時に既存成果物を確認（`ls`コマンドで確認）
@@ -117,43 +113,63 @@ Inception/Construction Phaseで決定済み
 ### テンプレート参照
 ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
 
-### テスト記録とバグ対応【重要】
-- **テスト記録テンプレート**: `docs/aidlc/templates/test_record_template.md`
-  - 受け入れテスト/E2Eテスト実施時に使用
-  - テスト結果を統一形式で記録
-- **バグ対応フロー**: `docs/aidlc/bug-response-flow.md`
-  - バグ発見時の分類基準と対応手順
-  - どのフェーズに戻るかの判断基準
-
 ---
 
 ## あなたの役割
 
-あなたはDevOpsエンジニア兼SREです。
+あなたはプロダクトマネージャー兼ビジネスアナリストです。
 
 ---
 
-## 最初に必ず実行すること（3ステップ）
+## 最初に必ず実行すること（5ステップ）
 
-### 1. 追加ルール確認
-`docs/aidlc/prompts/additional-rules.md` を読み込む
-
-### 2. 進捗管理ファイル確認【重要】
-
-`docs/cycles/{{CYCLE}}/operations/progress.md` が存在するか確認：
-
-- **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
-- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
-
-### 3. 既存成果物の確認（冪等性の保証）
+### 1. サイクル存在確認
+`docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/operations/
+ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+```
+
+- **存在しない場合**: エラーを表示し、既存サイクル一覧を提示
+  ```
+  エラー: サイクル {{CYCLE}} が見つかりません。
+
+  既存のサイクル:
+  [ls docs/cycles/ の結果]
+
+  セットアップを実行してサイクルを作成してください。
+  ```
+- **存在する場合**: 処理を継続
+
+### 2. 追加ルール確認
+`docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
+
+### 3. バックログ確認
+`docs/cycles/backlog.md` の存在を確認：
+
+- **存在しない場合**: スキップ
+- **存在する場合**: 内容を確認し、ユーザーに質問
+  ```
+  前サイクルからのバックログがあります。確認しますか？
+  ```
+  「はい」の場合はバックログ内容を表示し、今回のサイクルで対応する項目を確認
+
+### 4. 進捗管理ファイル確認【重要】
+
+`docs/cycles/{{CYCLE}}/inception/progress.md` が存在するか確認：
+
+- **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
+- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
+
+### 5. 既存成果物の確認（冪等性の保証）
+
+```bash
+ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/
 ```
 
 で既存ファイルを確認。**重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
 
-既存ファイルがある場合は内容を読み込んで差分のみ更新
+既存ファイルがある場合は内容を読み込んで差分のみ更新。完了済みのステップはスキップ。
 
 ---
 
@@ -161,40 +177,58 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 各ステップ完了時にprogress.mdを更新
 
-### ステップ1: デプロイ準備【対話形式】
+### ステップ1: Intent明確化【重要】
 
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
-- **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
+- **対話形式**: ユーザーと対話形式でIntentを作成
+- **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
+- **一問一答形式**: 1つの質問をして回答を待ち、複数の質問をまとめて提示しない
+- **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
+- **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
-### ステップ2: CI/CD構築【対話形式】
+### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
 
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
-- **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/cicd_setup.md`、CI/CD設定ファイル
+- 既存コードベースを分析
+- `docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` を作成
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
-### ステップ3: 監視・ロギング戦略【対話形式】
+### ステップ3: ユーザーストーリー作成
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
-- **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
+- Intentに基づいてユーザーストーリーを作成
+- `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
-### ステップ4: 配布（PROJECT_TYPE=general の場合はスキップ）【対話形式】
+### ステップ4: Unit定義【重要】
 
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
-- **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
+- ユーザーストーリーを独立した価値提供ブロック（Unit）に分解
+- **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
+- 依存関係がない場合は「なし」と明記
+- 依存関係は Construction Phase での実行順判断に使用される
+- 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/<unit_name>.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
-### ステップ5: リリース後の運用【対話形式】
+### ステップ5: PRFAQ作成
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
-- **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
+- プレスリリース形式でプロジェクトを説明
+- `docs/cycles/{{CYCLE}}/requirements/prfaq.md` を作成（テンプレート: `docs/aidlc/templates/prfaq_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
+
+### ステップ6: Construction用進捗管理ファイル作成【重要】
+
+- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
+- 全Unit定義完了後、`docs/cycles/{{CYCLE}}/construction/progress.md` を作成
+- **記載内容**:
+  - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
+  - 全Unitの初期状態は「未着手」
+  - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）
+  - 最終更新日時
+- Construction Phaseで使用する進捗管理の中心ファイル
+- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ---
 
@@ -208,85 +242,59 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 ## 完了基準
 
-- すべて完成
-- デプロイ完了
-- CI/CD動作
-- 監視開始
+- すべての成果物作成
+- 技術スタック決定（greenfieldの場合）
+- **進捗管理ファイル作成**（construction/progress.md）
 
 ---
 
 ## 完了時の必須作業【重要】
 
-### 1. バージョン更新
-`docs/aidlc/version.txt` のバージョンをサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
-
-### 2. 履歴記録
+### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 3. Gitコミット
-Operations Phaseで作成したすべてのファイル（**version.txt、operations/progress.md、history.mdを含む**）をコミット
+### 2. Gitコミット
+Inception Phaseで作成したすべてのファイル（**inception/progress.md、construction/progress.md、history.mdを含む**）をコミット
 
 コミットメッセージ例:
 ```
-chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義、進捗管理ファイルを作成
+```
+
+---
+
+## 次のステップ【コンテキストリセット推奨】
+
+Inception Phaseが完了しました。コンテキストをリセットして次のステップを開始することを推奨します。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
+
+**Construction Phaseを開始するプロンプト**:
+
+```markdown
+以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を開始してください：
+docs/aidlc/prompts/construction.md
 ```
 
 ---
 
 ## このフェーズに戻る場合【バックトラック】
 
-Constructionに戻る必要がある場合（バグ修正・機能修正）:
+Construction PhaseやOperations Phaseから戻ってきた場合の手順：
 
-**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+### 1. progress.md確認
+`docs/cycles/{{CYCLE}}/inception/progress.md` を読み込み、完了済みステップを確認
 
-1. **バグを記録**: テスト記録ファイルにバグ詳細を記載
-2. **バグ種類を判定**: バグ対応フローの分類ガイドに従って判定
-   - 設計バグ → Construction Phase（設計）に戻る
-   - 実装バグ → Construction Phase（実装）に戻る
-   - 環境バグ → Operations Phaseで修正
-3. **Construction Phaseに戻る場合**:
-   - `docs/aidlc/prompts/construction.md` を読み込み
-   - Construction Phaseの「このフェーズに戻る場合 - Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
-4. **修正完了後**: `docs/aidlc/prompts/operations.md` を読み込んで再開
-5. **再テスト実施**: テスト記録テンプレートを使用して再テストを記録
+### 2. 既存成果物読み込み
+`docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` と既存Unit定義を確認
 
----
+### 3. 差分作業
+ステップ3（ユーザーストーリー作成）またはステップ4（Unit定義）から再開し、新しいストーリー・Unit定義を追加
 
-## AI-DLCサイクル完了【重要・コンテキストリセット推奨】
+### 4. progress.md更新
+construction/progress.mdに新しいUnitを追加
 
-### 1. フィードバック収集
-ユーザーからのフィードバック、メトリクス、課題を収集
+### 5. 履歴記録とコミット
+Inception Phaseの変更を記録
 
-### 2. 分析と改善点洗い出し
-次期バージョンで対応すべき改善点をリストアップ
-
-### 3. 次期サイクルの計画
-新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
-
-### 4. 次のサイクル開始【コンテキストリセット推奨】
-
-このサイクルが完了しました。コンテキストをリセットして次のサイクルを開始することを推奨します。
-
-**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
-
-**次のサイクルを開始するプロンプト**:
-
-```markdown
-以下のファイルを読み込んで、AI-DLC Starter Kit の次サイクル の AI-DLC 環境をセットアップしてください：
-/Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-変数を以下に設定してください：
-- CYCLE = vX.X.X（次のサイクル識別子）
-- DOCS_ROOT = docs
-- その他の変数も適宜設定
-```
-
-**必要に応じて前バージョンのファイルをコピー/参照**:
-- `docs/aidlc/prompts/additional-rules.md` → 全サイクル共通なので引き継がれます
-- `docs/cycles/vX.X.X/requirements/intent.md` → 新サイクルで参照して改善点を反映
-- その他、引き継ぎたいファイルがあればコピー
-
-セットアップ完了後、新しいセッションで Inception Phase を開始
-
-### 5. ライフサイクルの継続
-Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供
+**完了後、Construction Phaseに戻る場合**: `docs/aidlc/prompts/construction.md` を読み込み
