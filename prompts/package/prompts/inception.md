@@ -1,9 +1,5 @@
 # Inception Phase プロンプト
 
-**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-（このパスはテンプレート生成時に使用します）
-
 ---
 
 ## AI-DLC手法の要約

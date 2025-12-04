@@ -1,8 +1,6 @@
 # Operations Phase プロンプト
 
-**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-（このパスはテンプレート生成時に使用します）
+**セットアッププロンプトパス**: ../../ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 ---
 
@@ -299,16 +297,11 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 **理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
 
-**次のサイクルを開始するプロンプト**:
+**次のサイクルを開始するプロンプト**（冒頭の「セットアッププロンプトパス」を使用）:
 
 ```markdown
-以下のファイルを読み込んで、AI-DLC Starter Kit の次サイクル の AI-DLC 環境をセットアップしてください：
-/Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-変数を以下に設定してください：
-- CYCLE = vX.X.X（次のサイクル識別子）
-- DOCS_ROOT = docs
-- その他の変数も適宜設定
+以下のファイルを読み込んで、次サイクルの AI-DLC 環境をセットアップしてください：
+[セットアッププロンプトパス]
 ```
 
 **必要に応じて前バージョンのファイルをコピー/参照**:
