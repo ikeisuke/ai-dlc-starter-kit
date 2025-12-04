@@ -128,3 +128,27 @@ Unit 2（変数具体例削除）の設計議論を通じて、以下が明ら�
 5. Unit 5: プロンプト分割・短縮化
 6. Unit 6: バージョン管理
 7. Unit 7: タグ付け自動化
+
+---
+
+## 2025-12-04 14:07:35 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 2: 設定アーキテクチャ設計 完了
+
+### 成果物
+- `docs/cycles/v1.2.0/plans/unit2_config_architecture_plan.md` - 計画ファイル
+- `docs/cycles/v1.2.0/design-artifacts/architecture/config_architecture.md` - 設計ドキュメント
+
+### 設計決定事項
+- 設定ファイル: `docs/aidlc/project.toml`（TOML形式）
+- 動的ファイル: `project.toml` のみ
+- サイクル変数: ディレクトリ名から導出（専用ファイルなし）
+- 変数置換（`{{CYCLE}}`等）: 廃止 → AI読み取り方式に変更
+- `additional-rules.md`: 廃止 → `project.toml` に統合
+
+### 備考
+後続Unit（Unit 3, 4, 5）で実装を行う
