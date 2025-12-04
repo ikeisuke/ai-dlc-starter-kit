@@ -1,6 +1,6 @@
 # Operations Phase プロンプト
 
-**セットアッププロンプトパス**: ../../ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+**セットアッププロンプトパス**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 ---
 
