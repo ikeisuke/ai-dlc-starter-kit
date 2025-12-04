@@ -171,7 +171,9 @@ mkdir -p docs/aidlc/operations
 
 スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` にコピー。
 
-**重要**: プロジェクト固有のファイルは上書きしないこと。
+**重要**:
+- プロジェクト固有のファイルは上書きしないこと
+- **cp コマンドは `\cp -f` を使用**（macOS の alias をバイパスし、上書き確認プロンプトを回避）
 
 #### 6.2.1 フェーズプロンプト（上書きOK）
 
@@ -206,14 +208,14 @@ mkdir -p docs/aidlc/operations
 ```bash
 # additional-rules.md が存在しない場合のみコピー
 if [ ! -f docs/aidlc/prompts/additional-rules.md ]; then
-  cp [スターターキットパス]/prompts/package/prompts/additional-rules.md docs/aidlc/prompts/
+  \cp -f [スターターキットパス]/prompts/package/prompts/additional-rules.md docs/aidlc/prompts/
 fi
 ```
 
 ### 6.3 バージョンファイルの配置
 
 ```bash
-cp [スターターキットパス]/version.txt docs/aidlc/version.txt
+\cp -f [スターターキットパス]/version.txt docs/aidlc/version.txt
 ```
 
 ### 6.4 その他の共通ファイル
