@@ -47,3 +47,16 @@ v1.2.1 サイクルの要件定義を完了
 - 4つのUnitを定義（合計見積もり: 2.5時間）
 - すべてのUnitに依存関係がないため、任意の順序で実行可能
 
+---
+## 2025-12-06 07:58:59 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 1「セットアップ情報まとめて確認」完了
+**成果物**:
+- prompts/setup-init.md - セクション4を修正（一問一答形式 → README.md推測+まとめ確認形式）
+- docs/cycles/v1.2.1/plans/unit1_setup_batch_confirm_plan.md - 実装計画
+- docs/cycles/v1.2.1/construction/units/unit1_setup_batch_confirm_implementation.md - 実装記録
+- docs/cycles/backlog.md - 「Unit作業中の気づき記録フロー」を追加
+
+**備考**: README.mdからプロジェクト情報を推測し、まとめて確認する形式に変更
+
