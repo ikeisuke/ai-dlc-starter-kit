@@ -60,3 +60,22 @@ v1.2.1 サイクルの要件定義を完了
 
 **備考**: README.mdからプロジェクト情報を推測し、まとめて確認する形式に変更
 
+
+---
+
+## 2025-12-06 08:27:59 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 2 バックログ完了項目移動 完了
+**成果物**:
+- docs/cycles/v1.2.1/design-artifacts/domain-models/unit2_domain_model.md
+- docs/cycles/v1.2.1/design-artifacts/logical-designs/unit2_logical_design.md
+- docs/cycles/v1.2.1/construction/units/unit2_implementation.md
+- docs/aidlc/templates/cycle_backlog_template.md（新規）
+- docs/aidlc/prompts/operations.md（修正）
+- docs/aidlc/prompts/construction.md（修正）
+- docs/aidlc/prompts/inception.md（修正）
+- prompts/setup-cycle.md（修正）
+
+**備考**: サイクル固有バックログを導入。コンフリクト回避と明確な管理を実現。
+
