@@ -221,9 +221,7 @@ fi
 ### 6.4 その他の共通ファイル
 
 以下のファイルもコピー:
-- `docs/aidlc/prompts/prompt-reference-guide.md` - プロンプト参照ガイド（上書きOK）
 - `docs/aidlc/templates/index.md` - テンプレート一覧
-- `docs/aidlc/operations/README.md` - 運用ディレクトリ説明
 
 ---
 

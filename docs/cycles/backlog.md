@@ -119,6 +119,29 @@
 - **期待効果**: プロンプト/テンプレートの更新管理が容易に
 - **優先度**: 中
 
+### Inception PhaseでConstruction Phaseのprogressを作成する違和感
+- **発見日**: 2025-12-05
+- **発見サイクル**: v1.2.0 リリース後
+- **概要**: Inception PhaseでConstruction Phaseの初期progressファイルを作成しているが、責務として違和感がある
+- **詳細**:
+  - 現状: Inception Phase完了時に `construction/progress.md` を作成
+  - 問題: 各フェーズは自分のフェーズのファイルを管理すべき
+- **対応案**: Construction Phase開始時に自身でprogressファイルを作成するよう変更
+- **優先度**: 低（動作に支障なし）
+
+### デグレ: prompt-reference-guide.md と operations/ 関連ファイルの欠落
+- **発見日**: 2025-12-05
+- **発見サイクル**: v1.2.0 リリース後
+- **概要**: v1.2.0でsetup/ディレクトリ分割時にファイルがデグレ
+- **詳細**:
+  - `prompts/package/prompts/prompt-reference-guide.md` - v1.1.0のsetup/common.mdに存在したが移行漏れ
+  - `prompts/package/operations/README.md` - setup-init.mdで参照されているが元々未実装
+  - `docs/aidlc/operations/` ディレクトリは存在するが空
+- **対応案**:
+  1. `prompt-reference-guide.md` を `prompts/package/prompts/` に復元
+  2. `operations/README.md` は元々未実装のため `setup-init.md` から参照削除、または新規作成
+- **優先度**: 低（動作に支障なし）
+
 ---
 
 ## 新機能アイデア
