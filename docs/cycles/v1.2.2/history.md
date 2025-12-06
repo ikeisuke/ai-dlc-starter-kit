@@ -84,3 +84,19 @@ Construction Phase (Lite) - Unit 6新設
 
 ### 備考
 コンテキストリセット前に情報を整理
+
+---
+
+## 2025-12-06 18:18:13 JST
+
+### フェーズ
+Construction Phase (Lite) - Unit 7, 8追加
+
+### 実行内容
+バックログから2件をUnitとして追加：
+- Unit 7: Lite版設計ステップ見直し
+- Unit 8: 継続プロンプト必須化
+
+### 成果物
+- docs/cycles/v1.2.2/story-artifacts/units/all_units.md（更新）
+- docs/cycles/v1.2.2/construction/progress.md（更新）
