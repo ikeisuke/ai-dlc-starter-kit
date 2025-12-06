@@ -226,6 +226,7 @@ AIがデプロイ手順、監視設定、運用ドキュメントを作成しま
 
 - **サイクル名**: extra-adventcalendar-2025
 - **Intent**: AI-DLCとスターターキットを紹介するアドベントカレンダー記事を執筆する
+- **開発ブランチ**: [cycle/extra-adventcalendar-2025](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/cycle/extra-adventcalendar-2025)
 
 アプリケーション開発ではないため、簡易的な利用として記事の各セクションをUnitとして定義しています。
 

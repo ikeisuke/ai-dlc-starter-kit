@@ -108,3 +108,21 @@ Unit-3: 一人AI-DLC体験談セクション完了
   - construction/units/unit-5_implementation.md
   - plans/unit-5-plan.md
 - **備考**: 全Unit完了、Construction Phase (Lite) 完了
+
+---
+## 2025-12-07 01:18:32 JST
+
+### フェーズ
+Operations Phase (Lite)
+
+### 実行内容
+- Operations Phase をスキップ（既存のCI/CD・デプロイプロセスが確立済みのため）
+- 記事にブランチリンクを追加
+- サイクル完了
+
+### 成果物
+- 記事に開発ブランチへのリンクを追加: `adventcalendar-2025.md`
+
+### 備考
+- Lite版のスキップ条件を満たしたため、Operations Phase の詳細ステップはスキップ
+- ブランチをリモートにpush（PR作成なし）
