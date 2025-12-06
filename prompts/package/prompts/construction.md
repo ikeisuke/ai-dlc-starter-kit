@@ -158,7 +158,14 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 3. 進捗管理ファイル読み込み【重要】
 
-`docs/cycles/{{CYCLE}}/construction/progress.md` を読み込む
+**progress.mdのパス（正確に）**:
+```
+docs/cycles/{{CYCLE}}/construction/progress.md
+                      ^^^^^^^^^^^^
+                      ※ construction/ サブディレクトリ内
+```
+
+**注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `construction/` ディレクトリ内のファイルを読み込んでください。
 
 このファイルには以下が記載されている：
 - 全Unit一覧
@@ -272,36 +279,69 @@ progress.mdの最終更新セクションを更新
 feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
-### 6. コンテキストリセット推奨
-Unitが完了しました。コンテキストをリセットして次の作業を開始することを推奨します。
+### 6. コンテキストリセット【必須】
 
-**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
+Unit [名前] が完了しました。以下のメッセージをユーザーに提示してください：
+
+```markdown
+---
+## Unit [名前] 完了
+
+コンテキストをリセットして次の作業を開始してください。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
 **次のUnitを開始するプロンプト**:
-```markdown
+```
 以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
 docs/aidlc/prompts/construction.md
 ```
+---
+```
+
+**重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 
 ---
 
-## 次のステップ【コンテキストリセット推奨】
+## 次のステップ【コンテキストリセット必須】
 
-- **次のUnitが残っている場合**: コンテキストをリセットして次のUnitを開始
+**重要**: ユーザーから明示的な連続実行指示がない限り、以下のメッセージを**必ず提示**してください。
 
-  ```markdown
-  以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
-  docs/aidlc/prompts/construction.md
-  ```
+### 次のUnitが残っている場合
 
-- **全Unit完了の場合**: コンテキストをリセットしてOperations Phaseへ移行
+```markdown
+---
+## Construction Phase 継続
 
-  全Unitが完了しました。コンテキストをリセットしてOperations Phaseを開始することを推奨します。
+コンテキストをリセットして次のUnitを開始してください。
 
-  ```markdown
-  以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase を開始してください：
-  docs/aidlc/prompts/operations.md
-  ```
+**理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
+
+**次のUnitを開始するプロンプト**:
+```
+以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を継続してください：
+docs/aidlc/prompts/construction.md
+```
+---
+```
+
+### 全Unit完了の場合
+
+```markdown
+---
+## Construction Phase 完了
+
+全Unitが完了しました。コンテキストをリセットしてOperations Phaseを開始してください。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
+
+**Operations Phaseを開始するプロンプト**:
+```
+以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase を開始してください：
+docs/aidlc/prompts/operations.md
+```
+---
+```
 
 ---
 

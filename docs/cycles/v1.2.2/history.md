@@ -186,3 +186,21 @@ Construction Phase (Lite) - Unit 7, 8追加
 
 **備考**: Unit 4完了後、Unit 5着手前にコンテキストリセット
 
+
+---
+## 2025-12-06 22:01:47 JST
+- **フェーズ**: Construction Phase (Lite)
+- **Unit**: Unit 8 継続プロンプト必須化
+- **実行内容**: 
+  - 継続プロンプトを「推奨」から「必須」に変更
+  - progress.mdのパスを明確化（construction/サブディレクトリ内であることを強調）
+  - ユーザー向けメッセージにリセット理由を追加
+- **成果物**:
+  - prompts/package/prompts/construction.md
+  - prompts/package/prompts/inception.md
+  - prompts/package/prompts/operations.md
+  - prompts/package/prompts/lite/construction.md
+  - prompts/package/prompts/lite/inception.md
+  - prompts/package/prompts/lite/operations.md
+  - docs/cycles/v1.2.2/plans/unit_8_plan.md
+- **備考**: AIがprogress.mdパスを見落とす問題の対策も含む

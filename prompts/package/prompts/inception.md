@@ -156,7 +156,14 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 4. 進捗管理ファイル確認【重要】
 
-`docs/cycles/{{CYCLE}}/inception/progress.md` が存在するか確認：
+**progress.mdのパス（正確に）**:
+```
+docs/cycles/{{CYCLE}}/inception/progress.md
+                      ^^^^^^^^^
+                      ※ inception/ サブディレクトリ内
+```
+
+**注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `inception/` ディレクトリ内のファイルを確認してください。
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
@@ -263,18 +270,27 @@ feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義�
 
 ---
 
-## 次のステップ【コンテキストリセット推奨】
+## 次のステップ【コンテキストリセット必須】
 
-Inception Phaseが完了しました。コンテキストをリセットして次のステップを開始することを推奨します。
-
-**理由**: 長い会話履歴はAIの応答品質を低下させる可能性があります。新しいセッションで開始することで、最適なパフォーマンスを維持できます。
-
-**Construction Phaseを開始するプロンプト**:
+Inception Phaseが完了しました。以下のメッセージをユーザーに提示してください：
 
 ```markdown
+---
+## Inception Phase 完了
+
+コンテキストをリセットしてConstruction Phaseを開始してください。
+
+**理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
+
+**Construction Phaseを開始するプロンプト**:
+```
 以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase を開始してください：
 docs/aidlc/prompts/construction.md
 ```
+---
+```
+
+**重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 
 ---
 
