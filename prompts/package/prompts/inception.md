@@ -39,7 +39,7 @@ Inception Phaseで決定
 
 ### 制約事項
 - **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
-- プロジェクト固有の制約は `docs/aidlc/prompts/additional-rules.md` を参照
+- プロジェクト固有の制約は `docs/cycles/rules.md` を参照
 
 ### 開発ルール
 - **人間の承認プロセス【重要】**: 計画作成後、必ず以下を実行する
@@ -69,7 +69,7 @@ Inception Phaseで決定
   ```
   記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
-- コード品質基準、Git運用の原則は `docs/aidlc/prompts/additional-rules.md` を参照
+- コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
 - **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
   - 「継続プロンプト」「リセットしたい」
@@ -142,7 +142,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 - **存在する場合**: 処理を継続
 
 ### 2. 追加ルール確認
-`docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
+`docs/cycles/rules.md` が存在すれば読み込む
 
 ### 3. バックログ確認
 `docs/cycles/backlog.md` の存在を確認：

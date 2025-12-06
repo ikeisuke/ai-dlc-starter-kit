@@ -100,3 +100,21 @@ Construction Phase (Lite) - Unit 7, 8追加
 ### 成果物
 - docs/cycles/v1.2.2/story-artifacts/units/all_units.md（更新）
 - docs/cycles/v1.2.2/construction/progress.md（更新）
+
+---
+
+## 2025-12-06 19:12:14 JST
+
+**フェーズ**: Construction Phase (Lite)
+**実行内容**: Unit 6 ファイル構成整理
+**成果物**:
+- prompts/setup-init.md（移行処理追加）
+- prompts/setup-prompt.md（パス参照更新）
+- prompts/package/prompts/construction.md
+- prompts/package/prompts/inception.md
+- prompts/package/prompts/operations.md
+- prompts/package/templates/rules_template.md（additional-rules.mdから移動）
+- docs/cycles/v1.2.2/plans/unit6_plan.md
+- docs/cycles/v1.2.2/construction/units/unit6_implementation.md
+
+**備考**: docs/aidlc/ がスターターキット由来のファイルのみになり、rsync --delete で完全同期可能に
