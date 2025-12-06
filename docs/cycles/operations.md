@@ -43,9 +43,11 @@
 2. `version.txt` を新バージョンに更新
 3. setup-initを実行して `docs/aidlc/` を最新化
 4. README.mdを更新
-5. mainブランチへPR作成・マージ
-6. GitHub Actionsが自動でタグ作成
-7. 必要に応じてGitHub Releasesでリリースノート作成
+5. Operations Phase完了コミット
+6. PRを作成（`gh pr create`）
+7. PRをマージ
+8. GitHub Actionsが自動でタグ作成
+9. 必要に応じてGitHub Releasesでリリースノート作成
 
 ### ロールバック方法
 ```bash
@@ -106,8 +108,38 @@ git checkout v1.2.0
 
 ---
 
+## メタ開発特有の完了時作業【重要】
+
+このプロジェクト（AI-DLC Starter Kit自体の開発）では、一般的なOperations Phase完了時の作業に加えて、以下の作業が必要です。
+
+### 1. バージョン更新
+`version.txt`（ルート）を新バージョンに更新:
+```bash
+echo "X.X.X" > version.txt
+```
+
+### 2. setup-init実行（アップグレード）
+`docs/aidlc/` を最新のスターターキット（`prompts/package/`）と同期:
+```bash
+# prompts/package/ から docs/aidlc/ にコピー
+\cp -f prompts/package/prompts/*.md docs/aidlc/prompts/
+\cp -rf prompts/package/prompts/lite/ docs/aidlc/prompts/lite/
+\cp -rf prompts/package/templates/ docs/aidlc/templates/
+\cp -f version.txt docs/aidlc/version.txt
+```
+
+**効果**:
+- プロンプト・テンプレートが最新化される
+- `docs/aidlc/version.txt` がルートと同期される
+- project.toml、additional-rules.md は保持される（上書きしない）
+
+### 注意
+これらの作業は一般プロジェクトでは不要です。AI-DLC Starter Kit自体を開発している（メタ開発）ため必要になります。
+
+---
+
 ## 更新履歴
 
 | 日時 | サイクル | 更新内容 |
 |------|---------|---------|
-| ${TIMESTAMP} | v1.2.1 | 初回作成 |
+| 2025-12-06 | v1.2.1 | 初回作成、メタ開発特有の完了時作業を追加 |
