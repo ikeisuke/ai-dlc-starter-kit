@@ -233,18 +233,36 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 ## 完了時の必須作業【重要】
 
-### 1. バージョン更新
-`docs/aidlc/version.txt` のバージョンをサイクル識別子に合わせて更新（例: 1.0.1 → 1.1.0）
+### 1. README更新
+README.mdに今回のサイクルの変更内容を追記
 
 ### 2. 履歴記録
 `docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 3. Gitコミット
-Operations Phaseで作成したすべてのファイル（**version.txt、operations/progress.md、history.mdを含む**）をコミット
+### 3. バックログ整理
+サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）を整理し、共通バックログに反映（詳細は「AI-DLCサイクル完了」セクション参照）
+
+### 4. Gitコミット
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
 
 コミットメッセージ例:
 ```
 chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+```
+
+### 5. PR作成
+mainブランチへのPRを作成:
+```bash
+gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
+## Summary
+- [サイクルの主要な変更点]
+
+## Test plan
+- [ ] 主要機能が動作する
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
 ```
 
 ---

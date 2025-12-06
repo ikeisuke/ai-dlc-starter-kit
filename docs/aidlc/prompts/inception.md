@@ -1,9 +1,5 @@
 # Inception Phase プロンプト
 
-**セットアッププロンプトパス**: /Users/isonokeisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
-
-（このパスはテンプレート生成時に使用します）
-
 ---
 
 ## AI-DLC手法の要約
@@ -125,19 +121,47 @@ Inception Phaseで決定
 
 ---
 
-## 最初に必ず実行すること
+## 最初に必ず実行すること（5ステップ）
 
-### 1. 追加ルール確認
-`docs/aidlc/prompts/additional-rules.md` を読み込む
+### 1. サイクル存在確認
+`docs/cycles/{{CYCLE}}/` の存在を確認：
 
-### 2. 進捗管理ファイル確認【重要】
+```bash
+ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+```
+
+- **存在しない場合**: エラーを表示し、既存サイクル一覧を提示
+  ```
+  エラー: サイクル {{CYCLE}} が見つかりません。
+
+  既存のサイクル:
+  [ls docs/cycles/ の結果]
+
+  セットアップを実行してサイクルを作成してください。
+  ```
+- **存在する場合**: 処理を継続
+
+### 2. 追加ルール確認
+`docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
+
+### 3. バックログ確認
+`docs/cycles/backlog.md` の存在を確認：
+
+- **存在しない場合**: スキップ
+- **存在する場合**: 内容を確認し、ユーザーに質問
+  ```
+  前サイクルからのバックログがあります。確認しますか？
+  ```
+  「はい」の場合はバックログ内容を表示し、今回のサイクルで対応する項目を確認
+
+### 4. 進捗管理ファイル確認【重要】
 
 `docs/cycles/{{CYCLE}}/inception/progress.md` が存在するか確認：
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
 
-### 3. 既存成果物の確認（冪等性の保証）
+### 5. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/
@@ -145,11 +169,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 で既存ファイルを確認。**重要**: 存在するファイルのみ読み込む（全ファイルを一度に読まない）
 
-### 4. 既存ファイルがある場合
-内容を読み込んで差分のみ更新
-
-### 5. 完了済みのステップ
-スキップ
+既存ファイルがある場合は内容を読み込んで差分のみ更新。完了済みのステップはスキップ。
 
 ---
 
