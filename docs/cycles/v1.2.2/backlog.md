@@ -24,6 +24,14 @@
 - **対応案**: inception.mdのバックログ確認ステップにサイクル固有バックログの確認を追加
 - **優先度**: 中
 
+### additional-rules.mdの位置をdocs/cycles/以下に移動
+- **発見日**: 2025-12-06
+- **発見フェーズ**: Construction
+- **概要**: additional-rules.mdの配置場所がわかりにくい
+- **詳細**: 現在 `docs/aidlc/prompts/additional-rules.md` に配置されているが、プロジェクト固有のルールはサイクル固有ファイルと同じ `docs/cycles/` 以下に配置した方がわかりやすい
+- **対応案**: `docs/cycles/additional-rules.md` または `docs/cycles/project-rules.md` に移動
+- **優先度**: 中
+
 ---
 
 （例）
