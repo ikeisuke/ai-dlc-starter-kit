@@ -59,3 +59,28 @@ Unit 1: 気づき記録フロー定義の実装
 
 ### 備考
 Lite版のため設計フェーズをスキップして直接実装
+
+---
+
+## 2025-12-06 18:10:02 JST
+
+### フェーズ
+Construction Phase (Lite) - Unit 6新設
+
+### 実行内容
+- Unit 6（ファイル構成整理）を新設
+- Unit 3にUnit 6への依存関係を追加
+- Unit 3, Unit 6の詳細な実装内容をUnit定義に記載
+
+### 決定事項
+- docs/aidlc/project.toml → docs/aidlc.toml に移動
+- version.txt → aidlc.tomlに統合（starter_kit_versionフィールド）
+- additional-rules.md → docs/cycles/に移動
+- docs/aidlc/はrsync --checksum --deleteで完全同期可能に
+
+### 成果物
+- docs/cycles/v1.2.2/story-artifacts/units/all_units.md（更新）
+- docs/cycles/v1.2.2/construction/progress.md（更新）
+
+### 備考
+コンテキストリセット前に情報を整理
