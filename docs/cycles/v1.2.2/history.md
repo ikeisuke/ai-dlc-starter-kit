@@ -174,3 +174,15 @@ Construction Phase (Lite) - Unit 7, 8追加
 - prompts/setup-cycle.md（修正）
 - docs/cycles/v1.2.2/plans/unit_4_plan.md
 
+
+---
+
+## 2025-12-06 21:11:25 JST
+
+**フェーズ**: Construction Phase (Lite)
+**実行内容**: Unit 8に追加要件を記録（コンテキストリセットルール強化）
+**成果物**:
+- docs/cycles/v1.2.2/story-artifacts/units/all_units.md（Unit 8追記）
+
+**備考**: Unit 4完了後、Unit 5着手前にコンテキストリセット
+
