@@ -71,8 +71,6 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - コード品質基準、Git運用の原則は `docs/aidlc/prompts/additional-rules.md` を参照
 
-- **気づきの記録【重要】**: 作業中に別Unitや将来のサイクルに関連する改善点・問題点に気づいた場合、`docs/cycles/{{CYCLE}}/backlog.md` の「このサイクルで発見した項目」セクションに記録する。現在の作業を中断せず、記録後に作業を継続する。
-
 - **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
   - 「継続プロンプト」「リセットしたい」
   - 「コンテキストが溢れそう」「コンテキストオーバーフロー」
@@ -147,28 +145,11 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 2. 追加ルール確認
 `docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
 
-### 3. 進捗管理ファイル確認【重要】
+### 3. 進捗管理ファイル読み込み【重要】
 
-`docs/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認：
+`docs/cycles/{{CYCLE}}/construction/progress.md` を読み込む
 
-- **存在する場合**: 読み込んで完了済みUnitを確認、未完了Unitから再開
-- **存在しない場合**: 初回実行として、Unit定義ファイルからprogress.mdを生成
-
-#### progress.md初期化手順（存在しない場合）
-
-1. `docs/cycles/{{CYCLE}}/story-artifacts/units/` 配下のUnit定義ファイル一覧を取得
-2. 各Unitファイルから以下の情報を抽出:
-   - Unit名（ファイル内の `# Unit:` 行）
-   - 依存関係（`### 依存する Unit` セクション）
-   - 優先度（`## 実装優先度` セクション）
-   - 見積もり（`## 見積もり` セクション）
-3. progress.mdを生成:
-   - Unit一覧を表形式で記録
-   - 全Unitの初期状態は「未着手」
-   - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）を計算
-   - 最終更新日時を記録
-
-このファイルには以下が記載される：
+このファイルには以下が記載されている：
 - 全Unit一覧
 - 依存関係
 - 状態（未着手/進行中/完了）
@@ -188,8 +169,6 @@ progress.mdに記載されている「実行可能なUnit」セクションを�
 
 **Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
 - パス: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
-
-**サイクル固有バックログの確認**: `docs/cycles/{{CYCLE}}/backlog.md` を確認し、このUnitで対応できる項目があれば対応を検討
 
 ### 5. 実行前確認【重要】
 

@@ -122,3 +122,31 @@ Unit 4: デグレファイル復元の実装完了
 - prompt-reference-guide.md: 各フェーズプロンプトに内容が組み込まれており不要と判断
 - operations: docs/cycles/operations.md として運用引き継ぎテンプレートを追加
 - 全Unit完了、Operations Phase に移行可能
+
+---
+
+## 2025-12-06 13:50:27 JST
+
+**フェーズ**: Operations Phase
+**実行内容**: Operations Phase完了
+
+**成果物**:
+- docs/cycles/operations.md（サイクル横断運用引き継ぎ情報）
+- docs/cycles/v1.2.1/operations/progress.md
+- docs/cycles/v1.2.1/operations/deployment_checklist.md
+- docs/cycles/v1.2.1/operations/cicd_setup.md
+- docs/cycles/v1.2.1/operations/monitoring_strategy.md
+- docs/cycles/v1.2.1/operations/post_release_operations.md
+- docs/cycles/v1.2.1/plans/operations_step1_plan.md
+
+**サイクル完了処理**:
+- version.txt を 1.2.1 に更新
+- README.md に v1.2.1 の改善点を追記
+- setup-init（アップグレード）を実行し docs/aidlc/ を最新化
+- デプロイチェックリストテンプレートにREADME更新チェックを追加
+- 運用引き継ぎファイルにリリース手順（setup-init実行）を追加
+- バックログ整理（対応済み4項目を backlog-completed.md に移動）
+
+**備考**:
+- v1.2.1 は技術的負債解消のメンテナンスリリース
+- ステップ4（配布）はgeneralプロジェクトのためスキップ

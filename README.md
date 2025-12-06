@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -389,6 +389,26 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 ### 8. バージョン・ブランチ整合性チェック
 - セットアップ時にサイクルバージョンとブランチ名の整合性をチェック
 - 不一致の場合は警告を表示し、対応を選択可能
+
+## 🔧 v1.2.1 の改善点
+
+v1.2.1 は技術的負債解消のメンテナンスリリースです。
+
+### 1. セットアップ体験の向上
+- プロジェクト情報の確認を一問一答形式からまとめて確認する形式に変更
+- デフォルト値を一覧表示し、変更があるものだけ指定可能
+
+### 2. バックログ管理の自動化
+- Operations Phase完了時に対応済み項目を自動的に `backlog-completed.md` に移動
+- サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）の導入
+
+### 3. フェーズ間の責務明確化
+- Construction Phase開始時に自身でprogress.mdを作成するよう変更
+- Inception Phaseの責務を要件定義に集中
+
+### 4. 運用引き継ぎの強化
+- サイクル横断の運用引き継ぎファイル（`docs/cycles/operations.md`）を追加
+- CI/CD設定、監視設定、デプロイ手順などをサイクル間で引き継ぎ可能
 
 ## 🔗 関連リンク
 
