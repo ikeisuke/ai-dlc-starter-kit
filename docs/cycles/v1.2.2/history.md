@@ -204,3 +204,32 @@ Construction Phase (Lite) - Unit 7, 8追加
   - prompts/package/prompts/lite/operations.md
   - docs/cycles/v1.2.2/plans/unit_8_plan.md
 - **備考**: AIがprogress.mdパスを見落とす問題の対策も含む
+
+---
+
+## 2025-12-06 22:12:00 JST
+
+### フェーズ
+Construction Phase (Lite)
+
+### 実行内容
+Unit 5: サイクル固有バックログ確認 - 実装完了
+
+### 変更内容
+- `prompts/package/prompts/inception.md` を更新
+  - ステップ3「バックログ確認」にサイクル固有バックログ確認を追加
+  - 共通バックログ (docs/cycles/backlog.md) とサイクル固有バックログ (docs/cycles/{{CYCLE}}/backlog.md) の両方を確認
+- rsync で `docs/aidlc/prompts/` に反映
+
+### 追加作業
+- Unit 2（ホームディレクトリ共通設定）を共通バックログに戻した
+- progress.md から Unit 2 を削除
+
+### 成果物
+- `prompts/package/prompts/inception.md`（更新）
+- `docs/aidlc/prompts/inception.md`（rsyncで同期）
+- `docs/cycles/v1.2.2/construction/progress.md`（更新）
+- `docs/cycles/v1.2.2/plans/unit_5_plan.md`（新規）
+
+### 備考
+- 全Unitが完了。Operations Phase へ移行可能
