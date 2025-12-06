@@ -162,3 +162,15 @@ Construction Phase (Lite) - Unit 7, 8追加
   - docs/aidlc/prompts/lite/（rsync同期）
   - docs/cycles/v1.2.2/plans/unit7_plan.md
 - **備考**: パスがプロジェクトルートからの絶対パスであることを明示し、AIの混乱を防止
+
+---
+
+## 2025-12-06 21:07:58 JST
+
+**フェーズ**: Construction Phase (Lite)
+**Unit**: Unit 4 - Lite版案内追加
+**実行内容**: サイクルセットアップ完了メッセージにLite版案内を追加
+**成果物**:
+- prompts/setup-cycle.md（修正）
+- docs/cycles/v1.2.2/plans/unit_4_plan.md
+
