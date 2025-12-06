@@ -150,3 +150,15 @@ Construction Phase (Lite) - Unit 7, 8追加
 - --checksum --delete オプションで差分のみ更新
 - プロジェクト固有ファイルは従来通り条件付きコピー
 
+---
+## 2025-12-06 20:04:08 JST
+- **フェーズ**: Construction Phase (Lite)
+- **Unit**: Unit 7 - Lite版設計ステップ見直し
+- **実行内容**: Lite版プロンプトの改善
+- **成果物**:
+  - prompts/package/prompts/lite/construction.md（パス注記追加、簡易実装先確認ステップ追加）
+  - prompts/package/prompts/lite/inception.md（パス注記追加）
+  - prompts/package/prompts/lite/operations.md（パス注記追加）
+  - docs/aidlc/prompts/lite/（rsync同期）
+  - docs/cycles/v1.2.2/plans/unit7_plan.md
+- **備考**: パスがプロジェクトルートからの絶対パスであることを明示し、AIの混乱を防止
