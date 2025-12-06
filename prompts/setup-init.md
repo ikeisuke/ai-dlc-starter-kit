@@ -238,8 +238,29 @@ mkdir -p docs/aidlc/templates
 
 #### 7.2.1 フェーズプロンプトの同期（rsync）
 
+**手順**:
+1. まずドライランで削除対象を確認
+2. 削除されるファイルがあればユーザーに確認
+3. 承認後に実行
+
 ```bash
-# プロンプトの同期（完全同期）
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/prompts/ \
+  docs/aidlc/prompts/ 2>&1 | grep "^deleting"
+```
+
+**削除対象がある場合**: 以下を表示してユーザーに確認
+```
+以下のファイルが削除されます：
+[削除対象のファイル一覧]
+
+これらのファイルを削除してよろしいですか？
+```
+
+**承認後に実行**:
+```bash
+# 2. 実際の同期を実行
 rsync -av --checksum --delete \
   [スターターキットパス]/prompts/package/prompts/ \
   docs/aidlc/prompts/
@@ -248,6 +269,7 @@ rsync -av --checksum --delete \
 | オプション | 説明 |
 |-----------|------|
 | `-av` | アーカイブモード + 詳細出力 |
+| `-n` | ドライラン（実際には実行しない） |
 | `--checksum` | ハッシュで比較、同一内容ならスキップ |
 | `--delete` | コピー元にないファイルを削除 |
 
@@ -257,8 +279,15 @@ rsync -av --checksum --delete \
 
 #### 7.2.2 ドキュメントテンプレートの同期（rsync）
 
+同様にドライラン → 確認 → 実行の手順で同期：
+
 ```bash
-# テンプレートの同期（完全同期）
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/templates/ \
+  docs/aidlc/templates/ 2>&1 | grep "^deleting"
+
+# 2. 承認後に実行
 rsync -av --checksum --delete \
   [スターターキットパス]/prompts/package/templates/ \
   docs/aidlc/templates/

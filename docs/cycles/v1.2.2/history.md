@@ -233,3 +233,31 @@ Unit 5: サイクル固有バックログ確認 - 実装完了
 
 ### 備考
 - 全Unitが完了。Operations Phase へ移行可能
+---
+
+## 2025-12-06 22:52:11 JST
+
+**フェーズ**: Operations Phase (Lite)
+**実行内容**: サイクル完了作業
+
+**変更内容**:
+1. Operations Phaseプロンプトに運用引き継ぎ情報確認ステップを追加
+2. ファイル移行処理を実行
+   - docs/aidlc/project.toml → docs/aidlc.toml
+   - docs/aidlc/prompts/additional-rules.md → docs/cycles/rules.md（復元）
+   - docs/aidlc/version.txt を削除
+3. docs/cycles/operations.md のメタ開発手順を更新（setup-init参照に変更）
+4. README.md を v1.2.2 に更新
+
+**成果物**:
+- prompts/package/prompts/operations.md
+- prompts/package/prompts/lite/operations.md
+- docs/aidlc/prompts/operations.md
+- docs/aidlc/prompts/lite/operations.md
+- docs/aidlc.toml（移動）
+- docs/cycles/rules.md（復元・移動）
+- docs/cycles/operations.md（更新）
+- README.md
+
+**備考**: rsyncによるadditional-rules.md消失バグを発見・修正
+
