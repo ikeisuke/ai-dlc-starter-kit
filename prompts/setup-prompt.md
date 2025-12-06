@@ -36,18 +36,19 @@ pwd
 以下のファイルの存在とバージョンを確認してください:
 
 ```bash
-# project.toml の存在確認
-ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "PROJECT_TOML_NOT_EXISTS"
+# aidlc.toml（新形式）または project.toml（旧形式）の存在確認
+ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
+  (ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "CONFIG_NOT_EXISTS")
 
-# プロジェクトのバージョン確認
-cat docs/aidlc/version.txt 2>/dev/null || echo "VERSION_NOT_FOUND"
+# プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
+grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "VERSION_NOT_FOUND"
 ```
 
 また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、**スターターキットのバージョン**を確認してください。
 
 ### 判定結果に基づく対応
 
-#### ケース A: `project.toml` が存在しない（初回セットアップ）
+#### ケース A: 設定ファイルが存在しない（初回セットアップ）
 
 以下のメッセージを表示してください:
 
@@ -59,7 +60,7 @@ AI-DLC の初回セットアップを行います。
 
 ---
 
-#### ケース B: `project.toml` が存在 & バージョン同じ（サイクル開始）
+#### ケース B: `aidlc.toml` が存在 & バージョン同じ（サイクル開始）
 
 以下のメッセージを表示してください:
 
@@ -71,14 +72,14 @@ AI-DLC は最新です。新しいサイクルを開始します。
 
 ---
 
-#### ケース C: `project.toml` が存在 & プロジェクトが古い（アップグレード可能）
+#### ケース C: `aidlc.toml` が存在 & プロジェクトが古い（アップグレード可能）
 
 以下のメッセージを表示し、ユーザーの選択を待ってください:
 
 ```
 AI-DLC のアップグレードが利用可能です。
 
-現在のバージョン: [プロジェクトの version.txt]
+現在のバージョン: [aidlc.toml の starter_kit_version]
 最新バージョン: [スターターキットの version.txt]
 
 選択してください:
@@ -98,12 +99,12 @@ AI-DLC のアップグレードが利用可能です。
 
 #### ケース D: プロジェクトが新しい（警告）
 
-プロジェクトの version.txt > スターターキットの version.txt の場合:
+aidlc.toml の starter_kit_version > スターターキットの version.txt の場合:
 
 ```
 警告: プロジェクトのバージョンがスターターキットより新しいです。
 
-プロジェクト: [プロジェクトの version.txt]
+プロジェクト: [aidlc.toml の starter_kit_version]
 スターターキット: [スターターキットの version.txt]
 
 スターターキットのアップデートを推奨します。
@@ -116,8 +117,16 @@ AI-DLC のアップグレードが利用可能です。
 
 ## 補足: 後方互換性
 
-`docs/aidlc/project.toml` は存在しないが `docs/aidlc/version.txt` が存在する場合:
+### 旧形式（project.toml）が存在する場合
+
+`docs/aidlc.toml` は存在しないが `docs/aidlc/project.toml` が存在する場合:
 - これは旧バージョンの AI-DLC でセットアップされたプロジェクトです
+- `setup-init.md` を読み込み、移行モードとして処理してください
+
+### さらに古い形式（version.txt のみ）が存在する場合
+
+`docs/aidlc/project.toml` も `docs/aidlc.toml` も存在しないが `docs/aidlc/version.txt` が存在する場合:
+- これはさらに旧バージョンの AI-DLC でセットアップされたプロジェクトです
 - ケース A（初回セットアップ）として扱い、移行を案内してください
 
 ---

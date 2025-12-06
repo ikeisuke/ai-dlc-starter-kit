@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -27,12 +27,14 @@ ai-dlc-starter-kit/
 │   │   ├── AI-DLC_AppendixA_ja.md
 │   │   └── AI-Driven_Development_Lifecycle_Summary.md
 │   │
+│   ├── aidlc.toml             # プロジェクト設定（v1.2.2から位置変更）
 │   ├── aidlc/                 # 全サイクル共通の共通ファイル（v1.0.0から）
 │   │   ├── prompts/           # 共通プロンプト（inception.md, construction.md, operations.md等）
-│   │   ├── templates/         # 全テンプレートファイル（セットアップ時に事前作成）
-│   │   └── version.txt        # スターターキットバージョン（1.0.0）
+│   │   └── templates/         # 全テンプレートファイル（セットアップ時に事前作成）
 │   │
 │   ├── cycles/                # サイクル固有成果物（v1.0.0から）
+│   │   ├── rules.md           # プロジェクト固有ルール（v1.2.2から位置変更）
+│   │   ├── operations.md      # サイクル横断の運用引き継ぎ情報（v1.2.1から）
 │   │   └── {{CYCLE}}/         # サイクル識別子で管理（例: v1.0.0, 2024-12, feature-x）
 │   │       ├── inception/
 │   │       │   └── progress.md       # Inception進捗管理（v1.0.0新機能）
@@ -94,30 +96,33 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
 セットアップが完了すると、以下のディレクトリ構造が作成されます：
 ```
 docs/
+├── aidlc.toml                # プロジェクト設定
 ├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成）
 │   ├── prompts/              # 各フェーズのプロンプトファイル
 │   │   ├── inception.md      # Inception Phase用
 │   │   ├── construction.md   # Construction Phase用
-│   │   ├── operations.md     # Operations Phase用
-│   │   └── additional-rules.md  # プロジェクト固有ルール
+│   │   └── operations.md     # Operations Phase用
 │   └── templates/            # ドキュメントテンプレート（セットアップ時に事前作成）
 │
-└── cycles/{{CYCLE}}/         # サイクル固有成果物
-    ├── inception/
-    │   └── progress.md       # Inception進捗管理
-    ├── requirements/         # 要件定義
-    ├── story-artifacts/      # ユーザーストーリー、Unit定義
-    ├── design-artifacts/     # ドメインモデル、論理設計
-    ├── construction/
-    │   ├── progress.md       # Construction進捗管理
-    │   └── units/            # Unit実装記録
-    ├── operations/
-    │   └── progress.md       # Operations進捗管理
-    └── history.md            # 開発履歴
+└── cycles/
+    ├── rules.md              # プロジェクト固有ルール
+    ├── operations.md         # サイクル横断の運用引き継ぎ情報
+    └── {{CYCLE}}/            # サイクル固有成果物
+        ├── inception/
+        │   └── progress.md   # Inception進捗管理
+        ├── requirements/     # 要件定義
+        ├── story-artifacts/  # ユーザーストーリー、Unit定義
+        ├── design-artifacts/ # ドメインモデル、論理設計
+        ├── construction/
+        │   ├── progress.md   # Construction進捗管理
+        │   └── units/        # Unit実装記録
+        ├── operations/
+        │   └── progress.md   # Operations進捗管理
+        └── history.md        # 開発履歴
 ```
 
 **重要**:
-- セットアップ完了後、`docs/aidlc/prompts/additional-rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
+- セットアップ完了後、`docs/cycles/rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
 - **このスターターキットはサイクル単位で環境を構築します**。新サイクル開発時は新しい`CYCLE`でsetup-prompt.mdを再実行します
 
 ### 3. 開発を開始
@@ -193,7 +198,8 @@ Operations Phase完了後、フィードバックを収集して次サイクル�
 ```
 
 **必要に応じて前サイクルのファイルを引き継ぐ**:
-- `docs/aidlc/prompts/additional-rules.md` は全サイクル共通なので引き継がれます
+- `docs/cycles/rules.md` は全サイクル共通なので引き継がれます
+- `docs/cycles/operations.md` も全サイクル共通（運用設定の引き継ぎ）
 - `docs/cycles/v1.0.0/requirements/intent.md` → 参照して改善点を反映
 - その他、引き継ぎたいファイルがあればコピー
 
@@ -290,7 +296,7 @@ Operations Phase完了後、フィードバックを収集して次サイクル�
 7. **コンテキスト効率** - 必要最小限のファイルのみ読み込み、コンテキスト溢れを防止
 8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成し、進捗を記録
 9. **プラットフォーム対応** - iOS/Android等の固有要件を自動で含める
-10. **カスタマイズ可能** - プロジェクト固有のルールを additional-rules.md に記述可能
+10. **カスタマイズ可能** - プロジェクト固有のルールを rules.md に記述可能
 
 ## 🔄 v0.1.0 から v1.0.0 への移行
 
@@ -378,7 +384,7 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 - 各フェーズプロンプト開始時にサイクルディレクトリの存在を確認
 - 存在しない場合はエラーを表示し、既存サイクル一覧を提示
 
-### 6. additional-rules.md の上書き防止
+### 6. rules.md の上書き防止
 - アップグレード時にプロジェクト固有のルールファイルを保護
 - 既に存在する場合はコピーをスキップ
 
@@ -409,6 +415,31 @@ v1.2.1 は技術的負債解消のメンテナンスリリースです。
 ### 4. 運用引き継ぎの強化
 - サイクル横断の運用引き継ぎファイル（`docs/cycles/operations.md`）を追加
 - CI/CD設定、監視設定、デプロイ手順などをサイクル間で引き継ぎ可能
+
+## 🔧 v1.2.2 の改善点
+
+v1.2.2 はファイル構成の整理とプロンプト改善のメンテナンスリリースです。
+
+### 1. ファイル構成の変更（破壊的変更）
+- `docs/aidlc/project.toml` → `docs/aidlc.toml` に移動
+- `docs/aidlc/prompts/additional-rules.md` → `docs/cycles/rules.md` に移動
+- `docs/aidlc/version.txt` 廃止（`aidlc.toml` に統合）
+- **効果**: `docs/aidlc/` がスターターキットと rsync で完全同期可能に
+
+### 2. Operations Phase の改善
+- 開始時に運用引き継ぎ情報（`docs/cycles/operations.md`）を自動確認
+- 前回サイクルの設定を再利用可能、毎回同じ質問を繰り返さない
+
+### 3. Lite版プロンプトの改善
+- パスがプロジェクトルートからの絶対パスであることを明示
+- 簡易実装先確認ステップを追加
+
+### 4. コンテキストリセットルールの強化
+- 継続プロンプトを「推奨」から「必須」に変更
+- progress.md のパスを明確化（サブディレクトリ内であることを強調）
+
+### 5. 既存プロジェクトの移行
+v1.2.1 以前を使用中のプロジェクトは、setup-init.md を実行すると自動で移行されます。
 
 ## 🔗 関連リンク
 

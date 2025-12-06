@@ -153,8 +153,15 @@ git commit -m "feat: サイクル [バージョン] 開始"
 
 新しいセッションで以下を実行してください：
 
+**Full版**（推奨: 新機能・大きな変更）:
+
 以下のファイルを読み込んで、サイクル [バージョン] の Inception Phase を開始してください：
 docs/aidlc/prompts/inception.md
+
+**Lite版**（バグ修正・小さな変更）:
+
+以下のファイルを読み込んで、サイクル [バージョン] の Inception Phase (Lite) を開始してください：
+docs/aidlc/prompts/lite/inception.md
 ```
 
 ---

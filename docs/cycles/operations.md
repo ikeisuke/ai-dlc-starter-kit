@@ -118,20 +118,17 @@ git checkout v1.2.0
 echo "X.X.X" > version.txt
 ```
 
-### 2. setup-init実行（アップグレード）
-`docs/aidlc/` を最新のスターターキット（`prompts/package/`）と同期:
+### 2. setup-init実行（アップグレードモード）
+`prompts/setup-init.md` をアップグレードモードで実行し、`docs/aidlc/` を最新化:
+
 ```bash
-# prompts/package/ から docs/aidlc/ にコピー
-\cp -f prompts/package/prompts/*.md docs/aidlc/prompts/
-\cp -rf prompts/package/prompts/lite/ docs/aidlc/prompts/lite/
-\cp -rf prompts/package/templates/ docs/aidlc/templates/
-\cp -f version.txt docs/aidlc/version.txt
+# setup-init.md を読み込み、セクション7（共通ファイルの配置）を実行
+# ※ アップグレードモードではセクション4-6（プロジェクト情報収集・aidlc.toml生成）はスキップ
 ```
 
-**効果**:
-- プロンプト・テンプレートが最新化される
-- `docs/aidlc/version.txt` がルートと同期される
-- project.toml、additional-rules.md は保持される（上書きしない）
+**実行内容**（setup-init.md セクション7.2）:
+- rsync で prompts/package/ → docs/aidlc/ に同期
+- プロジェクト固有ファイル（rules.md、operations.md）は保持
 
 ### 注意
 これらの作業は一般プロジェクトでは不要です。AI-DLC Starter Kit自体を開発している（メタ開発）ため必要になります。
@@ -143,3 +140,4 @@ echo "X.X.X" > version.txt
 | 日時 | サイクル | 更新内容 |
 |------|---------|---------|
 | 2025-12-06 | v1.2.1 | 初回作成、メタ開発特有の完了時作業を追加 |
+| 2025-12-06 | v1.2.2 | setup-init参照に変更、version.txt同期手順を削除 |
