@@ -228,36 +228,45 @@ mkdir -p docs/aidlc/prompts
 mkdir -p docs/aidlc/templates
 ```
 
-### 7.2 パッケージファイルのコピー
+### 7.2 パッケージファイルの同期
 
-スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` にコピー。
+スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` に同期。
 
 **重要**:
-- プロジェクト固有のファイルは上書きしないこと
-- **cp コマンドは `\cp -f` を使用**（macOS の alias をバイパスし、上書き確認プロンプトを回避）
+- rsync で完全同期（差分のみ更新、不要ファイル削除）
+- プロジェクト固有のファイルは別途処理
 
-#### 7.2.1 フェーズプロンプト（上書きOK）
+#### 7.2.1 フェーズプロンプトの同期（rsync）
 
-| ソース | 出力先 |
-|--------|--------|
-| prompts/package/prompts/inception.md | docs/aidlc/prompts/inception.md |
-| prompts/package/prompts/construction.md | docs/aidlc/prompts/construction.md |
-| prompts/package/prompts/operations.md | docs/aidlc/prompts/operations.md |
-| prompts/package/prompts/lite/ | docs/aidlc/prompts/lite/ |
+```bash
+# プロンプトの同期（完全同期）
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/prompts/ \
+  docs/aidlc/prompts/
+```
 
-これらのファイルは上書きして最新版に更新します。
+| オプション | 説明 |
+|-----------|------|
+| `-av` | アーカイブモード + 詳細出力 |
+| `--checksum` | ハッシュで比較、同一内容ならスキップ |
+| `--delete` | コピー元にないファイルを削除 |
 
-**注意**: `lite/` ディレクトリはライト版プロンプト（簡易版）です。
+**同期対象**:
+- inception.md, construction.md, operations.md
+- lite/ ディレクトリ（簡易版プロンプト）
 
-#### 7.2.2 ドキュメントテンプレート（上書きOK）
+#### 7.2.2 ドキュメントテンプレートの同期（rsync）
 
-| ソース | 出力先 |
-|--------|--------|
-| prompts/package/templates/ | docs/aidlc/templates/ |
+```bash
+# テンプレートの同期（完全同期）
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/templates/ \
+  docs/aidlc/templates/
+```
 
-テンプレートは上書きして最新版に更新します。
+テンプレートも同様に完全同期します。
 
-#### 7.2.3 プロジェクト固有ファイル（存在する場合はスキップ）
+#### 7.2.3 プロジェクト固有ファイル（初回のみコピー）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
 
@@ -266,7 +275,7 @@ mkdir -p docs/aidlc/templates
 | `docs/cycles/rules.md` | プロジェクト固有の追加ルール |
 | `docs/cycles/operations.md` | サイクル横断の運用引き継ぎ情報 |
 
-**コピー前に存在確認**:
+**存在確認後にコピー**:
 ```bash
 # rules.md が存在しない場合のみコピー
 if [ ! -f docs/cycles/rules.md ]; then
@@ -279,10 +288,28 @@ if [ ! -f docs/cycles/operations.md ]; then
 fi
 ```
 
-### 7.3 その他の共通ファイル
+#### 7.2.4 rsync出力例
 
-以下のファイルもコピー:
-- `docs/aidlc/templates/index.md` - テンプレート一覧
+```
+sending incremental file list
+>fcst....... construction.md   # 内容が異なる → 更新
+.f..t....... inception.md      # タイムスタンプのみ → スキップ（--checksumにより）
+
+sent 1,234 bytes  received 56 bytes
+```
+
+**互換性**: rsync は macOS/Linux 共通でプリインストール済み
+
+### 7.3 同期対象のファイル一覧
+
+rsync により以下のファイルが同期されます:
+
+**prompts/**:
+- inception.md, construction.md, operations.md
+- lite/inception.md, lite/construction.md, lite/operations.md
+
+**templates/**:
+- 各種テンプレートファイル（index.md含む）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 

@@ -132,3 +132,21 @@ Construction Phase (Lite) - Unit 7, 8追加
 - prompts/setup/templates/operations_handover_template.md（移動）
 
 **次回**: Unit 3 実装（rsyncコマンドへの置き換え）
+
+---
+
+## 2025-12-06 19:31:59 JST
+
+**フェーズ**: Construction Phase (Lite)
+**Unit**: Unit 3 - ファイルコピー判定改善
+**実行内容**: rsync対応実装
+
+**成果物**:
+- prompts/setup-init.md（セクション7.2をrsync対応に変更）
+- docs/cycles/v1.2.2/construction/units/unit3_implementation.md
+
+**変更内容**:
+- 個別cpコマンドをrsyncに置き換え
+- --checksum --delete オプションで差分のみ更新
+- プロジェクト固有ファイルは従来通り条件付きコピー
+
