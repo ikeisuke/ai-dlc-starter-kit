@@ -36,3 +36,23 @@ Inception Phase (Lite)
 ### 備考
 - LIFULLアドベントカレンダー2025記事執筆プロジェクト
 - 一人AI-DLCの実践と本質との差異も記事テーマに含める
+
+---
+
+## 2025-12-07 00:00:49 JST
+
+### フェーズ
+Construction Phase (Lite)
+
+### 実行内容
+Unit-1: AI-DLC概念説明セクション 完了
+
+### 成果物
+- `article/section-1-aidlc-concept.md` - AI-DLC概念説明セクション本文
+- `construction/units/unit-1_implementation.md` - 簡易実装記録
+- `plans/unit-1-plan.md` - 実装計画
+
+### 備考
+- AWSが提唱する手法であることを明記
+- 公式リソース（AWSブログ、GitHubリポジトリ、LIFULLワークショップ）への参照を追加
+- 3つのフェーズ、従来手法との比較、主要原則を説明
