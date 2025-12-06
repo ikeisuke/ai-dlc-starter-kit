@@ -147,11 +147,28 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 2. 追加ルール確認
 `docs/aidlc/prompts/additional-rules.md` が存在すれば読み込む
 
-### 3. 進捗管理ファイル読み込み【重要】
+### 3. 進捗管理ファイル確認【重要】
 
-`docs/cycles/{{CYCLE}}/construction/progress.md` を読み込む
+`docs/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認：
 
-このファイルには以下が記載されている：
+- **存在する場合**: 読み込んで完了済みUnitを確認、未完了Unitから再開
+- **存在しない場合**: 初回実行として、Unit定義ファイルからprogress.mdを生成
+
+#### progress.md初期化手順（存在しない場合）
+
+1. `docs/cycles/{{CYCLE}}/story-artifacts/units/` 配下のUnit定義ファイル一覧を取得
+2. 各Unitファイルから以下の情報を抽出:
+   - Unit名（ファイル内の `# Unit:` 行）
+   - 依存関係（`### 依存する Unit` セクション）
+   - 優先度（`## 実装優先度` セクション）
+   - 見積もり（`## 見積もり` セクション）
+3. progress.mdを生成:
+   - Unit一覧を表形式で記録
+   - 全Unitの初期状態は「未着手」
+   - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）を計算
+   - 最終更新日時を記録
+
+このファイルには以下が記載される：
 - 全Unit一覧
 - 依存関係
 - 状態（未着手/進行中/完了）

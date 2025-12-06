@@ -79,3 +79,23 @@ v1.2.1 サイクルの要件定義を完了
 
 **備考**: サイクル固有バックログを導入。コンフリクト回避と明確な管理を実現。
 
+
+---
+
+## 2025-12-06 09:09:08 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 3: Construction進捗ファイル責務移動の実装完了
+
+### 成果物
+- docs/aidlc/prompts/inception.md（ステップ6削除）
+- docs/aidlc/prompts/construction.md（初期化ロジック追加）
+- docs/cycles/v1.2.1/plans/unit3_construction_progress_plan.md
+- docs/cycles/v1.2.1/construction/units/unit3_implementation.md
+
+### 備考
+- Inception Phaseがconstruction/progress.mdを作成する責務をConstruction Phaseに移動
+- Operations Phaseと同様に「自身のprogress.mdを自己作成」するパターンに統一

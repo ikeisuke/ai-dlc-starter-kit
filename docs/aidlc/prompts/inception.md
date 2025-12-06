@@ -220,18 +220,6 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - `docs/cycles/{{CYCLE}}/requirements/prfaq.md` を作成（テンプレート: `docs/aidlc/templates/prfaq_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
-### ステップ6: Construction用進捗管理ファイル作成【重要】
-
-- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
-- 全Unit定義完了後、`docs/cycles/{{CYCLE}}/construction/progress.md` を作成
-- **記載内容**:
-  - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
-  - 全Unitの初期状態は「未着手」
-  - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）
-  - 最終更新日時
-- Construction Phaseで使用する進捗管理の中心ファイル
-- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
-
 ---
 
 ## 実行ルール
@@ -246,7 +234,6 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - すべての成果物作成
 - 技術スタック決定（greenfieldの場合）
-- **進捗管理ファイル作成**（construction/progress.md）
 
 ---
 
@@ -256,7 +243,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 `docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 2. Gitコミット
-Inception Phaseで作成したすべてのファイル（**inception/progress.md、construction/progress.md、history.mdを含む**）をコミット
+Inception Phaseで作成したすべてのファイル（**inception/progress.md、history.mdを含む**）をコミット
 
 コミットメッセージ例:
 ```
