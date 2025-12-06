@@ -66,3 +66,20 @@ Unit-1: AI-DLC概念説明セクション 完了
   - docs/cycles/extra-adventcalendar-2025/construction/units/unit-2_implementation.md
   - docs/cycles/extra-adventcalendar-2025/plans/unit-2-plan.md
 - **備考**: スターターキットの構成、使い方フロー、メタ構造について記載。人間が方向性を明確にすることの重要性を強調。
+
+---
+## 2025-12-07 00:58:35 JST
+
+### フェーズ
+Construction Phase (Lite)
+
+### 実行内容
+Unit-3: 一人AI-DLC体験談セクション完了
+
+### 成果物
+- docs/cycles/extra-adventcalendar-2025/article/section-3-experience-story.md（新規作成）
+- docs/cycles/extra-adventcalendar-2025/plans/unit-3-plan.md（計画）
+
+### 備考
+- 著者へのヒアリングを通じて体験談を執筆
+- 3つのiOSアプリでの実践、リリース頻度の変化、工夫と課題を記録
