@@ -94,3 +94,17 @@ Unit-3: 一人AI-DLC体験談セクション完了
   - construction/units/unit-4_implementation.md（新規作成）
   - plans/unit-4-plan.md（新規作成）
 - **備考**: AI-DLCの本質（チーム開発前提）と一人実践の差異を考察
+
+---
+## 2025-12-07 01:14:15 JST
+- **フェーズ**: Construction Phase (Lite)
+- **Unit**: Unit-5 記事全体の構成・まとめ
+- **実行内容**: 
+  - 統合記事ファイルの作成（導入文・セクション1〜4・結論）
+  - セクション間の繋ぎ文追加
+  - section-2のUnit進捗表を最終状態に更新
+- **成果物**:
+  - article/adventcalendar-2025.md（統合記事）
+  - construction/units/unit-5_implementation.md
+  - plans/unit-5-plan.md
+- **備考**: 全Unit完了、Construction Phase (Lite) 完了
