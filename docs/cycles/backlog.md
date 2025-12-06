@@ -43,18 +43,14 @@
 - **期待効果**: セットアップ時間短縮、ユーザー体験向上
 - **優先度**: 中
 
-### デグレ: prompt-reference-guide.md と operations/ 関連ファイルの欠落
+### ~~デグレ: prompt-reference-guide.md と operations/ 関連ファイルの欠落~~
 - **発見日**: 2025-12-05
 - **発見サイクル**: v1.2.0 リリース後
-- **概要**: v1.2.0でsetup/ディレクトリ分割時にファイルがデグレ
-- **詳細**:
-  - `prompts/package/prompts/prompt-reference-guide.md` - v1.1.0のsetup/common.mdに存在したが移行漏れ
-  - `prompts/package/operations/README.md` - setup-init.mdで参照されているが元々未実装
-  - `docs/aidlc/operations/` ディレクトリは存在するが空
-- **対応案**:
-  1. `prompt-reference-guide.md` を `prompts/package/prompts/` に復元
-  2. `operations/README.md` は元々未実装のため `setup-init.md` から参照削除、または新規作成
-- **優先度**: 低（動作に支障なし）
+- **対応サイクル**: v1.2.1
+- **対応結果**:
+  - `prompt-reference-guide.md`: 各フェーズプロンプトに内容が組み込まれており、独立したファイルは不要と判断
+  - `operations/`: `docs/cycles/operations.md` として運用引き継ぎテンプレートを追加。`docs/aidlc/operations/` ディレクトリは不要のため削除
+- **ステータス**: 対応完了（v1.2.1）
 
 ### Operations Phaseでのバックログ完了項目移動
 - **発見日**: 2025-12-06

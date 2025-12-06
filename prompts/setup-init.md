@@ -166,7 +166,6 @@ language = "日本語"
 ```bash
 mkdir -p docs/aidlc/prompts
 mkdir -p docs/aidlc/templates
-mkdir -p docs/aidlc/operations
 ```
 
 ### 6.2 パッケージファイルのコピー
@@ -205,12 +204,18 @@ mkdir -p docs/aidlc/operations
 | ファイル | 説明 |
 |--------|------|
 | `docs/aidlc/prompts/additional-rules.md` | プロジェクト固有の追加ルール |
+| `docs/cycles/operations.md` | サイクル横断の運用引き継ぎ情報 |
 
 **コピー前に存在確認**:
 ```bash
 # additional-rules.md が存在しない場合のみコピー
 if [ ! -f docs/aidlc/prompts/additional-rules.md ]; then
   \cp -f [スターターキットパス]/prompts/package/prompts/additional-rules.md docs/aidlc/prompts/
+fi
+
+# operations.md が存在しない場合のみコピー
+if [ ! -f docs/cycles/operations.md ]; then
+  \cp -f [スターターキットパス]/prompts/package/templates/operations_handover_template.md docs/cycles/operations.md
 fi
 ```
 
