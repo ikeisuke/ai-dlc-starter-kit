@@ -270,12 +270,12 @@ mkdir -p docs/aidlc/templates
 ```bash
 # rules.md が存在しない場合のみコピー
 if [ ! -f docs/cycles/rules.md ]; then
-  \cp -f [スターターキットパス]/prompts/package/templates/rules_template.md docs/cycles/rules.md
+  \cp -f [スターターキットパス]/prompts/setup/templates/rules_template.md docs/cycles/rules.md
 fi
 
 # operations.md が存在しない場合のみコピー
 if [ ! -f docs/cycles/operations.md ]; then
-  \cp -f [スターターキットパス]/prompts/package/templates/operations_handover_template.md docs/cycles/operations.md
+  \cp -f [スターターキットパス]/prompts/setup/templates/operations_handover_template.md docs/cycles/operations.md
 fi
 ```
 

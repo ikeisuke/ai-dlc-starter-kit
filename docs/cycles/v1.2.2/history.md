@@ -118,3 +118,17 @@ Construction Phase (Lite) - Unit 7, 8追加
 - docs/cycles/v1.2.2/construction/units/unit6_implementation.md
 
 **備考**: docs/aidlc/ がスターターキット由来のファイルのみになり、rsync --delete で完全同期可能に
+
+---
+
+## 2025-12-06 19:25:59 JST
+
+**フェーズ**: Construction Phase (Lite) - コンテキストリセット
+**実行内容**: Unit 3 計画作成、ディレクトリ構成整理
+**成果物**:
+- docs/cycles/v1.2.2/plans/unit3_plan.md
+- prompts/setup/templates/（新規ディレクトリ）
+- prompts/setup/templates/rules_template.md（移動）
+- prompts/setup/templates/operations_handover_template.md（移動）
+
+**次回**: Unit 3 実装（rsyncコマンドへの置き換え）
