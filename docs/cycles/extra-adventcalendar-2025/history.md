@@ -56,3 +56,13 @@ Unit-1: AI-DLC概念説明セクション 完了
 - AWSが提唱する手法であることを明記
 - 公式リソース（AWSブログ、GitHubリポジトリ、LIFULLワークショップ）への参照を追加
 - 3つのフェーズ、従来手法との比較、主要原則を説明
+
+---
+## 2025-12-07 00:28:00 JST
+- **フェーズ**: Construction Phase (Lite)
+- **実行内容**: Unit-2 スターターキット解説セクション完了
+- **成果物**:
+  - docs/cycles/extra-adventcalendar-2025/article/section-2-starter-kit.md
+  - docs/cycles/extra-adventcalendar-2025/construction/units/unit-2_implementation.md
+  - docs/cycles/extra-adventcalendar-2025/plans/unit-2-plan.md
+- **備考**: スターターキットの構成、使い方フロー、メタ構造について記載。人間が方向性を明確にすることの重要性を強調。
