@@ -11,15 +11,20 @@
 以下のコマンドで現在の状態を確認してください:
 
 ```bash
-ls docs/aidlc/project.toml 2>/dev/null && echo "UPGRADE_MODE" || echo "INITIAL_MODE"
+# 新形式（aidlc.toml）または旧形式（project.toml）の存在確認
+ls docs/aidlc.toml 2>/dev/null && echo "UPGRADE_MODE" || \
+  (ls docs/aidlc/project.toml 2>/dev/null && echo "MIGRATION_MODE" || echo "INITIAL_MODE")
 ```
 
 | 結果 | モード | 説明 |
 |------|--------|------|
-| INITIAL_MODE | 初回セットアップ | project.toml を新規作成 |
-| UPGRADE_MODE | アップグレード | project.toml を保持、プロンプト・テンプレートのみ更新 |
+| INITIAL_MODE | 初回セットアップ | aidlc.toml を新規作成 |
+| UPGRADE_MODE | アップグレード | aidlc.toml を保持、プロンプト・テンプレートのみ更新 |
+| MIGRATION_MODE | 移行 + アップグレード | 旧形式から新形式に移行後、アップグレード |
 
-**アップグレードモードの場合**: セクション 3（プロジェクト情報の収集）と 4（project.toml の生成）をスキップしてください。
+**アップグレードモードの場合**: セクション 4（プロジェクト情報の収集）と 5（aidlc.toml の生成）をスキップしてください。
+
+**移行モードの場合**: セクション 3（ファイル移行）を実行後、アップグレードモードと同様に進めてください。
 
 ---
 
@@ -29,9 +34,63 @@ ls docs/aidlc/project.toml 2>/dev/null && echo "UPGRADE_MODE" || echo "INITIAL_M
 
 ---
 
-## 3. Git環境の確認
+## 3. ファイル移行【移行モードのみ】
 
-### 3.1 Gitリポジトリの確認
+旧形式のファイルを新形式に移行します。
+
+### 3.1 移行処理
+
+```bash
+# 1. project.toml → aidlc.toml に移行
+if [ -f docs/aidlc/project.toml ] && [ ! -f docs/aidlc.toml ]; then
+  mv docs/aidlc/project.toml docs/aidlc.toml
+  echo "MIGRATED: docs/aidlc/project.toml → docs/aidlc.toml"
+fi
+
+# 2. additional-rules.md → rules.md に移行
+if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f docs/cycles/rules.md ]; then
+  mkdir -p docs/cycles
+  mv docs/aidlc/prompts/additional-rules.md docs/cycles/rules.md
+  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → docs/cycles/rules.md"
+fi
+
+# 3. version.txt を削除（バージョン情報は aidlc.toml に統合）
+if [ -f docs/aidlc/version.txt ]; then
+  rm docs/aidlc/version.txt
+  echo "REMOVED: docs/aidlc/version.txt (バージョン情報は aidlc.toml に統合)"
+fi
+```
+
+### 3.2 移行通知
+
+移行が実行された場合、以下のメッセージを表示：
+
+```
+ファイル構成の変更に伴い、以下のファイルを移行しました：
+
+| 移行元 | 移行先 |
+|--------|--------|
+| docs/aidlc/project.toml | docs/aidlc.toml |
+| docs/aidlc/prompts/additional-rules.md | docs/cycles/rules.md |
+| docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
+
+これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
+```
+
+### 3.3 aidlc.toml のバージョン情報更新
+
+移行後、`docs/aidlc.toml` に `starter_kit_version` フィールドを追加（存在しない場合）:
+
+```toml
+# ファイル先頭のコメントに追記
+# スターターキットバージョン: [version.txt の内容]
+```
+
+---
+
+## 4. Git環境の確認
+
+### 4.1 Gitリポジトリの確認
 
 ```bash
 git rev-parse --git-dir 2>/dev/null && echo "GIT_REPO" || echo "NOT_GIT_REPO"
@@ -42,7 +101,7 @@ git rev-parse --git-dir 2>/dev/null && echo "GIT_REPO" || echo "NOT_GIT_REPO"
 - `git init` での初期化を提案
 - ユーザーに「初期化する / バージョン管理なしで続行」を選択させる
 
-### 3.2 現在のブランチ確認
+### 4.2 現在のブランチ確認
 
 Gitリポジトリの場合:
 
@@ -52,11 +111,11 @@ git branch --show-current
 
 ---
 
-## 4. プロジェクト情報の収集【初回のみ】
+## 5. プロジェクト情報の収集【初回のみ】
 
 README.mdからプロジェクト情報を推測し、まとめて確認します。
 
-### 4.1 README.mdの読み込み
+### 5.1 README.mdの読み込み
 
 README.mdが存在する場合、内容を読み込んで以下の情報を推測します：
 - プロジェクト名（READMEのタイトル `# xxx` またはディレクトリ名）
@@ -66,7 +125,7 @@ README.mdが存在する場合、内容を読み込んで以下の情報を推�
 
 README.mdが存在しない場合は、ディレクトリ名をプロジェクト名として使用します。
 
-### 4.2 推測結果の確認
+### 5.2 推測結果の確認
 
 推測した情報をテーブル形式で表示し、ユーザーに確認を求めます：
 
@@ -88,7 +147,7 @@ README.mdが存在しない場合は、ディレクトリ名をプロジェク�
 - 「OK」「はい」「問題ない」→ 推測値を採用し、次のステップへ
 - 変更がある場合 → 指定された項目のみ更新
 
-### 4.3 推測できなかった項目の入力
+### 5.3 推測できなかった項目の入力
 
 推測値が「-」の項目について、必要に応じて個別に質問します：
 
@@ -96,21 +155,22 @@ README.mdが存在しない場合は、ディレクトリ名をプロジェク�
 [項目名]が推測できませんでした。入力してください（スキップする場合は「スキップ」）:
 ```
 
-**注意**: すべての項目はスキップ可能です。後から `docs/aidlc/project.toml` を直接編集することもできます。
+**注意**: すべての項目はスキップ可能です。後から `docs/aidlc.toml` を直接編集することもできます。
 
 ---
 
-## 5. project.toml の生成【初回のみ】
+## 6. aidlc.toml の生成【初回のみ】
 
-収集した情報を元に `docs/aidlc/project.toml` を生成します。
+収集した情報を元に `docs/aidlc.toml` を生成します。
 
-### 5.1 ディレクトリ作成
+### 6.1 ディレクトリ作成
 
 ```bash
 mkdir -p docs/aidlc
+mkdir -p docs/cycles
 ```
 
-### 5.2 project.toml の内容
+### 6.2 aidlc.toml の内容
 
 以下のテンプレートを使用し、収集した情報で置換してください:
 
@@ -159,90 +219,142 @@ language = "日本語"
 
 ---
 
-## 6. 共通ファイルの配置
+## 7. 共通ファイルの配置
 
-### 6.1 ディレクトリ構造の作成
+### 7.1 ディレクトリ構造の作成
 
 ```bash
 mkdir -p docs/aidlc/prompts
 mkdir -p docs/aidlc/templates
 ```
 
-### 6.2 パッケージファイルのコピー
+### 7.2 パッケージファイルの同期
 
-スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` にコピー。
+スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` に同期。
 
 **重要**:
-- プロジェクト固有のファイルは上書きしないこと
-- **cp コマンドは `\cp -f` を使用**（macOS の alias をバイパスし、上書き確認プロンプトを回避）
+- rsync で完全同期（差分のみ更新、不要ファイル削除）
+- プロジェクト固有のファイルは別途処理
 
-#### 6.2.1 フェーズプロンプト（上書きOK）
+#### 7.2.1 フェーズプロンプトの同期（rsync）
 
-| ソース | 出力先 |
-|--------|--------|
-| prompts/package/prompts/inception.md | docs/aidlc/prompts/inception.md |
-| prompts/package/prompts/construction.md | docs/aidlc/prompts/construction.md |
-| prompts/package/prompts/operations.md | docs/aidlc/prompts/operations.md |
-| prompts/package/prompts/lite/ | docs/aidlc/prompts/lite/ |
+**手順**:
+1. まずドライランで削除対象を確認
+2. 削除されるファイルがあればユーザーに確認
+3. 承認後に実行
 
-これらのファイルは上書きして最新版に更新します。
+```bash
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/prompts/ \
+  docs/aidlc/prompts/ 2>&1 | grep "^deleting"
+```
 
-**注意**: `lite/` ディレクトリはライト版プロンプト（簡易版）です。
+**削除対象がある場合**: 以下を表示してユーザーに確認
+```
+以下のファイルが削除されます：
+[削除対象のファイル一覧]
 
-#### 6.2.2 ドキュメントテンプレート（上書きOK）
+これらのファイルを削除してよろしいですか？
+```
 
-| ソース | 出力先 |
-|--------|--------|
-| prompts/package/templates/ | docs/aidlc/templates/ |
+**承認後に実行**:
+```bash
+# 2. 実際の同期を実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/prompts/ \
+  docs/aidlc/prompts/
+```
 
-テンプレートは上書きして最新版に更新します。
+| オプション | 説明 |
+|-----------|------|
+| `-av` | アーカイブモード + 詳細出力 |
+| `-n` | ドライラン（実際には実行しない） |
+| `--checksum` | ハッシュで比較、同一内容ならスキップ |
+| `--delete` | コピー元にないファイルを削除 |
 
-#### 6.2.3 プロジェクト固有ファイル（存在する場合はスキップ）
+**同期対象**:
+- inception.md, construction.md, operations.md
+- lite/ ディレクトリ（簡易版プロンプト）
+
+#### 7.2.2 ドキュメントテンプレートの同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/templates/ \
+  docs/aidlc/templates/ 2>&1 | grep "^deleting"
+
+# 2. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/templates/ \
+  docs/aidlc/templates/
+```
+
+テンプレートも同様に完全同期します。
+
+#### 7.2.3 プロジェクト固有ファイル（初回のみコピー）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
 
 | ファイル | 説明 |
 |--------|------|
-| `docs/aidlc/prompts/additional-rules.md` | プロジェクト固有の追加ルール |
+| `docs/cycles/rules.md` | プロジェクト固有の追加ルール |
 | `docs/cycles/operations.md` | サイクル横断の運用引き継ぎ情報 |
 
-**コピー前に存在確認**:
+**存在確認後にコピー**:
 ```bash
-# additional-rules.md が存在しない場合のみコピー
-if [ ! -f docs/aidlc/prompts/additional-rules.md ]; then
-  \cp -f [スターターキットパス]/prompts/package/prompts/additional-rules.md docs/aidlc/prompts/
+# rules.md が存在しない場合のみコピー
+if [ ! -f docs/cycles/rules.md ]; then
+  \cp -f [スターターキットパス]/prompts/setup/templates/rules_template.md docs/cycles/rules.md
 fi
 
 # operations.md が存在しない場合のみコピー
 if [ ! -f docs/cycles/operations.md ]; then
-  \cp -f [スターターキットパス]/prompts/package/templates/operations_handover_template.md docs/cycles/operations.md
+  \cp -f [スターターキットパス]/prompts/setup/templates/operations_handover_template.md docs/cycles/operations.md
 fi
 ```
 
-### 6.3 バージョンファイルの配置
+#### 7.2.4 rsync出力例
 
-```bash
-\cp -f [スターターキットパス]/version.txt docs/aidlc/version.txt
+```
+sending incremental file list
+>fcst....... construction.md   # 内容が異なる → 更新
+.f..t....... inception.md      # タイムスタンプのみ → スキップ（--checksumにより）
+
+sent 1,234 bytes  received 56 bytes
 ```
 
-### 6.4 その他の共通ファイル
+**互換性**: rsync は macOS/Linux 共通でプリインストール済み
 
-以下のファイルもコピー:
-- `docs/aidlc/templates/index.md` - テンプレート一覧
+### 7.3 同期対象のファイル一覧
+
+rsync により以下のファイルが同期されます:
+
+**prompts/**:
+- inception.md, construction.md, operations.md
+- lite/inception.md, lite/construction.md, lite/operations.md
+
+**templates/**:
+- 各種テンプレートファイル（index.md含む）
+
+**注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
 ---
 
-## 7. サイクル開始処理
+## 8. サイクル開始処理
 
 初回セットアップ完了後、続けてサイクル開始処理を実行します。
 
-### 7.1 サイクルバージョンの確認
+### 8.1 サイクルバージョンの確認
 
 ```
 最初のサイクルバージョンを入力してください（例: v1.0.0）:
 ```
 
-### 7.2 ブランチの確認と整合性チェック
+### 8.2 ブランチの確認と整合性チェック
 
 現在のブランチを確認し、サイクルバージョンとの整合性をチェック:
 
@@ -275,7 +387,7 @@ git branch --show-current
 2. 現在のブランチで続行する
 ```
 
-### 7.3 サイクルディレクトリの作成
+### 8.3 サイクルディレクトリの作成
 
 ```bash
 mkdir -p docs/cycles/[バージョン]/plans
@@ -291,7 +403,7 @@ mkdir -p docs/cycles/[バージョン]/operations
 
 各ディレクトリに `.gitkeep` を配置。
 
-### 7.4 history.md の初期化
+### 8.4 history.md の初期化
 
 `docs/cycles/[バージョン]/history.md` を作成:
 
@@ -308,7 +420,7 @@ mkdir -p docs/cycles/[バージョン]/operations
 **フェーズ**: 準備
 **実行内容**: AI-DLC環境セットアップ（初回）
 **成果物**:
-- docs/aidlc/project.toml
+- docs/aidlc.toml
 - docs/aidlc/prompts/（フェーズプロンプト）
 - docs/aidlc/templates/（テンプレート）
 - docs/cycles/[バージョン]/（サイクルディレクトリ）
@@ -318,21 +430,22 @@ mkdir -p docs/cycles/[バージョン]/operations
 
 ---
 
-## 8. Git コミット
+## 9. Git コミット
 
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc/ docs/cycles/
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
 - **初回**: `git commit -m "feat: AI-DLC初回セットアップ完了"`
 - **アップグレード**: `git commit -m "chore: AI-DLCをバージョンX.X.Xにアップグレード"`
+- **移行**: `git commit -m "chore: AI-DLC新ファイル構成に移行"`
 
 ---
 
-## 9. 完了メッセージ
+## 10. 完了メッセージ
 
 ### 初回セットアップの場合
 
@@ -341,13 +454,18 @@ AI-DLC環境のセットアップが完了しました！
 
 作成されたファイル:
 
+プロジェクト設定:
+- docs/aidlc.toml - プロジェクト設定
+
 共通ファイル（docs/aidlc/）:
-- project.toml - プロジェクト設定
 - prompts/inception.md - Inception Phase プロンプト
 - prompts/construction.md - Construction Phase プロンプト
 - prompts/operations.md - Operations Phase プロンプト
 - templates/ - ドキュメントテンプレート
-- version.txt - スターターキットバージョン
+
+プロジェクト固有ファイル（docs/cycles/）:
+- rules.md - プロジェクト固有ルール
+- operations.md - 運用引き継ぎ情報
 
 サイクル固有ファイル（docs/cycles/[バージョン]/）:
 - history.md - 実行履歴
@@ -360,15 +478,29 @@ AI-DLC環境のセットアップが完了しました！
 AI-DLCのアップグレードが完了しました！
 
 更新されたファイル:
-- prompts/ - フェーズプロンプト
-- templates/ - ドキュメントテンプレート
-- version.txt - スターターキットバージョン
+- docs/aidlc/prompts/ - フェーズプロンプト
+- docs/aidlc/templates/ - ドキュメントテンプレート
 
-※ project.toml は保持されています（変更なし）
+※ docs/aidlc.toml は保持されています（変更なし）
 
 サイクル固有ファイル（docs/cycles/[バージョン]/）:
 - history.md - 実行履歴
 - 各種ディレクトリ
+```
+
+### 移行の場合
+
+```
+AI-DLCの新ファイル構成への移行が完了しました！
+
+移行されたファイル:
+| 移行元 | 移行先 |
+|--------|--------|
+| docs/aidlc/project.toml | docs/aidlc.toml |
+| docs/aidlc/prompts/additional-rules.md | docs/cycles/rules.md |
+| docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
+
+これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
 ```
 
 ---
