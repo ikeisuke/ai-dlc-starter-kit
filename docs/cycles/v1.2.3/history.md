@@ -79,3 +79,18 @@ v1.2.3
 - docs/cycles/v1.2.3/plans/unit3_version_field_plan.md
 
 **備考**: aidlc.tomlのstarter_kit_versionをルートレベルに配置（grepで検索しやすい形式）
+
+---
+
+## 2025-12-09 00:12:02 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 4 - 移行時ファイル削除確認追加
+**実行内容**: rsync実行前の削除確認処理を強化
+**成果物**:
+- prompts/setup-init.md（修正）
+- docs/cycles/v1.2.3/plans/unit4_migration_confirm_plan.md
+**変更点**:
+- セクション7.2に「削除確認必須」の注意追加
+- .gitkeep を除外したフィルタリング追加
+- 3つの選択肢（削除同期/削除なし同期/キャンセル）を提供
