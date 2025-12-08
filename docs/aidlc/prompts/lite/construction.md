@@ -7,7 +7,7 @@
 
 Full版の内容を理解した上で、以下の変更点を適用してください。
 
-**注意**: Lite版・Full版でファイルパスは同じです。最初に `docs/cycles/{{CYCLE}}/construction/progress.md` を読んでください。
+**注意**: 全てのパスはプロジェクトルートからの絶対パスです。
 - プロンプト: `docs/aidlc/prompts/`
 - テンプレート: `docs/aidlc/templates/`
 - サイクル成果物: `docs/cycles/{{CYCLE}}/`

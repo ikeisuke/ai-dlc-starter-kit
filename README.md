@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.2.3-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -440,6 +440,34 @@ v1.2.2 はファイル構成の整理とプロンプト改善のメンテナン�
 
 ### 5. 既存プロジェクトの移行
 v1.2.1 以前を使用中のプロジェクトは、setup-init.md を実行すると自動で移行されます。
+
+## 🔧 v1.2.3 の改善点
+
+v1.2.3 は運用中に発見された問題点を修正するパッチリリースです。
+
+### 1. Lite版パス解決安定化
+- Lite版プロンプトでファイルパスをより明示的に指定
+- 相対パスの基準ディレクトリを明確化
+
+### 2. フェーズ遷移ガードレール強化
+- 各プロンプトに「このフェーズでは実装しない」等のガードレール追加
+- フェーズごとの許可アクションを明確化
+
+### 3. starter_kit_versionフィールド追加
+- aidlc.toml テンプレートに `starter_kit_version` フィールドを追加
+- setup-init.md でフィールドを自動生成
+
+### 4. 移行時ファイル削除確認追加
+- アップグレード時にrsyncで削除されるファイル一覧をユーザーに表示
+- 削除前に必ずユーザー確認を要求
+
+### 5. 日時記録必須ルール化
+- プロンプトに「日時を記録する際は必ず `date` コマンドで現在時刻を取得すること」を明記
+- セッション開始時の日時使い回しを防止
+
+### 6. Inception Phaseステップ6削除
+- v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
+- Construction Phaseが自身で作成する責務に集中
 
 ## 🔗 関連リンク
 
