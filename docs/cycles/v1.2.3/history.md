@@ -37,3 +37,13 @@ v1.2.3
 **備考**: 6項目のバグ修正・改善をUnit定義。バックログ整理（完了済み2項目をbacklog-completed.mdに移動）
 
 ---
+
+---
+## 2025-12-08 19:52:23 JST
+- **フェーズ**: Construction Phase
+- **実行内容**: Unit 1: Lite版パス解決安定化 完了
+- **成果物**:
+  - docs/aidlc/prompts/lite/inception.md（修正）
+  - docs/aidlc/prompts/lite/construction.md（修正）
+  - docs/aidlc/prompts/lite/operations.md（修正）
+- **備考**: Lite版・Full版でファイルパスが同じことを明記、最初にprogress.mdを読む指示を追加
