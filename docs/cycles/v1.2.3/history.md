@@ -64,3 +64,18 @@ v1.2.3
 - prompts/package/prompts/inception.md（修正）
 - prompts/package/prompts/construction.md（修正）
 **備考**: バックログ気づき「Unit開始前のバックログ確認がステップ化されていない」を対応、「コンテキストリセットのタイミング見直し」は次サイクルに先送り
+
+---
+
+## 2025-12-08 22:15:24 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 3 starter_kit_versionフィールド追加 完了
+**成果物**:
+- prompts/setup-init.md（3箇所修正）
+  - セクション3.3: 移行時のフィールド追加（コメント形式→フィールド形式）
+  - セクション6.2: テンプレート修正（コメント形式→フィールド形式）
+  - セクション6.3: アップグレード時のバージョン更新処理追加
+- docs/cycles/v1.2.3/plans/unit3_version_field_plan.md
+
+**備考**: aidlc.tomlのstarter_kit_versionをルートレベルに配置（grepで検索しやすい形式）

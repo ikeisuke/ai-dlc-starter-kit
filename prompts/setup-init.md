@@ -82,8 +82,8 @@ fi
 移行後、`docs/aidlc.toml` に `starter_kit_version` フィールドを追加（存在しない場合）:
 
 ```toml
-# ファイル先頭のコメントに追記
-# スターターキットバージョン: [version.txt の内容]
+# ファイル先頭に追記
+starter_kit_version = "[version.txt の内容]"
 ```
 
 ---
@@ -177,7 +177,8 @@ mkdir -p docs/cycles
 ```toml
 # AI-DLC プロジェクト設定
 # 生成日: [現在日時]
-# スターターキットバージョン: [version.txt の内容]
+
+starter_kit_version = "[version.txt の内容]"
 
 [project]
 name = "[プロジェクト名]"
@@ -215,6 +216,15 @@ language = "日本語"
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
+```
+
+### 6.3 starter_kit_versionの更新【アップグレードモードのみ】
+
+`docs/aidlc.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
+
+```bash
+# 既存のstarter_kit_versionを更新
+sed -i '' 's/^starter_kit_version = ".*"/starter_kit_version = "[新バージョン]"/' docs/aidlc.toml
 ```
 
 ---
