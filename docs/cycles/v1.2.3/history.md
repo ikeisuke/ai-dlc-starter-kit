@@ -94,3 +94,26 @@ v1.2.3
 - セクション7.2に「削除確認必須」の注意追加
 - .gitkeep を除外したフィルタリング追加
 - 3つの選択肢（削除同期/削除なし同期/キャンセル）を提供
+
+---
+
+## 2025-12-09 01:30:30 JST
+
+### フェーズ
+Construction Phase
+
+### 実行内容
+Unit 5: 日時記録必須ルール化 完了
+
+### 成果物
+- docs/cycles/v1.2.3/plans/unit5_timestamp_plan.md（計画）
+- docs/cycles/v1.2.3/construction/units/unit5_timestamp_implementation.md（実装記録）
+- docs/aidlc/prompts/inception.md（修正）
+- docs/aidlc/prompts/construction.md（修正）
+- docs/aidlc/prompts/operations.md（修正）
+- prompts/package/prompts/inception.md（修正）
+- prompts/package/prompts/construction.md（修正）
+- prompts/package/prompts/operations.md（修正）
+
+### 備考
+6つのプロンプトファイルの「プロンプト履歴管理」セクションを修正し、日時取得を「推奨」から「必須」に変更

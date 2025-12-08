@@ -58,7 +58,13 @@ Inception Phaseで決定
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。日時取得の推奨方法:
+- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。
+
+  **日時取得の必須ルール**:
+  - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
+  - セッション開始時に取得した日時を使い回さないこと
+  - 複数の記録を行う場合、それぞれで `date` を実行すること
+
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
   cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
