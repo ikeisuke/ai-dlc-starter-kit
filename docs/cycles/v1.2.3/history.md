@@ -47,3 +47,20 @@ v1.2.3
   - docs/aidlc/prompts/lite/construction.md（修正）
   - docs/aidlc/prompts/lite/operations.md（修正）
 - **備考**: Lite版・Full版でファイルパスが同じことを明記、最初にprogress.mdを読む指示を追加
+---
+
+## 2025-12-08 21:50:00 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 2 フェーズ遷移ガードレール強化 完了
+**成果物**:
+- docs/cycles/v1.2.3/plans/unit2_phase_guardrail_plan.md
+- docs/cycles/v1.2.3/design-artifacts/domain-models/unit2_phase_guardrail_domain_model.md
+- docs/cycles/v1.2.3/design-artifacts/logical-designs/unit2_phase_guardrail_logical_design.md
+- docs/cycles/v1.2.3/construction/units/unit2_phase_guardrail_implementation.md
+- prompts/setup-cycle.md（修正）
+- docs/aidlc/prompts/inception.md（修正）
+- docs/aidlc/prompts/construction.md（修正）
+- prompts/package/prompts/inception.md（修正）
+- prompts/package/prompts/construction.md（修正）
+**備考**: バックログ気づき「Unit開始前のバックログ確認がステップ化されていない」を対応、「コンテキストリセットのタイミング見直し」は次サイクルに先送り

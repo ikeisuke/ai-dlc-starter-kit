@@ -100,6 +100,21 @@ Inception Phaseで決定
   ---
   ```
 
+### フェーズの責務【重要】
+
+**このフェーズで行うこと**:
+- 要件の明確化（Intent作成）
+- ユーザーストーリー作成
+- Unit定義
+- Construction用進捗管理ファイル作成
+
+**このフェーズで行わないこと（禁止）**:
+- 実装コードを書く
+- テストコードを書く
+- 設計ドキュメントの詳細化（Construction Phaseで実施）
+
+**承認なしにConstruction Phaseに進んではいけない**
+
 ### フェーズの責務分離
 - **Inception Phase**: 要件定義とUnit分解（このフェーズ）
 - **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
