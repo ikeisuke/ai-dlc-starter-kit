@@ -162,7 +162,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
-### 3. 進捗管理ファイル読み込み【重要】
+### 3. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
 ```
@@ -171,7 +171,14 @@ docs/cycles/{{CYCLE}}/construction/progress.md
                       ※ construction/ サブディレクトリ内
 ```
 
-**注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `construction/` ディレクトリ内のファイルを読み込んでください。
+**注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `construction/` ディレクトリ内のファイルを確認してください。
+
+- **存在する場合**: 読み込んで進捗状況を確認
+- **存在しない場合**: Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）を参照し、progress.mdを作成
+  - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
+  - 全Unitの初期状態は「未着手」
+  - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）
+  - 最終更新日時
 
 このファイルには以下が記載されている：
 - 全Unit一覧
