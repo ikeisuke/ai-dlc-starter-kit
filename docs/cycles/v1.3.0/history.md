@@ -45,3 +45,27 @@ docs/aidlc/prompts/inception.md
 - US-1とUS-8を統合し、9件のユーザーストーリー、5つのUnitに整理
 - progress.md廃止の可能性を含めた進捗管理再設計をUnit 1で実施予定
 
+---
+## 2025-12-09 21:41:14 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 1 - 進捗管理再設計
+
+**実行内容**:
+- ドメインモデル設計: progress.mdの課題分析、方針決定
+- 論理設計: 具体的な実装設計
+- 実装: プロンプト・テンプレート修正、既存Unit定義ファイルへの状態セクション追加
+
+**成果物**:
+- docs/cycles/v1.3.0/design-artifacts/domain-models/unit1_progress_management_redesign_domain_model.md
+- docs/cycles/v1.3.0/design-artifacts/logical-designs/unit1_progress_management_redesign_logical_design.md
+- docs/cycles/v1.3.0/construction/units/unit1_progress_management_redesign_implementation.md
+
+**変更ファイル**:
+- docs/aidlc/templates/unit_definition_template.md
+- docs/aidlc/prompts/inception.md
+- docs/aidlc/prompts/construction.md
+- docs/cycles/v1.3.0/story-artifacts/units/*.md (5ファイル)
+
+**備考**:
+Construction Phaseのprogress.mdを廃止し、Unit定義ファイルに「実装状態」セクションを追加する方式に変更。後方互換性として既存progress.mdからの状態移行にも対応。
