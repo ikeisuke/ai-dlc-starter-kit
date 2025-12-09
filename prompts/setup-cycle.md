@@ -147,6 +147,9 @@ git commit -m "feat: サイクル [バージョン] 開始"
 - docs/cycles/[バージョン]/backlog.md
 - docs/cycles/[バージョン]/（各種ディレクトリ）
 
+**重要**: Inception Phase で計画を立ててから実装してください。
+セットアップ完了後すぐに実装コードを書き始めないでください。
+
 ---
 
 ## 次のステップ: Inception Phase の開始

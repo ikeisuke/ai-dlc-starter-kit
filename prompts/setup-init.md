@@ -82,8 +82,8 @@ fi
 移行後、`docs/aidlc.toml` に `starter_kit_version` フィールドを追加（存在しない場合）:
 
 ```toml
-# ファイル先頭のコメントに追記
-# スターターキットバージョン: [version.txt の内容]
+# ファイル先頭に追記
+starter_kit_version = "[version.txt の内容]"
 ```
 
 ---
@@ -177,7 +177,8 @@ mkdir -p docs/cycles
 ```toml
 # AI-DLC プロジェクト設定
 # 生成日: [現在日時]
-# スターターキットバージョン: [version.txt の内容]
+
+starter_kit_version = "[version.txt の内容]"
 
 [project]
 name = "[プロジェクト名]"
@@ -217,6 +218,15 @@ language = "日本語"
 # 必要に応じて追記してください
 ```
 
+### 6.3 starter_kit_versionの更新【アップグレードモードのみ】
+
+`docs/aidlc.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
+
+```bash
+# 既存のstarter_kit_versionを更新
+sed -i '' 's/^starter_kit_version = ".*"/starter_kit_version = "[新バージョン]"/' docs/aidlc.toml
+```
+
 ---
 
 ## 7. 共通ファイルの配置
@@ -228,9 +238,18 @@ mkdir -p docs/aidlc/prompts
 mkdir -p docs/aidlc/templates
 ```
 
-### 7.2 パッケージファイルの同期
+### 7.2 パッケージファイルの同期【重要: 削除確認必須】
 
 スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` に同期。
+
+**移行モード・アップグレードモード共通**:
+rsync実行前に**必ず**削除対象ファイルを確認し、ユーザーの承認を得てください。
+
+**手順**:
+1. ドライランで削除対象を確認
+2. `.gitkeep` 以外の削除対象があればユーザーに表示
+3. ユーザー承認後に実際の同期を実行
+4. 承認が得られない場合は `--delete` オプションなしで同期
 
 **重要**:
 - rsync で完全同期（差分のみ更新、不要ファイル削除）
@@ -243,22 +262,37 @@ mkdir -p docs/aidlc/templates
 2. 削除されるファイルがあればユーザーに確認
 3. 承認後に実行
 
+**削除対象の確認**:
 ```bash
-# 1. ドライランで削除対象を確認
+# 削除対象を抽出（.gitkeep を除く）
 rsync -avn --checksum --delete \
   [スターターキットパス]/prompts/package/prompts/ \
-  docs/aidlc/prompts/ 2>&1 | grep "^deleting"
+  docs/aidlc/prompts/ 2>&1 | grep "^deleting" | grep -v ".gitkeep"
 ```
 
-**削除対象がある場合**: 以下を表示してユーザーに確認
+**削除対象がある場合（.gitkeep以外）**:
 ```
-以下のファイルが削除されます：
+警告: 以下のファイルが削除されます：
+
 [削除対象のファイル一覧]
 
-これらのファイルを削除してよろしいですか？
+これらはスターターキットに存在しないファイルです。
+プロジェクト固有のカスタマイズが含まれている可能性があります。
+
+選択してください:
+1. 削除して同期する（スターターキットと完全同期）
+2. 削除せずに同期する（--deleteオプションなし）
+3. 同期をキャンセルする
+
+どれを選択しますか？
 ```
 
-**承認後に実行**:
+**選択に応じた処理**:
+- 1: `rsync -av --checksum --delete ...` を実行
+- 2: `rsync -av --checksum ...` を実行（--deleteなし）
+- 3: 同期をスキップし、手動対応を案内
+
+**削除対象がない場合（または.gitkeepのみ）**:
 ```bash
 # 2. 実際の同期を実行
 rsync -av --checksum --delete \
