@@ -248,16 +248,6 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
 - 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/<unit_name>.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
-- **実装状態セクション**: 各Unit定義ファイルの末尾に以下のセクションを含める（テンプレートに含まれている）
-  ```markdown
-  ---
-  ## 実装状態
-
-  - **状態**: 未着手
-  - **開始日**: -
-  - **完了日**: -
-  - **担当**: -
-  ```
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: PRFAQ作成

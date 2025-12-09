@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.2.3-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -468,6 +468,27 @@ v1.2.3 は運用中に発見された問題点を修正するパッチリリー�
 ### 6. Inception Phaseステップ6削除
 - v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
 - Construction Phaseが自身で作成する責務に集中
+
+## 🔧 v1.3.0 の改善点
+
+v1.3.0 は運用効率化・安定性向上のためのリリースです。
+
+### 1. 進捗管理再設計
+- progress.mdを廃止し、Unit定義ファイルに実装状態を追加
+- 複数人開発時のコンフリクト問題を解消
+- Git状態や既存ファイルから進捗を自動検出する方式に変更
+
+### 2. バージョン管理改善
+- Operations Phaseでのstarter_kit_version更新手順を改善
+- 初回セットアップ時にプロジェクトの既存バージョン（package.json等）を調査するステップを追加
+
+### 3. ワークフロー改善
+- PRマージ後のmainブランチ移動・pull手順をoperations.mdに追加
+- サイクル完了後のブランチ整理手順を明確化
+
+### 4. バックログ構造改善
+- 「最終更新」セクションを廃止し、追記しやすい構造に変更
+- heredocで追記しても構造が崩れない形式を採用
 
 ## 🔗 関連リンク
 
