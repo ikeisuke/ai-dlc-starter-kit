@@ -113,3 +113,24 @@ Construction Phaseのprogress.mdを廃止し、Unit定義ファイルに「実�
 - Unit 4 の目的「Unit定義ファイルのパスを予測せずに正確に特定できる仕組み」は、Unit 1 の完了（progress.md 廃止、Unit定義ファイルに実装状態を追加）により既に達成
 - ls コマンドで Unit 定義ファイル一覧を取得し、各ファイルの「実装状態」セクションを確認するフローでは、ファイル名を予測する必要がない
 - よって対応不要として完了扱い
+---
+## 2025-12-10 01:59:51 JST
+
+**フェーズ**: Construction Phase
+**Unit**: Unit 5 - バックログ構造改善
+**実行内容**: バックログファイルの構造を改善し、heredocで追記しても構造が崩れない形式に変更
+
+**成果物**:
+- docs/cycles/backlog.md（「最終更新」セクション削除、「参照」を先頭に移動、構造整理）
+- docs/cycles/backlog-completed.md（「最終更新」セクション削除、重複セクション解消）
+- docs/aidlc/templates/backlog_template.md（追記しやすい構造に改善）
+- docs/aidlc/templates/backlog_completed_template.md（追記しやすい構造に改善）
+- docs/aidlc/templates/cycle_backlog_template.md（「最終更新」セクション削除）
+- prompts/package/templates/backlog_template.md（追記しやすい構造に改善）
+- prompts/package/templates/backlog_completed_template.md（追記しやすい構造に改善）
+- prompts/package/templates/cycle_backlog_template.md（「最終更新」セクション削除）
+- docs/cycles/v1.3.0/plans/unit5_backlog_structure_plan.md（計画ファイル）
+
+**備考**:
+- 「最終更新」セクションはGit履歴で追跡可能なため廃止
+- 他ファイルからの「最終更新」セクション廃止は別のバックログ項目として記録済み
