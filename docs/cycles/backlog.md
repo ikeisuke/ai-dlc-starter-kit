@@ -145,6 +145,6 @@
 - **概要**: パッケージやアプリのリポジトリでは、Operations Phaseで対象バージョンに更新されているか確認すべき
 - **詳細**:
   - package.json、pyproject.toml、Cargo.toml、Info.plist等のバージョンがサイクルバージョンと一致しているか確認
-  - 具体的な確認手順はリポジトリごとに異なるため、rules.mdで定義する
-  - operations.mdのデプロイ準備ステップに確認項目として追加
+  - 具体的な確認手順はリポジトリごとに異なるため、`docs/cycles/operations.md`（運用引き継ぎ情報）で定義する
+  - プロンプト側（prompts配下のoperations.md）のデプロイ準備ステップに確認項目として追加
 - **優先度**: 中
