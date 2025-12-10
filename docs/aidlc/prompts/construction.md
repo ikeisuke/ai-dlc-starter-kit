@@ -162,31 +162,32 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
-### 3. 進捗管理ファイル確認【重要】
+### 3. 進捗状況確認【重要】
 
-**progress.mdのパス（正確に）**:
+**Unit定義ファイルから進捗を確認**:
+
+Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）内の各ファイルに「実装状態」セクションが含まれています。
+
+```bash
+ls docs/cycles/{{CYCLE}}/story-artifacts/units/
 ```
-docs/cycles/{{CYCLE}}/construction/progress.md
-                      ^^^^^^^^^^^^
-                      ※ construction/ サブディレクトリ内
+
+で全Unit定義ファイルを列挙し、各ファイルの「実装状態」セクションを確認：
+
+```markdown
+## 実装状態
+
+- **状態**: 未着手 | 進行中 | 完了
+- **開始日**: YYYY-MM-DD または -
+- **完了日**: YYYY-MM-DD または -
+- **担当**: @username または -
 ```
 
-**注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `construction/` ディレクトリ内のファイルを確認してください。
-
-- **存在する場合**: 読み込んで進捗状況を確認
-- **存在しない場合**: Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）を参照し、progress.mdを作成
-  - Unit一覧（名前、依存関係、優先度、見積もり）を表形式で記録
-  - 全Unitの初期状態は「未着手」
-  - 次回実行可能なUnit候補（依存関係がないまたは依存Unitが完了済みのUnit）
-  - 最終更新日時
-
-このファイルには以下が記載されている：
-- 全Unit一覧
-- 依存関係
-- 状態（未着手/進行中/完了）
-- 実行可能Unit
-
-**このファイルだけで進捗状況を完全に把握できる**（個別のUnit定義や実装記録を読む必要なし）
+**後方互換性**:
+- 「実装状態」セクションがないファイルは、まず `docs/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
+- **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
+- **progress.mdが存在しない場合**: 「未着手」として扱い、Unit定義ファイルに「実装状態」セクションを追加
+- テンプレート: `docs/aidlc/templates/unit_definition_template.md` の末尾を参照
 
 ### 3.5 バックログ確認
 
@@ -194,15 +195,19 @@ docs/cycles/{{CYCLE}}/construction/progress.md
 
 Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
 
-### 4. 対象Unit決定（progress.mdの情報に基づく）
+### 4. 対象Unit決定（Unit定義ファイルの実装状態に基づく）
 
-progress.mdに記載されている「実行可能なUnit」セクションを確認：
+ステップ3で確認した各Unit定義ファイルの「実装状態」セクションから:
 
 - **進行中のUnitがある場合**: そのUnitを継続（優先）
-- **進行中のUnitがない場合**: progress.mdの「次回実行可能なUnit候補」から選択
-  1. 実行可能Unitが0個: 「全Unit完了」と判断
-  2. 実行可能Unitが1個: 自動的にそのUnitを選択
-  3. 実行可能Unitが複数: ユーザーに選択肢を提示（progress.mdに記載された優先度と見積もりを参照）
+- **進行中のUnitがない場合**: 以下の条件で実行可能Unitを判定
+  - 状態が「未着手」
+  - 依存Unitが全て「完了」（依存関係は各Unit定義ファイルの「依存する Unit」セクションを参照）
+
+判定結果:
+1. 実行可能Unitが0個: 「全Unit完了」と判断
+2. 実行可能Unitが1個: 自動的にそのUnitを選択
+3. 実行可能Unitが複数: ユーザーに選択肢を提示（各Unit定義ファイルの優先度と見積もりを参照）
 
 **Unit定義ファイルの読み込み**: 対象Unitが決まったら、Unit定義ファイルを読み込む
 - パス: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
@@ -276,33 +281,29 @@ BDD/TDDに従ってテストコードを作成
 - ビルド成功
 - テストパス
 - 実装記録に「完了」明記
-- **progress.md更新**
+- **Unit定義ファイルの「実装状態」を「完了」に更新**
 
 ---
 
 ## Unit完了時の必須作業【重要】
 
-### 1. progress.mdを更新
-完了したUnitの状態を「完了」に変更し、完了日を記録
+### 1. Unit定義ファイルの「実装状態」を更新
+完了したUnitの定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`）の「実装状態」セクションを更新:
+- 状態: 進行中 → 完了
+- 完了日: 現在日付（YYYY-MM-DD形式）
 
-### 2. 実行可能Unitを再計算
-依存関係に基づいて次回実行可能なUnit候補を更新
-
-### 3. 最終更新日時を記録
-progress.mdの最終更新セクションを更新
-
-### 4. 履歴記録
+### 2. 履歴記録
 `docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 5. Gitコミット
-各Unitで作成・変更したすべてのファイル（**progress.mdとhistory.mdを含む**）をコミット
+### 3. Gitコミット
+各Unitで作成・変更したすべてのファイル（**Unit定義ファイルとhistory.mdを含む**）をコミット
 
 コミットメッセージ例:
 ```
 feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
-### 6. コンテキストリセット【必須】
+### 4. コンテキストリセット【必須】
 
 Unit [名前] が完了しました。以下のメッセージをユーザーに提示してください：
 
@@ -372,7 +373,7 @@ docs/aidlc/prompts/operations.md
 
 ### 1. Inceptionに戻る必要がある場合（Unit追加・拡張）
 
-- 現在のprogress.mdを確認
+- 現在のUnit定義ファイルの状態を確認
 - `docs/aidlc/prompts/inception.md` を読み込み
 - Inception Phaseの「このフェーズに戻る場合」セクションの手順に従う
 
@@ -380,11 +381,11 @@ docs/aidlc/prompts/operations.md
 
 **詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
 
-- progress.mdを読み込み、修正対象Unitを「進行中」に変更
+- 修正対象のUnit定義ファイルを読み込み、「実装状態」を「進行中」に変更
 - バグ種類に応じて修正:
   - **設計バグ**: ドメインモデル/論理設計を修正 → 設計レビュー → 実装修正
   - **実装バグ**: コードを修正 → テスト追加
 - ビルド・テスト実行で修正を確認
-- progress.mdを更新（Unitを「完了」に戻す）
+- Unit定義ファイルの「実装状態」を「完了」に戻す
 - 履歴記録とコミット
 - Operations Phaseに戻る: `docs/aidlc/prompts/operations.md` を読み込み
