@@ -269,6 +269,38 @@ Inception Phase を継続します...
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
+### 2.5. Dependabot PR確認
+
+GitHub CLIでDependabot PRの有無を確認：
+
+```bash
+# GitHub CLIの利用可否確認と Dependabot PR一覧取得
+if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+    gh pr list --label "dependencies" --state open
+else
+    echo "SKIP: GitHub CLI not available or not authenticated"
+fi
+```
+
+**判定**:
+- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **PRが0件**: 「オープンなDependabot PRはありません。」と表示し、次のステップへ進行
+- **PRが1件以上**: 以下の対応確認を実施
+
+**対応確認**（PRが存在する場合）:
+```
+以下のDependabot PRがあります：
+
+[PR一覧表示]
+
+これらのPRを今回のサイクルで対応しますか？
+1. はい - Unit定義に追加する
+2. いいえ - 今回は対応しない（後で個別に対応）
+```
+
+- **1を選択**: ユーザーストーリーとUnit定義に「Dependabot PR対応」を追加することを案内
+- **2を選択**: 次のステップへ進行
+
 ### 3. バックログ確認
 
 #### 3-1. 共通バックログ
