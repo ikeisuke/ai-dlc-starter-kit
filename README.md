@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -468,6 +468,23 @@ v1.2.3 は運用中に発見された問題点を修正するパッチリリー�
 ### 6. Inception Phaseステップ6削除
 - v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
 - Construction Phaseが自身で作成する責務に集中
+
+## 🔧 v1.3.1 の改善点
+
+v1.3.1 は Inception Phase 効率化のためのパッチリリースです。
+
+### 1. バックログ対応済みチェック機能
+- Inception Phase でバックログ確認時に、過去サイクルで対応済みかどうかを自動チェック
+- history.md や backlog-completed.md を参照して重複作業を防止
+
+### 2. セットアップスキップ機能
+- AI-DLC ツールキットのアップグレードが不要な場合、セットアップを経由せず直接 Inception Phase を開始可能
+- Inception Phase でサイクルディレクトリを自動作成
+- 最新バージョンチェックを行い、必要に応じてセットアップを案内
+
+### 3. Dependabot PR 確認機能
+- Inception Phase 開始時に Dependabot PR の有無を確認
+- セキュリティ更新を適切なタイミングで検討可能
 
 ## 🔧 v1.3.0 の改善点
 
