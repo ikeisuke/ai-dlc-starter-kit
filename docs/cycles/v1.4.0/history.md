@@ -35,3 +35,19 @@ v1.4.0
 - 中優先度タスク「ホームディレクトリ設定」を延期タスクに移動
 - 中優先度タスク「ハッシュ値判定」を対応済みに移動（rsync方式で解消）
 
+---
+
+## 2025-12-13 23:50:29 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 1 サイクルバージョン提案改善 完了
+**成果物**:
+- prompts/setup-init.md（セクション8削除、責務分離）
+- prompts/setup-cycle.md（バージョン提案ロジック追加）
+- docs/cycles/v1.4.0/design-artifacts/domain-models/unit1_domain_model.md
+- docs/cycles/v1.4.0/design-artifacts/logical-designs/unit1_logical_design.md
+- docs/cycles/v1.4.0/construction/units/unit1_implementation.md
+- docs/cycles/v1.4.0/plans/unit1_version_proposal_plan.md
+
+**備考**: 当初スコープ（setup-cycle.mdのみ）を拡大し、setup-init.mdからサイクル開始処理を分離するリファクタリングも実施。
+
