@@ -141,7 +141,35 @@ Inception Phaseで決定
 
 ---
 
-## 最初に必ず実行すること（5ステップ）
+## 最初に必ず実行すること（6ステップ）
+
+### 0. ブランチ確認【推奨】
+
+現在のブランチを確認し、サイクル用ブランチでの作業を推奨：
+
+```bash
+CURRENT_BRANCH=$(git branch --show-current)
+echo "現在のブランチ: ${CURRENT_BRANCH}"
+```
+
+**判定**:
+- **main または master の場合**: サイクル用ブランチの作成を提案
+  ```
+  現在 main/master ブランチで作業しています。
+  サイクル用ブランチで作業することを推奨します。
+
+  1. 新しいブランチを作成して切り替える: git checkout -b cycle/{{CYCLE}}
+  2. 現在のブランチで続行する（非推奨）
+
+  どちらを選択しますか？
+  ```
+  - **1を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
+  - **2を選択**: 警告を表示して続行
+    ```
+    警告: main/master ブランチで直接作業しています。
+    変更は直接 main/master に反映されます。
+    ```
+- **それ以外のブランチ**: 次のステップへ進行
 
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
@@ -299,6 +327,38 @@ fi
 ```
 
 - **1を選択**: ユーザーストーリーとUnit定義に「Dependabot PR対応」を追加することを案内
+- **2を選択**: 次のステップへ進行
+
+### 2.7. GitHub Issue確認
+
+GitHub CLIでオープンなIssueの有無を確認：
+
+```bash
+# GitHub CLIの利用可否確認と Issue一覧取得
+if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+    gh issue list --state open --limit 10
+else
+    echo "SKIP: GitHub CLI not available or not authenticated"
+fi
+```
+
+**判定**:
+- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **Issueが0件**: 「オープンなIssueはありません。」と表示し、次のステップへ進行
+- **Issueが1件以上**: 以下の対応確認を実施
+
+**対応確認**（Issueが存在する場合）:
+```
+以下のオープンなIssueがあります：
+
+[Issue一覧表示]
+
+これらのIssueを今回のサイクルで対応しますか？
+1. はい - 選択したIssueをユーザーストーリーとUnit定義に追加する
+2. いいえ - 今回は対応しない
+```
+
+- **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
 ### 3. バックログ確認

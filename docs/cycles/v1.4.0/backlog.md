@@ -51,3 +51,12 @@ Inception Phase等で共通バックログ（`docs/cycles/backlog.md`）から�
   - Construction Phase プロンプトに「コンテキスト量の目安」を追加
   - 一定の作業量（例: ステップ完了時、設計レビュー完了時など）でリセット提案を促すルールを追加
 - **優先度**: 中
+
+### [2025-12-14] 気づき: Setup Phase の新設
+- **関連**: Unit 2（GitHub Issue確認とセットアップ統合）
+- **詳細**: 現在 setup-cycle.md で行っている処理（ブランチ確認、サイクルディレクトリ作成、バージョン提案など）は、Inception Phase の前処理として位置づけが曖昧。Inception/Construction/Operations の3フェーズに加えて、Setup Phase を新設し、セットアップ処理を独立させるのが構造的に正しい。
+- **提案**: 
+  - Setup Phase を `prompts/package/prompts/setup.md` として新設
+  - setup-cycle.md の内容を Setup Phase に移行
+  - フロー: Setup → Inception → Construction → Operations
+- **優先度**: 中（構造改善、今すぐ必要ではない）
