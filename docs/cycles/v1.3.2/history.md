@@ -34,3 +34,18 @@ v1.3.2
 5. アップグレード時の変更要約表示
 
 ---
+
+## 2025-12-13 15:22:04 JST
+
+**フェーズ**: Construction Phase (Lite)
+**実行内容**: Unit 1 完了 - バージョン同期の修正
+**成果物**:
+- docs/cycles/operations.md（セクション2の手順説明を修正）
+- docs/cycles/v1.3.2/plans/unit1_plan.md
+- docs/cycles/v1.3.2/story-artifacts/units/units.md（実装状態を追加）
+
+**変更内容**:
+- 「セクション4-6はスキップ」→「セクション5-6.2はスキップ、セクション6.3を実行」に修正
+- これによりアップグレード時にstarter_kit_versionが正しく更新されるようになった
+
+---

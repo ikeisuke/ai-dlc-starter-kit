@@ -122,8 +122,10 @@ echo "X.X.X" > version.txt
 `prompts/setup-init.md` をアップグレードモードで実行し、`docs/aidlc/` を最新化:
 
 ```bash
-# setup-init.md を読み込み、セクション7（共通ファイルの配置）を実行
-# ※ アップグレードモードではセクション4-6（プロジェクト情報収集・aidlc.toml生成）はスキップ
+# setup-init.md を読み込み、以下を実行:
+# - セクション6.3（starter_kit_versionの更新）
+# - セクション7（共通ファイルの配置）
+# ※ セクション5-6.2はアップグレードモードではスキップ
 ```
 
 **実行内容**（setup-init.md セクション7.2）:
