@@ -63,3 +63,19 @@ v1.3.2
 - Unit 4: `prompts/package/templates/*_progress_template.md` から最終更新セクションを削除
 
 **備考**: 3つのUnitをまとめて実装
+---
+## 2025-12-13 17:24:41 JST
+
+**フェーズ**: Construction Phase (Lite)
+
+**実行内容**: Unit 5 実装完了 - アップグレード時の変更要約表示
+
+**成果物**:
+- prompts/setup-init.md（セクション7.2.1.1と7.2.2.1を追加）
+- docs/cycles/v1.3.2/plans/unit5_plan.md
+- docs/cycles/v1.3.2/story-artifacts/units/units.md（実装状態を更新）
+
+**変更内容**:
+- rsync実行後に更新されたファイル一覧を表示する手順を追加
+- プロンプトとテンプレートそれぞれに変更要約表示セクションを追加
+

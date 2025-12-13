@@ -331,6 +331,29 @@ rsync -av --checksum --delete \
 - inception.md, construction.md, operations.md
 - lite/ ディレクトリ（簡易版プロンプト）
 
+#### 7.2.1.1 プロンプト変更要約の表示【アップグレードモードのみ】
+
+rsync実行後、更新されたファイルを要約表示：
+
+```bash
+# rsync出力から更新されたファイルを抽出（>f で始まる行が更新対象）
+UPDATED_PROMPTS=$(rsync -avn --checksum \
+  [スターターキットパス]/prompts/package/prompts/ \
+  docs/aidlc/prompts/ 2>&1 | grep "^>f" | awk '{print $2}')
+
+if [ -n "$UPDATED_PROMPTS" ]; then
+  echo "更新されたプロンプト:"
+  echo "$UPDATED_PROMPTS" | while read f; do echo "  - $f"; done
+fi
+```
+
+**表示例**:
+```
+更新されたプロンプト:
+  - construction.md
+  - lite/operations.md
+```
+
 #### 7.2.2 ドキュメントテンプレートの同期（rsync）
 
 同様にドライラン → 確認 → 実行の手順で同期：
@@ -348,6 +371,29 @@ rsync -av --checksum --delete \
 ```
 
 テンプレートも同様に完全同期します。
+
+#### 7.2.2.1 テンプレート変更要約の表示【アップグレードモードのみ】
+
+rsync実行後、更新されたテンプレートを要約表示：
+
+```bash
+# rsync出力から更新されたファイルを抽出
+UPDATED_TEMPLATES=$(rsync -avn --checksum \
+  [スターターキットパス]/prompts/package/templates/ \
+  docs/aidlc/templates/ 2>&1 | grep "^>f" | awk '{print $2}')
+
+if [ -n "$UPDATED_TEMPLATES" ]; then
+  echo "更新されたテンプレート:"
+  echo "$UPDATED_TEMPLATES" | while read f; do echo "  - $f"; done
+fi
+```
+
+**表示例**:
+```
+更新されたテンプレート:
+  - unit_definition_template.md
+  - implementation_record_template.md
+```
 
 #### 7.2.3 プロジェクト固有ファイル（初回のみコピー）
 
