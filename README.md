@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -468,6 +468,27 @@ v1.2.3 は運用中に発見された問題点を修正するパッチリリー�
 ### 6. Inception Phaseステップ6削除
 - v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
 - Construction Phaseが自身で作成する責務に集中
+
+## 🔧 v1.3.2 の改善点
+
+v1.3.2 はドキュメント改善とアップグレード体験向上のためのパッチリリースです。
+
+### 1. バージョン同期の修正
+- Operations Phase の setup-init 実行時に `aidlc.toml` の `starter_kit_version` が適切に更新されるよう修正
+
+### 2. コミットハッシュ記録の注意事項追加
+- Unit完了時のコミットハッシュ記録後に --amend や rebase すると記録が無効になる問題への注意書きを追加
+
+### 3. PRマージ後のブランチ削除ルール追加
+- `operations.md` の「PRマージ後の手順」でブランチ削除を標準手順として明記
+
+### 4. 「最終更新」セクションの廃止
+- 全ファイルから「最終更新」セクションを削除
+- Git履歴で代替可能であり、手動メンテナンスコストを削減
+
+### 5. アップグレード時の変更要約表示
+- setup-init.md に更新されるファイルの要約表示機能を追加
+- rsync 実行後に更新されたプロンプト・テンプレートを一覧表示
 
 ## 🔧 v1.3.1 の改善点
 
