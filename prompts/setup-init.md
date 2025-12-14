@@ -221,6 +221,13 @@ language = "日本語"
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
 
+[rules.worktree]
+# git worktree設定
+# enabled: true | false
+# - true: サイクル開始時にworktreeの使用を提案する
+# - false: 提案しない（デフォルト）
+enabled = false
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
@@ -279,12 +286,30 @@ EOF
 else
   echo "[rules.mcp_review] section already exists"
 fi
+
+# [rules.worktree] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.worktree\]" docs/aidlc.toml; then
+  echo "Adding [rules.worktree] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.worktree]
+# git worktree設定（v1.4.0で追加）
+# enabled: true | false
+# - true: サイクル開始時にworktreeの使用を提案する
+# - false: 提案しない（デフォルト）
+enabled = false
+EOF
+  echo "Added [rules.worktree] section"
+else
+  echo "[rules.worktree] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
 
 ```bash
 grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
+grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。

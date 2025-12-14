@@ -123,3 +123,21 @@ v1.4.0
 **備考**: 
 - aidlc.toml で MCPレビュー設定を一元管理
 - アップグレード時のマイグレーション機能を追加
+
+---
+
+## 2025-12-14 16:35:38 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 6 完了 - git worktree提案機能追加
+
+**成果物**:
+- prompts/setup-init.md（[rules.worktree]セクション追加、設定マイグレーション追加）
+- prompts/setup-cycle.md（worktree条件分岐追加）
+- docs/cycles/v1.4.0/plans/unit6_worktree_plan.md
+- docs/cycles/v1.4.0/design-artifacts/domain-models/unit6_domain_model.md
+- docs/cycles/v1.4.0/design-artifacts/logical-designs/unit6_logical_design.md
+- docs/cycles/v1.4.0/construction/units/unit6_implementation.md
+
+**備考**: デフォルト無効、aidlc.toml設定で有効化可能
+

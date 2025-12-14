@@ -121,6 +121,55 @@ git branch --show-current
 
 ### 3.2 ブランチ作成の提案
 
+`docs/aidlc.toml` の `[rules.worktree]` 設定を確認:
+
+```bash
+grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | grep -q "true" && echo "WORKTREE_ENABLED" || echo "WORKTREE_DISABLED"
+```
+
+#### worktree が有効な場合（WORKTREE_ENABLED）
+
+```
+現在のブランチ: [ブランチ名]
+
+推奨: cycle/[バージョン] ブランチで作業することを推奨します。
+
+1. git worktreeを使用して新しい作業ディレクトリを作成する
+2. 新しいブランチを作成して切り替える: git checkout -b cycle/[バージョン]
+3. 現在のブランチで続行する
+
+どれを選択しますか？
+```
+
+**1を選択した場合（worktree使用）**:
+
+```
+## git worktree の使用
+
+git worktreeを使うと、同じリポジトリの複数ブランチを別ディレクトリで同時に開けます。
+複数サイクルの並行作業に便利です。
+
+**推奨ディレクトリ構成**:
+
+~/projects/
+├── my-project/              # メインディレクトリ（mainブランチ）
+├── my-project-v1.4.0/       # worktree（cycle/v1.4.0ブランチ）
+└── my-project-v1.5.0/       # worktree（cycle/v1.5.0ブランチ）
+
+**worktree作成コマンド**:
+
+# 親ディレクトリに移動してworktreeを作成
+cd ..
+git -C [元のディレクトリ名] worktree add -b cycle/[バージョン] [元のディレクトリ名]-[バージョン]
+cd [元のディレクトリ名]-[バージョン]
+
+作成後、新しいディレクトリでセッションを開始してください。
+```
+
+worktree作成後、セクション4以降は新しいディレクトリで実行します。
+
+#### worktree が無効な場合（WORKTREE_DISABLED）- デフォルト
+
 ```
 現在のブランチ: [ブランチ名]
 
