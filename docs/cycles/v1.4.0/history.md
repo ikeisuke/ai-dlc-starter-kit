@@ -102,3 +102,24 @@ v1.4.0
 - prompts/package/prompts/construction.md（編集）
 
 **備考**: 当初4分類で設計していたが、ユーザーとの対話により3分類にシンプル化
+
+---
+
+## 2025-12-14 15:42:51 JST
+
+**フェーズ**: Construction Phase
+**実行内容**: Unit 5 AI MCPレビュー推奨 - 実装完了
+**成果物**:
+- docs/cycles/v1.4.0/design-artifacts/domain-models/unit5_domain_model.md
+- docs/cycles/v1.4.0/design-artifacts/logical-designs/unit5_logical_design.md
+- docs/cycles/v1.4.0/construction/units/unit5_implementation.md
+- docs/cycles/v1.4.0/plans/unit5_mcp_review_plan.md
+- prompts/package/prompts/inception.md（更新）
+- prompts/package/prompts/construction.md（更新）
+- prompts/package/prompts/operations.md（更新）
+- prompts/setup-init.md（更新: テンプレート + マイグレーション機能）
+- docs/aidlc.toml（更新）
+
+**備考**: 
+- aidlc.toml で MCPレビュー設定を一元管理
+- アップグレード時のマイグレーション機能を追加

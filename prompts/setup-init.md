@@ -213,6 +213,14 @@ commit_on_phase_complete = true
 [rules.documentation]
 language = "日本語"
 
+[rules.mcp_review]
+# MCPレビュー設定
+# mode: "recommend" | "required" | "disabled"
+# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
+# - required: MCP利用可能時にレビュー必須
+# - disabled: レビュー推奨を無効化
+mode = "recommend"
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
@@ -246,6 +254,40 @@ grep "^starter_kit_version" docs/aidlc.toml
 期待される出力: `starter_kit_version = "[新バージョン]"`
 
 正しく更新されていない場合は、手動で `docs/aidlc.toml` を編集してください。
+
+### 6.4 設定マイグレーション【アップグレードモードのみ】
+
+新しいバージョンで追加された設定セクションを既存の `docs/aidlc.toml` に追加します。
+
+**マイグレーション対象の確認と追加**:
+
+```bash
+# [rules.mcp_review] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  echo "Adding [rules.mcp_review] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.mcp_review]
+# MCPレビュー設定（v1.4.0で追加）
+# mode: "recommend" | "required" | "disabled"
+# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
+# - required: MCP利用可能時にレビュー必須
+# - disabled: レビュー推奨を無効化
+mode = "recommend"
+EOF
+  echo "Added [rules.mcp_review] section"
+else
+  echo "[rules.mcp_review] section already exists"
+fi
+```
+
+**マイグレーション結果の確認**:
+
+```bash
+grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
+```
+
+**注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
 
 ---
 

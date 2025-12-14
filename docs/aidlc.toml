@@ -37,6 +37,14 @@ commit_on_phase_complete = true
 [rules.documentation]
 language = "日本語"
 
+[rules.mcp_review]
+# MCPレビュー設定
+# mode: "recommend" | "required" | "disabled"
+# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
+# - required: MCP利用可能時にレビュー必須
+# - disabled: レビュー推奨を無効化
+mode = "recommend"
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
