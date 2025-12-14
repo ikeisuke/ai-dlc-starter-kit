@@ -69,3 +69,20 @@ v1.4.0
 - ブランチ確認は setup-cycle.md と inception.md の両方で実施（二重化）
 - Setup Phase 新設案をバックログに記録
 
+
+---
+## 2025-12-14 09:20:56 JST
+- **フェーズ**: Construction Phase
+- **実行内容**: Unit 3 - Operations Phase構造改善 完了
+- **成果物**:
+  - prompts/package/prompts/operations.md（ステップ構造変更、バージョン確認追加）
+  - prompts/package/templates/operations_progress_template.md（6ステップに更新）
+  - prompts/package/templates/operations_handover_template.md（新規作成）
+  - prompts/package/templates/index.md（テンプレート追加）
+  - docs/cycles/v1.4.0/design-artifacts/domain-models/unit3_domain_model.md
+  - docs/cycles/v1.4.0/design-artifacts/logical-designs/unit3_logical_design.md
+  - docs/cycles/v1.4.0/construction/units/unit3_implementation.md
+- **備考**: 
+  - ステップ5を「バックログ整理と運用計画」に変更
+  - ステップ6「リリース準備」を新設
+  - デプロイ準備時のバージョン確認機能を追加（自動更新提案方式）

@@ -203,6 +203,31 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
+
+#### バージョン確認【必須】
+
+運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
+- **設定がある場合**: 設定に従ってバージョンを確認
+- **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
+
+**確認手順**:
+1. バージョン確認対象ファイルを特定（package.json, pyproject.toml等）
+2. 現在のバージョンを確認
+3. サイクルバージョンと整合性を確認
+4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
+
+**バージョン確認コマンド例**:
+```bash
+# Node.js
+cat package.json | grep '"version"'
+
+# Python
+cat pyproject.toml | grep 'version'
+
+# Go
+cat go.mod | head -1
+```
+
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
@@ -227,12 +252,61 @@ ls docs/cycles/{{CYCLE}}/operations/
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
-### ステップ5: リリース後の運用【対話形式】
+### ステップ5: バックログ整理と運用計画【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
+
+#### 5.1 バックログ整理
+
+サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）を確認し整理:
+
+| 出自 | 状態 | 移動先 |
+|------|------|--------|
+| このサイクルで発見 | 対応済み | `docs/cycles/backlog-completed.md` |
+| このサイクルで発見 | 未対応 | `docs/cycles/backlog.md`（共通） |
+| 共通から転記 | 対応済み | `docs/cycles/backlog-completed.md`（共通から削除） |
+| 共通から転記 | 未対応 | 共通に残す（転記を取り消し） |
+
+#### 5.2 リリース後運用計画
+
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
+
+### ステップ6: リリース準備
+
+- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
+
+#### 6.1 README更新
+README.mdに今回のサイクルの変更内容を追記
+
+#### 6.2 履歴記録
+`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+
+#### 6.3 Gitコミット
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
+
+コミットメッセージ例:
+```
+chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+```
+
+#### 6.4 PR作成
+mainブランチへのPRを作成:
+```bash
+gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
+## Summary
+- [サイクルの主要な変更点]
+
+## Test plan
+- [ ] 主要機能が動作する
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ---
 
@@ -253,39 +327,16 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 ---
 
-## 完了時の必須作業【重要】
+## 完了時の確認【重要】
 
-### 1. README更新
-README.mdに今回のサイクルの変更内容を追記
+Operations Phaseの完了時には、以下を確認してください:
 
-### 2. 履歴記録
-`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+1. **ステップ6（リリース準備）が完了している**こと
+   - README更新、履歴記録、Gitコミット、PR作成がすべて完了
+   - progress.mdでステップ6が「完了」になっている
 
-### 3. バックログ整理
-サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）を整理し、共通バックログに反映（詳細は「AI-DLCサイクル完了」セクション参照）
-
-### 4. Gitコミット
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
-
-コミットメッセージ例:
-```
-chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
-```
-
-### 5. PR作成
-mainブランチへのPRを作成:
-```bash
-gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
-## Summary
-- [サイクルの主要な変更点]
-
-## Test plan
-- [ ] 主要機能が動作する
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
+2. **全ステップが完了している**こと
+   - progress.mdで全ステップ（1-6、配布スキップの場合は4除く）が「完了」
 
 ---
 
