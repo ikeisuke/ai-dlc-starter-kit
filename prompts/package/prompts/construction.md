@@ -58,33 +58,55 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。
+- **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/` ディレクトリにUnit単位でファイル分割して管理。
+
+  **ファイル命名規則**:
+  - `construction_unit{N}.md` （N = Unit番号、例: `construction_unit1.md`）
 
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
-  - 複数の記録を行う場合、それぞれで `date` を実行すること
 
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
-  ---
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/construction_unit{N}.md
   ## ${TIMESTAMP}
-  ...
+
+  - **フェーズ**: Construction Phase
+  - **実行内容**: [作業概要]
+  - **プロンプト**: [実行したプロンプトや指示]
+  - **成果物**: [作成・更新したファイル]
+  - **備考**: [特記事項]
+
+  ---
   EOF
   ```
-  記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
 - **気づき記録フロー【重要】**: Unit作業中に別Unitや新規課題に関する気づきがあった場合、以下の手順で記録する
   1. **現在の作業を中断しない**: 気づきの記録のみ行い、現在のUnit作業を継続
-  2. **サイクル固有バックログに追記**: `docs/cycles/{{CYCLE}}/backlog.md` に以下のフォーマットで追記
+  2. **共通バックログに新規ファイル作成**: `docs/cycles/backlog/{種類}-{スラッグ}.md` を作成
+
+     **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
+
+     **ファイル内容**（テンプレート: `docs/aidlc/templates/backlog_item_template.md`）:
      ```markdown
-     ### [日時] 気づき: [概要]
-     - **関連**: [既存Unit名 / 新規課題]
-     - **詳細**: [気づきの内容]
-     - **提案**: [対応案があれば記載]
+     # [タイトル]
+
+     - **発見日**: YYYY-MM-DD
+     - **発見フェーズ**: Construction
+     - **発見サイクル**: {{CYCLE}}
+     - **優先度**: [高 / 中 / 低]
+
+     ## 概要
+     [簡潔な説明]
+
+     ## 詳細
+     [詳細な説明]
+
+     ## 対応案
+     [推奨される対応方法]
      ```
   3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
@@ -126,8 +148,8 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **対応手順**:
   1. 現在の作業状態を確認（どのUnitの何ステップか）
-  2. progress.mdを更新（現在のUnitとステップを「進行中」のまま保持）
-  3. 履歴記録（history.mdに中断状態を追記）
+  2. Unit定義ファイルの「実装状態」を確認（「進行中」のまま保持）
+  3. 履歴記録（`history/construction_unit{N}.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
   ```markdown
@@ -222,7 +244,11 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/
 
 ### 3.5 バックログ確認
 
-`docs/cycles/{{CYCLE}}/backlog.md` を確認し、対象Unitに関連する気づきがあれば確認する。
+`docs/cycles/backlog/` ディレクトリを確認し、対象Unitに関連する気づきがあれば確認する。
+
+```bash
+ls docs/cycles/backlog/
+```
 
 Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
 
@@ -324,10 +350,10 @@ BDD/TDDに従ってテストコードを作成
 - 完了日: 現在日付（YYYY-MM-DD形式）
 
 ### 2. 履歴記録
-`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/construction_unit{N}.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 3. Gitコミット
-各Unitで作成・変更したすべてのファイル（**Unit定義ファイルとhistory.mdを含む**）をコミット
+各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
 ```

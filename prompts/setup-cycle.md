@@ -209,24 +209,24 @@ find docs/cycles/[バージョン] -type d -empty -exec touch {}/.gitkeep \;
 
 ---
 
-## 5. history.md の初期化
+## 5. history/ ディレクトリの初期化
 
-`docs/cycles/[バージョン]/history.md` を作成:
+`docs/cycles/[バージョン]/history/` ディレクトリを作成し、`inception.md` を配置:
+
+```bash
+mkdir -p docs/cycles/[バージョン]/history
+```
+
+`docs/cycles/[バージョン]/history/inception.md` を作成:
 
 ```markdown
-# プロンプト実行履歴
-
-## サイクル
-[バージョン]
-
----
+# Inception Phase 履歴
 
 ## [現在日時]
 
-**フェーズ**: 準備
-**実行内容**: サイクル開始
-**成果物**:
-- docs/cycles/[バージョン]/（サイクルディレクトリ）
+- **実行内容**: サイクル開始
+- **成果物**: docs/cycles/[バージョン]/（サイクルディレクトリ）
+- **備考**: -
 
 ---
 ```
@@ -238,15 +238,17 @@ date '+%Y-%m-%d %H:%M:%S %Z'
 
 ---
 
-## 6. サイクル固有バックログの作成
+## 6. 共通バックログディレクトリの確認
 
-`docs/cycles/[バージョン]/backlog.md` を作成（テンプレート: `docs/aidlc/templates/cycle_backlog_template.md`）:
+`docs/cycles/backlog/` ディレクトリが存在しなければ作成:
 
-このファイルには以下を記録します:
-- このサイクルで発見した改善点・技術的負債
-- 共通バックログから対応する項目（転記）
+```bash
+mkdir -p docs/cycles/backlog
+mkdir -p docs/cycles/backlog-completed
+```
 
-Operations Phase完了時に共通バックログへ反映されます。
+**注意**: サイクル固有バックログ（`docs/cycles/[バージョン]/backlog.md`）は廃止されました。
+気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
 ---
 
@@ -256,6 +258,8 @@ Operations Phase完了時に共通バックログへ反映されます。
 
 ```bash
 git add docs/cycles/[バージョン]/
+git add docs/cycles/backlog/
+git add docs/cycles/backlog-completed/
 git commit -m "feat: サイクル [バージョン] 開始"
 ```
 
@@ -267,9 +271,9 @@ git commit -m "feat: サイクル [バージョン] 開始"
 サイクル [バージョン] の準備が完了しました！
 
 作成されたファイル:
-- docs/cycles/[バージョン]/history.md
-- docs/cycles/[バージョン]/backlog.md
+- docs/cycles/[バージョン]/history/inception.md
 - docs/cycles/[バージョン]/（各種ディレクトリ）
+- docs/cycles/backlog/（共通バックログ、初回のみ）
 
 **重要**: Inception Phase で計画を立ててから実装してください。
 セットアップ完了後すぐに実装コードを書き始めないでください。

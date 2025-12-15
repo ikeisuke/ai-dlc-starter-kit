@@ -60,22 +60,26 @@ Inception/Construction Phaseで決定済み
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。
+- **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
-  - 複数の記録を行う場合、それぞれで `date` を実行すること
 
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
-  ---
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/operations.md
   ## ${TIMESTAMP}
-  ...
+
+  - **フェーズ**: Operations Phase
+  - **実行内容**: [作業概要]
+  - **プロンプト**: [実行したプロンプトや指示]
+  - **成果物**: [作成・更新したファイル]
+  - **備考**: [特記事項]
+
+  ---
   EOF
   ```
-  記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
@@ -103,7 +107,7 @@ Inception/Construction Phaseで決定済み
   **対応手順**:
   1. 現在の作業状態を確認（どのステップか）
   2. progress.mdを更新（現在のステップを「進行中」のまま保持）
-  3. 履歴記録（history.mdに中断状態を追記）
+  3. 履歴記録（`history/operations.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
   ```markdown
@@ -275,14 +279,23 @@ cat go.mod | head -1
 
 #### 5.1 バックログ整理
 
-サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）を確認し整理:
+共通バックログ（`docs/cycles/backlog/`）を確認し、対応済みの項目を整理:
 
-| 出自 | 状態 | 移動先 |
-|------|------|--------|
-| このサイクルで発見 | 対応済み | `docs/cycles/backlog-completed.md` |
-| このサイクルで発見 | 未対応 | `docs/cycles/backlog.md`（共通） |
-| 共通から転記 | 対応済み | `docs/cycles/backlog-completed.md`（共通から削除） |
-| 共通から転記 | 未対応 | 共通に残す（転記を取り消し） |
+```bash
+ls docs/cycles/backlog/
+```
+
+**対応済み項目の移動先**: `docs/cycles/backlog-completed/{{CYCLE}}/`
+
+```bash
+# 対応済みディレクトリを作成
+mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
+
+# 対応済みの項目を移動
+mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
+```
+
+**未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
 #### 5.2 リリース後運用計画
 
@@ -297,10 +310,10 @@ cat go.mod | head -1
 README.mdに今回のサイクルの変更内容を追記
 
 #### 6.2 履歴記録
-`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 #### 6.3 Gitコミット
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
 ```
@@ -384,16 +397,30 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、`docs/cycles/backlog.md` に記録：
+次サイクルに引き継ぐタスクがある場合、共通バックログに記録：
 
-- **ファイルが存在しない場合**: テンプレート（`docs/aidlc/templates/backlog_template.md`）から作成
-- **ファイルが存在する場合**: 追記
+**記録先**: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
-記録項目:
-- タスク内容
-- 優先度（高/中/低）
-- 理由（なぜ今回対応できなかったか）
-- 推奨対応サイクル
+**種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
+
+**ファイル内容**（テンプレート: `docs/aidlc/templates/backlog_item_template.md`）:
+```markdown
+# [タイトル]
+
+- **発見日**: YYYY-MM-DD
+- **発見フェーズ**: Operations
+- **発見サイクル**: {{CYCLE}}
+- **優先度**: [高 / 中 / 低]
+
+## 概要
+[簡潔な説明]
+
+## 詳細
+[詳細な説明、なぜ今回対応できなかったか]
+
+## 対応案
+[推奨される対応方法、推奨対応サイクル]
+```
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

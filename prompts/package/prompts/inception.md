@@ -58,22 +58,26 @@ Inception Phaseで決定
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。
+- **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/inception.md` に記録。
 
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
-  - 複数の記録を行う場合、それぞれで `date` を実行すること
 
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
-  ---
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/inception.md
   ## ${TIMESTAMP}
-  ...
+
+  - **フェーズ**: Inception Phase
+  - **実行内容**: [作業概要]
+  - **プロンプト**: [実行したプロンプトや指示]
+  - **成果物**: [作成・更新したファイル]
+  - **備考**: [特記事項]
+
+  ---
   EOF
   ```
-  記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
@@ -101,7 +105,7 @@ Inception Phaseで決定
   **対応手順**:
   1. 現在の作業状態を確認（どのステップか）
   2. progress.mdを更新（現在のステップを「進行中」のまま保持）
-  3. 履歴記録（history.mdに中断状態を追記）
+  3. 履歴記録（`history/inception.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
   ```markdown
@@ -262,29 +266,32 @@ mkdir -p docs/cycles/{{CYCLE}}/construction/units
 mkdir -p docs/cycles/{{CYCLE}}/operations
 ```
 
-**history.md 初期化**:
+**history/ ディレクトリ初期化**:
 ```bash
+mkdir -p docs/cycles/{{CYCLE}}/history
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-cat <<EOF > docs/cycles/{{CYCLE}}/history.md
-# プロンプト実行履歴
-
-## サイクル
-{{CYCLE}}
-
----
+cat <<EOF > docs/cycles/{{CYCLE}}/history/inception.md
+# Inception Phase 履歴
 
 ## ${TIMESTAMP}
 
-**フェーズ**: 準備
-**実行内容**: サイクル開始（Inception Phaseから自動作成）
-**成果物**:
-- docs/cycles/{{CYCLE}}/（サイクルディレクトリ）
+- **フェーズ**: Inception Phase
+- **実行内容**: サイクル開始（Inception Phaseから自動作成）
+- **プロンプト**: -
+- **成果物**: docs/cycles/{{CYCLE}}/（サイクルディレクトリ）
+- **備考**: -
 
 ---
 EOF
 ```
 
-**backlog.md 作成**（テンプレート: `docs/aidlc/templates/cycle_backlog_template.md` を使用）
+**共通バックログディレクトリ確認**:
+```bash
+mkdir -p docs/cycles/backlog
+mkdir -p docs/cycles/backlog-completed
+```
+
+**注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
 **Gitコミット（任意）**:
 ```
@@ -293,6 +300,8 @@ EOF
 承認された場合:
 ```bash
 git add docs/cycles/{{CYCLE}}/
+git add docs/cycles/backlog/
+git add docs/cycles/backlog-completed/
 git commit -m "feat: サイクル {{CYCLE}} 開始"
 ```
 
@@ -301,9 +310,9 @@ git commit -m "feat: サイクル {{CYCLE}} 開始"
 サイクル {{CYCLE}} の準備が完了しました！
 
 作成されたファイル:
-- docs/cycles/{{CYCLE}}/history.md
-- docs/cycles/{{CYCLE}}/backlog.md
+- docs/cycles/{{CYCLE}}/history/inception.md
 - docs/cycles/{{CYCLE}}/（各種ディレクトリ）
+- docs/cycles/backlog/（共通バックログ、初回のみ）
 
 Inception Phase を継続します...
 ```
@@ -380,38 +389,42 @@ fi
 ### 3. バックログ確認
 
 #### 3-1. 共通バックログ
-`docs/cycles/backlog.md` の存在を確認：
+`docs/cycles/backlog/` ディレクトリを確認：
 
-- **存在しない場合**: スキップ
-- **存在する場合**: 内容を確認し、ユーザーに質問
+```bash
+ls docs/cycles/backlog/ 2>/dev/null
+```
+
+- **存在しない/空の場合**: スキップ
+- **ファイルが存在する場合**: 内容を確認し、ユーザーに質問
   ```
-  前サイクルからの共通バックログがあります。確認しますか？
+  共通バックログに以下の項目があります：
+  [ファイル一覧]
+
+  これらを確認しますか？
   ```
-  「はい」の場合はバックログ内容を表示し、今回のサイクルで対応する項目を確認
+  「はい」の場合は各ファイルの内容を表示し、今回のサイクルで対応する項目を確認
 
-#### 3-2. サイクル固有バックログ
-`docs/cycles/{{CYCLE}}/backlog.md` の存在を確認：
+#### 3-2. 対応済みバックログとの照合
+対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
-- **存在しない場合**: スキップ
-- **存在する場合**: 内容を確認し、ユーザーに質問
-  ```
-  このサイクル固有のバックログがあります。確認しますか？
-  ```
-  「はい」の場合はバックログ内容を表示し、今回のサイクルで対応する項目を確認
+```bash
+# 新形式（サイクル別ディレクトリ）
+ls -R docs/cycles/backlog-completed/ 2>/dev/null
+# 旧形式（単一ファイル、後方互換性）
+cat docs/cycles/backlog-completed.md 2>/dev/null
+```
 
-#### 3-3. 対応済みバックログとの照合
-`docs/cycles/backlog-completed.md` の存在を確認：
-
-- **存在しない場合**: スキップ
-- **存在する場合**: 3-1, 3-2で確認したバックログ項目と照合
-  - 対応済みファイルに同名または類似の項目があるか、AIが文脈を読み取って判断
+- **存在しない/空の場合**: スキップ
+- **ファイルが存在する場合**: 3-1で確認したバックログ項目と照合
+  - 対応済みに同名または類似の項目があるか、AIが文脈を読み取って判断
   - 類似項目を検出した場合、以下の形式でユーザーに通知：
     ```
     以下のバックログ項目は過去に対応済みの可能性があります：
 
-    | バックログ項目 | 対応済み項目 | 類似の根拠 |
-    |--------------|------------|----------|
-    | [項目名] | [対応済み項目名] | [AIによる判断理由] |
+    | バックログ項目 | 対応済み項目 | 対応サイクル | 類似の根拠 |
+    |--------------|------------|------------|----------|
+    | [ファイル名] | [対応済み項目] | [vX.X.X] | [AIによる判断理由] |
 
     これらの項目について確認しますか？（重複であれば対応不要として扱います）
     ```
@@ -520,10 +533,10 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ## 完了時の必須作業【重要】
 
 ### 1. 履歴記録
-`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
 ### 2. Gitコミット
-Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、history.mdを含む**）をコミット
+Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
 ```
