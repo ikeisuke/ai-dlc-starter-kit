@@ -237,17 +237,12 @@ enabled = false
 
 `docs/aidlc.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
 
-```bash
-# starter_kit_versionが存在するか確認
-if grep -q "^starter_kit_version" docs/aidlc.toml; then
-  # 存在する場合: 更新
-  sed -i '' 's/^starter_kit_version = ".*"/starter_kit_version = "[新バージョン]"/' docs/aidlc.toml
-else
-  # 存在しない場合: ファイル先頭に追加
-  sed -i '' '1i\
-starter_kit_version = "[新バージョン]"\
-' docs/aidlc.toml
-fi
+`docs/aidlc.toml` を開き、`starter_kit_version` の値を `[新バージョン]` に更新してください。
+
+`starter_kit_version` フィールドが存在しない場合は、ファイル先頭に以下を追加:
+
+```toml
+starter_kit_version = "[新バージョン]"
 ```
 
 **更新確認**:

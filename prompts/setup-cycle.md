@@ -4,13 +4,13 @@
 
 **前提**:
 - setup-prompt.md から誘導されてこのファイルを読み込んでいること
-- `docs/aidlc/project.toml` が存在すること（初回セットアップ済み）
+- `docs/aidlc.toml` が存在すること（初回セットアップ済み）
 
 ---
 
 ## 1. プロジェクト設定の読み込み
 
-`docs/aidlc/project.toml` を読み込んでください。
+`docs/aidlc.toml` を読み込んでください。
 
 このファイルには以下の情報が含まれています:
 - プロジェクト名・概要
@@ -27,7 +27,7 @@
 まず、既存サイクルを確認します:
 
 ```bash
-ls -d docs/cycles/v*/ 2>/dev/null | sort -V
+ls -d docs/cycles/*/ 2>/dev/null | sort -V
 ```
 
 ### 2.2 バージョン提案
