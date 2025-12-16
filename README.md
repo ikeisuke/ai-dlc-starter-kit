@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -468,6 +468,38 @@ v1.2.3 は運用中に発見された問題点を修正するパッチリリー�
 ### 6. Inception Phaseステップ6削除
 - v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
 - Construction Phaseが自身で作成する責務に集中
+
+## 🔧 v1.4.0 の新機能
+
+v1.4.0 は開発体験向上とチーム開発サポートのためのリリースです。
+
+### 1. サイクルバージョン提案改善
+- 既存サイクルから次バージョンを自動推測
+- バージョン番号の入力ミスを防止
+
+### 2. GitHub Issue確認とセットアップ統合
+- Inception Phase開始時にGitHub Issueを確認
+- main/masterブランチでの作業時にサイクル用ブランチ作成を提案
+
+### 3. npm-scripts自動実行の提案
+- package.json検出時に利用可能なスクリプトを表示
+- ビルド・テスト実行の効率化
+
+### 4. 割り込み対応ルール追加
+- 作業中の割り込み要望を適切に分類
+- 計画を崩さずに追加要望を管理
+
+### 5. AI MCPレビュー推奨機能
+- MCPサーバーが利用可能な場合にレビュー活用を提案
+- 成果物の品質向上をサポート
+
+### 6. git worktree提案機能
+- セットアップ時にgit worktreeの使用を提案
+- 複数サイクルの並行作業を支援
+
+### 7. 複数人開発時コンフリクト対策
+- history.mdとbacklog.mdのコンフリクト防止策を追加
+- チーム開発でのスムーズな運用をサポート
 
 ## 🔧 v1.3.2 の改善点
 

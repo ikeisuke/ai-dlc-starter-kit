@@ -8,7 +8,8 @@
 | 2. CI/CD構築 | 未着手 | operations/cicd_setup.md | - |
 | 3. 監視・ロギング戦略 | 未着手 | operations/monitoring_strategy.md | - |
 | 4. 配布 | 未着手 | operations/distribution_plan.md | - |
-| 5. リリース後の運用 | 未着手 | operations/post_release_operations.md | - |
+| 5. バックログ整理と運用計画 | 未着手 | operations/post_release_operations.md | - |
+| 6. リリース準備 | 未着手 | README.md, history.md, PR | - |
 
 ## 現在のステップ
 
