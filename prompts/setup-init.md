@@ -511,7 +511,7 @@ rsync により以下のファイルが同期されます:
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md docs/cycles/backlog.md docs/cycles/backlog-completed.md
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
