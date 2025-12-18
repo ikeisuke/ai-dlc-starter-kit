@@ -91,9 +91,14 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **生成コマンド**: `TEMPLATE_NAME = post_release_operations_template`
 
 #### operations_progress_template
-- **説明**: Operations Phaseの進捗管理（5ステップの状態管理）
+- **説明**: Operations Phaseの進捗管理（6ステップの状態管理）
 - **使用タイミング**: Operations Phase開始時に自動作成
 - **生成コマンド**: `TEMPLATE_NAME = operations_progress_template`
+
+#### operations_handover_template
+- **説明**: サイクル間で引き継ぐ運用設定・方針（バージョン確認設定、デプロイ環境等）
+- **使用タイミング**: 運用引き継ぎファイル作成時
+- **生成コマンド**: `TEMPLATE_NAME = operations_handover_template`
 
 ## テンプレート生成の仕組み
 

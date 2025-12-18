@@ -213,6 +213,21 @@ commit_on_phase_complete = true
 [rules.documentation]
 language = "日本語"
 
+[rules.mcp_review]
+# MCPレビュー設定
+# mode: "recommend" | "required" | "disabled"
+# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
+# - required: MCP利用可能時にレビュー必須
+# - disabled: レビュー推奨を無効化
+mode = "recommend"
+
+[rules.worktree]
+# git worktree設定
+# enabled: true | false
+# - true: サイクル開始時にworktreeの使用を提案する
+# - false: 提案しない（デフォルト）
+enabled = false
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
@@ -222,17 +237,12 @@ language = "日本語"
 
 `docs/aidlc.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
 
-```bash
-# starter_kit_versionが存在するか確認
-if grep -q "^starter_kit_version" docs/aidlc.toml; then
-  # 存在する場合: 更新
-  sed -i '' 's/^starter_kit_version = ".*"/starter_kit_version = "[新バージョン]"/' docs/aidlc.toml
-else
-  # 存在しない場合: ファイル先頭に追加
-  sed -i '' '1i\
-starter_kit_version = "[新バージョン]"\
-' docs/aidlc.toml
-fi
+`docs/aidlc.toml` を開き、`starter_kit_version` の値を `[新バージョン]` に更新してください。
+
+`starter_kit_version` フィールドが存在しない場合は、ファイル先頭に以下を追加:
+
+```toml
+starter_kit_version = "[新バージョン]"
 ```
 
 **更新確認**:
@@ -246,6 +256,58 @@ grep "^starter_kit_version" docs/aidlc.toml
 期待される出力: `starter_kit_version = "[新バージョン]"`
 
 正しく更新されていない場合は、手動で `docs/aidlc.toml` を編集してください。
+
+### 6.4 設定マイグレーション【アップグレードモードのみ】
+
+新しいバージョンで追加された設定セクションを既存の `docs/aidlc.toml` に追加します。
+
+**マイグレーション対象の確認と追加**:
+
+```bash
+# [rules.mcp_review] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  echo "Adding [rules.mcp_review] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.mcp_review]
+# MCPレビュー設定（v1.4.0で追加）
+# mode: "recommend" | "required" | "disabled"
+# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
+# - required: MCP利用可能時にレビュー必須
+# - disabled: レビュー推奨を無効化
+mode = "recommend"
+EOF
+  echo "Added [rules.mcp_review] section"
+else
+  echo "[rules.mcp_review] section already exists"
+fi
+
+# [rules.worktree] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.worktree\]" docs/aidlc.toml; then
+  echo "Adding [rules.worktree] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.worktree]
+# git worktree設定（v1.4.0で追加）
+# enabled: true | false
+# - true: サイクル開始時にworktreeの使用を提案する
+# - false: 提案しない（デフォルト）
+enabled = false
+EOF
+  echo "Added [rules.worktree] section"
+else
+  echo "[rules.worktree] section already exists"
+fi
+```
+
+**マイグレーション結果の確認**:
+
+```bash
+grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
+grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
+```
+
+**注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
 
 ---
 
@@ -444,135 +506,12 @@ rsync により以下のファイルが同期されます:
 
 ---
 
-## 8. サイクル開始処理
-
-初回セットアップ完了後、続けてサイクル開始処理を実行します。
-
-### 8.0 プロジェクトバージョンの調査【初回のみ】
-
-既存プロジェクトにAI-DLCを導入する場合、プロジェクトのバージョン情報を調査してサイクルバージョンの初期値を提案します。
-
-**調査対象ファイル**（優先順位順）:
-
-| 優先順位 | ファイル | 対象 |
-|----------|----------|------|
-| 1 | `package.json` | Node.js プロジェクト |
-| 2 | `pyproject.toml` | Python プロジェクト |
-| 3 | `Cargo.toml` | Rust プロジェクト |
-| 4 | `build.gradle` / `pom.xml` | Java プロジェクト |
-
-**調査手順**:
-
-1. 上記ファイルを順にチェックし、バージョン情報を抽出
-2. 最初に見つかったバージョンを採用
-
-**バージョンが検出された場合**:
-
-```
-プロジェクトバージョン [検出されたバージョン] を検出しました（ソース: [ファイル名]）。
-
-このバージョンをサイクルバージョンの初期値として使用しますか？
-1. はい、v[検出されたバージョン] を使用する
-2. いいえ、別のバージョンを入力する
-```
-
-- 1 を選択した場合: 検出されたバージョンを使用して 8.2 へ進む
-- 2 を選択した場合: 8.1 へ進む
-
-**バージョンが検出されなかった場合**:
-
-8.1 へ進む（手動入力）
-
-### 8.1 サイクルバージョンの確認
-
-8.0 でバージョンが決定されなかった場合、手動で入力を求めます。
-
-```
-サイクルバージョンを入力してください（例: v1.0.0）:
-```
-
-### 8.2 ブランチの確認と整合性チェック
-
-現在のブランチを確認し、サイクルバージョンとの整合性をチェック:
-
-```bash
-git branch --show-current
-```
-
-**整合性チェック**:
-- 現在のブランチが `cycle/[バージョン]` または `feature/[バージョン]` パターンの場合、ブランチ名からバージョンを抽出
-- 入力されたサイクルバージョンとブランチ名が異なる場合、警告を表示:
-
-```
-警告: サイクルバージョンとブランチ名が一致しません。
-
-入力されたサイクル: [入力バージョン]
-現在のブランチ: [ブランチ名]
-
-どうしますか？
-1. サイクルバージョンをブランチ名に合わせる（推奨）
-2. 新しいブランチ cycle/[入力バージョン] を作成
-3. 不一致のまま続行（非推奨）
-```
-
-**ブランチ操作**:
-```
-現在のブランチ: [ブランチ名]
-
-サイクル用ブランチ cycle/[バージョン] を作成しますか？
-1. 新しいブランチを作成して切り替える
-2. 現在のブランチで続行する
-```
-
-### 8.3 サイクルディレクトリの作成
-
-```bash
-mkdir -p docs/cycles/[バージョン]/plans
-mkdir -p docs/cycles/[バージョン]/requirements
-mkdir -p docs/cycles/[バージョン]/story-artifacts/units
-mkdir -p docs/cycles/[バージョン]/design-artifacts/domain-models
-mkdir -p docs/cycles/[バージョン]/design-artifacts/logical-designs
-mkdir -p docs/cycles/[バージョン]/design-artifacts/architecture
-mkdir -p docs/cycles/[バージョン]/inception
-mkdir -p docs/cycles/[バージョン]/construction/units
-mkdir -p docs/cycles/[バージョン]/operations
-```
-
-各ディレクトリに `.gitkeep` を配置。
-
-### 8.4 history.md の初期化
-
-`docs/cycles/[バージョン]/history.md` を作成:
-
-```markdown
-# プロンプト実行履歴
-
-## サイクル
-[バージョン]
-
----
-
-## [現在日時]
-
-**フェーズ**: 準備
-**実行内容**: AI-DLC環境セットアップ（初回）
-**成果物**:
-- docs/aidlc.toml
-- docs/aidlc/prompts/（フェーズプロンプト）
-- docs/aidlc/templates/（テンプレート）
-- docs/cycles/[バージョン]/（サイクルディレクトリ）
-
----
-```
-
----
-
-## 9. Git コミット
+## 8. Git コミット
 
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -582,7 +521,7 @@ git add docs/aidlc.toml docs/aidlc/ docs/cycles/
 
 ---
 
-## 10. 完了メッセージ
+## 9. 完了メッセージ
 
 ### 初回セットアップの場合
 
@@ -603,10 +542,8 @@ AI-DLC環境のセットアップが完了しました！
 プロジェクト固有ファイル（docs/cycles/）:
 - rules.md - プロジェクト固有ルール
 - operations.md - 運用引き継ぎ情報
-
-サイクル固有ファイル（docs/cycles/[バージョン]/）:
-- history.md - 実行履歴
-- 各種ディレクトリ
+- backlog.md - 共通バックログ
+- backlog-completed.md - 完了済みバックログ
 ```
 
 ### アップグレードの場合
@@ -619,10 +556,6 @@ AI-DLCのアップグレードが完了しました！
 - docs/aidlc/templates/ - ドキュメントテンプレート
 
 ※ docs/aidlc.toml は保持されています（変更なし）
-
-サイクル固有ファイル（docs/cycles/[バージョン]/）:
-- history.md - 実行履歴
-- 各種ディレクトリ
 ```
 
 ### 移行の場合
@@ -642,11 +575,13 @@ AI-DLCの新ファイル構成への移行が完了しました！
 
 ---
 
-## 次のステップ: Inception Phase の開始
+## 次のステップ: サイクル開始
 
-新しいセッションで以下を実行してください：
+セットアップが完了しました。新しいセッションで以下を実行し、サイクルを開始してください：
 
 ```
-以下のファイルを読み込んで、サイクル [バージョン] の Inception Phase を開始してください：
-docs/aidlc/prompts/inception.md
+以下のファイルを読み込んで、サイクルを開始してください：
+[スターターキットのパス]/prompts/setup-cycle.md
 ```
+
+**注意**: `[スターターキットのパス]` は AI-DLC Starter Kit のルートディレクトリに置き換えてください。

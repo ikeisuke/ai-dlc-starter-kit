@@ -60,24 +60,44 @@ Inception/Construction Phaseで決定済み
 
   コミットメッセージは変更内容を明確に記述
 
-- **プロンプト履歴管理【重要】**: history.mdファイルは初回セットアップ時に作成され、以降は必ずファイル末尾に追記（既存履歴を絶対に削除・上書きしない）。追記方法は Bash heredoc (`cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md`)。
+- **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
-  - 複数の記録を行う場合、それぞれで `date` を実行すること
 
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history.md
-  ---
+  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/operations.md
   ## ${TIMESTAMP}
-  ...
+
+  - **フェーズ**: Operations Phase
+  - **実行内容**: [作業概要]
+  - **プロンプト**: [実行したプロンプトや指示]
+  - **成果物**: [作成・更新したファイル]
+  - **備考**: [特記事項]
+
+  ---
   EOF
   ```
-  記録項目: 日時、フェーズ名、実行内容、プロンプト、成果物、備考
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
+
+- **MCPレビュー【設定に応じて】**: ユーザーの承認を求める前に、MCPレビューを実施する。
+
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを確認
+  - `mode = "required"`: MCP利用可能時はレビュー必須。利用不可時は警告表示
+  - `mode = "recommend"`: MCP利用可能時は以下の推奨を表示（デフォルト）
+  - `mode = "disabled"`: 何も表示しない
+
+  **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
+  ```
+  【レビュー推奨】別のAIエージェント（Codex MCP等）が利用可能です。
+  品質向上のため、この成果物のレビューを実施することを推奨します。
+  レビューを実施しますか？
+  ```
+
+  **対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
 - **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
   - 「継続プロンプト」「リセットしたい」
@@ -87,7 +107,7 @@ Inception/Construction Phaseで決定済み
   **対応手順**:
   1. 現在の作業状態を確認（どのステップか）
   2. progress.mdを更新（現在のステップを「進行中」のまま保持）
-  3. 履歴記録（history.mdに中断状態を追記）
+  3. 履歴記録（`history/operations.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
   ```markdown
@@ -203,6 +223,31 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
+
+#### バージョン確認【必須】
+
+運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
+- **設定がある場合**: 設定に従ってバージョンを確認
+- **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
+
+**確認手順**:
+1. バージョン確認対象ファイルを特定（package.json, pyproject.toml等）
+2. 現在のバージョンを確認
+3. サイクルバージョンと整合性を確認
+4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
+
+**バージョン確認コマンド例**:
+```bash
+# Node.js
+cat package.json | grep '"version"'
+
+# Python
+cat pyproject.toml | grep 'version'
+
+# Go
+cat go.mod | head -1
+```
+
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
@@ -227,12 +272,70 @@ ls docs/cycles/{{CYCLE}}/operations/
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
-### ステップ5: リリース後の運用【対話形式】
+### ステップ5: バックログ整理と運用計画【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
+
+#### 5.1 バックログ整理
+
+共通バックログ（`docs/cycles/backlog/`）を確認し、対応済みの項目を整理:
+
+```bash
+ls docs/cycles/backlog/
+```
+
+**対応済み項目の移動先**: `docs/cycles/backlog-completed/{{CYCLE}}/`
+
+```bash
+# 対応済みディレクトリを作成
+mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
+
+# 対応済みの項目を移動
+mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
+```
+
+**未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
+
+#### 5.2 リリース後運用計画
+
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
+
+### ステップ6: リリース準備
+
+- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
+
+#### 6.1 README更新
+README.mdに今回のサイクルの変更内容を追記
+
+#### 6.2 履歴記録
+`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+
+#### 6.3 Gitコミット
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
+
+コミットメッセージ例:
+```
+chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+```
+
+#### 6.4 PR作成
+mainブランチへのPRを作成:
+```bash
+gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
+## Summary
+- [サイクルの主要な変更点]
+
+## Test plan
+- [ ] 主要機能が動作する
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ---
 
@@ -253,39 +356,16 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 ---
 
-## 完了時の必須作業【重要】
+## 完了時の確認【重要】
 
-### 1. README更新
-README.mdに今回のサイクルの変更内容を追記
+Operations Phaseの完了時には、以下を確認してください:
 
-### 2. 履歴記録
-`docs/cycles/{{CYCLE}}/history.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+1. **ステップ6（リリース準備）が完了している**こと
+   - README更新、履歴記録、Gitコミット、PR作成がすべて完了
+   - progress.mdでステップ6が「完了」になっている
 
-### 3. バックログ整理
-サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）を整理し、共通バックログに反映（詳細は「AI-DLCサイクル完了」セクション参照）
-
-### 4. Gitコミット
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、history.mdを含む**）をコミット
-
-コミットメッセージ例:
-```
-chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
-```
-
-### 5. PR作成
-mainブランチへのPRを作成:
-```bash
-gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
-## Summary
-- [サイクルの主要な変更点]
-
-## Test plan
-- [ ] 主要機能が動作する
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
+2. **全ステップが完了している**こと
+   - progress.mdで全ステップ（1-6、配布スキップの場合は4除く）が「完了」
 
 ---
 
@@ -317,16 +397,30 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、`docs/cycles/backlog.md` に記録：
+次サイクルに引き継ぐタスクがある場合、共通バックログに記録：
 
-- **ファイルが存在しない場合**: テンプレート（`docs/aidlc/templates/backlog_template.md`）から作成
-- **ファイルが存在する場合**: 追記
+**記録先**: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
-記録項目:
-- タスク内容
-- 優先度（高/中/低）
-- 理由（なぜ今回対応できなかったか）
-- 推奨対応サイクル
+**種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
+
+**ファイル内容**（テンプレート: `docs/aidlc/templates/backlog_item_template.md`）:
+```markdown
+# [タイトル]
+
+- **発見日**: YYYY-MM-DD
+- **発見フェーズ**: Operations
+- **発見サイクル**: {{CYCLE}}
+- **優先度**: [高 / 中 / 低]
+
+## 概要
+[簡潔な説明]
+
+## 詳細
+[詳細な説明、なぜ今回対応できなかったか]
+
+## 対応案
+[推奨される対応方法、推奨対応サイクル]
+```
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
