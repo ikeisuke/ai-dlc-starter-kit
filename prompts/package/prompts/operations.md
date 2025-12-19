@@ -265,7 +265,7 @@ cat go.mod | head -1
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
-### ステップ4: 配布（PROJECT_TYPE=general の場合はスキップ）【対話形式】
+### ステップ4: 配布（PROJECT_TYPE=web/backend/general の場合はスキップ）【対話形式】
 
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話

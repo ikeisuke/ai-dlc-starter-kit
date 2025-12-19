@@ -493,7 +493,15 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
-- 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/<unit_name>.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+- 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+
+**Unit定義ファイルの命名規則**:
+- ファイル名形式: `{NNN}-{unit-name}.md`（例: `001-setup-database.md`）
+- NNN: 3桁の0埋め番号（001, 002, ..., 999）
+- unit-name: Unit名のケバブケース
+- 番号は依存関係に基づく実行順序を表す
+- 連番の重複は禁止
+- 依存関係がないUnitは任意の順番でよいが、優先度順に番号付けを推奨
 - **実装状態セクション**: 各Unit定義ファイルの末尾に以下のセクションを含める（テンプレートに含まれている）
   ```markdown
   ---
