@@ -110,6 +110,23 @@ Inception Phaseで決定済み、または既存スタックを使用
      ```
   3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
+- **Workaround（その場しのぎ対応）実施時のルール【重要】**: 本質的な解決ではなく、暫定的な対応（workaround）を行う場合、以下を必ず実施する
+
+  **必須手順**:
+  1. **workaroundの実装**: 暫定的な対応を実装
+  2. **バックログへの記録**: 本質的な対応を `docs/cycles/backlog/` に記録
+     - prefix: `chore-` または `refactor-`
+     - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
+  3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
+     ```
+     // TODO: workaround - see docs/cycles/backlog/{filename}.md
+     ```
+
+  **workaroundの例**:
+  - 時間的制約で簡易実装を選択した場合
+  - 依存ライブラリの問題を回避するための一時的な対処
+  - 本質的な設計変更が必要だが、現在のスコープ外の場合
+
 - **割り込み対応フロー【重要】**: ユーザーから作業中に追加の要望・タスクがあった場合、以下の3分類で対応する
 
   | 分類 | 判定基準 | 対応 |
@@ -222,10 +239,12 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）内の各ファイルに「実装状態」セクションが含まれています。
 
 ```bash
-ls docs/cycles/{{CYCLE}}/story-artifacts/units/
+ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 ```
 
-で全Unit定義ファイルを列挙し、各ファイルの「実装状態」セクションを確認：
+で全Unit定義ファイルを**番号順に**列挙し、各ファイルの「実装状態」セクションを確認：
+
+**注意**: Unit定義ファイルは `{NNN}-{unit-name}.md` 形式で番号付けされています。番号順に処理することで依存関係の実行順序が保たれます。
 
 ```markdown
 ## 実装状態
