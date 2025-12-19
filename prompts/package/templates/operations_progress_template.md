@@ -26,4 +26,5 @@
 ## プロジェクト種別による差異
 
 - モバイルアプリ（ios/android）: 全ステップ実施
+- デスクトップ/CLI（desktop/cli）: 全ステップ実施
 - Web/バックエンド（web/backend/general）: ステップ4（配布）をスキップ
