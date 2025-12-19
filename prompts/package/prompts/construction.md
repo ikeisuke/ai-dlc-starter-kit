@@ -222,10 +222,12 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）内の各ファイルに「実装状態」セクションが含まれています。
 
 ```bash
-ls docs/cycles/{{CYCLE}}/story-artifacts/units/
+ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 ```
 
-で全Unit定義ファイルを列挙し、各ファイルの「実装状態」セクションを確認：
+で全Unit定義ファイルを**番号順に**列挙し、各ファイルの「実装状態」セクションを確認：
+
+**注意**: Unit定義ファイルは `{NNN}-{unit-name}.md` 形式で番号付けされています。番号順に処理することで依存関係の実行順序が保たれます。
 
 ```markdown
 ## 実装状態

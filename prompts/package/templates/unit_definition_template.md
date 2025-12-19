@@ -1,3 +1,11 @@
+<!--
+ファイル名規則: {NNN}-{unit-name}.md
+  - NNN: 3桁の0埋め番号（例: 001, 002, ...）
+  - unit-name: Unit名のケバブケース（例: setup-database）
+  - 番号は依存関係に基づく実行順序を表す
+  - 例: 001-setup-database.md, 002-implement-auth.md
+-->
+
 # Unit: [Unit 名]
 
 ## 概要
