@@ -45,7 +45,7 @@ Lite版では**Operations Phase自体が任意**です。
 Operations Phase を実施する場合、以下は維持：
 
 - Gitコミット
-- 履歴記録（history.md）
+- 履歴記録（`history/operations.md`）
 
 ---
 
@@ -64,7 +64,7 @@ Operations Phase (Lite) が完了（またはスキップ）したら、サイ�
 
 ### 履歴記録
 
-history.mdにサイクル完了を記録してください。
+`history/operations.md` にサイクル完了を記録してください。
 
 ### 次のサイクル開始【コンテキストリセット必須】
 
