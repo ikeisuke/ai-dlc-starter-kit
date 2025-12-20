@@ -44,7 +44,52 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 
 ## 最初に必ず実行すること
 
-### 1. ブランチ確認【推奨】
+### 1. サイクルバージョンの決定
+
+#### 1.1 既存サイクルの検出
+
+```bash
+ls -d docs/cycles/*/ 2>/dev/null | sort -V
+```
+
+#### 1.2 バージョン提案
+
+**ケース A: 既存サイクルがある場合**
+
+最新バージョンから次バージョンを提案:
+
+```
+既存サイクル: [一覧]
+最新バージョン: v{X}.{Y}.{Z}
+
+次バージョンの提案:
+1. v{X}.{Y}.{Z+1}（パッチ - バグ修正・小さな変更）[推奨]
+2. v{X}.{Y+1}.0（マイナー - 新機能追加）
+3. v{X+1}.0.0（メジャー - 破壊的変更）
+4. その他（カスタム入力）
+
+どれを選択しますか？
+```
+
+**ケース B: 既存サイクルがない場合（初回サイクル）**
+
+プロジェクトのバージョン情報を調査（package.json, pyproject.toml 等）:
+
+```
+プロジェクトバージョン [検出されたバージョン] を検出しました（ソース: [ファイル名]）。
+
+このバージョンをサイクルバージョンとして使用しますか？
+1. はい、v[検出されたバージョン] を使用する
+2. いいえ、別のバージョンを入力する
+```
+
+バージョンが検出されなかった場合は `v1.0.0` を提案。
+
+#### 1.3 重複チェック
+
+選択されたバージョンが既存サイクルと重複する場合、エラーを表示して再選択。
+
+### 2. ブランチ確認【推奨】
 
 現在のブランチを確認し、サイクル用ブランチでの作業を推奨：
 
@@ -53,8 +98,28 @@ CURRENT_BRANCH=$(git branch --show-current)
 echo "現在のブランチ: ${CURRENT_BRANCH}"
 ```
 
+`docs/aidlc.toml` の `[rules.worktree]` 設定を確認:
+
+```bash
+grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | grep -q "true" && echo "WORKTREE_ENABLED" || echo "WORKTREE_DISABLED"
+```
+
 **判定**:
 - **main または master の場合**: サイクル用ブランチの作成を提案
+
+  **worktree が有効な場合（WORKTREE_ENABLED）**:
+  ```
+  現在 main/master ブランチで作業しています。
+  サイクル用ブランチで作業することを推奨します。
+
+  1. git worktreeを使用して新しい作業ディレクトリを作成する
+  2. 新しいブランチを作成して切り替える: git checkout -b cycle/{{CYCLE}}
+  3. 現在のブランチで続行する（非推奨）
+
+  どれを選択しますか？
+  ```
+
+  **worktree が無効な場合（WORKTREE_DISABLED）- デフォルト**:
   ```
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
@@ -64,15 +129,17 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 
   どちらを選択しますか？
   ```
-  - **1を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
-  - **2を選択**: 警告を表示して続行
+
+  - **worktree を選択**: worktree 作成手順を案内（セクション末尾参照）
+  - **ブランチ作成を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
+  - **続行を選択**: 警告を表示して続行
     ```
     警告: main/master ブランチで直接作業しています。
     変更は直接 main/master に反映されます。
     ```
 - **それ以外のブランチ**: 次のステップへ進行
 
-### 2. サイクル存在確認
+### 3. サイクル存在確認
 
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
@@ -87,9 +154,9 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
   Inception Phase を開始するには、以下のプロンプトを読み込んでください：
   docs/aidlc/prompts/inception.md
   ```
-- **存在しない場合**: ステップ3（バージョン確認）へ進む
+- **存在しない場合**: ステップ4（バージョン確認）へ進む
 
-### 3. バージョン確認
+### 4. バージョン確認
 
 ```bash
 # スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
@@ -102,8 +169,8 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
 ```
 
 **判定**:
-- **最新バージョン取得失敗**: ステップ4（サイクル作成）へ進む
-- **CURRENT_VERSION が空**: ステップ4（サイクル作成）へ進む（aidlc.tomlなし）
+- **最新バージョン取得失敗**: ステップ5（サイクル作成）へ進む
+- **CURRENT_VERSION が空**: ステップ5（サイクル作成）へ進む（aidlc.tomlなし）
 - **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
   ```
   AI-DLCスターターキットの新しいバージョンが利用可能です。
@@ -118,10 +185,10 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
     ```
     アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
     ```
-  - **2 を選択**: ステップ4（サイクル作成）へ進む
-- **LATEST_VERSION = CURRENT_VERSION**: ステップ4（サイクル作成）へ進む
+  - **2 を選択**: ステップ5（サイクル作成）へ進む
+- **LATEST_VERSION = CURRENT_VERSION**: ステップ5（サイクル作成）へ進む
 
-### 4. サイクルディレクトリ作成
+### 5. サイクルディレクトリ作成
 
 ユーザーに確認：
 ```
@@ -209,4 +276,33 @@ git commit -m "feat: サイクル {{CYCLE}} 開始"
 
 Inception Phase を開始するには、以下のプロンプトを読み込んでください：
 docs/aidlc/prompts/inception.md
+```
+
+---
+
+## 補足: git worktree の使用
+
+worktree を選択した場合の手順:
+
+```
+## git worktree の使用
+
+git worktreeを使うと、同じリポジトリの複数ブランチを別ディレクトリで同時に開けます。
+複数サイクルの並行作業に便利です。
+
+**推奨ディレクトリ構成**:
+
+~/projects/
+├── my-project/              # メインディレクトリ（mainブランチ）
+├── my-project-v1.4.0/       # worktree（cycle/v1.4.0ブランチ）
+└── my-project-v1.5.0/       # worktree（cycle/v1.5.0ブランチ）
+
+**worktree作成コマンド**:
+
+# 親ディレクトリに移動してworktreeを作成
+cd ..
+git -C [元のディレクトリ名] worktree add -b cycle/{{CYCLE}} [元のディレクトリ名]-{{CYCLE}}
+cd [元のディレクトリ名]-{{CYCLE}}
+
+作成後、新しいディレクトリでセッションを開始してください。
 ```
