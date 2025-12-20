@@ -41,13 +41,12 @@
 ### リリース手順
 1. サイクルブランチで開発完了
 2. `version.txt` を新バージョンに更新
-3. setup-initを実行して `docs/aidlc/` を最新化
-4. README.mdを更新
-5. Operations Phase完了コミット
-6. PRを作成（`gh pr create`）
-7. PRをマージ
-8. GitHub Actionsが自動でタグ作成
-9. 必要に応じてGitHub Releasesでリリースノート作成
+3. README.mdを更新
+4. Operations Phase完了コミット
+5. PRを作成（`gh pr create`）
+6. PRをマージ
+7. GitHub Actionsが自動でタグ作成
+8. 必要に応じてGitHub Releasesでリリースノート作成
 
 ### ロールバック方法
 ```bash
