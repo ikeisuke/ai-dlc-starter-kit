@@ -663,7 +663,5 @@ AI-DLCの新ファイル構成への移行が完了しました！
 
 ```
 以下のファイルを読み込んで、サイクルを開始してください：
-[スターターキットのパス]/prompts/setup-cycle.md
+docs/aidlc/prompts/setup.md
 ```
-
-**注意**: `[スターターキットのパス]` は AI-DLC Starter Kit のルートディレクトリに置き換えてください。
