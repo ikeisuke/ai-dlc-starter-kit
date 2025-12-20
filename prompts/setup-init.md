@@ -125,52 +125,100 @@ git branch --show-current
 
 ## 5. プロジェクト情報の収集【初回のみ】
 
-README.mdからプロジェクト情報を推測し、まとめて確認します。
+複数の情報源からプロジェクト情報を推測し、不足分のみ質問します。
 
-### 5.1 README.mdの読み込み
+### 5.1 情報源の探索
 
-README.mdが存在する場合、内容を読み込んで以下の情報を推測します：
-- プロジェクト名（READMEのタイトル `# xxx` またはディレクトリ名）
-- プロジェクト概要（READMEの冒頭部分）
-- 使用言語（READMEに記載があれば）
-- フレームワーク（READMEに記載があれば）
+以下の情報源を確認し、存在するものを収集します：
 
-README.mdが存在しない場合は、ディレクトリ名をプロジェクト名として使用します。
+```bash
+# 1. README.md の確認
+README_EXISTS=$(ls README.md 2>/dev/null && echo "yes" || echo "no")
 
-### 5.1.1 リンク先ドキュメントの読み込み【任意】
+# 2. 設定ファイルの確認（優先順位順）
+CONFIG_FILE=""
+for f in package.json go.mod Cargo.toml pyproject.toml composer.json Gemfile; do
+  if [ -f "$f" ]; then
+    CONFIG_FILE="$f"
+    break
+  fi
+done
 
-README.md内のリンクから、プロジェクトの理解に役立つドキュメントを追加で読み込みます。
+# 3. docs/ ディレクトリの確認（aidlc/, cycles/ を除外）
+# これらはセットアップで作成されるため探索対象外
+DOCS_FILES=$(find docs -maxdepth 2 -name "*.md" -not -path "docs/aidlc/*" -not -path "docs/cycles/*" 2>/dev/null | head -5)
+DOCS_COUNT=$(echo "$DOCS_FILES" | grep -c . 2>/dev/null || echo "0")
 
-**対象リンクの判定**:
-- 相対パス（`./`, `../`, またはパスのみ）のMarkdownリンク `[text](path)` のみ対象
-- 外部リンク（`http://`, `https://`）は辿らない
-- 存在しないファイルへのリンクはスキップ
+# 4. ソースコードディレクトリの確認
+SRC_DIR=""
+for d in src lib app cmd pkg; do
+  if [ -d "$d" ]; then
+    SRC_DIR="$d"
+    break
+  fi
+done
+
+echo "情報源: README=${README_EXISTS}, CONFIG=${CONFIG_FILE:-none}, DOCS=${DOCS_COUNT}files, SRC=${SRC_DIR:-none}"
+```
+
+**探索結果の表示**:
+```
+プロジェクトの情報源を確認しました：
+
+| 情報源 | 状態 |
+|--------|------|
+| README.md | [あり/なし] |
+| 設定ファイル | [ファイル名/なし] |
+| docs/（プロジェクト固有） | [N件/なし] |
+| ソースコード | [ディレクトリ名/なし] |
+```
+
+### 5.2 プロジェクト情報の推測
+
+収集した情報源から以下の情報を推測します：
+
+| フィールド | 推測方法（優先順位順） |
+|-----------|----------------------|
+| name | 1. package.json等のname 2. README.mdのタイトル 3. ディレクトリ名 |
+| description | 1. package.json等のdescription 2. README.mdの冒頭 |
+| languages | 1. 設定ファイルの種類から推測 2. ソースコードの拡張子から推測 |
+| frameworks | 1. 依存関係から推測（package.json, go.mod等） |
+| namingConvention | 1. 既存コードのスタイルから推測 2. デフォルト: lowerCamelCase |
+
+**設定ファイルからの言語推測**:
+| 設定ファイル | 言語 |
+|-------------|------|
+| package.json | JavaScript/TypeScript |
+| go.mod | Go |
+| Cargo.toml | Rust |
+| pyproject.toml | Python |
+| composer.json | PHP |
+| Gemfile | Ruby |
+
+**追加ドキュメントの読み込み**（必要に応じて）:
+
+情報が不足している場合、以下の順序で追加ドキュメントを読み込みます：
+1. CONTRIBUTING.md, ARCHITECTURE.md（ルート直下）
+2. docs/ 配下の .md ファイル（aidlc/, cycles/ を除く）
 
 **読み込み制限**（コンテキスト溢れ防止）:
 - 最大5ファイルまで
-- 各ファイル100行まで（超える場合は冒頭のみ）
+- 各ファイル100行まで
 
-**優先順位**:
-1. CONTRIBUTING.md, ARCHITECTURE.md（ルート直下）
-2. docs/ 配下の .md ファイル
-3. その他の .md ファイル
-
-**注意**: この機能はオプションです。README.mdの情報で十分な場合はスキップしてください。
-
-### 5.2 推測結果の確認
+### 5.3 推測結果の確認
 
 推測した情報をテーブル形式で表示し、ユーザーに確認を求めます：
 
 ```
 プロジェクト情報を推測しました：
 
-| 項目 | 推測値 |
-|------|--------|
-| プロジェクト名 | [推測値] |
-| プロジェクト概要 | [推測値 or 「-」] |
-| 使用言語 | [推測値 or 「-」] |
-| フレームワーク | [推測値 or 「-」] |
-| 命名規則 | lowerCamelCase（デフォルト） |
+| 項目 | 推測値 | 根拠 |
+|------|--------|------|
+| プロジェクト名 | [推測値] | [情報源] |
+| プロジェクト概要 | [推測値 or 「-」] | [情報源] |
+| 使用言語 | [推測値 or 「-」] | [情報源] |
+| フレームワーク | [推測値 or 「-」] | [情報源] |
+| 命名規則 | [推測値 or lowerCamelCase] | [情報源/デフォルト] |
 
 上記の内容で問題ありませんか？変更したい項目があれば教えてください。
 ```
@@ -179,9 +227,11 @@ README.md内のリンクから、プロジェクトの理解に役立つドキ�
 - 「OK」「はい」「問題ない」→ 推測値を採用し、次のステップへ
 - 変更がある場合 → 指定された項目のみ更新
 
-### 5.3 推測できなかった項目の入力
+### 5.4 不足項目の質問
 
-推測値が「-」の項目について、必要に応じて個別に質問します：
+推測値が「-」の項目について、aidlc.toml構成に必要な情報が不足している場合のみ質問します。
+
+**必須フィールド**: name（必須）、description（推奨）
 
 ```
 [項目名]が推測できませんでした。入力してください（スキップする場合は「スキップ」）:
