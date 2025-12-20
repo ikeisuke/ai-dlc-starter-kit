@@ -41,13 +41,12 @@
 ### リリース手順
 1. サイクルブランチで開発完了
 2. `version.txt` を新バージョンに更新
-3. setup-initを実行して `docs/aidlc/` を最新化
-4. README.mdを更新
-5. Operations Phase完了コミット
-6. PRを作成（`gh pr create`）
-7. PRをマージ
-8. GitHub Actionsが自動でタグ作成
-9. 必要に応じてGitHub Releasesでリリースノート作成
+3. README.mdを更新
+4. Operations Phase完了コミット
+5. PRを作成（`gh pr create`）
+6. PRをマージ
+7. GitHub Actionsが自動でタグ作成
+8. 必要に応じてGitHub Releasesでリリースノート作成
 
 ### ロールバック方法
 ```bash
@@ -108,32 +107,15 @@ git checkout v1.2.0
 
 ---
 
-## メタ開発特有の完了時作業【重要】
+## アップデート方法
 
-このプロジェクト（AI-DLC Starter Kit自体の開発）では、一般的なOperations Phase完了時の作業に加えて、以下の作業が必要です。
+AI-DLC Starter Kit自体のアップデートは、通常のセットアップフローを使用してください:
 
-### 1. バージョン更新
-`version.txt`（ルート）を新バージョンに更新:
-```bash
-echo "X.X.X" > version.txt
-```
+1. `docs/aidlc/prompts/setup-prompt.md` を読み込み
+2. 「既存プロジェクト + アップグレード」を選択
+3. セットアップ手順に従う
 
-### 2. setup-init実行（アップグレードモード）
-`prompts/setup-init.md` をアップグレードモードで実行し、`docs/aidlc/` を最新化:
-
-```bash
-# setup-init.md を読み込み、以下を実行:
-# - セクション6.3（starter_kit_versionの更新）
-# - セクション7（共通ファイルの配置）
-# ※ セクション5-6.2はアップグレードモードではスキップ
-```
-
-**実行内容**（setup-init.md セクション7.2）:
-- rsync で prompts/package/ → docs/aidlc/ に同期
-- プロジェクト固有ファイル（rules.md、operations.md）は保持
-
-### 注意
-これらの作業は一般プロジェクトでは不要です。AI-DLC Starter Kit自体を開発している（メタ開発）ため必要になります。
+詳細は setup-prompt.md を参照してください。
 
 ---
 
@@ -143,3 +125,4 @@ echo "X.X.X" > version.txt
 |------|---------|---------|
 | 2025-12-06 | v1.2.1 | 初回作成、メタ開発特有の完了時作業を追加 |
 | 2025-12-06 | v1.2.2 | setup-init参照に変更、version.txt同期手順を削除 |
+| 2025-12-20 | v1.5.0 | セルフアップデート廃止、通常セットアップフローへの誘導に変更 |

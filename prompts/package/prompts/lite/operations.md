@@ -44,6 +44,7 @@ Lite版では**Operations Phase自体が任意**です。
 
 Operations Phase を実施する場合、以下は維持：
 
+- 予想禁止・一問一答質問ルール（ハイブリッド方式）
 - Gitコミット
 - 履歴記録（`history/operations.md`）
 
