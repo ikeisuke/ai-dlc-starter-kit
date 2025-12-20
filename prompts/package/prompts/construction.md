@@ -294,14 +294,15 @@ Inception Phaseで決定済み、または既存スタックを使用
 ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
 ```
 
-- **存在しない場合**: エラーを表示し、既存サイクル一覧を提示
+- **存在しない場合**: エラーを表示し、setup.md を案内
   ```
   エラー: サイクル {{CYCLE}} が見つかりません。
 
   既存のサイクル:
   [ls docs/cycles/ の結果]
 
-  セットアップを実行してサイクルを作成してください。
+  サイクルを作成するには、以下のプロンプトを読み込んでください：
+  docs/aidlc/prompts/setup.md
   ```
 - **存在する場合**: 処理を継続
 

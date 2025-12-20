@@ -250,125 +250,16 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ```
 
 - **存在する場合**: 処理を継続（ステップ2へ）
-- **存在しない場合**: 以下のサブフローを実行
-
-#### 1-1. バージョン確認
-
-```bash
-# スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
-LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
-
-# 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-CURRENT_VERSION=$(grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "")
-
-echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
-```
-
-**判定**:
-- **最新バージョン取得失敗**: 1-2. サイクル作成へ進む
-- **CURRENT_VERSION が空**: 1-2. サイクル作成へ進む（aidlc.tomlなし）
-- **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
-  ```
-  AI-DLCスターターキットの新しいバージョンが利用可能です。
-  - 現在: [CURRENT_VERSION]
-  - 最新: [LATEST_VERSION]
-
-  アップグレードを推奨します。どうしますか？
-  1. アップグレードする
-  2. 現在のバージョンで続行する
-  ```
-  - **1 を選択**: セットアップを案内して終了
-    ```
-    アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
-    ```
-  - **2 を選択**: 1-2. サイクル作成へ進む
-- **LATEST_VERSION = CURRENT_VERSION**: 1-2. サイクル作成へ進む
-
-#### 1-2. サイクルディレクトリ作成
-
-ユーザーに確認：
-```
-サイクル {{CYCLE}} のディレクトリが存在しません。
-新規作成しますか？（Y/n）
-```
-
-- **拒否された場合**: エラーを表示して終了
+- **存在しない場合**: エラーを表示し、setup.md を案内
   ```
   エラー: サイクル {{CYCLE}} が見つかりません。
 
   既存のサイクル:
   [ls docs/cycles/ の結果]
 
-  セットアップを実行してサイクルを作成してください。
+  サイクルを作成するには、以下のプロンプトを読み込んでください：
+  docs/aidlc/prompts/setup.md
   ```
-
-- **承認された場合**: 以下を実行
-
-**ディレクトリ構造作成**:
-```bash
-mkdir -p docs/cycles/{{CYCLE}}/plans
-mkdir -p docs/cycles/{{CYCLE}}/requirements
-mkdir -p docs/cycles/{{CYCLE}}/story-artifacts/units
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/domain-models
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/logical-designs
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/architecture
-mkdir -p docs/cycles/{{CYCLE}}/inception
-mkdir -p docs/cycles/{{CYCLE}}/construction/units
-mkdir -p docs/cycles/{{CYCLE}}/operations
-```
-
-**history/ ディレクトリ初期化**:
-```bash
-mkdir -p docs/cycles/{{CYCLE}}/history
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-cat <<EOF > docs/cycles/{{CYCLE}}/history/inception.md
-# Inception Phase 履歴
-
-## ${TIMESTAMP}
-
-- **フェーズ**: Inception Phase
-- **実行内容**: サイクル開始（Inception Phaseから自動作成）
-- **プロンプト**: -
-- **成果物**: docs/cycles/{{CYCLE}}/（サイクルディレクトリ）
-- **備考**: -
-
----
-EOF
-```
-
-**共通バックログディレクトリ確認**:
-```bash
-mkdir -p docs/cycles/backlog
-mkdir -p docs/cycles/backlog-completed
-```
-
-**注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
-
-**Gitコミット（任意）**:
-```
-サイクル {{CYCLE}} を作成しました。Gitコミットを作成しますか？（Y/n）
-```
-承認された場合:
-```bash
-git add docs/cycles/{{CYCLE}}/
-git add docs/cycles/backlog/
-git add docs/cycles/backlog-completed/
-git commit -m "feat: サイクル {{CYCLE}} 開始"
-```
-
-**完了メッセージ**:
-```
-サイクル {{CYCLE}} の準備が完了しました！
-
-作成されたファイル:
-- docs/cycles/{{CYCLE}}/history/inception.md
-- docs/cycles/{{CYCLE}}/（各種ディレクトリ）
-- docs/cycles/backlog/（共通バックログ、初回のみ）
-
-Inception Phase を継続します...
-```
-
-→ ステップ2（追加ルール確認）へ進む
 
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
