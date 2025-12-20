@@ -150,6 +150,31 @@ Inception/Construction Phaseで決定済み
   ---
   ```
 
+### フェーズの責務【重要】
+
+**このフェーズで行うこと**:
+- デプロイ計画・実行
+- 監視・ロギング設定
+- 運用ドキュメント作成
+- CI/CD設定（.github/workflows/*.yml等）
+- インフラ設定（IaC）
+
+**このフェーズで許可されるコード記述**:
+- CI/CD設定ファイル
+- デプロイスクリプト
+- 監視・アラート設定
+- インフラ定義ファイル
+
+**このフェーズで行わないこと（禁止）**:
+- アプリケーションロジックの変更
+- 新機能の実装
+- テストコードの追加（バグ修正時を除く）
+
+**緊急バグ修正が必要な場合**:
+1. ユーザーに理由を説明し承認を得る
+2. 最小限の修正のみ実施
+3. 修正後、Construction Phaseへのバックトラックを提案
+
 ### フェーズの責務分離
 - **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
 - **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
