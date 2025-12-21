@@ -401,7 +401,7 @@ Operations Phaseで作成したすべてのファイル（**operations/progress.
 
 コミットメッセージ例:
 ```
-chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
 #### 6.4 PR作成

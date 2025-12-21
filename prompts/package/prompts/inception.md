@@ -490,7 +490,7 @@ Inception Phaseで作成・変更したすべてのファイル（**inception/pr
 
 コミットメッセージ例:
 ```
-feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
+feat: [{{CYCLE}}] Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
 ```
 
 ---
