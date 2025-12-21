@@ -428,6 +428,14 @@ mode = "recommend"
 # - false: 提案しない（デフォルト）
 enabled = false
 
+[rules.history]
+# 履歴記録設定
+# level: "detailed" | "standard" | "minimal"
+# - detailed: ステップ完了時に記録 + 修正差分も記録
+# - standard: ステップ完了時に記録（デフォルト）
+# - minimal: Unit完了時にまとめて記録
+level = "standard"
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
@@ -497,6 +505,24 @@ EOF
   echo "Added [rules.worktree] section"
 else
   echo "[rules.worktree] section already exists"
+fi
+
+# [rules.history] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.history\]" docs/aidlc.toml; then
+  echo "Adding [rules.history] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.history]
+# 履歴記録設定（v1.5.1で追加）
+# level: "detailed" | "standard" | "minimal"
+# - detailed: ステップ完了時に記録 + 修正差分も記録
+# - standard: ステップ完了時に記録（デフォルト）
+# - minimal: Unit完了時にまとめて記録
+level = "standard"
+EOF
+  echo "Added [rules.history] section"
+else
+  echo "[rules.history] section already exists"
 fi
 ```
 
