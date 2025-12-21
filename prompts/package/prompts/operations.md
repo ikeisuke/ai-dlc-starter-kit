@@ -269,7 +269,7 @@ docs/cycles/{{CYCLE}}/operations/progress.md
 **注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `operations/` ディレクトリ内のファイルを確認してください。
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
-- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
+- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、`docs/aidlc.toml` の `project.type` に応じて配布ステップ（ステップ4）を「スキップ」に設定）
 
 ### 4. 既存成果物の確認（冪等性の保証）
 
@@ -342,8 +342,15 @@ cat go.mod | head -1
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
-### ステップ4: 配布（PROJECT_TYPE=web/backend/general の場合はスキップ）【対話形式】
+### ステップ4: 配布【対話形式】
 
+**スキップ判定**:
+
+`docs/aidlc.toml` の `project.type` を確認:
+- **スキップ対象** (`web`, `backend`, `general`, 未設定): progress.mdでステップ4を「スキップ」に更新し、ステップ5へ進む
+- **実行対象** (`cli`, `desktop`, `ios`, `android`): 以下を実行
+
+**実行する場合**:
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
