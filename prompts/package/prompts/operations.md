@@ -1,6 +1,6 @@
 # Operations Phase プロンプト
 
-**セットアッププロンプトパス**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+**セットアッププロンプトパス（アップグレード時のみ）**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 ---
 
@@ -545,9 +545,15 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
-**次のサイクルを開始するプロンプト**（冒頭の「セットアッププロンプトパス」を使用）:
+**次のサイクルを開始するプロンプト**:
 ```
 以下のファイルを読み込んで、次サイクルの AI-DLC 環境をセットアップしてください：
+docs/aidlc/prompts/setup.md
+```
+
+**AI-DLCスターターキットをアップグレードする場合**:
+```
+以下のファイルを読み込んで、AI-DLC 環境をアップグレードしてください：
 [セットアッププロンプトパス]
 ```
 ---
