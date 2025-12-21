@@ -44,15 +44,47 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 
 ## 最初に必ず実行すること
 
-### 1. サイクルバージョンの決定
+### 1. スターターキットバージョン確認
 
-#### 1.1 既存サイクルの検出
+```bash
+# スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
+LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
+
+# 現在使用中のバージョン（aidlc.toml の starter_kit_version）
+CURRENT_VERSION=$(grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "")
+
+echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
+```
+
+**判定**:
+- **最新バージョン取得失敗**: ステップ2（サイクルバージョンの決定）へ進む
+- **CURRENT_VERSION が空**: ステップ2（サイクルバージョンの決定）へ進む（aidlc.tomlなし）
+- **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
+  ```
+  AI-DLCスターターキットの新しいバージョンが利用可能です。
+  - 現在: [CURRENT_VERSION]
+  - 最新: [LATEST_VERSION]
+
+  アップグレードを推奨します。どうしますか？
+  1. アップグレードする
+  2. 現在のバージョンで続行する
+  ```
+  - **1 を選択**: セットアップを案内して終了
+    ```
+    アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
+    ```
+  - **2 を選択**: ステップ2（サイクルバージョンの決定）へ進む
+- **LATEST_VERSION = CURRENT_VERSION**: ステップ2（サイクルバージョンの決定）へ進む
+
+### 2. サイクルバージョンの決定
+
+#### 2.1 既存サイクルの検出
 
 ```bash
 ls -d docs/cycles/*/ 2>/dev/null | sort -V
 ```
 
-#### 1.2 バージョン提案
+#### 2.2 バージョン提案
 
 **ケース A: 既存サイクルがある場合**
 
@@ -85,11 +117,11 @@ ls -d docs/cycles/*/ 2>/dev/null | sort -V
 
 バージョンが検出されなかった場合は `v1.0.0` を提案。
 
-#### 1.3 重複チェック
+#### 2.3 重複チェック
 
 選択されたバージョンが既存サイクルと重複する場合、エラーを表示して再選択。
 
-### 2. ブランチ確認【推奨】
+### 3. ブランチ確認【推奨】
 
 現在のブランチを確認し、サイクル用ブランチでの作業を推奨：
 
@@ -139,7 +171,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
     ```
 - **それ以外のブランチ**: 次のステップへ進行
 
-### 3. サイクル存在確認
+### 4. サイクル存在確認
 
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
@@ -154,70 +186,9 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
   Inception Phase を開始するには、以下のプロンプトを読み込んでください：
   docs/aidlc/prompts/inception.md
   ```
-- **存在しない場合**: ステップ4（バージョン確認）へ進む
+- **存在しない場合**: ステップ5（サイクルディレクトリ作成）へ進む
 
-### 4. バージョン確認
-
-```bash
-# スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
-LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
-
-# 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-CURRENT_VERSION=$(grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "")
-
-echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
-```
-
-**判定**:
-- **最新バージョン取得失敗**: ステップ5（プロジェクトタイプ確認）へ進む
-- **CURRENT_VERSION が空**: ステップ5（プロジェクトタイプ確認）へ進む（aidlc.tomlなし）
-- **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
-  ```
-  AI-DLCスターターキットの新しいバージョンが利用可能です。
-  - 現在: [CURRENT_VERSION]
-  - 最新: [LATEST_VERSION]
-
-  アップグレードを推奨します。どうしますか？
-  1. アップグレードする
-  2. 現在のバージョンで続行する
-  ```
-  - **1 を選択**: セットアップを案内して終了
-    ```
-    アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
-    ```
-  - **2 を選択**: ステップ5（プロジェクトタイプ確認）へ進む
-- **LATEST_VERSION = CURRENT_VERSION**: ステップ5（プロジェクトタイプ確認）へ進む
-
-### 5. プロジェクトタイプ確認
-
-`docs/aidlc.toml` の `[project]` セクションで `type` を確認。
-
-**未設定の場合**:
-
-```
-プロジェクトタイプを選択してください:
-
-1. web - Webアプリケーション
-2. backend - バックエンドAPI/サーバー
-3. cli - コマンドラインツール
-4. desktop - デスクトップアプリ
-5. ios - iOSアプリ
-6. android - Androidアプリ
-7. general - 汎用/未分類（デフォルト）
-
-どれを選択しますか？
-```
-
-選択後、`docs/aidlc.toml` の `[project]` セクションに `type = "{選択した値}"` を追加。
-
-**設定済みの場合**:
-現在の設定を表示して次のステップへ進む。
-
-```
-プロジェクトタイプ: {現在の値}
-```
-
-### 6. サイクルディレクトリ作成
+### 5. サイクルディレクトリ作成
 
 ユーザーに確認：
 ```
