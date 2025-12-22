@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -500,6 +500,31 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 ### 7. 複数人開発時コンフリクト対策
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
+
+## 🔧 v1.5.1 の改善点
+
+v1.5.1 はセットアップ体験とプロンプト構成を改善するメンテナンスリリースです。
+
+### 1. プロジェクトタイプ設定機能
+- 初回セットアップ時にプロジェクトタイプを明示的に設定
+- Operations Phase でプロジェクトタイプに応じた自動判断（配布ステップのスキップ等）
+
+### 2. 履歴記録設定機能
+- `aidlc.toml` に `[rules.history]` セクションを追加
+- 履歴記録レベルを選択可能: `detailed`（詳細）/ `standard`（標準）/ `minimal`（最小）
+
+### 3. コミットメッセージ改善
+- Unit 完了時のコミットメッセージにサイクル名を含める形式に変更
+- 例: `feat: [v1.5.1] Unit 001完了 - 機能追加`
+
+### 4. セットアップエントリーポイント変更
+- 通常のサイクル開始は `docs/aidlc/prompts/setup.md` を使用
+- アップデート時のみ `prompts/setup-prompt.md` を使用
+- 毎回アップデート確認を行わず効率的に
+
+### 5. セットアッププロンプト統合
+- `setup-cycle.md` を `setup.md` に統合
+- 責務分離と導線の明確化
 
 ## 🔧 v1.5.0 の新機能
 

@@ -2,7 +2,7 @@
 # 生成日: 2025-12-06
 # スターターキットバージョン: 1.2.3
 
-starter_kit_version = "1.4.1"
+starter_kit_version = "1.5.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -55,3 +55,11 @@ mode = "recommend"
 # - true: サイクル開始時にworktreeの使用を提案する
 # - false: 提案しない（デフォルト）
 enabled = false
+
+[rules.history]
+# 履歴記録設定（v1.5.1で追加）
+# level: "detailed" | "standard" | "minimal"
+# - detailed: ステップ完了時に記録 + 修正差分も記録
+# - standard: ステップ完了時に記録（デフォルト）
+# - minimal: Unit完了時にまとめて記録
+level = "standard"

@@ -82,6 +82,11 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/` ディレクトリにUnit単位でファイル分割して管理。
 
+  **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認
+  - `level = "detailed"`: ステップ完了時に記録 + 修正差分も記録
+  - `level = "standard"`: ステップ完了時に記録（デフォルト）
+  - `level = "minimal"`: Unit完了時にまとめて記録
+
   **ファイル命名規則**:
   - `construction_unit{N}.md` （N = Unit番号、例: `construction_unit1.md`）
 
@@ -89,19 +94,28 @@ Inception Phaseで決定済み、または既存スタックを使用
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
 
+  **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
   cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/construction_unit{N}.md
   ## ${TIMESTAMP}
 
   - **フェーズ**: Construction Phase
+  - **Unit**: [Unit名]
+  - **ステップ**: [ステップ名]
   - **実行内容**: [作業概要]
-  - **プロンプト**: [実行したプロンプトや指示]
   - **成果物**: [作成・更新したファイル]
-  - **備考**: [特記事項]
 
   ---
   EOF
+  ```
+
+  **修正差分の記録**（level = "detailed" の場合のみ）:
+  ユーザーからの修正依頼があった場合、以下を履歴に追記:
+  ```markdown
+  ### 修正履歴
+  - **修正依頼**: [ユーザーからのフィードバック要約]
+  - **変更点**: [修正前 → 修正後の要点]
   ```
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
@@ -453,7 +467,7 @@ BDD/TDDに従ってテストコードを作成
 
 コミットメッセージ例:
 ```
-feat: [Unit名]の実装完了 - ドメインモデル、論理設計、コード、テストを作成
+feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
 ### 4. コンテキストリセット【必須】

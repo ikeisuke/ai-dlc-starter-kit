@@ -1,6 +1,6 @@
 # Operations Phase プロンプト
 
-**セットアッププロンプトパス**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+**セットアッププロンプトパス（アップグレード時のみ）**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
 ---
 
@@ -84,23 +84,36 @@ Inception/Construction Phaseで決定済み
 
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
+  **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認
+  - `level = "detailed"`: ステップ完了時に記録 + 修正差分も記録
+  - `level = "standard"`: ステップ完了時に記録（デフォルト）
+  - `level = "minimal"`: フェーズ完了時にまとめて記録
+
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
 
+  **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
   cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/operations.md
   ## ${TIMESTAMP}
 
   - **フェーズ**: Operations Phase
+  - **ステップ**: [ステップ名]
   - **実行内容**: [作業概要]
-  - **プロンプト**: [実行したプロンプトや指示]
   - **成果物**: [作成・更新したファイル]
-  - **備考**: [特記事項]
 
   ---
   EOF
+  ```
+
+  **修正差分の記録**（level = "detailed" の場合のみ）:
+  ユーザーからの修正依頼があった場合、以下を履歴に追記:
+  ```markdown
+  ### 修正履歴
+  - **修正依頼**: [ユーザーからのフィードバック要約]
+  - **変更点**: [修正前 → 修正後の要点]
   ```
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
@@ -269,7 +282,7 @@ docs/cycles/{{CYCLE}}/operations/progress.md
 **注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `operations/` ディレクトリ内のファイルを確認してください。
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
-- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、PROJECT_TYPEに応じて配布ステップを「スキップ」に設定）
+- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」、`docs/aidlc.toml` の `project.type` に応じて配布ステップ（ステップ4）を「スキップ」に設定）
 
 ### 4. 既存成果物の確認（冪等性の保証）
 
@@ -342,8 +355,15 @@ cat go.mod | head -1
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
-### ステップ4: 配布（PROJECT_TYPE=web/backend/general の場合はスキップ）【対話形式】
+### ステップ4: 配布【対話形式】
 
+**スキップ判定**:
+
+`docs/aidlc.toml` の `project.type` を確認:
+- **スキップ対象** (`web`, `backend`, `general`, 未設定): progress.mdでステップ4を「スキップ」に更新し、ステップ5へ進む
+- **実行対象** (`cli`, `desktop`, `ios`, `android`): 以下を実行
+
+**実行する場合**:
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
@@ -394,7 +414,7 @@ Operations Phaseで作成したすべてのファイル（**operations/progress.
 
 コミットメッセージ例:
 ```
-chore: Operations Phase完了 - デプロイ、CI/CD、監視を構築
+chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
 #### 6.4 PR作成
@@ -538,9 +558,15 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
-**次のサイクルを開始するプロンプト**（冒頭の「セットアッププロンプトパス」を使用）:
+**次のサイクルを開始するプロンプト**:
 ```
 以下のファイルを読み込んで、次サイクルの AI-DLC 環境をセットアップしてください：
+docs/aidlc/prompts/setup.md
+```
+
+**AI-DLCスターターキットをアップグレードする場合**:
+```
+以下のファイルを読み込んで、AI-DLC 環境をアップグレードしてください：
 [セットアッププロンプトパス]
 ```
 ---
