@@ -82,23 +82,36 @@ Inception Phaseで決定
 
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/inception.md` に記録。
 
+  **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認
+  - `level = "detailed"`: ステップ完了時に記録 + 修正差分も記録
+  - `level = "standard"`: ステップ完了時に記録（デフォルト）
+  - `level = "minimal"`: フェーズ完了時にまとめて記録
+
   **日時取得の必須ルール**:
   - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
   - セッション開始時に取得した日時を使い回さないこと
 
+  **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
   cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/inception.md
   ## ${TIMESTAMP}
 
   - **フェーズ**: Inception Phase
+  - **ステップ**: [ステップ名]
   - **実行内容**: [作業概要]
-  - **プロンプト**: [実行したプロンプトや指示]
   - **成果物**: [作成・更新したファイル]
-  - **備考**: [特記事項]
 
   ---
   EOF
+  ```
+
+  **修正差分の記録**（level = "detailed" の場合のみ）:
+  ユーザーからの修正依頼があった場合、以下を履歴に追記:
+  ```markdown
+  ### 修正履歴
+  - **修正依頼**: [ユーザーからのフィードバック要約]
+  - **変更点**: [修正前 → 修正後の要点]
   ```
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
@@ -490,7 +503,7 @@ Inception Phaseで作成・変更したすべてのファイル（**inception/pr
 
 コミットメッセージ例:
 ```
-feat: Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
+feat: [{{CYCLE}}] Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
 ```
 
 ---
