@@ -44,6 +44,25 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 
 ## 最初に必ず実行すること
 
+### 0. デプロイ済みファイル確認
+
+```bash
+[ -f docs/aidlc/prompts/setup.md ] && echo "DEPLOYED_EXISTS" || echo "DEPLOYED_NOT_EXISTS"
+```
+
+**判定**:
+- **DEPLOYED_EXISTS**: ステップ1（スターターキットバージョン確認）へ進む
+- **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ1へ進む
+  ```
+  【お知らせ】docs/aidlc/prompts/setup.md が見つかりません。
+
+  アップグレードせずにサイクルを開始する場合は、以下のファイルを参照してください：
+  prompts/package/prompts/setup.md
+
+  このファイルには setup.md の最新版が含まれています。
+  現在このファイルを使用しているため、処理を続行します。
+  ```
+
 ### 1. スターターキットバージョン確認
 
 ```bash
@@ -74,7 +93,11 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
     アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
     ```
   - **2 を選択**: ステップ2（サイクルバージョンの決定）へ進む
-- **LATEST_VERSION = CURRENT_VERSION**: ステップ2（サイクルバージョンの決定）へ進む
+- **LATEST_VERSION = CURRENT_VERSION**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
+  ```
+  アップグレードは不要です（現在最新バージョンです）。
+  次回サイクル開始時も、このsetup.mdを参照してください。
+  ```
 
 ### 2. サイクルバージョンの決定
 
