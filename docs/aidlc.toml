@@ -54,7 +54,7 @@ mode = "recommend"
 # enabled: true | false
 # - true: サイクル開始時にworktreeの使用を提案する
 # - false: 提案しない（デフォルト）
-enabled = false
+enabled = true
 
 [rules.history]
 # 履歴記録設定（v1.5.1で追加）
