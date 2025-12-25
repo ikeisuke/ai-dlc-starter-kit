@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.5.2-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -500,6 +500,25 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 ### 7. 複数人開発時コンフリクト対策
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
+
+## 🔧 v1.5.2 の新機能
+
+v1.5.2 は並行作業対応とセットアップ改善のためのリリースです。
+
+### 1. ドラフトPRベースの並行作業ワークフロー
+- Inception Phase 完了時に main へのドラフト PR を作成
+- 各 Unit は サイクルブランチに対して PR を作成・マージ
+- Operations Phase 完了時にドラフト PR を Ready 化
+- 複数人・複数セッションでの並行開発を支援
+
+### 2. バックログ移行の自動化
+- 旧形式 `backlog.md` を新形式（個別ファイル方式）に自動移行
+- 完了済みバックログとの重複チェック機能
+- セットアップ時に移行を実行
+
+### 3. セットアップ柔軟性向上
+- アップグレードしない場合でも新サイクルを開始可能
+- `setup-prompt.md` でアップグレード不要時の案内を追加
 
 ## 🔧 v1.5.1 の改善点
 
