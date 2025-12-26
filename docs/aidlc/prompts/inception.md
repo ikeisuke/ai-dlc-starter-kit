@@ -498,7 +498,76 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 2. Gitコミット
+### 2. ドラフトPR作成【推奨】
+
+GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する。
+
+**前提条件チェック**:
+```bash
+# GitHub CLI利用可否と認証状態を確認
+if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+    echo "GITHUB_CLI_AVAILABLE"
+else
+    echo "GITHUB_CLI_NOT_AVAILABLE"
+fi
+```
+
+**判定**:
+- **GITHUB_CLI_NOT_AVAILABLE**: 以下を表示してスキップ
+  ```
+  GitHub CLIが利用できないため、ドラフトPR作成をスキップします。
+  必要に応じて、後で手動でPRを作成してください。
+  ```
+- **GITHUB_CLI_AVAILABLE**: 既存PR確認に進む
+
+**既存PR確認**:
+```bash
+CURRENT_BRANCH=$(git branch --show-current)
+gh pr list --head "${CURRENT_BRANCH}" --state open
+```
+
+- **既存PRあり**: 既存PRのURLを表示し、新規作成をスキップ
+- **既存PRなし**: ユーザーに確認
+
+**ユーザー確認**:
+```
+ドラフトPRを作成しますか？
+
+ドラフトPRを作成すると：
+- 進捗がGitHub上で可視化されます
+- 複数人での並行作業が容易になります
+- Unit単位でのレビューが可能になります
+
+1. はい - ドラフトPRを作成する
+2. いいえ - スキップする（後で手動で作成可能）
+```
+
+**PR作成実行**（ユーザーが「はい」を選択した場合）:
+```bash
+gh pr create --draft \
+  --title "[Draft] サイクル {{CYCLE}}" \
+  --body "$(cat <<'EOF'
+## サイクル概要
+[Intentから抽出した1-2文の概要]
+
+## 含まれるUnit
+[Unit定義ファイルから一覧を生成]
+
+---
+このPRはドラフト状態です。Operations Phase完了時にReady for Reviewに変更されます。
+EOF
+)"
+```
+
+**成功時**:
+```
+ドラフトPRを作成しました：
+[PR URL]
+
+このPRはOperations Phase完了時にReady for Reviewに変更されます。
+```
+
+### 3. Gitコミット
 Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:

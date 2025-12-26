@@ -385,6 +385,44 @@ Unit定義ファイルに「実装時の注意」セクションがある場合�
 
 **承認なしで次のステップを開始してはいけない**
 
+### 6. Unitブランチ作成【推奨】
+
+GitHub CLI利用可能時、Unitブランチを作成してから作業を開始する。
+
+**前提条件チェック**:
+```bash
+# GitHub CLI利用可否と認証状態を一括チェック
+if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+    echo "GITHUB_CLI_AVAILABLE"
+else
+    echo "GITHUB_CLI_NOT_AVAILABLE"
+fi
+```
+
+**利用可能な場合の確認メッセージ**:
+```
+Unitブランチを作成しますか？
+
+ブランチ名: cycle/{{CYCLE}}/unit-{NNN}
+
+Unitブランチを使用すると：
+- Unit単位でのPRレビューが可能になります
+- 並行作業時のコンフリクトを減らせます
+
+1. はい - Unitブランチを作成する（推奨）
+2. いいえ - サイクルブランチで直接作業する
+```
+
+**「はい」の場合**:
+```bash
+# Unitブランチ作成・切り替え
+UNIT_BRANCH="cycle/{{CYCLE}}/unit-{NNN}"
+git checkout -b "${UNIT_BRANCH}"
+git push -u origin "${UNIT_BRANCH}"
+```
+
+**「いいえ」またはGitHub CLI利用不可の場合**: スキップして次に進む
+
 ---
 
 ## フロー（1つのUnitのみ）
@@ -470,7 +508,77 @@ BDD/TDDに従ってテストコードを作成
 feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
-### 4. コンテキストリセット【必須】
+### 4. Unit PR作成・マージ【推奨】
+
+Unitブランチで作業した場合、サイクルブランチへのPRを作成してマージする。
+
+**前提条件**:
+- Unitブランチで作業していること
+- GitHub CLIが利用可能であること
+
+**確認メッセージ**:
+```
+Unit PRを作成しますか？
+
+対象ブランチ: cycle/{{CYCLE}}/unit-{NNN} → cycle/{{CYCLE}}
+
+1. はい - PRを作成してマージする（推奨）
+2. いいえ - スキップする（後で手動で作成可能）
+```
+
+**「はい」の場合**:
+
+1. **PR作成**:
+```bash
+gh pr create \
+  --base "cycle/{{CYCLE}}" \
+  --title "[Unit {NNN}] {Unit名}" \
+  --body "$(cat <<'EOF'
+## Unit概要
+[Unit定義から抽出した概要]
+
+## 変更内容
+[主な変更点]
+
+## テスト結果
+[テスト結果サマリ]
+EOF
+)"
+```
+
+2. **PR URL表示**:
+```
+PRを作成しました：
+[PR URL]
+
+レビューが完了したら「マージしてください」と入力してください。
+（または手動でGitHub上からマージすることもできます）
+```
+
+3. **マージ確認後**:
+```bash
+# squash mergeでマージし、ブランチを削除
+gh pr merge --squash --delete-branch
+
+# サイクルブランチに復帰
+git checkout "cycle/{{CYCLE}}"
+git pull origin "cycle/{{CYCLE}}"
+```
+
+4. **マージ成功時**:
+```
+PRをマージしました。
+サイクルブランチに戻りました: cycle/{{CYCLE}}
+```
+
+**「いいえ」またはサイクルブランチで作業した場合**:
+```
+Unit PR作成をスキップしました。
+必要に応じて、後で以下のコマンドで作成できます：
+gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
+```
+
+### 5. コンテキストリセット【必須】
 
 Unit [名前] が完了しました。以下のメッセージをユーザーに提示してください：
 

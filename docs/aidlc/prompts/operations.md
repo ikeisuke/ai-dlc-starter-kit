@@ -246,7 +246,7 @@ Inception/Construction Phaseで決定済み
 
 ---
 
-## 最初に必ず実行すること（5ステップ）
+## 最初に必ず実行すること（6ステップ）
 
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
@@ -302,6 +302,59 @@ ls docs/cycles/{{CYCLE}}/operations/
 - **存在しない場合**: テンプレート（`docs/aidlc/templates/operations_handover_template.md`）から作成
 
 **効果**: 毎回同じ質問を繰り返さずに済む
+
+### 6. 全Unit完了確認【重要】
+
+Construction Phaseで定義された全Unitが完了していることを確認します。
+
+**Unit定義ファイルの確認**:
+
+```bash
+# Unit定義ファイル一覧を取得（番号順）
+ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
+```
+
+各Unit定義ファイルの「## 実装状態」セクションを確認し、「状態」が「完了」であることを確認します。
+
+**全Unit完了の場合**:
+
+```
+全Unitの実装状態を確認しました。
+
+| Unit | 状態 | 完了日 |
+|------|------|--------|
+| 001 | 完了 | YYYY-MM-DD |
+| 002 | 完了 | YYYY-MM-DD |
+...
+
+全Unitが完了しています。Operations Phaseを継続します。
+```
+
+**未完了Unitがある場合**:
+
+```
+【警告】未完了のUnitがあります。
+
+| Unit | 状態 | 備考 |
+|------|------|------|
+| 001 | 完了 | - |
+| 002 | 進行中 | ← 未完了 |
+| 003 | 未着手 | ← 未完了 |
+
+通常、Operations PhaseはすべてのUnitが完了してから開始します。
+
+1. Construction Phaseに戻って未完了Unitを完了させる
+2. このまま続行する（非推奨）
+
+どちらを選択しますか？
+```
+
+- **選択1の場合**: Construction Phaseプロンプトを案内
+  ```
+  以下のファイルを読み込んで、Construction Phase を継続してください：
+  docs/aidlc/prompts/construction.md
+  ```
+- **選択2の場合**: 警告を記録し、Operations Phaseを継続
 
 ---
 
@@ -417,8 +470,67 @@ Operations Phaseで作成したすべてのファイル（**operations/progress.
 chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
-#### 6.4 PR作成
-mainブランチへのPRを作成:
+#### 6.4 ドラフトPR Ready化【重要】
+
+Inception Phaseで作成したドラフトPRをReady for Reviewに変更します。
+
+**前提条件チェック**:
+```bash
+# GitHub CLI利用可否と認証状態を確認
+if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+    echo "GITHUB_CLI_AVAILABLE"
+else
+    echo "GITHUB_CLI_NOT_AVAILABLE"
+fi
+```
+
+**ドラフトPR検索**:
+```bash
+# 現在のブランチからのオープンなPRを確認
+CURRENT_BRANCH=$(git branch --show-current)
+gh pr list --head "${CURRENT_BRANCH}" --state open --json number,url,isDraft
+```
+
+**ドラフトPRが見つかった場合**:
+
+```
+サイクルブランチからのドラフトPRが見つかりました:
+- PR #{番号}: {タイトル}
+- URL: {URL}
+
+このPRをReady for Reviewに変更しますか？
+
+1. はい - Ready for Reviewに変更
+2. いいえ - このままにする
+```
+
+選択1の場合:
+```bash
+# ドラフトPRをReady for Reviewに変更
+gh pr ready {PR番号}
+```
+
+**Ready化成功時**:
+```
+ドラフトPRをReady for Reviewに変更しました:
+- PR #{番号}: {タイトル}
+- URL: {URL}
+
+レビューを依頼し、マージしてください。
+```
+
+**ドラフトPRが見つからない場合**:
+
+```
+サイクルブランチからのPRが見つかりません。
+
+新規PRを作成しますか？
+
+1. はい - 新規PRを作成
+2. いいえ - スキップ（後で手動で作成可能）
+```
+
+選択1の場合:
 ```bash
 gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
 ## Summary
@@ -430,6 +542,15 @@ gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
+```
+
+**GitHub CLI利用不可時**:
+```
+GitHub CLIが利用できません。
+
+手動でPRをReady for Reviewに変更してください:
+1. GitHub上でPRを開く
+2. 「Ready for review」ボタンをクリック
 ```
 
 - **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
@@ -458,7 +579,7 @@ EOF
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - README更新、履歴記録、Gitコミット、PR作成がすべて完了
+   - README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
