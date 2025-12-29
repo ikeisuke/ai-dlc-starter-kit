@@ -70,7 +70,7 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
 
 # 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-CURRENT_VERSION=$(grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "")
+CURRENT_VERSION=$(grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
 
 echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
 ```

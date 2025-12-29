@@ -53,7 +53,7 @@ ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
   (ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "CONFIG_NOT_EXISTS")
 
 # プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
-grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "VERSION_NOT_FOUND"
+grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "VERSION_NOT_FOUND"
 ```
 
 また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、**スターターキットのバージョン**を確認してください。
