@@ -80,7 +80,12 @@ AI-DLC の初回セットアップを行います。
 AI-DLC は最新です。新しいサイクルを開始します。
 ```
 
-**次のアクション**: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込み、処理を継続してください。ユーザーの操作を待たずに自動で読み込むこと。
+**次のアクション**:
+1. `docs/aidlc/prompts/setup.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+
+ユーザーの操作を待たずに自動で読み込むこと。
 
 ---
 
@@ -103,7 +108,10 @@ AI-DLC のアップグレードが利用可能です。
 
 **次のアクション**: ユーザーの選択後:
 - **1 を選択**: セクション3（ファイル移行）をスキップし、セクション4（Git環境の確認）へ進む（アップグレードモード）
-- **2 を選択**: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+- **2 を選択**:
+  1. `docs/aidlc/prompts/setup.md` の存在を確認
+  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
 
 ---
 
@@ -121,7 +129,10 @@ aidlc.toml の starter_kit_version > スターターキットの version.txt の
 現在のバージョンで続行しますか？
 ```
 
-**次のアクション**: ユーザーが続行を承認した場合、プロジェクト内の `docs/aidlc/prompts/setup.md` を自動で読み込み、処理を継続してください。
+**次のアクション**: ユーザーが続行を承認した場合:
+1. `docs/aidlc/prompts/setup.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
 
 ---
 
