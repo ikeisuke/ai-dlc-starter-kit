@@ -255,6 +255,46 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     ```
 - **それ以外のブランチ**: 次のステップへ進行
 
+### 0.5 サイクル名の決定【重要】
+
+サイクル名を以下の優先順位で決定:
+
+1. **ユーザーが明示的に指定した場合**: その値を使用
+   - 例: 「サイクル v1.5.3 の Inception Phase を開始してください」
+   - ユーザーのプロンプトに「サイクル vX.Y.Z」「vX.Y.Z の」などの記載があれば、それを使用
+
+2. **現在のブランチ名から推測**:
+   ```bash
+   CURRENT_BRANCH=$(git branch --show-current)
+   if [[ $CURRENT_BRANCH =~ ^cycle/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+     DETECTED_CYCLE="v${BASH_REMATCH[1]}"
+     echo "CYCLE_DETECTED: ${DETECTED_CYCLE}"
+   else
+     echo "CYCLE_NOT_DETECTED_FROM_BRANCH"
+   fi
+   ```
+
+3. **docs/cycles/ 配下の最新サイクルディレクトリを使用**:
+   ```bash
+   LATEST_CYCLE=$(ls -d docs/cycles/*/ 2>/dev/null | sort -V | tail -1 | xargs basename)
+   echo "LATEST_CYCLE: ${LATEST_CYCLE}"
+   ```
+
+4. **上記いずれも該当しない場合**: ユーザーに質問
+   ```
+   サイクル名を特定できませんでした。
+   どのサイクルで作業しますか？（例: v1.5.3）
+   ```
+
+**決定したサイクル名の確認**:
+```
+サイクル {{CYCLE}} で Inception Phase を開始します。
+よろしいですか？
+```
+
+- **承認された場合**: 次のステップへ進行
+- **別のサイクルを指定された場合**: 指定されたサイクルを使用
+
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 

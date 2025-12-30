@@ -101,13 +101,39 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
 
 ### 2. サイクルバージョンの決定
 
-#### 2.1 既存サイクルの検出
+#### 2.1 ブランチ名からバージョン推測
+
+現在のブランチ名からサイクルバージョンを推測:
+
+```bash
+CURRENT_BRANCH=$(git branch --show-current)
+if [[ $CURRENT_BRANCH =~ ^cycle/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+  SUGGESTED_VERSION="v${BASH_REMATCH[1]}"
+  echo "BRANCH_VERSION_DETECTED: ${SUGGESTED_VERSION}"
+else
+  echo "BRANCH_VERSION_NOT_DETECTED"
+fi
+```
+
+**判定**:
+- **BRANCH_VERSION_DETECTED**: 検出されたバージョンを提案
+  ```
+  現在のブランチ名から v{X}.{Y}.{Z} を検出しました。
+  このバージョンをサイクルバージョンとして使用しますか？
+  1. はい、v{X}.{Y}.{Z} を使用する [推奨]
+  2. いいえ、別のバージョンを選択する
+  ```
+  - **1 を選択**: 検出されたバージョンを使用（重複チェックへ）
+  - **2 を選択**: 既存サイクルの検出へ進む
+- **BRANCH_VERSION_NOT_DETECTED**: 既存サイクルの検出へ進む
+
+#### 2.2 既存サイクルの検出
 
 ```bash
 ls -d docs/cycles/*/ 2>/dev/null | sort -V
 ```
 
-#### 2.2 バージョン提案
+#### 2.3 バージョン提案
 
 **ケース A: 既存サイクルがある場合**
 
@@ -140,7 +166,7 @@ ls -d docs/cycles/*/ 2>/dev/null | sort -V
 
 バージョンが検出されなかった場合は `v1.0.0` を提案。
 
-#### 2.3 重複チェック
+#### 2.4 重複チェック
 
 選択されたバージョンが既存サイクルと重複する場合、エラーを表示して再選択。
 
@@ -391,6 +417,8 @@ git commit -m "feat: サイクル {{CYCLE}} 開始"
 
 Inception Phase を開始するには、以下のプロンプトを読み込んでください：
 docs/aidlc/prompts/inception.md
+
+サイクル: {{CYCLE}}
 ```
 
 ---
