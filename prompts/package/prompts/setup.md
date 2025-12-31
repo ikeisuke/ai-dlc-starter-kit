@@ -211,7 +211,65 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
   どちらを選択しますか？
   ```
 
-  - **worktree を選択**: worktree 作成手順を案内（セクション末尾参照）
+  - **worktree を選択**: 以下のAI自動作成フローを実行
+
+    **1. プロジェクト情報取得**:
+    ```bash
+    PROJECT_NAME=$(basename "$(pwd)")
+    WORKTREE_PATH="../${PROJECT_NAME}-{{CYCLE}}"
+    echo "プロジェクト名: ${PROJECT_NAME}"
+    echo "worktreeパス: ${WORKTREE_PATH}"
+    ```
+
+    **2. 既存worktree確認**:
+    ```bash
+    git worktree list | grep "cycle/{{CYCLE}}" && echo "WORKTREE_EXISTS" || echo "WORKTREE_NOT_EXISTS"
+    ```
+
+    - **WORKTREE_EXISTS**: 既存worktreeの使用を確認
+      ```
+      cycle/{{CYCLE}} ブランチのworktreeが既に存在します。
+      既存のworktreeを使用しますか？（Y/n）
+      ```
+      承認された場合は既存worktreeのパスを表示して終了。
+
+    - **WORKTREE_NOT_EXISTS**: worktree作成を続行
+
+    **3. 作成確認**:
+    ```
+    以下のworktreeを作成します:
+    - パス: [WORKTREE_PATH]
+    - ブランチ: cycle/{{CYCLE}}
+
+    作成しますか？（Y/n）
+    ```
+
+    **4. worktree作成実行**:
+    ```bash
+    git worktree add "${WORKTREE_PATH}" "cycle/{{CYCLE}}"
+    ```
+
+    **5. 結果処理**:
+    - **成功時**:
+      ```
+      worktreeを作成しました: [WORKTREE_PATH]
+
+      新しいディレクトリに移動して、セッションを開始してください:
+      cd [WORKTREE_PATH]
+
+      移動後、以下のプロンプトを読み込んでください:
+      docs/aidlc/prompts/setup.md
+      ```
+    - **失敗時（フォールバック）**:
+      ```
+      worktreeの自動作成に失敗しました。
+      以下のコマンドを手動で実行してください:
+
+      git worktree add [WORKTREE_PATH] cycle/{{CYCLE}}
+
+      作成後、新しいディレクトリに移動してセッションを開始してください。
+      ```
+
   - **ブランチ作成を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
   - **続行を選択**: 警告を表示して続行
     ```
@@ -425,27 +483,51 @@ docs/aidlc/prompts/inception.md
 
 ## 補足: git worktree の使用
 
-worktree を選択した場合の手順:
-
-```
-## git worktree の使用
-
 git worktreeを使うと、同じリポジトリの複数ブランチを別ディレクトリで同時に開けます。
 複数サイクルの並行作業に便利です。
 
-**推奨ディレクトリ構成**:
+### 推奨ディレクトリ構成
 
+```
 ~/projects/
 ├── my-project/              # メインディレクトリ（mainブランチ）
 ├── my-project-v1.4.0/       # worktree（cycle/v1.4.0ブランチ）
 └── my-project-v1.5.0/       # worktree（cycle/v1.5.0ブランチ）
+```
 
-**worktree作成コマンド**:
+### 正しいworktree作成コマンド
 
-# 親ディレクトリに移動してworktreeを作成
-cd ..
-git -C [元のディレクトリ名] worktree add -b cycle/{{CYCLE}} [元のディレクトリ名]-{{CYCLE}}
-cd [元のディレクトリ名]-{{CYCLE}}
+**重要**: メインディレクトリから実行してください。親ディレクトリへのcdは不要です。
 
-作成後、新しいディレクトリでセッションを開始してください。
+```bash
+# メインディレクトリから実行
+git worktree add ../[プロジェクト名]-{{CYCLE}} cycle/{{CYCLE}}
+
+# 例: ai-dlc-starter-kit ディレクトリから v1.5.3 のworktreeを作成
+git worktree add ../ai-dlc-starter-kit-v1.5.3 cycle/v1.5.3
+```
+
+**注意**: `git -C` を使用した方法は**非推奨**です。相対パスがリポジトリディレクトリ基準になり、メインディレクトリ内にworktreeが作成されてしまいます。
+
+### 誤ったworktreeの修正手順
+
+メインディレクトリ内に誤ってworktreeが作成された場合:
+
+```bash
+# 1. 誤った worktree を削除
+git worktree remove [プロジェクト名]-{{CYCLE}}
+
+# 2. 正しい位置に再作成
+git worktree add ../[プロジェクト名]-{{CYCLE}} cycle/{{CYCLE}}
+
+# 3. 確認
+git worktree list
+```
+
+### worktree作成後
+
+作成後、新しいディレクトリに移動してセッションを開始してください:
+
+```bash
+cd ../[プロジェクト名]-{{CYCLE}}
 ```
