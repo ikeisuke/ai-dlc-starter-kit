@@ -508,6 +508,9 @@ gh pr list --head "${CURRENT_BRANCH}" --state open --json number,url,isDraft
 ```bash
 # ドラフトPRをReady for Reviewに変更
 gh pr ready {PR番号}
+
+# PRタイトルから[Draft]を削除
+gh pr edit {PR番号} --title "{{CYCLE}}"
 ```
 
 **Ready化成功時**:
