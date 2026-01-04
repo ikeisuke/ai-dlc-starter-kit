@@ -53,7 +53,7 @@ ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
   (ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "CONFIG_NOT_EXISTS")
 
 # プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
-grep -oP 'starter_kit_version\s*=\s*"\K[^"]+' docs/aidlc.toml 2>/dev/null || echo "VERSION_NOT_FOUND"
+grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "VERSION_NOT_FOUND"
 ```
 
 また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、**スターターキットのバージョン**を確認してください。
@@ -80,7 +80,12 @@ AI-DLC の初回セットアップを行います。
 AI-DLC は最新です。新しいサイクルを開始します。
 ```
 
-**次のアクション**: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込み、処理を継続してください。ユーザーの操作を待たずに自動で読み込むこと。
+**次のアクション**:
+1. `docs/aidlc/prompts/setup.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+
+ユーザーの操作を待たずに自動で読み込むこと。
 
 ---
 
@@ -103,7 +108,10 @@ AI-DLC のアップグレードが利用可能です。
 
 **次のアクション**: ユーザーの選択後:
 - **1 を選択**: セクション3（ファイル移行）をスキップし、セクション4（Git環境の確認）へ進む（アップグレードモード）
-- **2 を選択**: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+- **2 を選択**:
+  1. `docs/aidlc/prompts/setup.md` の存在を確認
+  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
 
 ---
 
@@ -121,7 +129,10 @@ aidlc.toml の starter_kit_version > スターターキットの version.txt の
 現在のバージョンで続行しますか？
 ```
 
-**次のアクション**: ユーザーが続行を承認した場合、プロジェクト内の `docs/aidlc/prompts/setup.md` を自動で読み込み、処理を継続してください。
+**次のアクション**: ユーザーが続行を承認した場合:
+1. `docs/aidlc/prompts/setup.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
 
 ---
 
@@ -782,7 +793,15 @@ AI-DLCのアップグレードが完了しました！
 - docs/aidlc/templates/ - ドキュメントテンプレート
 
 ※ docs/aidlc.toml は保持されています（変更なし）
+
+---
+**セットアップは完了です。このセッションはここで終了してください。**
+
+新しいセッションで以下を実行し、サイクルを開始してください：
+docs/aidlc/prompts/setup.md
 ```
+
+**重要**: アップグレード完了後は、自動で `setup.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
 
 ### 移行の場合
 
@@ -802,6 +821,12 @@ AI-DLCの新ファイル構成への移行が完了しました！
 ---
 
 ## 次のステップ: サイクル開始
+
+**注意**: このセクションは初回セットアップ・移行の場合のみ表示してください。
+- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `setup.md` を読み込む
+- **ケースC（アップグレード完了後）**: 上記「アップグレードの場合」のメッセージを表示し、セッションを終了する
+
+### 初回セットアップ・移行の場合
 
 セットアップが完了しました。新しいセッションで以下を実行し、サイクルを開始してください：
 
