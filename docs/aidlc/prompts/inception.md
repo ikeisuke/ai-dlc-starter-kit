@@ -116,16 +116,43 @@ Inception Phaseで決定
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
-- **MCPレビュー【設定に応じて】**: ユーザーの承認を求める前に、MCPレビューを実施する。
+- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを確認
-  - `mode = "required"`: MCP利用可能時はレビュー必須。利用不可時は警告表示
-  - `mode = "recommend"`: MCP利用可能時は以下の推奨を表示（デフォルト）
-  - `mode = "disabled"`: 何も表示しない
+  - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "disabled"`: AIレビューを行わない
+
+  **処理フロー**:
+
+  1. **mode確認**: 設定ファイルからmodeを読み取る
+     - `disabled` の場合: 直接人間承認へ
+     - `required` または `recommend` の場合: 次のステップへ
+
+  2. **MCP利用可否チェック**: AI MCP（Codex MCP等）が利用可能か確認
+
+  3. **MCP利用可能時**:
+     - AIレビューを実行
+     - レビュー結果を確認
+     - 指摘があれば修正を反映
+     - 修正後の成果物を人間に提示
+     - 人間の承認を求める
+
+  4. **MCP利用不可時**:
+     - `mode = "required"` の場合:
+       ```
+       【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
+
+       AIレビューをスキップして人間の承認に進みますか？
+       1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
+       2. いいえ - 処理を中断
+       ```
+       ユーザーの応答を待ち、「はい」の場合はスキップを履歴に記録して人間承認へ
+     - `mode = "recommend"` の場合: 直接人間に承認を求める
 
   **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
   ```
-  【レビュー推奨】別のAIエージェント（Codex MCP等）が利用可能です。
+  【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
   品質向上のため、この成果物のレビューを実施することを推奨します。
   レビューを実施しますか？
   ```
@@ -254,6 +281,46 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     変更は直接 main/master に反映されます。
     ```
 - **それ以外のブランチ**: 次のステップへ進行
+
+### 0.5 サイクル名の決定【重要】
+
+サイクル名を以下の優先順位で決定:
+
+1. **ユーザーが明示的に指定した場合**: その値を使用
+   - 例: 「サイクル v1.5.3 の Inception Phase を開始してください」
+   - ユーザーのプロンプトに「サイクル vX.Y.Z」「vX.Y.Z の」などの記載があれば、それを使用
+
+2. **現在のブランチ名から推測**:
+   ```bash
+   CURRENT_BRANCH=$(git branch --show-current)
+   if [[ $CURRENT_BRANCH =~ ^cycle/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+     DETECTED_CYCLE="v${BASH_REMATCH[1]}"
+     echo "CYCLE_DETECTED: ${DETECTED_CYCLE}"
+   else
+     echo "CYCLE_NOT_DETECTED_FROM_BRANCH"
+   fi
+   ```
+
+3. **docs/cycles/ 配下の最新サイクルディレクトリを使用**:
+   ```bash
+   LATEST_CYCLE=$(ls -d docs/cycles/*/ 2>/dev/null | sort -V | tail -1 | xargs basename)
+   echo "LATEST_CYCLE: ${LATEST_CYCLE}"
+   ```
+
+4. **上記いずれも該当しない場合**: ユーザーに質問
+   ```
+   サイクル名を特定できませんでした。
+   どのサイクルで作業しますか？（例: v1.5.3）
+   ```
+
+**決定したサイクル名の確認**:
+```
+サイクル {{CYCLE}} で Inception Phase を開始します。
+よろしいですか？
+```
+
+- **承認された場合**: 次のステップへ進行
+- **別のサイクルを指定された場合**: 指定されたサイクルを使用
 
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
