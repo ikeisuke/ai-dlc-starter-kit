@@ -2,3 +2,4 @@
 # これらはテンプレートやサイクル成果物であり、厳密なlintは不要
 docs/aidlc/
 docs/cycles/
+docs/versions/

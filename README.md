@@ -13,7 +13,7 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 ## 📂 リポジトリ構成
 
-```
+```text
 ai-dlc-starter-kit/
 ├── docs/
 │   ├── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
@@ -94,7 +94,7 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
   - `docs/cycles/` にサイクル固有成果物
 
 セットアップが完了すると、以下のディレクトリ構造が作成されます：
-```
+```text
 docs/
 ├── aidlc.toml                # プロジェクト設定
 ├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成）
@@ -310,7 +310,7 @@ v1.0.0 では以下の破壊的変更があります：
 - **理由**: 「バージョン」概念はモバイルアプリには適応的だが、Web/バックエンド開発には馴染まないため、より汎用的な「サイクル」に変更
 
 #### 2. ディレクトリ構造の変更
-```
+```text
 # v0.1.0
 docs/example/v1/
 ├── prompts/

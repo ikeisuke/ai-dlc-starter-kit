@@ -33,7 +33,7 @@ pwd
 
 **確認が完了したら、以下をユーザーに表示してください**:
 
-```
+```text
 現在のディレクトリ: [pwd の結果]
 
 このディレクトリで AI-DLC セットアップを実行してよろしいですか？
@@ -64,7 +64,7 @@ grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's
 
 以下のメッセージを表示してください:
 
-```
+```text
 AI-DLC の初回セットアップを行います。
 ```
 
@@ -76,7 +76,7 @@ AI-DLC の初回セットアップを行います。
 
 以下のメッセージを表示してください:
 
-```
+```text
 AI-DLC は最新です。新しいサイクルを開始します。
 ```
 
@@ -93,7 +93,7 @@ AI-DLC は最新です。新しいサイクルを開始します。
 
 以下のメッセージを表示し、ユーザーの選択を待ってください:
 
-```
+```text
 AI-DLC のアップグレードが利用可能です。
 
 現在のバージョン: [aidlc.toml の starter_kit_version]
@@ -119,7 +119,7 @@ AI-DLC のアップグレードが利用可能です。
 
 aidlc.toml の starter_kit_version > スターターキットの version.txt の場合:
 
-```
+```text
 警告: プロジェクトのバージョンがスターターキットより新しいです。
 
 プロジェクト: [aidlc.toml の starter_kit_version]
@@ -183,7 +183,7 @@ fi
 
 移行が実行された場合、以下のメッセージを表示：
 
-```
+```text
 ファイル構成の変更に伴い、以下のファイルを移行しました：
 
 | 移行元 | 移行先 |
@@ -268,7 +268,7 @@ echo "情報源: README=${README_EXISTS}, CONFIG=${CONFIG_FILE:-none}, DOCS=${DO
 ```
 
 **探索結果の表示**:
-```
+```text
 プロジェクトの情報源を確認しました：
 
 | 情報源 | 状態 |
@@ -315,7 +315,7 @@ echo "情報源: README=${README_EXISTS}, CONFIG=${CONFIG_FILE:-none}, DOCS=${DO
 
 推測した情報をテーブル形式で表示し、ユーザーに確認を求めます：
 
-```
+```text
 プロジェクト情報を推測しました：
 
 | 項目 | 推測値 | 根拠 |
@@ -339,7 +339,7 @@ echo "情報源: README=${README_EXISTS}, CONFIG=${CONFIG_FILE:-none}, DOCS=${DO
 
 **必須フィールド**: name（必須）、description（推奨）
 
-```
+```text
 [項目名]が推測できませんでした。入力してください（スキップする場合は「スキップ」）:
 ```
 
@@ -351,7 +351,7 @@ echo "情報源: README=${README_EXISTS}, CONFIG=${CONFIG_FILE:-none}, DOCS=${DO
 
 プロジェクトタイプを選択してください:
 
-```
+```text
 プロジェクトタイプを選択してください:
 
 1. web - Webアプリケーション
@@ -590,7 +590,7 @@ rsync -avn --checksum --delete \
 ```
 
 **削除対象がある場合（.gitkeep以外）**:
-```
+```text
 警告: 以下のファイルが削除されます：
 
 [削除対象のファイル一覧]
@@ -648,7 +648,7 @@ fi
 ```
 
 **表示例**:
-```
+```text
 更新されたプロンプト:
   - construction.md
   - lite/operations.md
@@ -689,7 +689,7 @@ fi
 ```
 
 **表示例**:
-```
+```text
 更新されたテンプレート:
   - unit_definition_template.md
   - implementation_record_template.md
@@ -719,7 +719,7 @@ fi
 
 #### 8.2.4 rsync出力例
 
-```
+```text
 sending incremental file list
 >fcst....... construction.md   # 内容が異なる → 更新
 .f..t....... inception.md      # タイムスタンプのみ → スキップ（--checksumにより）
@@ -763,7 +763,7 @@ git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.
 
 ### 初回セットアップの場合
 
-```
+```text
 AI-DLC環境のセットアップが完了しました！
 
 作成されたファイル:
@@ -785,7 +785,7 @@ AI-DLC環境のセットアップが完了しました！
 
 ### アップグレードの場合
 
-```
+```text
 AI-DLCのアップグレードが完了しました！
 
 更新されたファイル:
@@ -805,7 +805,7 @@ docs/aidlc/prompts/setup.md
 
 ### 移行の場合
 
-```
+```text
 AI-DLCの新ファイル構成への移行が完了しました！
 
 移行されたファイル:
@@ -830,7 +830,7 @@ AI-DLCの新ファイル構成への移行が完了しました！
 
 セットアップが完了しました。新しいセッションで以下を実行し、サイクルを開始してください：
 
-```
+```text
 以下のファイルを読み込んで、サイクルを開始してください：
 docs/aidlc/prompts/setup.md
 ```
