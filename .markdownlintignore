@@ -1,0 +1,4 @@
+# AI-DLC関連ディレクトリを除外
+# これらはテンプレートやサイクル成果物であり、厳密なlintは不要
+docs/aidlc/
+docs/cycles/
