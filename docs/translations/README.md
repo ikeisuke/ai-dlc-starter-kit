@@ -4,7 +4,7 @@ AWS が提唱する AI ネイティブなソフトウェア開発方法論のホ
 
 ## 元データ
 
-オリジナルのホワイトペーパー: https://prod.d13rzhkk8cj2z0.amplifyapp.com
+オリジナルのホワイトペーパー: <https://prod.d13rzhkk8cj2z0.amplifyapp.com>
 
 ## AI-DLC とは
 
@@ -107,7 +107,7 @@ AI-Driven Development Lifecycle (AI-DLC) は、AI を「支援ツール」とし
 著者: Raju SP, Amazon Web Services
 
 **重要**: このドキュメントには明示的なライセンス情報が記載されていません。
-- オリジナル文書: https://prod.d13rzhkk8cj2z0.amplifyapp.com
+- オリジナル文書: <https://prod.d13rzhkk8cj2z0.amplifyapp.com>
 - このリポジトリの翻訳文書は、学習・参考目的での利用を想定しています
 - 商用利用や再配布については、AWS または著者に直接確認することを推奨します
 
