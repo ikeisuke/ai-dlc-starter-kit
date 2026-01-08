@@ -452,17 +452,51 @@ Unitブランチを作成しますか？
 Unitブランチを使用すると：
 - Unit単位でのPRレビューが可能になります
 - 並行作業時のコンフリクトを減らせます
+- ドラフトPRが自動作成され、作業の可視化ができます
 
-1. はい - Unitブランチを作成する（推奨）
+1. はい - UnitブランチとドラフトPRを作成する（推奨）
 2. いいえ - サイクルブランチで直接作業する
 ```
 
 **「はい」の場合**:
+
+1. **Unitブランチ作成・プッシュ**:
 ```bash
 # Unitブランチ作成・切り替え
 UNIT_BRANCH="cycle/{{CYCLE}}/unit-{NNN}"
 git checkout -b "${UNIT_BRANCH}"
 git push -u origin "${UNIT_BRANCH}"
+```
+
+2. **ドラフトPR作成**:
+```bash
+gh pr create \
+  --draft \
+  --base "cycle/{{CYCLE}}" \
+  --title "[Draft][Unit {NNN}] {Unit名}" \
+  --body "$(cat <<'EOF'
+## Unit概要
+[Unit定義から抽出した概要]
+
+---
+:construction: このPRは作業中です。Unit完了時にレビュー依頼を行います。
+EOF
+)"
+```
+
+3. **PR URL表示**:
+```
+ドラフトPRを作成しました：
+[PR URL]
+
+Unit完了時にPRをレディ状態に変更し、レビューを依頼します。
+```
+
+**ドラフトPR作成に失敗した場合**:
+```
+【注意】ドラフトPRの作成に失敗しました。
+ブランチは正常に作成されています。
+PRは後で手動で作成するか、Unit完了時に作成してください。
 ```
 
 **「いいえ」またはGitHub CLI利用不可の場合**: スキップして次に進む
@@ -554,7 +588,7 @@ feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コー
 
 ### 4. Unit PR作成・マージ【推奨】
 
-Unitブランチで作業した場合、サイクルブランチへのPRを作成してマージする。
+Unitブランチで作業した場合、サイクルブランチへのPRを作成（または既存ドラフトPRを更新）してマージする。
 
 **前提条件**:
 - Unitブランチで作業していること
@@ -562,17 +596,51 @@ Unitブランチで作業した場合、サイクルブランチへのPRを作�
 
 **確認メッセージ**:
 ```
-Unit PRを作成しますか？
+Unit PRをマージしますか？
 
 対象ブランチ: cycle/{{CYCLE}}/unit-{NNN} → cycle/{{CYCLE}}
 
-1. はい - PRを作成してマージする（推奨）
+※ ドラフトPRが存在する場合は、レディ状態に変更してマージします。
+
+1. はい - PRを準備してマージする（推奨）
 2. いいえ - スキップする（後で手動で作成可能）
 ```
 
 **「はい」の場合**:
 
-1. **PR作成**:
+1. **既存PRの確認**:
+```bash
+# 現在のブランチに紐づくPRを確認
+if gh pr view --json number,state &>/dev/null; then
+    echo "EXISTING_PR_FOUND"
+else
+    echo "NO_EXISTING_PR"
+fi
+```
+
+2. **PRが存在する場合（ドラフトPR）**:
+```bash
+# ドラフトをレディ状態に変更
+gh pr ready
+
+# PRタイトルを更新（[Draft]プレフィックスを削除）
+gh pr edit --title "[Unit {NNN}] {Unit名}"
+
+# PRボディを更新
+gh pr edit --body "$(cat <<'EOF'
+## Unit概要
+[Unit定義から抽出した概要]
+
+## 変更内容
+[主な変更点]
+
+## テスト結果
+[テスト結果サマリ]
+EOF
+)"
+```
+
+3. **PRが存在しない場合（新規作成）**:
 ```bash
 gh pr create \
   --base "cycle/{{CYCLE}}" \
@@ -590,16 +658,16 @@ EOF
 )"
 ```
 
-2. **PR URL表示**:
+4. **PR URL表示**:
 ```
-PRを作成しました：
+PRを準備しました：
 [PR URL]
 
 レビューが完了したら「マージしてください」と入力してください。
 （または手動でGitHub上からマージすることもできます）
 ```
 
-3. **マージ確認後**:
+5. **マージ確認後**:
 ```bash
 # squash mergeでマージし、ブランチを削除
 gh pr merge --squash --delete-branch
@@ -609,7 +677,7 @@ git checkout "cycle/{{CYCLE}}"
 git pull origin "cycle/{{CYCLE}}"
 ```
 
-4. **マージ成功時**:
+6. **マージ成功時**:
 ```
 PRをマージしました。
 サイクルブランチに戻りました: cycle/{{CYCLE}}
