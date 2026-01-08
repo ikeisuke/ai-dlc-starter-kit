@@ -54,7 +54,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **質問フロー（ハイブリッド方式）**:
   1. まず質問の数と概要を提示する
-     ```
+     ```text
      質問が{N}点あります：
      1. {質問1の概要}
      2. {質問2の概要}
@@ -154,7 +154,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
-     ```
+     ```text
      // TODO: workaround - see docs/cycles/backlog/{filename}.md
      ```
 
@@ -219,7 +219,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   4. **MCP利用不可時**:
      - `mode = "required"` の場合:
-       ```
+       ```text
        【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
 
        AIレビューをスキップして人間の承認に進みますか？
@@ -230,7 +230,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - `mode = "recommend"` の場合: 直接人間に承認を求める
 
   **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
-  ```
+  ```text
   【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
   品質向上のため、この成果物のレビューを実施することを推奨します。
   レビューを実施しますか？
@@ -245,7 +245,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   - 応答に誤りや不整合がないか確認する
   - 自己判断を併記し、相違がある場合はユーザーに確認を求める
   - 形式：
-    ```
+    ```text
     【MCP応答の検証】
     - MCP応答: [応答内容の要約]
     - AI判断: [自己判断]
@@ -257,7 +257,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   - ユーザー入力に曖昧さがある場合は、解釈を明示して確認する
   - 複数の解釈が可能な場合は、すべての解釈を提示する
   - 形式：
-    ```
+    ```text
     【入力の解釈確認】
     ご入力: "[ユーザーの入力]"
 
@@ -278,7 +278,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   3. 履歴記録（`history/construction_unit{N}.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
-  ```markdown
+  ````markdown
   ---
   ## コンテキストリセット - 作業継続
 
@@ -295,7 +295,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   docs/aidlc/prompts/construction.md
   ```
   ---
-  ```
+  ````
 
 ### フェーズの責務【重要】
 
@@ -353,7 +353,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ```
 
 - **存在しない場合**: エラーを表示し、setup.md を案内
-  ```
+  ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
   既存のサイクル:
@@ -444,7 +444,7 @@ fi
 ```
 
 **利用可能な場合の確認メッセージ**:
-```
+```text
 Unitブランチを作成しますか？
 
 ブランチ名: cycle/{{CYCLE}}/unit-{NNN}
@@ -485,7 +485,7 @@ EOF
 ```
 
 3. **PR URL表示**:
-```
+```text
 ドラフトPRを作成しました：
 [PR URL]
 
@@ -493,7 +493,7 @@ Unit完了時にPRをレディ状態に変更し、レビューを依頼しま�
 ```
 
 **ドラフトPR作成に失敗した場合**:
-```
+```text
 【注意】ドラフトPRの作成に失敗しました。
 ブランチは正常に作成されています。
 PRは後で手動で作成するか、Unit完了時に作成してください。
@@ -582,7 +582,7 @@ BDD/TDDに従ってテストコードを作成
 各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
-```
+```text
 feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
@@ -595,7 +595,7 @@ Unitブランチで作業した場合、サイクルブランチへのPRを作�
 - GitHub CLIが利用可能であること
 
 **確認メッセージ**:
-```
+```text
 Unit PRをマージしますか？
 
 対象ブランチ: cycle/{{CYCLE}}/unit-{NNN} → cycle/{{CYCLE}}
@@ -659,7 +659,7 @@ EOF
 ```
 
 4. **PR URL表示**:
-```
+```text
 PRを準備しました：
 [PR URL]
 
@@ -678,13 +678,13 @@ git pull origin "cycle/{{CYCLE}}"
 ```
 
 6. **マージ成功時**:
-```
+```text
 PRをマージしました。
 サイクルブランチに戻りました: cycle/{{CYCLE}}
 ```
 
 **「いいえ」またはサイクルブランチで作業した場合**:
-```
+```text
 Unit PR作成をスキップしました。
 必要に応じて、後で以下のコマンドで作成できます：
 gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
@@ -694,7 +694,7 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 
 Unit [名前] が完了しました。以下のメッセージをユーザーに提示してください：
 
-```markdown
+````markdown
 ---
 ## Unit [名前] 完了
 
@@ -708,7 +708,7 @@ Unit [名前] が完了しました。以下のメッセージをユーザーに
 docs/aidlc/prompts/construction.md
 ```
 ---
-```
+````
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 
@@ -720,7 +720,7 @@ docs/aidlc/prompts/construction.md
 
 ### 次のUnitが残っている場合
 
-```markdown
+````markdown
 ---
 ## Construction Phase 継続
 
@@ -734,11 +734,11 @@ docs/aidlc/prompts/construction.md
 docs/aidlc/prompts/construction.md
 ```
 ---
-```
+````
 
 ### 全Unit完了の場合
 
-```markdown
+````markdown
 ---
 ## Construction Phase 完了
 
@@ -752,7 +752,7 @@ docs/aidlc/prompts/construction.md
 docs/aidlc/prompts/operations.md
 ```
 ---
-```
+````
 
 ---
 

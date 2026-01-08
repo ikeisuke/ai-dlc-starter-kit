@@ -57,7 +57,7 @@ Full版の内容を理解した上で、以下の変更点を適用してくだ�
 
 ## Lite版のフロー
 
-```
+```text
 1. progress.md読み込み
 2. 対象Unit確認
 3. 計画作成 → 承認待ち
@@ -86,7 +86,7 @@ Construction Phase (Lite) が完了しました。以下のメッセージをユ
 
 ### Unitが残っている場合
 
-```markdown
+````markdown
 ---
 ## Unit [名前] 完了
 
@@ -100,11 +100,11 @@ Construction Phase (Lite) が完了しました。以下のメッセージをユ
 docs/aidlc/prompts/lite/construction.md
 ```
 ---
-```
+````
 
 ### 全Unit完了の場合
 
-```markdown
+````markdown
 ---
 ## Construction Phase (Lite) 完了
 
@@ -118,7 +118,7 @@ docs/aidlc/prompts/lite/construction.md
 docs/aidlc/prompts/lite/operations.md
 ```
 ---
-```
+````
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 

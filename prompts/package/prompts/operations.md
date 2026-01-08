@@ -56,7 +56,7 @@ Inception/Construction Phaseで決定済み
 
   **質問フロー（ハイブリッド方式）**:
   1. まず質問の数と概要を提示する
-     ```
+     ```text
      質問が{N}点あります：
      1. {質問1の概要}
      2. {質問2の概要}
@@ -159,7 +159,7 @@ Inception/Construction Phaseで決定済み
 
   4. **MCP利用不可時**:
      - `mode = "required"` の場合:
-       ```
+       ```text
        【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
 
        AIレビューをスキップして人間の承認に進みますか？
@@ -170,7 +170,7 @@ Inception/Construction Phaseで決定済み
      - `mode = "recommend"` の場合: 直接人間に承認を求める
 
   **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
-  ```
+  ```text
   【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
   品質向上のため、この成果物のレビューを実施することを推奨します。
   レビューを実施しますか？
@@ -185,7 +185,7 @@ Inception/Construction Phaseで決定済み
   - 応答に誤りや不整合がないか確認する
   - 自己判断を併記し、相違がある場合はユーザーに確認を求める
   - 形式：
-    ```
+    ```text
     【MCP応答の検証】
     - MCP応答: [応答内容の要約]
     - AI判断: [自己判断]
@@ -197,7 +197,7 @@ Inception/Construction Phaseで決定済み
   - ユーザー入力に曖昧さがある場合は、解釈を明示して確認する
   - 複数の解釈が可能な場合は、すべての解釈を提示する
   - 形式：
-    ```
+    ```text
     【入力の解釈確認】
     ご入力: "[ユーザーの入力]"
 
@@ -218,7 +218,7 @@ Inception/Construction Phaseで決定済み
   3. 履歴記録（`history/operations.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
-  ```markdown
+  ````markdown
   ---
   ## コンテキストリセット - 作業継続
 
@@ -234,7 +234,7 @@ Inception/Construction Phaseで決定済み
   docs/aidlc/prompts/operations.md
   ```
   ---
-  ```
+  ````
 
 ### フェーズの責務【重要】
 
@@ -300,7 +300,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ```
 
 - **存在しない場合**: エラーを表示し、setup.md を案内
-  ```
+  ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
   既存のサイクル:
@@ -317,7 +317,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 3. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
-```
+```text
 docs/cycles/{{CYCLE}}/operations/progress.md
                       ^^^^^^^^^^
                       ※ operations/ サブディレクトリ内
@@ -362,7 +362,7 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 **全Unit完了の場合**:
 
-```
+```text
 全Unitの実装状態を確認しました。
 
 | Unit | 状態 | 完了日 |
@@ -376,7 +376,7 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 **未完了Unitがある場合**:
 
-```
+```text
 【警告】未完了のUnitがあります。
 
 | Unit | 状態 | 備考 |
@@ -394,7 +394,7 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 ```
 
 - **選択1の場合**: Construction Phaseプロンプトを案内
-  ```
+  ```text
   以下のファイルを読み込んで、Construction Phase を継続してください：
   docs/aidlc/prompts/construction.md
   ```
@@ -510,7 +510,7 @@ README.mdに今回のサイクルの変更内容を追記
 Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
-```
+```text
 chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
@@ -537,7 +537,7 @@ gh pr list --head "${CURRENT_BRANCH}" --state open --json number,url,isDraft
 
 **ドラフトPRが見つかった場合**:
 
-```
+```text
 サイクルブランチからのドラフトPRが見つかりました:
 - PR #{番号}: {タイトル}
 - URL: {URL}
@@ -558,7 +558,7 @@ gh pr edit {PR番号} --title "{{CYCLE}}"
 ```
 
 **Ready化成功時**:
-```
+```text
 ドラフトPRをReady for Reviewに変更しました:
 - PR #{番号}: {タイトル}
 - URL: {URL}
@@ -568,7 +568,7 @@ gh pr edit {PR番号} --title "{{CYCLE}}"
 
 **ドラフトPRが見つからない場合**:
 
-```
+```text
 サイクルブランチからのPRが見つかりません。
 
 新規PRを作成しますか？
@@ -592,7 +592,7 @@ EOF
 ```
 
 **GitHub CLI利用不可時**:
-```
+```text
 GitHub CLIが利用できません。
 
 手動でPRをReady for Reviewに変更してください:
@@ -718,7 +718,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 このサイクルが完了しました。以下のメッセージをユーザーに提示してください：
 
-```markdown
+````markdown
 ---
 ## サイクル完了
 
@@ -738,7 +738,7 @@ docs/aidlc/prompts/setup.md
 [セットアッププロンプトパス]
 ```
 ---
-```
+````
 
 **重要**: ユーザーから明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 

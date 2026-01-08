@@ -12,7 +12,7 @@
 
 ### レイヤー / モジュール構成
 
-```
+```text
 [Layer/Module 名]
 ├── [Sub-module 1]
 │   ├── [Component A]

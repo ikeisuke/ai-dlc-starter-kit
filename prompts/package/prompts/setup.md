@@ -53,7 +53,7 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 **判定**:
 - **DEPLOYED_EXISTS**: ステップ0.5（スターターキット開発リポジトリ判定）へ進む
 - **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ0.5へ進む
-  ```
+  ```text
   【お知らせ】docs/aidlc/prompts/setup.md が見つかりません。
 
   アップグレードせずにサイクルを開始する場合は、以下のファイルを参照してください：
@@ -78,7 +78,7 @@ fi
 
 **判定**:
 - **STARTER_KIT_DEV**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
-  ```
+  ```text
   スターターキット開発リポジトリを検出しました。
   アップグレード案内はスキップします（開発リポジトリでは、次サイクルで変更を加えてリリースするためです）。
   ```
@@ -100,7 +100,7 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
 - **最新バージョン取得失敗**: ステップ2（サイクルバージョンの決定）へ進む
 - **CURRENT_VERSION が空**: ステップ2（サイクルバージョンの決定）へ進む（aidlc.tomlなし）
 - **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
-  ```
+  ```text
   AI-DLCスターターキットの新しいバージョンが利用可能です。
   - 現在: [CURRENT_VERSION]
   - 最新: [LATEST_VERSION]
@@ -110,12 +110,12 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
   2. 現在のバージョンで続行する
   ```
   - **1 を選択**: セットアップを案内して終了
-    ```
+    ```text
     アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
     ```
   - **2 を選択**: ステップ2（サイクルバージョンの決定）へ進む
 - **LATEST_VERSION = CURRENT_VERSION**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
-  ```
+  ```text
   アップグレードは不要です（現在最新バージョンです）。
   次回サイクル開始時も、このsetup.mdを参照してください。
   ```
@@ -138,7 +138,7 @@ fi
 
 **判定**:
 - **BRANCH_VERSION_DETECTED**: 検出されたバージョンを提案
-  ```
+  ```text
   現在のブランチ名から v{X}.{Y}.{Z} を検出しました。
   このバージョンをサイクルバージョンとして使用しますか？
   1. はい、v{X}.{Y}.{Z} を使用する [推奨]
@@ -160,7 +160,7 @@ ls -d docs/cycles/*/ 2>/dev/null | sort -V
 
 最新バージョンから次バージョンを提案:
 
-```
+```text
 既存サイクル: [一覧]
 最新バージョン: v{X}.{Y}.{Z}
 
@@ -177,7 +177,7 @@ ls -d docs/cycles/*/ 2>/dev/null | sort -V
 
 プロジェクトのバージョン情報を調査（package.json, pyproject.toml 等）:
 
-```
+```text
 プロジェクトバージョン [検出されたバージョン] を検出しました（ソース: [ファイル名]）。
 
 このバージョンをサイクルバージョンとして使用しますか？
@@ -210,7 +210,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 - **main または master の場合**: サイクル用ブランチの作成を提案
 
   **worktree が有効な場合（WORKTREE_ENABLED）**:
-  ```
+  ```text
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
 
@@ -222,7 +222,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
   ```
 
   **worktree が無効な場合（WORKTREE_DISABLED）- デフォルト**:
-  ```
+  ```text
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
 
@@ -248,7 +248,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
     ```
 
     - **WORKTREE_EXISTS**: 既存worktreeの使用を確認
-      ```
+      ```text
       cycle/{{CYCLE}} ブランチのworktreeが既に存在します。
       既存のworktreeを使用しますか？（Y/n）
       ```
@@ -257,7 +257,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
     - **WORKTREE_NOT_EXISTS**: worktree作成を続行
 
     **3. 作成確認**:
-    ```
+    ```text
     以下のworktreeを作成します:
     - パス: [WORKTREE_PATH]
     - ブランチ: cycle/{{CYCLE}}
@@ -272,7 +272,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 
     **5. 結果処理**:
     - **成功時**:
-      ```
+      ```text
       worktreeを作成しました: [WORKTREE_PATH]
 
       新しいディレクトリに移動して、セッションを開始してください:
@@ -282,7 +282,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
       docs/aidlc/prompts/setup.md
       ```
     - **失敗時（フォールバック）**:
-      ```
+      ```text
       worktreeの自動作成に失敗しました。
       以下のコマンドを手動で実行してください:
 
@@ -293,7 +293,7 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 
   - **ブランチ作成を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
   - **続行を選択**: 警告を表示して続行
-    ```
+    ```text
     警告: main/master ブランチで直接作業しています。
     変更は直接 main/master に反映されます。
     ```
@@ -308,7 +308,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ```
 
 - **存在する場合**: 既存サイクルへの案内
-  ```
+  ```text
   サイクル {{CYCLE}} は既に存在します。
 
   Inception Phase を開始するには、以下のプロンプトを読み込んでください：
@@ -319,13 +319,13 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 5. サイクルディレクトリ作成
 
 ユーザーに確認：
-```
+```text
 サイクル {{CYCLE}} のディレクトリを作成します。
 よろしいですか？（Y/n）
 ```
 
 - **拒否された場合**: 終了
-  ```
+  ```text
   サイクル作成を中止しました。
   ```
 
@@ -384,7 +384,7 @@ mkdir -p docs/cycles/backlog-completed
 
 #### 6.1 移行確認
 
-```
+```text
 旧形式の docs/cycles/backlog.md が見つかりました。
 この形式は非推奨となり、新形式（docs/cycles/backlog/ ディレクトリ）への移行を推奨します。
 
@@ -452,7 +452,7 @@ mkdir -p docs/cycles/backlog-completed
    ```
 
 3. **移行結果サマリ表示**:
-   ```
+   ```text
    移行が完了しました。
 
    - 移行成功: X件
@@ -461,7 +461,7 @@ mkdir -p docs/cycles/backlog-completed
    ```
 
    **重複スキップがある場合（Z > 0）は追加表示**:
-   ```
+   ```text
    【警告】以下の項目は既存ファイルと重複するためスキップしました:
    - [ファイル名1] (元タイトル: "[タイトル1]")
    - [ファイル名2] (元タイトル: "[タイトル2]")
@@ -471,7 +471,7 @@ mkdir -p docs/cycles/backlog-completed
    ```
 
    **共通の終了メッセージ**:
-   ```
+   ```text
    元ファイルは docs/cycles/backlog.md.bak.[タイムスタンプ] として保存されています。
    問題がなければ、後で削除してください。
    ```
@@ -482,7 +482,7 @@ mkdir -p docs/cycles/backlog-completed
 
 ### 1. Gitコミット（任意）
 
-```
+```text
 サイクル {{CYCLE}} を作成しました。Gitコミットを作成しますか？（Y/n）
 ```
 
@@ -496,7 +496,7 @@ git commit -m "feat: サイクル {{CYCLE}} 開始"
 
 ### 2. 完了メッセージと次のステップ
 
-```
+```text
 サイクル {{CYCLE}} の準備が完了しました！
 
 作成されたファイル:
@@ -522,7 +522,7 @@ git worktreeを使うと、同じリポジトリの複数ブランチを別デ�
 
 ### 推奨ディレクトリ構成
 
-```
+```text
 ~/projects/
 ├── my-project/              # メインディレクトリ（mainブランチ）
 ├── my-project-v1.4.0/       # worktree（cycle/v1.4.0ブランチ）
