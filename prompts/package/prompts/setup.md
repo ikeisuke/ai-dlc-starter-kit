@@ -51,8 +51,8 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 ```
 
 **判定**:
-- **DEPLOYED_EXISTS**: ステップ1（スターターキットバージョン確認）へ進む
-- **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ1へ進む
+- **DEPLOYED_EXISTS**: ステップ0.5（スターターキット開発リポジトリ判定）へ進む
+- **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ0.5へ進む
   ```
   【お知らせ】docs/aidlc/prompts/setup.md が見つかりません。
 
@@ -62,6 +62,27 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
   このファイルには setup.md の最新版が含まれています。
   現在このファイルを使用しているため、処理を続行します。
   ```
+
+### 0.5. スターターキット開発リポジトリ判定
+
+```bash
+# プロジェクト名を取得（[project] セクション内の name のみ）
+PROJECT_NAME=$(awk '/^\[project\]/{found=1} found && /^name *= *"/{gsub(/.*= *"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null)
+
+if [ "$PROJECT_NAME" = "ai-dlc-starter-kit" ]; then
+  echo "STARTER_KIT_DEV"
+else
+  echo "USER_PROJECT"
+fi
+```
+
+**判定**:
+- **STARTER_KIT_DEV**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
+  ```
+  スターターキット開発リポジトリを検出しました。
+  アップグレード案内はスキップします（開発リポジトリでは、次サイクルで変更を加えてリリースするためです）。
+  ```
+- **USER_PROJECT**: ステップ1（スターターキットバージョン確認）へ進む
 
 ### 1. スターターキットバージョン確認
 
