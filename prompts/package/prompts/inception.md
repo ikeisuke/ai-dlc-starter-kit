@@ -118,23 +118,40 @@ Inception Phaseで決定
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを確認
+  **設定確認**: 以下のコマンドでAIレビューモードを確認
+  ```bash
+  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
+  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
+  ```
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
   - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
   - `mode = "disabled"`: AIレビューを行わない
 
+  **MCP利用可否の確認**:
+  - このAIエージェントが Codex MCP（`mcp__codex__codex` ツール）にアクセス可能か確認
+  - ツールが存在しない場合は「MCP利用不可」として処理
+
   **処理フロー**:
 
-  1. **mode確認**: 設定ファイルからmodeを読み取る
+  1. **mode確認**: 上記コマンドでmodeを取得
+     - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: 直接人間承認へ
      - `required` または `recommend` の場合: 次のステップへ
 
-  2. **MCP利用可否チェック**: AI MCP（Codex MCP等）が利用可能か確認
+  2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
 
   3. **MCP利用可能時**:
+     - **レビュー前コミット**:
+       ```bash
+       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
+     - **レビュー後コミット**（修正があった場合）:
+       ```bash
+       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
