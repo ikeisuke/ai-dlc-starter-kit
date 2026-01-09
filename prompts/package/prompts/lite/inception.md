@@ -52,7 +52,7 @@ Full版の内容を理解した上で、以下の変更点を適用してくだ�
 
 Inception Phase (Lite) が完了しました。以下のメッセージをユーザーに提示してください：
 
-```markdown
+````markdown
 ---
 ## Inception Phase (Lite) 完了
 
@@ -66,6 +66,6 @@ Inception Phase (Lite) が完了しました。以下のメッセージをユー
 docs/aidlc/prompts/lite/construction.md
 ```
 ---
-```
+````
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。

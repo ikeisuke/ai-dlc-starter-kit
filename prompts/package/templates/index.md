@@ -12,7 +12,7 @@
 ### 手動生成（オプション）
 テンプレートを事前に生成したい場合：
 
-```
+```text
 以下のファイルを読み込んでテンプレートを生成してください：
 /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
 
@@ -117,7 +117,7 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 
 テンプレートを事前に生成したい場合は、以下を実行：
 
-```
+```text
 MODE = template
 TEMPLATE_NAME = intent_template  # 生成したいテンプレート名
 DOCS_ROOT = (あなたのDOCS_ROOT)

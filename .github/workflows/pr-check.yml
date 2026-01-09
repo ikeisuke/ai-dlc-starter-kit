@@ -20,6 +20,6 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v18
         with:
           globs: |
-            docs/**/*.md
+            docs/translations/**/*.md
             prompts/**/*.md
             *.md

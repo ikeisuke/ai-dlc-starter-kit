@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.5.3-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.5.4-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -13,7 +13,7 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 ## 📂 リポジトリ構成
 
-```
+```text
 ai-dlc-starter-kit/
 ├── docs/
 │   ├── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
@@ -94,7 +94,7 @@ cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
   - `docs/cycles/` にサイクル固有成果物
 
 セットアップが完了すると、以下のディレクトリ構造が作成されます：
-```
+```text
 docs/
 ├── aidlc.toml                # プロジェクト設定
 ├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成）
@@ -310,7 +310,7 @@ v1.0.0 では以下の破壊的変更があります：
 - **理由**: 「バージョン」概念はモバイルアプリには適応的だが、Web/バックエンド開発には馴染まないため、より汎用的な「サイクル」に変更
 
 #### 2. ディレクトリ構造の変更
-```
+```text
 # v0.1.0
 docs/example/v1/
 ├── prompts/
@@ -500,6 +500,21 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 ### 7. 複数人開発時コンフリクト対策
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
+
+## 🔧 v1.5.4 の改善点
+
+v1.5.4 はバグ修正と機能改善のためのリリースです。
+
+### バグ修正
+- **AIレビュー必須設定の修正**: `mcp_review.mode = "required"` 設定が正しく機能しない問題を修正
+- **macOS grep互換性**: `grep -oP` を使用しない POSIX 互換コマンドに変更
+- **Unitブランチ PR作成**: Construction Phase での Unit ブランチから PR が作成されない問題を修正
+
+### 機能改善
+- **AGENTS.md/CLAUDE.md統合**: AI エージェントからの認識改善のため、AI-DLC への誘導を追加
+- **スターターキットアップグレードフロー**: 開発リポジトリでのアップグレード案内スキップ機能を追加
+- **バックログ移行重複警告**: 同名タイトルのバックログ項目がある場合に警告を表示
+- **markdownlintルール有効化**: MD009（末尾空白）、MD034（URLの自動リンク化）、MD040（コードブロック言語指定）を有効化
 
 ## 🔧 v1.5.3 の改善点
 
