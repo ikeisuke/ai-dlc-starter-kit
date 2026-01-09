@@ -759,16 +759,8 @@ if [ ! -f CLAUDE.md ]; then
 EOF
   echo "Created: CLAUDE.md"
 else
-  # AGENTS.md参照がなければ追記
-  if ! grep -q "@AGENTS.md" CLAUDE.md; then
-    TEMP_FILE=$(mktemp)
-    echo "@AGENTS.md を参照してください。" > "$TEMP_FILE"
-    echo "" >> "$TEMP_FILE"
-    cat CLAUDE.md >> "$TEMP_FILE"
-    mv "$TEMP_FILE" CLAUDE.md
-    echo "Added reference to CLAUDE.md: @AGENTS.md"
-  fi
-  # CLAUDE_AIDLC.md参照がなければ追記
+  # 参照行を追記（順序: @AGENTS.md → @CLAUDE_AIDLC.md となるように逆順で先頭挿入）
+  # 1. CLAUDE_AIDLC.md参照がなければ先頭に追記
   if ! grep -q "@docs/aidlc/CLAUDE_AIDLC.md" CLAUDE.md; then
     TEMP_FILE=$(mktemp)
     echo "@docs/aidlc/CLAUDE_AIDLC.md" > "$TEMP_FILE"
@@ -776,6 +768,15 @@ else
     cat CLAUDE.md >> "$TEMP_FILE"
     mv "$TEMP_FILE" CLAUDE.md
     echo "Added reference to CLAUDE.md: @docs/aidlc/CLAUDE_AIDLC.md"
+  fi
+  # 2. AGENTS.md参照がなければ先頭に追記（これが最上段になる）
+  if ! grep -q "@AGENTS.md" CLAUDE.md; then
+    TEMP_FILE=$(mktemp)
+    echo "@AGENTS.md を参照してください。" > "$TEMP_FILE"
+    echo "" >> "$TEMP_FILE"
+    cat CLAUDE.md >> "$TEMP_FILE"
+    mv "$TEMP_FILE" CLAUDE.md
+    echo "Added reference to CLAUDE.md: @AGENTS.md"
   fi
 fi
 ```
