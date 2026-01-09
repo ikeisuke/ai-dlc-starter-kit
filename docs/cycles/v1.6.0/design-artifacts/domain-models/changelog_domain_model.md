@@ -69,7 +69,6 @@ CHANGELOG.md に v1.1.0〜v1.6.0 の変更履歴を追加する。
 |---------|---------|
 | Changed | progress.md を Unit 定義ファイル内「実装状態」セクションに統合（複数人開発時のコンフリクト対策） |
 | Fixed | Operations Phase のバージョン更新処理 |
-| Added | Unit 作業中の気づき記録フロー定義 |
 | Added | Construction Phase 用 progress テンプレート |
 | Changed | コンテキストリセットのタイミング見直し |
 | Added | Unit 開始前のバックログ確認ステップ |
