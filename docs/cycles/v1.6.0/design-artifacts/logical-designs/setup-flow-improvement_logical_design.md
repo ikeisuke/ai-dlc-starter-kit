@@ -76,25 +76,43 @@ setup.mdの2箇所（ステップ2.2のlsコマンド、ステップ3のブラ�
 
 ### フロー図（改善後）
 
+**worktree選択時のフロー**:
+
 ```mermaid
 flowchart TD
     A[worktree選択] --> B[プロジェクト情報取得]
-    B --> C{ブランチ存在確認}
-    C -->|存在する| D{既存worktree確認}
-    C -->|存在しない| E[新規ブランチ作成フラグON]
-    E --> D
-    D -->|WORKTREE_EXISTS| F[既存worktree使用確認]
-    D -->|WORKTREE_NOT_EXISTS| G[作成確認]
-    F -->|承認| H[既存worktreeパス表示]
-    F -->|拒否| I[終了]
-    G -->|承認| J{ブランチ存在?}
-    G -->|拒否| I
+    B --> C{既存worktree確認}
+    C -->|WORKTREE_EXISTS| D[既存worktree使用確認]
+    C -->|WORKTREE_NOT_EXISTS| E{ブランチ存在確認}
+    D -->|承認| F[既存worktreeパス表示]
+    D -->|拒否| G[終了]
+    E -->|存在する| H[作成確認]
+    E -->|存在しない| I[新規ブランチ作成フラグON]
+    I --> H
+    H -->|承認| J{ブランチ存在?}
+    H -->|拒否| G
     J -->|存在する| K[git worktree add PATH BRANCH]
     J -->|存在しない| L[git worktree add -b BRANCH PATH]
     K --> M{成功?}
     L --> M
     M -->|成功| N[移動案内表示]
     M -->|失敗| O[手動コマンド提示]
+```
+
+**重要**: 既存worktree確認は**作成前**に行う（作成を試みてエラーになるのを防ぐ）
+
+**branch選択時のフロー**:
+
+```mermaid
+flowchart TD
+    A[branch選択] --> B{ブランチ存在確認}
+    B -->|存在する| C[git checkout BRANCH]
+    B -->|存在しない| D[git checkout -b BRANCH]
+    C --> E{成功?}
+    D --> E
+    E -->|成功| F[次のステップへ]
+    E -->|失敗| G[エラー表示]
+    G --> F
 ```
 
 ## 処理フロー詳細
@@ -106,8 +124,8 @@ flowchart TD
 2. main/masterの場合、選択肢を表示
 3. ユーザーの選択を待つ
 4. 選択に応じて処理を分岐:
-   - **worktree**: ブランチ存在確認 → worktree作成（ブランチ同時作成含む）
-   - **branch**: `git checkout -b cycle/{{CYCLE}}`
+   - **worktree**: 既存worktree確認 → ブランチ存在確認 → worktree作成（ブランチ同時作成含む）
+   - **branch**: ブランチ存在確認 → `git checkout` または `git checkout -b cycle/{{CYCLE}}`
    - **continue**: 警告表示
 
 ## 非機能要件（NFR）への対応
