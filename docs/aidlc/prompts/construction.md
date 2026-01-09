@@ -54,7 +54,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **質問フロー（ハイブリッド方式）**:
   1. まず質問の数と概要を提示する
-     ```
+     ```text
      質問が{N}点あります：
      1. {質問1の概要}
      2. {質問2の概要}
@@ -154,7 +154,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
-     ```
+     ```text
      // TODO: workaround - see docs/cycles/backlog/{filename}.md
      ```
 
@@ -180,29 +180,46 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを確認
+  **設定確認**: 以下のコマンドでAIレビューモードを確認
+  ```bash
+  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
+  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
+  ```
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
   - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
   - `mode = "disabled"`: AIレビューを行わない
 
+  **MCP利用可否の確認**:
+  - このAIエージェントが Codex MCP（`mcp__codex__codex` ツール）にアクセス可能か確認
+  - ツールが存在しない場合は「MCP利用不可」として処理
+
   **処理フロー**:
 
-  1. **mode確認**: 設定ファイルからmodeを読み取る
+  1. **mode確認**: 上記コマンドでmodeを取得
+     - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: 直接人間承認へ
      - `required` または `recommend` の場合: 次のステップへ
 
-  2. **MCP利用可否チェック**: AI MCP（Codex MCP等）が利用可能か確認
+  2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
 
   3. **MCP利用可能時**:
+     - **レビュー前コミット**:
+       ```bash
+       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
+     - **レビュー後コミット**（修正があった場合）:
+       ```bash
+       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
   4. **MCP利用不可時**:
      - `mode = "required"` の場合:
-       ```
+       ```text
        【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
 
        AIレビューをスキップして人間の承認に進みますか？
@@ -213,7 +230,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - `mode = "recommend"` の場合: 直接人間に承認を求める
 
   **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
-  ```
+  ```text
   【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
   品質向上のため、この成果物のレビューを実施することを推奨します。
   レビューを実施しますか？
@@ -228,7 +245,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   - 応答に誤りや不整合がないか確認する
   - 自己判断を併記し、相違がある場合はユーザーに確認を求める
   - 形式：
-    ```
+    ```text
     【MCP応答の検証】
     - MCP応答: [応答内容の要約]
     - AI判断: [自己判断]
@@ -240,7 +257,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   - ユーザー入力に曖昧さがある場合は、解釈を明示して確認する
   - 複数の解釈が可能な場合は、すべての解釈を提示する
   - 形式：
-    ```
+    ```text
     【入力の解釈確認】
     ご入力: "[ユーザーの入力]"
 
@@ -261,7 +278,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   3. 履歴記録（`history/construction_unit{N}.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
-  ```markdown
+  ````markdown
   ---
   ## コンテキストリセット - 作業継続
 
@@ -278,7 +295,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   docs/aidlc/prompts/construction.md
   ```
   ---
-  ```
+  ````
 
 ### フェーズの責務【重要】
 
@@ -336,7 +353,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ```
 
 - **存在しない場合**: エラーを表示し、setup.md を案内
-  ```
+  ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
   既存のサイクル:
@@ -427,7 +444,7 @@ fi
 ```
 
 **利用可能な場合の確認メッセージ**:
-```
+```text
 Unitブランチを作成しますか？
 
 ブランチ名: cycle/{{CYCLE}}/unit-{NNN}
@@ -435,17 +452,51 @@ Unitブランチを作成しますか？
 Unitブランチを使用すると：
 - Unit単位でのPRレビューが可能になります
 - 並行作業時のコンフリクトを減らせます
+- ドラフトPRが自動作成され、作業の可視化ができます
 
-1. はい - Unitブランチを作成する（推奨）
+1. はい - UnitブランチとドラフトPRを作成する（推奨）
 2. いいえ - サイクルブランチで直接作業する
 ```
 
 **「はい」の場合**:
+
+1. **Unitブランチ作成・プッシュ**:
 ```bash
 # Unitブランチ作成・切り替え
 UNIT_BRANCH="cycle/{{CYCLE}}/unit-{NNN}"
 git checkout -b "${UNIT_BRANCH}"
 git push -u origin "${UNIT_BRANCH}"
+```
+
+2. **ドラフトPR作成**:
+```bash
+gh pr create \
+  --draft \
+  --base "cycle/{{CYCLE}}" \
+  --title "[Draft][Unit {NNN}] {Unit名}" \
+  --body "$(cat <<'EOF'
+## Unit概要
+[Unit定義から抽出した概要]
+
+---
+:construction: このPRは作業中です。Unit完了時にレビュー依頼を行います。
+EOF
+)"
+```
+
+3. **PR URL表示**:
+```text
+ドラフトPRを作成しました：
+[PR URL]
+
+Unit完了時にPRをレディ状態に変更し、レビューを依頼します。
+```
+
+**ドラフトPR作成に失敗した場合**:
+```text
+【注意】ドラフトPRの作成に失敗しました。
+ブランチは正常に作成されています。
+PRは後で手動で作成するか、Unit完了時に作成してください。
 ```
 
 **「いいえ」またはGitHub CLI利用不可の場合**: スキップして次に進む
@@ -531,31 +582,65 @@ BDD/TDDに従ってテストコードを作成
 各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
-```
+```text
 feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
 ### 4. Unit PR作成・マージ【推奨】
 
-Unitブランチで作業した場合、サイクルブランチへのPRを作成してマージする。
+Unitブランチで作業した場合、サイクルブランチへのPRを作成（または既存ドラフトPRを更新）してマージする。
 
 **前提条件**:
 - Unitブランチで作業していること
 - GitHub CLIが利用可能であること
 
 **確認メッセージ**:
-```
-Unit PRを作成しますか？
+```text
+Unit PRをマージしますか？
 
 対象ブランチ: cycle/{{CYCLE}}/unit-{NNN} → cycle/{{CYCLE}}
 
-1. はい - PRを作成してマージする（推奨）
+※ ドラフトPRが存在する場合は、レディ状態に変更してマージします。
+
+1. はい - PRを準備してマージする（推奨）
 2. いいえ - スキップする（後で手動で作成可能）
 ```
 
 **「はい」の場合**:
 
-1. **PR作成**:
+1. **既存PRの確認**:
+```bash
+# 現在のブランチに紐づくPRを確認
+if gh pr view --json number,state &>/dev/null; then
+    echo "EXISTING_PR_FOUND"
+else
+    echo "NO_EXISTING_PR"
+fi
+```
+
+2. **PRが存在する場合（ドラフトPR）**:
+```bash
+# ドラフトをレディ状態に変更
+gh pr ready
+
+# PRタイトルを更新（[Draft]プレフィックスを削除）
+gh pr edit --title "[Unit {NNN}] {Unit名}"
+
+# PRボディを更新
+gh pr edit --body "$(cat <<'EOF'
+## Unit概要
+[Unit定義から抽出した概要]
+
+## 変更内容
+[主な変更点]
+
+## テスト結果
+[テスト結果サマリ]
+EOF
+)"
+```
+
+3. **PRが存在しない場合（新規作成）**:
 ```bash
 gh pr create \
   --base "cycle/{{CYCLE}}" \
@@ -573,16 +658,16 @@ EOF
 )"
 ```
 
-2. **PR URL表示**:
-```
-PRを作成しました：
+4. **PR URL表示**:
+```text
+PRを準備しました：
 [PR URL]
 
 レビューが完了したら「マージしてください」と入力してください。
 （または手動でGitHub上からマージすることもできます）
 ```
 
-3. **マージ確認後**:
+5. **マージ確認後**:
 ```bash
 # squash mergeでマージし、ブランチを削除
 gh pr merge --squash --delete-branch
@@ -592,14 +677,14 @@ git checkout "cycle/{{CYCLE}}"
 git pull origin "cycle/{{CYCLE}}"
 ```
 
-4. **マージ成功時**:
-```
+6. **マージ成功時**:
+```text
 PRをマージしました。
 サイクルブランチに戻りました: cycle/{{CYCLE}}
 ```
 
 **「いいえ」またはサイクルブランチで作業した場合**:
-```
+```text
 Unit PR作成をスキップしました。
 必要に応じて、後で以下のコマンドで作成できます：
 gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
@@ -609,7 +694,7 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 
 Unit [名前] が完了しました。以下のメッセージをユーザーに提示してください：
 
-```markdown
+````markdown
 ---
 ## Unit [名前] 完了
 
@@ -623,7 +708,7 @@ Unit [名前] が完了しました。以下のメッセージをユーザーに
 docs/aidlc/prompts/construction.md
 ```
 ---
-```
+````
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、上記メッセージを**必ず提示**してください。デフォルトはリセットです。
 
@@ -635,7 +720,7 @@ docs/aidlc/prompts/construction.md
 
 ### 次のUnitが残っている場合
 
-```markdown
+````markdown
 ---
 ## Construction Phase 継続
 
@@ -649,11 +734,11 @@ docs/aidlc/prompts/construction.md
 docs/aidlc/prompts/construction.md
 ```
 ---
-```
+````
 
 ### 全Unit完了の場合
 
-```markdown
+````markdown
 ---
 ## Construction Phase 完了
 
@@ -667,7 +752,7 @@ docs/aidlc/prompts/construction.md
 docs/aidlc/prompts/operations.md
 ```
 ---
-```
+````
 
 ---
 
