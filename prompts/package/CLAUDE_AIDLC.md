@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Claude Code 専用設定
 
-@AGENTS.md を参照してください。
+このファイルはClaude Code専用のAI-DLC設定です。
 
 ## Claude Code固有の設定
 

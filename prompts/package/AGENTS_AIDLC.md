@@ -1,6 +1,7 @@
-# AGENTS.md
+# AI-DLC 共通設定
 
-このプロジェクトはAI-DLC（AI-Driven Development Lifecycle）を使用しています。
+このファイルはAI-DLC（AI-Driven Development Lifecycle）の共通設定です。
+全てのAIツール（Claude Code、Codex、Amazon Q等）で使用されます。
 
 ## 開発サイクルの開始
 

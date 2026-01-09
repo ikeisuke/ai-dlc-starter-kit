@@ -34,18 +34,12 @@
 ### Phase 1: 設計
 
 #### ステップ1: ドメインモデル設計
-- CLAUDE.md/AGENTS.mdテンプレートの構造定義
-  - 必須セクションの識別
-  - セクション単位でのマージロジック
-- テンプレート配置場所（prompts/setup/templates/）の設計
+- 多段ファイル参照構造の定義
+- AGENTS_AIDLC.md（共通）/ CLAUDE_AIDLC.md（Claude Code専用）の責務定義
 
 #### ステップ2: 論理設計
-- テンプレートファイルの内容設計
-  - CLAUDE_template.md: Claude Code固有の設定（必須セクションをマーカーで識別）
-  - AGENTS_template.md: プロンプト自動解決の基本構造
-- setup-prompt.mdの変更設計
-  - セクション8.2.3にCLAUDE.md/AGENTS.mdコピー処理を追加
-  - 必須セクション自動追記ロジック
+- ファイル配置設計
+- setup-prompt.mdの変更設計（参照行追記処理）
 
 #### ステップ3: 設計レビュー
 - ユーザー承認
@@ -53,9 +47,11 @@
 ### Phase 2: 実装
 
 #### ステップ4: コード生成
-1. `prompts/package/templates/CLAUDE.md.template` → `prompts/setup/templates/` に移動
-2. `prompts/package/templates/AGENTS.md.template` → `prompts/setup/templates/` に移動
-3. `prompts/setup-prompt.md` にコピー・マージ処理追加
+1. `prompts/package/AGENTS_AIDLC.md` 作成（既存AGENTS.md.templateから変換）
+2. `prompts/package/CLAUDE_AIDLC.md` 作成（既存CLAUDE.md.templateから変換）
+3. `prompts/package/templates/CLAUDE.md.template` 削除
+4. `prompts/package/templates/AGENTS.md.template` 削除
+5. `prompts/setup-prompt.md` に参照行追記処理追加
 
 #### ステップ5: テスト生成
 - 新規セットアップ時: テンプレートがコピーされること
@@ -68,11 +64,11 @@
 ## 変更予定ファイル
 | ファイル | 変更種別 |
 |---------|---------|
-| prompts/package/templates/CLAUDE.md.template | 削除（移動元） |
-| prompts/package/templates/AGENTS.md.template | 削除（移動元） |
-| prompts/setup/templates/CLAUDE.md.template | 移動先 |
-| prompts/setup/templates/AGENTS.md.template | 移動先 |
-| prompts/setup-prompt.md | 修正（コピー・マージ処理追加） |
+| prompts/package/AGENTS_AIDLC.md | 新規作成（rsync対象） |
+| prompts/package/CLAUDE_AIDLC.md | 新規作成（rsync対象） |
+| prompts/package/templates/CLAUDE.md.template | 削除 |
+| prompts/package/templates/AGENTS.md.template | 削除 |
+| prompts/setup-prompt.md | 修正（参照行追記処理追加） |
 | docs/cycles/v1.6.0/design-artifacts/domain-models/unit-002_domain_model.md | 新規作成 |
 | docs/cycles/v1.6.0/design-artifacts/logical-designs/unit-002_logical_design.md | 新規作成 |
 | docs/cycles/v1.6.0/construction/units/unit-002_implementation.md | 新規作成 |

@@ -1,12 +1,16 @@
 # 論理設計: Claude Code機能活用
 
 ## 概要
-CLAUDE.md/AGENTS.mdテンプレートの配置場所変更と、setup-prompt.mdへのコピー・マージ処理追加の設計。
+AGENTS.md（共通）とCLAUDE.md（Claude Code専用）の多段参照構造の設計。
 
 **重要**: この論理設計では**コードは書かず**、処理フローと変更箇所の定義のみを行います。
 
 ## アーキテクチャパターン
-ファイルベース設定管理 - テンプレートとターゲットファイルの関係を明確に定義
+多段ファイル参照 - メインファイルから参照ファイルへの `@` 参照で設定を分離
+
+**設計方針**:
+- **AGENTS.md** → 全AIツール共通のAI-DLC設定（Codex、Amazon Q等も対応）
+- **CLAUDE.md** → Claude Code専用の設定（AskUserQuestion、TodoWrite等）
 
 ## コンポーネント構成
 
@@ -14,68 +18,87 @@ CLAUDE.md/AGENTS.mdテンプレートの配置場所変更と、setup-prompt.md�
 
 ```text
 prompts/
-├── setup-prompt.md          # セットアップエントリーポイント（修正対象）
-├── package/
-│   └── templates/           # rsync同期対象
-│       ├── CLAUDE.md.template   # 削除（移動元）
-│       └── AGENTS.md.template   # 削除（移動元）
-└── setup/
-    └── templates/           # 初回のみコピー対象
-        ├── rules_template.md
-        ├── operations_handover_template.md
-        ├── CLAUDE.md.template   # 追加（移動先）
-        └── AGENTS.md.template   # 追加（移動先）
+├── setup-prompt.md              # セットアップエントリーポイント（修正対象）
+└── package/
+    ├── CLAUDE_AIDLC.md          # Claude Code専用設定（rsync対象）
+    ├── AGENTS_AIDLC.md          # 全AIツール共通設定（rsync対象）
+    └── templates/
+        ├── CLAUDE.md.template   # 削除（不要に）
+        └── AGENTS.md.template   # 削除（不要に）
+
+docs/aidlc/
+├── CLAUDE_AIDLC.md              # rsyncでコピー - Claude Code専用
+└── AGENTS_AIDLC.md              # rsyncでコピー - 全AIツール共通
+
+プロジェクトルート/
+├── CLAUDE.md                    # @docs/aidlc/CLAUDE_AIDLC.md を参照
+└── AGENTS.md                    # @docs/aidlc/AGENTS_AIDLC.md を参照
 ```
 
+**AIツール対応表**:
+| AIツール | 読み込むファイル |
+|---------|-----------------|
+| Claude Code | CLAUDE.md → AGENTS.md |
+| Codex | AGENTS.md |
+| Amazon Q | AGENTS.md |
+| その他 | AGENTS.md |
+
 ### コンポーネント詳細
+
+#### CLAUDE_AIDLC.md（新規作成）
+- **責務**: Claude Code固有のAI-DLC設定
+- **配置**: `prompts/package/` → rsync → `docs/aidlc/`
+- **内容**: AskUserQuestion活用ルール、TodoWrite活用ルール等
+
+#### AGENTS_AIDLC.md（新規作成）
+- **責務**: AI-DLCプロンプト自動解決の基本構造
+- **配置**: `prompts/package/` → rsync → `docs/aidlc/`
+- **内容**: 開発サイクルの開始方法、推奨ワークフロー、ドキュメント参照
 
 #### setup-prompt.md
 - **責務**: セットアップフロー全体の制御
 - **修正箇所**: セクション8.2.3「プロジェクト固有ファイル」
-- **追加機能**: CLAUDE.md/AGENTS.mdのコピー・マージ処理
+- **追加機能**: CLAUDE.md/AGENTS.mdへの参照行追記処理
 
-#### CLAUDE.md.template
-- **責務**: Claude Code固有設定のテンプレート
-- **必須セクション**:
-  - `## Claude Code固有の設定`
-  - `### 質問時のルール`
-  - `### TodoWriteツールの活用`
-
-#### AGENTS.md.template
-- **責務**: AI-DLCプロンプト自動解決の基本構造
-- **必須セクション**:
-  - `## 開発サイクルの開始`
-  - `## 推奨ワークフロー`
-  - `## ドキュメント`
+#### CLAUDE.md.template / AGENTS.md.template
+- **状態**: 削除（不要に）
+- **理由**: 多段参照方式に変更のため
 
 ## 処理フロー概要
 
 ### CLAUDE.md/AGENTS.md処理フロー（セクション8.2.3拡張）
 
 **ステップ**:
-1. CLAUDE.mdの存在確認
-2. 存在しない場合: テンプレートをコピー
-3. 存在する場合: 必須セクションの存在を確認し、欠けていれば追記
-4. AGENTS.mdについても同様に処理
+1. AGENTS.mdの存在確認
+   - 存在しない場合: 最小限のAGENTS.mdを作成（参照行のみ）
+   - 存在する場合: 参照行の存在確認、なければ追記
+2. CLAUDE.mdについても同様に処理
 
-**関与するファイル**: setup-prompt.md, CLAUDE.md.template, AGENTS.md.template
+**関与するファイル**: setup-prompt.md, CLAUDE_AIDLC.md, AGENTS_AIDLC.md
 
-### 必須セクション追記ロジック
+### 参照行追記ロジック
 
-**シンプルなアプローチ**: 各ファイルに1つのキーセクションを定義し、そのセクションが欠けていればテンプレートの該当部分全体を追記
+**シンプルなアプローチ**: 参照行が欠けていれば追記
 
-| ファイル | キーセクション | 追記内容 |
-|---------|---------------|---------|
-| CLAUDE.md | `## Claude Code固有の設定` | テンプレートの`## Claude Code固有の設定`以降全体 |
-| AGENTS.md | `## 開発サイクルの開始` | テンプレートの`## 開発サイクルの開始`以降全体 |
+| ファイル | 参照行 |
+|---------|--------|
+| AGENTS.md | `@docs/aidlc/AGENTS_AIDLC.md` |
+| CLAUDE.md | `@AGENTS.md` + `@docs/aidlc/CLAUDE_AIDLC.md` |
 
 **処理フロー**:
 ```text
-if キーセクション not found in target_file:
-    append テンプレートのキーセクション以降全体 to end of target_file
+# AGENTS.md
+if @docs/aidlc/AGENTS_AIDLC.md not found:
+    prepend to AGENTS.md
+
+# CLAUDE.md
+if @AGENTS.md not found:
+    prepend @AGENTS.md to CLAUDE.md
+if @docs/aidlc/CLAUDE_AIDLC.md not found:
+    prepend to CLAUDE.md
 ```
 
-**追記位置**: 常にファイル末尾（冪等性を保証）
+**追記位置**: ファイル先頭（参照を最初に読み込ませるため）
 
 ## setup-prompt.md 変更設計
 
@@ -84,41 +107,44 @@ if キーセクション not found in target_file:
 現在の内容（rules.md, operations.md）に以下を追加:
 
 ```markdown
-#### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 必須セクション追記）
+#### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 ... (既存のrules.md, operations.md処理)
 
-# CLAUDE.md の処理
-if [ ! -f CLAUDE.md ]; then
-  \cp -f [スターターキットパス]/prompts/setup/templates/CLAUDE.md.template CLAUDE.md
-  echo "Created: CLAUDE.md"
+# AGENTS.md の処理（全AIツール共通）
+AGENTS_REF="@docs/aidlc/AGENTS_AIDLC.md"
+if [ ! -f AGENTS.md ]; then
+  echo "# AGENTS.md" > AGENTS.md
+  echo "" >> AGENTS.md
+  echo "${AGENTS_REF}" >> AGENTS.md
+  echo "Created: AGENTS.md"
 else
-  # キーセクションが欠けていれば追記
-  if ! grep -q "^## Claude Code固有の設定" CLAUDE.md; then
-    echo "" >> CLAUDE.md
-    sed -n '/^## Claude Code固有の設定$/,$p' \
-      [スターターキットパス]/prompts/setup/templates/CLAUDE.md.template >> CLAUDE.md
-    echo "Added: Claude Code settings to CLAUDE.md"
+  if ! grep -q "${AGENTS_REF}" AGENTS.md; then
+    # 先頭に参照行を追記
+    echo -e "${AGENTS_REF}\n\n$(cat AGENTS.md)" > AGENTS.md
+    echo "Added reference: ${AGENTS_REF} to AGENTS.md"
   fi
 fi
 
-# AGENTS.md の処理
-if [ ! -f AGENTS.md ]; then
-  \cp -f [スターターキットパス]/prompts/setup/templates/AGENTS.md.template AGENTS.md
-  echo "Created: AGENTS.md"
+# CLAUDE.md の処理（Claude Code専用）
+CLAUDE_REF="@docs/aidlc/CLAUDE_AIDLC.md"
+if [ ! -f CLAUDE.md ]; then
+  echo "# CLAUDE.md" > CLAUDE.md
+  echo "" >> CLAUDE.md
+  echo "${CLAUDE_REF}" >> CLAUDE.md
+  echo "Created: CLAUDE.md"
 else
-  if ! grep -q "^## 開発サイクルの開始" AGENTS.md; then
-    echo "" >> AGENTS.md
-    sed -n '/^## 開発サイクルの開始$/,$p' \
-      [スターターキットパス]/prompts/setup/templates/AGENTS.md.template >> AGENTS.md
-    echo "Added: AI-DLC workflow to AGENTS.md"
+  if ! grep -q "${CLAUDE_REF}" CLAUDE.md; then
+    echo -e "${CLAUDE_REF}\n\n$(cat CLAUDE.md)" > CLAUDE.md
+    echo "Added reference: ${CLAUDE_REF} to CLAUDE.md"
   fi
 fi
 ```
 
-**テンプレート更新と既存内容の関係**:
-- 既存ファイルのキーセクションは上書きしない（ユーザーのカスタマイズを保護）
-- これは意図的な設計
+**利点**:
+- 参照先ファイル（_AIDLC.md）はrsyncで常に最新化される
+- ユーザーのカスタマイズ（CLAUDE.md/AGENTS.md本体）は保護される
+- 参照行の追記のみなので、既存内容への影響が最小限
 
 ### 追加する説明文
 

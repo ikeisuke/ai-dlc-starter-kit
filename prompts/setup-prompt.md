@@ -695,7 +695,7 @@ fi
   - implementation_record_template.md
 ```
 
-#### 8.2.3 プロジェクト固有ファイル（初回のみコピー）
+#### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
 
@@ -703,6 +703,8 @@ fi
 |--------|------|
 | `docs/cycles/rules.md` | プロジェクト固有の追加ルール |
 | `docs/cycles/operations.md` | サイクル横断の運用引き継ぎ情報 |
+| `AGENTS.md` | AIツール共通設定（参照行を追記） |
+| `CLAUDE.md` | Claude Code専用設定（参照行を追記） |
 
 **存在確認後にコピー**:
 ```bash
@@ -714,6 +716,67 @@ fi
 # operations.md が存在しない場合のみコピー
 if [ ! -f docs/cycles/operations.md ]; then
   \cp -f [スターターキットパス]/prompts/setup/templates/operations_handover_template.md docs/cycles/operations.md
+fi
+```
+
+**AGENTS.md / CLAUDE.md の処理（参照行追記）**:
+
+AGENTS.mdとCLAUDE.mdは、AI-DLC設定ファイルへの参照を追記します。
+参照先ファイル（`docs/aidlc/AGENTS_AIDLC.md`, `docs/aidlc/CLAUDE_AIDLC.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
+
+```bash
+# AGENTS.md の処理（全AIツール共通）
+AGENTS_REF="@docs/aidlc/AGENTS_AIDLC.md"
+if [ ! -f AGENTS.md ]; then
+  # 新規作成
+  cat > AGENTS.md << 'EOF'
+# AGENTS.md
+
+@docs/aidlc/AGENTS_AIDLC.md
+EOF
+  echo "Created: AGENTS.md"
+else
+  # 参照行がなければ先頭に追記
+  if ! grep -q "@docs/aidlc/AGENTS_AIDLC.md" AGENTS.md; then
+    TEMP_FILE=$(mktemp)
+    echo "@docs/aidlc/AGENTS_AIDLC.md" > "$TEMP_FILE"
+    echo "" >> "$TEMP_FILE"
+    cat AGENTS.md >> "$TEMP_FILE"
+    mv "$TEMP_FILE" AGENTS.md
+    echo "Added reference to AGENTS.md: @docs/aidlc/AGENTS_AIDLC.md"
+  fi
+fi
+
+# CLAUDE.md の処理（Claude Code専用）
+if [ ! -f CLAUDE.md ]; then
+  # 新規作成（AGENTS.md参照も含む）
+  cat > CLAUDE.md << 'EOF'
+# CLAUDE.md
+
+@AGENTS.md を参照してください。
+
+@docs/aidlc/CLAUDE_AIDLC.md
+EOF
+  echo "Created: CLAUDE.md"
+else
+  # AGENTS.md参照がなければ追記
+  if ! grep -q "@AGENTS.md" CLAUDE.md; then
+    TEMP_FILE=$(mktemp)
+    echo "@AGENTS.md を参照してください。" > "$TEMP_FILE"
+    echo "" >> "$TEMP_FILE"
+    cat CLAUDE.md >> "$TEMP_FILE"
+    mv "$TEMP_FILE" CLAUDE.md
+    echo "Added reference to CLAUDE.md: @AGENTS.md"
+  fi
+  # CLAUDE_AIDLC.md参照がなければ追記
+  if ! grep -q "@docs/aidlc/CLAUDE_AIDLC.md" CLAUDE.md; then
+    TEMP_FILE=$(mktemp)
+    echo "@docs/aidlc/CLAUDE_AIDLC.md" > "$TEMP_FILE"
+    echo "" >> "$TEMP_FILE"
+    cat CLAUDE.md >> "$TEMP_FILE"
+    mv "$TEMP_FILE" CLAUDE.md
+    echo "Added reference to CLAUDE.md: @docs/aidlc/CLAUDE_AIDLC.md"
+  fi
 fi
 ```
 
@@ -740,6 +803,10 @@ rsync により以下のファイルが同期されます:
 **templates/**:
 - 各種テンプレートファイル（index.md含む）
 
+**AIツール設定ファイル**:
+- AGENTS_AIDLC.md - 全AIツール共通設定
+- CLAUDE_AIDLC.md - Claude Code専用設定
+
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
 ---
@@ -749,7 +816,7 @@ rsync により以下のファイルが同期されます:
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -781,6 +848,10 @@ AI-DLC環境のセットアップが完了しました！
 プロジェクト固有ファイル（docs/cycles/）:
 - rules.md - プロジェクト固有ルール
 - operations.md - 運用引き継ぎ情報
+
+AIツール設定ファイル（プロジェクトルート）:
+- AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
+- CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
 ```
 
 ### アップグレードの場合
