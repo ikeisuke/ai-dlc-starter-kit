@@ -137,27 +137,38 @@ Inception/Construction Phaseで決定済み
 
   1. **mode確認**: 上記コマンドでmodeを取得
      - 空または取得失敗時は「recommend」として扱う
-     - `disabled` の場合: 直接人間承認へ
+     - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
 
   2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
 
-  3. **MCP利用可能時**:
-     - **レビュー前コミット**:
+  3. **MCP利用可能時の選択**:
+     - `mode = "required"` の場合: ステップ4（AIレビューフロー）へ
+     - `mode = "recommend"` の場合: 推奨メッセージを表示しユーザーに選択を求める
+       ```text
+       【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
+       品質向上のため、この成果物のレビューを実施することを推奨します。
+       レビューを実施しますか？
+       ```
+       - 「はい」の場合: ステップ4（AIレビューフロー）へ
+       - 「いいえ」の場合: ステップ6（人間レビューフロー）へ
+
+  4. **AIレビューフロー**:
+     - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
-     - **レビュー後コミット**（修正があった場合）:
+     - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
-  4. **MCP利用不可時**:
+  5. **MCP利用不可時**:
      - `mode = "required"` の場合:
        ```text
        【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
@@ -166,15 +177,28 @@ Inception/Construction Phaseで決定済み
        1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
        2. いいえ - 処理を中断
        ```
-       ユーザーの応答を待ち、「はい」の場合はスキップを履歴に記録して人間承認へ
-     - `mode = "recommend"` の場合: 直接人間に承認を求める
+       ユーザーの応答を待ち、「はい」の場合は以下を履歴に記録してステップ6へ:
+       ```markdown
+       ### AIレビュースキップ
+       - **理由**: MCP利用不可
+       - **日時**: YYYY-MM-DD HH:MM:SS
+       - **対象成果物**: {成果物名}
+       ```
+     - `mode = "recommend"` の場合: ステップ6へ
 
-  **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
-  ```text
-  【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
-  品質向上のため、この成果物のレビューを実施することを推奨します。
-  レビューを実施しますか？
-  ```
+  6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
+     - **レビュー前コミット**（変更がある場合のみ）:
+       ```bash
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       ```
+     - 成果物を人間に提示
+     - 人間の承認を求める
+     - 修正依頼があれば修正を反映
+     - **レビュー後コミット**（修正があった場合のみ）:
+       ```bash
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       ```
+     - 再度人間に提示・承認を求める
 
   **対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
