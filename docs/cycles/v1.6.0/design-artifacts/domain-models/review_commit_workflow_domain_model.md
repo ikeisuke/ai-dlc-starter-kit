@@ -51,9 +51,22 @@
 |--------------|-------------|--------|
 | disabled | - | 人間レビューフロー |
 | required | 利用可 | AIレビューフロー |
-| required | 利用不可 | 警告 → 人間レビューフロー |
-| recommend | 利用可 | AIレビュー推奨 → AIレビューフロー or 人間レビューフロー |
+| required | 利用不可 | 警告 → ユーザー選択 → 人間レビューフロー（スキップ時は履歴に記録） |
+| recommend | 利用可 | AIレビュー推奨メッセージ表示 → ユーザー選択 → AIレビューフロー or 人間レビューフロー |
 | recommend | 利用不可 | 人間レビューフロー |
+
+### スキップ履歴の記録
+
+`mode = "required"` でMCP利用不可かつユーザーがスキップを選択した場合、以下の形式で履歴ファイルに記録:
+
+```markdown
+### AIレビュースキップ
+- **理由**: MCP利用不可
+- **日時**: YYYY-MM-DD HH:MM:SS
+- **対象成果物**: {成果物名}
+```
+
+**記録先**: 各フェーズの履歴ファイル（`history/inception.md`, `history/construction_unit{N}.md`, `history/operations.md`）
 
 ### AIレビューフロー
 
