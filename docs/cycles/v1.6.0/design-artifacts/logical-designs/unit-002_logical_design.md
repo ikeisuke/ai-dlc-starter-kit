@@ -62,13 +62,20 @@ prompts/
 
 ### 必須セクション追記ロジック
 
+**シンプルなアプローチ**: 各ファイルに1つのキーセクションを定義し、そのセクションが欠けていればテンプレートの該当部分全体を追記
+
+| ファイル | キーセクション | 追記内容 |
+|---------|---------------|---------|
+| CLAUDE.md | `## Claude Code固有の設定` | テンプレートの`## Claude Code固有の設定`以降全体 |
+| AGENTS.md | `## 開発サイクルの開始` | テンプレートの`## 開発サイクルの開始`以降全体 |
+
+**処理フロー**:
 ```text
-for each required_section in template:
-    if required_section.header not in target_file:
-        append required_section to target_file
+if キーセクション not found in target_file:
+    append テンプレートのキーセクション以降全体 to end of target_file
 ```
 
-**セクション識別方法**: 見出し行（`## `, `### `）でマッチング
+**追記位置**: 常にファイル末尾（冪等性を保証）
 
 ## setup-prompt.md 変更設計
 
@@ -83,32 +90,35 @@ for each required_section in template:
 
 # CLAUDE.md の処理
 if [ ! -f CLAUDE.md ]; then
-  # ファイルが存在しない場合: テンプレートをコピー
   \cp -f [スターターキットパス]/prompts/setup/templates/CLAUDE.md.template CLAUDE.md
   echo "Created: CLAUDE.md"
 else
-  # ファイルが存在する場合: 必須セクションを確認・追記
-  # 「## Claude Code固有の設定」セクションの存在確認
+  # キーセクションが欠けていれば追記
   if ! grep -q "^## Claude Code固有の設定" CLAUDE.md; then
     echo "" >> CLAUDE.md
-    echo "## Claude Code固有の設定" >> CLAUDE.md
-    echo "" >> CLAUDE.md
-    echo "(以降、テンプレートから必須セクションを追記)"
-    # テンプレートから該当セクションを抽出して追記
+    sed -n '/^## Claude Code固有の設定$/,$p' \
+      [スターターキットパス]/prompts/setup/templates/CLAUDE.md.template >> CLAUDE.md
+    echo "Added: Claude Code settings to CLAUDE.md"
   fi
 fi
 
-# AGENTS.md の処理（同様のロジック）
+# AGENTS.md の処理
 if [ ! -f AGENTS.md ]; then
   \cp -f [スターターキットパス]/prompts/setup/templates/AGENTS.md.template AGENTS.md
   echo "Created: AGENTS.md"
 else
-  # 必須セクションの確認・追記
   if ! grep -q "^## 開発サイクルの開始" AGENTS.md; then
-    # テンプレートから該当セクションを抽出して追記
+    echo "" >> AGENTS.md
+    sed -n '/^## 開発サイクルの開始$/,$p' \
+      [スターターキットパス]/prompts/setup/templates/AGENTS.md.template >> AGENTS.md
+    echo "Added: AI-DLC workflow to AGENTS.md"
   fi
 fi
 ```
+
+**テンプレート更新と既存内容の関係**:
+- 既存ファイルのキーセクションは上書きしない（ユーザーのカスタマイズを保護）
+- これは意図的な設計
 
 ### 追加する説明文
 
