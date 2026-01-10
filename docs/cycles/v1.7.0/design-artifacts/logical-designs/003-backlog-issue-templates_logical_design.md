@@ -69,7 +69,7 @@ body:
 | summary | textarea | true | 概要 / Summary |
 | details | textarea | false | 詳細 / Details |
 | cycle | input | false | 発見サイクル / Discovery Cycle |
-| phase | dropdown | false | 発見フェーズ / Discovery Phase (Inception/Construction/Operations) |
+| phase | dropdown | false | 発見フェーズ / Discovery Phase (Inception/Construction/Operations/N/A) |
 | priority | dropdown | true | 優先度 / Priority (High/Medium/Low) |
 | solution | textarea | false | 対応案 / Proposed Solution |
 

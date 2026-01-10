@@ -52,7 +52,7 @@ body:
   - 概要 / Summary（textarea, 必須）
   - 詳細 / Details（textarea, 任意）
   - 発見サイクル / Discovery Cycle（input, 任意）
-  - 発見フェーズ / Discovery Phase（dropdown, 任意）
+  - 発見フェーズ / Discovery Phase（dropdown, 任意: Inception/Construction/Operations/N/A）
   - 優先度 / Priority（dropdown, 必須）
   - 対応案 / Proposed Solution（textarea, 任意）
 
