@@ -17,7 +17,7 @@
 | フェーズ責務 | Inception=要件定義、Construction=設計実装分離、Operations=デプロイ運用 |
 | 禁止事項 | 履歴削除禁止、承認なしの進行禁止、独自判断禁止 |
 
-### 1.2 プロジェクト固有ルール（rules.mdに配置）
+### 1.2 プロジェクト固有ルール（`docs/cycles/rules.md` に配置）
 
 プロジェクトごとにカスタマイズされるルール：
 
@@ -124,7 +124,7 @@ docs/aidlc/prompts/construction.md
 | ファイル | 責務 |
 |----------|------|
 | `AGENTS.md` | AI-DLC共通ルール + フェーズ簡略指示 |
-| `rules.md` | プロジェクト固有ルールのみ |
+| `docs/cycles/rules.md` | プロジェクト固有ルールのみ |
 | `rules_template.md` | 新規プロジェクト用テンプレート |
 
 ### 4.2 参照関係
