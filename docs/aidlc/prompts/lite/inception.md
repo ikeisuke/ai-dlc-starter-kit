@@ -60,11 +60,7 @@ Inception Phase (Lite) が完了しました。以下のメッセージをユー
 
 **理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
-**Construction Phaseを開始するプロンプト**:
-```
-以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase (Lite) を開始してください：
-docs/aidlc/prompts/lite/construction.md
-```
+**次のステップ**: 「start lite construction」と指示してください。
 ---
 ````
 

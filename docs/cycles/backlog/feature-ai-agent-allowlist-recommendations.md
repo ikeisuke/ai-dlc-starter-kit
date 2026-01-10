@@ -38,6 +38,8 @@
 ### 作成系（可逆・安全）
 - `git checkout -b`, `git switch`
 - `git worktree add`, `git add`, `mkdir`
+- `tee` - ファイル追記（履歴記録等で使用）
+- `rsync` - ファイル同期（セットアップ・アップグレード時に使用）
 
 ### Git操作（歴史改変なし・可逆）
 - `git commit` - コミット作成
