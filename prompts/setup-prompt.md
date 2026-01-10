@@ -722,28 +722,27 @@ fi
 **AGENTS.md / CLAUDE.md の処理（参照行追記）**:
 
 AGENTS.mdとCLAUDE.mdは、AI-DLC設定ファイルへの参照を追記します。
-参照先ファイル（`docs/aidlc/AGENTS_AIDLC.md`, `docs/aidlc/CLAUDE_AIDLC.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
+参照先ファイル（`docs/aidlc/prompts/AGENTS.md`, `docs/aidlc/prompts/CLAUDE.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
 
 ```bash
 # AGENTS.md の処理（全AIツール共通）
-AGENTS_REF="@docs/aidlc/AGENTS_AIDLC.md"
 if [ ! -f AGENTS.md ]; then
   # 新規作成
   cat > AGENTS.md << 'EOF'
 # AGENTS.md
 
-@docs/aidlc/AGENTS_AIDLC.md
+@docs/aidlc/prompts/AGENTS.md を参照してください。
 EOF
   echo "Created: AGENTS.md"
 else
   # 参照行がなければ先頭に追記
-  if ! grep -q "@docs/aidlc/AGENTS_AIDLC.md" AGENTS.md; then
+  if ! grep -q "@docs/aidlc/prompts/AGENTS.md" AGENTS.md; then
     TEMP_FILE=$(mktemp)
-    echo "@docs/aidlc/AGENTS_AIDLC.md" > "$TEMP_FILE"
+    echo "@docs/aidlc/prompts/AGENTS.md を参照してください。" > "$TEMP_FILE"
     echo "" >> "$TEMP_FILE"
     cat AGENTS.md >> "$TEMP_FILE"
     mv "$TEMP_FILE" AGENTS.md
-    echo "Added reference to AGENTS.md: @docs/aidlc/AGENTS_AIDLC.md"
+    echo "Added reference to AGENTS.md: @docs/aidlc/prompts/AGENTS.md"
   fi
 fi
 
@@ -754,20 +753,19 @@ if [ ! -f CLAUDE.md ]; then
 # CLAUDE.md
 
 @AGENTS.md を参照してください。
-
-@docs/aidlc/CLAUDE_AIDLC.md
+@docs/aidlc/prompts/CLAUDE.md を参照してください。
 EOF
   echo "Created: CLAUDE.md"
 else
-  # 参照行を追記（順序: @AGENTS.md → @CLAUDE_AIDLC.md となるように逆順で先頭挿入）
-  # 1. CLAUDE_AIDLC.md参照がなければ先頭に追記
-  if ! grep -q "@docs/aidlc/CLAUDE_AIDLC.md" CLAUDE.md; then
+  # 参照行を追記（順序: @AGENTS.md → @CLAUDE.md となるように逆順で先頭挿入）
+  # 1. CLAUDE.md参照がなければ先頭に追記
+  if ! grep -q "@docs/aidlc/prompts/CLAUDE.md" CLAUDE.md; then
     TEMP_FILE=$(mktemp)
-    echo "@docs/aidlc/CLAUDE_AIDLC.md" > "$TEMP_FILE"
+    echo "@docs/aidlc/prompts/CLAUDE.md を参照してください。" > "$TEMP_FILE"
     echo "" >> "$TEMP_FILE"
     cat CLAUDE.md >> "$TEMP_FILE"
     mv "$TEMP_FILE" CLAUDE.md
-    echo "Added reference to CLAUDE.md: @docs/aidlc/CLAUDE_AIDLC.md"
+    echo "Added reference to CLAUDE.md: @docs/aidlc/prompts/CLAUDE.md"
   fi
   # 2. AGENTS.md参照がなければ先頭に追記（これが最上段になる）
   if ! grep -q "@AGENTS.md" CLAUDE.md; then
@@ -795,18 +793,15 @@ sent 1,234 bytes  received 56 bytes
 
 ### 8.3 同期対象のファイル一覧
 
-rsync により以下のファイルが同期されます:
+rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
-**prompts/**:
+**prompts/** → `docs/aidlc/prompts/`:
 - inception.md, construction.md, operations.md, setup.md
+- AGENTS.md, CLAUDE.md（AIツール設定）
 - lite/inception.md, lite/construction.md, lite/operations.md
 
-**templates/**:
+**templates/** → `docs/aidlc/templates/`:
 - 各種テンプレートファイル（index.md含む）
-
-**AIツール設定ファイル**:
-- AGENTS_AIDLC.md - 全AIツール共通設定
-- CLAUDE_AIDLC.md - Claude Code専用設定
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
