@@ -9,10 +9,14 @@
 ## 責務
 - `docs/aidlc.toml` への `[setup]` セクション追加
 - `[setup].prompt_path` へのパス記録処理（`prompts/setup-prompt.md`）
+- ghq前提のパス構成で記録（環境非依存）
+  - 同一リポジトリ内: 相対パス（例: `prompts/setup-prompt.md`）
+  - 外部リポジトリ: `ghq:{host}/{owner}/{repo}/{path}` 形式
 - Operations Phase完了時のメッセージで `[setup].prompt_path` を参照・表示
 
 ## 境界
 - サイクルセットアップ（`docs/aidlc/prompts/setup.md`）への変更は対象外
+- ghqがインストールされていない環境でも動作する（パス形式の規約のみ）
 
 ## 依存関係
 

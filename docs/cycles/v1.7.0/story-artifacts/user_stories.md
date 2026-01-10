@@ -97,12 +97,14 @@ So that アップグレード時に正しいプロンプトを使用できる
 
 **受け入れ基準**:
 - [ ] スターターキットセットアップ時に使用したパスが `docs/aidlc.toml` の `[setup].prompt_path` に記録される
+- [ ] パスはghq前提の環境非依存形式で記録される（相対パスまたは `ghq:` 形式）
 - [ ] Operations Phase完了時のメッセージで `[setup].prompt_path` の値が参照・表示される
 
 **技術的考慮事項**:
 - `[setup]` セクションを `aidlc.toml` に追加
 - `prompts/setup-prompt.md`（スターターキットセットアップ）で動的にパスを記録する処理を追加
 - サイクルセットアップ（`docs/aidlc/prompts/setup.md`）とは別物であることに注意
+- ghq前提のパス構成: 同一リポジトリ内は相対パス、外部リポジトリは `ghq:{host}/{owner}/{repo}/{path}` 形式
 
 ---
 
