@@ -29,8 +29,11 @@ brew install jj
 AI-DLCプロジェクトでjjを使用する場合は、colocateモードを推奨します。これによりGitとjjが同じリポジトリで共存できます。
 
 ```bash
-# 既存のGitリポジトリでjjを初期化
+# 既存のGitリポジトリでjjを初期化（jj 0.21以降）
 cd your-project
+jj git init --colocate
+
+# または（古いバージョン）
 jj git init --git-repo=.
 ```
 
@@ -38,6 +41,8 @@ jj git init --git-repo=.
 # 新規リポジトリの場合
 jj git init --colocate
 ```
+
+> **ヒント**: jjのバージョンにより初期化コマンドが異なる場合があります。詳細は公式ドキュメントを参照してください。
 
 ---
 
@@ -83,10 +88,18 @@ AI-DLC開発に関連するjjの主要な特徴:
 | 用途 | Git コマンド | jj コマンド | 備考 |
 |------|-------------|------------|------|
 | ステージング | `git add` | (自動) | jjでは自動追跡 |
-| コミット | `git commit -m "msg"` | `jj commit -m "msg"` | |
+| コミット | `git commit -m "msg"` | `jj describe -m "msg"` + `jj new` | 推奨フロー（下記参照） |
 | コミットメッセージ編集 | `git commit --amend` | `jj describe -m "msg"` | 現在のリビジョンを編集 |
 | 変更退避 | `git stash` | (不要) | ワーキングコピーが自動保存 |
-| 操作取り消し | `git reset` | `jj undo` | より安全 |
+| 操作取り消し | `git reset` | `jj undo` | 直前の操作を取り消し |
+
+> **コミットフローの推奨**:
+> jjでは `jj describe` でメッセージを設定し、`jj new` で次のリビジョンを作成するフローを推奨します。
+> `jj commit` も使用可能ですが、`jj describe` + `jj new` の方がワークフローに柔軟性があります。
+
+> **git reset との違い**:
+> `jj undo` は直前のjj操作を取り消します。Gitの `git reset --soft/--mixed/--hard` のような細かいモードはありません。
+> より詳細な制御が必要な場合は `jj restore` や `jj abandon` を検討してください。
 
 ### リモート操作系
 
@@ -94,9 +107,19 @@ AI-DLC開発に関連するjjの主要な特徴:
 |------|-------------|------------|------|
 | リモートへプッシュ | `git push` | `jj git push` | |
 | 特定ブックマークをプッシュ | `git push -u origin <branch>` | `jj git push --bookmark <name>` | |
-| リモートから取得 | `git pull` | `jj git fetch` + `jj rebase` | 2ステップで実行 |
+| リモートから取得 | `git pull` | `jj git fetch` + `jj rebase -d <remote>/<bookmark>` | 下記参照 |
 | タグ作成 | `git tag -a <tag> -m "msg"` | `git tag -a <tag> -m "msg"` | colocateでGit直接使用 |
-| タグプッシュ | `git push --tags` | `jj git push --all` | |
+| タグプッシュ | `git push --tags` | `git push --tags` | colocateでGit直接使用 |
+
+> **git pull との違い**:
+> jjでは `git pull` に相当する操作は2ステップです:
+> ```bash
+> jj git fetch                    # リモートから取得
+> jj rebase -d origin/main        # リモートブランチにリベース（宛先を明示）
+> ```
+
+> **タグ操作について**:
+> jjはGitタグをネイティブにサポートしていないため、colocateモードでGitコマンドを直接使用します。
 
 ---
 
@@ -163,8 +186,8 @@ jj git push
 # Gitでタグを作成
 git tag -a vX.X.X -m "Release vX.X.X"
 
-# jjでプッシュ
-jj git push --all
+# Gitでタグをプッシュ
+git push --tags
 ```
 
 mainへのマージ（GitHub PR経由を推奨）:
