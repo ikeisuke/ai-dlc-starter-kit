@@ -43,7 +43,7 @@ language = "日本語"
 # - recommend: MCP利用可能時にレビューを推奨（デフォルト）
 # - required: MCP利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
-mode = "recommend"
+mode = "required"
 
 [rules.custom]
 # プロジェクト固有のカスタムルール
@@ -70,3 +70,8 @@ level = "standard"
 # version_tag: true | false - バージョンタグを付与するか（デフォルト: false）
 changelog = true
 version_tag = true
+
+[rules.unit_branch]
+# Unitブランチ設定（v1.7.0で追加）
+# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: true）
+enabled = false
