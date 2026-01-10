@@ -94,11 +94,7 @@ Construction Phase (Lite) が完了しました。以下のメッセージをユ
 
 **理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
-**次のUnitを開始するプロンプト**:
-```
-以下のファイルを読み込んで、サイクル vX.X.X の Construction Phase (Lite) を継続してください：
-docs/aidlc/prompts/lite/construction.md
-```
+**次のステップ**: 「start lite construction」と指示してください。
 ---
 ````
 
@@ -112,11 +108,7 @@ docs/aidlc/prompts/lite/construction.md
 
 **理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
 
-**Operations Phaseを開始するプロンプト**:
-```
-以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase (Lite) を開始してください：
-docs/aidlc/prompts/lite/operations.md
-```
+**次のステップ**: 「start lite operations」と指示してください。
 ---
 ````
 
