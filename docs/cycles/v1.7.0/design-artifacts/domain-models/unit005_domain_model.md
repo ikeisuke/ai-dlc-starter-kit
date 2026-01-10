@@ -8,7 +8,7 @@
 ## エンティティ（Entity）
 
 ### BacklogItem（バックログアイテム）
-- **ID**: スラッグ（例: `feature-user-auth`）
+- **ID**: スラッグ（例: `feature-user-auth`）- ファイル名およびIssue本文に記載
 - **属性**:
   - title: String - バックログの件名
   - type: BacklogType - 種類（feature, bugfix, chore, refactor, docs, perf, security）
@@ -19,28 +19,30 @@
   - description: String - 概要
   - details: String - 詳細
   - proposedAction: String - 対応案
+  - issueNumber: Integer? - Issue駆動時のIssue番号（オプション）
 - **振る舞い**:
-  - createAsIssue(): 対応するGitHub Issueを作成
+  - createAsIssue(): 対応するGitHub Issueを作成（`backlog`ラベル必須）
   - createAsFile(): 対応するローカルファイルを作成
-  - close(): バックログを完了としてマーク
+  - complete(): バックログを完了（Issueクローズ or ファイルを`backlog-completed/`へ移動）
 
 ### Issue（GitHub Issue）
 - **ID**: number（GitHub Issue番号）
 - **属性**:
   - title: String - Issueタイトル
-  - body: String - Issue本文
-  - labels: Label[] - ラベル
+  - body: String - Issue本文（スラッグを含む）
+  - labels: Label[] - ラベル（`backlog`ラベル必須）
   - state: IssueState - 状態（open, closed）
 - **振る舞い**:
-  - linkToBacklogItem(): バックログアイテムと関連付け
   - close(): Issueをクローズ
+- **必須ラベル**: `backlog` - バックログIssueの識別に使用
 
 ## 値オブジェクト（Value Object）
 
 ### BacklogMode（バックログ管理モード）
 - **属性**: mode: String - "issue" | "git"
-- **不変性**: 設定ファイルで定義され、セッション中は不変
+- **不変性**: 設定ファイル（`aidlc.toml`）で定義された初期値
 - **等価性**: mode値が同じであれば等価
+- **フォールバック動作**: Issue駆動選択時にGitHub CLI未認証の場合、警告を表示しGit駆動で動作（設定は変更しない）
 
 ### BacklogType（バックログ種類）
 - **属性**: type: String - "feature" | "bugfix" | "chore" | "refactor" | "docs" | "perf" | "security"
@@ -77,7 +79,6 @@
 - **操作**:
   - findAll(): GitHub Issueとローカルファイル両方からバックログを収集
   - findByType(type): 指定種類のバックログを検索
-  - findRelatedToUnit(unitName): 特定Unitに関連するバックログを検索
 
 ## リポジトリインターフェース
 
@@ -94,7 +95,7 @@
 - **操作**:
   - save(backlogItem) - `docs/cycles/backlog/{type}-{slug}.md` として保存
   - find(slug) - ファイルからバックログ読み込み
-  - delete(slug) - ファイル削除
+  - moveToCompleted(slug, cycle) - `docs/cycles/backlog-completed/{cycle}/` へ移動
   - findAll() - `docs/cycles/backlog/` 配下の全ファイル取得
 
 ## ユビキタス言語

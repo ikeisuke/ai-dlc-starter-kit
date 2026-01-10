@@ -58,8 +58,9 @@ mode = "git"
 - **パラメータ**:
   - title: String - バックログタイトル
   - type: String - 種類（feature, bugfix等）
+  - slug: String - スラッグ（Issue本文に記載）
   - body: String - 本文
-- **副作用**: GitHub Issueを作成
+- **副作用**: GitHub Issueを作成（`backlog`ラベル必須）
 
 #### 新規バックログ作成（Git駆動）
 - **パラメータ**:
@@ -87,7 +88,9 @@ mode = "git"
 **ステップ**:
 1. `docs/aidlc.toml` の `[backlog].mode` を確認
 2. mode に応じて分岐:
-   - `issue`: `gh issue create` でGitHub Issueを作成
+   - `issue`:
+     1. GitHub CLI認証状態を確認（未認証の場合は警告を表示しGit駆動にフォールバック）
+     2. `gh issue create --label backlog` でGitHub Issueを作成（スラッグをbodyに含める）
    - `git`: `docs/cycles/backlog/{type}-{slug}.md` にファイルを作成
 3. 作成結果をユーザーに表示
 
@@ -99,10 +102,12 @@ mode = "git"
 1. `docs/aidlc.toml` の `[backlog].mode` を確認
 2. mode に応じて分岐:
    - `issue`: `gh issue close` でIssueをクローズ
-   - `git`: 該当ファイルを削除
+   - `git`: 該当ファイルを `docs/cycles/backlog-completed/{{CYCLE}}/` へ移動
 3. 完了結果をユーザーに表示
 
 **関与するコンポーネント**: ガイドドキュメント、設定ファイル
+
+**備考**: Git駆動の場合、ファイルを削除せず移動することで履歴を保持する（既存運用との整合性）
 
 ### 3. バックログ参照フロー
 
