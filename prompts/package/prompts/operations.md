@@ -827,6 +827,15 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 このサイクルが完了しました。以下のメッセージをユーザーに提示してください：
 
+**メッセージ表示前の準備**:
+```bash
+# setup_prompt パスを取得
+SETUP_PROMPT=$(grep "setup_prompt" docs/aidlc.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+echo "Setup prompt path: ${SETUP_PROMPT}"
+```
+
+以下のメッセージで `${SETUP_PROMPT}` を取得した値で置換してください：
+
 ````markdown
 ---
 ## サイクル完了
@@ -837,7 +846,8 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **次のステップ**: 「start setup」と指示してください。
 
-**AI-DLCスターターキットをアップグレードする場合**: `[setup-promptのパス]` を読み込んでください。
+**AI-DLCスターターキットをアップグレードする場合**: `${SETUP_PROMPT}` を読み込んでください。
+（ghq形式の場合: `$(ghq root)/${SETUP_PROMPT#ghq:}` で展開可能）
 ---
 ````
 

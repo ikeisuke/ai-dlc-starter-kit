@@ -401,7 +401,8 @@ frameworks = [[フレームワークリスト]]
 tools = ["Claude Code"]
 
 [paths]
-setup_prompt = "prompts/setup-prompt.md"
+# セットアッププロンプトのパス（詳細は 7.2.1 参照）
+setup_prompt = "[setup_prompt パス]"
 aidlc_dir = "docs/aidlc"
 cycles_dir = "docs/cycles"
 
@@ -451,6 +452,37 @@ level = "standard"
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
 ```
+
+### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
+
+`[paths].setup_prompt` には、このセットアッププロンプトファイルのパスを設定します。
+
+**パス形式の判定**（優先順位順）:
+
+1. **同一リポジトリ内の場合**: 相対パスを使用
+   - このファイル（setup-prompt.md）がプロジェクトルート配下にある場合
+   - 例: `prompts/setup-prompt.md`
+
+2. **外部リポジトリの場合**: ghq形式を使用
+   - このファイルが別のリポジトリにある場合（ghq管理下）
+   - 形式: `ghq:{host}/{owner}/{repo}/{path}`
+   - 例: `ghq:github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md`
+
+3. **上記以外の場合**: 絶対パスを使用（フォールバック、非推奨）
+   - ghq未使用環境でのフォールバック
+
+**判定補助**:
+- プロジェクトルートは `docs/aidlc.toml` が作成されるディレクトリ
+- 外部リポジトリの場合、以下のコマンドでghq形式パスを構築可能:
+  ```bash
+  # ghq root を取得
+  GHQ_ROOT=$(ghq root)
+  # スターターキットの相対パスを取得（ghq root からの相対パス）
+  STARTER_KIT_PATH="github.com/[owner]/[repo]"
+  # 完成形: ghq:github.com/[owner]/[repo]/prompts/setup-prompt.md
+  ```
+
+**アップグレードモードの場合**: 既存の `[paths].setup_prompt` を保持（変更しない）
 
 ### 7.3 starter_kit_versionの更新【アップグレードモードのみ】
 
