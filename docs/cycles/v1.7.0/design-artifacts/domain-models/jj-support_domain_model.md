@@ -27,43 +27,70 @@ AI-DLC開発に関連するjjの主要な特徴（5項目以上）:
 
 AI-DLCワークフローで使用するGitコマンドとjj対応（10件以上）:
 
+**注意**: jj 0.22以降では `branch` が `bookmark` に改名されています。
+
 | 用途 | Git コマンド | jj コマンド | 備考 |
 |------|-------------|------------|------|
 | 状態確認 | `git status` | `jj status` または `jj st` | |
 | 差分表示 | `git diff` | `jj diff` | |
 | 履歴表示 | `git log` | `jj log` | デフォルトでグラフ表示 |
-| ブランチ一覧 | `git branch` | `jj branch list` | |
-| 現在ブランチ | `git branch --show-current` | `jj log -r @` | 現在のリビジョン確認 |
-| ブランチ作成・切替 | `git checkout -b <name>` | `jj new` + `jj branch create <name>` | 段階的に実行 |
-| ブランチ切替 | `git checkout <name>` | `jj co <revision>` | |
+| ブックマーク一覧 | `git branch` | `jj bookmark list` | |
+| 現在リビジョンのブックマーク | `git branch --show-current` | `jj bookmark list -r @` | |
+| ブックマーク作成・切替 | `git checkout -b <name>` | `jj new` + `jj bookmark create <name>` | 段階的に実行 |
+| リビジョン切替 | `git checkout <name>` | `jj edit <revision>` | |
 | 変更のステージング | `git add` | (自動) | jjでは自動追跡 |
 | コミット | `git commit` | `jj commit` または `jj describe` | |
 | 変更退避 | `git stash` | (不要) | ワーキングコピーが自動保存 |
 | リモートへプッシュ | `git push` | `jj git push` | |
 | リモートから取得 | `git pull` | `jj git fetch` + `jj rebase` | |
-| タグ作成 | `git tag -a` | `jj git push --tags` | Git互換 |
+| タグ作成 | `git tag -a` | Git操作を使用 | colocateモードでgit tagを直接使用 |
+| タグプッシュ | `git push --tags` | `jj git push --all` | |
 | 操作取り消し | `git reset` | `jj undo` | より安全 |
-| ブランチ削除 | `git branch -d` | `jj branch delete` | |
+| ブックマーク削除 | `git branch -d` | `jj bookmark delete` | |
 
 ### 3. AI-DLCワークフロー互換性
 
 各フェーズでの使用方法:
 
 #### Setup Phase
-- サイクルブランチ作成: `jj new` + `jj branch create cycle/vX.X.X`
+- サイクルブックマーク作成:
+  ```text
+  jj new main
+  jj bookmark create cycle/vX.X.X
+  jj git push --bookmark cycle/vX.X.X
+  ```
 
 #### Inception Phase
-- ブランチ存在確認: `jj branch list` で確認
-- ブランチ切り替え: `jj co <branch>`
+- ブックマーク存在確認: `jj bookmark list` で確認
+- リビジョン切り替え: `jj edit <bookmark>` または `jj new <bookmark>`
 
 #### Construction Phase
-- コミット作成: `jj commit -m "message"` または `jj describe -m "message"` + `jj new`
-- レビュー前コミット: `jj commit -m "chore: [vX.X.X] レビュー前 - 成果物名"`
+- コミット作成:
+  ```text
+  jj describe -m "chore: [vX.X.X] レビュー前 - 成果物名"
+  jj new
+  ```
 - プッシュ: `jj git push`
+- レビュー後の修正があった場合:
+  ```text
+  jj describe -m "chore: [vX.X.X] レビュー反映 - 成果物名"
+  jj new
+  jj git push
+  ```
 
 #### Operations Phase
-- タグ作成: Gitのタグ機能を使用（colocateモード）
-- mainへのマージ: `jj git push`
+- タグ作成: colocateモードでGitのタグ機能を直接使用
+  ```text
+  git tag -a vX.X.X -m "Release vX.X.X"
+  jj git push --all
+  ```
+- mainへのマージ: GitHub PR経由でマージ（推奨）
+  - または jj でリベース後プッシュ:
+    ```text
+    jj rebase -d main
+    jj bookmark set main -r @
+    jj git push --bookmark main
+    ```
 
 ---
 

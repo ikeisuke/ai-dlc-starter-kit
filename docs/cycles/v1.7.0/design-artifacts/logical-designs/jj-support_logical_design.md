@@ -36,7 +36,7 @@ jj-support.md
 │   └── 安全なrebase
 ├── 4. Git/jjコマンド対照表
 │   ├── 状態確認系
-│   ├── ブランチ操作系
+│   ├── ブックマーク操作系
 │   ├── コミット操作系
 │   └── リモート操作系
 ├── 5. AI-DLCワークフローでの使用方法
@@ -86,8 +86,9 @@ jj-support.md
 
 **内容**:
 - 15件以上のコマンド対照
-- 用途別に分類（状態確認、ブランチ操作、コミット操作、リモート操作）
+- 用途別に分類（状態確認、ブックマーク操作、コミット操作、リモート操作）
 - 必要に応じて備考欄で違いを補足
+- jjバージョン差異の注意（0.22以降で `branch` → `bookmark` 改名）
 
 ### 5. AI-DLCワークフローでの使用方法
 
@@ -96,23 +97,39 @@ jj-support.md
 **内容**:
 
 #### Setup Phase
-- サイクルブランチ作成手順
+- サイクルブックマーク作成手順
   ```text
   jj new main
-  jj branch create cycle/vX.X.X
-  jj git push --branch cycle/vX.X.X
+  jj bookmark create cycle/vX.X.X
+  jj git push --bookmark cycle/vX.X.X
   ```
 
 #### Inception Phase
-- ブランチ切り替え手順
+- ブックマーク存在確認: `jj bookmark list`
+- リビジョン切り替え: `jj edit <bookmark>` または `jj new <bookmark>`
 
 #### Construction Phase
-- コミット作成手順
-- レビュー前/後のコミット
+- コミット作成手順:
+  ```text
+  jj describe -m "chore: [vX.X.X] レビュー前 - 成果物名"
+  jj new
+  jj git push
+  ```
+- レビュー後の修正があった場合も同様のフロー
 
 #### Operations Phase
-- タグ作成とプッシュ
-- mainへのマージ
+- タグ作成: colocateモードでGit操作を直接使用
+  ```text
+  git tag -a vX.X.X -m "Release vX.X.X"
+  jj git push --all
+  ```
+- mainへのマージ: GitHub PR経由でマージ（推奨）
+  - または jj でリベース後プッシュ:
+    ```text
+    jj rebase -d main
+    jj bookmark set main -r @
+    jj git push --bookmark main
+    ```
 
 ### 6. 注意事項と制限
 
