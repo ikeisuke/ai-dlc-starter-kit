@@ -31,21 +31,29 @@
 ### 読み取り専用（完全に安全）
 - `git status`, `git log`, `git branch`, `git diff`
 - `git worktree list`, `git remote`, `git show`
-- `ls`
+- `ls`, `cat`, `grep`
+- `date`, `command -v`
+- `gh pr list`, `gh issue list`, `gh auth status`
 
 ### 作成系（可逆・安全）
 - `git checkout -b`, `git switch`
 - `git worktree add`, `git add`, `mkdir`
 
-### 注意が必要だが可逆
-- `git commit`, `git worktree remove`, `git stash`
+### Git操作（歴史改変なし・可逆）
+- `git commit` - コミット作成
+- `git push` - リモートにプッシュ（--forceなし前提）
+- `git reset --soft` - コミット取り消し（変更は保持）
+- `git worktree remove`, `git stash`
 
-### 除外（破壊的）
-- `git push` - リモートに反映
-- `git reset --hard` - 変更を破棄
+### 除外（破壊的・歴史改変）
+- `git push --force` - 履歴を上書き
+- `git reset --hard` - 変更を完全に破棄
 - `git clean -fd` - 未追跡ファイル削除
 - `git rebase` - 履歴書き換え
 - `rm -rf` - ファイル削除
+
+### 備考: git管理下のファイル操作
+git管理下であればファイルの書き換えは `git checkout -- <file>` で復元可能なため、危険度は低いと判断できる。
 
 ## 対応案
 
