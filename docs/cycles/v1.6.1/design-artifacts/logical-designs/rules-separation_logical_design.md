@@ -35,12 +35,16 @@
 | 「インセプション進めて」「start inception」 | Inception Phase |
 | 「コンストラクション進めて」「start construction」 | Construction Phase |
 | 「オペレーション進めて」「start operations」 | Operations Phase |
-| 「セットアップ」「setup」 | Setup |
+| 「セットアップ」「start setup」 | Setup |
+
+**後方互換性**: 単語のみ（`inception`等）も引き続き有効
 
 ### サイクル判定
 
 - ブランチ名 `cycle/vX.X.X` からサイクルを自動判定
-- mainブランチの場合: setup.md を案内
+- mainブランチの場合: 初期セットアップ or 新規サイクル開始を確認
+  - 初期セットアップ: `prompts/setup-prompt.md`
+  - 新規サイクル: `docs/aidlc/prompts/setup.md`
 - コンテキストなしで「続けて」: ユーザーに確認
 
 ## AI-DLC共通ルール
@@ -80,6 +84,15 @@ docs/aidlc/prompts/construction.md
 ```markdown
 **次のステップ**: 「コンストラクション進めて」と指示してください。
 ```
+
+#### フェーズごとの次ステップメッセージ
+
+| ファイル | 次のフェーズ | メッセージ |
+|----------|-------------|-----------|
+| inception.md | Construction | 「コンストラクション進めて」 |
+| construction.md (Unit完了) | 次Unit or Operations | 「コンストラクション進めて」or「オペレーション進めて」 |
+| operations.md | 次サイクル | 「start setup」 |
+| setup.md | Inception | 「インセプション進めて」 |
 
 ### 2.3 変更箇所特定（各プロンプト）
 
@@ -122,6 +135,9 @@ docs/aidlc/prompts/construction.md
 ## 4. 非機能要件
 
 - **後方互換性**: 既存の詳細な指示も引き続き有効
+  - 詳細な指示（例: `docs/aidlc/prompts/construction.md を読み込んで`）も動作する
+  - 簡略指示と詳細指示は共存可能
+  - AGENTS.mdのフェーズ簡略指示セクションに後方互換性について明記
 - **拡張性**: 新しいフェーズやキーワードを追加可能
 - **可読性**: 簡略指示は直感的で覚えやすい形式
 

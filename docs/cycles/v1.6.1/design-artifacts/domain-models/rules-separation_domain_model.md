@@ -46,10 +46,12 @@ AI-DLCスターターキット開発に特有のルール：
 
 | 簡略指示キーワード | 対応プロンプト |
 |-------------------|----------------|
-| `インセプション進めて`、`inception` | `docs/aidlc/prompts/inception.md` |
-| `コンストラクション進めて`、`construction` | `docs/aidlc/prompts/construction.md` |
-| `オペレーション進めて`、`operations` | `docs/aidlc/prompts/operations.md` |
-| `セットアップ`、`setup` | `docs/aidlc/prompts/setup.md` |
+| `インセプション進めて`、`start inception` | `docs/aidlc/prompts/inception.md` |
+| `コンストラクション進めて`、`start construction` | `docs/aidlc/prompts/construction.md` |
+| `オペレーション進めて`、`start operations` | `docs/aidlc/prompts/operations.md` |
+| `セットアップ`、`start setup` | `docs/aidlc/prompts/setup.md` |
+
+**後方互換性**: 単語のみ（`inception`等）も引き続き有効とする
 
 ### 2.2 サイクル判定ロジック
 
@@ -59,7 +61,9 @@ AI-DLCスターターキット開発に特有のルール：
    - pattern: cycle/vX.X.X/unit-NNN → サイクル vX.X.X
 
 2. mainブランチの場合
-   - セットアップを促す: 「setup.md を読み込んでください」
+   - 初期セットアップ: 「prompts/setup-prompt.md を読み込んでください」
+   - 新規サイクル開始: 「docs/aidlc/prompts/setup.md を読み込んでください」
+   - ユーザーにどちらかを確認
 
 3. コンテキストなしで「続けて」の場合
    - ユーザーに確認: 「どのフェーズを継続しますか？」
@@ -78,6 +82,15 @@ docs/aidlc/prompts/construction.md
 「コンストラクション進めて」と指示してください。
 ```
 
+### 2.4 フェーズごとの完了時メッセージ
+
+| 完了フェーズ | 次のステップ | 簡略指示 |
+|-------------|-------------|----------|
+| Inception Phase | Construction Phase | 「コンストラクション進めて」 |
+| Construction Phase (Unit完了) | 次のUnit or Operations | 「コンストラクション進めて」or「オペレーション進めて」 |
+| Operations Phase | 次のサイクル | 「start setup」 |
+| Setup | Inception Phase | 「インセプション進めて」 |
+
 ---
 
 ## 3. エンティティ定義
@@ -95,9 +108,12 @@ docs/aidlc/prompts/construction.md
 ### 3.2 RuleCategory（列挙型）
 
 ```
-- COMMON: AI-DLC共通ルール
-- PROJECT_SPECIFIC: プロジェクト固有ルール
+- COMMON: AI-DLC共通ルール（全プロジェクト適用）
+- PROJECT_SPECIFIC: プロジェクト固有ルール（ユーザーカスタマイズ）
 ```
+
+**注**: スターターキット固有ルール（メタ開発の意識等）は `PROJECT_SPECIFIC` の一種として、
+このプロジェクトの `docs/cycles/rules.md` に記載する。他プロジェクトでは不要
 
 ---
 
@@ -122,3 +138,17 @@ AGENTS.md (読み込み必須)
 rules.md (プロジェクトごとにカスタマイズ)
     └── プロジェクト固有ルール
 ```
+
+### 4.3 AGENTS.md展開フロー
+
+```
+prompts/package/prompts/AGENTS.md (ソース)
+    ↓ Operations Phase の rsync
+docs/aidlc/prompts/AGENTS.md (プロジェクト内コピー)
+    ↓ 参照
+ルート AGENTS.md (docs/aidlc/prompts/AGENTS.md への参照のみ)
+```
+
+**変更対象**: `prompts/package/prompts/AGENTS.md` のみ
+**自動反映**: Operations Phase で rsync により `docs/aidlc/` に反映
+**ルート AGENTS.md**: 参照元のため変更不要
