@@ -1,8 +1,4 @@
-# CLAUDE.md
-
-@AGENTS.md を参照してください。
-
-## Claude Code固有の設定
+# Claude Code固有の設定
 
 ### 質問時のルール
 
