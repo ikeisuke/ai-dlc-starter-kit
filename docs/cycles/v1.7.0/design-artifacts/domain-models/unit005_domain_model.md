@@ -24,17 +24,22 @@
   - createAsIssue(): 対応するGitHub Issueを作成（`backlog`ラベル必須）
   - createAsFile(): 対応するローカルファイルを作成
   - complete(): バックログを完了（Issueクローズ or ファイルを`backlog-completed/`へ移動）
+  - invalidate(): バックログを無効化（対応しない - IssueをnotPlannedでクローズ or ファイル削除）
 
 ### Issue（GitHub Issue）
 - **ID**: number（GitHub Issue番号）
 - **属性**:
   - title: String - Issueタイトル
   - body: String - Issue本文（スラッグを含む）
-  - labels: Label[] - ラベル（`backlog`ラベル必須）
+  - labels: Label[] - ラベル
   - state: IssueState - 状態（open, closed）
 - **振る舞い**:
-  - close(): Issueをクローズ
+  - close(): Issueをクローズ（完了時）
+  - closeAsNotPlanned(): 対応しないとしてクローズ（無効化時）
 - **必須ラベル**: `backlog` - バックログIssueの識別に使用
+- **推奨ラベル**:
+  - `priority:high` / `priority:medium` / `priority:low` - 優先度
+  - `type:feature` / `type:bugfix` / `type:chore` 等 - 種類
 
 ## 値オブジェクト（Value Object）
 
