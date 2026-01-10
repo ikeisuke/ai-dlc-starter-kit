@@ -809,6 +809,84 @@ sent 1,234 bytes  received 56 bytes
 
 **互換性**: rsync は macOS/Linux 共通でプリインストール済み
 
+#### 8.2.5 GitHub Issueテンプレートのコピー
+
+GitHub Issueテンプレートをプロジェクトにコピーします。
+
+**状態確認**:
+```bash
+# .github/ISSUE_TEMPLATE/ の存在と内容確認
+if [ -d ".github/ISSUE_TEMPLATE" ]; then
+    echo "Existing Issue templates:"
+    ls .github/ISSUE_TEMPLATE/
+    echo "ISSUE_TEMPLATE_EXISTS"
+else
+    echo "ISSUE_TEMPLATE_NOT_EXISTS"
+fi
+```
+
+**ケース1: ディレクトリが存在しない場合**:
+```bash
+mkdir -p .github/ISSUE_TEMPLATE
+cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
+echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml"
+```
+
+**ケース2: 同名ファイルが存在する場合**:
+
+まず競合を確認:
+```bash
+CONFLICT_FILES=""
+for file in backlog.yml bug.yml feature.yml; do
+    if [ -f ".github/ISSUE_TEMPLATE/$file" ]; then
+        CONFLICT_FILES="${CONFLICT_FILES}${file} "
+    fi
+done
+echo "Conflict files: ${CONFLICT_FILES:-none}"
+```
+
+競合がある場合、以下のメッセージを表示しユーザーに選択を求める:
+```text
+警告: 以下のIssueテンプレートが既に存在します：
+
+[競合ファイル一覧]
+
+選択してください:
+1. 上書きする（すべて置き換え）
+2. スキップする（既存を保持、新規のみ追加）
+3. 個別に確認する
+
+どれを選択しますか？
+```
+
+- **選択1（上書き）**: `cp -f [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/`
+- **選択2（スキップ）**: 存在しないファイルのみコピー
+- **選択3（個別確認）**: 競合ファイルごとに上書き/スキップを選択
+
+**ケース3: 同名ファイルが存在しない場合**:
+```bash
+mkdir -p .github/ISSUE_TEMPLATE
+for file in backlog.yml bug.yml feature.yml; do
+    if [ ! -f ".github/ISSUE_TEMPLATE/$file" ]; then
+        cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
+        echo "Copied: $file"
+    fi
+done
+```
+
+**結果報告**:
+```text
+GitHub Issueテンプレートの配置が完了しました：
+
+| ファイル | 状態 |
+|----------|------|
+| backlog.yml | [新規作成 / スキップ / 上書き] |
+| bug.yml | [新規作成 / スキップ / 上書き] |
+| feature.yml | [新規作成 / スキップ / 上書き] |
+```
+
+**注意**: Issue Formsは公開リポジトリでのみフォーム形式で表示されます。プライベートリポジトリでは従来のMarkdownテンプレートとして機能します。
+
 ### 8.3 同期対象のファイル一覧
 
 rsync により以下のファイルが `docs/aidlc/` に同期されます:
@@ -833,7 +911,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -869,6 +947,11 @@ AI-DLC環境のセットアップが完了しました！
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
+
+GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
+- backlog.yml - バックログ用テンプレート
+- bug.yml - バグ報告用テンプレート
+- feature.yml - 機能要望用テンプレート
 
 ### AIエージェント許可リストの設定（オプション）
 
