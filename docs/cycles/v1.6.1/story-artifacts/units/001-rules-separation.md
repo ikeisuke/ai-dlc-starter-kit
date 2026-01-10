@@ -18,9 +18,15 @@ rules.md の汎用ルールを AGENTS.md テンプレートに移動し、責務
   - ブランチ名からサイクル自動判定
   - mainブランチ時はセットアップを促す
   - コンテキストなしで「続けて」はユーザーに確認
+- 各フェーズプロンプトの完了時メッセージを簡略指示形式に更新
+  - 例: 「コンストラクション進めて」と指示してください
 
 ## 境界
 - `prompts/package/prompts/AGENTS.md` - フェーズ簡略指示機能
+- `prompts/package/prompts/inception.md` - 完了時メッセージ更新
+- `prompts/package/prompts/construction.md` - 完了時メッセージ更新
+- `prompts/package/prompts/operations.md` - 完了時メッセージ更新
+- `prompts/package/prompts/setup.md` - 完了時メッセージ更新
 - `prompts/package/templates/AGENTS.md.template` - 共通ルールテンプレート
 - `prompts/setup/templates/rules_template.md` - プロジェクト固有ルールテンプレート
 - `docs/cycles/rules.md`
