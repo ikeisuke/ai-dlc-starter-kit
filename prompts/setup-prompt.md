@@ -451,6 +451,13 @@ level = "standard"
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
+
+[backlog]
+# バックログ管理モード設定
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "git"
 ```
 
 ### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
@@ -568,6 +575,23 @@ EOF
 else
   echo "[rules.history] section already exists"
 fi
+
+# [backlog] セクションが存在しない場合は追加
+if ! grep -q "^\[backlog\]" docs/aidlc.toml; then
+  echo "Adding [backlog] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[backlog]
+# バックログ管理モード設定（v1.7.0で追加）
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "git"
+EOF
+  echo "Added [backlog] section"
+else
+  echo "[backlog] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -575,6 +599,7 @@ fi
 ```bash
 grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
+grep -A 5 "^\[backlog\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
