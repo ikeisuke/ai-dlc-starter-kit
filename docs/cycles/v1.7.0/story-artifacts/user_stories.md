@@ -11,7 +11,7 @@ So that 確認ダイアログを減らしてスムーズに開発を進められ
 
 **受け入れ基準**:
 - [ ] `prompts/package/guides/ai-agent-allowlist.md` が作成されている
-- [ ] Claude Code、Cursor、Cline、Aider向けの設定方法が記載されている
+- [ ] Claude Code、Codex、Kiro-CLI向けの設定方法が記載されている
 - [ ] 読み取り専用、作成系、Git操作のカテゴリ別にコマンドが分類されている（各カテゴリ5件以上）
 - [ ] 除外すべき破壊的コマンドが明示されている（`git push --force`, `rm -rf` 等を含む）
 - [ ] スターターキットセットアップ完了時にこのガイドへの導線が案内される
