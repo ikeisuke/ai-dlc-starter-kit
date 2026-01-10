@@ -524,6 +524,52 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
+#### 6.0 CHANGELOG更新【推奨】
+
+CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
+
+**CHANGELOG.md確認**:
+```bash
+# CHANGELOG.mdの存在確認
+ls CHANGELOG.md 2>/dev/null && echo "CHANGELOG_EXISTS" || echo "CHANGELOG_NOT_EXISTS"
+```
+
+**存在しない場合**:
+```text
+CHANGELOG.mdが存在しません。
+
+1. 作成する - Keep a Changelog形式で新規作成
+2. スキップ - CHANGELOGなしで続行
+```
+
+**存在する場合**:
+現在のサイクルバージョンのエントリがあるか確認し、なければ追加を促す。
+
+**注意**: Unreleasedセクションは使用しない。直接バージョン付きエントリを作成する。
+
+**Keep a Changelog形式**:
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+※ バージョン番号はvなし（例: [1.6.0]）
+※ サイクル名から「v」を除いた形式で記載
+
+### Added
+- 新機能
+
+### Changed
+- 変更点
+
+### Fixed
+- バグ修正
+```
+
+**変更内容の収集元**:
+- `docs/cycles/{{CYCLE}}/history/` - 各フェーズの履歴
+- `docs/cycles/{{CYCLE}}/story-artifacts/units/` - Unit定義
+- コミット履歴
+
+**参考**: [Keep a Changelog](https://keepachangelog.com/)
+
 #### 6.1 README更新
 README.mdに今回のサイクルの変更内容を追記
 
@@ -650,7 +696,7 @@ GitHub CLIが利用できません。
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
+   - CHANGELOG更新、README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
@@ -728,7 +774,22 @@ PRがマージされたら、次サイクル開始前に以下を実行：
    git pull origin main
    ```
 
-3. **マージ済みブランチの削除**:
+3. **バージョンタグ付け【推奨】**:
+   ```bash
+   # アノテーション付きタグを作成（マージ後の最新コミットに付与）
+   git tag -a vX.X.X -m "Release vX.X.X"
+
+   # タグをリモートにプッシュ（個別タグ指定で安全にプッシュ）
+   git push origin vX.X.X
+   ```
+
+   **GitHub Release作成（オプション）**:
+   ```bash
+   # GitHub CLIが利用可能な場合
+   gh release create vX.X.X --title "vX.X.X" --notes "See CHANGELOG.md for details"
+   ```
+
+4. **マージ済みブランチの削除**:
    ```bash
    # ローカルブランチの削除
    git branch -d cycle/vX.X.X
