@@ -8,10 +8,11 @@
 
 ## 責務
 - `prompts/package/guides/issue-driven-backlog.md` の作成
-- バックログ管理方式の選択肢を提供（Issue駆動 / ローカルファイル / 併用）
+- バックログ保存先の選択肢を提供（`issue` / `git`）
+- `docs/aidlc.toml` に `[backlog].mode` 設定項目を追加
 - 新規バックログ作成時のIssue作成フロー定義
 - バックログ対応完了時のIssueクローズフロー定義
-- ローカル `docs/cycles/backlog/` との併用方法の説明
+- 参照時の両方確認（Issue + ローカルファイル）のフロー説明
 - サイクル・フェーズ管理へのIssue連携を将来検討事項として記載
 
 ## 境界
@@ -34,12 +35,11 @@
 - **可用性**: GitHub CLI未認証時はローカルファイル管理にフォールバック可能
 
 ## 技術的考慮事項
-- **バックログ管理方式の選択**: `docs/aidlc.toml` に設定項目を追加し、以下から選択可能にする
-  - `issue`: GitHub Issue駆動（ローカルファイルは使わない）
-  - `local`: ローカルファイル管理（従来方式）
-  - `hybrid`: 両方を併用（デフォルト）
+- **バックログ管理方式の選択**: `docs/aidlc.toml` の `[backlog].mode` で「保存先」を選択
+  - `issue`: GitHub Issueに保存
+  - `git`: ローカルファイルに保存（従来方式、デフォルト）
+- **参照は両方**: どちらのモードでも、参照時はGitHub IssueとローカルファイルをBoth確認する
 - 既存のプロンプトへのフック追加は将来検討
-- ローカルファイル管理との併用を前提とした設計
 
 ## 参考ファイル
 - `prompts/package/prompts/inception.md`（Inception Phase - バックログ確認処理を参考）
