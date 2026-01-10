@@ -461,6 +461,7 @@ level = "standard"
 
 1. **同一リポジトリ内の場合**: 相対パスを使用
    - このファイル（setup-prompt.md）がプロジェクトルート配下にある場合
+   - **基準**: `docs/aidlc.toml` が配置されるディレクトリ（プロジェクトルート）
    - 例: `prompts/setup-prompt.md`
 
 2. **外部リポジトリの場合**: ghq形式を使用

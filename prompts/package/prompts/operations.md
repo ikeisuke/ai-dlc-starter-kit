@@ -829,10 +829,12 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **メッセージ表示前の準備**:
 ```bash
-# setup_prompt パスを取得
-SETUP_PROMPT=$(grep "setup_prompt" docs/aidlc.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+# setup_prompt パスを取得（コメント行を除外）
+SETUP_PROMPT=$(grep -E '^\s*setup_prompt\s*=' docs/aidlc.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
 echo "Setup prompt path: ${SETUP_PROMPT}"
 ```
+
+**注意**: `${SETUP_PROMPT}` が空の場合（未設定/旧形式）は、デフォルト値 `prompts/setup-prompt.md` を使用するか、ユーザーに確認してください。
 
 以下のメッセージで `${SETUP_PROMPT}` を取得した値で置換してください：
 
