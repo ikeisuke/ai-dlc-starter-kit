@@ -524,7 +524,7 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
-#### 6.0 CHANGELOG更新【推奨】
+#### 6.0 CHANGELOG更新
 
 CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
 
@@ -535,23 +535,21 @@ ls CHANGELOG.md 2>/dev/null && echo "CHANGELOG_EXISTS" || echo "CHANGELOG_NOT_EX
 ```
 
 **存在しない場合**:
-```text
-CHANGELOG.mdが存在しません。
-
-1. 作成する - Keep a Changelog形式で新規作成
-2. スキップ - CHANGELOGなしで続行
-```
+Keep a Changelog形式で新規作成する。
 
 **存在する場合**:
-現在のサイクルバージョンのエントリがあるか確認し、なければ追加を促す。
+現在のサイクルバージョンのエントリがあるか確認し、なければ追加する。
 
 **注意**: Unreleasedセクションは使用しない。直接バージョン付きエントリを作成する。
+
+**表記ルール**:
+- CHANGELOG: `[X.Y.Z]` 形式（vなし、例: `[1.6.0]`）
+- gitタグ: `vX.Y.Z` 形式（vあり、例: `v1.6.0`）
+- サイクル名 `v1.6.0` → CHANGELOG `[1.6.0]` + タグ `v1.6.0`
 
 **Keep a Changelog形式**:
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
-※ バージョン番号はvなし（例: [1.6.0]）
-※ サイクル名から「v」を除いた形式で記載
 
 ### Added
 - 新機能
