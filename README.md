@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.5.4-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -500,6 +500,38 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 ### 7. 複数人開発時コンフリクト対策
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
+
+## 🔧 v1.6.0 の新機能
+
+v1.6.0 は開発ワークフロー改善とリリース管理の整備のためのリリースです。
+
+### 1. セットアップフロー改善
+- worktree/ブランチ操作の簡略化
+- ブランチ作成とワークツリー作成を一括実行可能に
+- `ls -d` コマンドのスラッシュ二重表示問題を修正
+
+### 2. Claude Code固有機能の活用
+- AskUserQuestion機能の活用ルールをCLAUDE.mdに追記
+- 選択肢が明確な質問ではAskUserQuestion機能を使用
+- TodoWriteツール活用の明記
+
+### 3. レビュー前後コミットワークフロー
+- 各プロンプトにレビュー前後のコミット手順を追加
+- AIレビューモードの設定追加（required/recommend/disabled）
+- レビュー前コミット → AIレビュー → 修正 → レビュー後コミットのフロー
+
+### 4. CHANGELOG.md作成
+- プロジェクト全体の変更履歴を記録するCHANGELOG.mdを導入
+- v1.0.0以降の全バージョン履歴を記載
+
+### 5. バージョンタグ運用手順
+- Operations Phaseにタグ付け手順を追加
+- version.txt更新 → mainブランチマージ → 自動タグ作成のフロー
+- 過去バージョンへのタグ付与対応
+
+### 6. AGENTS.md統合
+- AGENTS.mdを活用したプロンプト自動解決
+- プロンプトパス指定の省略が可能に
 
 ## 🔧 v1.5.4 の改善点
 

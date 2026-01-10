@@ -1,6 +1,6 @@
-# AGENTS.md
+# AI-DLC（AI-Driven Development Lifecycle）
 
-このプロジェクトはAI-DLC（AI-Driven Development Lifecycle）を使用しています。
+このプロジェクトはAI-DLCを使用しています。
 
 ## 開発サイクルの開始
 

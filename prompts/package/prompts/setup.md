@@ -151,7 +151,7 @@ fi
 #### 2.2 既存サイクルの検出
 
 ```bash
-ls -d docs/cycles/*/ 2>/dev/null | sort -V
+ls -d docs/cycles/* 2>/dev/null | sort -V
 ```
 
 #### 2.3 バージョン提案
@@ -209,13 +209,17 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 **判定**:
 - **main または master の場合**: サイクル用ブランチの作成を提案
 
+  **選択肢の表示**（worktree設定に関わらず3つの選択肢を表示）:
+
   **worktree が有効な場合（WORKTREE_ENABLED）**:
   ```text
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
 
-  1. git worktreeを使用して新しい作業ディレクトリを作成する
-  2. 新しいブランチを作成して切り替える: git checkout -b cycle/{{CYCLE}}
+  1. worktreeを使用して新しい作業ディレクトリを作成する（推奨）
+     → ブランチとworktreeを同時に作成します
+  2. 新しいブランチを作成して切り替える
+     → 現在のディレクトリでブランチを作成して切り替えます
   3. 現在のブランチで続行する（非推奨）
 
   どれを選択しますか？
@@ -226,10 +230,13 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
 
-  1. 新しいブランチを作成して切り替える: git checkout -b cycle/{{CYCLE}}
-  2. 現在のブランチで続行する（非推奨）
+  1. worktreeを使用して新しい作業ディレクトリを作成する
+     → ブランチとworktreeを同時に作成します
+  2. 新しいブランチを作成して切り替える（推奨）
+     → 現在のディレクトリでブランチを作成して切り替えます
+  3. 現在のブランチで続行する（非推奨）
 
-  どちらを選択しますか？
+  どれを選択しますか？
   ```
 
   - **worktree を選択**: 以下のAI自動作成フローを実行
@@ -256,7 +263,12 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 
     - **WORKTREE_NOT_EXISTS**: worktree作成を続行
 
-    **3. 作成確認**:
+    **3. ブランチ存在確認**:
+    ```bash
+    git show-ref --verify --quiet "refs/heads/cycle/{{CYCLE}}" && echo "BRANCH_EXISTS" || echo "BRANCH_NOT_EXISTS"
+    ```
+
+    **4. 作成確認**:
     ```text
     以下のworktreeを作成します:
     - パス: [WORKTREE_PATH]
@@ -265,12 +277,19 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
     作成しますか？（Y/n）
     ```
 
-    **4. worktree作成実行**:
-    ```bash
-    git worktree add "${WORKTREE_PATH}" "cycle/{{CYCLE}}"
-    ```
+    **5. worktree作成実行**:
 
-    **5. 結果処理**:
+    - **BRANCH_EXISTS の場合**（既存ブランチを使用）:
+      ```bash
+      git worktree add "${WORKTREE_PATH}" "cycle/{{CYCLE}}"
+      ```
+
+    - **BRANCH_NOT_EXISTS の場合**（新規ブランチを同時作成）:
+      ```bash
+      git worktree add -b "cycle/{{CYCLE}}" "${WORKTREE_PATH}"
+      ```
+
+    **6. 結果処理**:
     - **成功時**:
       ```text
       worktreeを作成しました: [WORKTREE_PATH]
@@ -282,6 +301,8 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
       docs/aidlc/prompts/setup.md
       ```
     - **失敗時（フォールバック）**:
+
+      **BRANCH_EXISTS の場合**:
       ```text
       worktreeの自動作成に失敗しました。
       以下のコマンドを手動で実行してください:
@@ -291,7 +312,53 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
       作成後、新しいディレクトリに移動してセッションを開始してください。
       ```
 
-  - **ブランチ作成を選択**: `git checkout -b cycle/{{CYCLE}}` を実行
+      **BRANCH_NOT_EXISTS の場合**:
+      ```text
+      worktreeの自動作成に失敗しました。
+      以下のコマンドを手動で実行してください:
+
+      git worktree add -b cycle/{{CYCLE}} [WORKTREE_PATH]
+
+      作成後、新しいディレクトリに移動してセッションを開始してください。
+      ```
+
+  - **ブランチ作成を選択**: 以下のフローを実行
+
+    **1. ブランチ存在確認**:
+    ```bash
+    git show-ref --verify --quiet "refs/heads/cycle/{{CYCLE}}" && echo "BRANCH_EXISTS" || echo "BRANCH_NOT_EXISTS"
+    ```
+
+    **2. ブランチ切り替え**:
+
+    - **BRANCH_EXISTS の場合**（既存ブランチに切り替え）:
+      ```bash
+      git checkout "cycle/{{CYCLE}}"
+      ```
+      ```text
+      既存のブランチ cycle/{{CYCLE}} に切り替えました。
+      ```
+
+    - **BRANCH_NOT_EXISTS の場合**（新規ブランチを作成して切り替え）:
+      ```bash
+      git checkout -b "cycle/{{CYCLE}}"
+      ```
+      ```text
+      新しいブランチ cycle/{{CYCLE}} を作成して切り替えました。
+      ```
+
+    **3. 失敗時**:
+    ```text
+    ブランチの切り替えに失敗しました。
+    以下のコマンドを手動で実行してください:
+
+    git checkout -b cycle/{{CYCLE}}
+
+    または、既存ブランチがある場合:
+
+    git checkout cycle/{{CYCLE}}
+    ```
+
   - **続行を選択**: 警告を表示して続行
     ```text
     警告: main/master ブランチで直接作業しています。

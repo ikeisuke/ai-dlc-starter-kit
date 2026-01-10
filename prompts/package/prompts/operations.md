@@ -137,27 +137,38 @@ Inception/Construction Phaseで決定済み
 
   1. **mode確認**: 上記コマンドでmodeを取得
      - 空または取得失敗時は「recommend」として扱う
-     - `disabled` の場合: 直接人間承認へ
+     - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
 
   2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
 
-  3. **MCP利用可能時**:
-     - **レビュー前コミット**:
+  3. **MCP利用可能時の選択**:
+     - `mode = "required"` の場合: ステップ4（AIレビューフロー）へ
+     - `mode = "recommend"` の場合: 推奨メッセージを表示しユーザーに選択を求める
+       ```text
+       【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
+       品質向上のため、この成果物のレビューを実施することを推奨します。
+       レビューを実施しますか？
+       ```
+       - 「はい」の場合: ステップ4（AIレビューフロー）へ
+       - 「いいえ」の場合: ステップ6（人間レビューフロー）へ
+
+  4. **AIレビューフロー**:
+     - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
-     - **レビュー後コミット**（修正があった場合）:
+     - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
-  4. **MCP利用不可時**:
+  5. **MCP利用不可時**:
      - `mode = "required"` の場合:
        ```text
        【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
@@ -166,15 +177,28 @@ Inception/Construction Phaseで決定済み
        1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
        2. いいえ - 処理を中断
        ```
-       ユーザーの応答を待ち、「はい」の場合はスキップを履歴に記録して人間承認へ
-     - `mode = "recommend"` の場合: 直接人間に承認を求める
+       ユーザーの応答を待ち、「はい」の場合は以下を履歴に記録してステップ6へ:
+       ```markdown
+       ### AIレビュースキップ
+       - **理由**: MCP利用不可
+       - **日時**: YYYY-MM-DD HH:MM:SS
+       - **対象成果物**: {成果物名}
+       ```
+     - `mode = "recommend"` の場合: ステップ6へ
 
-  **推奨メッセージ**（mode = "recommend" かつ MCP利用可能時）:
-  ```text
-  【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
-  品質向上のため、この成果物のレビューを実施することを推奨します。
-  レビューを実施しますか？
-  ```
+  6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
+     - **レビュー前コミット**（変更がある場合のみ）:
+       ```bash
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       ```
+     - 成果物を人間に提示
+     - 人間の承認を求める
+     - 修正依頼があれば修正を反映
+     - **レビュー後コミット**（修正があった場合のみ）:
+       ```bash
+       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       ```
+     - 再度人間に提示・承認を求める
 
   **対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
@@ -500,6 +524,66 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
+**サブステップ一覧**（順番に実行）:
+1. 6.0 CHANGELOG更新（`changelog = true` の場合）
+2. 6.1 README更新
+3. 6.2 履歴記録
+4. 6.3 Gitコミット
+5. 6.4 ドラフトPR Ready化
+
+#### 6.0 CHANGELOG更新
+
+**設定確認**:
+```bash
+CHANGELOG_ENABLED=$(grep -A2 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "changelog" | grep -o "true\|false" || echo "false")
+echo "CHANGELOG更新: ${CHANGELOG_ENABLED}"
+```
+
+- `changelog = false` の場合: このステップをスキップ
+- `changelog = true` の場合: 以下を実行
+
+CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
+
+**CHANGELOG.md確認**:
+```bash
+# CHANGELOG.mdの存在確認
+ls CHANGELOG.md 2>/dev/null && echo "CHANGELOG_EXISTS" || echo "CHANGELOG_NOT_EXISTS"
+```
+
+**存在しない場合**:
+Keep a Changelog形式で新規作成する。
+
+**存在する場合**:
+現在のサイクルバージョンのエントリがあるか確認し、なければ追加する。
+
+**注意**: Unreleasedセクションは使用しない。直接バージョン付きエントリを作成する。
+
+**表記ルール**:
+- CHANGELOG: `[X.Y.Z]` 形式（vなし、例: `[1.6.0]`）
+- gitタグ: `vX.Y.Z` 形式（vあり、例: `v1.6.0`）
+- サイクル名 `v1.6.0` → CHANGELOG `[1.6.0]` + タグ `v1.6.0`
+
+**Keep a Changelog形式**:
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### Added
+- 新機能
+
+### Changed
+- 変更点
+
+### Fixed
+- バグ修正
+```
+
+**変更内容の収集元**:
+- `docs/cycles/{{CYCLE}}/history/` - 各フェーズの履歴
+- `docs/cycles/{{CYCLE}}/story-artifacts/units/` - Unit定義
+- コミット履歴
+
+**参考**: [Keep a Changelog](https://keepachangelog.com/)
+
 #### 6.1 README更新
 README.mdに今回のサイクルの変更内容を追記
 
@@ -626,7 +710,7 @@ GitHub CLIが利用できません。
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
+   - CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
@@ -704,7 +788,32 @@ PRがマージされたら、次サイクル開始前に以下を実行：
    git pull origin main
    ```
 
-3. **マージ済みブランチの削除**:
+3. **バージョンタグ付け**:
+
+   **設定確認**:
+   ```bash
+   VERSION_TAG_ENABLED=$(grep -A3 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "version_tag" | grep -o "true\|false" || echo "false")
+   echo "バージョンタグ: ${VERSION_TAG_ENABLED}"
+   ```
+
+   - `version_tag = false` の場合: このステップをスキップ
+   - `version_tag = true` の場合: 以下を実行
+
+   ```bash
+   # アノテーション付きタグを作成（マージ後の最新コミットに付与）
+   git tag -a vX.X.X -m "Release vX.X.X"
+
+   # タグをリモートにプッシュ（個別タグ指定で安全にプッシュ）
+   git push origin vX.X.X
+   ```
+
+   **GitHub Release作成（オプション）**:
+   ```bash
+   # GitHub CLIが利用可能な場合
+   gh release create vX.X.X --title "vX.X.X" --notes "See CHANGELOG.md for details"
+   ```
+
+4. **マージ済みブランチの削除**:
    ```bash
    # ローカルブランチの削除
    git branch -d cycle/vX.X.X
