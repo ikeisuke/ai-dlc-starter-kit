@@ -79,8 +79,8 @@ prompts/package/guides/ai-agent-allowlist.md
 
 ## 成果物
 
-- [ ] `prompts/package/guides/ai-agent-allowlist.md` - 許可リストガイド
-- [ ] `prompts/setup-prompt.md` への案内追加
+- [x] `prompts/package/guides/ai-agent-allowlist.md` - 許可リストガイド
+- [x] `prompts/setup-prompt.md` への案内追加
 
 ## 見積もり
 

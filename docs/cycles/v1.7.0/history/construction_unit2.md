@@ -33,3 +33,47 @@
   - データ漏洩リスクの追記
 
 ---
+
+## 2026-01-11 整合性確認・修正
+
+- **フェーズ**: Construction Phase
+- **Unit**: AIエージェント許可リストガイド
+- **ステップ**: 整合性確認・修正
+- **実行内容**: ルールとの整合性確認、ガイド修正
+
+### 整合性確認結果
+
+1. **rules.md との整合性**: OK（メタ開発ルール遵守）
+2. **setup-prompt.md への反映**: OK（rsync同期処理・案内追加済み）
+3. **計画ファイルのチェックリスト**: 未更新 → **修正**
+4. **論理設計のセクション番号**: ずれあり → **修正**
+
+### ガイド修正（Claude Code公式ドキュメントとの整合性）
+
+`.claude/settings.local.json` とガイドの設定例を比較し、以下を修正:
+
+1. **deny → ask への変更**
+   - 破壊的コマンドは `deny`（完全ブロック）ではなく `ask`（確認後に使用可能）を推奨
+   - `deny` は機密ファイル（`.env`, `~/.ssh/` 等）のみに限定
+
+2. **優先順位の説明追加**
+   ```
+   deny（最優先）→ ask → allow（最低優先）
+   ```
+
+3. **設定ファイルパスの修正**
+   - `~/.claude.json` → `~/.claude/settings.json`
+   - `.claude/settings.local.json` を追記
+
+4. **使い分けの指針を追加**
+   - `allow`: 読み取り専用など安全なコマンド
+   - `ask`: 破壊的だが必要な場合もあるコマンド
+   - `deny`: 機密ファイルへのアクセスなど絶対に許可しないもの
+
+### 修正ファイル
+
+- `prompts/package/guides/ai-agent-allowlist.md` - ガイド本体
+- `docs/cycles/v1.7.0/plans/unit-002-ai-agent-allowlist.md` - 成果物チェックリスト
+- `docs/cycles/v1.7.0/design-artifacts/logical-designs/unit-002_logical_design.md` - セクション構成
+
+---

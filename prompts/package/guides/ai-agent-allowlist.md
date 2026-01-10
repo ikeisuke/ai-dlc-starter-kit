@@ -129,7 +129,7 @@ sandbox環境で実行することで、被害を限定する方式。
 
 ### 3.5 除外対象（許可非推奨）
 
-破壊的・履歴改変の可能性があるコマンド。denylistへの追加を推奨。
+破壊的・履歴改変の可能性があるコマンド。`ask`への追加を推奨（必要な時は承認して使用可能）。
 
 | コマンド | 説明 | リスク |
 |---------|------|--------|
@@ -147,8 +147,18 @@ sandbox環境で実行することで、被害を限定する方式。
 ### 4.1 Claude Code
 
 **設定ファイル**:
-- `.claude/settings.json`（プロジェクト）
-- `~/.claude.json`（ユーザー）
+- `.claude/settings.json`（プロジェクト共有、git管理）
+- `.claude/settings.local.json`（個人のプロジェクト固有、gitignore推奨）
+- `~/.claude/settings.json`（ユーザー全体）
+
+**優先順位**:
+```
+deny（最優先）→ ask → allow（最低優先）
+```
+
+- `deny`: 完全ブロック（承認不可）
+- `ask`: 確認を求める（承認すれば使える）
+- `allow`: 自動許可
 
 **設定例**:
 ```json
@@ -158,20 +168,26 @@ sandbox環境で実行することで、被害を限定する方式。
       "Bash(git status)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
-      "Bash(git branch --show-current)",
+      "Bash(git branch:*)",
       "Bash(git add:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(mkdir:*)",
       "Bash(date:*)"
     ],
-    "deny": [
+    "ask": [
       "Bash(rm -rf:*)",
       "Bash(git push --force:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
       "Bash(curl:*)",
       "Bash(wget:*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)"
     ]
   }
 }
@@ -181,7 +197,10 @@ sandbox環境で実行することで、被害を限定する方式。
 - `:*` - プレフィックスマッチ（末尾のみ）
 - `*` - 任意位置マッチ
 
-**既知の問題**: 一部バージョンでdeny設定が機能しないバグが報告されています（Issue #6631, #8961）。sandbox環境での実行を推奨。
+**使い分けの指針**:
+- `allow`: 読み取り専用など安全なコマンド
+- `ask`: 破壊的だが必要な場合もあるコマンド（確認後に使用可能）
+- `deny`: 機密ファイルへのアクセスなど絶対に許可しないもの
 
 ### 4.2 Codex CLI
 
@@ -304,9 +323,10 @@ VSCode拡張として動作。設定はVSCodeのsettings.jsonで管理。
 ### 5.4 推奨対策
 
 1. **sandbox環境**での実行を推奨（最も安全）
-2. **破壊的コマンド**を明示的にdenylistに追加
-3. **定期的なレビュー**で許可リストを見直す
-4. **Git hooks**の確認と必要に応じた無効化
+2. **破壊的コマンド**を`ask`に追加（確認後に使用可能）
+3. **機密ファイル**（`.env`, `~/.ssh/`等）は`deny`で完全ブロック
+4. **定期的なレビュー**で許可リストを見直す
+5. **Git hooks**の確認と必要に応じた無効化
 
 ---
 
