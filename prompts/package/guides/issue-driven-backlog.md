@@ -85,7 +85,8 @@ Issue作成にはリポジトリへの書き込み権限が必要です。
 
 ```bash
 # モード確認
-BACKLOG_MODE=$(grep -A1 "^\[backlog\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "git")
+BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 
 # Issue駆動の場合
 if [ "$BACKLOG_MODE" = "issue" ]; then
@@ -192,6 +193,10 @@ gh label create "backlog" --color "0052CC" --description "バックログアイ�
 gh label create "type:feature" --color "A2EEEF" --description "新機能"
 gh label create "type:bugfix" --color "D73A4A" --description "バグ修正"
 gh label create "type:chore" --color "FEF2C0" --description "雑務"
+gh label create "type:refactor" --color "C5DEF5" --description "リファクタリング"
+gh label create "type:docs" --color "0075CA" --description "ドキュメント"
+gh label create "type:perf" --color "F9D0C4" --description "パフォーマンス"
+gh label create "type:security" --color "D93F0B" --description "セキュリティ"
 gh label create "priority:high" --color "B60205" --description "優先度: 高"
 gh label create "priority:medium" --color "FBCA04" --description "優先度: 中"
 gh label create "priority:low" --color "0E8A16" --description "優先度: 低"

@@ -959,6 +959,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 **guides/** → `docs/aidlc/guides/`:
 - ai-agent-allowlist.md（AIエージェント許可リストガイド）
+- issue-driven-backlog.md（Issue駆動バックログ管理ガイド）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
