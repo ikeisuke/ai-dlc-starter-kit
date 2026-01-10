@@ -7,9 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
-## [Unreleased]
+## [1.6.0] - 2026-01-10
 
-（Operations Phase完了時にv1.6.0の変更内容を追記）
+### Added
+- CLAUDE.md/AGENTS.md を参照形式に変更（既存プロジェクトでの上書き問題解消）
+- docs/aidlc/prompts/ に CLAUDE.md, AGENTS.md を追加（rsync 同期対象）
+- AskUserQuestion 機能の活用ルール（CLAUDE.md）
+- TodoWrite ツールの活用ルール（CLAUDE.md）
+- レビュー前後のコミットワークフロー
+- CHANGELOG.md による変更履歴管理
+- バージョンタグ運用手順（Operations Phase）
+
+### Changed
+- セットアップフロー改善（worktree/ブランチ操作の簡略化）
+- ブランチ作成とワークツリー作成を一括実行可能に
+
+### Fixed
+- `ls -d` コマンドのスラッシュ二重表示問題
 
 ---
 
