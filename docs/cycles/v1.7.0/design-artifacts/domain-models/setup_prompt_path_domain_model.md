@@ -27,6 +27,9 @@
 - **GhqPath**: ghq管理下のリポジトリパス
   - 形式: `ghq:{host}/{owner}/{repo}/{path}`
   - 例: `ghq:github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md`
+- **AbsolutePath**: 絶対パス（フォールバック）
+  - 例: `/home/user/custom/setup-prompt.md`
+  - 環境依存のため非推奨だが、ghq未使用環境でのフォールバックとして許容
 
 ## ドメインサービス
 
