@@ -63,3 +63,10 @@ enabled = true
 # - standard: ステップ完了時に記録（デフォルト）
 # - minimal: Unit完了時にまとめて記録
 level = "standard"
+
+[rules.release]
+# リリース設定（v1.6.0で追加）
+# changelog: true | false - CHANGELOG.md更新を行うか（デフォルト: false）
+# version_tag: true | false - バージョンタグを付与するか（デフォルト: false）
+changelog = true
+version_tag = true

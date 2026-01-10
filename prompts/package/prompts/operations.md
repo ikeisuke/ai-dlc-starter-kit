@@ -526,6 +526,15 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 #### 6.0 CHANGELOG更新
 
+**設定確認**:
+```bash
+CHANGELOG_ENABLED=$(grep -A2 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "changelog" | grep -o "true\|false" || echo "false")
+echo "CHANGELOG更新: ${CHANGELOG_ENABLED}"
+```
+
+- `changelog = false` の場合: このステップをスキップ
+- `changelog = true` の場合: 以下を実行
+
 CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
 
 **CHANGELOG.md確認**:
@@ -694,7 +703,7 @@ GitHub CLIが利用できません。
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - CHANGELOG更新、README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
+   - CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
@@ -772,7 +781,17 @@ PRがマージされたら、次サイクル開始前に以下を実行：
    git pull origin main
    ```
 
-3. **バージョンタグ付け【推奨】**:
+3. **バージョンタグ付け**:
+
+   **設定確認**:
+   ```bash
+   VERSION_TAG_ENABLED=$(grep -A3 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "version_tag" | grep -o "true\|false" || echo "false")
+   echo "バージョンタグ: ${VERSION_TAG_ENABLED}"
+   ```
+
+   - `version_tag = false` の場合: このステップをスキップ
+   - `version_tag = true` の場合: 以下を実行
+
    ```bash
    # アノテーション付きタグを作成（マージ後の最新コミットに付与）
    git tag -a vX.X.X -m "Release vX.X.X"
