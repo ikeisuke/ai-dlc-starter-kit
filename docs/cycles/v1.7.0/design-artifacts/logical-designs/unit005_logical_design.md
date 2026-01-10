@@ -175,7 +175,7 @@ mode = "git"
 2. **設定方法**
    - `docs/aidlc.toml` への設定追加
    - モードの選択基準
-   - 推奨ラベル構成（`backlog`, `priority:*`, `type:*`）
+   - ラベル構成（`backlog`, `type:*`, `priority:*`, `cycle:*`）
 
 3. **前提条件**
    - GitHub CLIのインストールと認証

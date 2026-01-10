@@ -36,10 +36,12 @@
 - **振る舞い**:
   - close(): Issueをクローズ（完了時）
   - closeAsNotPlanned(): 対応しないとしてクローズ（無効化時）
-- **必須ラベル**: `backlog` - バックログIssueの識別に使用
-- **推奨ラベル**:
-  - `priority:high` / `priority:medium` / `priority:low` - 優先度
+- **必須ラベル**:
+  - `backlog` - バックログIssueの識別
   - `type:feature` / `type:bugfix` / `type:chore` 等 - 種類
+  - `priority:high` / `priority:medium` / `priority:low` - 優先度
+- **対応開始時に追加するラベル**:
+  - `cycle:vX.X.X` - 対応中のサイクル（例: `cycle:v1.8.0`）
 
 ## 値オブジェクト（Value Object）
 
