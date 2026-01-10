@@ -17,67 +17,73 @@ GitHubのIssueテンプレート機能では、`config.yml` で「空のIssue作
 - **責務**: テンプレート全体の設定（空Issue無効化、外部リンク追加など）
 - **今回の対応**: 作成しない（デフォルト設定で十分）
 
-### 2. Issueテンプレートファイル
+### 2. Issue Forms（YAML形式）
 
-各テンプレートはMarkdown形式で、YAMLフロントマターとMarkdown本文で構成される。
+GitHubのIssue Forms機能を使用し、構造化されたフォーム形式で入力を受け付ける。
+ファイル拡張子は `.yml`（`.yaml` も可）。
 
 #### テンプレート共通構造
 
-```
----
-name: [テンプレート名]
-about: [テンプレートの説明]
+```yaml
+name: [テンプレート名（和英併記）]
+description: [テンプレートの説明（和英併記）]
 title: "[PREFIX] "
 labels: [自動付与ラベル]
-assignees: ''
----
-
-[Markdown本文]
+body:
+  - type: [input / textarea / dropdown / checkboxes / markdown]
+    id: [フィールドID]
+    attributes:
+      label: [ラベル]
+      description: [説明]
+      placeholder: [プレースホルダー]
+    validations:
+      required: [true / false]
 ```
 
-### 3. バックログテンプレート（backlog.md）
+### 3. バックログテンプレート（backlog.yml）
 
 - **責務**: AI-DLCのバックログアイテム（気づき・将来の作業）を記録
-- **フロントマター**:
-  - name: Backlog / バックログ
-  - about: 将来対応が必要な気づきや課題を記録
+- **メタデータ**:
+  - name: "Backlog / バックログ"
+  - description: "Record a task or idea for future implementation / 将来対応が必要な気づきや課題を記録"
   - title: "[Backlog] "
-  - labels: backlog
-- **本文の構成**:
-  - 概要（必須）
-  - 詳細（任意）
-  - 発見コンテキスト（サイクル、フェーズ）
-  - 優先度（高/中/低）
-  - 対応案
+  - labels: ["backlog"]
+- **フォームフィールド**:
+  - 概要 / Summary（textarea, 必須）
+  - 詳細 / Details（textarea, 任意）
+  - 発見サイクル / Discovery Cycle（input, 任意）
+  - 発見フェーズ / Discovery Phase（dropdown, 任意）
+  - 優先度 / Priority（dropdown, 必須）
+  - 対応案 / Proposed Solution（textarea, 任意）
 
-### 4. バグ報告テンプレート（bug.md）
+### 4. バグ報告テンプレート（bug.yml）
 
-- **責務**: バグ報告を標準化
-- **フロントマター**:
-  - name: Bug Report / バグ報告
-  - about: バグや問題を報告
+- **責務**: バグ報告を標準化、必須項目を強制
+- **メタデータ**:
+  - name: "Bug Report / バグ報告"
+  - description: "Report a bug or unexpected behavior / バグや問題を報告"
   - title: "[Bug] "
-  - labels: bug
-- **本文の構成**:
-  - バグの概要（必須）
-  - 再現手順
-  - 期待される動作
-  - 実際の動作
-  - 環境情報
+  - labels: ["bug"]
+- **フォームフィールド**:
+  - バグの概要 / Bug Summary（textarea, 必須）
+  - 再現手順 / Steps to Reproduce（textarea, 必須）
+  - 期待される動作 / Expected Behavior（textarea, 必須）
+  - 実際の動作 / Actual Behavior（textarea, 必須）
+  - 環境情報 / Environment（textarea, 任意）
 
-### 5. 機能要望テンプレート（feature.md）
+### 5. 機能要望テンプレート（feature.yml）
 
 - **責務**: 機能要望を標準化
-- **フロントマター**:
-  - name: Feature Request / 機能要望
-  - about: 新機能や改善の要望
+- **メタデータ**:
+  - name: "Feature Request / 機能要望"
+  - description: "Suggest a new feature or enhancement / 新機能や改善の要望"
   - title: "[Feature] "
-  - labels: enhancement
-- **本文の構成**:
-  - 機能の概要（必須）
-  - 背景・動機
-  - 提案内容
-  - 代替案
+  - labels: ["enhancement"]
+- **フォームフィールド**:
+  - 機能の概要 / Feature Summary（textarea, 必須）
+  - 背景・動機 / Motivation（textarea, 必須）
+  - 提案内容 / Proposed Solution（textarea, 必須）
+  - 代替案 / Alternatives（textarea, 任意）
 
 ## セットアップフローとの統合
 
@@ -116,9 +122,9 @@ assignees: ''
 graph TB
     subgraph "スターターキット"
         PKG[prompts/package/.github/ISSUE_TEMPLATE/]
-        PKG --> BL[backlog.md]
-        PKG --> BG[bug.md]
-        PKG --> FT[feature.md]
+        PKG --> BL[backlog.yml]
+        PKG --> BG[bug.yml]
+        PKG --> FT[feature.yml]
     end
 
     subgraph "セットアップ処理"
