@@ -13,6 +13,10 @@ Operations Phaseにバージョンタグ付けとCHANGELOG更新の手順を追�
 ### 対象ファイル
 - `prompts/package/prompts/operations.md`
 
+### 完了条件への追加
+既存の完了条件セクションにCHANGELOG更新を追加:
+- 「完了時の確認【重要】」セクションにCHANGELOG更新完了を追記
+
 ### 変更箇所
 
 #### 1. CHANGELOG更新手順の追加
@@ -51,9 +55,9 @@ Operations Phaseにバージョンタグ付けとCHANGELOG更新の手順を追�
 **ステップ**:
 1. PRマージ完了を確認
 2. mainブランチに移動
-3. 最新の変更を取得
-4. バージョンタグを作成（`git tag -a vX.X.X -m "Release vX.X.X"`）
-5. タグをリモートにプッシュ（`git push origin --tags`）
+3. 最新の変更を取得（`git pull origin main`）
+4. **git pull後に**バージョンタグを作成（`git tag -a vX.X.X -m "Release vX.X.X"`）
+5. タグをリモートにプッシュ（`git push origin vX.X.X` - 個別タグ指定で安全）
 6. （オプション）GitHub Releaseを作成
 
 **関与するコンポーネント**: operations.md（セクション5）
@@ -82,11 +86,14 @@ CHANGELOG.mdが存在しません。
 \`\`\`
 
 **存在する場合**:
-現在のサイクルバージョン（{{CYCLE}}）のエントリがあるか確認し、なければ追加を促す。
+現在のサイクルバージョンのエントリがあるか確認し、なければ追加を促す。
+※ Unreleasedセクションは使用しない。直接バージョン付きエントリを作成する。
 
 **Keep a Changelog形式**:
 \`\`\`markdown
 ## [X.Y.Z] - YYYY-MM-DD
+※ バージョン番号はvなし（[1.6.0]形式）で記載
+※ サイクル名から「v」を除いた形式で記載
 
 ### Added
 - 新機能
@@ -106,15 +113,15 @@ CHANGELOG.mdが存在しません。
 ```markdown
 #### バージョンタグ付け【推奨】
 
-PRマージ後、バージョンタグを付与します。
+PRマージ後、`git pull origin main`の後にバージョンタグを付与します。
 
 **タグ作成**:
 \`\`\`bash
-# アノテーション付きタグを作成
+# アノテーション付きタグを作成（マージ後の最新コミットに付与）
 git tag -a vX.X.X -m "Release vX.X.X"
 
-# タグをリモートにプッシュ
-git push origin --tags
+# タグをリモートにプッシュ（個別タグ指定で安全にプッシュ）
+git push origin vX.X.X
 \`\`\`
 
 **GitHub Release作成（オプション）**:

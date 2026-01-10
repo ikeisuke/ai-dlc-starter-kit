@@ -11,29 +11,28 @@ AI-DLCサイクル完了時のバージョンタグ付けとCHANGELOG更新の�
 - **ID**: タグ名（例: v1.6.0）
 - **属性**:
   - name: String - タグ名（セマンティックバージョニング形式: vX.Y.Z）
-  - commitHash: String - タグを付与するコミットのハッシュ
+  - commitHash: String - タグを付与するコミットのハッシュ（PRマージ後の最新コミット）
   - message: String - タグの注釈メッセージ
   - createdAt: DateTime - タグ作成日時
 - **振る舞い**:
   - create: 新規タグを作成（`git tag -a`）
-  - push: リモートにタグをプッシュ（`git push origin --tags`）
+  - push: リモートにタグをプッシュ（`git push origin vX.Y.Z` - 個別タグ指定で安全にプッシュ）
 
 ### Changelog
 - **ID**: ファイルパス（CHANGELOG.md）
 - **属性**:
   - versions: List[VersionEntry] - バージョンごとの変更履歴
 - **振る舞い**:
-  - addVersion: 新しいバージョンエントリを追加
-  - update: 既存エントリを更新
+  - addVersion: 新しいバージョンエントリを直接追加（Unreleasedセクションは使用しない）
 
 ## 値オブジェクト（Value Object）
 
 ### VersionEntry
 - **属性**:
-  - version: String - バージョン番号
+  - version: String - バージョン番号（CHANGELOG内では[1.6.0]形式、vなし）
   - releaseDate: Date - リリース日
   - changes: ChangeSet - 変更内容
-- **不変性**: 各リリースの記録は変更されるべきでない
+- **不変性**: リリース済みのエントリは変更されるべきでない
 - **等価性**: バージョン番号で判定
 
 ### ChangeSet
