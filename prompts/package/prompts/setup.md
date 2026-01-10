@@ -378,8 +378,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
   ```text
   サイクル {{CYCLE}} は既に存在します。
 
-  Inception Phase を開始するには、以下のプロンプトを読み込んでください：
-  docs/aidlc/prompts/inception.md
+  「インセプション進めて」と指示してください。
   ```
 - **存在しない場合**: ステップ5（サイクルディレクトリ作成）へ進む
 
@@ -574,8 +573,7 @@ git commit -m "feat: サイクル {{CYCLE}} 開始"
 ---
 ## 次のステップ
 
-Inception Phase を開始するには、以下のプロンプトを読み込んでください：
-docs/aidlc/prompts/inception.md
+「インセプション進めて」と指示してください。
 
 サイクル: {{CYCLE}}
 ```
