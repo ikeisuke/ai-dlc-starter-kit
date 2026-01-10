@@ -524,6 +524,13 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
+**サブステップ一覧**（順番に実行）:
+1. 6.0 CHANGELOG更新（`changelog = true` の場合）
+2. 6.1 README更新
+3. 6.2 履歴記録
+4. 6.3 Gitコミット
+5. 6.4 ドラフトPR Ready化
+
 #### 6.0 CHANGELOG更新
 
 **設定確認**:
