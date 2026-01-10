@@ -23,3 +23,15 @@
   - docs/cycles/v1.6.1/inception/progress.md
 
 ---
+
+## 2026-01-10 18:46:25 JST
+
+- **フェーズ**: Inception Phase
+- **ステップ**: 追加要件反映
+- **実行内容**: フェーズ簡略指示機能を追加要件として反映
+- **成果物**: 
+  - docs/cycles/v1.6.1/requirements/intent.md（更新）
+  - docs/cycles/v1.6.1/story-artifacts/user_stories.md（更新）
+  - docs/cycles/v1.6.1/story-artifacts/units/001-rules-separation.md（更新）
+
+---

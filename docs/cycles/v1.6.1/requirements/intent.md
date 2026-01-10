@@ -20,6 +20,7 @@ AI-DLC Starter Kit v1.6.1 - ルール責務分離
 - `prompts/setup/templates/rules_template.md` からAI-DLC共通ルールが削除されている
 - 既存プロジェクトの `docs/cycles/rules.md` が更新されている
 - AskUserQuestionツールの使用ルール「不明点がなくなるまで繰り返し質問すること」が追加されている
+- フェーズ簡略指示機能が追加されている（「コンストラクション進めて」で自動的にプロンプト読み込み）
 
 ## 期限とマイルストーン
 - パッチリリースとして1セッション内で完了
