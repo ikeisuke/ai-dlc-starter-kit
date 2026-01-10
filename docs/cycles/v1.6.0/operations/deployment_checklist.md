@@ -41,7 +41,11 @@ git status
 
 ### 2. PRの作成とマージ
 ```bash
-# ドラフトPRをReady for Reviewに変更
+# 現在のブランチからのPRを確認
+CURRENT_BRANCH=$(git branch --show-current)
+gh pr list --head "${CURRENT_BRANCH}" --state open
+
+# PRが存在する場合、ドラフトPRをReady for Reviewに変更
 gh pr ready
 
 # PRタイトルを更新
@@ -63,12 +67,33 @@ gh pr merge --merge
 
 問題が発生した場合の手順：
 
+### 方法1: 前バージョンのタグから復旧ブランチを作成
 ```bash
-# 前のバージョンに戻す場合
+# 前のバージョンタグから復旧ブランチを作成
+git checkout -b hotfix/revert-v1.6.0 v1.5.4
+
+# 必要な修正を行い、PRを作成してマージ
+```
+
+### 方法2: マージコミットをrevert
+```bash
+# マージコミットのSHAを確認
+git log --oneline -5
+
+# マージコミットをrevert（-m 1 はメインラインを指定）
+git revert -m 1 <merge_commit_sha>
+
+# 変更をpush
+git push origin main
+```
+
+### 方法3: 参照用に前バージョンを確認（デタッチ状態）
+```bash
+# 前のバージョンを参照（デタッチ状態になるので注意）
 git checkout v1.5.4
 
-# または、特定のコミットに戻す
-git revert HEAD
+# 確認後、mainに戻る
+git checkout main
 ```
 
 ## デプロイ後チェックリスト

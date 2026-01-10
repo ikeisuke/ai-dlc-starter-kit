@@ -33,9 +33,9 @@ GitHub上で以下の情報を確認可能:
 ### プロジェクト履歴
 
 AI-DLC履歴ファイルで開発履歴を管理:
-- `docs/cycles/{{CYCLE}}/history/inception.md`
-- `docs/cycles/{{CYCLE}}/history/construction.md`
-- `docs/cycles/{{CYCLE}}/history/operations.md`
+- `docs/cycles/v1.6.0/history/inception.md`
+- `docs/cycles/v1.6.0/history/construction.md`
+- `docs/cycles/v1.6.0/history/operations.md`
 
 ### Gitコミット履歴
 
