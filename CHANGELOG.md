@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.7.1] - 2026-01-11
+
+### Added
+
+- jjサポート有効化フラグ（[rules.jj].enabled）
+- iOSアプリ向けInception Phaseでのバージョン更新対応
+- AskUserQuestion推奨オプション順序ルール（推奨を一番上に配置）
+- バックログラベル作成手順（setup.md）
+
+### Changed
+
+- Unitブランチ設定をconstruction.mdに統合（[rules.unit_branch].enabled参照）
+- 許可リスト運用改善のための複合コマンド削減
+- AIレビューイテレーション処理の改善
+- バックログ管理モード（issue）の読み込み処理を修正
+
+---
+
 ## [1.7.0] - 2026-01-11
 
 ### Added
