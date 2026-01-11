@@ -44,16 +44,23 @@ mainブランチへのマージ後、GitHub Actionsが自動でv1.7.0タグを�
 
 ## ロールバック手順
 
-問題が発生した場合：
+問題が発生した場合（mainブランチに既にマージ済みの場合）：
 
 ```bash
-# 前のバージョンに戻す場合
-git checkout v1.6.1
+# 1. mainブランチに移動
+git checkout main
+git pull origin main
 
-# リリースタグを削除（必要な場合）
+# 2. マージコミットをrevert
+git revert -m 1 <merge-commit-hash>
+git push origin main
+
+# 3. リリースタグを削除（必要な場合）
 git tag -d v1.7.0
 git push origin --delete v1.7.0
 ```
+
+**注意**: 公開リポジトリのため、force pushは避け、revertコミットで対応する
 
 ## デプロイ後チェックリスト
 - [ ] タグが正しく作成されている
@@ -69,8 +76,14 @@ git push origin --delete v1.7.0
 | 003 | バックログIssueテンプレート |
 | 004 | setup-promptパス記録機能 |
 | 005 | Issue駆動バックログフロー |
-| 006 | jjサポートガイド |
+| 006 | jj基本ワークフローガイド |
 
 ## 備考
 
-このプロジェクトはメタ開発（AI-DLCスターターキットを使ってAI-DLC自体を開発）のため、リリース準備（ステップ6）の前にAI-DLC環境のアップグレード（rsync）を実行する必要がある。
+### メタ開発の注意点
+このプロジェクトはメタ開発（AI-DLCスターターキットを使ってAI-DLC自体を開発）のため：
+
+1. **ステップ6（リリース準備）の前に**、AI-DLC環境のアップグレードを実行する
+   - `prompts/setup-prompt.md` を読み込んでrsyncを実行
+   - `prompts/package/` の変更が `docs/aidlc/` に反映される
+2. rsync後の変更をステップ6でコミット・PRに含める
