@@ -96,7 +96,7 @@ AI-DLC開発に関連するjjの主要な特徴:
 > **コミットフローの推奨**:
 > jjでは `jj describe` でメッセージを設定し、`jj new` で次のリビジョンを作成するフローを推奨します。
 > `jj commit` も使用可能ですが、`jj describe` + `jj new` の方がワークフローに柔軟性があります。
-
+>
 > **git reset との違い**:
 > `jj undo` は直前のjj操作を取り消します。Gitの `git reset --soft/--mixed/--hard` のような細かいモードはありません。
 > より詳細な制御が必要な場合は `jj restore` や `jj abandon` を検討してください。
@@ -117,7 +117,7 @@ AI-DLC開発に関連するjjの主要な特徴:
 > jj git fetch                    # リモートから取得
 > jj rebase -d origin/main        # リモートブランチにリベース（宛先を明示）
 > ```
-
+>
 > **タグ操作について**:
 > jjはGitタグをネイティブにサポートしていないため、colocateモードでGitコマンドを直接使用します。
 

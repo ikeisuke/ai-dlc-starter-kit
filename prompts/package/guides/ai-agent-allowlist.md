@@ -152,7 +152,7 @@ sandbox環境で実行することで、被害を限定する方式。
 - `~/.claude/settings.json`（ユーザー全体）
 
 **優先順位**:
-```
+```text
 deny（最優先）→ ask → allow（最低優先）
 ```
 
