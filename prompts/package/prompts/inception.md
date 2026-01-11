@@ -688,6 +688,76 @@ gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
 
 （`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
 
+### 0.5 iOSバージョン更新【project.type=iosの場合のみ】
+
+**前提条件確認**:
+
+```bash
+# project.type設定を読み取り
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+else
+    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+
+echo "プロジェクトタイプ: ${PROJECT_TYPE}"
+```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `type` 値を取得。
+
+**判定**:
+- `PROJECT_TYPE != "ios"` の場合: このステップをスキップ
+- `PROJECT_TYPE = "ios"` の場合: 以下を実行
+
+**iOSプロジェクト向けバージョン更新提案**:
+
+```text
+【iOSプロジェクト向け】バージョン更新の確認
+
+project.type=iosのため、Inception Phaseでバージョンを更新することを推奨します。
+
+これにより、Construction Phase中のTestFlight配布が可能になります。
+
+1. はい - バージョンを更新する（推奨）
+2. いいえ - Operations Phaseで更新する
+```
+
+**「はい」を選択した場合**:
+
+1. **バージョン確認対象の特定**:
+   - 運用引き継ぎ（`docs/cycles/operations.md`）に「バージョン確認設定」があれば参照
+   - なければユーザーに質問: 「バージョン管理ファイルはどれですか？（例: Info.plist, project.pbxproj）」
+
+2. **現在のバージョン確認と更新**:
+   ```bash
+   # サイクルバージョンからvプレフィックスを除去
+   CYCLE_VERSION="${{CYCLE}#v}"
+   echo "更新後のバージョン: ${CYCLE_VERSION}"
+   ```
+   - 対象ファイルのバージョンを更新（CFBundleShortVersionString等）
+
+3. **履歴への記録**（重要）:
+   ```bash
+   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+   cat <<EOF >> docs/cycles/{{CYCLE}}/history/inception.md
+   ## ${TIMESTAMP}
+
+   - **フェーズ**: Inception Phase
+   - **ステップ**: iOSバージョン更新実施
+   - **実行内容**: CFBundleShortVersionString を ${CYCLE_VERSION} に更新
+   - **成果物**: [更新したファイル]
+
+   ---
+   EOF
+   ```
+
+**注意**: 「iOSバージョン更新実施」の文言は履歴に必ず含めてください。Operations Phaseでこの記録を確認し、重複更新を防ぎます。
+
+**スコープ外**:
+- ビルド番号（CFBundleVersion）の管理はこの機能のスコープ外です
+- ビルド番号はCI/CD（fastlane等）で自動管理することを推奨します
+
 ### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 

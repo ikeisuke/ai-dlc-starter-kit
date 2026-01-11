@@ -433,6 +433,42 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 #### バージョン確認【必須】
 
+##### iOSプロジェクトの場合の事前確認
+
+`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認:
+
+```bash
+# project.type設定を読み取り
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+else
+    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+
+# iOSプロジェクトの場合、Inception履歴を確認
+if [ "$PROJECT_TYPE" = "ios" ]; then
+    if grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null; then
+        echo "UPDATED_IN_INCEPTION"
+    else
+        echo "NOT_UPDATED_IN_INCEPTION"
+    fi
+fi
+```
+
+**判定結果**:
+- **UPDATED_IN_INCEPTION**: 以下を表示してバージョン確認をスキップ
+  ```text
+  バージョン確認結果:
+  - project.type: ios
+  - Inception Phase履歴: バージョン更新実施済み
+
+  Inception Phaseでバージョン更新済みです。このステップをスキップします。
+  ```
+- **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
+
+##### 通常のバージョン確認
+
 運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
 - **設定がある場合**: 設定に従ってバージョンを確認
 - **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
@@ -442,6 +478,8 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 2. 現在のバージョンを確認
 3. サイクルバージョンと整合性を確認
 4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
+
+**iOSプロジェクトの注意**: サイクルバージョン（v1.7.1）からvプレフィックスを除去して使用（1.7.1）。CFBundleShortVersionStringは数値ドット区切り形式のみ受け付けます。
 
 **バージョン確認コマンド例**:
 ```bash
