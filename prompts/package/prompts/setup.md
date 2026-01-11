@@ -112,6 +112,70 @@ if [ "$BACKLOG_MODE" = "issue" ]; then
 fi
 ```
 
+### 0.8. backlogラベル確認・作成【mode=issueの場合のみ】
+
+**前提条件**:
+- BACKLOG_MODE = "issue"
+- GitHub CLIが利用可能かつ認証済み
+
+上記条件を満たさない場合はこのステップをスキップ。
+
+**ラベル作成確認**:
+```text
+Issue駆動バックログに必要なラベルを確認・作成します。
+
+1. はい - ラベルを確認・作成する（推奨）
+2. いいえ - スキップする
+```
+
+**「はい」の場合**:
+
+```bash
+# 作成するラベル定義（name:color:description）
+LABELS=(
+  "backlog:FBCA04:バックログ項目"
+  "type:feature:1D76DB:新機能"
+  "type:bugfix:D93F0B:バグ修正"
+  "type:chore:0E8A16:雑務・メンテナンス"
+  "type:refactor:5319E7:リファクタリング"
+  "type:docs:0075CA:ドキュメント"
+  "type:perf:FBCA04:パフォーマンス"
+  "type:security:B60205:セキュリティ"
+  "priority:high:D93F0B:高優先度"
+  "priority:medium:FBCA04:中優先度"
+  "priority:low:0E8A16:低優先度"
+)
+
+CREATED=0
+SKIPPED=0
+
+for LABEL_DEF in "${LABELS[@]}"; do
+  IFS=':' read -r NAME COLOR DESC <<< "$LABEL_DEF"
+
+  # ラベル存在確認（完全一致）
+  if gh label list --limit 100 --json name --jq ".[] | select(.name==\"$NAME\") | .name" | grep -q "^${NAME}$"; then
+    echo "スキップ: $NAME（既に存在）"
+    ((SKIPPED++))
+  else
+    if gh label create "$NAME" --description "$DESC" --color "$COLOR" 2>/dev/null; then
+      echo "作成: $NAME"
+      ((CREATED++))
+    else
+      echo "警告: $NAME の作成に失敗"
+    fi
+  fi
+done
+
+echo ""
+echo "ラベル作成完了: 作成 ${CREATED}件、スキップ ${SKIPPED}件"
+```
+
+**「いいえ」の場合**:
+```text
+ラベル作成をスキップしました。
+後から手動で作成することもできます。
+```
+
 ### 1. スターターキットバージョン確認
 
 ```bash

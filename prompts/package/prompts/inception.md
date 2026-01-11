@@ -616,6 +616,66 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ## 完了時の必須作業【重要】
 
+### 0. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
+
+**前提条件確認**:
+
+```bash
+# バックログモード確認（暫定版、Unit 004で改善予定）
+BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+
+# GitHub CLI確認
+GH_AVAILABLE="false"
+if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+  GH_AVAILABLE="true"
+fi
+
+echo "バックログモード: ${BACKLOG_MODE}"
+echo "GitHub CLI: ${GH_AVAILABLE}"
+```
+
+**判定**:
+- BACKLOG_MODE != "issue" の場合: このステップをスキップ
+- GH_AVAILABLE = "false" の場合: 警告を表示してスキップ
+
+**サイクルラベル確認・作成**:
+
+```bash
+CYCLE_LABEL="cycle:{{CYCLE}}"
+
+# ラベル存在確認
+if gh label list --limit 100 --json name --jq ".[] | select(.name==\"$CYCLE_LABEL\") | .name" | grep -q "^${CYCLE_LABEL}$"; then
+  echo "サイクルラベル ${CYCLE_LABEL} は既に存在します"
+else
+  # ラベル作成
+  if gh label create "$CYCLE_LABEL" --description "サイクル {{CYCLE}}" --color "C5DEF5"; then
+    echo "サイクルラベル ${CYCLE_LABEL} を作成しました"
+  else
+    echo "警告: サイクルラベルの作成に失敗しました"
+  fi
+fi
+```
+
+**関連Issueへのサイクルラベル付与**:
+
+Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）の「関連Issue」セクションからIssue番号を抽出し、サイクルラベルを付与:
+
+```bash
+# Unit定義ファイルからIssue番号を抽出
+ISSUE_NUMBERS=$(grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | sed 's/.*#\([0-9]*\).*/\1/' | sort -u)
+
+if [ -z "$ISSUE_NUMBERS" ]; then
+  echo "関連Issueが見つかりませんでした"
+else
+  echo "以下のIssueにサイクルラベルを付与します:"
+  for ISSUE_NUM in $ISSUE_NUMBERS; do
+    echo "  - #${ISSUE_NUM}"
+    gh issue edit "$ISSUE_NUM" --add-label "$CYCLE_LABEL" 2>/dev/null || echo "    警告: #${ISSUE_NUM} へのラベル付与に失敗"
+  done
+fi
+```
+
 ### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
