@@ -191,13 +191,9 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: 以下のコマンドでAIレビューモードを確認
-  ```bash
-  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
-  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
-  ```
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
   - `mode = "disabled"`: AIレビューを行わない
 
   **MCP利用可否の確認**:
@@ -229,10 +225,12 @@ Inception Phaseで決定済み、または既存スタックを使用
        ```bash
        git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
-     - AIレビューを実行
-     - レビュー結果を確認
-     - 指摘があれば修正を反映
-     - **レビュー後コミット**（修正があった場合のみ）:
+     - **反復レビュー**（指摘がなくなるまで繰り返す）:
+       1. AIレビューを実行
+       2. レビュー結果を確認
+       3. 指摘があれば修正を反映
+       4. 指摘がゼロになるまで1-3を繰り返す
+     - **レビュー後コミット**（反復完了後、修正があった場合のみ）:
        ```bash
        git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```

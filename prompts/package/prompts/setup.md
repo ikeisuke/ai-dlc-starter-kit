@@ -293,11 +293,9 @@ CURRENT_BRANCH=$(git branch --show-current)
 echo "現在のブランチ: ${CURRENT_BRANCH}"
 ```
 
-`docs/aidlc.toml` の `[rules.worktree]` 設定を確認:
-
-```bash
-grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | grep -q "true" && echo "WORKTREE_ENABLED" || echo "WORKTREE_DISABLED"
-```
+`docs/aidlc.toml` の `[rules.worktree]` セクションを読み、`enabled` の値を確認:
+- `enabled = true`: worktree使用を提案
+- `enabled = false`（デフォルト）: 提案しない
 
 **判定**:
 - **main または master の場合**: サイクル用ブランチの作成を提案

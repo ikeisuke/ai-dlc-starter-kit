@@ -118,13 +118,9 @@ Inception Phaseで決定
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: 以下のコマンドでAIレビューモードを確認
-  ```bash
-  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
-  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
-  ```
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
   - `mode = "disabled"`: AIレビューを行わない
 
   **MCP利用可否の確認**:

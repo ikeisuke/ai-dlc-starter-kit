@@ -120,13 +120,9 @@ Inception/Construction Phaseで決定済み
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: 以下のコマンドでAIレビューモードを確認
-  ```bash
-  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
-  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
-  ```
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
   - `mode = "disabled"`: AIレビューを行わない
 
   **MCP利用可否の確認**:
@@ -550,14 +546,10 @@ gh issue close {ISSUE_NUMBER}
 
 #### 6.0 CHANGELOG更新
 
-**設定確認**:
-```bash
-CHANGELOG_ENABLED=$(grep -A2 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "changelog" | grep -o "true\|false" || echo "false")
-echo "CHANGELOG更新: ${CHANGELOG_ENABLED}"
-```
+**設定確認**: `docs/aidlc.toml` の `[rules.release]` セクションを読み、`changelog` の値を確認
 
-- `changelog = false` の場合: このステップをスキップ
-- `changelog = true` の場合: 以下を実行
+- `changelog = false`（デフォルト）: このステップをスキップ
+- `changelog = true`: 以下を実行
 
 CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
 
@@ -826,14 +818,10 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 3. **バージョンタグ付け**:
 
-   **設定確認**:
-   ```bash
-   VERSION_TAG_ENABLED=$(grep -A3 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "version_tag" | grep -o "true\|false" || echo "false")
-   echo "バージョンタグ: ${VERSION_TAG_ENABLED}"
-   ```
+   **設定確認**: `docs/aidlc.toml` の `[rules.release]` セクションを読み、`version_tag` の値を確認
 
-   - `version_tag = false` の場合: このステップをスキップ
-   - `version_tag = true` の場合: 以下を実行
+   - `version_tag = false`（デフォルト）: このステップをスキップ
+   - `version_tag = true`: 以下を実行
 
    ```bash
    # アノテーション付きタグを作成（マージ後の最新コミットに付与）
