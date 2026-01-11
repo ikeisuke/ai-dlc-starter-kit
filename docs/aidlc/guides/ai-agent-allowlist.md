@@ -170,6 +170,7 @@ deny（最優先）→ ask → allow（最低優先）
       "Bash(gh auth status)",
       "Bash(date)",
       "Bash(git worktree list)",
+      "Bash(git rev-parse:*)",
       "Bash(git log:*)",
       "Bash(git branch)",
       "Bash(git branch -a)",
