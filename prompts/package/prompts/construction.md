@@ -126,9 +126,15 @@ Inception Phaseで決定済み、または既存スタックを使用
 
      **設定確認**:
      ```bash
-     BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+     if command -v dasel >/dev/null 2>&1; then
+         BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+     else
+         BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+     fi
      [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
      ```
+
+     **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
      **mode=git の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成
 
@@ -660,7 +666,7 @@ Unit PRをマージしますか？
 1. **既存PRの確認**:
 ```bash
 # 現在のブランチに紐づくPRを確認
-if gh pr view --json number,state &>/dev/null; then
+if gh pr view --json number,state >/dev/null 2>&1; then
     echo "EXISTING_PR_FOUND"
 else
     echo "NO_EXISTING_PR"

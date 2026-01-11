@@ -495,9 +495,15 @@ cat go.mod | head -1
 
 **設定確認**:
 ```bash
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
 **mode=git の場合**:
 ```bash
@@ -769,9 +775,15 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 **設定確認**:
 ```bash
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
 **mode=git の場合**:
 記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`

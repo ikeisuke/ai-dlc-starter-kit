@@ -449,9 +449,17 @@ fi
 
 **設定確認**:
 ```bash
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+# dasel がインストールされている場合は dasel を使用
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    BACKLOG_MODE=""
+fi
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
 #### 3-1. 共通バックログ
 
@@ -617,19 +625,25 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 **前提条件確認**:
 
 ```bash
-# バックログモード確認（暫定版、Unit 004で改善予定）
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+# バックログモード確認
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 
 # GitHub CLI確認
 GH_AVAILABLE="false"
-if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
   GH_AVAILABLE="true"
 fi
 
 echo "バックログモード: ${BACKLOG_MODE}"
 echo "GitHub CLI: ${GH_AVAILABLE}"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
 **判定と処理**:
 

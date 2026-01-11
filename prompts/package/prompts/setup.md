@@ -89,11 +89,18 @@ fi
 バックログモード設定を確認:
 
 ```bash
-# バックログモード設定を読み込み（暫定版、Unit 004で改善予定）
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+# dasel がインストールされている場合は dasel を使用
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    BACKLOG_MODE=""
+fi
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 echo "バックログモード: ${BACKLOG_MODE}"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得してください（デフォルト: `git`）。
 
 **判定結果表示**:
 - `git`: ローカルファイル駆動（`docs/cycles/backlog/`）
@@ -102,9 +109,9 @@ echo "バックログモード: ${BACKLOG_MODE}"
 **mode=issue の場合、GitHub CLI確認**:
 ```bash
 if [ "$BACKLOG_MODE" = "issue" ]; then
-    if ! command -v gh &>/dev/null; then
+    if ! command -v gh >/dev/null 2>&1; then
         echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
-    elif ! gh auth status &>/dev/null; then
+    elif ! gh auth status >/dev/null 2>&1; then
         echo "警告: GitHub CLI未認証。Issue駆動機能は制限されます。"
     else
         echo "GitHub CLI: 認証済み"
