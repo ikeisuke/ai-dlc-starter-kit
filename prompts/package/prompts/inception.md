@@ -669,21 +669,24 @@ else
     fi
   fi
 
-  # 関連Issueへのサイクルラベル付与
-  # Unit定義ファイルからIssue番号を抽出
-  ISSUE_NUMBERS=$(grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | sed 's/.*#\([0-9]*\).*/\1/' | sort -u)
-
-  if [ -z "$ISSUE_NUMBERS" ]; then
-    echo "関連Issueが見つかりませんでした"
-  else
-    echo "以下のIssueにサイクルラベルを付与します:"
-    for ISSUE_NUM in $ISSUE_NUMBERS; do
-      echo "  - #${ISSUE_NUM}"
-      gh issue edit "$ISSUE_NUM" --add-label "$CYCLE_LABEL" 2>/dev/null || echo "    警告: #${ISSUE_NUM} へのラベル付与に失敗"
-    done
-  fi
 fi
 ```
+
+**関連Issueへのサイクルラベル付与**:
+
+Unit定義ファイルから関連Issue番号を確認する。
+
+```bash
+grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null
+```
+
+Issue番号が見つかった場合、各Issueに対してサイクルラベル `cycle:{{CYCLE}}` を付与する。
+
+```bash
+gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
+```
+
+（`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
 
 ### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）

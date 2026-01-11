@@ -137,45 +137,32 @@ Issue駆動バックログに必要なラベルを確認・作成します。
 
 **「はい」の場合**:
 
+まず既存ラベルを確認する。
+
 ```bash
-# 作成するラベル定義（name|color|description）
-# 注意: ラベル名に「:」が含まれるため、区切り文字は「|」を使用
-LABELS=(
-  "backlog|FBCA04|バックログ項目"
-  "type:feature|1D76DB|新機能"
-  "type:bugfix|D93F0B|バグ修正"
-  "type:chore|0E8A16|雑務・メンテナンス"
-  "type:refactor|5319E7|リファクタリング"
-  "type:docs|0075CA|ドキュメント"
-  "type:perf|FBCA04|パフォーマンス"
-  "type:security|B60205|セキュリティ"
-  "priority:high|D93F0B|高優先度"
-  "priority:medium|FBCA04|中優先度"
-  "priority:low|0E8A16|低優先度"
-)
+gh label list --json name --jq '.[].name'
+```
 
-CREATED=0
-SKIPPED=0
+以下のラベルのうち、**存在しないもののみ**作成する。
 
-for LABEL_DEF in "${LABELS[@]}"; do
-  IFS='|' read -r NAME COLOR DESC <<< "$LABEL_DEF"
+| ラベル名 | 色 | 説明 |
+|----------|------|------|
+| `backlog` | FBCA04 | バックログ項目 |
+| `type:feature` | 1D76DB | 新機能 |
+| `type:bugfix` | D93F0B | バグ修正 |
+| `type:chore` | 0E8A16 | 雑務・メンテナンス |
+| `type:refactor` | 5319E7 | リファクタリング |
+| `type:docs` | 0075CA | ドキュメント |
+| `type:perf` | FBCA04 | パフォーマンス |
+| `type:security` | B60205 | セキュリティ |
+| `priority:high` | D93F0B | 高優先度 |
+| `priority:medium` | FBCA04 | 中優先度 |
+| `priority:low` | 0E8A16 | 低優先度 |
 
-  # ラベル存在確認（--searchで絞り込み後、完全一致を確認）
-  if gh label list --search "$NAME" --json name --jq ".[] | select(.name==\"$NAME\") | .name" 2>/dev/null | grep -q "^${NAME}$"; then
-    echo "スキップ: $NAME（既に存在）"
-    ((SKIPPED++))
-  else
-    if gh label create "$NAME" --description "$DESC" --color "$COLOR" 2>/dev/null; then
-      echo "作成: $NAME"
-      ((CREATED++))
-    else
-      echo "警告: $NAME の作成に失敗"
-    fi
-  fi
-done
+作成コマンド（必要なラベルのみ実行）:
 
-echo ""
-echo "ラベル作成完了: 作成 ${CREATED}件、スキップ ${SKIPPED}件"
+```bash
+gh label create "{NAME}" --description "{DESC}" --color "{COLOR}"
 ```
 
 **「いいえ」の場合**:
