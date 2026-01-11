@@ -635,44 +635,43 @@ echo "バックログモード: ${BACKLOG_MODE}"
 echo "GitHub CLI: ${GH_AVAILABLE}"
 ```
 
-**判定**:
-- BACKLOG_MODE != "issue" の場合: このステップをスキップ
-- GH_AVAILABLE = "false" の場合: 警告を表示してスキップ
-
-**サイクルラベル確認・作成**:
+**判定と処理**:
 
 ```bash
-CYCLE_LABEL="cycle:{{CYCLE}}"
-
-# ラベル存在確認
-if gh label list --limit 100 --json name --jq ".[] | select(.name==\"$CYCLE_LABEL\") | .name" | grep -q "^${CYCLE_LABEL}$"; then
-  echo "サイクルラベル ${CYCLE_LABEL} は既に存在します"
+# 前提条件チェック
+if [ "$BACKLOG_MODE" != "issue" ]; then
+  echo "バックログモードがissueではないため、スキップします"
+elif [ "$GH_AVAILABLE" != "true" ]; then
+  echo "警告: GitHub CLIが利用できないため、スキップします"
 else
-  # ラベル作成
-  if gh label create "$CYCLE_LABEL" --description "サイクル {{CYCLE}}" --color "C5DEF5"; then
-    echo "サイクルラベル ${CYCLE_LABEL} を作成しました"
+  # サイクルラベル確認・作成
+  CYCLE_LABEL="cycle:{{CYCLE}}"
+
+  # ラベル存在確認（--searchで絞り込み後、完全一致を確認）
+  if gh label list --search "$CYCLE_LABEL" --json name --jq ".[] | select(.name==\"$CYCLE_LABEL\") | .name" 2>/dev/null | grep -q "^${CYCLE_LABEL}$"; then
+    echo "サイクルラベル ${CYCLE_LABEL} は既に存在します"
   else
-    echo "警告: サイクルラベルの作成に失敗しました"
+    # ラベル作成
+    if gh label create "$CYCLE_LABEL" --description "サイクル {{CYCLE}}" --color "C5DEF5"; then
+      echo "サイクルラベル ${CYCLE_LABEL} を作成しました"
+    else
+      echo "警告: サイクルラベルの作成に失敗しました"
+    fi
   fi
-fi
-```
 
-**関連Issueへのサイクルラベル付与**:
+  # 関連Issueへのサイクルラベル付与
+  # Unit定義ファイルからIssue番号を抽出
+  ISSUE_NUMBERS=$(grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | sed 's/.*#\([0-9]*\).*/\1/' | sort -u)
 
-Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/`）の「関連Issue」セクションからIssue番号を抽出し、サイクルラベルを付与:
-
-```bash
-# Unit定義ファイルからIssue番号を抽出
-ISSUE_NUMBERS=$(grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | sed 's/.*#\([0-9]*\).*/\1/' | sort -u)
-
-if [ -z "$ISSUE_NUMBERS" ]; then
-  echo "関連Issueが見つかりませんでした"
-else
-  echo "以下のIssueにサイクルラベルを付与します:"
-  for ISSUE_NUM in $ISSUE_NUMBERS; do
-    echo "  - #${ISSUE_NUM}"
-    gh issue edit "$ISSUE_NUM" --add-label "$CYCLE_LABEL" 2>/dev/null || echo "    警告: #${ISSUE_NUM} へのラベル付与に失敗"
-  done
+  if [ -z "$ISSUE_NUMBERS" ]; then
+    echo "関連Issueが見つかりませんでした"
+  else
+    echo "以下のIssueにサイクルラベルを付与します:"
+    for ISSUE_NUM in $ISSUE_NUMBERS; do
+      echo "  - #${ISSUE_NUM}"
+      gh issue edit "$ISSUE_NUM" --add-label "$CYCLE_LABEL" 2>/dev/null || echo "    警告: #${ISSUE_NUM} へのラベル付与に失敗"
+    done
+  fi
 fi
 ```
 
