@@ -75,10 +75,13 @@ git checkout v1.2.0
 2. mainブランチへマージ
 3. GitHub Actionsが自動で `v1.2.1` タグを作成
 
+### PRチェック（v1.5.4で追加）
+- `.github/workflows/pr-check.yml` - Markdownlintによる自動チェック
+- 対象: `docs/translations/**/*.md`, `prompts/**/*.md`, `*.md`
+
 ### 将来検討事項
-- Markdownリンター（markdownlint）
 - テンプレート整合性チェック
-- PR時の自動レビュー
+- セットアップテストの自動化
 
 ---
 
@@ -107,6 +110,32 @@ git checkout v1.2.0
 
 ---
 
+## メタ開発特有のOperations Phase手順【重要】
+
+このプロジェクトはメタ開発のため、Operations Phaseで以下の追加手順が必要です。
+
+### ステップ5と6の間で実行する処理
+
+**タイミング**: ステップ5（バックログ整理）完了後、ステップ6（リリース準備）開始前
+
+1. **setup-prompt.mdを読み込んでアップグレード処理を実行**
+   ```text
+   prompts/setup-prompt.md を読み込んで、AI-DLC 環境をアップグレードしてください
+   ```
+
+2. **アップグレード処理の内容**
+   - rsyncによる `prompts/package/` → `docs/aidlc/` 同期
+   - aidlc.tomlのマイグレーション（新設定セクション追加）
+   - starter_kit_versionの更新
+
+3. **確認事項**
+   - 削除対象ファイルがあれば確認・承認
+   - 新設定セクションが追加されたことを確認
+
+**理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映し、aidlc.tomlのマイグレーションも確実に実行するため。
+
+---
+
 ## アップデート方法
 
 AI-DLC Starter Kit自体のアップデートは、通常のセットアップフローを使用してください:
@@ -126,3 +155,4 @@ AI-DLC Starter Kit自体のアップデートは、通常のセットアップ�
 | 2025-12-06 | v1.2.1 | 初回作成、メタ開発特有の完了時作業を追加 |
 | 2025-12-06 | v1.2.2 | setup-init参照に変更、version.txt同期手順を削除 |
 | 2025-12-20 | v1.5.0 | セルフアップデート廃止、通常セットアップフローへの誘導に変更 |
+| 2026-01-11 | v1.7.0 | メタ開発特有のOperations Phase手順を詳細化、PRチェック情報追加 |

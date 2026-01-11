@@ -75,3 +75,10 @@ version_tag = true
 # Unitブランチ設定（v1.7.0で追加）
 # enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: true）
 enabled = false
+
+[backlog]
+# バックログ管理モード設定（v1.7.0で追加）
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "git"
