@@ -387,7 +387,7 @@ GitHub CLIでDependabot PRの有無を確認：
 
 ```bash
 # GitHub CLIの利用可否確認と Dependabot PR一覧取得
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     gh pr list --label "dependencies" --state open
 else
     echo "SKIP: GitHub CLI not available or not authenticated"
@@ -419,7 +419,7 @@ GitHub CLIでオープンなIssueの有無を確認：
 
 ```bash
 # GitHub CLIの利用可否確認と Issue一覧取得
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     gh issue list --state open --limit 10
 else
     echo "SKIP: GitHub CLI not available or not authenticated"
@@ -695,7 +695,7 @@ GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作�
 **前提条件チェック**:
 ```bash
 # GitHub CLI利用可否と認証状態を確認
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     echo "GITHUB_CLI_AVAILABLE"
 else
     echo "GITHUB_CLI_NOT_AVAILABLE"

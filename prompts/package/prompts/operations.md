@@ -630,7 +630,7 @@ Inception Phaseで作成したドラフトPRをReady for Reviewに変更しま�
 **前提条件チェック**:
 ```bash
 # GitHub CLI利用可否と認証状態を確認
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     echo "GITHUB_CLI_AVAILABLE"
 else
     echo "GITHUB_CLI_NOT_AVAILABLE"
