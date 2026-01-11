@@ -6,6 +6,22 @@ AIレビューフローに反復プロセスを追加し、設定読み込みパ
 
 **重要**: この論理設計では**コードは書かず**、変更箇所と変更内容の定義のみを行います。
 
+## 変更対象の範囲
+
+### 対象ファイル
+
+`prompts/package/prompts/` 配下の以下のファイル:
+
+- construction.md
+- inception.md
+- operations.md
+- setup.md
+
+### 対象外ファイル
+
+- **`docs/aidlc/prompts/*.md`**: `prompts/package/prompts/` からrsyncでコピーされる生成物のため、直接編集しない。Operations PhaseでAI-DLC環境アップグレード時に自動更新される。
+- **`prompts/setup-prompt.md`**: 設定セクションの追加と確認のみ行い、設定読み込み処理がないため対象外。
+
 ## 変更箇所と変更内容
 
 ### 1. AIレビューフロー反復プロセス（construction.md）
@@ -50,8 +66,11 @@ AIレビューフローに反復プロセスを追加し、設定読み込みパ
   1. AIレビュー実行
   2. 指摘があれば修正
   3. 指摘がゼロになるまで1-2を繰り返す
-  4. 完了したら人間レビューへ
+  4. **反復完了後に**レビュー後コミットを実行
+  5. 人間レビューへ進む
 ```
+
+**注意**: 「レビュー後コミット」は反復完了後（指摘がゼロになった時点）のみ実行する。反復中の修正はコミットしない。
 
 ### 2. 設定読み込みパターン改善
 
@@ -116,15 +135,30 @@ grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | gr
 **改善後**:
 
 ```bash
+# 生の値を抽出（true/false以外も取得可能）
 WORKTREE_ENABLED=$(awk '
   /^\[rules\.worktree\]/ { found=1; next }
   /^\[/ { found=0 }
   found && !/^[[:space:]]*#/ && /^[[:space:]]*enabled[[:space:]]*=/ {
-    if (/true/) print "true"
-    else print "false"
+    gsub(/.*=[[:space:]]*/, "")
+    gsub(/[[:space:]]*#.*/, "")  # インラインコメント除去
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "")  # 前後空白トリム
+    print
     exit
   }
 ' docs/aidlc.toml 2>/dev/null)
+
+# バリデーション（true/false以外は警告してfalseにフォールバック）
+case "$WORKTREE_ENABLED" in
+  true|false) ;;
+  "")
+    WORKTREE_ENABLED="false"
+    ;;
+  *)
+    echo "警告: 無効なrules.worktree.enabled値 '${WORKTREE_ENABLED}'。falseにフォールバックします。"
+    WORKTREE_ENABLED="false"
+    ;;
+esac
 [ "$WORKTREE_ENABLED" = "true" ] && echo "WORKTREE_ENABLED" || echo "WORKTREE_DISABLED"
 ```
 
@@ -141,16 +175,30 @@ CHANGELOG_ENABLED=$(grep -A2 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | 
 **改善後**:
 
 ```bash
+# 生の値を抽出
 CHANGELOG_ENABLED=$(awk '
   /^\[rules\.release\]/ { found=1; next }
   /^\[/ { found=0 }
   found && !/^[[:space:]]*#/ && /^[[:space:]]*changelog[[:space:]]*=/ {
-    if (/true/) print "true"
-    else print "false"
+    gsub(/.*=[[:space:]]*/, "")
+    gsub(/[[:space:]]*#.*/, "")  # インラインコメント除去
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "")  # 前後空白トリム
+    print
     exit
   }
 ' docs/aidlc.toml 2>/dev/null)
-[ -z "$CHANGELOG_ENABLED" ] && CHANGELOG_ENABLED="false"
+
+# バリデーション
+case "$CHANGELOG_ENABLED" in
+  true|false) ;;
+  "")
+    CHANGELOG_ENABLED="false"
+    ;;
+  *)
+    echo "警告: 無効なrules.release.changelog値 '${CHANGELOG_ENABLED}'。falseにフォールバックします。"
+    CHANGELOG_ENABLED="false"
+    ;;
+esac
 ```
 
 #### 2.4 VERSION_TAG_ENABLED読み込み改善
@@ -166,16 +214,30 @@ VERSION_TAG_ENABLED=$(grep -A3 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null 
 **改善後**:
 
 ```bash
+# 生の値を抽出
 VERSION_TAG_ENABLED=$(awk '
   /^\[rules\.release\]/ { found=1; next }
   /^\[/ { found=0 }
   found && !/^[[:space:]]*#/ && /^[[:space:]]*version_tag[[:space:]]*=/ {
-    if (/true/) print "true"
-    else print "false"
+    gsub(/.*=[[:space:]]*/, "")
+    gsub(/[[:space:]]*#.*/, "")  # インラインコメント除去
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "")  # 前後空白トリム
+    print
     exit
   }
 ' docs/aidlc.toml 2>/dev/null)
-[ -z "$VERSION_TAG_ENABLED" ] && VERSION_TAG_ENABLED="false"
+
+# バリデーション
+case "$VERSION_TAG_ENABLED" in
+  true|false) ;;
+  "")
+    VERSION_TAG_ENABLED="false"
+    ;;
+  *)
+    echo "警告: 無効なrules.release.version_tag値 '${VERSION_TAG_ENABLED}'。falseにフォールバックします。"
+    VERSION_TAG_ENABLED="false"
+    ;;
+esac
 ```
 
 ## 変更サマリ
@@ -203,6 +265,10 @@ VERSION_TAG_ENABLED=$(awk '
 2. **コメント行除外**: `!/^[[:space:]]*#/`でコメント行を除外
 3. **セクション終了検出**: `^\[`で新セクション開始を検出し`found=0`にリセット
 4. **バリデーション統一**: case文で許可値をチェックし、不正値は警告+フォールバック
+5. **空白トリム**: 前後の空白を除去してからバリデーション
+6. **非対応事項**（現時点では対応しない）:
+   - `;`コメント: TOML v1.0では`;`は正式なコメント記号ではないため非対応
+   - 引用符付きbool値（`"true"`）: TOMLではboolに引用符を付けないため非対応
 
 ## 不明点と質問（設計中に記録）
 
