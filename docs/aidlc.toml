@@ -81,4 +81,4 @@ enabled = false
 # mode: "git" | "issue"
 # - git: ローカルファイルに保存（従来方式、デフォルト）
 # - issue: GitHub Issueに保存
-mode = "git"
+mode = "issue"
