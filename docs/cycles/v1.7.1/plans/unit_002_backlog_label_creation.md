@@ -33,22 +33,22 @@ Issue駆動バックログ使用時に、必要なラベル（backlog, type:xxx,
 
 **setup.md への追加位置**: ステップ0.7「バックログモード確認」の後に新ステップを追加
 
-**ラベル定義**:
+**ラベル定義**（カラーコードは`#`なしで指定）:
 ```
-backlog        : "#FBCA04" (黄色) - バックログ項目
-type:feature   : "#1D76DB" (青)   - 新機能
-type:bugfix    : "#D93F0B" (赤)   - バグ修正
-type:chore     : "#0E8A16" (緑)   - 雑務・メンテナンス
-type:refactor  : "#5319E7" (紫)   - リファクタリング
-type:docs      : "#0075CA" (青)   - ドキュメント
-type:perf      : "#FBCA04" (黄)   - パフォーマンス
-type:security  : "#B60205" (暗赤) - セキュリティ
-priority:high  : "#D93F0B" (赤)   - 高優先度
-priority:medium: "#FBCA04" (黄)   - 中優先度
-priority:low   : "#0E8A16" (緑)   - 低優先度
+backlog        : "FBCA04" (黄色) - バックログ項目
+type:feature   : "1D76DB" (青)   - 新機能
+type:bugfix    : "D93F0B" (赤)   - バグ修正
+type:chore     : "0E8A16" (緑)   - 雑務・メンテナンス
+type:refactor  : "5319E7" (紫)   - リファクタリング
+type:docs      : "0075CA" (青)   - ドキュメント
+type:perf      : "FBCA04" (黄)   - パフォーマンス
+type:security  : "B60205" (暗赤) - セキュリティ
+priority:high  : "D93F0B" (赤)   - 高優先度
+priority:medium: "FBCA04" (黄)   - 中優先度
+priority:low   : "0E8A16" (緑)   - 低優先度
 ```
 
-**inception.md への追加位置**: 「5. 完了時の作業」の前にサイクルラベル作成ステップを追加
+**inception.md への追加位置**: 「## 完了時の必須作業【重要】」セクション内、「### 1. 履歴記録」の前
 
 ### ステップ3: 設計レビュー
 
