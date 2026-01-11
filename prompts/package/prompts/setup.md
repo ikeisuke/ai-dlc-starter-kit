@@ -283,6 +283,7 @@ ls -d docs/cycles/* 2>/dev/null | sort -V
 **jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
 - `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
 - `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
+- **注意**: worktree操作（`git worktree`）はjjでサポートされていないため、`enabled = true`でもgitを使用
 
 現在のブランチを確認し、サイクル用ブランチでの作業を推奨：
 
