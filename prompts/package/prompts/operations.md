@@ -131,7 +131,7 @@ Inception/Construction Phaseで決定済み
 
   **処理フロー**:
 
-  1. **mode確認**: 上記コマンドでmodeを取得
+  1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
      - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ

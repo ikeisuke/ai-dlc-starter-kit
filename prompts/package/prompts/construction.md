@@ -202,7 +202,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **処理フロー**:
 
-  1. **mode確認**: 上記コマンドでmodeを取得
+  1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
      - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
@@ -225,11 +225,12 @@ Inception Phaseで決定済み、または既存スタックを使用
        ```bash
        git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
-     - **反復レビュー**（指摘がなくなるまで繰り返す）:
+     - **反復レビュー**（指摘がなくなるまで繰り返す、最大3回）:
        1. AIレビューを実行
        2. レビュー結果を確認
        3. 指摘があれば修正を反映
-       4. 指摘がゼロになるまで1-3を繰り返す
+       4. 指摘がゼロになるまで1-3を繰り返す（最大3回まで）
+       5. 3回繰り返しても指摘が残る場合は、残りの指摘を人間に提示して判断を仰ぐ
      - **レビュー後コミット**（反復完了後、修正があった場合のみ）:
        ```bash
        git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
