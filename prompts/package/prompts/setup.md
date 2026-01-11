@@ -84,6 +84,34 @@ fi
   ```
 - **USER_PROJECT**: ステップ1（スターターキットバージョン確認）へ進む
 
+### 0.7. バックログモード確認
+
+バックログモード設定を確認:
+
+```bash
+# バックログモード設定を読み込み（暫定版、Unit 004で改善予定）
+BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+echo "バックログモード: ${BACKLOG_MODE}"
+```
+
+**判定結果表示**:
+- `git`: ローカルファイル駆動（`docs/cycles/backlog/`）
+- `issue`: GitHub Issue駆動（Issue作成、ラベル管理）
+
+**mode=issue の場合、GitHub CLI確認**:
+```bash
+if [ "$BACKLOG_MODE" = "issue" ]; then
+    if ! command -v gh &>/dev/null; then
+        echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
+    elif ! gh auth status &>/dev/null; then
+        echo "警告: GitHub CLI未認証。Issue駆動機能は制限されます。"
+    else
+        echo "GitHub CLI: 認証済み"
+    fi
+fi
+```
+
 ### 1. スターターキットバージョン確認
 
 ```bash

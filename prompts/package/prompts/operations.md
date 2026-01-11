@@ -497,13 +497,18 @@ cat go.mod | head -1
 
 #### 5.1 バックログ整理
 
-共通バックログ（`docs/cycles/backlog/`）を確認し、対応済みの項目を整理:
+**設定確認**:
+```bash
+BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+```
 
+**mode=git の場合**:
 ```bash
 ls docs/cycles/backlog/
 ```
 
-**対応済み項目の移動先**: `docs/cycles/backlog-completed/{{CYCLE}}/`
+対応済み項目の移動先: `docs/cycles/backlog-completed/{{CYCLE}}/`
 
 ```bash
 # 対応済みディレクトリを作成
@@ -512,6 +517,18 @@ mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
 # 対応済みの項目を移動
 mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
 ```
+
+**mode=issue の場合**:
+```bash
+gh issue list --label backlog --state open
+```
+
+対応済み項目は Issue をクローズ:
+```bash
+gh issue close {ISSUE_NUMBER}
+```
+
+**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
@@ -756,9 +773,16 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、共通バックログに記録：
+次サイクルに引き継ぐタスクがある場合、バックログに記録：
 
-**記録先**: `docs/cycles/backlog/{種類}-{スラッグ}.md`
+**設定確認**:
+```bash
+BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+```
+
+**mode=git の場合**:
+記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
@@ -780,6 +804,8 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 ## 対応案
 [推奨される対応方法、推奨対応サイクル]
 ```
+
+**mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

@@ -7,8 +7,8 @@ Issue駆動バックログ使用時に、backlogラベルが存在しない場�
 - ストーリー 1: backlogラベル自動作成
 
 ## 責務
-- setup.mdにbacklogラベル存在確認ロジックを追加
-- ラベルが存在しない場合の自動作成処理
+- setup.mdに4種類のラベル（backlog, type:xxx, priority:xxx, cycle:vX.X.X）の存在確認・自動作成ロジックを追加
+- inception.mdにサイクルラベル付与ロジックを追加（Inception Phase終了時に関連Issueにサイクルラベルを付与）
 
 ## 境界
 - バックログモードの判定ロジック（Unit 001で対応）

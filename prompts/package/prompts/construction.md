@@ -122,7 +122,15 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **気づき記録フロー【重要】**: Unit作業中に別Unitや新規課題に関する気づきがあった場合、以下の手順で記録する
   1. **現在の作業を中断しない**: 気づきの記録のみ行い、現在のUnit作業を継続
-  2. **共通バックログに新規ファイル作成**: `docs/cycles/backlog/{種類}-{スラッグ}.md` を作成
+  2. **バックログ項目を作成**:
+
+     **設定確認**:
+     ```bash
+     BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
+     [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+     ```
+
+     **mode=git の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成
 
      **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
@@ -144,6 +152,9 @@ Inception Phaseで決定済み、または既存スタックを使用
      ## 対応案
      [推奨される対応方法]
      ```
+
+     **mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
+
   3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
 - **Workaround（その場しのぎ対応）実施時のルール【重要】**: 本質的な解決ではなく、暫定的な対応（workaround）を行う場合、以下を必ず実施する
