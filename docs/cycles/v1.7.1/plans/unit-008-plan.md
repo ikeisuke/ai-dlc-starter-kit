@@ -66,7 +66,7 @@ aidlc.tomlに`[rules.jj].enabled`設定を追加し、jjサポートの有効/�
 
 | ファイル | 変更内容 |
 |---------|---------|
-| `prompts/package/aidlc.toml.template` | `[rules.jj]`セクション追加 |
+| `docs/aidlc.toml` | `[rules.jj]`セクション追加 |
 | `prompts/package/prompts/setup.md` | jj設定参照ガイダンス追加 |
 | `prompts/package/prompts/inception.md` | jj設定参照ガイダンス追加 |
 | `prompts/package/prompts/construction.md` | jj設定参照ガイダンス追加 |

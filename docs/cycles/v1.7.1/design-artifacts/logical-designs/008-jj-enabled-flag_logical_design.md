@@ -4,7 +4,7 @@
 
 ### 設定ファイル
 
-- `prompts/package/aidlc.toml.template`
+- `docs/aidlc.toml`（直接編集）
   - `[rules.jj]`セクションを追加
 
 ### プロンプトファイル
@@ -16,7 +16,7 @@
 
 ### 反映先
 
-- `docs/aidlc/` 配下
+- `docs/aidlc/prompts/` 配下
   - Operations Phase完了時のrsyncで自動反映（`docs/cycles/rules.md`参照）
 
 ### 適用範囲外
@@ -36,7 +36,7 @@
     - 値がtrue/false以外（不正値）の場合: false（デフォルト）
   ↓
 [3] 条件分岐
-    ├─ enabled = true  → jjコマンドを案内、jj-support.md参照を追加
+    ├─ enabled = true  → jj-support.md参照を案内（gitコマンドは変更しない）
     └─ enabled = false → 従来通りgitコマンドを使用
   ↓
 終了
@@ -44,13 +44,13 @@
 
 ## 設定ファイルの変更
 
-### aidlc.toml.template への追加
+### docs/aidlc.toml への追加
 
 ```toml
 [rules.jj]
 # jjサポート設定（v1.8.0で追加）
 # enabled: true | false
-# - true: プロンプト内でjjコマンドを優先的に案内
+# - true: プロンプト内でjj-support.md参照を案内
 # - false: 従来のgitコマンドを使用（デフォルト）
 enabled = false
 ```
@@ -67,29 +67,30 @@ enabled = false
 
 1. **設定確認ブロック**: `[rules.jj].enabled`の値を確認する案内
 2. **条件分岐**: enabled=trueの場合はjj-support.mdを参照するよう案内
+3. **既存のgitコマンドはそのまま維持**（ガイドの「読み替え前提」方針と整合）
 
 ### 変更箇所の詳細
 
 #### setup.md
 
 - 対象セクション: サイクルブランチ作成
-- 追加内容: jj設定確認と`jj bookmark create`コマンドの案内
+- 追加内容: jj設定確認ブロック
 
 #### inception.md
 
 - 対象セクション: Gitコミット関連
-- 追加内容: jj設定確認と`jj describe`/`jj new`コマンドの案内
+- 追加内容: jj設定確認ブロック
 
 #### construction.md
 
 - 対象セクション: Gitコミット関連、Unitブランチ作成
-- 追加内容: jj設定確認と対応するjjコマンドの案内
+- 追加内容: jj設定確認ブロック
 
 #### operations.md
 
 - 対象セクション: リリースタグ作成、PRマージ
-- 追加内容: jj設定確認とjjコマンドの案内
-- 注意: タグ操作はjjでサポートされていないためgitを使用（jj-support.md参照）
+- 追加内容: jj設定確認ブロック
+- 注意: タグ操作はjjでサポートされていないためgitを継続使用（ガイド参照）
 
 ### 追加するガイダンスブロック（共通形式）
 
@@ -98,9 +99,18 @@ enabled = false
 
 `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
 
-- enabled = true の場合: jjコマンドを使用。詳細は`docs/aidlc/guides/jj-support.md`を参照
-- enabled = false、未設定、または不正値の場合: 以下のgitコマンドを使用
+- enabled = true の場合: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
+- enabled = false、未設定、または不正値の場合: 以下のgitコマンドをそのまま使用
 ```
+
+## 既存ガイドとの整合性
+
+`docs/aidlc/guides/jj-support.md`の方針:
+> 「AI-DLCのプロンプト本体はGitコマンドを使用。jjユーザーはこのガイドで読み替え」
+
+本設計はこの方針を維持:
+- プロンプト内のgitコマンドは変更しない
+- enabled=true時は「ガイドで読み替え」を案内するのみ
 
 ## テスト観点
 

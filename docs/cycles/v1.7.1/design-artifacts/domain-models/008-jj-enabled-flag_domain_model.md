@@ -21,8 +21,8 @@
    - `enabled`キーが存在しない
    - 値が`true`/`false`以外（不正値）
 4. `enabled=true`の場合:
-   - 各プロンプトでgitコマンドの代わりにjjコマンドを案内
-   - `docs/aidlc/guides/jj-support.md`への参照を追加
+   - 各プロンプトでjj使用時は`docs/aidlc/guides/jj-support.md`を参照するよう案内
+   - **例外**: タグ操作（リリースタグ作成等）はjjでサポートされていないためgitを継続使用
 
 ## 境界コンテキスト
 
@@ -44,8 +44,13 @@
 
 `docs/aidlc/guides/jj-support.md`は実験的機能として提供済み。本設定は：
 
-- enabled=false: 現状維持（jj-support.mdは補助資料として存在）
-- enabled=true: プロンプト内でjjコマンドを積極的に案内
+- enabled=false: 現状維持（jj-support.mdは補助資料として存在、gitコマンドを使用）
+- enabled=true: プロンプト内でjj-support.md参照を案内（ガイドを通じてjjコマンドを使用）
+
+**ガイドとの整合性**:
+- 既存ガイドは「プロンプト本体はGitコマンドのまま、読み替え前提」と記載
+- enabled=true時は「jj使用時はガイドを参照」と案内し、プロンプト内のgitコマンドは変更しない
+- これによりガイドの「読み替え前提」方針と整合を保つ
 
 ## 補足
 
