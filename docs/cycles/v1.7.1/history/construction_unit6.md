@@ -32,3 +32,19 @@
    - コードブロック内でAIがどう動作するかをより明示的に
 
 ---
+
+## 2026-01-11 21:08:29 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: Unit 006 - 複合コマンド削減
+- **ステップ**: Phase 2 完了
+- **実行内容**:
+  - 許可リスト絞り込みテスト（`git branch -D` が承認必要であることを確認）
+  - ワイルドカードの完全一致説明を追記
+  - 絞り込み例を追加
+  - dasel未導入時の動作を詳細に記載
+- **成果物**:
+  - `prompts/package/guides/ai-agent-allowlist.md`（更新）
+  - `docs/cycles/v1.7.1/story-artifacts/units/006-reduce-compound-commands.md`（完了）
+
+---

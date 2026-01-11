@@ -232,6 +232,11 @@ deny（最優先）→ ask → allow（最低優先）
 **ワイルドカード**:
 - `:*` - プレフィックスマッチ（末尾のみ）
 - `*` - 任意位置マッチ
+- ワイルドカードなし - 完全一致のみ
+
+**絞り込み例**:
+- `Bash(git branch)` → `git branch` のみ許可。`git branch -D` は承認が必要
+- `Bash(git commit -m:*)` → `-m` 必須。`git commit --amend` 単体は許可されない
 
 **使い分けの指針**:
 - `allow`: 読み取り専用など安全なコマンド
@@ -403,7 +408,21 @@ dasel -f docs/aidlc.toml -r toml '.backlog.mode'
 dasel -f docs/aidlc.toml -r toml '.rules.mcp_review.mode'
 ```
 
-**dasel未インストール時**: AIがファイルを直接読み取って設定値を取得します。
+**dasel未インストール時の動作**:
+
+AIエージェントが `docs/aidlc.toml` をReadツールで直接読み取り、設定値を解釈します。
+
+```text
+# AI-DLCプロンプト内での使用例（setup.md, construction.md等）
+
+daselが利用可能な場合:
+  dasel -f docs/aidlc.toml -r toml '.backlog.mode'
+
+daselが利用できない場合:
+  AIがReadツールでdocs/aidlc.tomlを読み取り、該当の設定値を抽出
+```
+
+この動作により、daselの導入有無に関わらずAI-DLCは正常に機能します。
 
 ---
 
