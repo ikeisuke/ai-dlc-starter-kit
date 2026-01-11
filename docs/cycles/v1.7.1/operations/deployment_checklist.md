@@ -18,8 +18,8 @@
 ### バージョン管理
 
 - [x] version.txt が更新されている（1.7.1）
-- [ ] CHANGELOG.md が更新されている
-- [ ] README.md が更新されている
+- [x] CHANGELOG.md が更新されている
+- [x] README.md が更新されている
 
 ### ドキュメント
 

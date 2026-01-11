@@ -55,9 +55,9 @@ ai-dlc-starter-kit/
     └── setup-prompt.md        # セットアッププロンプト（v1.0.0）
 ```
 
-**注**: 現在のバージョンは **v1.0.0** です。`docs/versions/v1.0.0/` は v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録で、参考資料として残してあります。v1.0.0 を使ってセットアップすると `docs/aidlc/` に共通プロンプトが配置され、`docs/cycles/{{CYCLE}}/` にサイクル固有の成果物が作成されます。
+**注**: `docs/versions/v1.0.0/` は v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録で、参考資料として残してあります。セットアップすると `docs/aidlc/` に共通プロンプトが配置され、`docs/cycles/{{CYCLE}}/` にサイクル固有の成果物が作成されます。
 
-## 🚀 クイックスタート (v1.0.0)
+## 🚀 クイックスタート
 
 ### 1. AI-DLC について学ぶ
 
@@ -174,7 +174,7 @@ docs/aidlc/prompts/operations.md
 ```
 
 AIが以下を実施します：
-- **進捗管理ファイル（operations/progress.md）を確認**: 5ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
+- **進捗管理ファイル（operations/progress.md）を確認**: 6ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
 - Construction完了確認（コンテキスト溢れ防止のため、最小限のファイルのみ読み込み）
 - **対話形式でデプロイ準備、CI/CD構築、監視設定**: 不明点を質問してきます
 - リリース後の運用
@@ -215,7 +215,7 @@ Operations Phase完了後、フィードバックを収集して次サイクル�
 - **全フェーズでprogress.mdを自動管理**
   - Inception Phase: 6ステップの進捗（`inception/progress.md`）
   - Construction Phase: Unit一覧、状態、依存関係、優先度、見積もりを1つのファイルで管理（`construction/progress.md`）
-  - Operations Phase: 5ステップの進捗（`operations/progress.md`）
+  - Operations Phase: 6ステップの進捗（`operations/progress.md`）
 - **コンテキストオーバーフロー対策**: 長いセッションで中断しても、progress.mdを読み込むだけで未完了ステップから自動再開
 - Construction Phase実行時に1ファイル読むだけで全体状況を把握（コンテキスト削減）
 - 各Unit完了後に自動更新（次回実行可能なUnit候補を再計算）
