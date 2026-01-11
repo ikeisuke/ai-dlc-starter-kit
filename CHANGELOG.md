@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.7.0] - 2026-01-11
+
+### Added
+- AIエージェント許可リストガイド（Claude Code, Cursor, Cline, Windsurf対応）
+- GitHub Issueテンプレート（backlog.yml, bug.yml, feature.yml）
+- setup-promptパス記録機能（aidlc.tomlの[paths].setup_prompt）
+- Issue駆動バックログ管理ガイド（git/issueモード切替対応）
+- jj（Jujutsu）基本ワークフローガイド（実験的サポート）
+- Unitブランチ無効化設定（[rules.unit_branch].enabled）
+- バックログ管理モード設定（[backlog].mode: git/issue）
+
+### Removed
+- Construction Phaseのバックアップステップを廃止（冗長なため）
+
+---
+
 ## [1.6.1] - 2026-01-10
 
 ### Added

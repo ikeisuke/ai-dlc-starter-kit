@@ -455,7 +455,7 @@ mkdir -p docs/cycles/backlog-completed
 この形式は非推奨となり、新形式（docs/cycles/backlog/ ディレクトリ）への移行を推奨します。
 
 移行を実行しますか？（Y/n）
-→ 移行後、元ファイルは backlog.md.bak として保存されます
+→ 移行後、元ファイル（docs/cycles/backlog.md）は削除されます
 ```
 
 - **拒否された場合**: スキップ（完了時の作業へ進む）
@@ -465,13 +465,7 @@ mkdir -p docs/cycles/backlog-completed
 
 **処理手順**:
 
-1. **バックアップ作成**:
-   ```bash
-   BACKUP_TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-   cp docs/cycles/backlog.md "docs/cycles/backlog.md.bak.${BACKUP_TIMESTAMP}"
-   ```
-
-2. **項目解析と移行**:
+1. **項目解析と移行**:
 
    AIが `docs/cycles/backlog.md` を読み込み、以下のルールで各項目を新形式ファイルに変換：
 
@@ -517,6 +511,11 @@ mkdir -p docs/cycles/backlog-completed
    [対応案テキスト]
    ```
 
+2. **元ファイル削除**:
+   ```bash
+   rm docs/cycles/backlog.md
+   ```
+
 3. **移行結果サマリ表示**:
    ```text
    移行が完了しました。
@@ -524,6 +523,9 @@ mkdir -p docs/cycles/backlog-completed
    - 移行成功: X件
    - スキップ（完了済み）: Y件
    - スキップ（重複）: Z件
+
+   元ファイル docs/cycles/backlog.md を削除しました。
+   （gitで履歴が残るため、バックアップは不要です）
    ```
 
    **重複スキップがある場合（Z > 0）は追加表示**:
@@ -534,12 +536,6 @@ mkdir -p docs/cycles/backlog-completed
    ...
 
    これらの項目を移行するには、既存ファイルを削除または名前変更してから再度移行を実行してください。
-   ```
-
-   **共通の終了メッセージ**:
-   ```text
-   元ファイルは docs/cycles/backlog.md.bak.[タイムスタンプ] として保存されています。
-   問題がなければ、後で削除してください。
    ```
 
 ---

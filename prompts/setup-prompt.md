@@ -401,7 +401,8 @@ frameworks = [[フレームワークリスト]]
 tools = ["Claude Code"]
 
 [paths]
-setup_prompt = "prompts/setup-prompt.md"
+# セットアッププロンプトのパス（詳細は 7.2.1 参照）
+setup_prompt = "[setup_prompt パス]"
 aidlc_dir = "docs/aidlc"
 cycles_dir = "docs/cycles"
 
@@ -450,7 +451,46 @@ level = "standard"
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
+
+[backlog]
+# バックログ管理モード設定
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "git"
 ```
+
+### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
+
+`[paths].setup_prompt` には、このセットアッププロンプトファイルのパスを設定します。
+
+**パス形式の判定**（優先順位順）:
+
+1. **同一リポジトリ内の場合**: 相対パスを使用
+   - このファイル（setup-prompt.md）がプロジェクトルート配下にある場合
+   - **基準**: `docs/aidlc.toml` が配置されるディレクトリ（プロジェクトルート）
+   - 例: `prompts/setup-prompt.md`
+
+2. **外部リポジトリの場合**: ghq形式を使用
+   - このファイルが別のリポジトリにある場合（ghq管理下）
+   - 形式: `ghq:{host}/{owner}/{repo}/{path}`
+   - 例: `ghq:github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md`
+
+3. **上記以外の場合**: 絶対パスを使用（フォールバック、非推奨）
+   - ghq未使用環境でのフォールバック
+
+**判定補助**:
+- プロジェクトルートは `docs/aidlc.toml` が作成されるディレクトリ
+- 外部リポジトリの場合、以下のコマンドでghq形式パスを構築可能:
+  ```bash
+  # ghq root を取得
+  GHQ_ROOT=$(ghq root)
+  # スターターキットの相対パスを取得（ghq root からの相対パス）
+  STARTER_KIT_PATH="github.com/[owner]/[repo]"
+  # 完成形: ghq:github.com/[owner]/[repo]/prompts/setup-prompt.md
+  ```
+
+**アップグレードモードの場合**: 既存の `[paths].setup_prompt` を保持（変更しない）
 
 ### 7.3 starter_kit_versionの更新【アップグレードモードのみ】
 
@@ -535,6 +575,23 @@ EOF
 else
   echo "[rules.history] section already exists"
 fi
+
+# [backlog] セクションが存在しない場合は追加
+if ! grep -q "^\[backlog\]" docs/aidlc.toml; then
+  echo "Adding [backlog] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[backlog]
+# バックログ管理モード設定（v1.7.0で追加）
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "git"
+EOF
+  echo "Added [backlog] section"
+else
+  echo "[backlog] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -542,6 +599,7 @@ fi
 ```bash
 grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
+grep -A 5 "^\[backlog\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
@@ -695,6 +753,24 @@ fi
   - implementation_record_template.md
 ```
 
+#### 8.2.2.2 ガイドの同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/guides/ \
+  docs/aidlc/guides/ 2>&1 | grep "^deleting"
+
+# 2. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/guides/ \
+  docs/aidlc/guides/
+```
+
+ガイドも同様に完全同期します。
+
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
@@ -791,6 +867,84 @@ sent 1,234 bytes  received 56 bytes
 
 **互換性**: rsync は macOS/Linux 共通でプリインストール済み
 
+#### 8.2.5 GitHub Issueテンプレートのコピー
+
+GitHub Issueテンプレートをプロジェクトにコピーします。
+
+**状態確認**:
+```bash
+# .github/ISSUE_TEMPLATE/ の存在と内容確認
+if [ -d ".github/ISSUE_TEMPLATE" ]; then
+    echo "Existing Issue templates:"
+    ls .github/ISSUE_TEMPLATE/
+    echo "ISSUE_TEMPLATE_EXISTS"
+else
+    echo "ISSUE_TEMPLATE_NOT_EXISTS"
+fi
+```
+
+**ケース1: ディレクトリが存在しない場合**:
+```bash
+mkdir -p .github/ISSUE_TEMPLATE
+cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
+echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml"
+```
+
+**ケース2: 同名ファイルが存在する場合**:
+
+まず競合を確認:
+```bash
+CONFLICT_FILES=""
+for file in backlog.yml bug.yml feature.yml; do
+    if [ -f ".github/ISSUE_TEMPLATE/$file" ]; then
+        CONFLICT_FILES="${CONFLICT_FILES}${file} "
+    fi
+done
+echo "Conflict files: ${CONFLICT_FILES:-none}"
+```
+
+競合がある場合、以下のメッセージを表示しユーザーに選択を求める:
+```text
+警告: 以下のIssueテンプレートが既に存在します：
+
+[競合ファイル一覧]
+
+選択してください:
+1. 上書きする（すべて置き換え）
+2. スキップする（既存を保持、新規のみ追加）
+3. 個別に確認する
+
+どれを選択しますか？
+```
+
+- **選択1（上書き）**: `cp -f [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/`
+- **選択2（スキップ）**: 存在しないファイルのみコピー
+- **選択3（個別確認）**: 競合ファイルごとに上書き/スキップを選択
+
+**ケース3: 同名ファイルが存在しない場合**:
+```bash
+mkdir -p .github/ISSUE_TEMPLATE
+for file in backlog.yml bug.yml feature.yml; do
+    if [ ! -f ".github/ISSUE_TEMPLATE/$file" ]; then
+        cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
+        echo "Copied: $file"
+    fi
+done
+```
+
+**結果報告**:
+```text
+GitHub Issueテンプレートの配置が完了しました：
+
+| ファイル | 状態 |
+|----------|------|
+| backlog.yml | [新規作成 / スキップ / 上書き] |
+| bug.yml | [新規作成 / スキップ / 上書き] |
+| feature.yml | [新規作成 / スキップ / 上書き] |
+```
+
+**注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
+
 ### 8.3 同期対象のファイル一覧
 
 rsync により以下のファイルが `docs/aidlc/` に同期されます:
@@ -803,6 +957,10 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 **templates/** → `docs/aidlc/templates/`:
 - 各種テンプレートファイル（index.md含む）
 
+**guides/** → `docs/aidlc/guides/`:
+- ai-agent-allowlist.md（AIエージェント許可リストガイド）
+- issue-driven-backlog.md（Issue駆動バックログ管理ガイド）
+
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
 ---
@@ -812,7 +970,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -848,6 +1006,18 @@ AI-DLC環境のセットアップが完了しました！
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
+
+GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
+- backlog.yml - バックログ用テンプレート
+- bug.yml - バグ報告用テンプレート
+- feature.yml - 機能要望用テンプレート
+
+### AIエージェント許可リストの設定（オプション）
+
+AI-DLCではファイル操作やGitコマンドを多用します。
+毎回の確認を減らすため、許可リストまたはsandbox環境の設定を推奨します。
+
+詳細は docs/aidlc/guides/ai-agent-allowlist.md を参照してください。
 ```
 
 ### アップグレードの場合

@@ -2,7 +2,7 @@
 # 生成日: 2025-12-06
 # スターターキットバージョン: 1.2.3
 
-starter_kit_version = "1.6.1"
+starter_kit_version = "1.7.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -43,7 +43,7 @@ language = "日本語"
 # - recommend: MCP利用可能時にレビューを推奨（デフォルト）
 # - required: MCP利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
-mode = "recommend"
+mode = "required"
 
 [rules.custom]
 # プロジェクト固有のカスタムルール
@@ -70,3 +70,15 @@ level = "standard"
 # version_tag: true | false - バージョンタグを付与するか（デフォルト: false）
 changelog = true
 version_tag = true
+
+[rules.unit_branch]
+# Unitブランチ設定（v1.7.0で追加）
+# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: true）
+enabled = false
+
+[backlog]
+# バックログ管理モード設定（v1.7.0で追加）
+# mode: "git" | "issue"
+# - git: ローカルファイルに保存（従来方式、デフォルト）
+# - issue: GitHub Issueに保存
+mode = "issue"
