@@ -602,7 +602,17 @@ BDD/TDDに従ってテストコードを作成
 ### 2. 履歴記録
 `docs/cycles/{{CYCLE}}/history/construction_unit{N}.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 3. Gitコミット
+### 3. Markdownlint実行【CI対応】
+コミット前にMarkdownlintを実行し、エラーがあれば修正する。
+
+```bash
+# markdownlint-cli2がインストールされている場合
+npx markdownlint-cli2 "docs/**/*.md" "prompts/**/*.md" "*.md"
+```
+
+**エラーがある場合**: 修正してから次のステップへ進む。
+
+### 4. Gitコミット
 各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
@@ -610,7 +620,7 @@ BDD/TDDに従ってテストコードを作成
 feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
 
-### 4. Unit PR作成・マージ【推奨】
+### 5. Unit PR作成・マージ【推奨】
 
 Unitブランチで作業した場合、サイクルブランチへのPRを作成（または既存ドラフトPRを更新）してマージする。
 

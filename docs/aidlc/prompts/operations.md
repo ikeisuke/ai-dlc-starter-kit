@@ -590,7 +590,17 @@ README.mdに今回のサイクルの変更内容を追記
 #### 6.2 履歴記録
 `docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-#### 6.3 Gitコミット
+#### 6.3 Markdownlint実行【CI対応】
+コミット前にMarkdownlintを実行し、エラーがあれば修正する。
+
+```bash
+# markdownlint-cli2がインストールされている場合
+npx markdownlint-cli2 "docs/**/*.md" "prompts/**/*.md" "*.md"
+```
+
+**エラーがある場合**: 修正してから次のステップへ進む。
+
+#### 6.4 Gitコミット
 Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
@@ -598,7 +608,7 @@ Operations Phaseで作成したすべてのファイル（**operations/progress.
 chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
-#### 6.4 ドラフトPR Ready化【重要】
+#### 6.5 ドラフトPR Ready化【重要】
 
 Inception Phaseで作成したドラフトPRをReady for Reviewに変更します。
 
