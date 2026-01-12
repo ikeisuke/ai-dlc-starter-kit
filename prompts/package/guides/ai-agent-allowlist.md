@@ -86,6 +86,11 @@ sandbox環境で実行することで、被害を限定する方式。
 | `gh pr list` | PR一覧表示 | Inception, Operations |
 | `gh pr view` | PR詳細表示 | Operations |
 | `gh issue list` | Issue一覧表示 | Inception |
+| `jj status` | 作業ツリー状態表示 | 全フェーズ |
+| `jj log` | コミット履歴表示 | 全フェーズ |
+| `jj diff` | 差分表示 | 全フェーズ |
+| `jj bookmark list` | ブックマーク一覧表示 | 全フェーズ |
+| `jj show` | コミット内容表示 | Construction, Operations |
 
 ### 3.2 作成系（許可推奨）
 
@@ -99,6 +104,9 @@ sandbox環境で実行することで、被害を限定する方式。
 | `git add` | ステージング | 全フェーズ |
 | `mkdir -p` | ディレクトリ作成 | Setup |
 | `touch` | 空ファイル作成 | Setup |
+| `jj git init --colocate` | gitリポジトリでjj初期化 | Setup |
+| `jj bookmark create` | ブックマーク作成 | Setup, Inception |
+| `jj new` | 新規変更作成 | 全フェーズ |
 
 ### 3.3 Git操作（条件付き許可）
 
@@ -112,6 +120,10 @@ sandbox環境で実行することで、被害を限定する方式。
 | `git stash` | 変更一時退避 | - |
 | `gh pr create` | PR作成 | - |
 | `gh pr ready` | PRをReady化 | - |
+| `jj describe -m` | コミットメッセージ設定 | - |
+| `jj git push` | リモートにプッシュ | リモート通信 |
+| `jj bookmark set` | ブックマーク設定 | 参照の移動 |
+| `jj git fetch` | リモートからフェッチ | リモート通信、ローカル状態更新 |
 
 ### 3.4 破壊的操作（注意が必要）
 
@@ -203,6 +215,18 @@ deny（最優先）→ ask → allow（最低優先）
       "Bash(rsync * docs/aidlc/guides/)",
       "Bash(curl * https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/*)",
       "Bash(npx markdownlint-cli2:*)",
+      "Bash(jj status:*)",
+      "Bash(jj log:*)",
+      "Bash(jj diff:*)",
+      "Bash(jj bookmark list:*)",
+      "Bash(jj show:*)",
+      "Bash(jj git init --colocate)",
+      "Bash(jj bookmark create:*)",
+      "Bash(jj new:*)",
+      "Bash(jj describe -m:*)",
+      "Bash(jj git push:*)",
+      "Bash(jj bookmark set:*)",
+      "Bash(jj git fetch:*)",
       "WebSearch"
     ],
     "ask": [
