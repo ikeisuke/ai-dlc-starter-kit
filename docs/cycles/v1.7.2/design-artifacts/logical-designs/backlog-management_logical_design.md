@@ -61,35 +61,11 @@ mode = "git"
 
 **変更内容**: 排他モードの判定と分岐を追加
 
-```markdown
-**設定確認**:
-```bash
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
-
-**排他モード判定**: modeが "git-only" または "issue-only" の場合は排他モード
-
-#### 3-1. 共通バックログ
-
-**mode=git または mode=git-only の場合**:
-```bash
-ls docs/cycles/backlog/ 2>/dev/null
-```
-
-**mode=issue または mode=issue-only の場合**:
-```bash
-gh issue list --label backlog --state open
-```
-
-**mode=git または mode=issue の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
-
-**mode=git-only または mode=issue-only の場合**: 指定された保存先のみを確認（他の保存先は確認しない）
-```
+- 排他モード判定を追加
+- mode=git または mode=git-only の場合: ローカルファイルを確認
+- mode=issue または mode=issue-only の場合: GitHub Issueを確認
+- 非排他モードの場合のみ両方を確認
+- 排他モードの場合は指定された保存先のみを確認
 
 ### 4. prompts/package/prompts/construction.md
 
@@ -97,27 +73,10 @@ gh issue list --label backlog --state open
 
 **変更内容**: 排他モードの判定と分岐を追加
 
-```markdown
-**設定確認**:
-```bash
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
-
-**排他モード判定**: modeが "git-only" または "issue-only" の場合は排他モード
-
-**mode=git または mode=git-only の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成
-
-**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
-
-**排他モードの場合の注意**: 指定された保存先以外への記録は禁止
-```
+- 排他モード判定を追加
+- mode=git または mode=git-only の場合: ローカルファイルに作成
+- mode=issue または mode=issue-only の場合: GitHub Issueを作成
+- 排他モードの場合は指定された保存先以外への記録を禁止
 
 ### 5. prompts/package/prompts/operations.md
 
@@ -129,7 +88,7 @@ fi
 
 ### バックログ記録フロー
 
-```
+```text
 1. docs/aidlc.tomlからBACKLOG_MODEを取得
 2. 排他モード判定（*-only かどうか）
 3. 保存先決定:
@@ -141,7 +100,7 @@ fi
 
 ### バックログ確認フロー
 
-```
+```text
 1. docs/aidlc.tomlからBACKLOG_MODEを取得
 2. 排他モード判定（*-only かどうか）
 3. 確認対象決定:
@@ -155,7 +114,7 @@ fi
 
 **タイミング**: Inception Phase のバックログ確認ステップ
 
-```
+```text
 1. 現在のBACKLOG_MODEを取得
 2. 両方の保存先（ローカル/Issue）を確認
 3. 現在のmodeと異なる保存先に項目がある場合:
@@ -182,7 +141,7 @@ fi
 
 **突合基準**: タイトルの類似性でAIが判断
 
-```
+```text
 1. ローカルファイルとGitHub Issueの両方を取得
 2. 各項目のタイトルを比較
 3. AIが文脈を読み取って類似項目を判定:
