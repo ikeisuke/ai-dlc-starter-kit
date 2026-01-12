@@ -548,7 +548,7 @@ fi
 
 **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 ```bash
 ls docs/cycles/backlog/
 ```
@@ -563,7 +563,7 @@ mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
 mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
 ```
 
-**mode=issue の場合**:
+**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
@@ -573,7 +573,11 @@ gh issue list --label backlog --state open
 gh issue close {ISSUE_NUMBER}
 ```
 
-**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+
+**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
@@ -852,7 +856,7 @@ fi
 [推奨される対応方法、推奨対応サイクル]
 ```
 
-**mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
+**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

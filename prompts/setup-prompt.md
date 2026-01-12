@@ -461,9 +461,11 @@ enabled = false
 
 [backlog]
 # バックログ管理モード設定
-# mode: "git" | "issue"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
+# mode: "git" | "issue" | "git-only" | "issue-only"
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容（デフォルト）
+# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
+# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）
 mode = "git"
 ```
 
@@ -984,7 +986,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 **guides/** → `docs/aidlc/guides/`:
 - ai-agent-allowlist.md（AIエージェント許可リストガイド）
-- issue-driven-backlog.md（Issue駆動バックログ管理ガイド）
+- backlog-management.md（バックログ管理ガイド）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 

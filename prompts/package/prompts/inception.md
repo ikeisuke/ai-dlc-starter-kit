@@ -468,17 +468,21 @@ fi
 
 #### 3-1. 共通バックログ
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 ```bash
 ls docs/cycles/backlog/ 2>/dev/null
 ```
 
-**mode=issue の場合**:
+**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
 
-**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+
+**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
 
 - **存在しない/空の場合**: スキップ
 - **項目が存在する場合**: 内容を確認し、ユーザーに質問
