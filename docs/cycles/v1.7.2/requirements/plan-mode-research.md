@@ -6,18 +6,19 @@ Claude Codeのプランモード（EnterPlanMode）をAI-DLC Construction Phase�
 
 ## EnterPlanModeの仕様
 
+**注**: 本セクションの仕様はClaude Codeのツール説明に基づく。Claude Codeのバージョンや設定により動作が異なる可能性がある。
+
 ### 機能概要
 
-EnterPlanModeは、非自明な実装タスクを開始する前にユーザーの承認を得るための機能。
+EnterPlanModeは、非自明な実装タスクを開始する前に計画を立て、ユーザーと合意形成を行うためのモード。
 
 **プランモードで行えること**:
 
-- コードベースの探索（Glob, Grep, Read）
+- コードベースの探索（読み取り系ツールを使用）
 - 既存パターンとアーキテクチャの理解
 - 実装アプローチの設計
-- ユーザーへの計画提示と承認取得
-- AskUserQuestionでアプローチの明確化
-- ExitPlanModeで実装へ移行
+- ユーザーへの計画提示
+- ユーザーの承認後、ExitPlanModeで実装へ移行
 
 ### 使用すべき場面
 
@@ -34,7 +35,9 @@ EnterPlanModeは、非自明な実装タスクを開始する前にユーザー�
 
 - 一行〜数行の修正（タイポ、明らかなバグ）
 - 詳細な指示がすでにある場合
-- リサーチ/探索タスク（Task/Exploreを使用）
+- 純粋なリサーチタスク（実装を伴わない調査のみの場合は、Task/Exploreエージェントを使用）
+
+**注**: プランモードでもコード探索は行えるが、目的が異なる。プランモードは「実装計画策定のための探索」、Task/Exploreは「情報収集のみを目的とした探索」という使い分けになる。
 
 ## AI-DLC Construction Phaseとの比較
 
@@ -58,8 +61,10 @@ Construction Phase
 | AI-DLC | EnterPlanMode |
 |--------|---------------|
 | Phase 1（設計） | プランモードでの探索・設計 |
-| 設計レビュー承認 | ExitPlanModeでの承認取得 |
+| 設計レビュー承認 | ユーザー承認後にExitPlanModeで移行 |
 | Phase 2（実装） | 承認後の実装 |
+
+**注**: ExitPlanMode自体は「承認を取得する」動作ではなく、ユーザーが計画を承認した後に「実装モードへ移行する」ためのツール。承認→ExitPlanModeの順序で実行される。
 
 ### 相違点
 
@@ -181,5 +186,7 @@ Construction Phase
 
 ## 参考
 
-- Claude Code EnterPlanMode ツール仕様
+- Claude Code EnterPlanMode ツール説明（Claude Codeセッション内で確認可能な内蔵ツール仕様）
 - AI-DLC Construction Phase プロンプト (`docs/aidlc/prompts/construction.md`)
+
+**注**: EnterPlanModeの仕様はClaude Code内蔵ツールとして提供されており、公式ドキュメントとしては公開されていない。本検討はClaude Codeセッション内で確認できるツール説明に基づいている。
