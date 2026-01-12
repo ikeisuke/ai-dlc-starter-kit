@@ -43,7 +43,7 @@ EnterPlanModeは、非自明な実装タスクを開始する前に計画を立�
 
 ### 現在のConstruction Phase構造
 
-```
+```text
 Construction Phase
 ├── Phase 1: 設計【対話形式、コードは書かない】
 │   ├── ステップ1: ドメインモデル設計
