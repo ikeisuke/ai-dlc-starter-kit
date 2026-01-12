@@ -1,0 +1,52 @@
+# Unit: jjサポート - 許可リスト
+
+## 概要
+AIエージェント許可リストにjjコマンドを追加する。
+
+## 含まれるユーザーストーリー
+- ストーリー 2-2: 許可リストへのjjコマンド追加 (#42)
+
+## 責務
+- ai-agent-allowlist.md にjj読み取り系コマンドを追加
+- ai-agent-allowlist.md にjj作成系コマンドを追加
+- ai-agent-allowlist.md にjj操作系コマンドを追加
+- Claude Code設定例にjjコマンドを追加
+
+## 境界
+- jjの設定やドキュメントは別Unit（002）
+
+## 依存関係
+
+### 依存する Unit
+- なし（Unit 002と並行して実装可能）
+
+### 外部依存
+- なし
+
+## 非機能要件（NFR）
+- **パフォーマンス**: 該当なし
+- **セキュリティ**: 該当なし
+- **スケーラビリティ**: 該当なし
+- **可用性**: 該当なし
+
+## 技術的考慮事項
+- prompts/package/guides/ai-agent-allowlist.md を修正
+- 追加するjjコマンド:
+  - 読み取り系: jj status, jj log, jj diff, jj bookmark list
+  - 作成系: jj git init --colocate, jj bookmark create, jj new
+  - 操作系: jj describe -m, jj git push, jj bookmark set
+- Claude Code設定例のJSON形式に合わせて追加
+
+## 実装優先度
+Medium
+
+## 見積もり
+AI-DLCでは見積もりを行わない
+
+---
+## 実装状態
+
+- **状態**: 未着手
+- **開始日**: -
+- **完了日**: -
+- **担当**: -
