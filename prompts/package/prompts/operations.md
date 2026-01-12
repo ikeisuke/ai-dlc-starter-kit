@@ -462,19 +462,21 @@ fi
 ```
 
 **判定結果**:
-- **UPDATED_IN_INCEPTION**: 以下を表示してバージョン確認をスキップ
+- **UPDATED_IN_INCEPTION**: 以下を表示してMARKETING_VERSION確認をスキップし、iOSビルド番号確認に進む
   ```text
   バージョン確認結果:
   - project.type: ios
-  - Inception Phase履歴: バージョン更新実施済み
+  - Inception Phase履歴: MARKETING_VERSION更新実施済み
 
-  Inception Phaseでバージョン更新済みです。このステップをスキップします。
+  Inception PhaseでMARKETING_VERSION更新済みです。「通常のバージョン確認」をスキップし、「iOSビルド番号確認」に進みます。
   ```
 - **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
 
 ##### iOSビルド番号確認
 
-`project.type = "ios"` の場合、ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
+**前提条件**: `project.type = "ios"` の場合のみ実行。それ以外のプロジェクトタイプではこのセクションをスキップ。
+
+ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
 
 ```bash
 # project.pbxprojファイルを検索（Pods/DerivedData除外）
@@ -508,15 +510,19 @@ fi
   iOSプロジェクトの場合は、.xcodeprojディレクトリ内にproject.pbxprojが存在するか確認してください。
   ```
 
-- **MULTIPLE_PROJECT_FILES**: ユーザーに選択を求める
+- **MULTIPLE_PROJECT_FILES**: ユーザーに選択を求め、選択されたパスを `PROJECT_FILE` として使用
   ```text
   複数のproject.pbxprojファイルが見つかりました:
-  [ファイル一覧]
+  1. ./MyApp.xcodeproj/project.pbxproj
+  2. ./MyAppTests.xcodeproj/project.pbxproj
+  3. ./Frameworks/Core.xcodeproj/project.pbxproj
 
-  どのファイルを確認しますか？
+  どのファイルを確認しますか？（番号で選択、例: 1）
   ```
 
-- **PROJECT_FOUND**: ビルド番号比較を実行
+  ユーザーが番号を選択後、対応するパスを `PROJECT_FILE` に設定してビルド番号比較に進む。
+
+- **PROJECT_FOUND**: 見つかったファイルを `PROJECT_FILE` に設定してビルド番号比較を実行
 
 **ビルド番号比較**:
 
@@ -528,13 +534,16 @@ git rev-parse --verify origin/${DEFAULT_BRANCH} >/dev/null 2>&1 || DEFAULT_BRANC
 
 # 現在ブランチのビルド番号
 PROJECT_FILE="[選択されたファイルパス]"
-CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" ${PROJECT_FILE} \
+# git showはリポジトリ相対パスが必要なため、先頭の./ を除去
+GIT_PROJECT_FILE="${PROJECT_FILE#./}"
+CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" "${PROJECT_FILE}" \
     | head -1 \
     | sed 's/.*= *\([^;]*\);.*/\1/' \
     | tr -d ' \t"')
 
 # デフォルトブランチのビルド番号（リモートブランチを参照）
-PREVIOUS_BUILD=$(git show origin/${DEFAULT_BRANCH}:${PROJECT_FILE} 2>/dev/null \
+# 注意: origin未設定の場合はエラーになるため、事前にgit remote -vで確認推奨
+PREVIOUS_BUILD=$(git show "origin/${DEFAULT_BRANCH}:${GIT_PROJECT_FILE}" 2>/dev/null \
     | grep "CURRENT_PROJECT_VERSION" \
     | head -1 \
     | sed 's/.*= *\([^;]*\);.*/\1/' \
@@ -551,13 +560,12 @@ fi
 
 **比較結果の表示**:
 
-- **抽出失敗の場合**（CURRENT_BUILD または PREVIOUS_BUILD が空）:
+- **現在のビルド番号が抽出失敗**（CURRENT_BUILD が空）:
   ```text
-  【注意】iOSビルド番号を自動抽出できませんでした
+  【注意】現在のiOSビルド番号を自動抽出できませんでした
 
   プロジェクトファイル: [パス]
   現在のビルド番号: 取得失敗
-  前回のビルド番号: 取得失敗
 
   考えられる原因:
   - CURRENT_PROJECT_VERSIONが変数参照（$(inherited)等）になっている
@@ -565,6 +573,22 @@ fi
 
   手動でビルド番号を確認してください:
   1. Xcode > プロジェクト設定 > Build Settings > Current Project Version
+  ```
+
+- **前回のビルド番号のみ抽出失敗**（PREVIOUS_BUILD が空で CURRENT_BUILD はあり）:
+  ```text
+  【注意】デフォルトブランチからビルド番号を取得できませんでした
+
+  プロジェクトファイル: [パス]
+  現在のビルド番号: [番号]
+  前回のビルド番号: 取得失敗
+
+  考えられる原因:
+  - origin リモートが設定されていない
+  - デフォルトブランチ (origin/${DEFAULT_BRANCH}) に該当ファイルが存在しない
+  - 新規プロジェクトで比較対象がない
+
+  比較をスキップして続行します。
   ```
 
 - **ビルド番号が異なる場合**:
