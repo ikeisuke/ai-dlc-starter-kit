@@ -472,6 +472,124 @@ fi
   ```
 - **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
 
+##### iOSビルド番号確認
+
+`project.type = "ios"` の場合、ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
+
+```bash
+# project.pbxprojファイルを検索（Pods/DerivedData除外）
+PROJECT_FILES=$(find . -name "project.pbxproj" \
+    -not -path "*/Pods/*" \
+    -not -path "*/DerivedData/*" \
+    -not -path "*/.build/*" \
+    2>/dev/null)
+PROJECT_COUNT=$(echo "$PROJECT_FILES" | grep -c . 2>/dev/null || echo 0)
+
+if [ "$PROJECT_COUNT" -eq 0 ]; then
+    echo "PROJECT_NOT_FOUND"
+elif [ "$PROJECT_COUNT" -gt 1 ]; then
+    echo "MULTIPLE_PROJECT_FILES"
+    echo "$PROJECT_FILES"
+else
+    echo "PROJECT_FOUND"
+    echo "$PROJECT_FILES"
+fi
+```
+
+**判定結果**:
+
+- **PROJECT_NOT_FOUND**: 以下を表示してビルド番号確認をスキップ
+  ```text
+  【情報】iOSビルド番号確認をスキップします
+
+  理由: project.pbxprojファイルが見つかりませんでした。
+  （Pods/DerivedData/は検索対象外）
+
+  iOSプロジェクトの場合は、.xcodeprojディレクトリ内にproject.pbxprojが存在するか確認してください。
+  ```
+
+- **MULTIPLE_PROJECT_FILES**: ユーザーに選択を求める
+  ```text
+  複数のproject.pbxprojファイルが見つかりました:
+  [ファイル一覧]
+
+  どのファイルを確認しますか？
+  ```
+
+- **PROJECT_FOUND**: ビルド番号比較を実行
+
+**ビルド番号比較**:
+
+```bash
+# デフォルトブランチを取得
+DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep "HEAD branch" | sed 's/.*: //')
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
+git rev-parse --verify origin/${DEFAULT_BRANCH} >/dev/null 2>&1 || DEFAULT_BRANCH="master"
+
+# 現在ブランチのビルド番号
+PROJECT_FILE="[選択されたファイルパス]"
+CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" ${PROJECT_FILE} \
+    | head -1 \
+    | sed 's/.*= *\([^;]*\);.*/\1/' \
+    | tr -d ' \t"')
+
+# デフォルトブランチのビルド番号（リモートブランチを参照）
+PREVIOUS_BUILD=$(git show origin/${DEFAULT_BRANCH}:${PROJECT_FILE} 2>/dev/null \
+    | grep "CURRENT_PROJECT_VERSION" \
+    | head -1 \
+    | sed 's/.*= *\([^;]*\);.*/\1/' \
+    | tr -d ' \t"')
+
+# 変数参照チェック（$を含む場合は抽出失敗扱い）
+if echo "$CURRENT_BUILD" | grep -q '\$'; then
+    CURRENT_BUILD=""
+fi
+if echo "$PREVIOUS_BUILD" | grep -q '\$'; then
+    PREVIOUS_BUILD=""
+fi
+```
+
+**比較結果の表示**:
+
+- **抽出失敗の場合**（CURRENT_BUILD または PREVIOUS_BUILD が空）:
+  ```text
+  【注意】iOSビルド番号を自動抽出できませんでした
+
+  プロジェクトファイル: [パス]
+  現在のビルド番号: 取得失敗
+  前回のビルド番号: 取得失敗
+
+  考えられる原因:
+  - CURRENT_PROJECT_VERSIONが変数参照（$(inherited)等）になっている
+  - xcconfig等で外部定義されている
+
+  手動でビルド番号を確認してください:
+  1. Xcode > プロジェクト設定 > Build Settings > Current Project Version
+  ```
+
+- **ビルド番号が異なる場合**:
+  ```text
+  iOSビルド番号確認結果:
+  - プロジェクトファイル: [パス]
+  - 現在のビルド番号: [番号]
+  - 前回のビルド番号: [番号]
+  - 状態: 更新済み ✓
+  ```
+
+- **ビルド番号が同一の場合**:
+  ```text
+  【警告】iOSビルド番号が前回と同一です
+
+  - 現在のビルド番号: [番号]
+  - 前回のビルド番号: [番号]
+
+  App Storeは同一ビルド番号での再提出を拒否します。
+  ビルド番号をインクリメントすることを推奨します。
+
+  1. 手動で対応する（推奨）
+  2. このまま続行する（非推奨）
+  ```
+
 ##### 通常のバージョン確認
 
 運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
