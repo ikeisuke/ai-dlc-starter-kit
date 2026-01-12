@@ -448,6 +448,13 @@ enabled = false
 # - minimal: Unit完了時にまとめて記録
 level = "standard"
 
+[rules.jj]
+# jjサポート設定（v1.7.2で追加）
+# enabled: true | false
+# - true: プロンプト内でjj-support.md参照を案内
+# - false: 従来のgitコマンドを使用（デフォルト）
+enabled = false
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
@@ -592,6 +599,23 @@ EOF
 else
   echo "[backlog] section already exists"
 fi
+
+# [rules.jj] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.jj\]" docs/aidlc.toml; then
+  echo "Adding [rules.jj] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.jj]
+# jjサポート設定（v1.7.2で追加）
+# enabled: true | false
+# - true: プロンプト内でjj-support.md参照を案内
+# - false: 従来のgitコマンドを使用（デフォルト）
+enabled = false
+EOF
+  echo "Added [rules.jj] section"
+else
+  echo "[rules.jj] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -600,6 +624,7 @@ fi
 grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
+grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
