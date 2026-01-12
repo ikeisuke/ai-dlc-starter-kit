@@ -220,7 +220,7 @@ deny（最優先）→ ask → allow（最低優先）
       "Bash(jj diff:*)",
       "Bash(jj bookmark list:*)",
       "Bash(jj show:*)",
-      "Bash(jj git init --colocate)",
+      "Bash(jj git init --colocate:*)",
       "Bash(jj bookmark create:*)",
       "Bash(jj new:*)",
       "Bash(jj describe -m:*)",
