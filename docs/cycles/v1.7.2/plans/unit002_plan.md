@@ -16,6 +16,14 @@ jjサポートのための設定テンプレート修正とドキュメント改
 | `prompts/setup-prompt.md` | aidlc.tomlテンプレートに[rules.jj]セクションを追加 |
 | `prompts/package/guides/jj-support.md` | 「gitとjjの考え方の違い」セクションを追加 |
 
+## 作成される成果物
+
+| ファイル | 説明 |
+|---------|------|
+| `docs/cycles/v1.7.2/design-artifacts/domain-models/unit002_domain_model.md` | ドメインモデル設計 |
+| `docs/cycles/v1.7.2/design-artifacts/logical-designs/unit002_logical_design.md` | 論理設計 |
+| `docs/cycles/v1.7.2/construction/units/unit002_implementation.md` | 実装記録 |
+
 ## 詳細計画
 
 ### 1. setup-prompt.md の修正
@@ -25,7 +33,7 @@ jjサポートのための設定テンプレート修正とドキュメント改
 **追加内容**:
 ```toml
 [rules.jj]
-# jjサポート設定（v1.8.0で追加）
+# jjサポート設定（v1.7.2で追加）
 # enabled: true | false
 # - true: プロンプト内でjj-support.md参照を案内
 # - false: 従来のgitコマンドを使用（デフォルト）
@@ -58,12 +66,6 @@ enabled = false
    - jj-support.md の修正
    - テスト（markdownlint）
    - コミット
-
-## 成果物
-
-- 設計ドキュメント: `docs/cycles/v1.7.2/design-artifacts/domain-models/unit002_domain_model.md`
-- 論理設計: `docs/cycles/v1.7.2/design-artifacts/logical-designs/unit002_logical_design.md`
-- 実装記録: `docs/cycles/v1.7.2/construction/units/unit002_implementation.md`
 
 ## 注意事項
 
