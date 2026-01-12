@@ -1,12 +1,26 @@
-# Issue駆動バックログ管理ガイド
+# バックログ管理ガイド
 
 ## 概要
 
-### Issue駆動バックログ管理とは
+AI-DLCにおけるバックログ管理の方式とフローを定義します。
 
-GitHub Issueを使用してバックログを管理する方式です。従来のローカルファイル管理（Git駆動）と選択制で利用できます。
+### モード一覧
 
-### 従来方式（Git駆動）との違い
+| mode | 保存先 | 説明 |
+|------|--------|------|
+| git | `docs/cycles/backlog/*.md` | ローカルファイルがデフォルト（他の保存先も許容） |
+| issue | GitHub Issues | GitHub Issueがデフォルト（他の保存先も許容） |
+| git-only | `docs/cycles/backlog/*.md` | ローカルファイルのみ（Issue作成禁止） |
+| issue-only | GitHub Issues | GitHub Issueのみ（ローカルファイル作成禁止） |
+
+### 排他モード（`*-only`）について
+
+`git-only` または `issue-only` を選択した場合：
+- 指定された保存先のみを使用
+- 他の保存先への記録は禁止
+- バックログ確認時も指定された保存先のみを確認
+
+### Git駆動 vs Issue駆動
 
 | 項目 | Git駆動 | Issue駆動 |
 |------|---------|-----------|
@@ -20,14 +34,16 @@ GitHub Issueを使用してバックログを管理する方式です。従来�
 
 ## 設定方法
 
-### `docs/aidlc.toml` への設定追加
+### `docs/aidlc.toml` への設定
 
 ```toml
 [backlog]
 # バックログ管理モード設定
-# mode: "git" | "issue"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
+# mode: "git" | "issue" | "git-only" | "issue-only"
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容（デフォルト）
+# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
+# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）
 mode = "git"
 ```
 
@@ -35,10 +51,12 @@ mode = "git"
 
 | 条件 | 推奨モード |
 |------|------------|
-| 個人開発・ローカル完結 | `git` |
-| チーム開発・外部可視化 | `issue` |
-| GitHub CLI未導入 | `git` |
-| GitHub Projects連携予定 | `issue` |
+| 個人開発・ローカル完結 | `git` または `git-only` |
+| チーム開発・外部可視化 | `issue` または `issue-only` |
+| GitHub CLI未導入 | `git` または `git-only` |
+| GitHub Projects連携予定 | `issue` または `issue-only` |
+| 柔軟な運用が必要 | `git` または `issue`（非排他） |
+| 厳密な一元管理が必要 | `git-only` または `issue-only`（排他） |
 
 ### ラベル構成
 
@@ -88,12 +106,18 @@ Issue作成にはリポジトリへの書き込み権限が必要です。
 BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 
-# Issue駆動の場合
-if [ "$BACKLOG_MODE" = "issue" ]; then
+# Issue駆動の場合（issue または issue-only）
+if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
     # GitHub CLI認証確認
     if ! gh auth status &>/dev/null; then
-        echo "警告: GitHub CLI未認証。Git駆動にフォールバックします。"
-        # Git駆動にフォールバック
+        if [ "$BACKLOG_MODE" = "issue-only" ]; then
+            echo "エラー: GitHub CLI未認証。issue-only モードでは認証が必須です。"
+            echo "gh auth login を実行してください。"
+            exit 1
+        else
+            echo "警告: GitHub CLI未認証。Git駆動にフォールバックします。"
+            # Git駆動にフォールバック
+        fi
     else
         gh issue create \
             --title "[Backlog] タイトル" \
@@ -157,7 +181,7 @@ rm docs/cycles/backlog/{type}-{slug}.md
 
 ### バックログ参照時
 
-**重要**: どのモードでも、参照時はIssueとファイル両方を確認します。
+**非排他モード（git / issue）の場合**: IssueとGitファイル両方を確認します。
 
 ```bash
 # GitHub Issueを確認
@@ -166,6 +190,35 @@ gh issue list --label backlog --state open
 # ローカルファイルを確認
 ls docs/cycles/backlog/
 ```
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認します。
+
+---
+
+## フェーズ固有のアクション
+
+各フェーズでバックログに対して行うアクションを定義します。
+
+### Inception Phase
+
+1. **バックログ確認**: 既存のバックログ項目を確認し、今回のサイクルで対応する項目を選定
+2. **サイクルラベル付与**（Issue駆動の場合）: 対応する項目に `cycle:vX.X.X` ラベルを付与
+   ```bash
+   gh issue edit {ISSUE_NUMBER} --add-label "cycle:vX.X.X"
+   ```
+3. **移行提案**（非排他モードのみ）: 現在のmodeと異なる保存先に項目がある場合、移行を提案
+
+### Construction Phase
+
+1. **バックログ記録**: 作業中に発見した課題・気づきをバックログに記録
+2. **workaround記録**: 暫定対応を行った場合、本質的な解決策をバックログに記録
+
+### Operations Phase
+
+1. **バックログクローズ**: サイクルで対応した項目をクローズ
+   - Issue駆動: `gh issue close {ISSUE_NUMBER}`
+   - Git駆動: `docs/cycles/backlog-completed/{{CYCLE}}/` に移動
+2. **残存確認**: 未対応の項目を次サイクルに引き継ぐか確認
 
 ---
 
@@ -209,10 +262,8 @@ gh label create "cycle:v1.7.0" --color "5319E7" --description "サイクル v1.7
 
 ### サイクル・フェーズ管理へのIssue連携
 
-現在のUnit 005ではバックログ管理のみを対象としています。将来的には以下の連携も検討可能です:
+将来的には以下の連携も検討可能です:
 
 - サイクル開始時のマイルストーン作成
 - Unit完了時のIssue自動クローズ
 - GitHub Projectsとの連携（ステータス管理）
-
-詳細は `docs/cycles/backlog/feature-github-projects-integration.md` を参照してください。

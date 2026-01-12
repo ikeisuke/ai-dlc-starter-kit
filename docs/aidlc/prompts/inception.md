@@ -293,7 +293,7 @@ Inception Phaseで決定
 
 ---
 
-## 最初に必ず実行すること（6ステップ）
+## 最初に必ず実行すること（9ステップ）
 
 ### 0. ブランチ確認【推奨】
 
@@ -323,7 +323,7 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     ```
 - **それ以外のブランチ**: 次のステップへ進行
 
-### 0.5 サイクル名の決定【重要】
+### 1. サイクル名の決定【重要】
 
 サイクル名を以下の優先順位で決定:
 
@@ -363,14 +363,15 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 - **承認された場合**: 次のステップへ進行
 - **別のサイクルを指定された場合**: 指定されたサイクルを使用
 
-### 1. サイクル存在確認
+### 2. サイクル存在確認
+
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
 ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
 ```
 
-- **存在する場合**: 処理を継続（ステップ2へ）
+- **存在する場合**: 処理を継続（ステップ3へ）
 - **存在しない場合**: エラーを表示し、setup.md を案内
   ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
@@ -382,10 +383,10 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
   docs/aidlc/prompts/setup.md
   ```
 
-### 2. 追加ルール確認
+### 3. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
-### 2.5. Dependabot PR確認
+### 4. Dependabot PR確認
 
 GitHub CLIでDependabot PRの有無を確認：
 
@@ -417,7 +418,7 @@ fi
 - **1を選択**: ユーザーストーリーとUnit定義に「Dependabot PR対応」を追加することを案内
 - **2を選択**: 次のステップへ進行
 
-### 2.7. GitHub Issue確認
+### 5. GitHub Issue確認
 
 GitHub CLIでオープンなIssueの有無を確認：
 
@@ -449,7 +450,7 @@ fi
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
-### 3. バックログ確認
+### 6. バックログ確認
 
 **設定確認**:
 ```bash
@@ -467,17 +468,21 @@ fi
 
 #### 3-1. 共通バックログ
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 ```bash
 ls docs/cycles/backlog/ 2>/dev/null
 ```
 
-**mode=issue の場合**:
+**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
 
-**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+
+**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
 
 - **存在しない/空の場合**: スキップ
 - **項目が存在する場合**: 内容を確認し、ユーザーに質問
@@ -516,7 +521,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
 
-### 4. 進捗管理ファイル確認【重要】
+### 7. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
 ```text
@@ -530,7 +535,7 @@ docs/cycles/{{CYCLE}}/inception/progress.md
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
 
-### 5. 既存成果物の確認（冪等性の保証）
+### 8. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/

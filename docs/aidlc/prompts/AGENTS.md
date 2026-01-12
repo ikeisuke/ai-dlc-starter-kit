@@ -82,6 +82,19 @@
 - **Construction Phase**: 設計と実装を分離（Phase 1で設計、Phase 2で実装）
 - **Operations Phase**: デプロイ前にチェックリスト確認、ロールバック手順必須
 
+### バックログ管理
+
+バックログの保存先は `docs/aidlc.toml` の `[backlog].mode` で設定する。
+
+| mode | 保存先 | 説明 |
+|------|--------|------|
+| git | `docs/cycles/backlog/*.md` | ローカルファイルがデフォルト（他の保存先も許容） |
+| issue | GitHub Issues | GitHub Issueがデフォルト（他の保存先も許容） |
+| git-only | `docs/cycles/backlog/*.md` | ローカルファイルのみ（Issue作成禁止） |
+| issue-only | GitHub Issues | GitHub Issueのみ（ローカルファイル作成禁止） |
+
+**排他モード（`*-only`）の場合**: 指定された保存先のみを使用し、他の保存先への記録は行わない。
+
 ### 禁止事項
 
 - 既存履歴の削除・上書き（historyは追記のみ）

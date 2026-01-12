@@ -140,7 +140,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
      **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
-     **mode=git の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成
+     **mode=git または mode=git-only の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
      **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
@@ -163,7 +163,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      [推奨される対応方法]
      ```
 
-     **mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
+     **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
   3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
@@ -171,12 +171,12 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **必須手順**:
   1. **workaroundの実装**: 暫定的な対応を実装
-  2. **バックログへの記録**: 本質的な対応を `docs/cycles/backlog/` に記録
+  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
      ```text
-     // TODO: workaround - see docs/cycles/backlog/{filename}.md
+     // TODO: workaround - see backlog (mode に応じた保存先を参照)
      ```
 
   **workaroundの例**:
