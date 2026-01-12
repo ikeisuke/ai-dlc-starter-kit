@@ -171,12 +171,12 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **必須手順**:
   1. **workaroundの実装**: 暫定的な対応を実装
-  2. **バックログへの記録**: 本質的な対応を `docs/cycles/backlog/` に記録
+  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
      ```text
-     // TODO: workaround - see docs/cycles/backlog/{filename}.md
+     // TODO: workaround - see backlog (mode に応じた保存先を参照)
      ```
 
   **workaroundの例**:

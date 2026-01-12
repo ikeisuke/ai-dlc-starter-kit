@@ -106,12 +106,18 @@ Issue作成にはリポジトリへの書き込み権限が必要です。
 BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
 [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
 
-# Issue駆動の場合
-if [ "$BACKLOG_MODE" = "issue" ]; then
+# Issue駆動の場合（issue または issue-only）
+if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
     # GitHub CLI認証確認
     if ! gh auth status &>/dev/null; then
-        echo "警告: GitHub CLI未認証。Git駆動にフォールバックします。"
-        # Git駆動にフォールバック
+        if [ "$BACKLOG_MODE" = "issue-only" ]; then
+            echo "エラー: GitHub CLI未認証。issue-only モードでは認証が必須です。"
+            echo "gh auth login を実行してください。"
+            exit 1
+        else
+            echo "警告: GitHub CLI未認証。Git駆動にフォールバックします。"
+            # Git駆動にフォールバック
+        fi
     else
         gh issue create \
             --title "[Backlog] タイトル" \
@@ -256,10 +262,8 @@ gh label create "cycle:v1.7.0" --color "5319E7" --description "サイクル v1.7
 
 ### サイクル・フェーズ管理へのIssue連携
 
-現在のUnit 005ではバックログ管理のみを対象としています。将来的には以下の連携も検討可能です:
+将来的には以下の連携も検討可能です:
 
 - サイクル開始時のマイルストーン作成
 - Unit完了時のIssue自動クローズ
 - GitHub Projectsとの連携（ステータス管理）
-
-詳細は `docs/cycles/backlog/feature-github-projects-integration.md` を参照してください。

@@ -832,7 +832,7 @@ fi
 
 **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
