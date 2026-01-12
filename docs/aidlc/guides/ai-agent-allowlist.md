@@ -160,27 +160,56 @@ deny（最優先）→ ask → allow（最低優先）
 - `ask`: 確認を求める（承認すれば使える）
 - `allow`: 自動許可
 
-**設定例**:
+**設定例（AI-DLC推奨）**:
 ```json
 {
   "permissions": {
     "allow": [
       "Bash(git status)",
+      "Bash(git branch --show-current)",
+      "Bash(gh auth status)",
+      "Bash(date)",
+      "Bash(git worktree list)",
+      "Bash(git rev-parse:*)",
       "Bash(git log:*)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -r)",
+      "Bash(git branch -v:*)",
       "Bash(git diff:*)",
-      "Bash(git branch:*)",
-      "Bash(git add:*)",
+      "Bash(git remote)",
+      "Bash(git remote -v)",
+      "Bash(git remote show:*)",
+      "Bash(git show:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(command -v:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue list:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git switch:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git add:*)",
       "Bash(mkdir:*)",
-      "Bash(date:*)"
+      "Bash(git commit -m:*)",
+      "Bash(git push:*)",
+      "Bash(git reset --soft:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git stash:*)",
+      "Bash(tee -a docs/cycles/*/history/*)",
+      "Bash(rsync * docs/aidlc/prompts/)",
+      "Bash(rsync * docs/aidlc/templates/)",
+      "Bash(rsync * docs/aidlc/guides/)",
+      "Bash(curl * https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/*)",
+      "Bash(npx markdownlint-cli2:*)",
+      "WebSearch"
     ],
     "ask": [
       "Bash(rm -rf:*)",
       "Bash(git push --force:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
-      "Bash(curl:*)",
       "Bash(wget:*)"
     ],
     "deny": [
@@ -193,9 +222,22 @@ deny（最優先）→ ask → allow（最低優先）
 }
 ```
 
+**設定のポイント**:
+- `git branch:*` ではなく読み取り系のみ（`-d/-D` 除外）
+- `git remote:*` ではなく読み取り系のみ（削除系除外）
+- `git commit -m:*` で `-m` 必須（`--amend` 除外）
+- `tee` は履歴ファイル限定（`docs/cycles/*/history/*`）
+- `rsync` は同期先限定（`docs/aidlc/` 配下）
+- `curl` はスターターキットURL限定
+
 **ワイルドカード**:
 - `:*` - プレフィックスマッチ（末尾のみ）
 - `*` - 任意位置マッチ
+- ワイルドカードなし - 完全一致のみ
+
+**絞り込み例**:
+- `Bash(git branch)` → `git branch` のみ許可。`git branch -D` は承認が必要
+- `Bash(git commit -m:*)` → `-m` 必須。`git commit --amend` 単体は許可されない
 
 **使い分けの指針**:
 - `allow`: 読み取り専用など安全なコマンド
@@ -285,20 +327,25 @@ VSCode拡張として動作。設定はVSCodeのsettings.jsonで管理。
 
 ## 5. セキュリティ上の注意事項
 
-### 5.1 シェル演算子の扱い
+### 5.1 シェル演算子とリダイレクトの扱い
 
-以下の演算子を含むコマンドは、許可リストに登録しても承認を求められる場合がある：
+以下の演算子やリダイレクトを含むコマンドは、許可リストに登録しても承認を求められる場合がある：
 
-| 演算子 | 用途 | リスク |
-|--------|------|--------|
-| `&&` | AND実行 | コマンドチェイン |
-| `\|\|` | OR実行 | コマンドチェイン |
-| `;` | 順次実行 | コマンドチェイン |
-| `\|` | パイプ | データ流出 |
-| `&` | バックグラウンド | 制御外実行 |
+| パターン | 用途 | 承認 | 対策 |
+|----------|------|------|------|
+| `&&` | AND実行 | 条件付き | プロジェクト内パスなら許可される場合あり |
+| `\|\|` | OR実行 | 条件付き | 同上 |
+| `;` | 順次実行 | 条件付き | 同上 |
+| `\|` | パイプ | 条件付き | 同上 |
+| `&` | バックグラウンド | 必要 | 制御外実行のため |
+| **`&>/dev/null`** | stdout+stderr抑制 | **必要** | `>/dev/null 2>&1` に置換 |
+| `>/dev/null` | stdout抑制 | 不要 | そのまま使用可 |
+| `2>/dev/null` | stderr抑制 | 不要 | そのまま使用可 |
+
+**重要**: `&>/dev/null`（bash省略記法）は許可リストに関係なく承認が必要になる場合があります。`>/dev/null 2>&1` に置き換えることで承認なしで実行できます。
 
 **対策**:
-- **Claude Code**: シェル演算子を検出してブロック（都度承認が必要）
+- **Claude Code**: `&>/dev/null` を `>/dev/null 2>&1` に置換
 - **Kiro CLI**: `deniedCommands: ["&&", "||", ";", "|", "&"]` を設定
 
 ### 5.2 ワイルドカードの限界
@@ -330,7 +377,57 @@ VSCode拡張として動作。設定はVSCodeのsettings.jsonで管理。
 
 ---
 
-## 6. 参考リンク
+## 6. 推奨ツール
+
+### 6.1 dasel（TOML/YAML/JSONパーサー）
+
+AI-DLCの設定ファイル（`docs/aidlc.toml`）を読み取るために、`dasel` の使用を推奨します。
+
+**なぜ dasel か**:
+- `awk`/`grep`/`sed` を使った複雑なTOML読み取りが不要になる
+- 許可リストが簡潔になる（`dasel` だけ許可すればOK）
+- JSON/YAML/TOML すべて対応
+
+**インストール**:
+```bash
+# macOS
+brew install dasel
+
+# Go
+go install github.com/tomwright/dasel/v2/cmd/dasel@latest
+
+# その他（バイナリダウンロード）
+# https://github.com/TomWright/dasel/releases
+```
+
+**使用例**:
+```bash
+# バックログモード取得
+dasel -f docs/aidlc.toml -r toml '.backlog.mode'
+
+# AIレビューモード取得
+dasel -f docs/aidlc.toml -r toml '.rules.mcp_review.mode'
+```
+
+**dasel未インストール時の動作**:
+
+AIエージェントが `docs/aidlc.toml` をReadツールで直接読み取り、設定値を解釈します。
+
+```text
+# AI-DLCプロンプト内での使用例（setup.md, construction.md等）
+
+daselが利用可能な場合:
+  dasel -f docs/aidlc.toml -r toml '.backlog.mode'
+
+daselが利用できない場合:
+  AIがReadツールでdocs/aidlc.tomlを読み取り、該当の設定値を抽出
+```
+
+この動作により、daselの導入有無に関わらずAI-DLCは正常に機能します。
+
+---
+
+## 7. 参考リンク
 
 - [Claude Code Settings](https://code.claude.com/docs/en/settings)
 - [Codex CLI Security](https://developers.openai.com/codex/security/)

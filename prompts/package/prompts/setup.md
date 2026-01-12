@@ -84,6 +84,93 @@ fi
   ```
 - **USER_PROJECT**: ステップ1（スターターキットバージョン確認）へ進む
 
+### 0.7. バックログモード確認
+
+バックログモード設定を確認:
+
+```bash
+# dasel がインストールされている場合は dasel を使用
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    BACKLOG_MODE=""
+fi
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+echo "バックログモード: ${BACKLOG_MODE}"
+```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得してください（デフォルト: `git`）。
+
+**判定結果表示**:
+- `git`: ローカルファイル駆動（`docs/cycles/backlog/`）
+- `issue`: GitHub Issue駆動（Issue作成、ラベル管理）
+
+**mode=issue の場合、GitHub CLI確認**:
+```bash
+if [ "$BACKLOG_MODE" = "issue" ]; then
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
+    elif ! gh auth status >/dev/null 2>&1; then
+        echo "警告: GitHub CLI未認証。Issue駆動機能は制限されます。"
+    else
+        echo "GitHub CLI: 認証済み"
+    fi
+fi
+```
+
+### 0.8. backlogラベル確認・作成【mode=issueの場合のみ】
+
+**前提条件**:
+- BACKLOG_MODE = "issue"
+- GitHub CLIが利用可能かつ認証済み
+
+上記条件を満たさない場合はこのステップをスキップ。
+
+**ラベル作成確認**:
+```text
+Issue駆動バックログに必要なラベルを確認・作成します。
+
+1. はい - ラベルを確認・作成する（推奨）
+2. いいえ - スキップする
+```
+
+**「はい」の場合**:
+
+まず既存ラベルを確認する。
+
+```bash
+gh label list --json name --jq '.[].name'
+```
+
+以下のラベルのうち、**存在しないもののみ**作成する。
+
+| ラベル名 | 色 | 説明 |
+|----------|------|------|
+| `backlog` | FBCA04 | バックログ項目 |
+| `type:feature` | 1D76DB | 新機能 |
+| `type:bugfix` | D93F0B | バグ修正 |
+| `type:chore` | 0E8A16 | 雑務・メンテナンス |
+| `type:refactor` | 5319E7 | リファクタリング |
+| `type:docs` | 0075CA | ドキュメント |
+| `type:perf` | FBCA04 | パフォーマンス |
+| `type:security` | B60205 | セキュリティ |
+| `priority:high` | D93F0B | 高優先度 |
+| `priority:medium` | FBCA04 | 中優先度 |
+| `priority:low` | 0E8A16 | 低優先度 |
+
+作成コマンド（必要なラベルのみ実行）:
+
+```bash
+gh label create "{NAME}" --description "{DESC}" --color "{COLOR}"
+```
+
+**「いいえ」の場合**:
+```text
+ラベル作成をスキップしました。
+後から手動で作成することもできます。
+```
+
 ### 1. スターターキットバージョン確認
 
 ```bash
@@ -193,6 +280,11 @@ ls -d docs/cycles/* 2>/dev/null | sort -V
 
 ### 3. ブランチ確認【推奨】
 
+**jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
+- `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
+- `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
+- **注意**: worktree操作（`git worktree`）はjjでサポートされていないため、`enabled = true`でもgitを使用
+
 現在のブランチを確認し、サイクル用ブランチでの作業を推奨：
 
 ```bash
@@ -200,11 +292,9 @@ CURRENT_BRANCH=$(git branch --show-current)
 echo "現在のブランチ: ${CURRENT_BRANCH}"
 ```
 
-`docs/aidlc.toml` の `[rules.worktree]` 設定を確認:
-
-```bash
-grep -A1 "^\[rules.worktree\]" docs/aidlc.toml 2>/dev/null | grep "enabled" | grep -q "true" && echo "WORKTREE_ENABLED" || echo "WORKTREE_DISABLED"
-```
+`docs/aidlc.toml` の `[rules.worktree]` セクションを読み、`enabled` の値を確認:
+- `enabled = true`: worktree使用を提案
+- `enabled = false`（デフォルト）: 提案しない
 
 **判定**:
 - **main または master の場合**: サイクル用ブランチの作成を提案

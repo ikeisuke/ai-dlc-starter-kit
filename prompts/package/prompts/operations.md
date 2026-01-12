@@ -82,6 +82,11 @@ Inception/Construction Phaseで決定済み
 
   コミットメッセージは変更内容を明確に記述
 
+- **jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認
+  - `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
+  - `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
+  - **注意**: タグ操作（`git tag`）はjjでサポートされていないため、`enabled = true`でもgitを使用
+
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認
@@ -120,13 +125,9 @@ Inception/Construction Phaseで決定済み
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: 以下のコマンドでAIレビューモードを確認
-  ```bash
-  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
-  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
-  ```
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
   - `mode = "disabled"`: AIレビューを行わない
 
   **MCP利用可否の確認**:
@@ -135,7 +136,7 @@ Inception/Construction Phaseで決定済み
 
   **処理フロー**:
 
-  1. **mode確認**: 上記コマンドでmodeを取得
+  1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
      - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
@@ -437,6 +438,42 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 #### バージョン確認【必須】
 
+##### iOSプロジェクトの場合の事前確認
+
+`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認:
+
+```bash
+# project.type設定を読み取り
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+else
+    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+
+# iOSプロジェクトの場合、Inception履歴を確認
+if [ "$PROJECT_TYPE" = "ios" ]; then
+    if grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null; then
+        echo "UPDATED_IN_INCEPTION"
+    else
+        echo "NOT_UPDATED_IN_INCEPTION"
+    fi
+fi
+```
+
+**判定結果**:
+- **UPDATED_IN_INCEPTION**: 以下を表示してバージョン確認をスキップ
+  ```text
+  バージョン確認結果:
+  - project.type: ios
+  - Inception Phase履歴: バージョン更新実施済み
+
+  Inception Phaseでバージョン更新済みです。このステップをスキップします。
+  ```
+- **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
+
+##### 通常のバージョン確認
+
 運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
 - **設定がある場合**: 設定に従ってバージョンを確認
 - **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
@@ -446,6 +483,8 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 2. 現在のバージョンを確認
 3. サイクルバージョンと整合性を確認
 4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
+
+**iOSプロジェクトの注意**: サイクルバージョン（v1.7.1）からvプレフィックスを除去して使用（1.7.1）。CFBundleShortVersionStringは数値ドット区切り形式のみ受け付けます。
 
 **バージョン確認コマンド例**:
 ```bash
@@ -497,13 +536,24 @@ cat go.mod | head -1
 
 #### 5.1 バックログ整理
 
-共通バックログ（`docs/cycles/backlog/`）を確認し、対応済みの項目を整理:
+**設定確認**:
+```bash
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+```
 
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+
+**mode=git の場合**:
 ```bash
 ls docs/cycles/backlog/
 ```
 
-**対応済み項目の移動先**: `docs/cycles/backlog-completed/{{CYCLE}}/`
+対応済み項目の移動先: `docs/cycles/backlog-completed/{{CYCLE}}/`
 
 ```bash
 # 対応済みディレクトリを作成
@@ -512,6 +562,18 @@ mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
 # 対応済みの項目を移動
 mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
 ```
+
+**mode=issue の場合**:
+```bash
+gh issue list --label backlog --state open
+```
+
+対応済み項目は Issue をクローズ:
+```bash
+gh issue close {ISSUE_NUMBER}
+```
+
+**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
@@ -533,14 +595,10 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 
 #### 6.0 CHANGELOG更新
 
-**設定確認**:
-```bash
-CHANGELOG_ENABLED=$(grep -A2 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "changelog" | grep -o "true\|false" || echo "false")
-echo "CHANGELOG更新: ${CHANGELOG_ENABLED}"
-```
+**設定確認**: `docs/aidlc.toml` の `[rules.release]` セクションを読み、`changelog` の値を確認
 
-- `changelog = false` の場合: このステップをスキップ
-- `changelog = true` の場合: 以下を実行
+- `changelog = false`（デフォルト）: このステップをスキップ
+- `changelog = true`: 以下を実行
 
 CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
 
@@ -615,7 +673,7 @@ Inception Phaseで作成したドラフトPRをReady for Reviewに変更しま�
 **前提条件チェック**:
 ```bash
 # GitHub CLI利用可否と認証状態を確認
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     echo "GITHUB_CLI_AVAILABLE"
 else
     echo "GITHUB_CLI_NOT_AVAILABLE"
@@ -756,9 +814,22 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、共通バックログに記録：
+次サイクルに引き継ぐタスクがある場合、バックログに記録：
 
-**記録先**: `docs/cycles/backlog/{種類}-{スラッグ}.md`
+**設定確認**:
+```bash
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+
+**mode=git の場合**:
+記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
@@ -781,6 +852,8 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 [推奨される対応方法、推奨対応サイクル]
 ```
 
+**mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
+
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
 
@@ -800,14 +873,10 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 3. **バージョンタグ付け**:
 
-   **設定確認**:
-   ```bash
-   VERSION_TAG_ENABLED=$(grep -A3 "^\[rules.release\]" docs/aidlc.toml 2>/dev/null | grep "version_tag" | grep -o "true\|false" || echo "false")
-   echo "バージョンタグ: ${VERSION_TAG_ENABLED}"
-   ```
+   **設定確認**: `docs/aidlc.toml` の `[rules.release]` セクションを読み、`version_tag` の値を確認
 
-   - `version_tag = false` の場合: このステップをスキップ
-   - `version_tag = true` の場合: 以下を実行
+   - `version_tag = false`（デフォルト）: このステップをスキップ
+   - `version_tag = true`: 以下を実行
 
    ```bash
    # アノテーション付きタグを作成（マージ後の最新コミットに付与）

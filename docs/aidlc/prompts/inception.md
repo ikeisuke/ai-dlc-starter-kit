@@ -80,6 +80,10 @@ Inception Phaseで決定
 
   コミットメッセージは変更内容を明確に記述
 
+- **jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認
+  - `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
+  - `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
+
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/inception.md` に記録。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認
@@ -118,13 +122,9 @@ Inception Phaseで決定
 
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
 
-  **設定確認**: 以下のコマンドでAIレビューモードを確認
-  ```bash
-  MCP_REVIEW_MODE=$(grep -A1 "^\[rules.mcp_review\]" docs/aidlc.toml 2>/dev/null | grep "mode" | sed 's/.*"\([^"]*\)".*/\1/' || echo "recommend")
-  echo "AIレビューモード: ${MCP_REVIEW_MODE}"
-  ```
+  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
   - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能）
+  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
   - `mode = "disabled"`: AIレビューを行わない
 
   **MCP利用可否の確認**:
@@ -133,7 +133,7 @@ Inception Phaseで決定
 
   **処理フロー**:
 
-  1. **mode確認**: 上記コマンドでmodeを取得
+  1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
      - 空または取得失敗時は「recommend」として扱う
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
@@ -391,7 +391,7 @@ GitHub CLIでDependabot PRの有無を確認：
 
 ```bash
 # GitHub CLIの利用可否確認と Dependabot PR一覧取得
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     gh pr list --label "dependencies" --state open
 else
     echo "SKIP: GitHub CLI not available or not authenticated"
@@ -423,7 +423,7 @@ GitHub CLIでオープンなIssueの有無を確認：
 
 ```bash
 # GitHub CLIの利用可否確認と Issue一覧取得
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     gh issue list --state open --limit 10
 else
     echo "SKIP: GitHub CLI not available or not authenticated"
@@ -451,22 +451,43 @@ fi
 
 ### 3. バックログ確認
 
-#### 3-1. 共通バックログ
-`docs/cycles/backlog/` ディレクトリを確認：
+**設定確認**:
+```bash
+# dasel がインストールされている場合は dasel を使用
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    BACKLOG_MODE=""
+fi
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+```
 
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
+
+#### 3-1. 共通バックログ
+
+**mode=git の場合**:
 ```bash
 ls docs/cycles/backlog/ 2>/dev/null
 ```
 
+**mode=issue の場合**:
+```bash
+gh issue list --label backlog --state open
+```
+
+**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+
 - **存在しない/空の場合**: スキップ
-- **ファイルが存在する場合**: 内容を確認し、ユーザーに質問
+- **項目が存在する場合**: 内容を確認し、ユーザーに質問
   ```text
   共通バックログに以下の項目があります：
-  [ファイル一覧]
+  [ファイル一覧 または Issue一覧]
 
   これらを確認しますか？
   ```
-  「はい」の場合は各ファイルの内容を表示し、今回のサイクルで対応する項目を確認
+  「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
 #### 3-2. 対応済みバックログとの照合
 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
@@ -603,6 +624,144 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ## 完了時の必須作業【重要】
 
+### 0. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
+
+**前提条件確認**:
+
+```bash
+# バックログモード確認
+if command -v dasel >/dev/null 2>&1; then
+    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+else
+    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+
+# GitHub CLI確認
+GH_AVAILABLE="false"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  GH_AVAILABLE="true"
+fi
+
+echo "バックログモード: ${BACKLOG_MODE}"
+echo "GitHub CLI: ${GH_AVAILABLE}"
+```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+
+**判定と処理**:
+
+```bash
+# 前提条件チェック
+if [ "$BACKLOG_MODE" != "issue" ]; then
+  echo "バックログモードがissueではないため、スキップします"
+elif [ "$GH_AVAILABLE" != "true" ]; then
+  echo "警告: GitHub CLIが利用できないため、スキップします"
+else
+  # サイクルラベル確認・作成
+  CYCLE_LABEL="cycle:{{CYCLE}}"
+
+  # ラベル存在確認（--searchで絞り込み後、完全一致を確認）
+  if gh label list --search "$CYCLE_LABEL" --json name --jq ".[] | select(.name==\"$CYCLE_LABEL\") | .name" 2>/dev/null | grep -q "^${CYCLE_LABEL}$"; then
+    echo "サイクルラベル ${CYCLE_LABEL} は既に存在します"
+  else
+    # ラベル作成
+    if gh label create "$CYCLE_LABEL" --description "サイクル {{CYCLE}}" --color "C5DEF5"; then
+      echo "サイクルラベル ${CYCLE_LABEL} を作成しました"
+    else
+      echo "警告: サイクルラベルの作成に失敗しました"
+    fi
+  fi
+
+fi
+```
+
+**関連Issueへのサイクルラベル付与**:
+
+Unit定義ファイルから関連Issue番号を確認する。
+
+```bash
+grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null
+```
+
+Issue番号が見つかった場合、各Issueに対してサイクルラベル `cycle:{{CYCLE}}` を付与する。
+
+```bash
+gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
+```
+
+（`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
+
+### 0.5 iOSバージョン更新【project.type=iosの場合のみ】
+
+**前提条件確認**:
+
+```bash
+# project.type設定を読み取り
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+else
+    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
+fi
+[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+
+echo "プロジェクトタイプ: ${PROJECT_TYPE}"
+```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `type` 値を取得。
+
+**判定**:
+- `PROJECT_TYPE != "ios"` の場合: このステップをスキップ
+- `PROJECT_TYPE = "ios"` の場合: 以下を実行
+
+**iOSプロジェクト向けバージョン更新提案**:
+
+```text
+【iOSプロジェクト向け】バージョン更新の確認
+
+project.type=iosのため、Inception Phaseでバージョンを更新することを推奨します。
+
+これにより、Construction Phase中のTestFlight配布が可能になります。
+
+1. はい - バージョンを更新する（推奨）
+2. いいえ - Operations Phaseで更新する
+```
+
+**「はい」を選択した場合**:
+
+1. **バージョン確認対象の特定**:
+   - 運用引き継ぎ（`docs/cycles/operations.md`）に「バージョン確認設定」があれば参照
+   - なければユーザーに質問: 「バージョン管理ファイルはどれですか？（例: Info.plist, project.pbxproj）」
+
+2. **現在のバージョン確認と更新**:
+   ```bash
+   # サイクルバージョンからvプレフィックスを除去
+   CYCLE_VERSION="${{CYCLE}#v}"
+   echo "更新後のバージョン: ${CYCLE_VERSION}"
+   ```
+   - 対象ファイルのバージョンを更新（CFBundleShortVersionString等）
+
+3. **履歴への記録**（重要）:
+   ```bash
+   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+   cat <<EOF >> docs/cycles/{{CYCLE}}/history/inception.md
+   ## ${TIMESTAMP}
+
+   - **フェーズ**: Inception Phase
+   - **ステップ**: iOSバージョン更新実施
+   - **実行内容**: CFBundleShortVersionString を ${CYCLE_VERSION} に更新
+   - **成果物**: [更新したファイル]
+
+   ---
+   EOF
+   ```
+
+**注意**: 「iOSバージョン更新実施」の文言は履歴に必ず含めてください。Operations Phaseでこの記録を確認し、重複更新を防ぎます。
+
+**スコープ外**:
+- ビルド番号（CFBundleVersion）の管理はこの機能のスコープ外です
+- ビルド番号はCI/CD（fastlane等）で自動管理することを推奨します
+
 ### 1. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
@@ -613,7 +772,7 @@ GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作�
 **前提条件チェック**:
 ```bash
 # GitHub CLI利用可否と認証状態を確認
-if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     echo "GITHUB_CLI_AVAILABLE"
 else
     echo "GITHUB_CLI_NOT_AVAILABLE"
