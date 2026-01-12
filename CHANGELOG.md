@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.7.2] - 2026-01-13
+
+### Added
+
+- Claude Codeプランモード活用調査文書（Unit 006成果物として追加）
+- iOSビルド番号確認機能（Inception Phaseでxcrun読み取り対応）
+- GitHub Issueテンプレート（backlog.yml, bug.yml, feature.yml）
+- jj許可リストガイドへのjjコマンド追加
+
+### Changed
+
+- セットアップフロー最適化（不要な確認ステップの省略）
+- jjサポートドキュメント強化（gitとjjの考え方の違いセクション追加）
+- バックログ管理ガイド改善（issue-driven-backlog.md → backlog-management.mdに統合）
+- AGENTS.mdにバックログ管理方針を追加
+
+### Fixed
+
+- setup-prompt.mdテンプレートに[rules.jj]セクション追加
+
+---
+
 ## [1.7.1] - 2026-01-11
 
 ### Added

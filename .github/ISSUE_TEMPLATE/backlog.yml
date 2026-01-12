@@ -1,0 +1,65 @@
+name: "Backlog / バックログ"
+description: "Record a task or idea for future implementation / 将来対応が必要な気づきや課題を記録"
+title: "[Backlog] "
+labels: ["backlog"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Summary / 概要"
+      description: "Briefly describe the task or idea / タスクやアイデアを簡潔に説明してください"
+      placeholder: "e.g., Add support for X feature / 例: X機能のサポートを追加"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: "Details / 詳細"
+      description: "Provide additional context or details / 追加の文脈や詳細を記載してください"
+      placeholder: "Any additional information..."
+    validations:
+      required: false
+
+  - type: input
+    id: cycle
+    attributes:
+      label: "Discovery Cycle / 発見サイクル"
+      description: "The cycle where this was discovered (if applicable) / 発見したサイクル（該当する場合）"
+      placeholder: "e.g., v1.7.0"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: "Discovery Phase / 発見フェーズ"
+      description: "The phase where this was discovered / 発見したフェーズ"
+      options:
+        - "Inception"
+        - "Construction"
+        - "Operations"
+        - "N/A"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority / 優先度"
+      description: "How important is this task? / このタスクの重要度は？"
+      options:
+        - "High / 高"
+        - "Medium / 中"
+        - "Low / 低"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed Solution / 対応案"
+      description: "How might this be addressed? / どのように対応すべきか？"
+      placeholder: "Suggested approach or implementation..."
+    validations:
+      required: false

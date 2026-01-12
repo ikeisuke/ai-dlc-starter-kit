@@ -462,15 +462,157 @@ fi
 ```
 
 **判定結果**:
-- **UPDATED_IN_INCEPTION**: 以下を表示してバージョン確認をスキップ
+- **UPDATED_IN_INCEPTION**: 以下を表示してMARKETING_VERSION確認をスキップし、iOSビルド番号確認に進む
   ```text
   バージョン確認結果:
   - project.type: ios
-  - Inception Phase履歴: バージョン更新実施済み
+  - Inception Phase履歴: MARKETING_VERSION更新実施済み
 
-  Inception Phaseでバージョン更新済みです。このステップをスキップします。
+  Inception PhaseでMARKETING_VERSION更新済みです。「通常のバージョン確認」をスキップし、「iOSビルド番号確認」に進みます。
   ```
 - **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
+
+##### iOSビルド番号確認
+
+**前提条件**: `project.type = "ios"` の場合のみ実行。それ以外のプロジェクトタイプではこのセクションをスキップ。
+
+ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
+
+```bash
+# project.pbxprojファイルを検索（Pods/DerivedData除外）
+PROJECT_FILES=$(find . -name "project.pbxproj" \
+    -not -path "*/Pods/*" \
+    -not -path "*/DerivedData/*" \
+    -not -path "*/.build/*" \
+    2>/dev/null)
+PROJECT_COUNT=$(echo "$PROJECT_FILES" | grep -c . 2>/dev/null || echo 0)
+
+if [ "$PROJECT_COUNT" -eq 0 ]; then
+    echo "PROJECT_NOT_FOUND"
+elif [ "$PROJECT_COUNT" -gt 1 ]; then
+    echo "MULTIPLE_PROJECT_FILES"
+    echo "$PROJECT_FILES"
+else
+    echo "PROJECT_FOUND"
+    echo "$PROJECT_FILES"
+fi
+```
+
+**判定結果**:
+
+- **PROJECT_NOT_FOUND**: 以下を表示してビルド番号確認をスキップ
+  ```text
+  【情報】iOSビルド番号確認をスキップします
+
+  理由: project.pbxprojファイルが見つかりませんでした。
+  （Pods/DerivedData/は検索対象外）
+
+  iOSプロジェクトの場合は、.xcodeprojディレクトリ内にproject.pbxprojが存在するか確認してください。
+  ```
+
+- **MULTIPLE_PROJECT_FILES**: ユーザーに選択を求め、選択されたパスを `PROJECT_FILE` として使用
+  ```text
+  複数のproject.pbxprojファイルが見つかりました:
+  1. ./MyApp.xcodeproj/project.pbxproj
+  2. ./MyAppTests.xcodeproj/project.pbxproj
+  3. ./Frameworks/Core.xcodeproj/project.pbxproj
+
+  どのファイルを確認しますか？（番号で選択、例: 1）
+  ```
+
+  ユーザーが番号を選択後、対応するパスを `PROJECT_FILE` に設定してビルド番号比較に進む。
+
+- **PROJECT_FOUND**: 見つかったファイルを `PROJECT_FILE` に設定してビルド番号比較を実行
+
+**ビルド番号比較**:
+
+```bash
+# デフォルトブランチを取得
+DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep "HEAD branch" | sed 's/.*: //')
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
+git rev-parse --verify origin/${DEFAULT_BRANCH} >/dev/null 2>&1 || DEFAULT_BRANCH="master"
+
+# 現在ブランチのビルド番号
+PROJECT_FILE="[選択されたファイルパス]"
+# git showはリポジトリ相対パスが必要なため、先頭の./ を除去
+GIT_PROJECT_FILE="${PROJECT_FILE#./}"
+CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" "${PROJECT_FILE}" \
+    | head -1 \
+    | sed 's/.*= *\([^;]*\);.*/\1/' \
+    | tr -d ' \t"')
+
+# デフォルトブランチのビルド番号（リモートブランチを参照）
+# 注意: origin未設定の場合はエラーになるため、事前にgit remote -vで確認推奨
+PREVIOUS_BUILD=$(git show "origin/${DEFAULT_BRANCH}:${GIT_PROJECT_FILE}" 2>/dev/null \
+    | grep "CURRENT_PROJECT_VERSION" \
+    | head -1 \
+    | sed 's/.*= *\([^;]*\);.*/\1/' \
+    | tr -d ' \t"')
+
+# 変数参照チェック（$を含む場合は抽出失敗扱い）
+if echo "$CURRENT_BUILD" | grep -q '\$'; then
+    CURRENT_BUILD=""
+fi
+if echo "$PREVIOUS_BUILD" | grep -q '\$'; then
+    PREVIOUS_BUILD=""
+fi
+```
+
+**比較結果の表示**:
+
+- **現在のビルド番号が抽出失敗**（CURRENT_BUILD が空）:
+  ```text
+  【注意】現在のiOSビルド番号を自動抽出できませんでした
+
+  プロジェクトファイル: [パス]
+  現在のビルド番号: 取得失敗
+
+  考えられる原因:
+  - CURRENT_PROJECT_VERSIONが変数参照（$(inherited)等）になっている
+  - xcconfig等で外部定義されている
+
+  手動でビルド番号を確認してください:
+  1. Xcode > プロジェクト設定 > Build Settings > Current Project Version
+  ```
+
+- **前回のビルド番号のみ抽出失敗**（PREVIOUS_BUILD が空で CURRENT_BUILD はあり）:
+  ```text
+  【注意】デフォルトブランチからビルド番号を取得できませんでした
+
+  プロジェクトファイル: [パス]
+  現在のビルド番号: [番号]
+  前回のビルド番号: 取得失敗
+
+  考えられる原因:
+  - origin リモートが設定されていない
+  - デフォルトブランチ (origin/${DEFAULT_BRANCH}) に該当ファイルが存在しない
+  - 新規プロジェクトで比較対象がない
+
+  比較をスキップして続行します。
+  ```
+
+- **ビルド番号が異なる場合**:
+  ```text
+  iOSビルド番号確認結果:
+  - プロジェクトファイル: [パス]
+  - 現在のビルド番号: [番号]
+  - 前回のビルド番号: [番号]
+  - 状態: 更新済み ✓
+  ```
+
+- **ビルド番号が同一の場合**:
+  ```text
+  【警告】iOSビルド番号が前回と同一です
+
+  - 現在のビルド番号: [番号]
+  - 前回のビルド番号: [番号]
+
+  App Storeは同一ビルド番号での再提出を拒否します。
+  ビルド番号をインクリメントすることを推奨します。
+
+  1. 手動で対応する（推奨）
+  2. このまま続行する（非推奨）
+  ```
 
 ##### 通常のバージョン確認
 
@@ -548,7 +690,7 @@ fi
 
 **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 ```bash
 ls docs/cycles/backlog/
 ```
@@ -563,7 +705,7 @@ mkdir -p docs/cycles/backlog-completed/{{CYCLE}}
 mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-completed/{{CYCLE}}/
 ```
 
-**mode=issue の場合**:
+**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
@@ -573,7 +715,11 @@ gh issue list --label backlog --state open
 gh issue close {ISSUE_NUMBER}
 ```
 
-**両方確認**（漏れ防止）: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+
+**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
@@ -828,7 +974,7 @@ fi
 
 **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
 
-**mode=git の場合**:
+**mode=git または mode=git-only の場合**:
 記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
@@ -852,7 +998,7 @@ fi
 [推奨される対応方法、推奨対応サイクル]
 ```
 
-**mode=issue の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/issue-driven-backlog.md`）
+**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

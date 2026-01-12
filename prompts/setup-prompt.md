@@ -448,15 +448,24 @@ enabled = false
 # - minimal: Unit完了時にまとめて記録
 level = "standard"
 
+[rules.jj]
+# jjサポート設定（v1.7.2で追加）
+# enabled: true | false
+# - true: プロンプト内でjj-support.md参照を案内
+# - false: 従来のgitコマンドを使用（デフォルト）
+enabled = false
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
 
 [backlog]
 # バックログ管理モード設定
-# mode: "git" | "issue"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
+# mode: "git" | "issue" | "git-only" | "issue-only"
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容（デフォルト）
+# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
+# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）
 mode = "git"
 ```
 
@@ -592,6 +601,23 @@ EOF
 else
   echo "[backlog] section already exists"
 fi
+
+# [rules.jj] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.jj\]" docs/aidlc.toml; then
+  echo "Adding [rules.jj] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.jj]
+# jjサポート設定（v1.7.2で追加）
+# enabled: true | false
+# - true: プロンプト内でjj-support.md参照を案内
+# - false: 従来のgitコマンドを使用（デフォルト）
+enabled = false
+EOF
+  echo "Added [rules.jj] section"
+else
+  echo "[rules.jj] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -600,6 +626,7 @@ fi
 grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
+grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
@@ -959,7 +986,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 **guides/** → `docs/aidlc/guides/`:
 - ai-agent-allowlist.md（AIエージェント許可リストガイド）
-- issue-driven-backlog.md（Issue駆動バックログ管理ガイド）
+- backlog-management.md（バックログ管理ガイド）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
