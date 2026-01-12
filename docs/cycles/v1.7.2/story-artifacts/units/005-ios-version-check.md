@@ -33,13 +33,18 @@ Operations PhaseでiOSプロジェクトのビルド番号（CURRENT_PROJECT_VER
 ## 技術的考慮事項
 - prompts/package/prompts/operations.md のステップ1を修正
 - project.type = "ios" の判定はaidlc.tomlから読み取り
-- 確認コマンド:
+- **デフォルトブランチの取得**: `git remote show origin | grep "HEAD branch"` または `main`/`master` を順に試行
+- **プロジェクトファイルの検索**: `find . -name "project.pbxproj"` で検索し、複数見つかった場合はユーザーに確認
+- 確認コマンド例:
   ```bash
-  # 現在のバージョン
-  grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" *.xcodeproj/project.pbxproj | sort -u
+  # デフォルトブランチを取得
+  DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep "HEAD branch" | sed 's/.*: //')
 
-  # 前バージョン（mainブランチ）と比較
-  git show main:*.xcodeproj/project.pbxproj | grep -E "CURRENT_PROJECT_VERSION" | head -1
+  # 現在のバージョン（プロジェクトファイルを検索）
+  find . -name "project.pbxproj" -exec grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" {} \; | sort -u
+
+  # 前バージョン（デフォルトブランチ）と比較
+  # AIがプロジェクトファイルパスを特定してから実行
   ```
 - App Storeは同一ビルド番号での再提出を許可しない点を注意書きに追加
 

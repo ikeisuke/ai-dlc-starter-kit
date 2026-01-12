@@ -54,5 +54,6 @@ AI-DLCでは見積もりを行わない
 
 **このUnitは検討のみで、実装は次回以降のサイクルで行う。**
 
-検討結果は `docs/cycles/v1.7.2/requirements/plan-mode-research.md` または
-GitHub Issue のコメントとして記録する。
+**成果物の保存先**:
+- 検討結果は `docs/cycles/v1.7.2/requirements/plan-mode-research.md` に記録する
+- 実装が決まった場合は GitHub Issue #39 のコメントに方針を追記する

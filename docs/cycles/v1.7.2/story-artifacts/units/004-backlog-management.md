@@ -33,9 +33,11 @@
 - **可用性**: 該当なし
 
 ## 技術的考慮事項
-- prompts/package/prompts/AGENTS.md にバックログ管理セクションを追加
-- prompts/setup-prompt.md のaidlc.tomlテンプレートにsingle_sourceオプションを追加
-- prompts/package/prompts/inception.md, operations.md でsingle_source設定を参照
+- **編集対象**:
+  - `prompts/package/prompts/AGENTS.md`（テンプレート側。Operations Phaseでrsyncにより`docs/aidlc/prompts/AGENTS.md`に反映）
+  - `prompts/setup-prompt.md` のaidlc.tomlテンプレートにsingle_sourceオプションを追加
+  - `prompts/package/prompts/inception.md`, `operations.md` でsingle_source設定を参照
+- **注意**: `docs/aidlc/` は直接編集禁止。必ず `prompts/package/` を編集すること
 - 旧形式（backlog.md）からの移行ロジックをmode対応に修正
 
 ## 実装優先度
