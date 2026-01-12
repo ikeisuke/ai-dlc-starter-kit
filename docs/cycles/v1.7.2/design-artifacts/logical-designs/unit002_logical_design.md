@@ -4,7 +4,14 @@
 
 jjサポートのための設定テンプレート修正とドキュメント改善の論理設計。
 
-## 変更1: setup-prompt.md への [rules.jj] 追加
+## 要件トレーサビリティ
+
+| ストーリー | 変更箇所 |
+|-----------|---------|
+| 2-1: setup-prompt.mdへの[rules.jj]追加 (#40) | 変更1, 変更1.1 |
+| 2-3: jj-support.mdへの説明追加 (#43) | 変更2 |
+
+## 変更1: setup-prompt.md への [rules.jj] 追加（新規セットアップ用）
 
 ### 対象ファイル
 
@@ -34,6 +41,53 @@ enabled = false
 - デフォルト値は `false`（従来のGitコマンドを維持）
 - jjは実験的機能のため、明示的に有効化する必要がある
 - コメントでv1.7.2で追加されたことを明記
+
+## 変更1.1: setup-prompt.md への [rules.jj] マイグレーション追加（既存プロジェクト用）
+
+### 対象ファイル
+
+`prompts/setup-prompt.md`
+
+### 変更箇所
+
+セクション7.4「設定マイグレーション【アップグレードモードのみ】」
+
+### 追加内容
+
+```bash
+# [rules.jj] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.jj\]" docs/aidlc.toml; then
+  echo "Adding [rules.jj] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.jj]
+# jjサポート設定（v1.7.2で追加）
+# enabled: true | false
+# - true: プロンプト内でjj-support.md参照を案内
+# - false: 従来のgitコマンドを使用（デフォルト）
+enabled = false
+EOF
+  echo "Added [rules.jj] section"
+else
+  echo "[rules.jj] section already exists"
+fi
+```
+
+### 設計判断
+
+- 既存プロジェクトがアップグレードした際に自動的に設定が追加される
+- 既存の `[backlog]` マイグレーションと同様のパターンを使用
+
+## enabled=true の動作について
+
+**注意**: このUnitの責務は「設定テンプレートとドキュメント」の追加のみ。
+
+`enabled=true` 時にプロンプト内でjj-support.mdへの参照を案内する動作は、各フェーズプロンプト（construction.md等）の修正が必要であり、**別Unitまたは今後のサイクルで対応**する。
+
+現時点では:
+- 設定の追加と説明ドキュメントの充実を行う
+- プロンプトの動作変更は行わない
+- ユーザーは手動でjj-support.mdを参照してGitコマンドを読み替える
 
 ## 変更2: jj-support.md への「gitとjjの考え方の違い」セクション追加
 

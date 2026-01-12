@@ -13,7 +13,8 @@ jjサポートのための設定テンプレート修正とドキュメント改
 
 | ファイル | 変更内容 |
 |---------|---------|
-| `prompts/setup-prompt.md` | aidlc.tomlテンプレートに[rules.jj]セクションを追加 |
+| `prompts/setup-prompt.md` | aidlc.tomlテンプレートに[rules.jj]セクションを追加（セクション7.2） |
+| `prompts/setup-prompt.md` | 設定マイグレーションに[rules.jj]を追加（セクション7.4） |
 | `prompts/package/guides/jj-support.md` | 「gitとjjの考え方の違い」セクションを追加 |
 
 ## 作成される成果物
@@ -26,7 +27,7 @@ jjサポートのための設定テンプレート修正とドキュメント改
 
 ## 詳細計画
 
-### 1. setup-prompt.md の修正
+### 1. setup-prompt.md の修正（セクション7.2: テンプレート）
 
 **場所**: セクション7.2「aidlc.toml の内容」内のテンプレート
 
@@ -42,6 +43,12 @@ enabled = false
 
 **挿入位置**: `[rules.history]` セクションの後、`[rules.custom]` セクションの前
 
+### 1.1 setup-prompt.md の修正（セクション7.4: マイグレーション）
+
+**場所**: セクション7.4「設定マイグレーション【アップグレードモードのみ】」
+
+**追加内容**: `[rules.jj]` セクションのマイグレーションスクリプト（既存の `[backlog]` マイグレーションと同様のパターン）
+
 ### 2. jj-support.md の修正
 
 **追加セクション**: 「gitとjjの考え方の違い」
@@ -52,7 +59,7 @@ enabled = false
 - ブランチ vs ブックマークの概念
 - フロー比較図（ASCII図）
 
-**挿入位置**: 「## jjの特徴と利点」セクションの後
+**挿入位置**: 「## 前提条件」セクションの後、「## jjの特徴と利点」セクションの前
 
 ## 実装手順
 
@@ -62,10 +69,16 @@ enabled = false
    - 設計レビュー
 
 2. Phase 2: 実装
-   - setup-prompt.md の修正
+   - setup-prompt.md セクション7.2 の修正（テンプレート）
+   - setup-prompt.md セクション7.4 の修正（マイグレーション）
    - jj-support.md の修正
    - テスト（markdownlint）
    - コミット
+
+## スコープ外
+
+- `enabled=true` 時のプロンプト動作変更は別Unit/サイクルで対応
+- 現時点ではユーザーが手動でjj-support.mdを参照
 
 ## 注意事項
 
