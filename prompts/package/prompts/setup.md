@@ -119,7 +119,12 @@ echo "dasel: ${DASEL_STATUS}"
 
 ```bash
 # プロジェクト名を取得（[project] セクション内の name のみ）
-PROJECT_NAME=$(awk '/^\[project\]/{found=1} found && /^name *= *"/{gsub(/.*= *"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null)
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_NAME=$(dasel -f docs/aidlc.toml -r toml '.project.name' 2>/dev/null || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    PROJECT_NAME=""
+fi
 
 if [ "$PROJECT_NAME" = "ai-dlc-starter-kit" ]; then
   echo "STARTER_KIT_DEV"
@@ -127,6 +132,8 @@ else
   echo "USER_PROJECT"
 fi
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `name` 値を取得してください。
 
 **判定**:
 - **STARTER_KIT_DEV**: 以下を表示し、ステップ7（サイクルバージョンの決定）へ進む
@@ -230,10 +237,17 @@ gh label create "{NAME}" --description "{DESC}" --color "{COLOR}"
 LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
 
 # 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-CURRENT_VERSION=$(grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
+if command -v dasel >/dev/null 2>&1; then
+    CURRENT_VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    CURRENT_VERSION=""
+fi
 
 echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。
 
 **判定**:
 - **最新バージョン取得失敗**: ステップ7（サイクルバージョンの決定）へ進む

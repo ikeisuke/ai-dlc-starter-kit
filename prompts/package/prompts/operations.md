@@ -1053,12 +1053,18 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **メッセージ表示前の準備**:
 ```bash
-# setup_prompt パスを取得（コメント行を除外）
-SETUP_PROMPT=$(grep -E '^\s*setup_prompt\s*=' docs/aidlc.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+# setup_prompt パスを取得
+if command -v dasel >/dev/null 2>&1; then
+    SETUP_PROMPT=$(dasel -f docs/aidlc.toml -r toml '.paths.setup_prompt' 2>/dev/null || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    SETUP_PROMPT=""
+fi
+[ -z "$SETUP_PROMPT" ] && SETUP_PROMPT="prompts/setup-prompt.md"
 echo "Setup prompt path: ${SETUP_PROMPT}"
 ```
 
-**注意**: `${SETUP_PROMPT}` が空の場合（未設定/旧形式）は、デフォルト値 `prompts/setup-prompt.md` を使用するか、ユーザーに確認してください。
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[paths]` セクションの `setup_prompt` 値を取得してください（デフォルト: `prompts/setup-prompt.md`）。
 
 以下のメッセージで `${SETUP_PROMPT}` を取得した値で置換してください：
 

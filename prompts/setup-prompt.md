@@ -53,8 +53,17 @@ ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
   (ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "CONFIG_NOT_EXISTS")
 
 # プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
-grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "VERSION_NOT_FOUND"
+if command -v dasel >/dev/null 2>&1; then
+    VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    VERSION=""
+fi
+[ -z "$VERSION" ] && VERSION="VERSION_NOT_FOUND"
+echo "$VERSION"
 ```
+
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。値が取得できない場合は「VERSION_NOT_FOUND」として扱ってください。
 
 また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、**スターターキットのバージョン**を確認してください。
 
