@@ -40,8 +40,8 @@
 | #55 | `prompts/package/prompts/setup.md` | ステップ番号の連番化 |
 | #55 | `prompts/package/prompts/inception.md` | 完了時作業のステップ番号整理 |
 | #54 | `docs/cycles/v1.7.2/operations/post_release_operations.md` | 過去サイクル成果物（直接編集可） |
-| #53 | `prompts/package/templates/deployment_checklist_template.md` | テンプレート修正 |
-| #52 | `prompts/package/templates/cicd_setup_template.md` | テンプレート修正（存在確認必要） |
+| #53 | `prompts/package/prompts/operations.md` | Markdownlint対象変更 |
+| #52 | `docs/cycles/v1.7.2/operations/cicd_setup.md` | 抜粋コメント追加 |
 | #51 | `prompts/setup-prompt.md` | テンプレート生成部分修正 |
 | #50 | `prompts/package/prompts/inception.md` | ドラフトPR作成セクション修正 |
 | #50 | `prompts/package/prompts/operations.md` | Ready化セクション修正 |
