@@ -42,7 +42,7 @@
 | #54 | `docs/cycles/v1.7.2/operations/post_release_operations.md` | 過去サイクル成果物（直接編集可） |
 | #53 | `prompts/package/templates/deployment_checklist_template.md` | テンプレート修正 |
 | #52 | `prompts/package/templates/cicd_setup_template.md` | テンプレート修正（存在確認必要） |
-| #51 | `prompts/package/prompts/setup-prompt.md` | テンプレート生成部分修正 |
+| #51 | `prompts/setup-prompt.md` | テンプレート生成部分修正 |
 | #50 | `prompts/package/prompts/inception.md` | ドラフトPR作成セクション修正 |
 | #50 | `prompts/package/prompts/operations.md` | Ready化セクション修正 |
 
