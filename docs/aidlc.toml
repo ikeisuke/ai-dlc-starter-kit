@@ -81,7 +81,7 @@ enabled = false
 # enabled: true | false
 # - true: プロンプト内でjj-support.md参照を案内
 # - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false
+enabled = true
 
 [backlog]
 # バックログ管理モード設定（v1.7.0で追加）
