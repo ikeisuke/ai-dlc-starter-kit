@@ -414,11 +414,11 @@ AI-DLCの設定ファイル（`docs/aidlc.toml`）を読み取るために、`da
 
 **インストール**:
 ```bash
-# macOS
+# macOS（v3がインストールされます）
 brew install dasel
 
-# Go
-go install github.com/tomwright/dasel/v2/cmd/dasel@latest
+# Go（v3系）
+go install github.com/tomwright/dasel/v3/cmd/dasel@latest
 
 # その他（バイナリダウンロード）
 # https://github.com/TomWright/dasel/releases
