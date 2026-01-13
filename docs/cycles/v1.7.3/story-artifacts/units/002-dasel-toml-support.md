@@ -23,7 +23,7 @@ setup-prompt.mdでTOML設定値の読み込みにdaselを活用し、コード�
 なし
 
 ### 外部依存
-- dasel（オプション）: https://github.com/TomWright/dasel
+- dasel（オプション）: [dasel](https://github.com/TomWright/dasel)
 
 ## 非機能要件（NFR）
 - **パフォーマンス**: N/A

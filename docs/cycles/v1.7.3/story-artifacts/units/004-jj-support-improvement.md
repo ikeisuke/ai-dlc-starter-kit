@@ -24,7 +24,7 @@ jjサポートの課題を改善し、jjユーザーがAI-DLCをスムーズに�
 なし
 
 ### 外部依存
-- jj (Jujutsu): https://github.com/martinvonz/jj
+- jj (Jujutsu): [jj](https://github.com/martinvonz/jj)
 
 ## 非機能要件（NFR）
 - **パフォーマンス**: N/A
