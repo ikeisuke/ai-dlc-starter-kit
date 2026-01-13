@@ -21,6 +21,11 @@
 | 3 | prompts/package/prompts/setup.md | 233 | starter_kit_version | grep + sed |
 | 4 | prompts/package/prompts/operations.md | 1057 | paths.setup_prompt | grep + sed |
 
+### スコープに関する注記
+
+- **`docs/aidlc/prompts/`**: `prompts/package/` のrsyncコピーであり、Operations Phaseで自動同期される（直接編集対象外）
+- **本Unitの編集対象**: `prompts/setup-prompt.md` と `prompts/package/prompts/` 配下のみ
+
 ## 変更詳細
 
 ### 変更1: setup-prompt.md:56 - starter_kit_version取得
@@ -35,11 +40,13 @@ grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "VERSION_NOT_FOUND"
+    VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    echo ""
+    VERSION=""
 fi
+[ -z "$VERSION" ] && VERSION="VERSION_NOT_FOUND"
+echo "$VERSION"
 ```
 
 **フォールバック指示（dasel未インストール時）**:
