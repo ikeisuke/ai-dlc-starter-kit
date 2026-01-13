@@ -10,6 +10,54 @@ jj（Jujutsu）は、Gitと互換性のある次世代バージョン管理シ�
 
 ---
 
+## ⚠️ 重要: bookmarkは自動で進まない
+
+> **Gitとの最大の違い**: jjのbookmarkは手動で移動する必要があります。
+
+| 比較 | Git | jj |
+|------|-----|-----|
+| ブランチ/bookmark | コミット時に自動でHEADに追従 | **手動で移動が必要** |
+
+**AI-DLCでの影響**:
+
+Unit完了時に `jj bookmark set` を忘れると、cycle bookmarkが古いままになり、次のUnit開始時やPR作成時に問題が発生します。
+
+**必須対策**:
+
+Unit完了時に **必ず** 以下のコマンドを実行してください:
+
+```bash
+jj bookmark set cycle/vX.X.X -r @-
+```
+
+**補助設定**:
+
+`auto-local-bookmark` を有効にすると、リモート同期時の混乱を減らせます（下記「推奨設定」参照）。ただし、これはbookmark自動追従ではないため、上記コマンドは引き続き必要です。
+
+---
+
+## 推奨設定
+
+jjをAI-DLCで使用する際の推奨設定です。
+
+### auto-local-bookmark の有効化
+
+`.jj/config.toml`（リポジトリローカル）または `~/.config/jj/config.toml`（グローバル）に以下を追加:
+
+```toml
+[git]
+auto-local-bookmark = true
+```
+
+**効果**:
+
+- `jj git fetch` 時にリモートブランチに対応するローカルbookmarkを自動作成
+- リモートとの同期が容易になる
+
+**注意**: この設定はbookmarkの自動作成であり、自動追従ではありません。Unit完了時の `jj bookmark set` は引き続き必要です。
+
+---
+
 ## 前提条件
 
 ### jjのインストール
@@ -191,15 +239,41 @@ AI-DLC開発に関連するjjの主要な特徴:
 
 ## AI-DLCワークフローでの使用方法
 
+### 作業開始時チェックリスト
+
+Unit/フェーズを開始する前に確認してください。
+
+- [ ] 現在のリビジョン（@）の位置を確認
+
+  ```bash
+  jj log -r @
+  ```
+
+- [ ] cycle bookmarkの位置を確認
+
+  ```bash
+  jj log -r 'cycle/vX.X.X'
+  ```
+
+- [ ] cycle bookmarkから新しいchangeを作成
+
+  ```bash
+  jj new cycle/vX.X.X
+  ```
+
+> **ヒント**: `jj log` で現在の状態を視覚的に確認できます。cycle bookmarkと@の位置関係を把握してから作業を開始しましょう。
+
+---
+
 ### Setup Phase
 
-サイクルブックマークの作成:
+cycle bookmarkの作成:
 
 ```bash
 # mainから新しいリビジョンを作成
 jj new main
 
-# サイクルブックマークを作成
+# cycle bookmarkを作成
 jj bookmark create cycle/vX.X.X
 
 # リモートにプッシュ
@@ -214,7 +288,7 @@ jj git push --bookmark cycle/vX.X.X
 # ブックマーク一覧を確認
 jj bookmark list
 
-# サイクルブックマークに切り替え
+# cycle bookmarkに切り替え
 jj edit cycle/vX.X.X
 # または新しいリビジョンとして作業開始
 jj new cycle/vX.X.X
@@ -232,7 +306,7 @@ jj describe -m "chore: [vX.X.X] レビュー前 - 成果物名"
 jj new
 
 # リモートにプッシュ
-jj git push
+jj git push --bookmark cycle/vX.X.X
 ```
 
 レビュー後の修正:
@@ -241,7 +315,7 @@ jj git push
 # 修正を行った後
 jj describe -m "chore: [vX.X.X] レビュー反映 - 成果物名"
 jj new
-jj git push
+jj git push --bookmark cycle/vX.X.X
 ```
 
 ### Operations Phase
@@ -269,7 +343,57 @@ jj git push --bookmark main
 
 ---
 
+### 作業終了時チェックリスト
+
+Unit/フェーズを完了する際に **必ず** 実行してください。
+
+- [ ] コミットメッセージを設定
+
+  ```bash
+  jj describe -m "feat: [vX.X.X] Unit NNN完了 - 概要"
+  ```
+
+- [ ] 新しいリビジョンを作成（現在の変更を確定）
+
+  ```bash
+  jj new
+  ```
+
+- [ ] **cycle bookmarkを進める（重要）**
+
+  ```bash
+  jj bookmark set cycle/vX.X.X -r @-
+  ```
+
+- [ ] リモートにプッシュ
+
+  ```bash
+  jj git push --bookmark cycle/vX.X.X
+  ```
+
+**ワンライナー版**（上記をまとめて実行）:
+
+```bash
+jj describe -m "feat: [vX.X.X] Unit NNN完了" && jj new && jj bookmark set cycle/vX.X.X -r @- && jj git push --bookmark cycle/vX.X.X
+```
+
+> **注意**: `jj bookmark set` を忘れるとcycle bookmarkが古いままになります。必ず実行してください。
+
+---
+
 ## 注意事項と制限
+
+### bookmarkの手動移動について（再強調）
+
+**最も重要な注意点**: jjのbookmarkは自動で進みません。
+
+Unit完了時には必ず以下を実行してください:
+
+```bash
+jj bookmark set cycle/vX.X.X -r @-
+```
+
+詳細は「[作業終了時チェックリスト](#作業終了時チェックリスト)」を参照してください。
 
 ### 実験的機能について
 
