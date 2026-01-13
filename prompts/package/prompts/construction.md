@@ -631,9 +631,11 @@ BDD/TDDに従ってテストコードを作成
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-# markdownlint-cli2がインストールされている場合
-npx markdownlint-cli2 "docs/**/*.md" "prompts/**/*.md" "*.md"
+# 現在サイクルと変更ファイルのみを対象（過去サイクルは除外）
+npx markdownlint-cli2 "docs/cycles/{{CYCLE}}/**/*.md" "prompts/**/*.md" "*.md"
 ```
+
+**注意**: 過去サイクルのファイルはCIでもチェック対象外のため、現在サイクルのみを対象とします。
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 
