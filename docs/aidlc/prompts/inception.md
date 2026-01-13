@@ -456,7 +456,7 @@ fi
 ```bash
 # dasel がインストールされている場合は dasel を使用
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     BACKLOG_MODE=""
@@ -629,14 +629,14 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ## 完了時の必須作業【重要】
 
-### 0. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
+### 1. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
 
 **前提条件確認**:
 
 ```bash
 # バックログモード確認
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
 fi
@@ -697,14 +697,14 @@ gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
 
 （`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
 
-### 0.5 iOSバージョン更新【project.type=iosの場合のみ】
+### 2. iOSバージョン更新【project.type=iosの場合のみ】
 
 **前提条件確認**:
 
 ```bash
 # project.type設定を読み取り
 if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
 else
     PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
 fi
@@ -767,10 +767,10 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 - ビルド番号（CFBundleVersion）の管理はこの機能のスコープ外です
 - ビルド番号はCI/CD（fastlane等）で自動管理することを推奨します
 
-### 1. 履歴記録
+### 3. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
 
-### 2. ドラフトPR作成【推奨】
+### 4. ドラフトPR作成【推奨】
 
 GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する。
 
@@ -817,16 +817,13 @@ gh pr list --head "${CURRENT_BRANCH}" --state open
 **PR作成実行**（ユーザーが「はい」を選択した場合）:
 ```bash
 gh pr create --draft \
-  --title "[Draft] サイクル {{CYCLE}}" \
+  --title "サイクル {{CYCLE}}" \
   --body "$(cat <<'EOF'
 ## サイクル概要
 [Intentから抽出した1-2文の概要]
 
 ## 含まれるUnit
 [Unit定義ファイルから一覧を生成]
-
----
-このPRはドラフト状態です。Operations Phase完了時にReady for Reviewに変更されます。
 EOF
 )"
 ```
@@ -839,7 +836,7 @@ EOF
 このPRはOperations Phase完了時にReady for Reviewに変更されます。
 ```
 
-### 3. Gitコミット
+### 5. Gitコミット
 Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:

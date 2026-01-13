@@ -44,7 +44,7 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 
 ## 最初に必ず実行すること
 
-### -1. 依存コマンド確認
+### 1. 依存コマンド確認
 
 AI-DLCで使用する依存コマンドの状態を確認します。
 
@@ -96,15 +96,15 @@ echo "dasel: ${DASEL_STATUS}"
 
 **処理継続**: 警告後も次のステップへ進行する（エラー終了しない）
 
-### 0. デプロイ済みファイル確認
+### 2. デプロイ済みファイル確認
 
 ```bash
 [ -f docs/aidlc/prompts/setup.md ] && echo "DEPLOYED_EXISTS" || echo "DEPLOYED_NOT_EXISTS"
 ```
 
 **判定**:
-- **DEPLOYED_EXISTS**: ステップ0.5（スターターキット開発リポジトリ判定）へ進む
-- **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ0.5へ進む
+- **DEPLOYED_EXISTS**: ステップ3（スターターキット開発リポジトリ判定）へ進む
+- **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ3へ進む
   ```text
   【お知らせ】docs/aidlc/prompts/setup.md が見つかりません。
 
@@ -115,11 +115,16 @@ echo "dasel: ${DASEL_STATUS}"
   現在このファイルを使用しているため、処理を続行します。
   ```
 
-### 0.5. スターターキット開発リポジトリ判定
+### 3. スターターキット開発リポジトリ判定
 
 ```bash
 # プロジェクト名を取得（[project] セクション内の name のみ）
-PROJECT_NAME=$(awk '/^\[project\]/{found=1} found && /^name *= *"/{gsub(/.*= *"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null)
+if command -v dasel >/dev/null 2>&1; then
+    PROJECT_NAME=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.name' 2>/dev/null | tr -d "'" || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    PROJECT_NAME=""
+fi
 
 if [ "$PROJECT_NAME" = "ai-dlc-starter-kit" ]; then
   echo "STARTER_KIT_DEV"
@@ -128,22 +133,24 @@ else
 fi
 ```
 
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `name` 値を取得してください。
+
 **判定**:
-- **STARTER_KIT_DEV**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
+- **STARTER_KIT_DEV**: 以下を表示し、ステップ7（サイクルバージョンの決定）へ進む
   ```text
   スターターキット開発リポジトリを検出しました。
   アップグレード案内はスキップします（開発リポジトリでは、次サイクルで変更を加えてリリースするためです）。
   ```
-- **USER_PROJECT**: ステップ1（スターターキットバージョン確認）へ進む
+- **USER_PROJECT**: ステップ6（スターターキットバージョン確認）へ進む
 
-### 0.7. バックログモード確認
+### 4. バックログモード確認
 
 バックログモード設定を確認:
 
 ```bash
 # dasel がインストールされている場合は dasel を使用
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     BACKLOG_MODE=""
@@ -171,7 +178,7 @@ if [ "$BACKLOG_MODE" = "issue" ]; then
 fi
 ```
 
-### 0.8. backlogラベル確認・作成【mode=issueの場合のみ】
+### 5. backlogラベル確認・作成【mode=issueの場合のみ】
 
 **前提条件**:
 - BACKLOG_MODE = "issue"
@@ -223,21 +230,28 @@ gh label create "{NAME}" --description "{DESC}" --color "{COLOR}"
 後から手動で作成することもできます。
 ```
 
-### 1. スターターキットバージョン確認
+### 6. スターターキットバージョン確認
 
 ```bash
 # スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
 LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
 
 # 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-CURRENT_VERSION=$(grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
+if command -v dasel >/dev/null 2>&1; then
+    CURRENT_VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
+else
+    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
+    CURRENT_VERSION=""
+fi
 
 echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
 ```
 
+**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。
+
 **判定**:
-- **最新バージョン取得失敗**: ステップ2（サイクルバージョンの決定）へ進む
-- **CURRENT_VERSION が空**: ステップ2（サイクルバージョンの決定）へ進む（aidlc.tomlなし）
+- **最新バージョン取得失敗**: ステップ7（サイクルバージョンの決定）へ進む
+- **CURRENT_VERSION が空**: ステップ7（サイクルバージョンの決定）へ進む（aidlc.tomlなし）
 - **LATEST_VERSION > CURRENT_VERSION**: アップグレード推奨を表示
   ```text
   AI-DLCスターターキットの新しいバージョンが利用可能です。
@@ -252,16 +266,16 @@ echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし
     ```text
     アップグレードするには、スターターキットの setup-prompt.md を読み込んでください。
     ```
-  - **2 を選択**: ステップ2（サイクルバージョンの決定）へ進む
-- **LATEST_VERSION = CURRENT_VERSION**: 以下を表示し、ステップ2（サイクルバージョンの決定）へ進む
+  - **2 を選択**: ステップ7（サイクルバージョンの決定）へ進む
+- **LATEST_VERSION = CURRENT_VERSION**: 以下を表示し、ステップ7（サイクルバージョンの決定）へ進む
   ```text
   アップグレードは不要です（現在最新バージョンです）。
   次回サイクル開始時も、このsetup.mdを参照してください。
   ```
 
-### 2. サイクルバージョンの決定
+### 7. サイクルバージョンの決定
 
-#### 2.1 ブランチ名からバージョン推測
+#### 7.1 ブランチ名からバージョン推測
 
 現在のブランチ名からサイクルバージョンを推測:
 
@@ -287,13 +301,13 @@ fi
   - **2 を選択**: 既存サイクルの検出へ進む
 - **BRANCH_VERSION_NOT_DETECTED**: 既存サイクルの検出へ進む
 
-#### 2.2 既存サイクルの検出
+#### 7.2 既存サイクルの検出
 
 ```bash
 ls -d docs/cycles/* 2>/dev/null | sort -V
 ```
 
-#### 2.3 バージョン提案
+#### 7.3 バージョン提案
 
 **ケース A: 既存サイクルがある場合**
 
@@ -326,11 +340,11 @@ ls -d docs/cycles/* 2>/dev/null | sort -V
 
 バージョンが検出されなかった場合は `v1.0.0` を提案。
 
-#### 2.4 重複チェック
+#### 7.4 重複チェック
 
 選択されたバージョンが既存サイクルと重複する場合、エラーを表示して再選択。
 
-### 3. ブランチ確認【推奨】
+### 8. ブランチ確認【推奨】
 
 **jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
 - `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
@@ -508,7 +522,7 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     ```
 - **それ以外のブランチ**: 次のステップへ進行
 
-### 4. サイクル存在確認
+### 9. サイクル存在確認
 
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
@@ -522,9 +536,9 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
   「インセプション進めて」と指示してください。
   ```
-- **存在しない場合**: ステップ5（サイクルディレクトリ作成）へ進む
+- **存在しない場合**: ステップ10（サイクルディレクトリ作成）へ進む
 
-### 5. サイクルディレクトリ作成
+### 10. サイクルディレクトリ作成
 
 サイクル {{CYCLE}} のディレクトリを自動的に作成します。
 
@@ -568,7 +582,7 @@ mkdir -p docs/cycles/backlog-completed
 
 **注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
-### 6. 旧形式バックログ移行（該当する場合）
+### 11. 旧形式バックログ移行（該当する場合）
 
 旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
 
@@ -579,7 +593,7 @@ mkdir -p docs/cycles/backlog-completed
 - **OLD_BACKLOG_NOT_EXISTS**: スキップ（完了時の作業へ進む）
 - **OLD_BACKLOG_EXISTS**: 以下の移行処理を実行
 
-#### 6.1 移行確認
+#### 11.1 移行確認
 
 ```text
 旧形式の docs/cycles/backlog.md が見つかりました。
@@ -592,7 +606,7 @@ mkdir -p docs/cycles/backlog-completed
 - **拒否された場合**: スキップ（完了時の作業へ進む）
 - **承認された場合**: 移行処理を実行
 
-#### 6.2 移行処理
+#### 11.2 移行処理
 
 **処理手順**:
 

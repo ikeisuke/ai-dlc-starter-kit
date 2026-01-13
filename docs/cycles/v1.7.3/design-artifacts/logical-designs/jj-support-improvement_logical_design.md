@@ -30,7 +30,7 @@ jj bookmark set cycle/vX.X.X -r @-
 **補助設定**:
 auto-local-bookmark を有効にすると、リモート同期時の混乱を減らせます（下記参照）。
 ただし、これはbookmark自動追従ではないため、上記コマンドは引き続き必要です。
-```
+```text
 
 ### 2. 推奨設定セクション
 
@@ -56,7 +56,7 @@ auto-local-bookmark = true
 
 **注意**: この設定はbookmarkの自動追従ではなく、自動作成のみです。
 Unit完了時の `jj bookmark set` は引き続き必要です。
-```
+```text
 
 ### 3. 作業開始時チェックリスト
 
@@ -79,7 +79,7 @@ Unit/フェーズを開始する前に確認してください。
   ```bash
   jj new cycle/vX.X.X
   ```
-```
+```text
 
 ### 4. 作業終了時チェックリスト
 
@@ -111,7 +111,7 @@ Unit/フェーズを完了する際に**必ず**実行してください。
 ```bash
 jj describe -m "feat: [vX.X.X] Unit NNN完了" && jj new && jj bookmark set cycle/vX.X.X -r @- && jj git push --bookmark cycle/vX.X.X
 ```
-```
+```text
 
 ## 既存セクションの調整
 
