@@ -93,8 +93,8 @@ fi
 
 ### daselバージョン前提
 
-- **対象**: dasel v2系（v2.0.0以降）
-- **コマンド形式**: `dasel -f <file> -r toml '<path>'`
+- **対象**: dasel v3系（v3.0.0以降）
+- **コマンド形式**: `cat <file> | dasel -i toml '<selector>' | tr -d "'"`
 - **エラー時**: exit code 1, stderr出力
 
 ### 旧形式（project.toml）への対応方針

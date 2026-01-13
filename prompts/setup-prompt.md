@@ -54,7 +54,7 @@ ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
 
 # プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
 if command -v dasel >/dev/null 2>&1; then
-    VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+    VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     VERSION=""

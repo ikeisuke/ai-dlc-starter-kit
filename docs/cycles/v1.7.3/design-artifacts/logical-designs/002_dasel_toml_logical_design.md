@@ -40,7 +40,7 @@ grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>/dev/null | sed 's
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+    VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     VERSION=""
@@ -66,7 +66,7 @@ PROJECT_NAME=$(awk '/^\[project\]/{found=1} found && /^name *= *"/{gsub(/.*= *"|
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    PROJECT_NAME=$(dasel -f docs/aidlc.toml -r toml '.project.name' 2>/dev/null || echo "")
+    PROJECT_NAME=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.name' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     PROJECT_NAME=""
@@ -77,7 +77,7 @@ fi
 
 > AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `name` 値を取得してください。
 
-### 変更3: setup.md:233 - starter_kit_version取得
+### 変更3: setup.md:240 - starter_kit_version取得
 
 **現在のコード**:
 
@@ -89,7 +89,7 @@ CURRENT_VERSION=$(grep -E 'starter_kit_version\s*=\s*"[^"]+"' docs/aidlc.toml 2>
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    CURRENT_VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+    CURRENT_VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     CURRENT_VERSION=""
@@ -112,7 +112,7 @@ SETUP_PROMPT=$(grep -E '^\s*setup_prompt\s*=' docs/aidlc.toml | head -1 | sed 's
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    SETUP_PROMPT=$(dasel -f docs/aidlc.toml -r toml '.paths.setup_prompt' 2>/dev/null || echo "")
+    SETUP_PROMPT=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'paths.setup_prompt' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     SETUP_PROMPT=""
@@ -126,21 +126,21 @@ fi
 
 ## 共通パターン
 
-### daselコマンド形式
+### daselコマンド形式（v3系）
 
 ```bash
-dasel -f <file> -r toml '<path>'
+cat <file> | dasel -i toml '<selector>' | tr -d "'"
 ```
 
-- `-f`: 対象ファイル
-- `-r toml`: 入力形式をTOMLに指定
-- `'<path>'`: ドット区切りのパス（例: `.project.name`）
+- `-i toml`: 入力形式をTOMLに指定
+- `'<selector>'`: ドット区切りのセレクタ（例: `project.name`）
+- `tr -d "'"`: 出力からクォートを除去
 
 ### フォールバックの統一形式
 
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    VALUE=$(dasel -f docs/aidlc.toml -r toml '<path>' 2>/dev/null || echo "<default>")
+    VALUE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml '<selector>' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     VALUE=""

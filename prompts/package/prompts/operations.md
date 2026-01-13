@@ -1055,7 +1055,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 ```bash
 # setup_prompt パスを取得
 if command -v dasel >/dev/null 2>&1; then
-    SETUP_PROMPT=$(dasel -f docs/aidlc.toml -r toml '.paths.setup_prompt' 2>/dev/null || echo "")
+    SETUP_PROMPT=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'paths.setup_prompt' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     SETUP_PROMPT=""

@@ -120,7 +120,7 @@ echo "dasel: ${DASEL_STATUS}"
 ```bash
 # プロジェクト名を取得（[project] セクション内の name のみ）
 if command -v dasel >/dev/null 2>&1; then
-    PROJECT_NAME=$(dasel -f docs/aidlc.toml -r toml '.project.name' 2>/dev/null || echo "")
+    PROJECT_NAME=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.name' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     PROJECT_NAME=""
@@ -238,7 +238,7 @@ LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke
 
 # 現在使用中のバージョン（aidlc.toml の starter_kit_version）
 if command -v dasel >/dev/null 2>&1; then
-    CURRENT_VERSION=$(dasel -f docs/aidlc.toml -r toml '.starter_kit_version' 2>/dev/null || echo "")
+    CURRENT_VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     CURRENT_VERSION=""
