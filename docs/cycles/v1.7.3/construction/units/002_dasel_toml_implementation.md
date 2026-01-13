@@ -38,6 +38,16 @@ fi
 
 - markdownlint: エラーなし
 - AIレビュー: 承認済み
+- 動作確認: 4箇所全て正常動作確認済み
+
+## 追加変更（スコープ拡大）
+
+dasel v3系統一のため、以下も追加修正:
+- prompts/package/prompts/inception.md（3箇所）
+- prompts/package/prompts/construction.md（1箇所）
+- prompts/package/prompts/operations.md（3箇所）
+- prompts/package/prompts/setup.md（1箇所）
+- prompts/package/guides/ai-agent-allowlist.md（インストール方法・使用例）
 
 ## 完了状態
 
