@@ -445,7 +445,7 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 ```bash
 # project.type設定を読み取り
 if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
 else
     PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
 fi
@@ -681,7 +681,7 @@ cat go.mod | head -1
 **設定確認**:
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
 fi
@@ -964,7 +964,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 **設定確認**:
 ```bash
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
 fi

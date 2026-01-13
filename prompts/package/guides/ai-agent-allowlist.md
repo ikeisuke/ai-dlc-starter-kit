@@ -424,13 +424,13 @@ go install github.com/tomwright/dasel/v2/cmd/dasel@latest
 # https://github.com/TomWright/dasel/releases
 ```
 
-**使用例**:
+**使用例（dasel v3系）**:
 ```bash
 # バックログモード取得
-dasel -f docs/aidlc.toml -r toml '.backlog.mode'
+cat docs/aidlc.toml | dasel -i toml 'backlog.mode' | tr -d "'"
 
 # AIレビューモード取得
-dasel -f docs/aidlc.toml -r toml '.rules.mcp_review.mode'
+cat docs/aidlc.toml | dasel -i toml 'rules.mcp_review.mode' | tr -d "'"
 ```
 
 **dasel未インストール時の動作**:
@@ -441,7 +441,7 @@ AIエージェントが `docs/aidlc.toml` をReadツールで直接読み取り�
 # AI-DLCプロンプト内での使用例（setup.md, construction.md等）
 
 daselが利用可能な場合:
-  dasel -f docs/aidlc.toml -r toml '.backlog.mode'
+  cat docs/aidlc.toml | dasel -i toml 'backlog.mode' | tr -d "'"
 
 daselが利用できない場合:
   AIがReadツールでdocs/aidlc.tomlを読み取り、該当の設定値を抽出

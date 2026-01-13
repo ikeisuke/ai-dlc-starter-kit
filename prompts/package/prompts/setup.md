@@ -150,7 +150,7 @@ fi
 ```bash
 # dasel がインストールされている場合は dasel を使用
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     BACKLOG_MODE=""

@@ -456,7 +456,7 @@ fi
 ```bash
 # dasel がインストールされている場合は dasel を使用
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
     BACKLOG_MODE=""
@@ -636,7 +636,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ```bash
 # バックログモード確認
 if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
 else
     BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
 fi
@@ -704,7 +704,7 @@ gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
 ```bash
 # project.type設定を読み取り
 if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(dasel -f docs/aidlc.toml -r toml '.project.type' 2>/dev/null || echo "general")
+    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
 else
     PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
 fi
