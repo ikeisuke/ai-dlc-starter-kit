@@ -131,7 +131,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      **設定確認**:
      ```bash
      if command -v dasel >/dev/null 2>&1; then
-         BACKLOG_MODE=$(dasel -f docs/aidlc.toml -r toml '.backlog.mode' 2>/dev/null || echo "git")
+         BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
      else
          BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
      fi
@@ -631,9 +631,11 @@ BDD/TDDに従ってテストコードを作成
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-# markdownlint-cli2がインストールされている場合
-npx markdownlint-cli2 "docs/**/*.md" "prompts/**/*.md" "*.md"
+# 現在サイクルと変更ファイルのみを対象（過去サイクルは除外）
+npx markdownlint-cli2 "docs/cycles/{{CYCLE}}/**/*.md" "prompts/**/*.md" "*.md"
 ```
+
+**注意**: 過去サイクルのファイルはCIでもチェック対象外のため、現在サイクルのみを対象とします。
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 

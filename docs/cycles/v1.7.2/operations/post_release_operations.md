@@ -35,6 +35,10 @@
 
 - Claude Codeプランモード活用に関する調査・文書化
 
+### GitHub Issueテンプレート
+
+- backlog.yml, bug.yml, feature.ymlテンプレート追加
+
 ## 運用監視項目（ドキュメントプロジェクト）
 
 | 項目 | 確認方法 | 頻度 |

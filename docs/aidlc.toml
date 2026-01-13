@@ -2,7 +2,7 @@
 # 生成日: 2025-12-06
 # スターターキットバージョン: 1.2.3
 
-starter_kit_version = "1.7.2"
+starter_kit_version = "1.7.3"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -54,7 +54,7 @@ mode = "required"
 # enabled: true | false
 # - true: サイクル開始時にworktreeの使用を提案する
 # - false: 提案しない（デフォルト）
-enabled = true
+enabled = false
 
 [rules.history]
 # 履歴記録設定（v1.5.1で追加）
@@ -81,11 +81,13 @@ enabled = false
 # enabled: true | false
 # - true: プロンプト内でjj-support.md参照を案内
 # - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false
+enabled = true
 
 [backlog]
 # バックログ管理モード設定（v1.7.0で追加）
-# mode: "git" | "issue"
+# mode: "git" | "issue" | "git-only" | "issue-only"
 # - git: ローカルファイルに保存（従来方式、デフォルト）
 # - issue: GitHub Issueに保存
-mode = "issue"
+# - git-only: ローカルファイルのみ（Issue作成禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイル作成禁止）
+mode = "issue-only"

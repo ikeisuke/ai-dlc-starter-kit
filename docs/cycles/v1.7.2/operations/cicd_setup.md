@@ -24,6 +24,7 @@ on:
 - **動作**: markdownlint-cli2による構文チェック
 
 ```yaml
+# 抜粋（詳細は .github/workflows/pr-check.yml を参照）
 name: PR Check
 on:
   pull_request:

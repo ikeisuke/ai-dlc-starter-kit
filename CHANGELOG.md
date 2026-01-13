@@ -7,6 +7,31 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.7.3] - 2026-01-14
+
+### Added
+
+- daselによるTOML読み込み対応（setup-prompt.md）
+- jj作業開始・終了時のガイド（jj-support.md）
+- jj推奨設定（auto-local-bookmark）の記載
+- Unit境界でのbookmark操作ガイド
+
+### Changed
+
+- プロンプト全体をdasel v3系に統一
+- Markdownlint対象範囲を最適化（現在サイクルまたは変更ファイルのみ）
+- setup.mdのステップ番号を連番に整理
+- ドラフトPRのタイトル・説明文からドラフト表記を削除
+
+### Fixed
+
+- aidlc.tomlのコメント内バージョン番号が古い問題
+- cicd_setup.mdのYAML抜粋が実ファイルと不一致の問題
+- deployment_checklist.mdのlint対象がCIと不整合の問題
+- post_release_operations.mdのGitHub Issueテンプレート記載漏れ
+
+---
+
 ## [1.7.2] - 2026-01-13
 
 ### Added
