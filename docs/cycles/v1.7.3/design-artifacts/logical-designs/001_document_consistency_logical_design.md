@@ -168,7 +168,7 @@ on:
 
 ### Issue #51: aidlc.tomlのコメント内バージョン番号が古い
 
-**対象ファイル**: `prompts/package/prompts/setup-prompt.md`
+**対象ファイル**: `prompts/setup-prompt.md`
 
 **変更内容**:
 aidlc.toml生成部分から以下のコメント行を削除:
@@ -243,7 +243,7 @@ gh pr edit {PR番号} --title "{{CYCLE}}"
 | #54 | `docs/cycles/v1.7.2/operations/post_release_operations.md` | 過去サイクル成果物 |
 | #53 | `prompts/package/prompts/operations.md` | プロンプト |
 | #52 | `docs/cycles/v1.7.2/operations/cicd_setup.md` | 過去サイクル成果物 |
-| #51 | `prompts/package/prompts/setup-prompt.md` | プロンプト |
+| #51 | `prompts/setup-prompt.md` | プロンプト |
 | #50 | `prompts/package/prompts/inception.md` | プロンプト |
 | #50 | `prompts/package/prompts/operations.md` | プロンプト |
 
