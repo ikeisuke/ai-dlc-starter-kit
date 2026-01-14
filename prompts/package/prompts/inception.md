@@ -154,14 +154,14 @@ Inception Phaseで決定
   4. **AIレビューフロー**:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
@@ -187,14 +187,14 @@ Inception Phaseで決定
   6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - 成果物を人間に提示
      - 人間の承認を求める
      - 修正依頼があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 再度人間に提示・承認を求める
 
@@ -629,7 +629,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ## 完了時の必須作業【重要】
 
-### 1. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
+### 1. サイクルラベル作成・Issue紐付け【mode=issueまたはissue-onlyの場合のみ】
 
 **前提条件確認**:
 
@@ -658,8 +658,8 @@ echo "GitHub CLI: ${GH_AVAILABLE}"
 
 ```bash
 # 前提条件チェック
-if [ "$BACKLOG_MODE" != "issue" ]; then
-  echo "バックログモードがissueではないため、スキップします"
+if [ "$BACKLOG_MODE" != "issue" ] && [ "$BACKLOG_MODE" != "issue-only" ]; then
+  echo "バックログモードがissueまたはissue-onlyではないため、スキップします"
 elif [ "$GH_AVAILABLE" != "true" ]; then
   echo "警告: GitHub CLIが利用できないため、スキップします"
 else

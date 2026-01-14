@@ -110,7 +110,7 @@ So that Claude Code以外のツールでもAI-DLCを活用できる
 - [ ] Kiroエージェントに `resources` 設定を確認・追加してもらう手順が記載されている
 
 **技術的考慮事項**:
-- 参照: https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field
+- 参照: <https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field>
 - 追加先: `prompts/package/prompts/AGENTS.md`
 - 読み込むべきファイル: `docs/aidlc/prompts/AGENTS.md`
 

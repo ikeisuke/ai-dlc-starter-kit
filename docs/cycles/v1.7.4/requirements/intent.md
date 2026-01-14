@@ -52,4 +52,4 @@ AI-DLCスターターキットのバグ修正、ドキュメント改善、プ�
 ## 不明点と質問（Inception Phase中に記録）
 
 [Question] #57 KiroCLI対応の具体的な内容は？
-[Answer] KiroCLIでは `@` 参照記法が機能しないため、`.kiro/agents.toml` の `resources` フィールドに読み込むファイルを指定する案内をユーザー向けに追加する。参照: https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field
+[Answer] KiroCLIでは `@` 参照記法が機能しないため、`.kiro/agents.toml` の `resources` フィールドに読み込むファイルを指定する案内をユーザー向けに追加する。参照: <https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field>

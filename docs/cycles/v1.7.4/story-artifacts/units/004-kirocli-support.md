@@ -34,7 +34,7 @@ KiroCLIでAI-DLCを使用するための設定案内をAGENTS.mdに追加する�
 
 ## 技術的考慮事項
 - 編集先: `prompts/package/prompts/AGENTS.md`（Operations Phaseでrsyncにより `docs/aidlc/` に反映）
-- 参照: https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field
+- 参照: <https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field>
 - ユーザー向け案内内容: Kiroエージェントにresources設定で `docs/aidlc/prompts/AGENTS.md` を読み込ませる
 
 ## 実装優先度

@@ -14,7 +14,7 @@
 - **フェーズ**: Inception Phase
 - **ステップ**: 全ステップ完了
 - **実行内容**: Intent作成、ユーザーストーリー作成、Unit定義（5 Units）、PRFAQ作成
-- **成果物**: 
+- **成果物**:
   - docs/cycles/v1.7.4/requirements/intent.md
   - docs/cycles/v1.7.4/story-artifacts/user_stories.md
   - docs/cycles/v1.7.4/story-artifacts/units/001-005
