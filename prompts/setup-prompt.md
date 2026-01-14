@@ -17,6 +17,62 @@
 
 ---
 
+## 0. 必要ツールの準備
+
+AI-DLCの実行には、以下のツールが必要です。セットアップ前にインストールしてください。
+
+### 必須ツール
+
+| ツール | 用途 |
+|--------|------|
+| gh (GitHub CLI) | GitHub Issue/PR操作、バックログ管理（issue-only モード時） |
+
+### オプションツール
+
+以下のツールはオプションです。インストールされていない場合、AIが代替処理を行います。
+
+| ツール | 用途 | 代替手段 |
+|--------|------|----------|
+| dasel | TOML設定ファイルの解析 | AIが直接ファイルを読み取り |
+| jq | JSON解析 | AIが直接解析 |
+| curl | Webリソース取得 | AIのWebFetch機能（Claude Code等） |
+
+### インストールコマンド
+
+**macOS (Homebrew)**:
+
+```bash
+# 必須
+brew install gh
+
+# オプション
+brew install dasel
+brew install jq
+# curl は通常プリインストール済み
+```
+
+**Ubuntu/Debian (APT)**:
+
+```bash
+# 必須
+sudo apt install gh
+
+# オプション
+# dasel: https://github.com/TomWright/dasel/releases からダウンロード
+sudo apt install jq
+# curl は通常プリインストール済み
+```
+
+**GitHub CLI の認証**:
+
+インストール後、以下のコマンドで認証を行ってください。
+
+```bash
+gh auth login
+```
+
+---
+
 ## 1. 実行環境の確認
 
 **まず最初に、現在のカレントディレクトリを確認してください**:

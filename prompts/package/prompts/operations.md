@@ -157,14 +157,14 @@ Inception/Construction Phaseで決定済み
   4. **AIレビューフロー**:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
@@ -190,14 +190,14 @@ Inception/Construction Phaseで決定済み
   6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - 成果物を人間に提示
      - 人間の承認を求める
      - 修正依頼があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 再度人間に提示・承認を求める
 

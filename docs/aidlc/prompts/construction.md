@@ -167,6 +167,8 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
+  **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `docs/aidlc/guides/subagent-usage.md` を参照。
+
 - **Workaround（その場しのぎ対応）実施時のルール【重要】**: 本質的な解決ではなく、暫定的な対応（workaround）を行う場合、以下を必ず実施する
 
   **必須手順**:
@@ -233,7 +235,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   4. **AIレビューフロー**:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - **反復レビュー**（指摘がなくなるまで繰り返す、最大3回）:
        1. AIレビューを実行
@@ -243,7 +245,7 @@ Inception Phaseで決定済み、または既存スタックを使用
        5. 3回繰り返しても指摘が残る場合は、残りの指摘を人間に提示して判断を仰ぐ
      - **レビュー後コミット**（反復完了後、修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
@@ -269,14 +271,14 @@ Inception Phaseで決定済み、または既存スタックを使用
   6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - 成果物を人間に提示
      - 人間の承認を求める
      - 修正依頼があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 再度人間に提示・承認を求める
 
