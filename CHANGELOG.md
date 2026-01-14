@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.7.4] - 2026-01-14
+
+### Added
+
+- ツールインストール案内セクション（setup-prompt.md）- gh必須、dasel/jq/curlオプション
+- サブエージェント活用ガイド（construction.md, guides/subagent-usage.md）
+- KiroCLI対応セクション（AGENTS.md）- resources設定案内
+- 質問深掘りルール（AGENTS.md）- 追加質問の深掘り方法を明確化
+- 受け入れ基準の書き方ガイダンス（inception.md）- 良い例・悪い例を含む
+
+### Fixed
+
+- issue-onlyモードでのGitHub CLI検証・サイクルラベル作成が正常動作するよう修正
+- 未追跡ファイルのみ存在する場合のコミット処理を修正（git status --porcelain使用）
+
+---
+
 ## [1.7.3] - 2026-01-14
 
 ### Added

@@ -123,3 +123,65 @@
 - 既存履歴の削除・上書き（historyは追記のみ）
 - 承認なしでの次ステップ開始
 - 独自判断での重要な決定（必ず質問する）
+
+---
+
+## KiroCLI対応
+
+このセクションでは、KiroCLIでAI-DLCを使用するための設定方法を説明します。
+
+### 制約事項
+
+- **KiroCLI固有の制約**: AGENTS.md内の `@ファイルパス` 記法はKiroCLIで解釈されません
+- この制約はKiroCLIの仕様によるものです（Claude Codeでは `@` 記法が機能します）
+- KiroCLIでは `resources` に指定したファイルのみがエージェントに読み込まれます
+
+### 設定手順
+
+1. 設定ファイルを作成します:
+   - ローカル（プロジェクト固有）: `.kiro/agents/{agent-name}.json`
+   - グローバル（ユーザー全体）: `~/.kiro/agents/{agent-name}.json`
+
+2. `resources` フィールドでAI-DLCに必要なファイルを指定します
+
+**注意**: KiroCLIの仕様は更新される可能性があります。最新情報は[公式ドキュメント](https://kiro.dev/docs/cli/custom-agents/configuration-reference/#resources-field)を参照してください。
+
+### 設定例
+
+```json
+{
+  "name": "aidlc-agent",
+  "resources": [
+    "file://docs/aidlc/prompts/AGENTS.md"
+  ],
+  "tools": ["read", "write", "shell"]
+}
+```
+
+**最小限のresources設定**:
+
+| パス | 用途 |
+|------|------|
+| `docs/aidlc/prompts/AGENTS.md` | エントリーポイント（必須） |
+
+**注意**: パスはプロジェクトルートからの相対パスで指定します。
+
+**resourcesの拡張**: 必要に応じて以下のパスを追加できます:
+
+```json
+"resources": [
+  "file://docs/aidlc/prompts/AGENTS.md",
+  "file://docs/aidlc.toml",
+  "file://docs/aidlc/prompts/construction.md"
+]
+```
+
+全ファイルをresourcesに含めるとコンテキストが増大するため、作業に必要なファイルのみを指定してください。
+
+**tools設定**:
+
+| ツール | 用途 |
+|--------|------|
+| `read` | ドキュメント・コードの読み取り |
+| `write` | ドキュメント・コードの生成・編集 |
+| `shell` | ビルド・テスト・Git操作の実行 |

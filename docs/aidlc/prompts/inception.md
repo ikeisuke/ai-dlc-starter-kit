@@ -154,14 +154,14 @@ Inception Phaseで決定
   4. **AIレビューフロー**:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - AIレビューを実行
      - レビュー結果を確認
      - 指摘があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
@@ -187,14 +187,14 @@ Inception Phaseで決定
   6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
      - 成果物を人間に提示
      - 人間の承認を求める
      - 修正依頼があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
        ```bash
-       git diff --quiet && git diff --cached --quiet || git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
        ```
      - 再度人間に提示・承認を求める
 
@@ -556,7 +556,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: ユーザーと対話形式でIntentを作成
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
-- **一問一答形式**: 1つの質問をして回答を待ち、複数の質問をまとめて提示しない
+- **一問一答形式**: 質問の概要を先に提示した後は、1つの質問をして回答を待つ（ハイブリッド方式に従う）
 - **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
@@ -572,6 +572,29 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
 - Intentに基づいてユーザーストーリーを作成
+
+**受け入れ基準の書き方【重要】**:
+
+受け入れ基準は「何が実現されていれば完了とみなせるか」を具体的に記述する。
+
+**良い例**（具体的で検証可能）:
+
+- 「ログインボタンをクリックすると、ダッシュボード画面に遷移する」
+- 「エラー時に赤色の警告メッセージが3秒間表示される」
+- 「検索結果が100件を超える場合、ページネーションが表示される」
+
+**悪い例**（曖昧で検証困難）:
+
+- 「ユーザーが使いやすいこと」
+- 「パフォーマンスが良いこと」
+- 「適切に処理されること」
+
+**記述のポイント**:
+
+- 主語・動詞・結果を明確にする
+- 数値や状態を具体的に記述する
+- テスト可能な形で書く
+
 - `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
@@ -629,7 +652,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ## 完了時の必須作業【重要】
 
-### 1. サイクルラベル作成・Issue紐付け【mode=issueの場合のみ】
+### 1. サイクルラベル作成・Issue紐付け【mode=issueまたはissue-onlyの場合のみ】
 
 **前提条件確認**:
 
@@ -658,8 +681,8 @@ echo "GitHub CLI: ${GH_AVAILABLE}"
 
 ```bash
 # 前提条件チェック
-if [ "$BACKLOG_MODE" != "issue" ]; then
-  echo "バックログモードがissueではないため、スキップします"
+if [ "$BACKLOG_MODE" != "issue" ] && [ "$BACKLOG_MODE" != "issue-only" ]; then
+  echo "バックログモードがissueまたはissue-onlyではないため、スキップします"
 elif [ "$GH_AVAILABLE" != "true" ]; then
   echo "警告: GitHub CLIが利用できないため、スキップします"
 else

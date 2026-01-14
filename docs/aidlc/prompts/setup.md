@@ -162,12 +162,12 @@ echo "バックログモード: ${BACKLOG_MODE}"
 **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得してください（デフォルト: `git`）。
 
 **判定結果表示**:
-- `git`: ローカルファイル駆動（`docs/cycles/backlog/`）
-- `issue`: GitHub Issue駆動（Issue作成、ラベル管理）
+- `git` / `git-only`: ローカルファイル駆動（`docs/cycles/backlog/`）
+- `issue` / `issue-only`: GitHub Issue駆動（Issue作成、ラベル管理）
 
-**mode=issue の場合、GitHub CLI確認**:
+**mode=issue または issue-only の場合、GitHub CLI確認**:
 ```bash
-if [ "$BACKLOG_MODE" = "issue" ]; then
+if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
     if ! command -v gh >/dev/null 2>&1; then
         echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
     elif ! gh auth status >/dev/null 2>&1; then
@@ -178,10 +178,10 @@ if [ "$BACKLOG_MODE" = "issue" ]; then
 fi
 ```
 
-### 5. backlogラベル確認・作成【mode=issueの場合のみ】
+### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
 
 **前提条件**:
-- BACKLOG_MODE = "issue"
+- BACKLOG_MODE = "issue" または "issue-only"
 - GitHub CLIが利用可能かつ認証済み
 
 上記条件を満たさない場合はこのステップをスキップ。
