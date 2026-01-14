@@ -556,7 +556,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: ユーザーと対話形式でIntentを作成
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
-- **一問一答形式**: 1つの質問をして回答を待ち、複数の質問をまとめて提示しない
+- **一問一答形式**: 質問の概要を先に提示した後は、1つの質問をして回答を待つ（ハイブリッド方式に従う）
 - **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
