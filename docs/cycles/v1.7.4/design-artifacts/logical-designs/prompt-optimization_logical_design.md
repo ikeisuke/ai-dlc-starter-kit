@@ -31,12 +31,14 @@
 - ユースケースやシナリオを聞いて理解を深める
 
 **注意事項**:
-- 一問一答形式を守る（複数質問を一度にしない）
+- 質問の概要を先に提示し、その後は一問一答形式で進める（各フェーズのハイブリッド方式に従う）
 - 回答を得てから次の質問に進む
 - 独自の解釈で進めず、必ず確認する
 ```
 
 **理由**: CLAUDE.mdにある「質問の深掘り」ルールをAGENTS.mdに移動・集約することで、Claude Code以外のAIツール（Kiro等）でも同じルールが適用される。
+
+**注**: 各フェーズプロンプト（inception.md等）に記載の「質問フロー（ハイブリッド方式）」が優先される。本ルールは共通の基本原則として位置づける。
 
 ### 2. inception.md への受け入れ基準ガイダンス追加
 
@@ -71,9 +73,18 @@
 
 ## 影響範囲
 
+### 編集対象（正のソース）
+
 - `prompts/package/prompts/AGENTS.md`: 質問深掘りルール追加
 - `prompts/package/prompts/inception.md`: 受け入れ基準ガイダンス追加
 - `prompts/package/prompts/CLAUDE.md`: 「質問の深掘り」セクションはそのまま残す（Claude Code固有の補足として）
+
+### 反映先（Operations Phaseでrsyncにより自動反映）
+
+- `docs/aidlc/prompts/AGENTS.md`
+- `docs/aidlc/prompts/inception.md`
+
+**注**: `prompts/package/` が正のソースであり、`docs/aidlc/` は rsync コピーである（rules.md「メタ開発の意識」参照）。直接 `docs/aidlc/` を編集してはならない。
 
 ## 非機能要件への対応
 
