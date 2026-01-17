@@ -532,37 +532,16 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 サイクル {{CYCLE}} のディレクトリを自動的に作成します。
 
-**ディレクトリ構造作成**:
+**ディレクトリ構造・履歴ファイル作成**:
 ```bash
-mkdir -p docs/cycles/{{CYCLE}}/plans
-mkdir -p docs/cycles/{{CYCLE}}/requirements
-mkdir -p docs/cycles/{{CYCLE}}/story-artifacts/units
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/domain-models
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/logical-designs
-mkdir -p docs/cycles/{{CYCLE}}/design-artifacts/architecture
-mkdir -p docs/cycles/{{CYCLE}}/inception
-mkdir -p docs/cycles/{{CYCLE}}/construction/units
-mkdir -p docs/cycles/{{CYCLE}}/operations
+bin/init-cycle-dir.sh {{CYCLE}}
 ```
 
-**history/ ディレクトリ初期化**:
-```bash
-mkdir -p docs/cycles/{{CYCLE}}/history
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-cat <<EOF > docs/cycles/{{CYCLE}}/history/inception.md
-# Inception Phase 履歴
+このスクリプトは以下を一括で作成します:
+- 10個のディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
+- history/inception.md（初期履歴ファイル）
 
-## ${TIMESTAMP}
-
-- **フェーズ**: サイクルセットアップ
-- **実行内容**: サイクル開始
-- **プロンプト**: -
-- **成果物**: docs/cycles/{{CYCLE}}/（サイクルディレクトリ）
-- **備考**: -
-
----
-EOF
-```
+**注**: `--dry-run` オプションで作成予定を確認できます。
 
 **共通バックログディレクトリ確認**:
 ```bash

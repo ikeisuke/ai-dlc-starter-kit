@@ -686,20 +686,8 @@ if [ "$BACKLOG_MODE" != "issue" ] && [ "$BACKLOG_MODE" != "issue-only" ]; then
 elif [ "$GH_AVAILABLE" != "true" ]; then
   echo "警告: GitHub CLIが利用できないため、スキップします"
 else
-  # サイクルラベル確認・作成
-  CYCLE_LABEL="cycle:{{CYCLE}}"
-
-  # ラベル存在確認（--searchで絞り込み後、完全一致を確認）
-  if gh label list --search "$CYCLE_LABEL" --json name --jq ".[] | select(.name==\"$CYCLE_LABEL\") | .name" 2>/dev/null | grep -q "^${CYCLE_LABEL}$"; then
-    echo "サイクルラベル ${CYCLE_LABEL} は既に存在します"
-  else
-    # ラベル作成
-    if gh label create "$CYCLE_LABEL" --description "サイクル {{CYCLE}}" --color "C5DEF5"; then
-      echo "サイクルラベル ${CYCLE_LABEL} を作成しました"
-    else
-      echo "警告: サイクルラベルの作成に失敗しました"
-    fi
-  fi
+  # サイクルラベル確認・作成（cycle-label.shスクリプトを使用）
+  docs/aidlc/bin/cycle-label.sh "{{CYCLE}}"
 
 fi
 ```
