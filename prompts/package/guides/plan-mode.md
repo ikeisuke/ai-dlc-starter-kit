@@ -63,9 +63,11 @@ Claude Codeが自動的にプランモードへの移行を提案する場合が
 
 ## 3. AI-DLCでの活用シーン
 
-### 推奨ケース
+> **注**: AI-DLCでは現行フロー（Phase 1設計 → Phase 2実装）を基本とし、プランモードは**オプション**として必要に応じて活用する方針です（v1.7.2検討結果）。
 
-以下の場合にプランモードの活用を推奨します：
+### 活用が有効なケース
+
+以下の場合にプランモードの活用が有効です：
 
 | ケース | 例 |
 |--------|-----|
@@ -90,7 +92,7 @@ Claude Codeが自動的にプランモードへの移行を提案する場合が
 
 ```text
 [プランモード]（オプション）
-    ↓ 探索結果を反映
+    ↓ 探索結果をドメインモデル・論理設計に反映
 Phase 1: 設計
 ├── ドメインモデル設計
 ├── 論理設計
@@ -98,6 +100,11 @@ Phase 1: 設計
     ↓
 Phase 2: 実装
 ```
+
+**プランモードの探索結果の活用**:
+
+- 既存コードのパターンやアーキテクチャの理解 → ドメインモデル設計に反映
+- 技術的な実装アプローチの検討結果 → 論理設計に反映
 
 **重要**: プランモードの承認とAI-DLC設計レビューの承認は別物です。両方の承認プロセスが必要です。
 
@@ -129,6 +136,7 @@ Phase 2: 実装
 
 ## 参考
 
-- [Claude Code EnterPlanMode仕様](https://docs.anthropic.com/en/docs/claude-code)（Claude Code内蔵ツール）
+- Claude Code EnterPlanMode（Claude Code内蔵ツール仕様）
+  - **注**: EnterPlanModeの仕様はClaude Code内蔵ツールとして提供されており、公式ドキュメントとしては公開されていません。バージョンや設定により動作が異なる可能性があります。
 - AI-DLC Construction Phase プロンプト (`docs/aidlc/prompts/construction.md`)
 - v1.7.2 プランモード活用検討 (`docs/cycles/v1.7.2/requirements/plan-mode-research.md`)
