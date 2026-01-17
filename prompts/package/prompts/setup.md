@@ -181,12 +181,14 @@ fi
 ### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
 
 **前提条件**:
+
 - BACKLOG_MODE = "issue" または "issue-only"
 - GitHub CLIが利用可能かつ認証済み
 
 上記条件を満たさない場合はこのステップをスキップ。
 
 **ラベル作成確認**:
+
 ```text
 Issue駆動バックログに必要なラベルを確認・作成します。
 
@@ -196,35 +198,23 @@ Issue駆動バックログに必要なラベルを確認・作成します。
 
 **「はい」の場合**:
 
-まず既存ラベルを確認する。
+共通ラベル初期化スクリプトを実行する。
 
 ```bash
-gh label list --json name --jq '.[].name'
+docs/aidlc/bin/init-labels.sh
 ```
 
-以下のラベルのうち、**存在しないもののみ**作成する。
+**出力例**:
 
-| ラベル名 | 色 | 説明 |
-|----------|------|------|
-| `backlog` | FBCA04 | バックログ項目 |
-| `type:feature` | 1D76DB | 新機能 |
-| `type:bugfix` | D93F0B | バグ修正 |
-| `type:chore` | 0E8A16 | 雑務・メンテナンス |
-| `type:refactor` | 5319E7 | リファクタリング |
-| `type:docs` | 0075CA | ドキュメント |
-| `type:perf` | FBCA04 | パフォーマンス |
-| `type:security` | B60205 | セキュリティ |
-| `priority:high` | D93F0B | 高優先度 |
-| `priority:medium` | FBCA04 | 中優先度 |
-| `priority:low` | 0E8A16 | 低優先度 |
-
-作成コマンド（必要なラベルのみ実行）:
-
-```bash
-gh label create "{NAME}" --description "{DESC}" --color "{COLOR}"
+```text
+label:backlog:exists
+label:type:feature:created
+label:type:bugfix:created
+...
 ```
 
 **「いいえ」の場合**:
+
 ```text
 ラベル作成をスキップしました。
 後から手動で作成することもできます。

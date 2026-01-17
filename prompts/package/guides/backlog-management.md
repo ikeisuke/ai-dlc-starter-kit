@@ -238,22 +238,20 @@ gh auth login
 
 ### Issueラベルの設定
 
-ラベルが存在しない場合、事前に作成が必要です:
+共通ラベルが存在しない場合、初期化スクリプトで一括作成できます:
 
 ```bash
-# ラベル作成例
-gh label create "backlog" --color "0052CC" --description "バックログアイテム"
-gh label create "type:feature" --color "A2EEEF" --description "新機能"
-gh label create "type:bugfix" --color "D73A4A" --description "バグ修正"
-gh label create "type:chore" --color "FEF2C0" --description "雑務"
-gh label create "type:refactor" --color "C5DEF5" --description "リファクタリング"
-gh label create "type:docs" --color "0075CA" --description "ドキュメント"
-gh label create "type:perf" --color "F9D0C4" --description "パフォーマンス"
-gh label create "type:security" --color "D93F0B" --description "セキュリティ"
-gh label create "priority:high" --color "B60205" --description "優先度: 高"
-gh label create "priority:medium" --color "FBCA04" --description "優先度: 中"
-gh label create "priority:low" --color "0E8A16" --description "優先度: 低"
-gh label create "cycle:v1.7.0" --color "5319E7" --description "サイクル v1.7.0"
+# 共通ラベルの一括作成（11個）
+docs/aidlc/bin/init-labels.sh
+
+# 確認のみ（実際に作成しない）
+docs/aidlc/bin/init-labels.sh --dry-run
+```
+
+**注**: サイクルラベル（`cycle:vX.X.X`）は上記スクリプトに含まれません。サイクル開始時に別途作成してください:
+
+```bash
+gh label create "cycle:v1.8.0" --color "5319E7" --description "サイクル v1.8.0"
 ```
 
 ---
