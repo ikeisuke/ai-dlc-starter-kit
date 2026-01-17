@@ -89,7 +89,7 @@ GitHub IssueへのラベルとClose操作を行うCLIスクリプトのドメイ
 
 ### labelサブコマンド
 
-```
+```text
 入力: issue-ops.sh label <issue_number> <label_name>
 処理:
   1. 前提条件チェック
@@ -101,7 +101,7 @@ GitHub IssueへのラベルとClose操作を行うCLIスクリプトのドメイ
 
 ### closeサブコマンド
 
-```
+```text
 入力: issue-ops.sh close <issue_number> [--not-planned]
 処理:
   1. 前提条件チェック

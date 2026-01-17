@@ -33,9 +33,9 @@
 - 失敗: 0
 
 ```text
-$ cycle-label.sh --help    → ヘルプ表示: OK
-$ cycle-label.sh           → error:missing-version: OK
-$ cycle-label.sh v1.8.0    → label:cycle:v1.8.0:exists: OK
+cycle-label.sh --help    → ヘルプ表示: OK
+cycle-label.sh           → error:missing-version: OK
+cycle-label.sh v1.8.0    → label:cycle:v1.8.0:exists: OK
 ```
 
 ## コードレビュー結果
