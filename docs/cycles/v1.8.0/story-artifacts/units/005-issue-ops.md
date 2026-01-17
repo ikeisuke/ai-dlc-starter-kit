@@ -48,11 +48,25 @@ bin/issue-ops.sh close 123 --not-planned
 ### 出力例
 
 ```text
+# 成功ケース
 issue:123:labeled:cycle:v1.8.0
 issue:123:closed
 issue:123:closed:not-planned
-issue:123:error:not found
+
+# エラーケース（ハイフン区切り、スペースなし）
+issue:123:error:not-found
+issue:123:error:gh-not-available
+issue:123:error:gh-not-authenticated
+issue:123:error:unknown
+
+# 引数エラーケース
+error:missing-subcommand
+error:unknown-subcommand:foo
+error:missing-issue-number
+error:missing-label-name
 ```
+
+**注**: すべての出力はstdoutへ。エラー理由はハイフン区切りで機械処理しやすい形式。
 
 ### 変更対象ファイル
 - `prompts/package/bin/issue-ops.sh`（新規）
@@ -68,7 +82,7 @@ Medium
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-01-17
+- **完了日**: 2026-01-17
+- **担当**: AI

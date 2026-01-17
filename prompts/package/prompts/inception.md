@@ -703,10 +703,12 @@ grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null
 Issue番号が見つかった場合、各Issueに対してサイクルラベル `cycle:{{CYCLE}}` を付与する。
 
 ```bash
-gh issue edit {ISSUE_NUM} --add-label "cycle:{{CYCLE}}"
+docs/aidlc/bin/issue-ops.sh label {ISSUE_NUM} "cycle:{{CYCLE}}"
 ```
 
 （`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
+
+**出力例**: `issue:123:labeled:cycle:v1.8.0`
 
 ### 2. iOSバージョン更新【project.type=iosの場合のみ】
 

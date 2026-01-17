@@ -712,8 +712,10 @@ gh issue list --label backlog --state open
 
 対応済み項目は Issue をクローズ:
 ```bash
-gh issue close {ISSUE_NUMBER}
+docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 ```
+
+**出力例**: `issue:123:closed`
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
