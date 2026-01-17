@@ -88,7 +88,15 @@ file:<パス>:<状態>
 | created | 新規作成 |
 | exists | 既存（スキップ） |
 | would-create | 作成予定（--dry-runモード） |
-| error | 作成失敗 |
+| error | 作成失敗（詳細はstderrへ） |
+
+### エラー出力（stderr）
+
+```text
+[error] <対象>: <エラー詳細>
+```
+
+init-labels.shと同様の形式を採用。エラー発生時はこの形式でstderrに出力する。
 
 ### 終了コード
 
@@ -105,7 +113,7 @@ file:<パス>:<状態>
 **ステップ**:
 1. 引数解析（--help, --dry-run, VERSION）
 2. バージョン形式を検証
-3. 各ディレクトリを順次作成（10個）
+3. 各ディレクトリを順次作成（10個: plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
 4. history/inception.md を初期化
 5. エラーカウントに応じて終了コードを決定
 
@@ -118,6 +126,13 @@ file:<パス>:<状態>
 3. 存在しない場合:
    - --dry-run: `would-create` を出力
    - 通常: mkdir -p で作成、結果を出力
+
+### --dry-run モードの詳細仕様
+
+- **既存判定**: 実行する（ファイルシステムを読み取り、exists/would-createを正確に出力）
+- **ディレクトリ作成**: 実行しない（would-createを出力するのみ）
+- **ファイル作成（history/inception.md）**: 実行しない（would-createを出力するのみ）
+- **出力形式**: 通常モードと同じ形式で出力（状態のみ異なる）
 
 ## 非機能要件（NFR）への対応
 
@@ -136,6 +151,7 @@ file:<パス>:<状態>
 ## 技術選定
 - **言語**: Bash
 - **依存コマンド**: mkdir, date, cat
+- **配置先**: `prompts/package/bin/init-cycle-dir.sh`（init-labels.shと同じディレクトリ）
 
 ## setup.md への統合
 
