@@ -43,16 +43,17 @@
 
 以下の簡略指示でフェーズを開始できます：
 
-| 指示 | 対応フェーズ |
-|------|-------------|
+| 指示 | 対応処理 |
+|------|----------|
 | 「インセプション進めて」「start inception」 | Inception Phase |
 | 「コンストラクション進めて」「start construction」 | Construction Phase |
 | 「オペレーション進めて」「start operations」 | Operations Phase |
 | 「セットアップ」「start setup」 | Setup（新規サイクル開始） |
+| 「AIDLCアップデート」「update aidlc」「start upgrade」 | アップグレード（環境更新） |
 
 **Lite版を使用する場合**:
-| 指示 | 対応フェーズ |
-|------|-------------|
+| 指示 | 対応処理 |
+|------|----------|
 | 「start lite inception」 | Inception Phase (Lite) |
 | 「start lite construction」 | Construction Phase (Lite) |
 | 「start lite operations」 | Operations Phase (Lite) |
