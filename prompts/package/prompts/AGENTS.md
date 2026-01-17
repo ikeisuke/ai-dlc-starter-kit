@@ -50,6 +50,7 @@
 | 「オペレーション進めて」「start operations」 | Operations Phase |
 | 「セットアップ」「start setup」 | Setup（新規サイクル開始） |
 | 「AIDLCアップデート」「update aidlc」「start upgrade」 | アップグレード（環境更新） |
+| 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
 
 **Lite版を使用する場合**:
 | 指示 | 対応処理 |
@@ -124,6 +125,43 @@
 - 既存履歴の削除・上書き（historyは追記のみ）
 - 承認なしでの次ステップ開始
 - 独自判断での重要な決定（必ず質問する）
+
+---
+
+## フィードバック送信
+
+「AIDLCフィードバック」「aidlc feedback」と言われた場合、以下の手順でフィードバック送信を案内する。
+
+### 手順
+
+1. **フィードバック内容のヒアリング**:
+   - 改善提案、要望、バグ報告、感想などを自由に入力してもらう
+   - 必要に応じて詳細を質問する
+
+2. **Issue作成画面を開く**:
+   - GitHub CLIが利用可能な場合、以下のコマンドでブラウザを開く
+   - ユーザーが内容を確認・編集してから送信できる
+   - **重要**: ユーザー入力はヒアドキュメントで安全に渡すこと
+
+   ```bash
+   gh issue create --web \
+     --repo ikeisuke/ai-dlc-starter-kit \
+     --template feedback.yml \
+     --title "[Feedback] タイトル" \
+     --body "$(cat <<'EOF'
+   フィードバック内容をここに記載
+   EOF
+   )"
+   ```
+
+3. **GitHub CLIが利用できない場合**:
+   - 以下のURLを案内する
+   - `https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feedback.yml`
+
+### 注意事項
+
+- Issue作成は自動で行わず、必ずブラウザで確認画面を開く
+- ユーザーが「Submit」ボタンを押すまでIssueは作成されない
 
 ---
 

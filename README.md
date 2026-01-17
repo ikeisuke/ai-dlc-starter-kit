@@ -775,3 +775,9 @@ AI-DLC 翻訳文書については、オリジナルのホワイトペーパー�
 ## 📮 フィードバック
 
 このスターターキットについてのフィードバックや質問は、GitHub Issues でお願いします。
+
+- [フィードバック・改善提案](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feedback.yml)
+- [バグ報告](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=bug.yml)
+- [機能要望](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feature.yml)
+
+**AIで作業中の場合**: 「AIDLCフィードバック」と入力すると、AIがフィードバック送信を案内します。

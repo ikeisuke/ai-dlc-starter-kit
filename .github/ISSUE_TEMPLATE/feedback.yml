@@ -1,0 +1,36 @@
+name: "Feedback / フィードバック"
+description: "Feedback and suggestions for AI-DLC Starter Kit / AI-DLCスターターキットへのフィードバック・改善提案"
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your feedback on AI-DLC Starter Kit!
+        AI-DLCスターターキットへのフィードバックをお寄せいただきありがとうございます。
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: "Feedback / フィードバック内容"
+      description: "Share your suggestions, requests, or thoughts / 改善提案、要望、感想などを自由にお書きください"
+      placeholder: |
+        e.g., / 例：
+        - This feature would be helpful / こういう機能があると便利
+        - This documentation is unclear / このドキュメントがわかりにくい
+        - This worked well for my use case / こういう使い方をしてみたら良かった
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Usage Context (Optional) / 利用状況（任意）"
+      description: "What environment or situation are you using? / どのような環境・状況でお使いですか？"
+      placeholder: |
+        e.g., / 例：
+        - Version: v1.8.0 / 使用バージョン: v1.8.0
+        - Project type: Web application / プロジェクトタイプ: Webアプリケーション
+        - AI tool: Claude Code / AIツール: Claude Code
+    validations:
+      required: false
