@@ -1,6 +1,5 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
-# スターターキットバージョン: 1.2.3
 
 starter_kit_version = "1.7.4"
 
@@ -82,6 +81,13 @@ enabled = false
 # - true: プロンプト内でjj-support.md参照を案内
 # - false: 従来のgitコマンドを使用（デフォルト）
 enabled = true
+
+[rules.linting]
+# markdownlint設定（v1.8.0で追加）
+# markdown_lint: true | false
+# - true: markdownlint を実行する
+# - false: markdownlint をスキップする（デフォルト）
+markdown_lint = false
 
 [backlog]
 # バックログ管理モード設定（v1.7.0で追加）

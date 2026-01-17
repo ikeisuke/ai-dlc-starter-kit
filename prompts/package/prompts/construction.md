@@ -633,11 +633,10 @@ BDD/TDDに従ってテストコードを作成
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-# 現在サイクルと変更ファイルのみを対象（過去サイクルは除外）
-npx markdownlint-cli2 "docs/cycles/{{CYCLE}}/**/*.md" "prompts/**/*.md" "*.md"
+docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 ```
 
-**注意**: 過去サイクルのファイルはCIでもチェック対象外のため、現在サイクルのみを対象とします。
+**注意**: `docs/aidlc.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 

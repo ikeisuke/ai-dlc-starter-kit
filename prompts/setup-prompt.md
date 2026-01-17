@@ -683,6 +683,23 @@ EOF
 else
   echo "[rules.jj] section already exists"
 fi
+
+# [rules.linting] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.linting\]" docs/aidlc.toml; then
+  echo "Adding [rules.linting] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.linting]
+# markdownlint設定（v1.8.0で追加）
+# markdown_lint: true | false
+# - true: markdownlint を実行する
+# - false: markdownlint をスキップする（デフォルト）
+markdown_lint = false
+EOF
+  echo "Added [rules.linting] section"
+else
+  echo "[rules.linting] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -692,6 +709,7 @@ grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
 grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
+grep -A 5 "^\[rules.linting\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
@@ -862,6 +880,24 @@ rsync -av --checksum --delete \
 ```
 
 ガイドも同様に完全同期します。
+
+#### 8.2.2.3 スクリプトの同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/bin/ \
+  docs/aidlc/bin/ 2>&1 | grep "^deleting"
+
+# 2. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/bin/ \
+  docs/aidlc/bin/
+```
+
+スクリプトも同様に完全同期します。
 
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
