@@ -49,24 +49,56 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 AI-DLCで使用する依存コマンドの状態を確認します。
 
 ```bash
-# ghの判定
-if ! command -v gh >/dev/null 2>&1; then
-  GH_STATUS="未インストール"
-elif ! gh auth status >/dev/null 2>&1; then
-  GH_STATUS="未認証"
+# env-info.shを使用して依存ツールの状態を一括取得
+if [ -f "docs/aidlc/bin/env-info.sh" ]; then
+  ENV_INFO=$(docs/aidlc/bin/env-info.sh 2>/dev/null) || ENV_INFO=""
 else
-  GH_STATUS="利用可能"
+  ENV_INFO=""
 fi
 
-# daselの判定
-if command -v dasel >/dev/null 2>&1; then
-  DASEL_STATUS="利用可能"
-else
-  DASEL_STATUS="未インストール"
-fi
+if [ -n "$ENV_INFO" ]; then
+  # env-info.shの出力から状態を抽出
+  GH_RAW=$(echo "$ENV_INFO" | grep "^gh:" | cut -d: -f2)
+  DASEL_RAW=$(echo "$ENV_INFO" | grep "^dasel:" | cut -d: -f2)
 
-echo "gh: ${GH_STATUS}"
-echo "dasel: ${DASEL_STATUS}"
+  # 空の場合はunknownとして扱う
+  [ -z "$GH_RAW" ] && GH_RAW="unknown"
+  [ -z "$DASEL_RAW" ] && DASEL_RAW="unknown"
+
+  # Raw値を日本語表示値に変換
+  case "$GH_RAW" in
+    available) GH_STATUS="利用可能" ;;
+    not-installed) GH_STATUS="未インストール" ;;
+    not-authenticated) GH_STATUS="未認証" ;;
+    *) GH_STATUS="不明" ;;
+  esac
+
+  case "$DASEL_RAW" in
+    available) DASEL_STATUS="利用可能" ;;
+    not-installed) DASEL_STATUS="未インストール" ;;
+    *) DASEL_STATUS="不明" ;;
+  esac
+else
+  # env-info.shが利用できない場合は旧ロジックにフォールバック
+  if ! command -v gh >/dev/null 2>&1; then
+    GH_RAW="not-installed"
+    GH_STATUS="未インストール"
+  elif ! gh auth status >/dev/null 2>&1; then
+    GH_RAW="not-authenticated"
+    GH_STATUS="未認証"
+  else
+    GH_RAW="available"
+    GH_STATUS="利用可能"
+  fi
+
+  if command -v dasel >/dev/null 2>&1; then
+    DASEL_RAW="available"
+    DASEL_STATUS="利用可能"
+  else
+    DASEL_RAW="not-installed"
+    DASEL_STATUS="未インストール"
+  fi
+fi
 ```
 
 **結果表示**:
@@ -82,7 +114,7 @@ echo "dasel: ${DASEL_STATUS}"
 | dasel | ${DASEL_STATUS} | 設定ファイル解析 |
 ```
 
-**警告表示条件**: `GH_STATUS != "利用可能"` または `DASEL_STATUS != "利用可能"` の場合
+**警告表示条件**: `GH_RAW != "available"` または `DASEL_RAW != "available"` の場合（Raw値で判定）
 
 ```text
 ⚠️ 一部のコマンドが利用できません。関連機能は制限されます：
