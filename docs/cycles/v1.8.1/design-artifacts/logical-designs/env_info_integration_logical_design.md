@@ -43,10 +43,10 @@ setup.md
 
 #### 状態変換
 
-- **責務**: 英語状態値を日本語に変換
-- **入力**: 英語状態値（available, not-installed, not-authenticated）
-- **出力**: 日本語状態値（利用可能, 未インストール, 未認証）
-- **処理**: case文による変換
+- **責務**: Raw値（英語状態値）を表示値（日本語）に変換
+- **入力**: Raw値（available, not-installed, not-authenticated, unknown/空/その他）
+- **出力**: 表示値（利用可能, 未インストール, 未認証, 不明）
+- **処理**: case文による変換（マッチしない場合は `unknown` → "不明"）
 
 #### 結果表示
 
@@ -57,7 +57,7 @@ setup.md
 #### 警告表示
 
 - **責務**: 必要に応じて警告メッセージを表示
-- **判定条件**: GH_STATUS != "利用可能" OR DASEL_STATUS != "利用可能"
+- **判定条件**: GH_RAW != "available" OR DASEL_RAW != "available"（Raw値で判定）
 - **出力**: 警告テキストブロック
 
 ## インターフェース設計
@@ -102,7 +102,7 @@ statusの取りうる値:
 
 ### 警告表示フォーマット（条件付き）
 
-表示条件: GH_STATUS != "利用可能" OR DASEL_STATUS != "利用可能"
+表示条件: GH_RAW != "available" OR DASEL_RAW != "available"（Raw値で判定）
 
 ```text
 ⚠️ 一部のコマンドが利用できません。関連機能は制限されます：
