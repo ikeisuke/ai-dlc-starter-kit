@@ -51,7 +51,7 @@ AI-DLCで使用する依存コマンドの状態を確認します。
 ```bash
 # env-info.shを使用して依存ツールの状態を一括取得
 if [ -f "docs/aidlc/bin/env-info.sh" ]; then
-  ENV_INFO=$(docs/aidlc/bin/env-info.sh 2>/dev/null) || ENV_INFO=""
+  ENV_INFO=$(bash docs/aidlc/bin/env-info.sh 2>/dev/null) || ENV_INFO=""
 else
   ENV_INFO=""
 fi
