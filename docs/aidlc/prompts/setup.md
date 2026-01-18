@@ -536,7 +536,7 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 **ディレクトリ構造・履歴ファイル作成**:
 ```bash
-bin/init-cycle-dir.sh {{CYCLE}}
+docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 ```
 
 このスクリプトは以下を一括で作成します:
