@@ -712,8 +712,10 @@ gh issue list --label backlog --state open
 
 対応済み項目は Issue をクローズ:
 ```bash
-gh issue close {ISSUE_NUMBER}
+docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 ```
+
+**出力例**: `issue:123:closed`
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
@@ -798,11 +800,10 @@ README.mdに今回のサイクルの変更内容を追記
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-# 現在サイクルと変更ファイルのみを対象（過去サイクルは除外）
-npx markdownlint-cli2 "docs/cycles/{{CYCLE}}/**/*.md" "prompts/**/*.md" "*.md"
+docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 ```
 
-**注意**: 過去サイクルのファイルはCIでもチェック対象外のため、現在サイクルのみを対象とします。
+**注意**: `docs/aidlc.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 

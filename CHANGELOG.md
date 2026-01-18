@@ -7,6 +7,40 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.8.0] - 2026-01-18
+
+### Added
+
+- スクリプト化基盤（`docs/aidlc/bin/`）
+  - env-info.sh - 環境情報取得
+  - init-labels.sh - GitHubラベル初期化
+  - init-cycle-dir.sh - サイクルディレクトリ初期化
+  - cycle-label.sh - サイクルラベル管理
+  - issue-ops.sh - Issue操作
+  - write-history.sh - 履歴書き込み
+  - sync-prompts.sh - プロンプト同期
+  - run-markdownlint.sh - Markdownlint実行
+- プランモード活用ガイド（`docs/aidlc/guides/plan-mode.md`）
+- フェーズ間連携（セットアップ→インセプション引き継ぎ）
+- Unit完了チェック機能（Construction Phase Phase2終了時）
+- markdownlint設定対応（[rules.linting].markdown_lint）
+- 簡略指示「AIDLCアップデート」追加
+- フィードバック手段追加（GitHub Issues/Discussionsへの誘導）
+- worktreeサブディレクトリ化対応
+- プロンプト最適化分析レポート（次サイクル向け準備）
+
+### Changed
+
+- 複合コマンドをスクリプト化（許可リスト運用改善）
+- 各フェーズプロンプトでスクリプト呼び出しに統合
+- セットアップコンテキストテンプレート追加
+
+### Fixed
+
+- 後方互換性：スクリプト未同期環境でのフォールバック動作
+
+---
+
 ## [1.7.4] - 2026-01-14
 
 ### Added
