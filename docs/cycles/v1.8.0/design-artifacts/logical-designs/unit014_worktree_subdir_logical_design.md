@@ -26,6 +26,15 @@ echo "worktreeパス: ${WORKTREE_PATH}"
 
 **理由**: プロジェクト名の取得が不要になり、シンプルなパス定義に変更。
 
+### 1.5 親ディレクトリ作成の追加
+
+worktree作成フローに `mkdir -p .worktree` を追加:
+
+```bash
+mkdir -p .worktree
+git worktree add "${WORKTREE_PATH}" "cycle/{{CYCLE}}"
+```
+
 ### 2. 成功時メッセージ（438-448行目付近）
 
 **変更前**:
@@ -131,6 +140,35 @@ cd .worktree/cycle-{{CYCLE}}
 - `Bash(git worktree add:*)` - ワイルドカードパターンのため変更不要
 - `Bash(git worktree remove:*)` - ワイルドカードパターンのため変更不要
 
+## .gitignore の更新
+
+`.worktree/`ディレクトリがgit statusにUntracked filesとして表示されるため、`.gitignore`に追加:
+
+```gitignore
+# worktree directory
+.worktree/
+```
+
+## 既存worktree移行手順
+
+setup.mdに以下の移行手順を追記:
+
+```text
+### 既存worktreeの移行
+
+旧形式（親ディレクトリ）のworktreeがある場合の移行手順:
+
+1. 既存worktreeを削除
+   git worktree remove ../[プロジェクト名]-{{CYCLE}}
+
+2. 新形式で再作成
+   mkdir -p .worktree
+   git worktree add .worktree/cycle-{{CYCLE}} cycle/{{CYCLE}}
+
+3. 新しいディレクトリに移動
+   cd .worktree/cycle-{{CYCLE}}
+```
+
 ## テスト方針
 
 このUnitはドキュメント変更のみのため、以下を確認:
@@ -138,3 +176,4 @@ cd .worktree/cycle-{{CYCLE}}
 1. 変更後のsetup.mdが構文的に正しいこと
 2. パス形式が一貫していること
 3. コマンド例が正しく動作する形式であること
+4. `.gitignore`に`.worktree/`が追加されていること

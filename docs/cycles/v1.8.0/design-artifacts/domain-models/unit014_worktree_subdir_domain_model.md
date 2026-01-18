@@ -49,8 +49,24 @@ worktreeの作成先パスを表す概念。
 
 ### 注意点
 
-1. **既存worktree**: 既存のworktreeは手動で移行が必要
-2. **.gitignore不要**: worktreeディレクトリはgitの仕様上、追跡対象外
+1. **既存worktree**: 既存のworktreeは手動で移行が必要（remove→再作成）
+2. **.gitignore追加が必要**: `.worktree/`ディレクトリはgit statusにUntracked filesとして表示されるため、`.gitignore`への追加が必要
+3. **親ディレクトリ作成**: `mkdir -p .worktree`が必要（git worktree addは親ディレクトリを自動作成しない）
+
+## 検証結果
+
+### git worktree addの動作確認
+
+メインワークツリー配下のサブディレクトリへのworktree作成は正常に動作することを確認済み。
+
+```bash
+mkdir -p .worktree
+git worktree add .worktree/test-branch -b test-branch  # 成功
+```
+
+### git statusの表示
+
+`.worktree/`ディレクトリはUntracked filesとして表示される→`.gitignore`への追加が必要。
 
 ## 変更対象ファイル
 
@@ -58,3 +74,8 @@ worktreeの作成先パスを表す概念。
 |---------|---------|
 | `prompts/package/prompts/setup.md` | パス定義、コマンド例、説明文の更新 |
 | `prompts/package/guides/ai-agent-allowlist.md` | 確認のみ（変更不要の見込み） |
+| `.gitignore` | `.worktree/`の追加 |
+
+### 検索確認済み
+
+`grep -r "worktree" prompts/package/`で検索し、上記以外のファイルには旧パスの記述がないことを確認済み。
