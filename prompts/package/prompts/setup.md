@@ -387,11 +387,9 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 
   - **worktree を選択**: 以下のAI自動作成フローを実行
 
-    **1. プロジェクト情報取得**:
+    **1. worktreeパス設定**:
     ```bash
-    PROJECT_NAME=$(basename "$(pwd)")
-    WORKTREE_PATH="../${PROJECT_NAME}-{{CYCLE}}"
-    echo "プロジェクト名: ${PROJECT_NAME}"
+    WORKTREE_PATH=".worktree/cycle-{{CYCLE}}"
     echo "worktreeパス: ${WORKTREE_PATH}"
     ```
 
@@ -427,11 +425,13 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 
     - **BRANCH_EXISTS の場合**（既存ブランチを使用）:
       ```bash
+      mkdir -p .worktree
       git worktree add "${WORKTREE_PATH}" "cycle/{{CYCLE}}"
       ```
 
     - **BRANCH_NOT_EXISTS の場合**（新規ブランチを同時作成）:
       ```bash
+      mkdir -p .worktree
       git worktree add -b "cycle/{{CYCLE}}" "${WORKTREE_PATH}"
       ```
 
@@ -440,7 +440,7 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
       ```text
       worktreeを作成しました: [WORKTREE_PATH]
 
-      新しいディレクトリに移動して、セッションを開始してください:
+      サブディレクトリに移動して、セッションを開始してください:
       cd [WORKTREE_PATH]
 
       移動後、以下のプロンプトを読み込んでください:
@@ -453,9 +453,10 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
       worktreeの自動作成に失敗しました。
       以下のコマンドを手動で実行してください:
 
-      git worktree add [WORKTREE_PATH] cycle/{{CYCLE}}
+      mkdir -p .worktree
+      git worktree add .worktree/cycle-{{CYCLE}} cycle/{{CYCLE}}
 
-      作成後、新しいディレクトリに移動してセッションを開始してください。
+      作成後、サブディレクトリに移動してセッションを開始してください。
       ```
 
       **BRANCH_NOT_EXISTS の場合**:
@@ -463,9 +464,10 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
       worktreeの自動作成に失敗しました。
       以下のコマンドを手動で実行してください:
 
-      git worktree add -b cycle/{{CYCLE}} [WORKTREE_PATH]
+      mkdir -p .worktree
+      git worktree add -b cycle/{{CYCLE}} .worktree/cycle-{{CYCLE}}
 
-      作成後、新しいディレクトリに移動してセッションを開始してください。
+      作成後、サブディレクトリに移動してセッションを開始してください。
       ```
 
   - **ブランチ作成を選択**: 以下のフローを実行
@@ -754,35 +756,35 @@ git worktreeを使うと、同じリポジトリの複数ブランチを別デ�
 
 ```text
 ~/projects/
-├── my-project/              # メインディレクトリ（mainブランチ）
-├── my-project-v1.4.0/       # worktree（cycle/v1.4.0ブランチ）
-└── my-project-v1.5.0/       # worktree（cycle/v1.5.0ブランチ）
+└── my-project/              # メインディレクトリ（mainブランチ）
+    └── .worktree/
+        ├── cycle-v1.4.0/    # worktree（cycle/v1.4.0ブランチ）
+        └── cycle-v1.5.0/    # worktree（cycle/v1.5.0ブランチ）
 ```
 
-### 正しいworktree作成コマンド
-
-**重要**: メインディレクトリから実行してください。親ディレクトリへのcdは不要です。
+### worktree作成コマンド
 
 ```bash
 # メインディレクトリから実行
-git worktree add ../[プロジェクト名]-{{CYCLE}} cycle/{{CYCLE}}
+mkdir -p .worktree
+git worktree add .worktree/cycle-{{CYCLE}} cycle/{{CYCLE}}
 
-# 例: ai-dlc-starter-kit ディレクトリから v1.5.3 のworktreeを作成
-git worktree add ../ai-dlc-starter-kit-v1.5.3 cycle/v1.5.3
+# 例: v1.5.3 のworktreeを作成
+mkdir -p .worktree
+git worktree add .worktree/cycle-v1.5.3 cycle/v1.5.3
 ```
 
-**注意**: `git -C` を使用した方法は**非推奨**です。相対パスがリポジトリディレクトリ基準になり、メインディレクトリ内にworktreeが作成されてしまいます。
+### 既存worktreeの移行
 
-### 誤ったworktreeの修正手順
-
-メインディレクトリ内に誤ってworktreeが作成された場合:
+旧形式（親ディレクトリ）のworktreeがある場合の移行手順:
 
 ```bash
-# 1. 誤った worktree を削除
-git worktree remove [プロジェクト名]-{{CYCLE}}
+# 1. 既存 worktree を削除
+git worktree remove ../[プロジェクト名]-{{CYCLE}}
 
-# 2. 正しい位置に再作成
-git worktree add ../[プロジェクト名]-{{CYCLE}} cycle/{{CYCLE}}
+# 2. 新形式で再作成
+mkdir -p .worktree
+git worktree add .worktree/cycle-{{CYCLE}} cycle/{{CYCLE}}
 
 # 3. 確認
 git worktree list
@@ -790,8 +792,8 @@ git worktree list
 
 ### worktree作成後
 
-作成後、新しいディレクトリに移動してセッションを開始してください:
+作成後、サブディレクトリに移動してセッションを開始してください:
 
 ```bash
-cd ../[プロジェクト名]-{{CYCLE}}
+cd .worktree/cycle-{{CYCLE}}
 ```
