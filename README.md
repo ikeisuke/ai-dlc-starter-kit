@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.7.4-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -501,6 +501,36 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
 
+## 🔧 v1.8.0 の新機能
+
+v1.8.0 はスクリプト化基盤構築とUX改善のためのリリースです。
+
+### 1. スクリプト化基盤（docs/aidlc/bin/）
+
+プロンプト内の複合コマンドを独立スクリプトに移行し、AIエージェントの許可リスト運用を改善しました。
+
+- `env-info.sh` - 環境情報取得
+- `init-labels.sh` - GitHubラベル初期化
+- `init-cycle-dir.sh` - サイクルディレクトリ初期化
+- `cycle-label.sh` - サイクルラベル管理
+- `issue-ops.sh` - Issue操作
+- `write-history.sh` - 履歴書き込み
+- `sync-prompts.sh` - プロンプト同期
+- `run-markdownlint.sh` - Markdownlint実行
+
+### 2. UX改善機能
+
+- **プランモード活用ガイド**: Claude Codeのプランモード使い方を文書化
+- **フェーズ間連携**: セットアップで決めた内容をインセプションに引き継ぐ仕組み
+- **Unit完了チェック**: Construction Phase終了時の受け入れ基準確認
+- **markdownlint設定**: `[rules.linting].markdown_lint` で有効/無効を切替可能
+- **簡略指示追加**: 「AIDLCアップデート」で環境更新を開始
+- **worktreeサブディレクトリ化**: worktree使用時のディレクトリ構造改善
+
+### 3. プロンプト最適化準備
+
+次サイクルでのプロンプトサイズ削減に向けた分析レポートを作成しました。
+
 ## 🔧 v1.6.1 の新機能
 
 v1.6.1 はフェーズ開始の簡略化とルール責務分離のためのリリースです。
@@ -775,3 +805,9 @@ AI-DLC 翻訳文書については、オリジナルのホワイトペーパー�
 ## 📮 フィードバック
 
 このスターターキットについてのフィードバックや質問は、GitHub Issues でお願いします。
+
+- [フィードバック・改善提案](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feedback.yml)
+- [バグ報告](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=bug.yml)
+- [機能要望](https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feature.yml)
+
+**AIで作業中の場合**: 「AIDLCフィードバック」と入力すると、AIがフィードバック送信を案内します。

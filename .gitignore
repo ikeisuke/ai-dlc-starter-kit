@@ -11,3 +11,6 @@
 # Temporary files
 *.tmp
 *.bak
+
+# Worktree directory
+.worktree/
