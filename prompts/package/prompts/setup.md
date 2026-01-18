@@ -779,14 +779,17 @@ git worktree add .worktree/cycle-v1.5.3 cycle/v1.5.3
 旧形式（親ディレクトリ）のworktreeがある場合の移行手順:
 
 ```bash
-# 1. 既存 worktree を削除
-git worktree remove ../[プロジェクト名]-{{CYCLE}}
+# 1. 既存 worktree のパスを確認
+git worktree list
 
-# 2. 新形式で再作成
+# 2. 既存 worktree を削除（上記で確認したパスを指定）
+git worktree remove [確認したパス]
+
+# 3. 新形式で再作成
 mkdir -p .worktree
 git worktree add .worktree/cycle-{{CYCLE}} cycle/{{CYCLE}}
 
-# 3. 確認
+# 4. 確認
 git worktree list
 ```
 
