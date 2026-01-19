@@ -12,8 +12,14 @@
 |----------|----------|------|
 | inception.md | 行99-111 | 一般履歴記録のheredocを置換 |
 | inception.md | 行894-906 | iOSバージョン更新履歴のheredocを置換 |
+| inception.md | 行914-915 | 「heredoc使用」の説明文を「write-history.sh使用」に更新 |
 | construction.md | 行101-115 | 履歴記録のheredocを置換 |
 | operations.md | 行101-114 | 履歴記録のheredocを置換 |
+
+## 境界（スコープ外）
+
+- **write-history.sh自体の修正は行わない**（既存スクリプトをそのまま利用）
+- **setup.mdの履歴記録は対象外**（setup-context.mdは別処理）
 
 ## 実装計画
 
@@ -31,6 +37,7 @@
 1. **inception.md の修正**
    - 一般履歴記録セクション（行99-111）をwrite-history.sh呼び出しに置換
    - iOSバージョン更新セクション（行894-906）をwrite-history.sh呼び出しに置換
+   - 「heredoc使用」の説明文（行914-915）を「write-history.sh使用」に更新
 
 2. **construction.md の修正**
    - 履歴記録セクション（行101-115）をwrite-history.sh呼び出しに置換
@@ -90,6 +97,7 @@ docs/aidlc/bin/write-history.sh \
 ## 完了条件チェックリスト
 
 - [ ] inception.mdのheredocをwrite-history.sh呼び出しに置換
+- [ ] inception.mdの「heredoc使用」説明文を「write-history.sh使用」に更新
 - [ ] construction.mdのheredocをwrite-history.sh呼び出しに置換
 - [ ] operations.mdのheredocをwrite-history.sh呼び出しに置換
 - [ ] 従来のフォーマットとの互換性を維持
