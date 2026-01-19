@@ -51,12 +51,12 @@ AIレビュー設定をSkills優先（MCPフォールバック）方式に改善
 
 ## 完了条件チェックリスト
 
-- [ ] inception.mdのAIレビュー設定をSkills優先+MCPフォールバックに修正
-- [ ] construction.mdのAIレビュー設定を同様に修正
-- [ ] operations.mdのAIレビュー設定を同様に修正
-- [ ] Skills/MCP切り替えフローの明確化
-- [ ] 反復レビュー3回後の継続確認フローを追加
-- [ ] 変更後の各mdファイルが一貫した記述になっていること
+- [x] inception.mdのAIレビュー設定をSkills優先+MCPフォールバックに修正
+- [x] construction.mdのAIレビュー設定を同様に修正
+- [x] operations.mdのAIレビュー設定を同様に修正
+- [x] Skills/MCP切り替えフローの明確化
+- [x] 反復レビュー3回後の継続確認フローを追加
+- [x] 変更後の各mdファイルが一貫した記述になっていること
 
 ## 確認済み事項
 
