@@ -97,17 +97,12 @@ Inception Phaseで決定
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/inception.md
-  ## ${TIMESTAMP}
-
-  - **フェーズ**: Inception Phase
-  - **ステップ**: [ステップ名]
-  - **実行内容**: [作業概要]
-  - **成果物**: [作成・更新したファイル]
-
-  ---
-  EOF
+  docs/aidlc/bin/write-history.sh \
+      --cycle {{CYCLE}} \
+      --phase inception \
+      --step "[ステップ名]" \
+      --content "[作業概要]" \
+      --artifacts "[作成・更新したファイル]"
   ```
 
   **修正差分の記録**（level = "detailed" の場合のみ）:
@@ -892,17 +887,12 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 
 3. **履歴への記録**（重要）:
    ```bash
-   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-   cat <<EOF >> docs/cycles/{{CYCLE}}/history/inception.md
-   ## ${TIMESTAMP}
-
-   - **フェーズ**: Inception Phase
-   - **ステップ**: iOSバージョン更新実施
-   - **実行内容**: CFBundleShortVersionString を ${CYCLE_VERSION} に更新
-   - **成果物**: [更新したファイル]
-
-   ---
-   EOF
+   docs/aidlc/bin/write-history.sh \
+       --cycle {{CYCLE}} \
+       --phase inception \
+       --step "iOSバージョン更新実施" \
+       --content "CFBundleShortVersionString を ${CYCLE_VERSION} に更新" \
+       --artifacts "[更新したファイル]"
    ```
 
 **注意**: 「iOSバージョン更新実施」の文言は履歴に必ず含めてください。Operations Phaseでこの記録を確認し、重複更新を防ぎます。
@@ -912,7 +902,7 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 - ビルド番号はCI/CD（fastlane等）で自動管理することを推奨します
 
 ### 3. 履歴記録
-`docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（write-history.sh使用）
 
 ### 4. ドラフトPR作成【推奨】
 

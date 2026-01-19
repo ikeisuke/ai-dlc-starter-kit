@@ -100,18 +100,15 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/construction_unit{N}.md
-  ## ${TIMESTAMP}
-
-  - **フェーズ**: Construction Phase
-  - **Unit**: [Unit名]
-  - **ステップ**: [ステップ名]
-  - **実行内容**: [作業概要]
-  - **成果物**: [作成・更新したファイル]
-
-  ---
-  EOF
+  docs/aidlc/bin/write-history.sh \
+      --cycle {{CYCLE}} \
+      --phase construction \
+      --unit {N} \
+      --unit-name "[Unit名]" \
+      --unit-slug "[unit-slug]" \
+      --step "[ステップ名]" \
+      --content "[作業概要]" \
+      --artifacts "[作成・更新したファイル]"
   ```
 
   **修正差分の記録**（level = "detailed" の場合のみ）:
