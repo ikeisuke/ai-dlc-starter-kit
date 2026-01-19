@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.8.0"
+starter_kit_version = "1.8.1"
 
 [project]
 name = "ai-dlc-starter-kit"

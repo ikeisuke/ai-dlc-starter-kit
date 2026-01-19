@@ -49,52 +49,25 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 AI-DLCで使用する依存コマンドの状態を確認します。
 
 ```bash
-# ghの判定
-if ! command -v gh >/dev/null 2>&1; then
-  GH_STATUS="未インストール"
-elif ! gh auth status >/dev/null 2>&1; then
-  GH_STATUS="未認証"
-else
-  GH_STATUS="利用可能"
-fi
-
-# daselの判定
-if command -v dasel >/dev/null 2>&1; then
-  DASEL_STATUS="利用可能"
-else
-  DASEL_STATUS="未インストール"
-fi
-
-echo "gh: ${GH_STATUS}"
-echo "dasel: ${DASEL_STATUS}"
+docs/aidlc/bin/env-info.sh
 ```
 
-**結果表示**:
+状態値の意味:
 
-```text
-【依存コマンド確認】
+- `available`: 利用可能
+- `not-installed`: 未インストール
+- `not-authenticated`: 未認証（ghのみ）
 
-以下のコマンドの状態を確認しました：
+**運用ルール**:
 
-| コマンド | 状態 | 用途 |
-|---------|------|------|
-| gh | ${GH_STATUS} | GitHub操作（PR作成、Issue管理） |
-| dasel | ${DASEL_STATUS} | 設定ファイル解析 |
-```
+- この出力を会話コンテキストに保持し、以降のステップでは再実行しない
+- ユーザーがコマンドをインストール/認証した場合のみ再実行
+- スクリプト実行に失敗した場合は、必要になった時点で個別に確認
 
-**警告表示条件**: `GH_STATUS != "利用可能"` または `DASEL_STATUS != "利用可能"` の場合
+**gh/daselが `available` 以外の場合の影響**:
 
-```text
-⚠️ 一部のコマンドが利用できません。関連機能は制限されます：
-- gh未使用時: ドラフトPR作成、Issue操作、ラベル作成がスキップされます
-- dasel未使用時: AIが設定ファイルを直接読み取ります（機能上の影響なし）
-
-インストール方法:
-- gh: https://cli.github.com/
-- dasel: https://github.com/TomWright/dasel
-```
-
-**処理継続**: 警告後も次のステップへ進行する（エラー終了しない）
+- gh: ドラフトPR作成、Issue操作、ラベル作成をスキップ
+- dasel: AIが設定ファイルを直接読み取る（機能上の影響なし）
 
 ### 2. デプロイ済みファイル確認
 

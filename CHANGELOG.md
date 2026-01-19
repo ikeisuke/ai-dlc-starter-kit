@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.8.1] - 2026-01-20
+
+### Added
+
+- env-info.shをsetup.mdの依存ツール確認セクションで活用
+- write-history.shを各フェーズプロンプト（inception/construction/operations）に統合
+- label-cycle-issues.sh - Unit定義ファイルからIssue番号を抽出しサイクルラベルを一括付与
+- AIレビュー設定をSkills優先（MCPフォールバック）方式に改善（#70, #73）
+- 依存コマンド追加手順をoperations.mdにドキュメント化（#72）
+
+### Changed
+
+- 履歴記録をheredocからwrite-history.sh呼び出しに統一
+- AIレビュー判定フロー：Skills利用可能時はSkill使用、不可時はMCPフォールバック
+
+---
+
 ## [1.8.0] - 2026-01-18
 
 ### Added

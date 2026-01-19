@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.8.1-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -500,6 +500,27 @@ v1.4.0 は開発体験向上とチーム開発サポートのためのリリー�
 ### 7. 複数人開発時コンフリクト対策
 - history.mdとbacklog.mdのコンフリクト防止策を追加
 - チーム開発でのスムーズな運用をサポート
+
+## 🔧 v1.8.1 の改善点
+
+v1.8.1 はスクリプト活用拡大とAIレビュー改善のためのリリースです。
+
+### 1. スクリプト活用の拡大
+
+- `env-info.sh` を setup.md の依存ツール確認セクションで活用
+- `write-history.sh` を各フェーズプロンプト（inception/construction/operations）に統合
+- `label-cycle-issues.sh` 新規作成: Unit定義ファイルからIssue番号を抽出しサイクルラベルを一括付与
+
+### 2. AIレビュー設定の改善
+
+- Skills優先（MCPフォールバック）方式に変更
+- Skills利用可能時はSkill使用、不可時はMCPフォールバック
+- 関連Issue: #70, #73
+
+### 3. ドキュメント整備
+
+- 依存コマンド追加手順を operations.md にドキュメント化（#72）
+- 新しい依存コマンドを追加する際の手順を明文化
 
 ## 🔧 v1.8.0 の新機能
 
