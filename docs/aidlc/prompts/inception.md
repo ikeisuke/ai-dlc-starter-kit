@@ -91,23 +91,17 @@ Inception Phaseで決定
   - `level = "standard"`: ステップ完了時に記録（デフォルト）
   - `level = "minimal"`: フェーズ完了時にまとめて記録
 
-  **日時取得の必須ルール**:
-  - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
-  - セッション開始時に取得した日時を使い回さないこと
+  **日時取得**:
+  - 日時は `write-history.sh` が内部で自動取得します
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/inception.md
-  ## ${TIMESTAMP}
-
-  - **フェーズ**: Inception Phase
-  - **ステップ**: [ステップ名]
-  - **実行内容**: [作業概要]
-  - **成果物**: [作成・更新したファイル]
-
-  ---
-  EOF
+  docs/aidlc/bin/write-history.sh \
+      --cycle {{CYCLE}} \
+      --phase inception \
+      --step "[ステップ名]" \
+      --content "[作業概要]" \
+      --artifacts "[作成・更新したファイル]"
   ```
 
   **修正差分の記録**（level = "detailed" の場合のみ）:
@@ -120,16 +114,19 @@ Inception Phaseで決定
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
-- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
+- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビュー（Skills優先、MCPフォールバック）を実行する。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
-  - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
+  - `mode = "required"`: AIレビュー必須（AIレビューツールが両方利用不可の場合、ユーザー承認により例外的に人間レビューへ移行可能。承認は履歴に記録する）
   - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
-  - `mode = "disabled"`: AIレビューを行わない
+  - `mode = "disabled"`: AIレビューを行わない（AIレビューをスキップし、直接人間レビューへ進む）
 
-  **MCP利用可否の確認**:
-  - このAIエージェントが Codex MCP（`mcp__codex__codex` ツール）にアクセス可能か確認
-  - ツールが存在しない場合は「MCP利用不可」として処理
+  **AIレビューツール利用可否の確認（Skills優先）**:
+  - **Skills確認**: Skillツール一覧から `codex` スキルが利用可能か確認（スキル名は `codex` 固定）
+    - Claude Code: Skillツールが存在し、`skill="codex"`で呼び出し可能かを確認
+    - KiroCLI等の他環境: Skill一覧取得APIがあればそれを利用、なければMCPフォールバックへ
+  - **MCPフォールバック**: Skills利用不可の場合、Codex MCPツール（`mcp__codex__codex`）の存在を確認
+  - **両方利用不可**: AIレビュー不可として処理
 
   **処理フロー**:
 
@@ -138,13 +135,17 @@ Inception Phaseで決定
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
 
-  2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
+  2. **AIレビューツール利用可否チェック（Skills優先）**:
+     - Skills（`skill="codex"`）が利用可能 → ステップ3へ
+     - Skills利用不可 → MCPフォールバック（`mcp__codex__codex`）を確認
+     - MCP利用可能 → ステップ3へ
+     - 両方利用不可 → ステップ5（AIレビュー不可時）へ
 
-  3. **MCP利用可能時の選択**:
+  3. **AIレビューツール利用可能時の選択**:
      - `mode = "required"` の場合: ステップ4（AIレビューフロー）へ
      - `mode = "recommend"` の場合: 推奨メッセージを表示しユーザーに選択を求める
        ```text
-       【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
+       【レビュー推奨】AIレビューツール（Skills/MCP）が利用可能です。
        品質向上のため、この成果物のレビューを実施することを推奨します。
        レビューを実施しますか？
        ```
@@ -156,7 +157,7 @@ Inception Phaseで決定
        ```bash
        [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
-     - AIレビューを実行
+     - AIレビューを実行（Skills優先、利用不可ならMCP使用）
      - レビュー結果を確認
      - 指摘があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
@@ -166,10 +167,10 @@ Inception Phaseで決定
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
-  5. **MCP利用不可時**:
+  5. **AIレビュー不可時**（Skills/MCP両方利用不可の場合）:
      - `mode = "required"` の場合:
        ```text
-       【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
+       【警告】AIレビューが必須設定ですが、AIレビューツール（Skills/MCP）が利用できません。
 
        AIレビューをスキップして人間の承認に進みますか？
        1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
@@ -178,13 +179,14 @@ Inception Phaseで決定
        ユーザーの応答を待ち、「はい」の場合は以下を履歴に記録してステップ6へ:
        ```markdown
        ### AIレビュースキップ
-       - **理由**: MCP利用不可
+       - **理由**: AIレビューツール利用不可（ユーザー承認済み）
        - **日時**: YYYY-MM-DD HH:MM:SS
        - **対象成果物**: {成果物名}
        ```
-     - `mode = "recommend"` の場合: ステップ6へ
+       「いいえ」の場合: 処理を中断し、ユーザー再指示待ち状態へ
+     - `mode = "recommend"` の場合: 自動的にステップ6へ
 
-  6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
+  6. **人間レビューフロー**（mode=disabled または AIレビュー不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
        [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
@@ -200,16 +202,16 @@ Inception Phaseで決定
 
   **対象タイミング**: Intent承認前、ユーザーストーリー承認前、Unit定義承認前
 
-- **外部入力検証ルール【重要】**: 外部からの入力（AI MCP応答、ユーザー入力）を批判的に評価し、自己判断を明示する。
+- **外部入力検証ルール【重要】**: 外部からの入力（AIレビュー応答、ユーザー入力）を批判的に評価し、自己判断を明示する。
 
-  **AI MCP応答の検証**:
-  - AI MCPからの応答をそのまま信頼せず、批判的に評価する
+  **AIレビュー応答の検証**:
+  - AIレビュー（Skills/MCP）からの応答をそのまま信頼せず、批判的に評価する
   - 応答に誤りや不整合がないか確認する
   - 自己判断を併記し、相違がある場合はユーザーに確認を求める
   - 形式：
     ```text
-    【MCP応答の検証】
-    - MCP応答: [応答内容の要約]
+    【AIレビュー応答の検証】
+    - AIレビュー応答: [応答内容の要約]
     - AI判断: [自己判断]
     - 相違点: [ある場合は記載、なければ「なし」]
     - 結論: [採用する判断とその理由]
@@ -820,26 +822,20 @@ else
   # サイクルラベル確認・作成（cycle-label.shスクリプトを使用）
   docs/aidlc/bin/cycle-label.sh "{{CYCLE}}"
 
+  # 関連Issueへのサイクルラベル一括付与
+  docs/aidlc/bin/label-cycle-issues.sh "{{CYCLE}}"
 fi
 ```
 
-**関連Issueへのサイクルラベル付与**:
+**出力例**:
 
-Unit定義ファイルから関連Issue番号を確認する。
-
-```bash
-grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null
+```text
+label:cycle:v1.8.0:created
+issue:81:labeled:cycle:v1.8.0
+issue:72:labeled:cycle:v1.8.0
 ```
 
-Issue番号が見つかった場合、各Issueに対してサイクルラベル `cycle:{{CYCLE}}` を付与する。
-
-```bash
-docs/aidlc/bin/issue-ops.sh label {ISSUE_NUM} "cycle:{{CYCLE}}"
-```
-
-（`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
-
-**出力例**: `issue:123:labeled:cycle:v1.8.0`
+**注**: Issue番号が見つからない場合は出力なしで正常終了する。
 
 ### 2. iOSバージョン更新【project.type=iosの場合のみ】
 
@@ -892,17 +888,12 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 
 3. **履歴への記録**（重要）:
    ```bash
-   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-   cat <<EOF >> docs/cycles/{{CYCLE}}/history/inception.md
-   ## ${TIMESTAMP}
-
-   - **フェーズ**: Inception Phase
-   - **ステップ**: iOSバージョン更新実施
-   - **実行内容**: CFBundleShortVersionString を ${CYCLE_VERSION} に更新
-   - **成果物**: [更新したファイル]
-
-   ---
-   EOF
+   docs/aidlc/bin/write-history.sh \
+       --cycle {{CYCLE}} \
+       --phase inception \
+       --step "iOSバージョン更新実施" \
+       --content "CFBundleShortVersionString を ${CYCLE_VERSION} に更新" \
+       --artifacts "[更新したファイル]"
    ```
 
 **注意**: 「iOSバージョン更新実施」の文言は履歴に必ず含めてください。Operations Phaseでこの記録を確認し、重複更新を防ぎます。
@@ -912,7 +903,7 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 - ビルド番号はCI/CD（fastlane等）で自動管理することを推奨します
 
 ### 3. 履歴記録
-`docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（write-history.sh使用）
 
 ### 4. ドラフトPR作成【推奨】
 

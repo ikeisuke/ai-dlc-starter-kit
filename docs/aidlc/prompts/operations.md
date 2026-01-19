@@ -94,23 +94,17 @@ Inception/Construction Phaseで決定済み
   - `level = "standard"`: ステップ完了時に記録（デフォルト）
   - `level = "minimal"`: フェーズ完了時にまとめて記録
 
-  **日時取得の必須ルール**:
-  - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
-  - セッション開始時に取得した日時を使い回さないこと
+  **日時取得**:
+  - 日時は `write-history.sh` が内部で自動取得します
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
-  cat <<EOF | tee -a docs/cycles/{{CYCLE}}/history/operations.md
-  ## ${TIMESTAMP}
-
-  - **フェーズ**: Operations Phase
-  - **ステップ**: [ステップ名]
-  - **実行内容**: [作業概要]
-  - **成果物**: [作成・更新したファイル]
-
-  ---
-  EOF
+  docs/aidlc/bin/write-history.sh \
+      --cycle {{CYCLE}} \
+      --phase operations \
+      --step "[ステップ名]" \
+      --content "[作業概要]" \
+      --artifacts "[作成・更新したファイル]"
   ```
 
   **修正差分の記録**（level = "detailed" の場合のみ）:
@@ -123,16 +117,19 @@ Inception/Construction Phaseで決定済み
 
 - コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
 
-- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビューを実行する。
+- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビュー（Skills優先、MCPフォールバック）を実行する。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
-  - `mode = "required"`: AIレビュー必須（スキップには明示的な確認が必要）
+  - `mode = "required"`: AIレビュー必須（AIレビューツールが両方利用不可の場合、ユーザー承認により例外的に人間レビューへ移行可能。承認は履歴に記録する）
   - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
-  - `mode = "disabled"`: AIレビューを行わない
+  - `mode = "disabled"`: AIレビューを行わない（AIレビューをスキップし、直接人間レビューへ進む）
 
-  **MCP利用可否の確認**:
-  - このAIエージェントが Codex MCP（`mcp__codex__codex` ツール）にアクセス可能か確認
-  - ツールが存在しない場合は「MCP利用不可」として処理
+  **AIレビューツール利用可否の確認（Skills優先）**:
+  - **Skills確認**: Skillツール一覧から `codex` スキルが利用可能か確認（スキル名は `codex` 固定）
+    - Claude Code: Skillツールが存在し、`skill="codex"`で呼び出し可能かを確認
+    - KiroCLI等の他環境: Skill一覧取得APIがあればそれを利用、なければMCPフォールバックへ
+  - **MCPフォールバック**: Skills利用不可の場合、Codex MCPツール（`mcp__codex__codex`）の存在を確認
+  - **両方利用不可**: AIレビュー不可として処理
 
   **処理フロー**:
 
@@ -141,13 +138,17 @@ Inception/Construction Phaseで決定済み
      - `disabled` の場合: ステップ6（人間レビューフロー）へ
      - `required` または `recommend` の場合: 次のステップへ
 
-  2. **MCP利用可否チェック**: Codex MCPツール（`mcp__codex__codex`）の存在確認
+  2. **AIレビューツール利用可否チェック（Skills優先）**:
+     - Skills（`skill="codex"`）が利用可能 → ステップ3へ
+     - Skills利用不可 → MCPフォールバック（`mcp__codex__codex`）を確認
+     - MCP利用可能 → ステップ3へ
+     - 両方利用不可 → ステップ5（AIレビュー不可時）へ
 
-  3. **MCP利用可能時の選択**:
+  3. **AIレビューツール利用可能時の選択**:
      - `mode = "required"` の場合: ステップ4（AIレビューフロー）へ
      - `mode = "recommend"` の場合: 推奨メッセージを表示しユーザーに選択を求める
        ```text
-       【レビュー推奨】AI MCP（Codex MCP等）が利用可能です。
+       【レビュー推奨】AIレビューツール（Skills/MCP）が利用可能です。
        品質向上のため、この成果物のレビューを実施することを推奨します。
        レビューを実施しますか？
        ```
@@ -159,7 +160,7 @@ Inception/Construction Phaseで決定済み
        ```bash
        [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
        ```
-     - AIレビューを実行
+     - AIレビューを実行（Skills優先、利用不可ならMCP使用）
      - レビュー結果を確認
      - 指摘があれば修正を反映
      - **レビュー後コミット**（修正があった場合のみ）:
@@ -169,10 +170,10 @@ Inception/Construction Phaseで決定済み
      - 修正後の成果物を人間に提示
      - 人間の承認を求める
 
-  5. **MCP利用不可時**:
+  5. **AIレビュー不可時**（Skills/MCP両方利用不可の場合）:
      - `mode = "required"` の場合:
        ```text
-       【警告】AIレビューが必須設定ですが、AI MCPが利用できません。
+       【警告】AIレビューが必須設定ですが、AIレビューツール（Skills/MCP）が利用できません。
 
        AIレビューをスキップして人間の承認に進みますか？
        1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
@@ -181,13 +182,14 @@ Inception/Construction Phaseで決定済み
        ユーザーの応答を待ち、「はい」の場合は以下を履歴に記録してステップ6へ:
        ```markdown
        ### AIレビュースキップ
-       - **理由**: MCP利用不可
+       - **理由**: AIレビューツール利用不可（ユーザー承認済み）
        - **日時**: YYYY-MM-DD HH:MM:SS
        - **対象成果物**: {成果物名}
        ```
-     - `mode = "recommend"` の場合: ステップ6へ
+       「いいえ」の場合: 処理を中断し、ユーザー再指示待ち状態へ
+     - `mode = "recommend"` の場合: 自動的にステップ6へ
 
-  6. **人間レビューフロー**（mode=disabled または MCP利用不可時）:
+  6. **人間レビューフロー**（mode=disabled または AIレビュー不可時）:
      - **レビュー前コミット**（変更がある場合のみ）:
        ```bash
        [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
@@ -203,16 +205,16 @@ Inception/Construction Phaseで決定済み
 
   **対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
-- **外部入力検証ルール【重要】**: 外部からの入力（AI MCP応答、ユーザー入力）を批判的に評価し、自己判断を明示する。
+- **外部入力検証ルール【重要】**: 外部からの入力（AIレビュー応答、ユーザー入力）を批判的に評価し、自己判断を明示する。
 
-  **AI MCP応答の検証**:
-  - AI MCPからの応答をそのまま信頼せず、批判的に評価する
+  **AIレビュー応答の検証**:
+  - AIレビュー（Skills/MCP）からの応答をそのまま信頼せず、批判的に評価する
   - 応答に誤りや不整合がないか確認する
   - 自己判断を併記し、相違がある場合はユーザーに確認を求める
   - 形式：
     ```text
-    【MCP応答の検証】
-    - MCP応答: [応答内容の要約]
+    【AIレビュー応答の検証】
+    - AIレビュー応答: [応答内容の要約]
     - AI判断: [自己判断]
     - 相違点: [ある場合は記載、なければ「なし」]
     - 結論: [採用する判断とその理由]
@@ -794,7 +796,7 @@ Keep a Changelog形式で新規作成する。
 README.mdに今回のサイクルの変更内容を追記
 
 #### 6.2 履歴記録
-`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（write-history.sh使用）
 
 #### 6.3 Markdownlint実行【CI対応】
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
@@ -1092,6 +1094,135 @@ echo "Setup prompt path: ${SETUP_PROMPT}"
 - その他、引き継ぎたいファイルがあればコピー
 
 セットアップ完了後、新しいセッションで Inception Phase を開始
+
+---
+
+## 付録: 依存コマンド追加手順
+
+新しい依存コマンドをAI-DLCに追加する手順。
+
+### 1. env-info.shへの追加
+
+#### 1.1 汎用ツールの場合
+
+認証確認が不要なツール（例: dasel, jj）を追加する場合。
+
+**追加手順**:
+
+1. `prompts/package/bin/env-info.sh` のヘルプメッセージにツール名を追加
+2. `main` 関数に `check_tool` を使った出力を追加
+
+**コード例**:
+
+```bash
+# ヘルプメッセージ（show_help関数の cat << 'EOF' ... EOF 内）に追加
+依存ツール（gh, dasel, jj, git, newtool）の状態を一覧で出力します。
+
+# main関数内に追加（出力順を考慮して適切な位置に）
+echo "newtool:$(check_tool newtool)"
+```
+
+#### 1.2 認証が必要なツールの場合
+
+認証確認が必要なツール（例: gh）を追加する場合。
+
+**追加手順**:
+
+1. 専用のチェック関数を作成（`check_gh` を参考に）
+2. ヘルプメッセージとコメントを更新:
+   - ファイル先頭コメントの `not-authenticated` 説明から「（ghのみ）」を更新
+   - `show_help` 関数内のツール名を追加（`依存ツール（gh, dasel, jj, git, newtool）`）
+   - `show_help` 関数内の `not-authenticated` 説明から「（ghのみ）」を更新
+   - 例示出力行にツールを追加
+3. `main` 関数で専用関数を呼び出し
+
+**コード例**:
+
+```bash
+# 新しいチェック関数を追加（check_gh関数の後に配置）
+check_newtool() {
+    if ! command -v newtool >/dev/null 2>&1; then
+        echo "not-installed"
+        return
+    fi
+    # 認証コマンドはツールごとに異なる（例: newtool auth status）
+    if newtool auth status >/dev/null 2>&1; then
+        echo "available"
+    else
+        echo "not-authenticated"
+    fi
+}
+
+# main関数内で呼び出し
+echo "newtool:$(check_newtool)"
+```
+
+### 2. setup.mdへの追加
+
+#### 2.1 運用ルールへの影響説明追加
+
+**追加場所**: `prompts/package/prompts/setup.md` の「**gh/daselが `available` 以外の場合の影響**」セクション
+
+**コード例**:
+
+```markdown
+**gh/dasel/newtoolが `available` 以外の場合の影響**:
+
+- gh: ドラフトPR作成、Issue操作、ラベル作成をスキップ
+- dasel: AIが設定ファイルを直接読み取る（機能上の影響なし）
+- newtool: [影響の説明]
+```
+
+#### 2.2 状態値の意味の更新（認証ツール追加時のみ）
+
+認証が必要なツールを追加した場合、「状態値の意味」セクションも更新が必要。
+
+**追加場所**: `prompts/package/prompts/setup.md` の「状態値の意味」セクション
+
+**変更内容**:
+
+```markdown
+# 変更前
+- `not-authenticated`: 未認証（ghのみ）
+
+# 変更後（例: newtoolを追加した場合）
+- `not-authenticated`: 未認証（gh, newtool）
+```
+
+### 3. 各プロンプトでの利用方法追加（必要に応じて）
+
+新しいツールが特定のフェーズで使用される場合、該当プロンプトに利用方法を追加。
+
+**対象ファイル例**:
+
+- `prompts/package/prompts/inception.md`
+- `prompts/package/prompts/construction.md`
+- `prompts/package/prompts/operations.md`
+
+**追加内容**:
+
+- ツールの利用可否確認方法（env-info.sh結果の参照）
+- ツールが利用不可の場合の代替フロー
+
+### 4. チェックリスト
+
+依存コマンド追加時の確認項目:
+
+- [ ] env-info.shのヘルプメッセージにツール名追加
+- [ ] env-info.shにチェック関数またはcheck_tool呼び出し追加
+- [ ] env-info.shの出力順コメント更新（`# 出力順序は固定（gh → dasel → jj → git）` の行、必要に応じて）
+- [ ] env-info.shのヘルプ例示出力行にツール追加
+- [ ] setup.mdの影響説明に追加
+- [ ] 動作確認（env-info.sh実行）
+- [ ] 関連プロンプトへの利用方法追加（必要に応じて）
+
+**認証が必要なツールの場合、追加で確認**:
+
+- [ ] env-info.shのファイル先頭コメントで「(ghのみ)」→「(gh, newtool)」に更新
+- [ ] env-info.shのshow_help関数内で「(ghのみ)」→「(gh, newtool)」に更新
+- [ ] setup.mdの「状態値の意味」で「(ghのみ)」→「(gh, newtool)」に更新
+
+---
 
 ### 7. ライフサイクルの継続
 Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供
