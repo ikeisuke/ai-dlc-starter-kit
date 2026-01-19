@@ -1129,7 +1129,11 @@ echo "newtool:$(check_tool newtool)"
 **追加手順**:
 
 1. 専用のチェック関数を作成（`check_gh` を参考に）
-2. ヘルプメッセージにツール名と状態値を追加
+2. ヘルプメッセージとコメントを更新:
+   - ファイル先頭コメントの `not-authenticated` 説明から「（ghのみ）」を更新
+   - `show_help` 関数内のツール名を追加（`依存ツール（gh, dasel, jj, git, newtool）`）
+   - `show_help` 関数内の `not-authenticated` 説明から「（ghのみ）」を更新
+   - 例示出力行にツールを追加
 3. `main` 関数で専用関数を呼び出し
 
 **コード例**:
@@ -1169,6 +1173,22 @@ echo "newtool:$(check_newtool)"
 - newtool: [影響の説明]
 ```
 
+#### 2.2 状態値の意味の更新（認証ツール追加時のみ）
+
+認証が必要なツールを追加した場合、「状態値の意味」セクションも更新が必要。
+
+**追加場所**: `prompts/package/prompts/setup.md` の「状態値の意味」セクション
+
+**変更内容**:
+
+```markdown
+# 変更前
+- `not-authenticated`: 未認証（ghのみ）
+
+# 変更後（例: newtoolを追加した場合）
+- `not-authenticated`: 未認証（gh, newtool）
+```
+
 ### 3. 各プロンプトでの利用方法追加（必要に応じて）
 
 新しいツールが特定のフェーズで使用される場合、該当プロンプトに利用方法を追加。
@@ -1191,9 +1211,16 @@ echo "newtool:$(check_newtool)"
 - [ ] env-info.shのヘルプメッセージにツール名追加
 - [ ] env-info.shにチェック関数またはcheck_tool呼び出し追加
 - [ ] env-info.shの出力順コメント更新（`# 出力順序は固定（gh → dasel → jj → git）` の行、必要に応じて）
+- [ ] env-info.shのヘルプ例示出力行にツール追加
 - [ ] setup.mdの影響説明に追加
 - [ ] 動作確認（env-info.sh実行）
 - [ ] 関連プロンプトへの利用方法追加（必要に応じて）
+
+**認証が必要なツールの場合、追加で確認**:
+
+- [ ] env-info.shのファイル先頭コメントで「(ghのみ)」→「(gh, newtool)」に更新
+- [ ] env-info.shのshow_help関数内で「(ghのみ)」→「(gh, newtool)」に更新
+- [ ] setup.mdの「状態値の意味」で「(ghのみ)」→「(gh, newtool)」に更新
 
 ---
 
