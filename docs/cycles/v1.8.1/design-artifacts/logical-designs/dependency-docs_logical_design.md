@@ -39,7 +39,7 @@ operations.mdに「依存コマンド追加手順」セクションを追加す�
 **コード例**:
 
 ```bash
-# ヘルプメッセージ（show_help関数内）に追加
+# ヘルプメッセージ（show_help関数の cat << 'EOF' ... EOF 内）に追加
 依存ツール（gh, dasel, jj, git, newtool）の状態を一覧で出力します。
 
 # main関数内に追加（出力順を考慮して適切な位置に）
@@ -114,7 +114,7 @@ echo "newtool:$(check_newtool)"
 
 - [ ] env-info.shのヘルプメッセージにツール名追加
 - [ ] env-info.shにチェック関数またはcheck_tool呼び出し追加
-- [ ] env-info.shの出力順コメント更新（必要に応じて）
+- [ ] env-info.shの出力順コメント更新（`# 出力順序は固定（gh → dasel → jj → git）` の行、必要に応じて）
 - [ ] setup.mdの影響説明に追加
 - [ ] 動作確認（env-info.sh実行）
 - [ ] 関連プロンプトへの利用方法追加（必要に応じて）
