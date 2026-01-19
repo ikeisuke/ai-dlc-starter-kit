@@ -814,26 +814,20 @@ else
   # サイクルラベル確認・作成（cycle-label.shスクリプトを使用）
   docs/aidlc/bin/cycle-label.sh "{{CYCLE}}"
 
+  # 関連Issueへのサイクルラベル一括付与
+  docs/aidlc/bin/label-cycle-issues.sh "{{CYCLE}}"
 fi
 ```
 
-**関連Issueへのサイクルラベル付与**:
+**出力例**:
 
-Unit定義ファイルから関連Issue番号を確認する。
-
-```bash
-grep -h "^- #[0-9]" docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null
+```text
+label:cycle:v1.8.0:created
+issue:81:labeled:cycle:v1.8.0
+issue:72:labeled:cycle:v1.8.0
 ```
 
-Issue番号が見つかった場合、各Issueに対してサイクルラベル `cycle:{{CYCLE}}` を付与する。
-
-```bash
-docs/aidlc/bin/issue-ops.sh label {ISSUE_NUM} "cycle:{{CYCLE}}"
-```
-
-（`{ISSUE_NUM}` を実際のIssue番号に置き換えて、見つかったIssue分だけ実行）
-
-**出力例**: `issue:123:labeled:cycle:v1.8.0`
+**注**: Issue番号が見つからない場合は出力なしで正常終了する。
 
 ### 2. iOSバージョン更新【project.type=iosの場合のみ】
 
