@@ -94,9 +94,8 @@ Inception/Construction Phaseで決定済み
   - `level = "standard"`: ステップ完了時に記録（デフォルト）
   - `level = "minimal"`: フェーズ完了時にまとめて記録
 
-  **日時取得の必須ルール**:
-  - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
-  - セッション開始時に取得した日時を使い回さないこと
+  **日時取得**:
+  - 日時は `write-history.sh` が内部で自動取得します
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
@@ -789,7 +788,7 @@ Keep a Changelog形式で新規作成する。
 README.mdに今回のサイクルの変更内容を追記
 
 #### 6.2 履歴記録
-`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（write-history.sh使用）
 
 #### 6.3 Markdownlint実行【CI対応】
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。

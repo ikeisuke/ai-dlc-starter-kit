@@ -92,11 +92,10 @@ Inception Phaseで決定済み、または既存スタックを使用
   - `level = "minimal"`: Unit完了時にまとめて記録
 
   **ファイル命名規則**:
-  - `construction_unit{N}.md` （N = Unit番号、例: `construction_unit1.md`）
+  - `construction_unit{NN}.md` （NN = 2桁ゼロパディングのUnit番号、例: `construction_unit01.md`）
 
-  **日時取得の必須ルール**:
-  - 日時を記録する際は**必ずその時点で** `date` コマンドを実行すること
-  - セッション開始時に取得した日時を使い回さないこと
+  **日時取得**:
+  - 日時は `write-history.sh` が内部で自動取得します
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
@@ -318,7 +317,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   **対応手順**:
   1. 現在の作業状態を確認（どのUnitの何ステップか）
   2. Unit定義ファイルの「実装状態」を確認（「進行中」のまま保持）
-  3. 履歴記録（`history/construction_unit{N}.md` に中断状態を追記）
+  3. 履歴記録（`history/construction_unit{NN}.md` に中断状態を追記）
   4. 継続用プロンプトを提示（下記フォーマット）
 
   ````markdown
@@ -703,7 +702,7 @@ Unit完了をマークする前に、計画ファイルの「完了条件チェ�
 - 完了日: 現在日付（YYYY-MM-DD形式）
 
 ### 2. 履歴記録
-`docs/cycles/{{CYCLE}}/history/construction_unit{N}.md` に履歴を追記（heredoc使用、日時は `date '+%Y-%m-%d %H:%M:%S'` で取得）
+`docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md` に履歴を追記（write-history.sh使用）
 
 ### 3. Markdownlint実行【CI対応】
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
