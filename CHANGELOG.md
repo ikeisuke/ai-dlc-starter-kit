@@ -38,6 +38,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.8.2] - 2026-01-21
+
+### Added
+
+- スキルファイル対応（setup.skill.md, upgrade.skill.md）- AIエージェントのスキル拡張機能
+- セットアップスクリプト（setup-aidlc.sh）- 対話型セットアップの自動化
+- KiroCLI対応セクション（AGENTS.md）- resourcesフィールド設定ガイド
+- AIレビューツール設定（ai_tools）- 複数AIサービスの優先順位設定対応
+- jjサポート強化 - よくあるミスと対処法セクション追加
+
+### Changed
+
+- AIレビュー設定をai_toolsリストで指定可能に（Skills優先、MCPフォールバック方式統合）
+- 全フェーズで反復レビュー処理を統一化
+- スキルファイル同期をrsync対象に追加（prompts/package/skills/ → docs/aidlc/skills/）
+
+---
+
 ## [1.8.1] - 2026-01-20
 
 ### Added
