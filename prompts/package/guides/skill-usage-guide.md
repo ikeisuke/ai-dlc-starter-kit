@@ -65,7 +65,7 @@ Claude Code には組み込みの Skill ツールがあり、スキルを自動�
 
 他のAIツールを呼び出したいときは、該当するスキルファイルを読んでください:
 
-```
+```text
 「Claude でレビューして」と言われたら:
 → docs/aidlc/skills/claude/SKILL.md を読んで、その手順に従う
 
