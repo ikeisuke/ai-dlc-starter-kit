@@ -500,6 +500,11 @@ language = "日本語"
 # - required: MCP利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
+# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）
+# - デフォルト: ["codex"]
+# - 例: ["codex", "claude", "gemini"]
+# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
+ai_tools = ["codex"]
 
 [rules.worktree]
 # git worktree設定
@@ -702,6 +707,33 @@ EOF
   echo "Added [rules.linting] section"
 else
   echo "[rules.linting] section already exists"
+fi
+
+# [rules.mcp_review] に ai_tools が存在しない場合は追加（v1.8.2で追加）
+# セクション内での存在チェック: [rules.mcp_review]から次のセクションまでの範囲でai_toolsを検索
+if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  AI_TOOLS_IN_SECTION=$(sed -n '/^\[rules.mcp_review\]/,/^\[/p' docs/aidlc.toml | grep -c "^ai_tools" || echo "0")
+  if [ "$AI_TOOLS_IN_SECTION" = "0" ]; then
+    echo "Adding ai_tools to [rules.mcp_review] section..."
+    # [rules.mcp_review] セクション内の mode = 行の後に追加
+    sed -i '' '/^\[rules.mcp_review\]/,/^\[/ {
+      /^\[rules.mcp_review\]/!{
+        /^\[/!{
+          /^mode = /a\
+# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）\
+# - デフォルト: ["codex"]\
+# - 例: ["codex", "claude", "gemini"]\
+# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用\
+ai_tools = ["codex"]
+        }
+      }
+    }' docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
+    echo "Added ai_tools to [rules.mcp_review] section"
+  else
+    echo "ai_tools already exists in [rules.mcp_review] section"
+  fi
+else
+  echo "[rules.mcp_review] section not found"
 fi
 ```
 
