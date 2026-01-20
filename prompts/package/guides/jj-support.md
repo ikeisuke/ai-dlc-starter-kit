@@ -206,6 +206,8 @@ AI-DLC開発に関連するjjの主要な特徴:
 | コミットメッセージ編集 | `git commit --amend` | `jj describe -m "msg"` | 現在のリビジョンを編集 |
 | 変更退避 | `git stash` | (不要) | ワーキングコピーが自動保存 |
 | 操作取り消し | `git reset` | `jj undo` | 直前の操作を取り消し |
+| 変更を分離 | `git add -p` + `git commit` | `jj split` | 対話的に変更を分離 |
+| ファイル復元 | `git restore <file>` | `jj restore <file>` | ワーキングコピーから復元 |
 
 > **コミットフローの推奨**:
 > jjでは `jj describe` でメッセージを設定し、`jj new` で次のリビジョンを作成するフローを推奨します。
@@ -222,6 +224,7 @@ AI-DLC開発に関連するjjの主要な特徴:
 | リモートへプッシュ | `git push` | `jj git push` | |
 | 特定ブックマークをプッシュ | `git push -u origin <branch>` | `jj git push --bookmark <name>` | |
 | リモートから取得 | `git pull` | `jj git fetch` + `jj rebase -d <remote>/<bookmark>` | 下記参照 |
+| リモートbookmark削除 | `git push origin --delete <name>` | `jj bookmark delete <name>` + `jj git push --deleted` | 下記参照 |
 | タグ作成 | `git tag -a <tag> -m "msg"` | `git tag -a <tag> -m "msg"` | colocateでGit直接使用 |
 | タグプッシュ | `git push --tags` | `git push --tags` | colocateでGit直接使用 |
 
@@ -234,6 +237,13 @@ AI-DLC開発に関連するjjの主要な特徴:
 >
 > **タグ操作について**:
 > jjはGitタグをネイティブにサポートしていないため、colocateモードでGitコマンドを直接使用します。
+>
+> **リモートbookmark削除について**:
+> jjでリモートbookmarkを削除するには2ステップが必要です:
+> ```bash
+> jj bookmark delete <name>    # ローカル削除（次回pushで削除が伝播）
+> jj git push --deleted        # 削除をリモートに反映
+> ```
 
 ---
 
@@ -381,7 +391,129 @@ jj describe -m "feat: [vX.X.X] Unit NNN完了" && jj new && jj bookmark set cycl
 
 ---
 
+## よくあるミスと対処法
+
+このセクションでは、AI-DLCでjjを使用する際によく遭遇する問題と解決策を説明します。
+
+### `jj new` を忘れて作業を始めた
+
+**症状**:
+
+- 前のリビジョンに新しい変更が混ざってしまった
+- `jj log` で見ると、意図しない変更が含まれている
+
+**原因**:
+
+作業開始前に `jj new` を実行せず、既存のリビジョンに変更を追加してしまった。
+
+**解決策**:
+
+`jj split` で変更を対話的に分離します：
+
+```bash
+# 現在のリビジョンを分離
+jj split
+
+# 対話的UIで、前のリビジョンに残す変更と新しいリビジョンに移す変更を選択
+# 完了後、新しいリビジョンが作成される
+```
+
+**予防策**:
+
+「[作業開始時チェックリスト](#作業開始時チェックリスト)」を活用し、作業前に必ず `jj new` を実行してください。
+
+---
+
+### bookmarkが進まない・リモートに反映されない
+
+**症状**:
+
+- `jj git push` してもリモートに変更が反映されない
+- PRのdiffが空になる、または古いコミットしか含まれていない
+- `jj log` でbookmarkが古いリビジョンを指している
+
+**原因**:
+
+`jj bookmark set` を実行していないため、bookmarkが古いリビジョンを指したままになっている。
+
+**解決策**:
+
+正しいリビジョンを指定して `jj bookmark set` を実行します：
+
+```bash
+# 現在の作業完了後、bookmarkを更新
+jj bookmark set cycle/vX.X.X -r @-
+
+# リモートにプッシュ
+jj git push --bookmark cycle/vX.X.X
+```
+
+**予防策**:
+
+「[作業終了時チェックリスト](#作業終了時チェックリスト)」を活用し、作業終了時に必ず `jj bookmark set` を実行してください。
+
+詳細は「[⚠️ 重要: bookmarkは自動で進まない](#%EF%B8%8F-重要-bookmarkは自動で進まない)」も参照してください。
+
+---
+
+### 不要なbookmarkの削除
+
+**症状**:
+
+- 古いサイクルや作業用のbookmarkが残っている
+- `jj bookmark list` の一覧が煩雑になっている
+
+**解決策**:
+
+ローカルbookmarkを削除し、リモートにも反映します：
+
+```bash
+# ローカルbookmarkを削除
+jj bookmark delete old-cycle/v1.0.0
+
+# 削除をリモートに反映
+jj git push --deleted
+```
+
+> **注意**: `jj bookmark delete` は次回のpush時に削除をリモートに伝播する設定になります。すぐに反映したい場合は `jj git push --deleted` を実行してください。
+
+---
+
+### 作業開始前に未コミットの変更がある
+
+**症状**:
+
+- 新しい作業を始めようとしたら、前の作業の変更が残っている
+- `jj status` で予期しない変更が表示される
+
+**原因**:
+
+前の作業を完了（`jj describe` + `jj new`）せずに新しい作業を開始しようとした。
+
+**解決策**:
+
+現在の変更にメッセージを付けて確定し、新しいリビジョンを作成します：
+
+```bash
+# 現在の変更状態を確認
+jj status
+
+# 現在の変更にメッセージを設定
+jj describe -m "前の作業の内容を説明"
+
+# 新しいリビジョンを作成して作業開始
+jj new
+```
+
+**予防策**:
+
+作業開始前に必ず `jj status` で状態を確認してください。
+
+---
+
 ## 注意事項と制限
+
+> **ヒント**: 問題が発生した場合は「[よくあるミスと対処法](#よくあるミスと対処法)」も参照してください。
 
 ### bookmarkの手動移動について（再強調）
 
