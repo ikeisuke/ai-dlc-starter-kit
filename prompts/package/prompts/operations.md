@@ -58,8 +58,6 @@ Inception/Construction Phaseで決定済み
   - **変更点**: [修正前 → 修正後の要点]
   ```
 
-- コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
-
 - **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビュー（Skills優先、MCPフォールバック）を実行する。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
