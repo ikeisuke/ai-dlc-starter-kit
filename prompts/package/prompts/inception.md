@@ -172,10 +172,12 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
    ```
 
 3. **docs/cycles/ 配下の最新サイクルディレクトリを使用**:
+
    ```bash
-   LATEST_CYCLE=$(ls -d docs/cycles/*/ 2>/dev/null | sort -V | tail -1 | xargs basename)
-   echo "LATEST_CYCLE: ${LATEST_CYCLE}"
+   ls -d docs/cycles/*/ 2>/dev/null
    ```
+
+   AIが出力からセマンティックバージョン順（v1.9 < v1.10）で最新のサイクルを判定。
 
 4. **上記いずれも該当しない場合**: ユーザーに質問
    ```text
@@ -197,8 +199,10 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ```
+
+AIが出力を確認し、パス名が表示されれば存在、エラーなら不存在と判断。
 
 - **存在する場合**: 処理を継続（ステップ3へ）
 - **存在しない場合**: エラーを表示し、setup.md を案内
@@ -240,8 +244,10 @@ backlog_mode:issue-only
 **ファイル確認**:
 
 ```bash
-[ -f "docs/cycles/{{CYCLE}}/requirements/setup-context.md" ] && echo "CONTEXT_EXISTS" || echo "CONTEXT_NOT_EXISTS"
+ls docs/cycles/{{CYCLE}}/requirements/setup-context.md 2>/dev/null
 ```
+
+AIが出力を確認し、ファイル名が表示されれば存在、エラーなら不存在と判断。
 
 **判定**:
 
@@ -644,19 +650,9 @@ issue:72:labeled:cycle:v1.8.0
 
 **前提条件確認**:
 
-```bash
-# project.type設定を読み取り
-if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
-else
-    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `type` 値を確認。
 
-echo "プロジェクトタイプ: ${PROJECT_TYPE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `type` 値を取得。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `general` として扱う。
 
 **判定**:
 - `PROJECT_TYPE != "ios"` の場合: このステップをスキップ

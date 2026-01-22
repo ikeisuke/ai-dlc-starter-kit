@@ -151,8 +151,10 @@ Inception/Construction Phaseで決定済み
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ```
+
+出力があれば存在、エラーなら不存在と判断。
 
 - **存在しない場合**: エラーを表示し、setup.md を案内
   ```text
@@ -287,26 +289,18 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ##### iOSプロジェクトの場合の事前確認
 
-`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認:
+`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認。
+
+**project.type確認**: AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `type` 値を確認。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `general` として扱う。
+
+**iOSプロジェクトの場合**: Inception履歴を確認
 
 ```bash
-# project.type設定を読み取り
-if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
-else
-    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
-
-# iOSプロジェクトの場合、Inception履歴を確認
-if [ "$PROJECT_TYPE" = "ios" ]; then
-    if grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null; then
-        echo "UPDATED_IN_INCEPTION"
-    else
-        echo "NOT_UPDATED_IN_INCEPTION"
-    fi
-fi
+grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null
 ```
+
+出力があれば `UPDATED_IN_INCEPTION`、なければ `NOT_UPDATED_IN_INCEPTION` と判断。
 
 **判定結果**:
 - **UPDATED_IN_INCEPTION**: 以下を表示してMARKETING_VERSION確認をスキップし、iOSビルド番号確認に進む
@@ -325,25 +319,25 @@ fi
 
 ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
 
-```bash
-# project.pbxprojファイルを検索（Pods/DerivedData除外）
-PROJECT_FILES=$(find . -name "project.pbxproj" \
-    -not -path "*/Pods/*" \
-    -not -path "*/DerivedData/*" \
-    -not -path "*/.build/*" \
-    2>/dev/null)
-PROJECT_COUNT=$(echo "$PROJECT_FILES" | grep -c . 2>/dev/null || echo 0)
+project.pbxprojファイルを検索（Pods/DerivedData除外）。
 
-if [ "$PROJECT_COUNT" -eq 0 ]; then
-    echo "PROJECT_NOT_FOUND"
-elif [ "$PROJECT_COUNT" -gt 1 ]; then
-    echo "MULTIPLE_PROJECT_FILES"
-    echo "$PROJECT_FILES"
-else
-    echo "PROJECT_FOUND"
-    echo "$PROJECT_FILES"
-fi
+AIは Glob ツールでプロジェクトファイルを検索:
+
+```text
+パターン: **/project.pbxproj
+除外: Pods/, DerivedData/, .build/
 ```
+
+代替手段:
+
+```bash
+find . -name "project.pbxproj" -not -path "*/Pods/*" -not -path "*/DerivedData/*" -not -path "*/.build/*" 2>/dev/null
+```
+
+AIが出力からファイル数を確認:
+- 0件: `PROJECT_NOT_FOUND`
+- 複数件: `MULTIPLE_PROJECT_FILES`（ユーザーに選択を求める）
+- 1件: `PROJECT_FOUND`
 
 **判定結果**:
 
@@ -373,37 +367,37 @@ fi
 
 **ビルド番号比較**:
 
+1. **デフォルトブランチを取得**:
+
 ```bash
-# デフォルトブランチを取得
-DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep "HEAD branch" | sed 's/.*: //')
-[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
-git rev-parse --verify origin/${DEFAULT_BRANCH} >/dev/null 2>&1 || DEFAULT_BRANCH="master"
-
-# 現在ブランチのビルド番号
-PROJECT_FILE="[選択されたファイルパス]"
-# git showはリポジトリ相対パスが必要なため、先頭の./ を除去
-GIT_PROJECT_FILE="${PROJECT_FILE#./}"
-CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" "${PROJECT_FILE}" \
-    | head -1 \
-    | sed 's/.*= *\([^;]*\);.*/\1/' \
-    | tr -d ' \t"')
-
-# デフォルトブランチのビルド番号（リモートブランチを参照）
-# 注意: origin未設定の場合はエラーになるため、事前にgit remote -vで確認推奨
-PREVIOUS_BUILD=$(git show "origin/${DEFAULT_BRANCH}:${GIT_PROJECT_FILE}" 2>/dev/null \
-    | grep "CURRENT_PROJECT_VERSION" \
-    | head -1 \
-    | sed 's/.*= *\([^;]*\);.*/\1/' \
-    | tr -d ' \t"')
-
-# 変数参照チェック（$を含む場合は抽出失敗扱い）
-if echo "$CURRENT_BUILD" | grep -q '\$'; then
-    CURRENT_BUILD=""
-fi
-if echo "$PREVIOUS_BUILD" | grep -q '\$'; then
-    PREVIOUS_BUILD=""
-fi
+git remote show origin 2>/dev/null
 ```
+
+AIが出力から「HEAD branch」行を確認しデフォルトブランチ名を取得。取得できない場合は `main` を候補とする。
+
+候補ブランチの存在確認:
+
+```bash
+git show-ref --verify "refs/remotes/origin/main" 2>/dev/null
+```
+
+存在しない場合は `master` を試行。
+
+2. **現在ブランチのビルド番号**:
+
+```bash
+grep "CURRENT_PROJECT_VERSION" "[選択されたファイルパス]" 2>/dev/null
+```
+
+AIが出力から最初の行を抽出し、`= *値;` 形式から値を取得。`$` を含む場合は変数参照のため抽出失敗扱い。
+
+3. **デフォルトブランチのビルド番号**:
+
+```bash
+git show "origin/{DEFAULT_BRANCH}:{GIT_PROJECT_FILE}" 2>/dev/null
+```
+
+AIが出力から同様に `CURRENT_PROJECT_VERSION` の値を抽出。
 
 **比較結果の表示**:
 
@@ -588,10 +582,12 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 CHANGELOG.mdを更新し、現在のサイクルの変更内容を記録します。
 
 **CHANGELOG.md確認**:
+
 ```bash
-# CHANGELOG.mdの存在確認
-ls CHANGELOG.md 2>/dev/null && echo "CHANGELOG_EXISTS" || echo "CHANGELOG_NOT_EXISTS"
+ls CHANGELOG.md 2>/dev/null
 ```
+
+出力があれば存在、エラーなら不存在と判断。
 
 **存在しない場合**:
 Keep a Changelog形式で新規作成する。
@@ -870,19 +866,9 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 このサイクルが完了しました。以下のメッセージをユーザーに提示してください：
 
 **メッセージ表示前の準備**:
-```bash
-# setup_prompt パスを取得
-if command -v dasel >/dev/null 2>&1; then
-    SETUP_PROMPT=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'paths.setup_prompt' 2>/dev/null | tr -d "'" || echo "")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    SETUP_PROMPT=""
-fi
-[ -z "$SETUP_PROMPT" ] && SETUP_PROMPT="prompts/setup-prompt.md"
-echo "Setup prompt path: ${SETUP_PROMPT}"
-```
 
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[paths]` セクションの `setup_prompt` 値を取得してください（デフォルト: `prompts/setup-prompt.md`）。
+AIが `docs/aidlc.toml` をReadツールで読み取り、`[paths]` セクションの `setup_prompt` 値を確認。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `prompts/setup-prompt.md` を使用。
 
 以下のメッセージで `${SETUP_PROMPT}` を取得した値で置換してください：
 

@@ -48,7 +48,14 @@
    - **レビュー前コミット**（変更がある場合のみ）:
 
      ```bash
-     [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+     git status --porcelain
+     ```
+
+     AIが出力を確認し、変更がある場合は以下を順次実行:
+
+     ```bash
+     git add -A
+     git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
      ```
 
    - **反復レビュー**（指摘がなくなるまで繰り返す、1セット最大3回）:
@@ -75,7 +82,14 @@
    - **レビュー後コミット**（反復完了後、修正があった場合のみ）:
 
      ```bash
-     [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+     git status --porcelain
+     ```
+
+     AIが出力を確認し、変更がある場合は以下を順次実行:
+
+     ```bash
+     git add -A
+     git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
      ```
 
    - 修正後の成果物を人間に提示
@@ -108,7 +122,14 @@
    - **レビュー前コミット**（変更がある場合のみ）:
 
      ```bash
-     [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
+     git status --porcelain
+     ```
+
+     AIが出力を確認し、変更がある場合は以下を順次実行:
+
+     ```bash
+     git add -A
+     git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
      ```
 
    - 成果物を人間に提示
@@ -117,7 +138,14 @@
    - **レビュー後コミット**（修正があった場合のみ）:
 
      ```bash
-     [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
+     git status --porcelain
+     ```
+
+     AIが出力を確認し、変更がある場合は以下を順次実行:
+
+     ```bash
+     git add -A
+     git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
      ```
 
    - 再度人間に提示・承認を求める

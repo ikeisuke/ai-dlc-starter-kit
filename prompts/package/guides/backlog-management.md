@@ -101,11 +101,11 @@ Issue作成にはリポジトリへの書き込み権限が必要です。
 
 #### Issue駆動の場合
 
-```bash
-# モード確認
-BACKLOG_MODE=$(awk '/^\[backlog\]/{found=1} found && /^mode\s*=/{gsub(/.*=\s*"|".*/, ""); print; exit}' docs/aidlc.toml 2>/dev/null || echo "git")
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
+**モード確認**: AIが `docs/aidlc.toml` をReadツールで読み取り、`[backlog]` セクションの `mode` 値を確認。
 
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `git` として扱う。
+
+```bash
 # Issue駆動の場合（issue または issue-only）
 if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
     # GitHub CLI認証確認

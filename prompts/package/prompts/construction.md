@@ -211,8 +211,10 @@ Inception Phaseで決定済み、または既存スタックを使用
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ```
+
+AIが出力を確認し、パス名が表示されれば存在、エラーなら不存在と判断。
 
 - **存在しない場合**: エラーを表示し、setup.md を案内
   ```text
