@@ -62,19 +62,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **気づき記録フロー【重要】**: Unit作業中に別Unitや新規課題に関する気づきがあった場合、以下の手順で記録する
   1. **現在の作業を中断しない**: 気づきの記録のみ行い、現在のUnit作業を継続
-  2. **バックログ項目を作成**:
-
-     **設定確認**:
-     ```bash
-     if command -v dasel >/dev/null 2>&1; then
-         BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-     else
-         BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-     fi
-     [ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-     ```
-
-     **dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+  2. **バックログ項目を作成**（ステップ2.5で確認した `backlog_mode` を参照）:
 
      **mode=git または mode=git-only の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
@@ -217,7 +205,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 ---
 
-## 最初に必ず実行すること（5ステップ）
+## 最初に必ず実行すること
 
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
@@ -240,6 +228,22 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
+
+### 2.5 環境確認
+GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
+
+```bash
+docs/aidlc/bin/check-gh-status.sh
+docs/aidlc/bin/check-backlog-mode.sh
+```
+
+**出力例**:
+```text
+gh:available
+backlog_mode:issue-only
+```
+
+**`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
 ### 3. 進捗状況確認【重要】
 
@@ -349,17 +353,10 @@ Unit定義ファイルに「実装時の注意」セクションがある場合�
 - `enabled = false`の場合: このセクションをスキップして次へ進む
 - `enabled = true`、未設定、または不正値の場合: 以下の「前提条件チェック」から実行
 
-**前提条件チェック**:
-```bash
-# GitHub CLI利用可否と認証状態を一括チェック
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    echo "GITHUB_CLI_AVAILABLE"
-else
-    echo "GITHUB_CLI_NOT_AVAILABLE"
-fi
-```
+**前提条件チェック**（ステップ2.5で確認した `gh` ステータスを参照）:
+- `gh:available` 以外の場合: スキップして次へ進む
 
-**利用可能な場合の確認メッセージ**:
+**`gh:available` の場合の確認メッセージ**:
 ```text
 Unitブランチを作成しますか？
 

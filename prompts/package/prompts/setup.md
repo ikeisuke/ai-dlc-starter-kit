@@ -50,6 +50,7 @@ AI-DLCで使用する依存コマンドの状態を確認します。
 
 ```bash
 docs/aidlc/bin/env-info.sh
+docs/aidlc/bin/check-backlog-mode.sh
 ```
 
 状態値の意味:
@@ -118,37 +119,15 @@ fi
 
 ### 4. バックログモード確認
 
-バックログモード設定を確認:
-
-```bash
-# dasel がインストールされている場合は dasel を使用
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    BACKLOG_MODE=""
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-echo "バックログモード: ${BACKLOG_MODE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得してください（デフォルト: `git`）。
+ステップ1で確認した `backlog_mode` を参照する。
 
 **判定結果表示**:
 - `git` / `git-only`: ローカルファイル駆動（`docs/cycles/backlog/`）
 - `issue` / `issue-only`: GitHub Issue駆動（Issue作成、ラベル管理）
 
-**mode=issue または issue-only の場合、GitHub CLI確認**:
-```bash
-if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
-    if ! command -v gh >/dev/null 2>&1; then
-        echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
-    elif ! gh auth status >/dev/null 2>&1; then
-        echo "警告: GitHub CLI未認証。Issue駆動機能は制限されます。"
-    else
-        echo "GitHub CLI: 認証済み"
-    fi
-fi
+**mode=issue または issue-only で、`gh:available` 以外の場合**:
+```text
+警告: GitHub CLI未インストールまたは未認証。Issue駆動機能は制限されます。
 ```
 
 ### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
@@ -654,7 +633,7 @@ mkdir -p docs/cycles/backlog-completed
    - **確認済み質問**: セットアップ中にユーザーに確認した質問と回答（なければセクション省略可）
    - **引継ぎ事項**: インセプションで追加確認が必要な事項（なければ「なし」）
 
-   **注意**: 対象Issueの選択はインセプションフェーズ（ステップ5）で行われます。セットアップでは「なし」を初期値として設定します。
+   **注意**: 対象Issueの選択はインセプションフェーズの「5. 対象Issue選択」で行われます。セットアップでは「なし」を初期値として設定します。
 
    テンプレート: `prompts/package/templates/setup_context_template.md`
    （rsync後は `docs/aidlc/templates/setup_context_template.md` として参照可能）

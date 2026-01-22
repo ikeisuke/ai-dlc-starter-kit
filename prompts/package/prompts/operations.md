@@ -145,7 +145,7 @@ Inception/Construction Phaseで決定済み
 
 ---
 
-## 最初に必ず実行すること（6ステップ）
+## 最初に必ず実行すること
 
 ### 1. サイクル存在確認
 `docs/cycles/{{CYCLE}}/` の存在を確認：
@@ -168,6 +168,23 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
+
+### 2.5 環境確認
+
+GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
+
+```bash
+docs/aidlc/bin/check-gh-status.sh
+docs/aidlc/bin/check-backlog-mode.sh
+```
+
+**出力例**:
+```text
+gh:available
+backlog_mode:issue-only
+```
+
+**`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
 ### 3. 進捗管理ファイル確認【重要】
 
@@ -508,17 +525,7 @@ cat go.mod | head -1
 
 #### 5.1 バックログ整理
 
-**設定確認**:
-```bash
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+ステップ2.5で確認した `backlog_mode` を参照する。
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -647,19 +654,11 @@ chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構�
 
 #### 6.5 ドラフトPR Ready化【重要】
 
-Inception Phaseで作成したドラフトPRをReady for Reviewに変更します。
+Inception Phaseで作成したドラフトPRをReady for Reviewに変更します（ステップ2.5で確認した `gh` ステータスを参照）。
 
-**前提条件チェック**:
-```bash
-# GitHub CLI利用可否と認証状態を確認
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    echo "GITHUB_CLI_AVAILABLE"
-else
-    echo "GITHUB_CLI_NOT_AVAILABLE"
-fi
-```
+**`gh:available` 以外の場合**: スキップ
 
-**ドラフトPR検索**:
+**ドラフトPR検索**（`gh:available` の場合）:
 ```bash
 # 現在のブランチからのオープンなPRを確認
 CURRENT_BRANCH=$(git branch --show-current)
@@ -790,19 +789,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、バックログに記録：
-
-**設定確認**:
-```bash
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+次サイクルに引き継ぐタスクがある場合、バックログに記録（ステップ2.5で確認した `backlog_mode` を参照）：
 
 **mode=git または mode=git-only の場合**:
 記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`

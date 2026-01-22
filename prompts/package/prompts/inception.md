@@ -122,7 +122,7 @@ Inception Phaseで決定
 
 ---
 
-## 最初に必ず実行すること（9ステップ）
+## 最初に必ず実行すること
 
 ### 0. ブランチ確認【推奨】
 
@@ -215,6 +215,23 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 ### 3. 追加ルール確認
 
 `docs/cycles/rules.md` が存在すれば読み込む
+
+### 3.3 環境確認
+
+GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
+
+```bash
+docs/aidlc/bin/check-gh-status.sh
+docs/aidlc/bin/check-backlog-mode.sh
+```
+
+**出力例**:
+```text
+gh:available
+backlog_mode:issue-only
+```
+
+**`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
 ### 3.5 セットアップコンテキスト確認
 
@@ -348,19 +365,15 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 4. Dependabot PR確認
 
-GitHub CLIでDependabot PRの有無を確認：
+GitHub CLIでDependabot PRの有無を確認（ステップ3.3で確認した `gh` ステータスを参照）：
 
+**`gh:available` の場合のみ**:
 ```bash
-# GitHub CLIの利用可否確認と Dependabot PR一覧取得
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh pr list --label "dependencies" --state open
-else
-    echo "SKIP: GitHub CLI not available or not authenticated"
-fi
+gh pr list --label "dependencies" --state open
 ```
 
 **判定**:
-- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **`gh:available` 以外**: 次のステップへ進行
 - **PRが0件**: 「オープンなDependabot PRはありません。」と表示し、次のステップへ進行
 - **PRが1件以上**: 以下の対応確認を実施
 
@@ -380,19 +393,15 @@ fi
 
 ### 5. GitHub Issue確認
 
-GitHub CLIでオープンなIssueの有無を確認：
+GitHub CLIでオープンなIssueの有無を確認（ステップ3.3で確認した `gh` ステータスを参照）：
 
+**`gh:available` の場合のみ**:
 ```bash
-# GitHub CLIの利用可否確認と Issue一覧取得
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh issue list --state open --limit 10
-else
-    echo "SKIP: GitHub CLI not available or not authenticated"
-fi
+gh issue list --state open --limit 10
 ```
 
 **判定**:
-- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **`gh:available` 以外**: 次のステップへ進行
 - **Issueが0件**: 「オープンなIssueはありません。」と表示し、次のステップへ進行
 - **Issueが1件以上**: 以下の対応確認を実施
 
@@ -412,21 +421,9 @@ fi
 
 ### 6. バックログ確認
 
-**設定確認**:
-```bash
-# dasel がインストールされている場合は dasel を使用
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    BACKLOG_MODE=""
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
+ステップ3.3で確認した `backlog_mode` を参照する。
 
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
-
-#### 3-1. 共通バックログ
+#### 6-1. 共通バックログ
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -454,7 +451,7 @@ gh issue list --label backlog --state open
   ```
   「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
-#### 3-2. 対応済みバックログとの照合
+#### 6-2. 対応済みバックログとの照合
 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
@@ -465,7 +462,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
 ```
 
 - **存在しない/空の場合**: スキップ
-- **ファイルが存在する場合**: 3-1で確認したバックログ項目と照合
+- **ファイルが存在する場合**: 6-1で確認したバックログ項目と照合
   - 対応済みに同名または類似の項目があるか、AIが文脈を読み取って判断
   - 類似項目を検出した場合、以下の形式でユーザーに通知：
     ```text
@@ -614,28 +611,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ### 1. サイクルラベル作成・Issue紐付け【mode=issueまたはissue-onlyの場合のみ】
 
-**前提条件確認**:
-
-```bash
-# バックログモード確認
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-
-# GitHub CLI確認
-GH_AVAILABLE="false"
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  GH_AVAILABLE="true"
-fi
-
-echo "バックログモード: ${BACKLOG_MODE}"
-echo "GitHub CLI: ${GH_AVAILABLE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+ステップ3.3で確認した `backlog_mode` と `gh` ステータスを参照する。
 
 **判定と処理**:
 
@@ -734,20 +710,10 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 
 ### 4. ドラフトPR作成【推奨】
 
-GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する。
-
-**前提条件チェック**:
-```bash
-# GitHub CLI利用可否と認証状態を確認
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    echo "GITHUB_CLI_AVAILABLE"
-else
-    echo "GITHUB_CLI_NOT_AVAILABLE"
-fi
-```
+GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する（ステップ3.3で確認した `gh` ステータスを参照）。
 
 **判定**:
-- **GITHUB_CLI_NOT_AVAILABLE**: 以下を表示してスキップ
+- **`gh:available` 以外**: 以下を表示してスキップ
   ```text
   GitHub CLIが利用できないため、ドラフトPR作成をスキップします。
   必要に応じて、後で手動でPRを作成してください。
