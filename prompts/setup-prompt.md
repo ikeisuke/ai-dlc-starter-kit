@@ -33,6 +33,7 @@ AI-DLCの実行には、以下のツールが必要です。セットアップ�
 
 | ツール | 用途 | 代替手段 |
 |--------|------|----------|
+| ghq | リポジトリ管理（スターターキットパス解決） | 手動でパスを指定 |
 | dasel | TOML設定ファイルの解析 | AIが直接ファイルを読み取り |
 | jq | JSON解析 | AIが直接解析 |
 | curl | Webリソース取得 | AIのWebFetch機能（Claude Code等） |
@@ -46,6 +47,7 @@ AI-DLCの実行には、以下のツールが必要です。セットアップ�
 brew install gh
 
 # オプション
+brew install ghq
 brew install dasel
 brew install jq
 # curl は通常プリインストール済み
@@ -58,6 +60,7 @@ brew install jq
 sudo apt install gh
 
 # オプション
+# ghq: https://github.com/x-motemen/ghq/releases からダウンロード
 # dasel: https://github.com/TomWright/dasel/releases からダウンロード
 sudo apt install jq
 # curl は通常プリインストール済み
@@ -84,8 +87,8 @@ pwd
 **このセットアップは、対象プロジェクトのルートディレクトリで実行する必要があります。**
 
 もし現在のディレクトリが `ai-dlc-starter-kit` リポジトリ内の場合:
-- **このままセットアップを実行しないでください**
-- **対象プロジェクトのルートディレクトリに移動してから、このファイルのフルパスを指定して再度実行してください**
+- **メタ開発モード**: `prompts/package/` ディレクトリが存在する場合は、スターターキット自体の開発として続行できます
+- **通常利用**: 対象プロジェクトのルートディレクトリに移動してから、このファイルのフルパスを指定して再度実行してください
 
 **確認が完了したら、以下をユーザーに表示してください**:
 
@@ -725,9 +728,64 @@ mkdir -p docs/aidlc/prompts
 mkdir -p docs/aidlc/templates
 ```
 
+### 8.1.1 スターターキットパスの判定【重要】
+
+rsync実行前に、スターターキットパスを特定してください。
+
+**環境判定**:
+
+```bash
+# メタ開発環境の判定（prompts/package/ が存在するか）
+if [ -d "prompts/package" ]; then
+    echo "META_DEV_MODE"
+    STARTER_KIT_PATH="."  # 同一リポジトリ内
+elif command -v ghq >/dev/null 2>&1; then
+    # ghq形式でパスを構築
+    STARTER_KIT_PATH="$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit"
+    # パスの存在確認
+    if [ -d "${STARTER_KIT_PATH}/prompts/package" ]; then
+        echo "NORMAL_MODE (ghq)"
+    else
+        echo "NORMAL_MODE (ghq path not found, fallback to manual)"
+        STARTER_KIT_PATH=""
+    fi
+else
+    echo "NORMAL_MODE (manual)"
+    STARTER_KIT_PATH=""
+fi
+
+# パスが未設定の場合は手動入力
+if [ -z "$STARTER_KIT_PATH" ]; then
+    echo "スターターキットの絶対パスを入力してください:"
+    echo "例: /path/to/ai-dlc-starter-kit"
+    # ユーザー入力を待つ
+fi
+```
+
+**パス参照の読み替え**:
+
+| 環境 | `[スターターキットパス]` の実際の値 |
+|------|-----------------------------------|
+| メタ開発 | `.`（カレントディレクトリ = プロジェクトルート） |
+| 通常利用（ghq） | `$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit` |
+| 通常利用（手動） | ユーザーに確認した絶対パス（例: `/path/to/ai-dlc-starter-kit`） |
+
+**非ghq環境の場合**:
+
+- ghqを使用していない環境では、スターターキットの絶対パスを手動で指定してください
+- 例: `/path/to/ai-dlc-starter-kit`
+
+**メタ開発時の注意**:
+
+- rsync元とrsync先が同一リポジトリ内になる
+- `prompts/package/` → `docs/aidlc/` への同期
+- 変更は `prompts/package/` で行い、rsyncで `docs/aidlc/` に反映する
+
 ### 8.2 パッケージファイルの同期【重要: 削除確認必須】
 
 スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` に同期。
+
+**注意**: 以下のコマンド例で使用する `[スターターキットパス]` は、セクション8.1.1で判定したパスに置き換えてください。メタ開発環境の場合は `.`（カレントディレクトリ）になります。
 
 **移行モード・アップグレードモード共通**:
 rsync実行前に**必ず**削除対象ファイルを確認し、ユーザーの承認を得てください。

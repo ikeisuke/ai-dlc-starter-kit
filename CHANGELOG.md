@@ -7,6 +7,37 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.9.0] - 2026-01-23
+
+### Added
+
+- プロンプトモジュール化基盤
+  - common/intro.md - AI-DLC概要・役割定義の共通化
+  - common/rules.md - 開発ルールの共通化
+  - common/review-flow.md - AIレビューフローの外部化
+- 参照方式の標準化（「ファイルを読み込んでください」指示形式）
+- 参照漏れチェックスクリプト（check-references.sh）
+- 設定確認スクリプト
+  - check-backlog-mode.sh - バックログモード確認
+  - check-gh-status.sh - GitHub CLI状態確認
+- Operations Phaseサイズチェック機能（[rules.size_check]設定）
+- 参照ガイド（reference-guide.md）
+- deprecation対象コード一覧と警告メッセージ
+
+### Changed
+
+- 複合コマンドを単純コマンド + スクリプト呼び出しに置換
+- プロンプト重複セクション削減（約300行削減）
+- AIレビューフローを外部ファイル参照に変更
+- アップグレード指示にメタ開発用パス参照を追加
+
+### Removed
+
+- 各プロンプト内の重複共通セクション（外部ファイル化）
+- インラインの複合コマンド（スクリプト化）
+
+---
+
 ## [1.8.1] - 2026-01-20
 
 ### Added

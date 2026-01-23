@@ -110,6 +110,8 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクシ�
 
 ステップ1で確認した `backlog_mode` を参照する。
 
+**空値の場合のフォールバック**: `check-backlog-mode.sh` が空値を返した場合（dasel未インストール時）は、`docs/aidlc.toml` の `[backlog].mode` を直接読み取る。値が取得できない場合は `git` として扱う。
+
 **判定結果表示**:
 - `git` / `git-only`: ローカルファイル駆動（`docs/cycles/backlog/`）
 - `issue` / `issue-only`: GitHub Issue駆動（Issue作成、ラベル管理）
@@ -505,7 +507,7 @@ mkdir -p docs/cycles/backlog-completed
 
 > **DEPRECATED (v1.9.0)**: この移行セクション全体が v2.0.0 で削除予定です。
 > 新規プロジェクトでは影響ありません。
-> 詳細は `prompts/package/deprecation.md` を参照してください。
+> 詳細は `docs/aidlc/guides/deprecation.md` を参照してください。
 
 旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
 
