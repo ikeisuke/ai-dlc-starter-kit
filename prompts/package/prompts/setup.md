@@ -503,6 +503,10 @@ mkdir -p docs/cycles/backlog-completed
 
 ### 11. 旧形式バックログ移行（該当する場合）
 
+> **DEPRECATED (v1.9.0)**: この移行セクション全体が v2.0.0 で削除予定です。
+> 新規プロジェクトでは影響ありません。
+> 詳細は `prompts/package/deprecation.md` を参照してください。
+
 旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
 
 ```bash

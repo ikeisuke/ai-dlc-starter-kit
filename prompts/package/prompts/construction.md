@@ -270,6 +270,10 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - **担当**: @username または -
 ```
 
+> **DEPRECATED (v1.9.0)**: この後方互換性セクションは v2.0.0 で削除予定です。
+> 新規プロジェクトでは影響ありません。
+> 詳細は `prompts/package/deprecation.md` を参照してください。
+
 **後方互換性**:
 - 「実装状態」セクションがないファイルは、まず `docs/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
 - **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
