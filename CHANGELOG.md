@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.9.1] - 2026-01-25
+
+### Added
+
+- init-cycle-dir.shに共通バックログディレクトリ作成機能を追加
+- コンテキストコンパクション時のAIDLC情報保持指示（AGENTS.md）
+
+### Changed
+
+- サイクル一覧取得時の不要項目（backlog, backlog-completed等）を除外
+- 環境確認（gh/dasel状態）をセットアップ時1回に統合し重複解消
+- 確認系処理をスクリプト化（check-gh-status.sh, check-backlog-mode.sh活用強化）
+- Co-Authored-By設定をaidlc.toml経由で柔軟に設定可能に
+- setup.mdの手動mkdirコマンドをinit-cycle-dir.shに統合
+
+---
+
 ## [1.9.0] - 2026-01-23
 
 ### Added
