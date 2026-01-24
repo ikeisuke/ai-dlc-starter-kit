@@ -232,7 +232,7 @@ fi
 #### 7.2 既存サイクルの検出
 
 ```bash
-ls -d docs/cycles/* 2>/dev/null | sort -V
+ls -d docs/cycles/*/ 2>/dev/null | grep -vE '(backlog|backlog-completed)' | sort -V
 ```
 
 #### 7.3 バージョン提案
