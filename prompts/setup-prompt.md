@@ -482,6 +482,13 @@ use_env_for_secrets = true
 commit_on_unit_complete = true
 commit_on_phase_complete = true
 
+[rules.commit]
+# コミット設定（v1.9.1で追加）
+# ai_author: Co-Authored-By に使用するAI著者情報
+# - 形式: "ツール名 <email>"（推奨）または任意の文字列
+# - デフォルト: "Claude <noreply@anthropic.com>"
+ai_author = "Claude <noreply@anthropic.com>"
+
 [rules.documentation]
 language = "日本語"
 
@@ -727,6 +734,23 @@ ai_tools = ["codex"]
 else
   echo "[rules.mcp_review] section not found"
 fi
+
+# [rules.commit] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.commit\]" docs/aidlc.toml; then
+  echo "Adding [rules.commit] section..."
+  cat >> docs/aidlc.toml << 'EOF'
+
+[rules.commit]
+# コミット設定（v1.9.1で追加）
+# ai_author: Co-Authored-By に使用するAI著者情報
+# - 形式: "ツール名 <email>"（推奨）または任意の文字列
+# - デフォルト: "Claude <noreply@anthropic.com>"
+ai_author = "Claude <noreply@anthropic.com>"
+EOF
+  echo "Added [rules.commit] section"
+else
+  echo "[rules.commit] section already exists"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -737,6 +761,7 @@ grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
 grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
 grep -A 5 "^\[rules.linting\]" docs/aidlc.toml
+grep -A 5 "^\[rules.commit\]" docs/aidlc.toml
 ```
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
