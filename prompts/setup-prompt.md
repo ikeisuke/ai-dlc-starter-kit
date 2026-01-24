@@ -104,31 +104,23 @@ pwd
 
 ## 2. セットアップ種類の判定
 
-以下のファイルの存在とバージョンを確認してください:
+セットアップ種類判定スクリプトを実行してください:
 
 ```bash
-# aidlc.toml（新形式）または project.toml（旧形式）の存在確認
-ls docs/aidlc.toml 2>/dev/null && echo "AIDLC_TOML_EXISTS" || \
-  (ls docs/aidlc/project.toml 2>/dev/null && echo "PROJECT_TOML_EXISTS" || echo "CONFIG_NOT_EXISTS")
-
-# プロジェクトのバージョン確認（aidlc.toml の starter_kit_version フィールド）
-if command -v dasel >/dev/null 2>&1; then
-    VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    VERSION=""
-fi
-[ -z "$VERSION" ] && VERSION="VERSION_NOT_FOUND"
-echo "$VERSION"
+docs/aidlc/bin/check-setup-type.sh
 ```
 
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。値が取得できない場合は「VERSION_NOT_FOUND」として扱ってください。
+**出力例**:
 
-また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、**スターターキットのバージョン**を確認してください。
+```text
+setup_type:cycle_start
+```
+
+**dasel未インストールの場合**（`setup_type:` と空値が返る場合）: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、スターターキットのバージョンと比較してください。
 
 ### 判定結果に基づく対応
 
-#### ケース A: 設定ファイルが存在しない（初回セットアップ）
+#### ケース A: `setup_type:initial`（初回セットアップ）
 
 以下のメッセージを表示してください:
 
@@ -140,7 +132,7 @@ AI-DLC の初回セットアップを行います。
 
 ---
 
-#### ケース B: `aidlc.toml` が存在 & バージョン同じ（サイクル開始）
+#### ケース B: `setup_type:cycle_start`（サイクル開始）
 
 以下のメッセージを表示してください:
 
@@ -157,15 +149,15 @@ AI-DLC は最新です。新しいサイクルを開始します。
 
 ---
 
-#### ケース C: `aidlc.toml` が存在 & プロジェクトが古い（アップグレード可能）
+#### ケース C: `setup_type:upgrade:{project}:{kit}`（アップグレード可能）
 
 以下のメッセージを表示し、ユーザーの選択を待ってください:
 
 ```text
 AI-DLC のアップグレードが利用可能です。
 
-現在のバージョン: [aidlc.toml の starter_kit_version]
-最新バージョン: [スターターキットの version.txt]
+現在のバージョン: {project}
+最新バージョン: {kit}
 
 選択してください:
 1. アップグレードする（プロンプト・テンプレートを更新）
@@ -183,15 +175,15 @@ AI-DLC のアップグレードが利用可能です。
 
 ---
 
-#### ケース D: プロジェクトが新しい（警告）
+#### ケース D: `setup_type:warning_newer:{project}:{kit}`（プロジェクトが新しい）
 
-aidlc.toml の starter_kit_version > スターターキットの version.txt の場合:
+以下のメッセージを表示してください:
 
 ```text
 警告: プロジェクトのバージョンがスターターキットより新しいです。
 
-プロジェクト: [aidlc.toml の starter_kit_version]
-スターターキット: [スターターキットの version.txt]
+プロジェクト: {project}
+スターターキット: {kit}
 
 スターターキットのアップデートを推奨します。
 現在のバージョンで続行しますか？
@@ -204,13 +196,13 @@ aidlc.toml の starter_kit_version > スターターキットの version.txt の
 
 ---
 
-### 後方互換性
-
-#### 旧形式（project.toml）が存在する場合
+#### ケース E: `setup_type:migration`（旧形式からの移行）
 
 `docs/aidlc.toml` は存在しないが `docs/aidlc/project.toml` が存在する場合:
 - これは旧バージョンの AI-DLC でセットアップされたプロジェクトです
 - セクション3（ファイル移行）へ進んでください（移行モード）
+
+### 後方互換性
 
 #### さらに古い形式（version.txt のみ）が存在する場合
 
