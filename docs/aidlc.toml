@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.8.1"
+starter_kit_version = "1.9.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -88,6 +88,17 @@ enabled = true
 # - true: markdownlint を実行する
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = false
+
+[rules.size_check]
+# サイズチェック設定（v1.9.0で追加）
+# enabled: true | false - サイズチェックを有効にするか（デフォルト: true）
+# max_bytes: Integer - バイト数閾値（デフォルト: 150000）
+# max_lines: Integer - 行数閾値（デフォルト: 1000）
+# target_pattern: String - 対象ファイルパターン（デフォルト: "*.md"）
+enabled = true
+max_bytes = 150000
+max_lines = 1000
+target_pattern = "*.md"
 
 [backlog]
 # バックログ管理モード設定（v1.7.0で追加）

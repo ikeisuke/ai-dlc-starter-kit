@@ -50,6 +50,7 @@ AI-DLCで使用する依存コマンドの状態を確認します。
 
 ```bash
 docs/aidlc/bin/env-info.sh
+docs/aidlc/bin/check-backlog-mode.sh
 ```
 
 状態値の意味:
@@ -72,8 +73,10 @@ docs/aidlc/bin/env-info.sh
 ### 2. デプロイ済みファイル確認
 
 ```bash
-[ -f docs/aidlc/prompts/setup.md ] && echo "DEPLOYED_EXISTS" || echo "DEPLOYED_NOT_EXISTS"
+ls docs/aidlc/prompts/setup.md 2>/dev/null
 ```
+
+出力があれば `DEPLOYED_EXISTS`、エラーなら `DEPLOYED_NOT_EXISTS` と判断。
 
 **判定**:
 - **DEPLOYED_EXISTS**: ステップ3（スターターキット開発リポジトリ判定）へ進む
@@ -90,23 +93,10 @@ docs/aidlc/bin/env-info.sh
 
 ### 3. スターターキット開発リポジトリ判定
 
-```bash
-# プロジェクト名を取得（[project] セクション内の name のみ）
-if command -v dasel >/dev/null 2>&1; then
-    PROJECT_NAME=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.name' 2>/dev/null | tr -d "'" || echo "")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    PROJECT_NAME=""
-fi
+AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `name` 値を確認。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は空として扱う。
 
-if [ "$PROJECT_NAME" = "ai-dlc-starter-kit" ]; then
-  echo "STARTER_KIT_DEV"
-else
-  echo "USER_PROJECT"
-fi
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `name` 値を取得してください。
+`name` が `ai-dlc-starter-kit` の場合は `STARTER_KIT_DEV`、それ以外は `USER_PROJECT` と判断。
 
 **判定**:
 - **STARTER_KIT_DEV**: 以下を表示し、ステップ7（サイクルバージョンの決定）へ進む
@@ -118,37 +108,17 @@ fi
 
 ### 4. バックログモード確認
 
-バックログモード設定を確認:
+ステップ1で確認した `backlog_mode` を参照する。
 
-```bash
-# dasel がインストールされている場合は dasel を使用
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    BACKLOG_MODE=""
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-echo "バックログモード: ${BACKLOG_MODE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得してください（デフォルト: `git`）。
+**空値の場合のフォールバック**: `check-backlog-mode.sh` が空値を返した場合（dasel未インストール時）は、`docs/aidlc.toml` の `[backlog].mode` を直接読み取る。値が取得できない場合は `git` として扱う。
 
 **判定結果表示**:
 - `git` / `git-only`: ローカルファイル駆動（`docs/cycles/backlog/`）
 - `issue` / `issue-only`: GitHub Issue駆動（Issue作成、ラベル管理）
 
-**mode=issue または issue-only の場合、GitHub CLI確認**:
-```bash
-if [ "$BACKLOG_MODE" = "issue" ] || [ "$BACKLOG_MODE" = "issue-only" ]; then
-    if ! command -v gh >/dev/null 2>&1; then
-        echo "警告: GitHub CLI未インストール。Issue駆動機能は制限されます。"
-    elif ! gh auth status >/dev/null 2>&1; then
-        echo "警告: GitHub CLI未認証。Issue駆動機能は制限されます。"
-    else
-        echo "GitHub CLI: 認証済み"
-    fi
-fi
+**mode=issue または issue-only で、`gh:available` 以外の場合**:
+```text
+警告: GitHub CLI未インストールまたは未認証。Issue駆動機能は制限されます。
 ```
 
 ### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
@@ -195,22 +165,17 @@ label:type:bugfix:created
 
 ### 6. スターターキットバージョン確認
 
+**最新バージョン取得**:
+
 ```bash
-# スターターキットの最新バージョン（GitHubから取得、タイムアウト5秒）
-LATEST_VERSION=$(curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null | tr -d '\n' || echo "")
-
-# 現在使用中のバージョン（aidlc.toml の starter_kit_version）
-if command -v dasel >/dev/null 2>&1; then
-    CURRENT_VERSION=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'starter_kit_version' 2>/dev/null | tr -d "'" || echo "")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    CURRENT_VERSION=""
-fi
-
-echo "最新: ${LATEST_VERSION:-取得失敗}, 現在: ${CURRENT_VERSION:-なし}"
+curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt 2>/dev/null
 ```
 
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。
+AIがcurl出力から最新バージョンを取得（エラー時は空として扱う）。
+
+**現在のバージョン取得**:
+AIが `docs/aidlc.toml` をReadツールで読み取り、`starter_kit_version` の値を確認。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は空として扱う。
 
 **判定**:
 - **最新バージョン取得失敗**: ステップ7（サイクルバージョンの決定）へ進む
@@ -367,9 +332,13 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     ```
 
     **2. 既存worktree確認**:
+
     ```bash
-    git worktree list | grep "cycle/{{CYCLE}}" && echo "WORKTREE_EXISTS" || echo "WORKTREE_NOT_EXISTS"
+    git worktree list --porcelain
     ```
+
+    AIが `--porcelain` 出力から `worktree` 行を確認し、パスに `cycle/{{CYCLE}}` が完全一致で含まれるかを判定。
+    含まれる場合は `WORKTREE_EXISTS`、含まれない場合は `WORKTREE_NOT_EXISTS` と判断。
 
     - **WORKTREE_EXISTS**: 既存worktreeの使用を確認
       ```text
@@ -381,9 +350,12 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
     - **WORKTREE_NOT_EXISTS**: worktree作成を続行
 
     **3. ブランチ存在確認**:
+
     ```bash
-    git show-ref --verify --quiet "refs/heads/cycle/{{CYCLE}}" && echo "BRANCH_EXISTS" || echo "BRANCH_NOT_EXISTS"
+    git show-ref --verify "refs/heads/cycle/{{CYCLE}}" 2>/dev/null
     ```
+
+    出力があれば `BRANCH_EXISTS`、エラーなら `BRANCH_NOT_EXISTS` と判断。
 
     **4. 作成確認**:
     ```text
@@ -446,9 +418,12 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
   - **ブランチ作成を選択**: 以下のフローを実行
 
     **1. ブランチ存在確認**:
+
     ```bash
-    git show-ref --verify --quiet "refs/heads/cycle/{{CYCLE}}" && echo "BRANCH_EXISTS" || echo "BRANCH_NOT_EXISTS"
+    git show-ref --verify "refs/heads/cycle/{{CYCLE}}" 2>/dev/null
     ```
+
+    出力があれば `BRANCH_EXISTS`、エラーなら `BRANCH_NOT_EXISTS` と判断。
 
     **2. ブランチ切り替え**:
 
@@ -492,8 +467,10 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ```
+
+出力があれば `CYCLE_EXISTS`、エラーなら `CYCLE_NOT_EXISTS` と判断。
 
 - **存在する場合**: 既存サイクルへの案内
   ```text
@@ -528,11 +505,17 @@ mkdir -p docs/cycles/backlog-completed
 
 ### 11. 旧形式バックログ移行（該当する場合）
 
+> **DEPRECATED (v1.9.0)**: この移行セクション全体が v2.0.0 で削除予定です。
+> 新規プロジェクトでは影響ありません。
+> 詳細は `docs/aidlc/guides/deprecation.md` を参照してください。
+
 旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
 
 ```bash
-[ -f docs/cycles/backlog.md ] && echo "OLD_BACKLOG_EXISTS" || echo "OLD_BACKLOG_NOT_EXISTS"
+ls docs/cycles/backlog.md 2>/dev/null
 ```
+
+出力があれば `OLD_BACKLOG_EXISTS`、エラーなら `OLD_BACKLOG_NOT_EXISTS` と判断。
 
 - **OLD_BACKLOG_NOT_EXISTS**: スキップ（完了時の作業へ進む）
 - **OLD_BACKLOG_EXISTS**: 以下の移行処理を実行
@@ -641,8 +624,10 @@ mkdir -p docs/cycles/backlog-completed
 1. **ファイル存在確認**:
 
    ```bash
-   [ -f "docs/cycles/{{CYCLE}}/requirements/setup-context.md" ] && echo "EXISTS" || echo "NOT_EXISTS"
+   ls docs/cycles/{{CYCLE}}/requirements/setup-context.md 2>/dev/null
    ```
+
+   出力があれば `EXISTS`、エラーなら `NOT_EXISTS` と判断。
 
 2. **NOT_EXISTS の場合のみ生成**:
 
@@ -654,7 +639,7 @@ mkdir -p docs/cycles/backlog-completed
    - **確認済み質問**: セットアップ中にユーザーに確認した質問と回答（なければセクション省略可）
    - **引継ぎ事項**: インセプションで追加確認が必要な事項（なければ「なし」）
 
-   **注意**: 対象Issueの選択はインセプションフェーズ（ステップ5）で行われます。セットアップでは「なし」を初期値として設定します。
+   **注意**: 対象Issueの選択はインセプションフェーズの「5. 対象Issue選択」で行われます。セットアップでは「なし」を初期値として設定します。
 
    テンプレート: `prompts/package/templates/setup_context_template.md`
    （rsync後は `docs/aidlc/templates/setup_context_template.md` として参照可能）

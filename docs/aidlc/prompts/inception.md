@@ -1,26 +1,7 @@
 # Inception Phase プロンプト
 
----
-
-## AI-DLC手法の要約
-
-AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来のSDLCやAgileが「人間中心・長期サイクル」を前提としているのに対し、AI-DLCは「AI主導・短サイクル」で開発を推進します。
-
-**主要原則**:
-- **会話の反転**: AIが作業計画を提示し、人間が承認・判断する
-- **設計技法の統合**: DDD・BDD・TDDをAIが自動適用
-- **冪等性の保証**: 各ステップで既存成果物を確認し、差分のみ更新
-
-**3つのフェーズ**: Inception（要件定義）→ Construction（実装）→ Operations（運用）
-- **Inception**: Intentを具体的なUnitに分解し、ユーザーストーリーを作成
-- **Construction**: ドメイン設計・論理設計・コード・テストを生成
-- **Operations**: デプロイ・監視・運用を実施
-
-**主要アーティファクト**:
-- **Intent**: 開発の目的と狙い
-- **Unit**: 独立した価値提供ブロック（Epic/Subdomainに相当）
-- **Domain Design**: DDDに従ったビジネスロジックの構造化
-- **Logical Design**: 非機能要件を反映した設計層
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/intro.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
 
 ---
 
@@ -42,47 +23,8 @@ Inception Phaseで決定
 - プロジェクト固有の制約は `docs/cycles/rules.md` を参照
 
 ### 開発ルール
-- **人間の承認プロセス【重要】**: 計画作成後、必ず以下を実行する
-  1. 計画ファイルのパスをユーザーに提示
-  2. 「この計画で進めてよろしいですか？」と明示的に質問
-  3. ユーザーが「承認」「OK」「進めてください」などの肯定的な返答をするまで待機
-  4. **承認なしで次のステップを開始してはいけない**
 
-- **質問と回答の記録【重要】**: 独自の判断をせず、不明点はドキュメントに `[Question]` タグで記録し `[Answer]` タグを配置、ユーザーに回答を求める。
-
-- **予想禁止・一問一答質問ルール【重要】**: 不明点や判断に迷う点がある場合、予想や仮定で進めてはいけない。必ずユーザーに質問する。
-
-  **質問フロー（ハイブリッド方式）**:
-  1. まず質問の数と概要を提示する
-     ```text
-     質問が{N}点あります：
-     1. {質問1の概要}
-     2. {質問2の概要}
-     ...
-
-     まず1点目から確認させてください。
-     ```
-  2. 1問ずつ詳細を質問し、回答を待つ
-  3. 回答を得てから次の質問に進む
-  4. 回答に基づく追加質問が発生した場合は「追加で確認させてください」と明示して質問する
-
-  **質問すべき場面**:
-  - 要件が曖昧な場合
-  - 複数の解釈が可能な場合
-  - 技術的な選択肢がある場合
-  - 前提条件が不明確な場合
-
-- **Gitコミットのタイミング【必須】**: 以下のタイミングで**必ず**Gitコミットを作成する
-  1. セットアップ完了時
-  2. Inception Phase完了時
-  3. 各Unit完了時
-  4. Operations Phase完了時
-
-  コミットメッセージは変更内容を明確に記述
-
-- **jjサポート設定**: `docs/aidlc.toml`の`[rules.jj]`セクションを確認
-  - `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/guides/jj-support.md`の対照表で読み替えて実行
-  - `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
+**共通ルールは `docs/aidlc/prompts/common/rules.md` を参照**
 
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/inception.md` に記録。
 
@@ -112,124 +54,9 @@ Inception Phaseで決定
   - **変更点**: [修正前 → 修正後の要点]
   ```
 
-- コード品質基準、Git運用の原則は `docs/cycles/rules.md` を参照
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/review-flow.md` を読み込んで、内容を確認してください。
 
-- **AIレビュー優先ルール【重要】**: 人間に承認を求める前に、AIレビュー（Skills優先、MCPフォールバック）を実行する。
-
-  **設定確認**: `docs/aidlc.toml` の `[rules.mcp_review]` セクションを読み、`mode` の値を確認
-  - `mode = "required"`: AIレビュー必須（AIレビューツールが両方利用不可の場合、ユーザー承認により例外的に人間レビューへ移行可能。承認は履歴に記録する）
-  - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
-  - `mode = "disabled"`: AIレビューを行わない（AIレビューをスキップし、直接人間レビューへ進む）
-
-  **AIレビューツール利用可否の確認（Skills優先）**:
-  - **Skills確認**: Skillツール一覧から `codex` スキルが利用可能か確認（スキル名は `codex` 固定）
-    - Claude Code: Skillツールが存在し、`skill="codex"`で呼び出し可能かを確認
-    - KiroCLI等の他環境: Skill一覧取得APIがあればそれを利用、なければMCPフォールバックへ
-  - **MCPフォールバック**: Skills利用不可の場合、Codex MCPツール（`mcp__codex__codex`）の存在を確認
-  - **両方利用不可**: AIレビュー不可として処理
-
-  **処理フロー**:
-
-  1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
-     - 空または取得失敗時は「recommend」として扱う
-     - `disabled` の場合: ステップ6（人間レビューフロー）へ
-     - `required` または `recommend` の場合: 次のステップへ
-
-  2. **AIレビューツール利用可否チェック（Skills優先）**:
-     - Skills（`skill="codex"`）が利用可能 → ステップ3へ
-     - Skills利用不可 → MCPフォールバック（`mcp__codex__codex`）を確認
-     - MCP利用可能 → ステップ3へ
-     - 両方利用不可 → ステップ5（AIレビュー不可時）へ
-
-  3. **AIレビューツール利用可能時の選択**:
-     - `mode = "required"` の場合: ステップ4（AIレビューフロー）へ
-     - `mode = "recommend"` の場合: 推奨メッセージを表示しユーザーに選択を求める
-       ```text
-       【レビュー推奨】AIレビューツール（Skills/MCP）が利用可能です。
-       品質向上のため、この成果物のレビューを実施することを推奨します。
-       レビューを実施しますか？
-       ```
-       - 「はい」の場合: ステップ4（AIレビューフロー）へ
-       - 「いいえ」の場合: ステップ6（人間レビューフロー）へ
-
-  4. **AIレビューフロー**:
-     - **レビュー前コミット**（変更がある場合のみ）:
-       ```bash
-       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
-       ```
-     - AIレビューを実行（Skills優先、利用不可ならMCP使用）
-     - レビュー結果を確認
-     - 指摘があれば修正を反映
-     - **レビュー後コミット**（修正があった場合のみ）:
-       ```bash
-       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
-       ```
-     - 修正後の成果物を人間に提示
-     - 人間の承認を求める
-
-  5. **AIレビュー不可時**（Skills/MCP両方利用不可の場合）:
-     - `mode = "required"` の場合:
-       ```text
-       【警告】AIレビューが必須設定ですが、AIレビューツール（Skills/MCP）が利用できません。
-
-       AIレビューをスキップして人間の承認に進みますか？
-       1. はい - 人間承認へ進む（レビュースキップを履歴に記録）
-       2. いいえ - 処理を中断
-       ```
-       ユーザーの応答を待ち、「はい」の場合は以下を履歴に記録してステップ6へ:
-       ```markdown
-       ### AIレビュースキップ
-       - **理由**: AIレビューツール利用不可（ユーザー承認済み）
-       - **日時**: YYYY-MM-DD HH:MM:SS
-       - **対象成果物**: {成果物名}
-       ```
-       「いいえ」の場合: 処理を中断し、ユーザー再指示待ち状態へ
-     - `mode = "recommend"` の場合: 自動的にステップ6へ
-
-  6. **人間レビューフロー**（mode=disabled または AIレビュー不可時）:
-     - **レビュー前コミット**（変更がある場合のみ）:
-       ```bash
-       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
-       ```
-     - 成果物を人間に提示
-     - 人間の承認を求める
-     - 修正依頼があれば修正を反映
-     - **レビュー後コミット**（修正があった場合のみ）:
-       ```bash
-       [ -n "$(git status --porcelain)" ] && git add -A && git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
-       ```
-     - 再度人間に提示・承認を求める
-
-  **対象タイミング**: Intent承認前、ユーザーストーリー承認前、Unit定義承認前
-
-- **外部入力検証ルール【重要】**: 外部からの入力（AIレビュー応答、ユーザー入力）を批判的に評価し、自己判断を明示する。
-
-  **AIレビュー応答の検証**:
-  - AIレビュー（Skills/MCP）からの応答をそのまま信頼せず、批判的に評価する
-  - 応答に誤りや不整合がないか確認する
-  - 自己判断を併記し、相違がある場合はユーザーに確認を求める
-  - 形式：
-    ```text
-    【AIレビュー応答の検証】
-    - AIレビュー応答: [応答内容の要約]
-    - AI判断: [自己判断]
-    - 相違点: [ある場合は記載、なければ「なし」]
-    - 結論: [採用する判断とその理由]
-    ```
-
-  **ユーザー入力の検証**:
-  - ユーザー入力に曖昧さがある場合は、解釈を明示して確認する
-  - 複数の解釈が可能な場合は、すべての解釈を提示する
-  - 形式：
-    ```text
-    【入力の解釈確認】
-    ご入力: "[ユーザーの入力]"
-
-    以下のように解釈しました：
-    [解釈内容]
-
-    この解釈で正しいでしょうか？
-    ```
+  **AIレビュー対象タイミング**: Intent承認前、ユーザーストーリー承認前、Unit定義承認前
 
 - **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
   - 「継続プロンプト」「リセットしたい」
@@ -295,7 +122,7 @@ Inception Phaseで決定
 
 ---
 
-## 最初に必ず実行すること（9ステップ）
+## 最初に必ず実行すること
 
 ### 0. ブランチ確認【推奨】
 
@@ -345,10 +172,12 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
    ```
 
 3. **docs/cycles/ 配下の最新サイクルディレクトリを使用**:
+
    ```bash
-   LATEST_CYCLE=$(ls -d docs/cycles/*/ 2>/dev/null | sort -V | tail -1 | xargs basename)
-   echo "LATEST_CYCLE: ${LATEST_CYCLE}"
+   ls -d docs/cycles/*/ 2>/dev/null
    ```
+
+   AIが出力からセマンティックバージョン順（v1.9 < v1.10）で最新のサイクルを判定。
 
 4. **上記いずれも該当しない場合**: ユーザーに質問
    ```text
@@ -370,8 +199,10 @@ echo "現在のブランチ: ${CURRENT_BRANCH}"
 `docs/cycles/{{CYCLE}}/` の存在を確認：
 
 ```bash
-ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_EXISTS"
+ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ```
+
+AIが出力を確認し、パス名が表示されれば存在、エラーなら不存在と判断。
 
 - **存在する場合**: 処理を継続（ステップ3へ）
 - **存在しない場合**: エラーを表示し、setup.md を案内
@@ -389,6 +220,23 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 `docs/cycles/rules.md` が存在すれば読み込む
 
+### 3.3 環境確認
+
+GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
+
+```bash
+docs/aidlc/bin/check-gh-status.sh
+docs/aidlc/bin/check-backlog-mode.sh
+```
+
+**出力例**:
+```text
+gh:available
+backlog_mode:issue-only
+```
+
+**`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
+
 ### 3.5 セットアップコンテキスト確認
 
 セットアップで決定した内容を確認し、重複質問を回避します。
@@ -396,8 +244,10 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 **ファイル確認**:
 
 ```bash
-[ -f "docs/cycles/{{CYCLE}}/requirements/setup-context.md" ] && echo "CONTEXT_EXISTS" || echo "CONTEXT_NOT_EXISTS"
+ls docs/cycles/{{CYCLE}}/requirements/setup-context.md 2>/dev/null
 ```
+
+AIが出力を確認し、ファイル名が表示されれば存在、エラーなら不存在と判断。
 
 **判定**:
 
@@ -521,19 +371,15 @@ ls docs/cycles/{{CYCLE}}/ 2>/dev/null && echo "CYCLE_EXISTS" || echo "CYCLE_NOT_
 
 ### 4. Dependabot PR確認
 
-GitHub CLIでDependabot PRの有無を確認：
+GitHub CLIでDependabot PRの有無を確認（ステップ3.3で確認した `gh` ステータスを参照）：
 
+**`gh:available` の場合のみ**:
 ```bash
-# GitHub CLIの利用可否確認と Dependabot PR一覧取得
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh pr list --label "dependencies" --state open
-else
-    echo "SKIP: GitHub CLI not available or not authenticated"
-fi
+gh pr list --label "dependencies" --state open
 ```
 
 **判定**:
-- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **`gh:available` 以外**: 次のステップへ進行
 - **PRが0件**: 「オープンなDependabot PRはありません。」と表示し、次のステップへ進行
 - **PRが1件以上**: 以下の対応確認を実施
 
@@ -553,19 +399,15 @@ fi
 
 ### 5. GitHub Issue確認
 
-GitHub CLIでオープンなIssueの有無を確認：
+GitHub CLIでオープンなIssueの有無を確認（ステップ3.3で確認した `gh` ステータスを参照）：
 
+**`gh:available` の場合のみ**:
 ```bash
-# GitHub CLIの利用可否確認と Issue一覧取得
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh issue list --state open --limit 10
-else
-    echo "SKIP: GitHub CLI not available or not authenticated"
-fi
+gh issue list --state open --limit 10
 ```
 
 **判定**:
-- **SKIP（GitHub CLI利用不可）**: 次のステップへ進行
+- **`gh:available` 以外**: 次のステップへ進行
 - **Issueが0件**: 「オープンなIssueはありません。」と表示し、次のステップへ進行
 - **Issueが1件以上**: 以下の対応確認を実施
 
@@ -585,21 +427,9 @@ fi
 
 ### 6. バックログ確認
 
-**設定確認**:
-```bash
-# dasel がインストールされている場合は dasel を使用
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    echo "dasel未インストール - AIが設定ファイルを直接読み取ります"
-    BACKLOG_MODE=""
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-```
+ステップ3.3で確認した `backlog_mode` を参照する。
 
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
-
-#### 3-1. 共通バックログ
+#### 6-1. 共通バックログ
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -627,7 +457,7 @@ gh issue list --label backlog --state open
   ```
   「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
-#### 3-2. 対応済みバックログとの照合
+#### 6-2. 対応済みバックログとの照合
 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
@@ -638,7 +468,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
 ```
 
 - **存在しない/空の場合**: スキップ
-- **ファイルが存在する場合**: 3-1で確認したバックログ項目と照合
+- **ファイルが存在する場合**: 6-1で確認したバックログ項目と照合
   - 対応済みに同名または類似の項目があるか、AIが文脈を読み取って判断
   - 類似項目を検出した場合、以下の形式でユーザーに通知：
     ```text
@@ -787,28 +617,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ### 1. サイクルラベル作成・Issue紐付け【mode=issueまたはissue-onlyの場合のみ】
 
-**前提条件確認**:
-
-```bash
-# バックログモード確認
-if command -v dasel >/dev/null 2>&1; then
-    BACKLOG_MODE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-else
-    BACKLOG_MODE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$BACKLOG_MODE" ] && BACKLOG_MODE="git"
-
-# GitHub CLI確認
-GH_AVAILABLE="false"
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  GH_AVAILABLE="true"
-fi
-
-echo "バックログモード: ${BACKLOG_MODE}"
-echo "GitHub CLI: ${GH_AVAILABLE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得。
+ステップ3.3で確認した `backlog_mode` と `gh` ステータスを参照する。
 
 **判定と処理**:
 
@@ -841,19 +650,9 @@ issue:72:labeled:cycle:v1.8.0
 
 **前提条件確認**:
 
-```bash
-# project.type設定を読み取り
-if command -v dasel >/dev/null 2>&1; then
-    PROJECT_TYPE=$(cat docs/aidlc.toml 2>/dev/null | dasel -i toml 'project.type' 2>/dev/null | tr -d "'" || echo "general")
-else
-    PROJECT_TYPE=""  # AIが設定ファイルを直接読み取る
-fi
-[ -z "$PROJECT_TYPE" ] && PROJECT_TYPE="general"
+AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `type` 値を確認。
 
-echo "プロジェクトタイプ: ${PROJECT_TYPE}"
-```
-
-**dasel未インストールの場合**: AIは `docs/aidlc.toml` を読み込み、`[project]` セクションの `type` 値を取得。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `general` として扱う。
 
 **判定**:
 - `PROJECT_TYPE != "ios"` の場合: このステップをスキップ
@@ -907,20 +706,10 @@ project.type=iosのため、Inception Phaseでバージョンを更新するこ�
 
 ### 4. ドラフトPR作成【推奨】
 
-GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する。
-
-**前提条件チェック**:
-```bash
-# GitHub CLI利用可否と認証状態を確認
-if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    echo "GITHUB_CLI_AVAILABLE"
-else
-    echo "GITHUB_CLI_NOT_AVAILABLE"
-fi
-```
+GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する（ステップ3.3で確認した `gh` ステータスを参照）。
 
 **判定**:
-- **GITHUB_CLI_NOT_AVAILABLE**: 以下を表示してスキップ
+- **`gh:available` 以外**: 以下を表示してスキップ
   ```text
   GitHub CLIが利用できないため、ドラフトPR作成をスキップします。
   必要に応じて、後で手動でPRを作成してください。

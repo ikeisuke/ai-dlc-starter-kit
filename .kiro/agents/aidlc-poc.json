@@ -1,0 +1,5 @@
+{
+  "name": "aidlc-poc",
+  "resources": [],
+  "tools": ["read", "write", "shell"]
+}
