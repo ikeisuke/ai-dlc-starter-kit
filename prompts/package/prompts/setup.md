@@ -490,16 +490,12 @@ docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 ```
 
 このスクリプトは以下を一括で作成します:
-- 10個のディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
+- 10個のサイクル固有ディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
 - history/inception.md（初期履歴ファイル）
+- 共通バックログディレクトリ（docs/cycles/backlog/, docs/cycles/backlog-completed/）
+  - ただし、backlog mode が `issue-only` の場合はスキップされます
 
 **注**: `--dry-run` オプションで作成予定を確認できます。
-
-**共通バックログディレクトリ確認**:
-```bash
-mkdir -p docs/cycles/backlog
-mkdir -p docs/cycles/backlog-completed
-```
 
 **注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
