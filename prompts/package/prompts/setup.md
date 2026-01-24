@@ -123,10 +123,10 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクシ�
 
 ### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
 
-**前提条件**:
+**前提条件**（ステップ1の環境確認結果を参照）:
 
-- BACKLOG_MODE = "issue" または "issue-only"
-- GitHub CLIが利用可能かつ認証済み
+- `backlog_mode` が "issue" または "issue-only"
+- `gh` ステータスが `available`
 
 上記条件を満たさない場合はこのステップをスキップ。
 
