@@ -793,15 +793,5 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`[paths]` セクショ
 
 ---
 
-## 付録
-
-### 依存コマンド追加手順
-
-新しい依存コマンドをAI-DLCに追加する手順は、以下のガイドを参照してください：
-
-**参照**: `docs/aidlc/guides/dependency-commands.md`
-
----
-
 ### 7. ライフサイクルの継続
 Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供
