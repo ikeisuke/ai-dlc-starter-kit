@@ -104,10 +104,19 @@ pwd
 
 ## 2. セットアップ種類の判定
 
-セットアップ種類判定スクリプトを実行してください:
+セットアップ種類判定スクリプトを実行してください。
+
+**スクリプトのパス判定**:
+- このファイル（setup-prompt.md）と同じディレクトリの `setup/bin/check-setup-type.sh` を使用
+- メタ開発モード（`prompts/package/` が存在）: `prompts/setup/bin/check-setup-type.sh`
+- 通常利用: スターターキットの `prompts/setup/bin/check-setup-type.sh`
 
 ```bash
-docs/aidlc/bin/check-setup-type.sh
+# メタ開発モードの場合
+prompts/setup/bin/check-setup-type.sh
+
+# 通常利用の場合（ghq使用時）
+$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup/bin/check-setup-type.sh
 ```
 
 **出力例**:
