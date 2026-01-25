@@ -85,14 +85,18 @@ OPTIONS:
 EOF
 }
 
-# バージョン形式を検証（vX.X.X形式）
-validate_version() {
-    local version="$1"
-    if [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        return 0
-    else
+# サイクル名を検証（空文字とパス区切り文字を拒否）
+validate_cycle() {
+    local cycle="$1"
+    # 空文字チェック
+    if [[ -z "$cycle" ]]; then
         return 1
     fi
+    # パス区切り文字を拒否（ディレクトリトラバーサル防止）
+    if [[ "$cycle" == */* ]]; then
+        return 1
+    fi
+    return 0
 }
 
 # フェーズを検証
@@ -303,8 +307,8 @@ main() {
         exit 1
     fi
 
-    if ! validate_version "$CYCLE"; then
-        echo "error:Invalid cycle format. Expected vX.X.X (e.g., v1.8.0)" >&2
+    if ! validate_cycle "$CYCLE"; then
+        echo "error:Invalid cycle name. Cannot be empty or contain '/'" >&2
         exit 1
     fi
 
