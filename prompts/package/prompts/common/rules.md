@@ -54,6 +54,25 @@
 
 コミットメッセージは変更内容を明確に記述
 
+## Co-Authored-By の設定
+
+コミットメッセージに追加する Co-Authored-By 情報は `docs/aidlc.toml` で設定可能。
+
+**設定の確認**:
+
+`docs/aidlc.toml` の `[rules.commit]` セクションを確認:
+
+- `ai_author` が設定されている場合: その値を使用
+- 未設定または `[rules.commit]` セクションがない場合: デフォルト値 `Claude <noreply@anthropic.com>` を使用
+
+**コミットメッセージ形式**:
+
+```text
+{コミットメッセージ}
+
+Co-Authored-By: {ai_author の値}
+```
+
 ## jjサポート設定
 
 `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
