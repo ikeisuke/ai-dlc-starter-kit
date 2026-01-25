@@ -21,6 +21,8 @@ AI-DLC Starter Kit の変更履歴です。
 - 確認系処理をスクリプト化（check-gh-status.sh, check-backlog-mode.sh活用強化）
 - Co-Authored-By設定をaidlc.toml経由で柔軟に設定可能に
 - setup.mdの手動mkdirコマンドをinit-cycle-dir.shに統合
+- rsync処理で`.github`ディレクトリを除外対象に追加
+- セットアップ専用スクリプト（check-setup-type.sh）を`prompts/setup/bin/`に配置変更
 
 ---
 

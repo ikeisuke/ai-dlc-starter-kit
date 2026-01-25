@@ -140,8 +140,9 @@ get_backlog_mode() {
 
     # daselが利用不可または取得失敗の場合はgrepでフォールバック
     if [[ -z "$mode" ]]; then
-        # mode = "xxx" の形式を抽出
-        mode=$(grep -E '^\s*mode\s*=' "$config_file" 2>/dev/null | head -1 | sed 's/.*=\s*["'"'"']\?\([^"'"'"']*\)["'"'"']\?.*/\1/' || echo "")
+        # [backlog]セクション内のmode = "xxx" の形式を抽出
+        # sedで[backlog]から次のセクション（または末尾）までを抽出し、その中からmodeを検索
+        mode=$(sed -n '/^\[backlog\]/,/^\[/p' "$config_file" 2>/dev/null | grep -E '^\s*mode\s*=' | head -1 | sed 's/.*=\s*["'"'"']\?\([^"'"'"']*\)["'"'"']\?.*/\1/' || echo "")
     fi
 
     # 空または無効な値の場合はデフォルト

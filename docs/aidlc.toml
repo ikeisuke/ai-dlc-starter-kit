@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.9.0"
+starter_kit_version = "1.9.1"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -32,6 +32,13 @@ use_env_for_secrets = true
 # Git運用ルール
 commit_on_unit_complete = true
 commit_on_phase_complete = true
+
+[rules.commit]
+# コミット設定（v1.9.1で追加）
+# ai_author: Co-Authored-By に使用するAI著者情報
+# - 形式: "ツール名 <email>"（推奨）または任意の文字列
+# - デフォルト: "Claude <noreply@anthropic.com>"
+ai_author = "Claude <noreply@anthropic.com>"
 
 [rules.documentation]
 language = "日本語"

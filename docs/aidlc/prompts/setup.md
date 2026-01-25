@@ -123,10 +123,10 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクシ�
 
 ### 5. backlogラベル確認・作成【mode=issueまたはissue-onlyの場合のみ】
 
-**前提条件**:
+**前提条件**（ステップ1の環境確認結果を参照）:
 
-- BACKLOG_MODE = "issue" または "issue-only"
-- GitHub CLIが利用可能かつ認証済み
+- `backlog_mode` が "issue" または "issue-only"
+- `gh` ステータスが `available`
 
 上記条件を満たさない場合はこのステップをスキップ。
 
@@ -232,7 +232,7 @@ fi
 #### 7.2 既存サイクルの検出
 
 ```bash
-ls -d docs/cycles/*/ 2>/dev/null | grep -vE '(backlog|backlog-completed)' | sort -V
+ls -d docs/cycles/* 2>/dev/null | sort -V
 ```
 
 #### 7.3 バージョン提案
@@ -490,16 +490,12 @@ docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 ```
 
 このスクリプトは以下を一括で作成します:
-- 10個のディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
+- 10個のサイクル固有ディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
 - history/inception.md（初期履歴ファイル）
+- 共通バックログディレクトリ（docs/cycles/backlog/, docs/cycles/backlog-completed/）
+  - ただし、backlog mode が `issue-only` の場合はスキップされます
 
 **注**: `--dry-run` オプションで作成予定を確認できます。
-
-**共通バックログディレクトリ確認**:
-```bash
-mkdir -p docs/cycles/backlog
-mkdir -p docs/cycles/backlog-completed
-```
 
 **注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
