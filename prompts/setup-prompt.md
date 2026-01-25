@@ -1181,7 +1181,45 @@ else
 fi
 ```
 
-**注意**: シンボリックリンク作成は必須ではありません。失敗した場合は警告を表示し、処理を継続します。他のAIツール（Codex、Gemini、KiroCLI等）は `docs/aidlc/skills/` を直接参照できるため、シンボリックリンクがなくても問題ありません。
+**注意**: シンボリックリンク作成は必須ではありません。失敗した場合は警告を表示し、処理を継続します。他のAIツール（Codex、Gemini等）は `docs/aidlc/skills/` を直接参照できるため、シンボリックリンクがなくても問題ありません。
+
+**KiroCLI エージェント設定の生成**:
+
+KiroCLIでAI-DLCを使用できるよう、エージェント設定ファイルを自動生成します。
+
+```bash
+# .kiro/agents ディレクトリ作成
+mkdir -p .kiro/agents
+
+# aidlc.json が存在しない場合のみ作成
+if [ ! -f ".kiro/agents/aidlc.json" ]; then
+  cat > .kiro/agents/aidlc.json << 'EOF'
+{
+  "name": "aidlc",
+  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
+  "tools": ["read", "write", "shell"],
+  "resources": [
+    "file://docs/aidlc/prompts/AGENTS.md",
+    "skill://docs/aidlc/skills/codex/SKILL.md",
+    "skill://docs/aidlc/skills/claude/SKILL.md",
+    "skill://docs/aidlc/skills/gemini/SKILL.md"
+  ]
+}
+EOF
+  echo "Created: .kiro/agents/aidlc.json"
+else
+  echo "Skipped: .kiro/agents/aidlc.json already exists"
+fi
+```
+
+**利用方法**:
+```bash
+# aidlcエージェントでKiroCLIを起動
+kiro-cli --agent aidlc
+
+# または起動後に切り替え
+> /agent swap aidlc
+```
 
 #### 8.2.4 rsync出力例
 
@@ -1304,6 +1342,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
 # .claude/skills シンボリックリンクが作成されている場合のみ追加
 [ -L ".claude/skills" ] && git add .claude/
+# .kiro/agents/aidlc.json が作成されている場合のみ追加
+[ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -1341,6 +1381,7 @@ AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
 - .claude/skills → docs/aidlc/skills（シンボリックリンク、作成した場合）
+- .kiro/agents/aidlc.json - KiroCLIエージェント設定（作成した場合）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 - backlog.yml - バックログ用テンプレート
