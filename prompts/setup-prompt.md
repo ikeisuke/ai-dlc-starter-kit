@@ -500,6 +500,11 @@ language = "日本語"
 # - required: MCP利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
+# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）
+# - デフォルト: ["codex"]
+# - 例: ["codex", "claude", "gemini"]
+# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
+ai_tools = ["codex"]
 
 [rules.worktree]
 # git worktree設定
@@ -703,6 +708,33 @@ EOF
 else
   echo "[rules.linting] section already exists"
 fi
+
+# [rules.mcp_review] に ai_tools が存在しない場合は追加（v1.8.2で追加）
+# セクション内での存在チェック: [rules.mcp_review]から次のセクションまでの範囲でai_toolsを検索
+if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  AI_TOOLS_IN_SECTION=$(sed -n '/^\[rules.mcp_review\]/,/^\[/p' docs/aidlc.toml | grep -c "^ai_tools" || echo "0")
+  if [ "$AI_TOOLS_IN_SECTION" = "0" ]; then
+    echo "Adding ai_tools to [rules.mcp_review] section..."
+    # [rules.mcp_review] セクション内の mode = 行の後に追加
+    sed -i '' '/^\[rules.mcp_review\]/,/^\[/ {
+      /^\[rules.mcp_review\]/!{
+        /^\[/!{
+          /^mode = /a\
+# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）\
+# - デフォルト: ["codex"]\
+# - 例: ["codex", "claude", "gemini"]\
+# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用\
+ai_tools = ["codex"]
+        }
+      }
+    }' docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
+    echo "Added ai_tools to [rules.mcp_review] section"
+  else
+    echo "ai_tools already exists in [rules.mcp_review] section"
+  fi
+else
+  echo "[rules.mcp_review] section not found"
+fi
 ```
 
 **マイグレーション結果の確認**:
@@ -792,7 +824,7 @@ rsync実行前に**必ず**削除対象ファイルを確認し、ユーザー�
 
 **手順**:
 1. ドライランで削除対象を確認
-2. `.gitkeep` 以外の削除対象があればユーザーに表示
+2. 削除対象があればユーザーに表示
 3. ユーザー承認後に実際の同期を実行
 4. 承認が得られない場合は `--delete` オプションなしで同期
 
@@ -809,13 +841,13 @@ rsync実行前に**必ず**削除対象ファイルを確認し、ユーザー�
 
 **削除対象の確認**:
 ```bash
-# 削除対象を抽出（.gitkeep を除く）
+# 削除対象を抽出
 rsync -avn --checksum --delete \
   [スターターキットパス]/prompts/package/prompts/ \
-  docs/aidlc/prompts/ 2>&1 | grep "^deleting" | grep -v ".gitkeep"
+  docs/aidlc/prompts/ 2>&1 | grep "^deleting"
 ```
 
-**削除対象がある場合（.gitkeep以外）**:
+**削除対象がある場合**:
 ```text
 警告: 以下のファイルが削除されます：
 
@@ -837,7 +869,7 @@ rsync -avn --checksum --delete \
 - 2: `rsync -av --checksum ...` を実行（--deleteなし）
 - 3: 同期をスキップし、手動対応を案内
 
-**削除対象がない場合（または.gitkeepのみ）**:
+**削除対象がない場合**:
 ```bash
 # 2. 実際の同期を実行
 rsync -av --checksum --delete \
@@ -957,6 +989,27 @@ rsync -av --checksum --delete \
 
 スクリプトも同様に完全同期します。
 
+#### 8.2.2.4 スキルファイルの同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. 宛先ディレクトリ作成
+mkdir -p docs/aidlc/skills
+
+# 2. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/skills/ \
+  docs/aidlc/skills/ 2>&1 | grep "^deleting"
+
+# 3. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/skills/ \
+  docs/aidlc/skills/
+```
+
+スキルファイル（AIエージェント拡張機能）も同様に完全同期します。
+
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
@@ -1040,6 +1093,69 @@ else
   fi
 fi
 ```
+
+**Claude Code スキルファイルのシンボリックリンク作成**:
+
+Claude Codeがスキルファイルを自動認識できるよう、シンボリックリンクを作成します。
+
+```bash
+# 親ディレクトリ作成（.claude/skills はリンクとして作成するため mkdir しない）
+mkdir -p .claude
+
+# 既存パスの状態確認と処理
+if [ ! -e ".claude/skills" ]; then
+  # ケースA: パス未存在 → 新規リンク作成
+  ln -s "../docs/aidlc/skills" ".claude/skills"
+  echo "Created: .claude/skills → ../docs/aidlc/skills"
+
+elif [ -L ".claude/skills" ]; then
+  # シンボリックリンクの場合
+  CURRENT_TARGET=$(readlink ".claude/skills")
+  EXPECTED_TARGET="../docs/aidlc/skills"
+
+  if [ "$CURRENT_TARGET" = "$EXPECTED_TARGET" ]; then
+    # ケースB: 同じターゲット → スキップ
+    echo "Skipped: .claude/skills already points to $EXPECTED_TARGET"
+  else
+    # ケースC: 異なるターゲット → ユーザーに確認
+    echo "警告: .claude/skills は既に別のターゲットを指しています"
+    echo "  現在: $CURRENT_TARGET"
+    echo "  期待: $EXPECTED_TARGET"
+    echo ""
+    echo "選択してください:"
+    echo "1. 上書きする"
+    echo "2. スキップする"
+    # ユーザー選択後:
+    # 1の場合: rm ".claude/skills" && ln -s "$EXPECTED_TARGET" ".claude/skills"
+    # 2の場合: スキップ
+  fi
+
+else
+  # ケースD: ディレクトリまたはファイルが存在 → ユーザーに確認
+  echo "警告: .claude/skills が既にディレクトリまたはファイルとして存在します"
+  echo ""
+  echo "選択してください:"
+  echo "1. 退避して新規作成（.claude/skills.backup.{timestamp}）"
+  echo "2. スキップする"
+  # ユーザー選択後:
+  # 1の場合:
+  #   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+  #   BACKUP_PATH=".claude/skills.backup.${TIMESTAMP}"
+  #   # 衝突回避
+  #   if [ -e "$BACKUP_PATH" ]; then
+  #     COUNTER=1
+  #     while [ -e "${BACKUP_PATH}.${COUNTER}" ]; do
+  #       COUNTER=$((COUNTER + 1))
+  #     done
+  #     BACKUP_PATH="${BACKUP_PATH}.${COUNTER}"
+  #   fi
+  #   mv ".claude/skills" "$BACKUP_PATH"
+  #   ln -s "../docs/aidlc/skills" ".claude/skills"
+  # 2の場合: スキップ
+fi
+```
+
+**注意**: シンボリックリンク作成は必須ではありません。失敗した場合は警告を表示し、処理を継続します。他のAIツール（Codex、Gemini、KiroCLI等）は `docs/aidlc/skills/` を直接参照できるため、シンボリックリンクがなくても問題ありません。
 
 #### 8.2.4 rsync出力例
 
@@ -1147,6 +1263,9 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 - ai-agent-allowlist.md（AIエージェント許可リストガイド）
 - backlog-management.md（バックログ管理ガイド）
 
+**skills/** → `docs/aidlc/skills/`:
+- codex/SKILL.md, claude/SKILL.md, gemini/SKILL.md（AIスキルファイル）
+
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
 ---
@@ -1157,6 +1276,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 ```bash
 git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
+# .claude/skills シンボリックリンクが作成されている場合のみ追加
+[ -L ".claude/skills" ] && git add .claude/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -1184,6 +1305,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/operations.md - Operations Phase プロンプト
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
+- skills/ - AIスキルファイル（codex, claude, gemini）
 
 プロジェクト固有ファイル（docs/cycles/）:
 - rules.md - プロジェクト固有ルール
@@ -1192,6 +1314,7 @@ AI-DLC環境のセットアップが完了しました！
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
+- .claude/skills → docs/aidlc/skills（シンボリックリンク、作成した場合）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 - backlog.yml - バックログ用テンプレート

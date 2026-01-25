@@ -43,6 +43,11 @@ language = "日本語"
 # - required: MCP利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "required"
+# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）
+# - デフォルト: ["codex"]
+# - 例: ["codex", "claude", "gemini"]
+# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
+ai_tools = ["codex"]
 
 [rules.custom]
 # プロジェクト固有のカスタムルール
