@@ -7,6 +7,30 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.9.2] - 2026-01-26
+
+### Added
+
+- プレリリースバージョンサポート（-alpha, -beta, -rc形式）
+  - サイクル名・ブランチ名に-alpha, -beta, -rc接尾辞を許可
+  - write-history.shでプレリリース形式のバリデーション対応
+- KiroCLI Skills対応
+  - resourcesフィールドによるファイル指定ガイド
+  - .kiro/agents/aidlc.json自動生成
+
+### Changed
+
+- operations.mdサイズ最適化（付録を外部ファイルに分離）
+  - 依存コマンド追加手順を`docs/development/dependency-commands.md`に移動
+- ai_tools設定による複数AIサービス対応
+  - 優先順位付きのサービスリスト指定
+  - codex, claude, geminiの切り替え対応強化
+- AI著者情報の自動検出機能
+  - AI著者情報をツールから自動判定
+  - ai_author設定のデフォルト値最適化
+
+---
+
 ## [1.9.1] - 2026-01-25
 
 ### Added
