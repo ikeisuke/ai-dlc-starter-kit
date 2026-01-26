@@ -317,143 +317,38 @@ grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception
 
 **前提条件**: `project.type = "ios"` の場合のみ実行。それ以外のプロジェクトタイプではこのセクションをスキップ。
 
-ビルド番号（CURRENT_PROJECT_VERSION）がデフォルトブランチから変更されているか確認:
+ビルド番号確認スクリプトを実行:
 
-project.pbxprojファイルを検索（Pods/DerivedData除外）。
+```bash
+docs/aidlc/bin/ios-build-check.sh
+```
 
-AIは Glob ツールでプロジェクトファイルを検索:
+**出力形式**:
+- `status:found|not-found|multiple` - ファイル検出状態
+- `current_build:XXX` - 現在のビルド番号
+- `previous_build:XXX` - 前回のビルド番号
+- `comparison:updated|same|unknown` - 比較結果
+- `files:...` - status=multipleの場合、ファイル一覧
 
+**判定結果に応じた対応**:
+
+| status | comparison | 対応 |
+|--------|------------|------|
+| not-found | - | スキップ |
+| multiple | - | ユーザーにファイル選択を求め、選択後に再実行 |
+| found | updated | 続行 |
+| found | same | 警告を表示し、更新を推奨 |
+| found | unknown | 手動確認を案内 |
+
+**status=multiple時の再実行**:
+```bash
+docs/aidlc/bin/ios-build-check.sh "[選択されたパス]"
+```
+
+**comparison=same時の警告**:
 ```text
-パターン: **/project.pbxproj
-除外: Pods/, DerivedData/, .build/
+【警告】iOSビルド番号が前回と同一です。App Storeは同一ビルド番号での再提出を拒否します。
 ```
-
-代替手段:
-
-```bash
-find . -name "project.pbxproj" -not -path "*/Pods/*" -not -path "*/DerivedData/*" -not -path "*/.build/*" 2>/dev/null
-```
-
-AIが出力からファイル数を確認:
-- 0件: `PROJECT_NOT_FOUND`
-- 複数件: `MULTIPLE_PROJECT_FILES`（ユーザーに選択を求める）
-- 1件: `PROJECT_FOUND`
-
-**判定結果**:
-
-- **PROJECT_NOT_FOUND**: 以下を表示してビルド番号確認をスキップ
-  ```text
-  【情報】iOSビルド番号確認をスキップします
-
-  理由: project.pbxprojファイルが見つかりませんでした。
-  （Pods/DerivedData/は検索対象外）
-
-  iOSプロジェクトの場合は、.xcodeprojディレクトリ内にproject.pbxprojが存在するか確認してください。
-  ```
-
-- **MULTIPLE_PROJECT_FILES**: ユーザーに選択を求め、選択されたパスを `PROJECT_FILE` として使用
-  ```text
-  複数のproject.pbxprojファイルが見つかりました:
-  1. ./MyApp.xcodeproj/project.pbxproj
-  2. ./MyAppTests.xcodeproj/project.pbxproj
-  3. ./Frameworks/Core.xcodeproj/project.pbxproj
-
-  どのファイルを確認しますか？（番号で選択、例: 1）
-  ```
-
-  ユーザーが番号を選択後、対応するパスを `PROJECT_FILE` に設定してビルド番号比較に進む。
-
-- **PROJECT_FOUND**: 見つかったファイルを `PROJECT_FILE` に設定してビルド番号比較を実行
-
-**ビルド番号比較**:
-
-1. **デフォルトブランチを取得**:
-
-```bash
-git remote show origin 2>/dev/null
-```
-
-AIが出力から「HEAD branch」行を確認しデフォルトブランチ名を取得。取得できない場合は `main` を候補とする。
-
-候補ブランチの存在確認:
-
-```bash
-git show-ref --verify "refs/remotes/origin/main" 2>/dev/null
-```
-
-存在しない場合は `master` を試行。
-
-2. **現在ブランチのビルド番号**:
-
-```bash
-grep "CURRENT_PROJECT_VERSION" "[選択されたファイルパス]" 2>/dev/null
-```
-
-AIが出力から最初の行を抽出し、`= *値;` 形式から値を取得。`$` を含む場合は変数参照のため抽出失敗扱い。
-
-3. **デフォルトブランチのビルド番号**:
-
-```bash
-git show "origin/{DEFAULT_BRANCH}:{GIT_PROJECT_FILE}" 2>/dev/null
-```
-
-AIが出力から同様に `CURRENT_PROJECT_VERSION` の値を抽出。
-
-**比較結果の表示**:
-
-- **現在のビルド番号が抽出失敗**（CURRENT_BUILD が空）:
-  ```text
-  【注意】現在のiOSビルド番号を自動抽出できませんでした
-
-  プロジェクトファイル: [パス]
-  現在のビルド番号: 取得失敗
-
-  考えられる原因:
-  - CURRENT_PROJECT_VERSIONが変数参照（$(inherited)等）になっている
-  - xcconfig等で外部定義されている
-
-  手動でビルド番号を確認してください:
-  1. Xcode > プロジェクト設定 > Build Settings > Current Project Version
-  ```
-
-- **前回のビルド番号のみ抽出失敗**（PREVIOUS_BUILD が空で CURRENT_BUILD はあり）:
-  ```text
-  【注意】デフォルトブランチからビルド番号を取得できませんでした
-
-  プロジェクトファイル: [パス]
-  現在のビルド番号: [番号]
-  前回のビルド番号: 取得失敗
-
-  考えられる原因:
-  - origin リモートが設定されていない
-  - デフォルトブランチ (origin/${DEFAULT_BRANCH}) に該当ファイルが存在しない
-  - 新規プロジェクトで比較対象がない
-
-  比較をスキップして続行します。
-  ```
-
-- **ビルド番号が異なる場合**:
-  ```text
-  iOSビルド番号確認結果:
-  - プロジェクトファイル: [パス]
-  - 現在のビルド番号: [番号]
-  - 前回のビルド番号: [番号]
-  - 状態: 更新済み ✓
-  ```
-
-- **ビルド番号が同一の場合**:
-  ```text
-  【警告】iOSビルド番号が前回と同一です
-
-  - 現在のビルド番号: [番号]
-  - 前回のビルド番号: [番号]
-
-  App Storeは同一ビルド番号での再提出を拒否します。
-  ビルド番号をインクリメントすることを推奨します。
-
-  1. 手動で対応する（推奨）
-  2. このまま続行する（非推奨）
-  ```
 
 ##### 通常のバージョン確認
 
@@ -895,133 +790,6 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`[paths]` セクショ
 - その他、引き継ぎたいファイルがあればコピー
 
 セットアップ完了後、新しいセッションで Inception Phase を開始
-
----
-
-## 付録: 依存コマンド追加手順
-
-新しい依存コマンドをAI-DLCに追加する手順。
-
-### 1. env-info.shへの追加
-
-#### 1.1 汎用ツールの場合
-
-認証確認が不要なツール（例: dasel, jj）を追加する場合。
-
-**追加手順**:
-
-1. `prompts/package/bin/env-info.sh` のヘルプメッセージにツール名を追加
-2. `main` 関数に `check_tool` を使った出力を追加
-
-**コード例**:
-
-```bash
-# ヘルプメッセージ（show_help関数の cat << 'EOF' ... EOF 内）に追加
-依存ツール（gh, dasel, jj, git, newtool）の状態を一覧で出力します。
-
-# main関数内に追加（出力順を考慮して適切な位置に）
-echo "newtool:$(check_tool newtool)"
-```
-
-#### 1.2 認証が必要なツールの場合
-
-認証確認が必要なツール（例: gh）を追加する場合。
-
-**追加手順**:
-
-1. 専用のチェック関数を作成（`check_gh` を参考に）
-2. ヘルプメッセージとコメントを更新:
-   - ファイル先頭コメントの `not-authenticated` 説明から「（ghのみ）」を更新
-   - `show_help` 関数内のツール名を追加（`依存ツール（gh, dasel, jj, git, newtool）`）
-   - `show_help` 関数内の `not-authenticated` 説明から「（ghのみ）」を更新
-   - 例示出力行にツールを追加
-3. `main` 関数で専用関数を呼び出し
-
-**コード例**:
-
-```bash
-# 新しいチェック関数を追加（check_gh関数の後に配置）
-check_newtool() {
-    if ! command -v newtool >/dev/null 2>&1; then
-        echo "not-installed"
-        return
-    fi
-    # 認証コマンドはツールごとに異なる（例: newtool auth status）
-    if newtool auth status >/dev/null 2>&1; then
-        echo "available"
-    else
-        echo "not-authenticated"
-    fi
-}
-
-# main関数内で呼び出し
-echo "newtool:$(check_newtool)"
-```
-
-### 2. setup.mdへの追加
-
-#### 2.1 運用ルールへの影響説明追加
-
-**追加場所**: `prompts/package/prompts/setup.md` の「**gh/daselが `available` 以外の場合の影響**」セクション
-
-**コード例**:
-
-```markdown
-**gh/dasel/newtoolが `available` 以外の場合の影響**:
-
-- gh: ドラフトPR作成、Issue操作、ラベル作成をスキップ
-- dasel: AIが設定ファイルを直接読み取る（機能上の影響なし）
-- newtool: [影響の説明]
-```
-
-#### 2.2 状態値の意味の更新（認証ツール追加時のみ）
-
-認証が必要なツールを追加した場合、「状態値の意味」セクションも更新が必要。
-
-**追加場所**: `prompts/package/prompts/setup.md` の「状態値の意味」セクション
-
-**変更内容**:
-
-```markdown
-# 変更前
-- `not-authenticated`: 未認証（ghのみ）
-
-# 変更後（例: newtoolを追加した場合）
-- `not-authenticated`: 未認証（gh, newtool）
-```
-
-### 3. 各プロンプトでの利用方法追加（必要に応じて）
-
-新しいツールが特定のフェーズで使用される場合、該当プロンプトに利用方法を追加。
-
-**対象ファイル例**:
-
-- `prompts/package/prompts/inception.md`
-- `prompts/package/prompts/construction.md`
-- `prompts/package/prompts/operations.md`
-
-**追加内容**:
-
-- ツールの利用可否確認方法（env-info.sh結果の参照）
-- ツールが利用不可の場合の代替フロー
-
-### 4. チェックリスト
-
-依存コマンド追加時の確認項目:
-
-- [ ] env-info.shのヘルプメッセージにツール名追加
-- [ ] env-info.shにチェック関数またはcheck_tool呼び出し追加
-- [ ] env-info.shの出力順コメント更新（`# 出力順序は固定（gh → dasel → jj → git）` の行、必要に応じて）
-- [ ] env-info.shのヘルプ例示出力行にツール追加
-- [ ] setup.mdの影響説明に追加
-- [ ] 動作確認（env-info.sh実行）
-- [ ] 関連プロンプトへの利用方法追加（必要に応じて）
-
-**認証が必要なツールの場合、追加で確認**:
-
-- [ ] env-info.shのファイル先頭コメントで「(ghのみ)」→「(gh, newtool)」に更新
-- [ ] env-info.shのshow_help関数内で「(ghのみ)」→「(gh, newtool)」に更新
-- [ ] setup.mdの「状態値の意味」で「(ghのみ)」→「(gh, newtool)」に更新
 
 ---
 

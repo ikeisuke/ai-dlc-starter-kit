@@ -56,21 +56,66 @@
 
 ## Co-Authored-By の設定
 
-コミットメッセージに追加する Co-Authored-By 情報は `docs/aidlc.toml` で設定可能。
+コミットメッセージに追加する Co-Authored-By 情報は自動検出または手動設定で決定する。
 
-**設定の確認**:
+### 自動検出の有効化/無効化
 
-`docs/aidlc.toml` の `[rules.commit]` セクションを確認:
+`docs/aidlc.toml` の `[rules.commit]` セクションで制御:
 
-- `ai_author` が設定されている場合: その値を使用
-- 未設定または `[rules.commit]` セクションがない場合: デフォルト値 `Claude <noreply@anthropic.com>` を使用
+```toml
+[rules.commit]
+ai_author_auto_detect = true  # デフォルト: true（自動検出有効）
+ai_author = ""                # 手動設定（自動検出無効時に使用）
+```
 
-**コミットメッセージ形式**:
+- `ai_author_auto_detect = false`: 自動検出をスキップし、`ai_author`の値を使用
+- `ai_author_auto_detect = true`（デフォルト）: 以下の検出フローを実行
+
+### 検出フロー
+
+以下の優先順位でAI著者情報を決定:
+
+1. **設定確認**: `ai_author`が有効値で設定済み → その値を使用
+2. **自己認識**: AIツールが自身を認識 → 対応するai_author値を使用
+3. **環境変数**: AIツール固有の環境変数を検出 → 対応するai_author値を使用
+4. **ユーザー確認**: 上記すべて失敗 → ユーザーに質問
+
+**「未設定」の定義**: キー不存在、空文字(`""`)、空白のみ(`"   "`)
+
+### AIツールマッピングテーブル
+
+| AIツール | 自己認識キーワード | 環境変数 | ai_author値 |
+|---------|-------------------|---------|-------------|
+| Claude Code | Claude Code | `CLAUDE_CODE` | `Claude <noreply@anthropic.com>` |
+| Cursor | Cursor | `CURSOR_EDITOR` | `Cursor <noreply@cursor.com>` |
+| Cline | Cline | `CLINE_*` | `Cline <noreply@cline.bot>` |
+| Windsurf | Windsurf | `WINDSURF_*` | `Windsurf <noreply@codeium.com>` |
+| Codex CLI | Codex | `CODEX_*` | `Codex <noreply@openai.com>` |
+| KiroCLI | Kiro | `KIRO_*` | `Kiro <noreply@aws.com>` |
+
+### マイグレーション（既存設定の削除）
+
+v1.9.1以前で`ai_author`が設定されている場合、初回コミット時に以下を確認:
+
+```text
+【マイグレーション確認】
+aidlc.tomlに ai_author が設定されていますが、v1.9.2から自動検出機能が利用可能です。
+
+現在の設定: ai_author = "{現在値}"
+
+自動検出を有効にするため、この設定を削除しますか？
+1. はい - 設定を削除して自動検出を使用（推奨）
+2. いいえ - 現在の設定を維持
+```
+
+「はい」の場合: `ai_author`行をコメントアウトまたは削除
+
+### コミットメッセージ形式
 
 ```text
 {コミットメッセージ}
 
-Co-Authored-By: {ai_author の値}
+Co-Authored-By: {検出または設定されたai_author値}
 ```
 
 ## jjサポート設定

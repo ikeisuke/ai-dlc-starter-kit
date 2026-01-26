@@ -207,35 +207,36 @@ AI-DLCは複数のAIツールで利用できます。
 
 ### KiroCLI対応
 
-KiroCLI では `resources` フィールドでファイルを明示指定します。
+AI-DLCセットアップ時に `.kiro/agents/aidlc.json` が自動生成されます。
 
-**制約事項**:
-- `@ファイルパス` 記法はKiroCLIで解釈されません（Claude Code固有機能）
-- `resources` に指定したファイルのみがエージェントに読み込まれます
+**利用方法**:
 
-**設定ファイルの場所**:
-- ローカル: `.kiro/agents/{agent-name}.json`
-- グローバル: `~/.kiro/agents/{agent-name}.json`
+```bash
+# aidlcエージェントでKiroCLIを起動
+kiro-cli --agent aidlc
 
-**設定例**:
+# または起動後に切り替え
+> /agent swap aidlc
+```
+
+**自動生成される設定**:
 
 ```json
 {
-  "name": "aidlc-agent",
+  "name": "aidlc",
+  "description": "AI-DLC開発支援エージェント",
+  "tools": ["read", "write", "shell"],
   "resources": [
-    "file://docs/aidlc/prompts/AGENTS.md"
-  ],
-  "tools": ["read", "write", "shell"]
+    "file://docs/aidlc/prompts/AGENTS.md",
+    "skill://docs/aidlc/skills/codex/SKILL.md",
+    "skill://docs/aidlc/skills/claude/SKILL.md",
+    "skill://docs/aidlc/skills/gemini/SKILL.md"
+  ]
 }
 ```
 
-必要に応じてスキルファイルを追加:
-
-```json
-"resources": [
-  "file://docs/aidlc/prompts/AGENTS.md",
-  "file://docs/aidlc/skills/codex/SKILL.md"
-]
-```
+**手動で設定する場合**:
+- ローカル: `.kiro/agents/{agent-name}.json`
+- グローバル: `~/.kiro/agents/{agent-name}.json`
 
 **注意**: KiroCLIの仕様は更新される可能性があります。[公式ドキュメント](https://kiro.dev/docs/cli/custom-agents/configuration-reference/)を参照してください。
