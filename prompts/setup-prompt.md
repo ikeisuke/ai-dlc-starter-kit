@@ -125,7 +125,7 @@ $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup/bin/check-setup
 setup_type:cycle_start
 ```
 
-**dasel未インストールの場合**（`setup_type:` と空値が返る場合）: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、スターターキットのバージョンと比較してください。
+**dasel未インストールの場合**（`setup_type:` と空値が返る場合）: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。また、プロジェクトルートの `version.txt`（リポジトリルート直下）を読み込み、スターターキットのバージョンと比較してください。
 
 ### 判定結果に基づく対応
 
