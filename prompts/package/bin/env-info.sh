@@ -7,6 +7,7 @@
 #
 # OPTIONS:
 #   -h, --help    ヘルプを表示
+#   --setup       セットアップ情報を追加出力
 #
 # 出力形式:
 #   ツール名:状態
@@ -26,6 +27,7 @@ Usage: env-info.sh [OPTIONS]
 
 OPTIONS:
   -h, --help    このヘルプを表示
+  --setup       セットアップ情報を追加出力
 
 出力形式:
   ツール名:状態
@@ -41,6 +43,16 @@ OPTIONS:
   dasel:not-installed
   jj:available
   git:available
+
+  $ env-info.sh --setup
+  gh:available
+  dasel:available
+  jj:available
+  git:available
+  project.name:my-project
+  backlog.mode:issue-only
+  current_branch:main
+  latest_cycle:v1.0.0
 EOF
 }
 
@@ -72,14 +84,69 @@ check_gh() {
     fi
 }
 
+# docs/aidlc.toml から project.name を取得
+# dasel未インストール時またはファイル不存在時は空値を返す
+get_project_name() {
+    if ! command -v dasel >/dev/null 2>&1; then
+        echo ""
+        return
+    fi
+    if [[ ! -f "docs/aidlc.toml" ]]; then
+        echo ""
+        return
+    fi
+    local result
+    result=$(cat docs/aidlc.toml | dasel -i toml 'project.name' 2>/dev/null) || { echo ""; return; }
+    # daselの出力からクォートを除去
+    echo "$result" | tr -d "'"
+}
+
+# docs/aidlc.toml から backlog.mode を取得
+# dasel未インストール時またはファイル不存在時は空値を返す
+get_backlog_mode() {
+    if ! command -v dasel >/dev/null 2>&1; then
+        echo ""
+        return
+    fi
+    if [[ ! -f "docs/aidlc.toml" ]]; then
+        echo ""
+        return
+    fi
+    local result
+    result=$(cat docs/aidlc.toml | dasel -i toml 'backlog.mode' 2>/dev/null) || { echo ""; return; }
+    # daselの出力からクォートを除去
+    echo "$result" | tr -d "'"
+}
+
+# 現在のGitブランチを取得
+# Gitリポジトリ外では空値を返す
+get_current_branch() {
+    git branch --show-current 2>/dev/null || echo ""
+}
+
+# docs/cycles/ 配下の最新サイクルバージョンを取得
+# ディレクトリがない場合は空値を返す
+get_latest_cycle() {
+    if [[ ! -d "docs/cycles" ]]; then
+        echo ""
+        return
+    fi
+    ls -1 docs/cycles/ 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1 || echo ""
+}
+
 # メイン処理
 main() {
+    local setup_mode=false
+
     # 引数解析
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)
                 show_help
                 exit 0
+                ;;
+            --setup)
+                setup_mode=true
                 ;;
             *)
                 echo "Error: Unknown option: $1" >&2
@@ -94,6 +161,14 @@ main() {
     echo "dasel:$(check_tool dasel)"
     echo "jj:$(check_tool jj)"
     echo "git:$(check_tool git)"
+
+    # --setup オプション時のみ追加出力
+    if [[ "$setup_mode" == true ]]; then
+        echo "project.name:$(get_project_name)"
+        echo "backlog.mode:$(get_backlog_mode)"
+        echo "current_branch:$(get_current_branch)"
+        echo "latest_cycle:$(get_latest_cycle)"
+    fi
 }
 
 main "$@"

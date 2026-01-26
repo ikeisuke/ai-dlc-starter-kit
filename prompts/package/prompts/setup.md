@@ -46,12 +46,24 @@ AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発�
 
 ### 1. 依存コマンド確認
 
-AI-DLCで使用する依存コマンドの状態を確認します。
+AI-DLCで使用する依存コマンドの状態と環境情報を確認します。
 
 ```bash
-docs/aidlc/bin/env-info.sh
-docs/aidlc/bin/check-backlog-mode.sh
+docs/aidlc/bin/env-info.sh --setup
 ```
+
+出力項目:
+
+| キー | 説明 |
+|------|------|
+| gh | GitHub CLI状態 |
+| dasel | dasel状態 |
+| jj | jj状態 |
+| git | git状態 |
+| project.name | プロジェクト名 |
+| backlog.mode | バックログモード |
+| current_branch | 現在のブランチ |
+| latest_cycle | 最新サイクル |
 
 状態値の意味:
 
@@ -501,9 +513,8 @@ docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 
 ### 11. 旧形式バックログ移行（該当する場合）
 
-> **DEPRECATED (v1.9.0)**: この移行セクション全体が v2.0.0 で削除予定です。
+> **DEPRECATED (v1.9.0)**: この移行セクション全体は v2.0.0 で削除予定です。
 > 新規プロジェクトでは影響ありません。
-> 詳細は `docs/aidlc/guides/deprecation.md` を参照してください。
 
 旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
 

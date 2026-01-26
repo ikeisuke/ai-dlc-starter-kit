@@ -7,6 +7,31 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.9.3] - 2026-01-26
+
+### Added
+
+- env-info.shに--setupオプション追加
+  - セットアップ時に必要な情報を一括出力（project.name, backlog.mode, current_branch, latest_cycle）
+- codex skillにresume機能の説明追加
+
+### Changed
+
+- skills構成をシンボリックリンクからrsyncコピー方式に変更
+  - プロジェクト独自スキルの追加が可能に
+- KiroCLIエージェント設定を正確な内容に修正
+  - .kiro/agents/aidlc.jsonのresources参照を修正
+- init-cycle-dir.shのバージョン形式チェックを緩和
+  - 任意の文字列を受け入れ可能に（空文字・スラッシュのみ拒否）
+- アップグレード指示にメタ開発用パス参照を追記
+
+### Fixed
+
+- jj-support.mdの未追跡ファイル記述を修正
+- jj-support.mdのリモートブックマーク表記を修正
+
+---
+
 ## [1.9.2] - 2026-01-26
 
 ### Added

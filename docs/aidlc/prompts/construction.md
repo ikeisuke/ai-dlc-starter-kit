@@ -272,7 +272,6 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 > **DEPRECATED (v1.9.0)**: この後方互換性セクションは v2.0.0 で削除予定です。
 > 新規プロジェクトでは影響ありません。
-> 詳細は `docs/aidlc/guides/deprecation.md` を参照してください。
 
 **後方互換性**:
 - 「実装状態」セクションがないファイルは、まず `docs/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認

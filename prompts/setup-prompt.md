@@ -1036,6 +1036,27 @@ rsync -av --checksum --delete \
 
 スキルファイル（AIエージェント拡張機能）も同様に完全同期します。
 
+#### 8.2.2.5 KiroCLIエージェント設定の同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. 宛先ディレクトリ作成
+mkdir -p docs/aidlc/kiro/agents
+
+# 2. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/kiro/ \
+  docs/aidlc/kiro/ 2>&1 | grep "^deleting"
+
+# 3. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/kiro/ \
+  docs/aidlc/kiro/
+```
+
+KiroCLIエージェント設定も同様に完全同期します。
+
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
@@ -1120,99 +1141,37 @@ else
 fi
 ```
 
-**Claude Code スキルファイルのシンボリックリンク作成**:
+**AIツール設定のセットアップ**:
 
-Claude Codeがスキルファイルを自動認識できるよう、シンボリックリンクを作成します。
-
-```bash
-# 親ディレクトリ作成（.claude/skills はリンクとして作成するため mkdir しない）
-mkdir -p .claude
-
-# 既存パスの状態確認と処理
-if [ ! -e ".claude/skills" ]; then
-  # ケースA: パス未存在 → 新規リンク作成
-  ln -s "../docs/aidlc/skills" ".claude/skills"
-  echo "Created: .claude/skills → ../docs/aidlc/skills"
-
-elif [ -L ".claude/skills" ]; then
-  # シンボリックリンクの場合
-  CURRENT_TARGET=$(readlink ".claude/skills")
-  EXPECTED_TARGET="../docs/aidlc/skills"
-
-  if [ "$CURRENT_TARGET" = "$EXPECTED_TARGET" ]; then
-    # ケースB: 同じターゲット → スキップ
-    echo "Skipped: .claude/skills already points to $EXPECTED_TARGET"
-  else
-    # ケースC: 異なるターゲット → ユーザーに確認
-    echo "警告: .claude/skills は既に別のターゲットを指しています"
-    echo "  現在: $CURRENT_TARGET"
-    echo "  期待: $EXPECTED_TARGET"
-    echo ""
-    echo "選択してください:"
-    echo "1. 上書きする"
-    echo "2. スキップする"
-    # ユーザー選択後:
-    # 1の場合: rm ".claude/skills" && ln -s "$EXPECTED_TARGET" ".claude/skills"
-    # 2の場合: スキップ
-  fi
-
-else
-  # ケースD: ディレクトリまたはファイルが存在 → ユーザーに確認
-  echo "警告: .claude/skills が既にディレクトリまたはファイルとして存在します"
-  echo ""
-  echo "選択してください:"
-  echo "1. 退避して新規作成（.claude/skills.backup.{timestamp}）"
-  echo "2. スキップする"
-  # ユーザー選択後:
-  # 1の場合:
-  #   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-  #   BACKUP_PATH=".claude/skills.backup.${TIMESTAMP}"
-  #   # 衝突回避
-  #   if [ -e "$BACKUP_PATH" ]; then
-  #     COUNTER=1
-  #     while [ -e "${BACKUP_PATH}.${COUNTER}" ]; do
-  #       COUNTER=$((COUNTER + 1))
-  #     done
-  #     BACKUP_PATH="${BACKUP_PATH}.${COUNTER}"
-  #   fi
-  #   mv ".claude/skills" "$BACKUP_PATH"
-  #   ln -s "../docs/aidlc/skills" ".claude/skills"
-  # 2の場合: スキップ
-fi
-```
-
-**注意**: シンボリックリンク作成は必須ではありません。失敗した場合は警告を表示し、処理を継続します。他のAIツール（Codex、Gemini等）は `docs/aidlc/skills/` を直接参照できるため、シンボリックリンクがなくても問題ありません。
-
-**KiroCLI エージェント設定の生成**:
-
-KiroCLIでAI-DLCを使用できるよう、エージェント設定ファイルを自動生成します。
+Claude CodeとKiroCLIの設定ファイルをセットアップします。
 
 ```bash
-# .kiro/agents ディレクトリ作成
-mkdir -p .kiro/agents
-
-# aidlc.json が存在しない場合のみ作成
-if [ ! -f ".kiro/agents/aidlc.json" ]; then
-  cat > .kiro/agents/aidlc.json << 'EOF'
-{
-  "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
-  "tools": ["read", "write", "shell"],
-  "resources": [
-    "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://docs/aidlc/skills/codex/SKILL.md",
-    "skill://docs/aidlc/skills/claude/SKILL.md",
-    "skill://docs/aidlc/skills/gemini/SKILL.md"
-  ]
-}
-EOF
-  echo "Created: .kiro/agents/aidlc.json"
-else
-  echo "Skipped: .kiro/agents/aidlc.json already exists"
-fi
+# スクリプトで実行
+docs/aidlc/bin/setup-ai-tools.sh
 ```
 
-**利用方法**:
+このスクリプトは以下を行います:
+
+1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
+2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
+
+**ディレクトリ構成**:
+```
+.claude/skills/              ← 実ディレクトリ
+├── codex/   → symlink → ../../docs/aidlc/skills/codex/
+├── claude/  → symlink → ../../docs/aidlc/skills/claude/
+├── gemini/  → symlink → ../../docs/aidlc/skills/gemini/
+└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
+
+.kiro/agents/
+└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
+```
+
+**注意**:
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
+
+**KiroCLI利用方法**:
 ```bash
 # aidlcエージェントでKiroCLIを起動
 kiro-cli --agent aidlc
@@ -1340,8 +1299,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 ```bash
 git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
-# .claude/skills シンボリックリンクが作成されている場合のみ追加
-[ -L ".claude/skills" ] && git add .claude/
+# .claude/skills ディレクトリが作成されている場合のみ追加
+[ -d ".claude/skills" ] && git add .claude/
 # .kiro/agents/aidlc.json が作成されている場合のみ追加
 [ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
 ```
@@ -1372,6 +1331,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
 - skills/ - AIスキルファイル（codex, claude, gemini）
+- kiro/agents/ - KiroCLIエージェント設定
 
 プロジェクト固有ファイル（docs/cycles/）:
 - rules.md - プロジェクト固有ルール
@@ -1380,8 +1340,8 @@ AI-DLC環境のセットアップが完了しました！
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
-- .claude/skills → docs/aidlc/skills（シンボリックリンク、作成した場合）
-- .kiro/agents/aidlc.json - KiroCLIエージェント設定（作成した場合）
+- .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
+- .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 - backlog.yml - バックログ用テンプレート

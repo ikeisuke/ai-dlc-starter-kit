@@ -207,7 +207,7 @@ AI-DLCは複数のAIツールで利用できます。
 
 ### KiroCLI対応
 
-AI-DLCセットアップ時に `.kiro/agents/aidlc.json` が自動生成されます。
+AI-DLCセットアップ時に `.kiro/agents/aidlc.json` がシンボリックリンクとして作成されます。
 
 **利用方法**:
 
@@ -219,18 +219,19 @@ kiro-cli --agent aidlc
 > /agent swap aidlc
 ```
 
-**自動生成される設定**:
+**設定ファイル**:
+
+`.kiro/agents/aidlc.json` → `docs/aidlc/kiro/agents/aidlc.json` へのシンボリックリンク
 
 ```json
 {
   "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント",
-  "tools": ["read", "write", "shell"],
+  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
+  "tools": ["@builtin"],
   "resources": [
+    "file://AGENTS.md",
     "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://docs/aidlc/skills/codex/SKILL.md",
-    "skill://docs/aidlc/skills/claude/SKILL.md",
-    "skill://docs/aidlc/skills/gemini/SKILL.md"
+    "skill://docs/aidlc/skills/*/SKILL.md"
   ]
 }
 ```

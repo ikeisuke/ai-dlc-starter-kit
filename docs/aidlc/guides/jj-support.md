@@ -223,7 +223,7 @@ AI-DLC開発に関連するjjの主要な特徴:
 |------|-------------|------------|------|
 | リモートへプッシュ | `git push` | `jj git push` | |
 | 特定ブックマークをプッシュ | `git push -u origin <branch>` | `jj git push --bookmark <name>` | |
-| リモートから取得 | `git pull` | `jj git fetch` + `jj rebase -d <remote>/<bookmark>` | 下記参照 |
+| リモートから取得 | `git pull` | `jj git fetch` + `jj rebase -d <bookmark>@<remote>` | 下記参照 |
 | リモートbookmark削除 | `git push origin --delete <name>` | `jj bookmark delete <name>` + `jj git push --deleted` | 下記参照 |
 | タグ作成 | `git tag -a <tag> -m "msg"` | `git tag -a <tag> -m "msg"` | colocateでGit直接使用 |
 | タグプッシュ | `git push --tags` | `git push --tags` | colocateでGit直接使用 |
@@ -232,7 +232,7 @@ AI-DLC開発に関連するjjの主要な特徴:
 > jjでは `git pull` に相当する操作は2ステップです:
 > ```bash
 > jj git fetch                    # リモートから取得
-> jj rebase -d origin/main        # リモートブランチにリベース（宛先を明示）
+> jj rebase -d main@origin        # リモートブックマークにリベース（宛先を明示）
 > ```
 >
 > **タグ操作について**:

@@ -13,6 +13,17 @@ Codex CLIを使用してコードレビュー・分析を実行するスキル�
 codex exec -s read-only -C <project_directory> "<request>"
 ```
 
+## セッション継続（resume）
+
+前回のセッションを継続して会話する場合:
+
+```bash
+codex exec resume <session-id> "<request>"
+```
+
+- セッションIDは前回の実行結果の末尾に `session id: xxx` として表示されます
+- 同じコンテキストで追加の質問や確認ができます
+
 ## パラメータ
 
 | パラメータ | 説明 |
@@ -43,11 +54,9 @@ codex exec -s read-only -C /path/to/project "認証処理でエラーが発生�
 codex exec --full-auto -C /path/to/project "このバグを修正してください"
 ```
 
-### セッション引き継ぎ（同じコンテキストで話を続ける）
+### セッション引き継ぎ
 
-```bash
-codex exec resume <session-id> "先ほどの指摘に対して修正をしたので確認してください"
-```
+上記「セッション継続（resume）」セクションを参照。
 
 ## 実行手順
 
