@@ -1036,6 +1036,27 @@ rsync -av --checksum --delete \
 
 スキルファイル（AIエージェント拡張機能）も同様に完全同期します。
 
+#### 8.2.2.5 KiroCLIエージェント設定の同期（rsync）
+
+同様にドライラン → 確認 → 実行の手順で同期：
+
+```bash
+# 1. 宛先ディレクトリ作成
+mkdir -p docs/aidlc/kiro/agents
+
+# 2. ドライランで削除対象を確認
+rsync -avn --checksum --delete \
+  [スターターキットパス]/prompts/package/kiro/ \
+  docs/aidlc/kiro/ 2>&1 | grep "^deleting"
+
+# 3. 承認後に実行
+rsync -av --checksum --delete \
+  [スターターキットパス]/prompts/package/kiro/ \
+  docs/aidlc/kiro/
+```
+
+KiroCLIエージェント設定も同様に完全同期します。
+
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
 以下のファイルはプロジェクト固有の設定を含むため、**既に存在する場合はコピーしない**:
@@ -1120,11 +1141,19 @@ else
 fi
 ```
 
-**Claude Code スキルディレクトリの作成**:
+**AIツール設定のセットアップ**:
 
-Claude Codeがスキルファイルを自動認識できるよう、`.claude/skills/` ディレクトリを作成し、各スキルへのシンボリックリンクを配置します。
+Claude CodeとKiroCLIの設定ファイルをセットアップします。
 
-これにより、プロジェクト独自スキルを `.claude/skills/` に追加できます。
+```bash
+# スクリプトで実行
+docs/aidlc/bin/setup-ai-tools.sh
+```
+
+このスクリプトは以下を行います:
+
+1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
+2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
 
 **ディレクトリ構成**:
 ```
@@ -1133,45 +1162,16 @@ Claude Codeがスキルファイルを自動認識できるよう、`.claude/ski
 ├── claude/  → symlink → ../../docs/aidlc/skills/claude/
 ├── gemini/  → symlink → ../../docs/aidlc/skills/gemini/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
+
+.kiro/agents/
+└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
 ```
 
-```bash
-# スクリプトで実行
-docs/aidlc/bin/setup-claude-skills.sh
-```
+**注意**:
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
 
-**注意**: `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
-
-**KiroCLI エージェント設定の生成**:
-
-KiroCLIでAI-DLCを使用できるよう、エージェント設定ファイルを自動生成します。
-
-```bash
-# .kiro/agents ディレクトリ作成
-mkdir -p .kiro/agents
-
-# aidlc.json が存在しない場合のみ作成
-if [ ! -f ".kiro/agents/aidlc.json" ]; then
-  cat > .kiro/agents/aidlc.json << 'EOF'
-{
-  "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
-  "tools": ["read", "write", "shell"],
-  "resources": [
-    "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://docs/aidlc/skills/codex/SKILL.md",
-    "skill://docs/aidlc/skills/claude/SKILL.md",
-    "skill://docs/aidlc/skills/gemini/SKILL.md"
-  ]
-}
-EOF
-  echo "Created: .kiro/agents/aidlc.json"
-else
-  echo "Skipped: .kiro/agents/aidlc.json already exists"
-fi
-```
-
-**利用方法**:
+**KiroCLI利用方法**:
 ```bash
 # aidlcエージェントでKiroCLIを起動
 kiro-cli --agent aidlc
@@ -1331,6 +1331,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
 - skills/ - AIスキルファイル（codex, claude, gemini）
+- kiro/agents/ - KiroCLIエージェント設定
 
 プロジェクト固有ファイル（docs/cycles/）:
 - rules.md - プロジェクト固有ルール
@@ -1340,7 +1341,7 @@ AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
 - .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
-- .kiro/agents/aidlc.json - KiroCLIエージェント設定（作成した場合）
+- .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 - backlog.yml - バックログ用テンプレート

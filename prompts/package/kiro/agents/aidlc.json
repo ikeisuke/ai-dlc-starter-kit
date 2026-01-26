@@ -1,0 +1,10 @@
+{
+  "name": "aidlc",
+  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
+  "tools": ["@builtin"],
+  "resources": [
+    "file://AGENTS.md",
+    "file://docs/aidlc/prompts/AGENTS.md",
+    "skill://docs/aidlc/skills/*/SKILL.md"
+  ]
+}
