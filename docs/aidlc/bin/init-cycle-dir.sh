@@ -6,7 +6,7 @@
 #   ./init-cycle-dir.sh <VERSION> [OPTIONS]
 #
 # ARGUMENTS:
-#   VERSION       サイクルバージョン（例: v1.8.0）
+#   VERSION       サイクル識別子（例: v1.8.0, v2.0.0-alpha.1, feature-test）
 #
 # OPTIONS:
 #   -h, --help    ヘルプを表示
@@ -46,7 +46,7 @@ Usage: init-cycle-dir.sh <VERSION> [OPTIONS]
 サイクル用ディレクトリ構造（10個）と初期ファイルを一括作成します。
 
 ARGUMENTS:
-  VERSION       サイクルバージョン（例: v1.8.0）
+  VERSION       サイクル識別子（例: v1.8.0, v2.0.0-alpha.1, feature-test）
 
 OPTIONS:
   -h, --help    このヘルプを表示
@@ -82,16 +82,27 @@ OPTIONS:
 EOF
 }
 
-# バージョン形式を検証（vX.X.X形式）
+# バージョン形式を検証
+# - 空文字は拒否
+# - スラッシュ含有は拒否（パス生成で問題になるため）
+# - それ以外は許容（プレリリース、任意の識別子など）
 # 戻り値: 0=有効, 1=無効
 validate_version() {
     local version="$1"
-    if [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        return 0
-    else
-        echo "[error] ${version}: Invalid version format. Expected vX.X.X (e.g., v1.8.0)" >&2
+
+    # 空文字チェック
+    if [[ -z "$version" ]]; then
+        echo "[error] VERSION argument is required" >&2
         return 1
     fi
+
+    # スラッシュ含有チェック（パス生成で問題になるため）
+    if [[ "$version" == */* ]]; then
+        echo "[error] ${version}: Version cannot contain slashes" >&2
+        return 1
+    fi
+
+    return 0
 }
 
 # ディレクトリを作成

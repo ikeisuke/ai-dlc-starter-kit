@@ -24,7 +24,7 @@
 セットアップ後、スキルファイルは以下の場所に配置されます:
 
 ```text
-docs/aidlc/skills/
+docs/aidlc/skills/          ← rsync で同期（スターターキット提供）
 ├── codex/
 │   └── SKILL.md    # Codex CLI の呼び出し方
 ├── claude/
@@ -32,6 +32,8 @@ docs/aidlc/skills/
 └── gemini/
     └── SKILL.md    # Gemini CLI の呼び出し方
 ```
+
+Claude Code では `.claude/skills/` からこれらを参照します。プロジェクト独自スキルの追加方法は後述の「プロジェクト独自スキルの追加」を参照してください。
 
 ---
 
@@ -101,6 +103,51 @@ KiroCLI では、エージェント設定ファイルの `resources` フィー�
 **注**: 全スキルを含めるとコンテキストが増大します。必要なスキルのみ指定することを推奨します。
 
 **パス解決**: 相対パスはエージェント設定ファイルの場所を基準に解決されます。
+
+---
+
+## プロジェクト独自スキルの追加（Claude Code）
+
+`.claude/skills/` ディレクトリに独自のスキルを追加できます。
+
+### ディレクトリ構成
+
+```text
+.claude/skills/
+├── codex/   → ../../docs/aidlc/skills/codex/   (シンボリックリンク)
+├── claude/  → ../../docs/aidlc/skills/claude/  (シンボリックリンク)
+├── gemini/  → ../../docs/aidlc/skills/gemini/  (シンボリックリンク)
+└── my-review/           ← プロジェクト独自スキル（実ディレクトリ）
+    └── SKILL.md
+```
+
+### 追加手順
+
+1. `.claude/skills/` 配下にディレクトリを作成
+   ```bash
+   mkdir -p .claude/skills/my-review
+   ```
+
+2. `SKILL.md` ファイルを作成
+   ```bash
+   touch .claude/skills/my-review/SKILL.md
+   ```
+
+3. SKILL.md ファイルを作成してスキルの内容を記述
+
+### 命名規則
+
+| 名前 | 使用可否 | 理由 |
+|------|----------|------|
+| `codex`, `claude`, `gemini` | 不可 | スターターキット予約名（シンボリックリンク） |
+| `my-project-lint` | 可 | プロジェクト名プレフィックス推奨 |
+| `team-review` | 可 | チーム名プレフィックス推奨 |
+
+### アップグレード時の挙動
+
+- `docs/aidlc/skills/` は rsync で同期されます（スターターキット提供のスキル）
+- `.claude/skills/` 内のプロジェクト独自スキル（実ディレクトリ）はアップグレードの影響を受けません
+- シンボリックリンク（codex, claude, gemini）は `docs/aidlc/skills/` を参照するため、自動的に最新版が適用されます
 
 ---
 
