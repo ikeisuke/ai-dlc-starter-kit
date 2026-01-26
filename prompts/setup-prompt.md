@@ -1120,68 +1120,27 @@ else
 fi
 ```
 
-**Claude Code スキルファイルのシンボリックリンク作成**:
+**Claude Code スキルディレクトリの作成**:
 
-Claude Codeがスキルファイルを自動認識できるよう、シンボリックリンクを作成します。
+Claude Codeがスキルファイルを自動認識できるよう、`.claude/skills/` ディレクトリを作成し、各スキルへのシンボリックリンクを配置します。
 
-```bash
-# 親ディレクトリ作成（.claude/skills はリンクとして作成するため mkdir しない）
-mkdir -p .claude
+これにより、プロジェクト独自スキルを `.claude/skills/` に追加できます。
 
-# 既存パスの状態確認と処理
-if [ ! -e ".claude/skills" ]; then
-  # ケースA: パス未存在 → 新規リンク作成
-  ln -s "../docs/aidlc/skills" ".claude/skills"
-  echo "Created: .claude/skills → ../docs/aidlc/skills"
-
-elif [ -L ".claude/skills" ]; then
-  # シンボリックリンクの場合
-  CURRENT_TARGET=$(readlink ".claude/skills")
-  EXPECTED_TARGET="../docs/aidlc/skills"
-
-  if [ "$CURRENT_TARGET" = "$EXPECTED_TARGET" ]; then
-    # ケースB: 同じターゲット → スキップ
-    echo "Skipped: .claude/skills already points to $EXPECTED_TARGET"
-  else
-    # ケースC: 異なるターゲット → ユーザーに確認
-    echo "警告: .claude/skills は既に別のターゲットを指しています"
-    echo "  現在: $CURRENT_TARGET"
-    echo "  期待: $EXPECTED_TARGET"
-    echo ""
-    echo "選択してください:"
-    echo "1. 上書きする"
-    echo "2. スキップする"
-    # ユーザー選択後:
-    # 1の場合: rm ".claude/skills" && ln -s "$EXPECTED_TARGET" ".claude/skills"
-    # 2の場合: スキップ
-  fi
-
-else
-  # ケースD: ディレクトリまたはファイルが存在 → ユーザーに確認
-  echo "警告: .claude/skills が既にディレクトリまたはファイルとして存在します"
-  echo ""
-  echo "選択してください:"
-  echo "1. 退避して新規作成（.claude/skills.backup.{timestamp}）"
-  echo "2. スキップする"
-  # ユーザー選択後:
-  # 1の場合:
-  #   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-  #   BACKUP_PATH=".claude/skills.backup.${TIMESTAMP}"
-  #   # 衝突回避
-  #   if [ -e "$BACKUP_PATH" ]; then
-  #     COUNTER=1
-  #     while [ -e "${BACKUP_PATH}.${COUNTER}" ]; do
-  #       COUNTER=$((COUNTER + 1))
-  #     done
-  #     BACKUP_PATH="${BACKUP_PATH}.${COUNTER}"
-  #   fi
-  #   mv ".claude/skills" "$BACKUP_PATH"
-  #   ln -s "../docs/aidlc/skills" ".claude/skills"
-  # 2の場合: スキップ
-fi
+**ディレクトリ構成**:
+```
+.claude/skills/              ← 実ディレクトリ
+├── codex/   → symlink → ../../docs/aidlc/skills/codex/
+├── claude/  → symlink → ../../docs/aidlc/skills/claude/
+├── gemini/  → symlink → ../../docs/aidlc/skills/gemini/
+└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 ```
 
-**注意**: シンボリックリンク作成は必須ではありません。失敗した場合は警告を表示し、処理を継続します。他のAIツール（Codex、Gemini等）は `docs/aidlc/skills/` を直接参照できるため、シンボリックリンクがなくても問題ありません。
+```bash
+# スクリプトで実行
+docs/aidlc/bin/setup-claude-skills.sh
+```
+
+**注意**: `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
 
 **KiroCLI エージェント設定の生成**:
 
@@ -1340,8 +1299,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 ```bash
 git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
-# .claude/skills シンボリックリンクが作成されている場合のみ追加
-[ -L ".claude/skills" ] && git add .claude/
+# .claude/skills ディレクトリが作成されている場合のみ追加
+[ -d ".claude/skills" ] && git add .claude/
 # .kiro/agents/aidlc.json が作成されている場合のみ追加
 [ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
 ```
@@ -1380,7 +1339,7 @@ AI-DLC環境のセットアップが完了しました！
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
-- .claude/skills → docs/aidlc/skills（シンボリックリンク、作成した場合）
+- .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
 - .kiro/agents/aidlc.json - KiroCLIエージェント設定（作成した場合）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
