@@ -14,6 +14,7 @@
 #   - available: 利用可能
 #   - not-installed: 未インストール
 #   - not-authenticated: インストール済みだが認証されていない（ghのみ）
+#   starter_kit_version:バージョン番号（version.txt から取得）
 #
 
 set -euo pipefail
@@ -31,6 +32,7 @@ OPTIONS:
 
 出力形式:
   ツール名:状態
+  starter_kit_version:バージョン番号
 
 状態:
   available         - 利用可能（インストール済み、認証済み）
@@ -43,12 +45,14 @@ OPTIONS:
   dasel:not-installed
   jj:available
   git:available
+  starter_kit_version:1.9.2
 
   $ env-info.sh --setup
   gh:available
   dasel:available
   jj:available
   git:available
+  starter_kit_version:1.9.2
   project.name:my-project
   backlog.mode:issue-only
   current_branch:main
@@ -134,6 +138,20 @@ get_latest_cycle() {
     ls -1 docs/cycles/ 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1 || echo ""
 }
 
+# version.txt からスターターキットのバージョンを取得
+# ファイル不存在/空/読み取りエラー時は空値を返す
+# 正規化: 1行目のみ取得し、CRを除去
+get_starter_kit_version() {
+    if [[ ! -f "version.txt" ]]; then
+        echo ""
+        return
+    fi
+    local version=""
+    IFS= read -r version < version.txt 2>/dev/null || true
+    # CRを除去（Windows改行対応）
+    echo "${version//$'\r'/}"
+}
+
 # メイン処理
 main() {
     local setup_mode=false
@@ -156,11 +174,12 @@ main() {
         shift
     done
 
-    # 出力順序は固定（gh → dasel → jj → git）
+    # 出力順序は固定（gh → dasel → jj → git → starter_kit_version）
     echo "gh:$(check_gh)"
     echo "dasel:$(check_tool dasel)"
     echo "jj:$(check_tool jj)"
     echo "git:$(check_tool git)"
+    echo "starter_kit_version:$(get_starter_kit_version)"
 
     # --setup オプション時のみ追加出力
     if [[ "$setup_mode" == true ]]; then
