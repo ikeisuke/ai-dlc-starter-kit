@@ -21,7 +21,8 @@ codex exec -s read-only -C <project_directory> "<request>"
 codex exec resume <session-id> "<request>"
 ```
 
-- セッションIDは前回の実行結果の末尾に `session id: xxx` として表示されます
+- セッションIDは前回の実行結果の末尾に表示されます（例: `session id: xxx`）
+- resumeを使用すると、前回のセッション設定（`-C`、`-s`等）が通常継承されます
 - 同じコンテキストで追加の質問や確認ができます
 
 ## 反復レビュー時のルール【重要】
@@ -30,9 +31,9 @@ AI-DLCの反復レビューフロー（`docs/aidlc/prompts/common/review-flow.md
 
 ### session idの確認・記録
 
-1. **初回レビュー実行後**: 出力末尾の `session id: xxx` を確認
+1. **初回レビュー実行後**: 出力末尾に表示される session id を確認
 2. **session idを記録**: 後続のレビューで使用するため、session idを控えておく
-3. **2回目以降**: `codex exec resume <session-id> "<request>"` で継続
+3. **2回目以降**: `codex exec resume <session-id> "<request>"` で継続（`-C`/`-s`は通常継承）
 
 ### resumeを使うべき場面
 
@@ -41,7 +42,9 @@ AI-DLCの反復レビューフロー（`docs/aidlc/prompts/common/review-flow.md
 | 反復レビュー（2回目以降） | 必須 | 前回の指摘内容を踏まえた継続レビューが必要 |
 | 指摘への追加質問 | 必須 | 指摘の文脈を保持したまま深掘りできる |
 | 修正後の再レビュー | 必須 | 修正箇所と元の指摘の関連を理解できる |
-| 新規ファイルのレビュー | 不要 | 新しいコンテキストで開始 |
+| 別のUnitや独立したレビュー対象 | 不要 | 新しいコンテキストで開始すべき |
+
+**注**: 反復レビュー中に新規ファイルが追加された場合も、同じセッション（resume）を使用してください。「独立したレビュー対象」とは、別のUnitや別のレビュータスクを指します。
 
 ### 反復レビューの流れ
 
