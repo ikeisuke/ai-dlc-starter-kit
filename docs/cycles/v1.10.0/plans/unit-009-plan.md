@@ -13,26 +13,30 @@
 ### 更新
 
 - `prompts/package/guides/backlog-management.md` - 新規ガイドへの参照追加
+- `prompts/package/prompts/CLAUDE.md` - AskUserQuestion活用の前提を追記
 
 ## 実装計画
 
 ### Phase 1: 設計
 
 1. **ドメインモデル設計**: バックログ登録の概念と確認フローの構造を定義
-2. **論理設計**: 確認フローの具体的な手順とAskUserQuestion活用パターンを定義
+2. **論理設計**: 確認フローの具体的な手順（一問一答形式）を定義
 3. **設計レビュー**: ユーザー承認
 
 ### Phase 2: 実装
 
 4. **コード生成**: `prompts/package/guides/backlog-registration.md` を作成
 5. **テスト生成**: 該当なし（ドキュメントのみ）
-6. **統合とレビュー**: バックログ管理ガイドへの参照追加、AIレビュー、最終確認
+6. **統合とレビュー**:
+   - バックログ管理ガイドへの参照追加
+   - CLAUDE.md へ AskUserQuestion 活用の前提を追記
+   - AIレビュー、最終確認
 
 ## 完了条件チェックリスト
 
-- [ ] バックログ登録前の確認フロー追加
+- [ ] バックログ登録前の確認フロー追加（一問一答形式）
 - [ ] 必須項目テンプレートの提供
-- [ ] AskUserQuestionを活用した対話的登録
+- [ ] Claude Code向けAskUserQuestion活用の前提をCLAUDE.mdに追記
 
 ## 技術的考慮事項
 
