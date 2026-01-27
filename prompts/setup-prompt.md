@@ -543,11 +543,11 @@ enabled = false
 [backlog]
 # バックログ管理モード設定
 # mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容（デフォルト）
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
 # - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
 # - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）
-mode = "git"
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
+mode = "issue-only"
 ```
 
 ### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
@@ -672,11 +672,13 @@ if ! grep -q "^\[backlog\]" docs/aidlc.toml; then
   cat >> docs/aidlc.toml << 'EOF'
 
 [backlog]
-# バックログ管理モード設定（v1.7.0で追加）
-# mode: "git" | "issue"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
-mode = "git"
+# バックログ管理モード設定（v1.7.0で追加、v1.10.0でデフォルト変更）
+# mode: "git" | "issue" | "git-only" | "issue-only"
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
+# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
+# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
+mode = "issue-only"
 EOF
   echo "Added [backlog] section"
 else
@@ -1270,12 +1272,13 @@ GitHub Issueテンプレートの配置が完了しました：
 
 **注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
 
-#### 8.2.6 Issue用基本ラベルの作成
+#### 8.2.6 Issue用基本ラベルの作成【mode=issueまたはissue-onlyの場合のみ】
 
-GitHub CLIが利用可能な場合、バックログ管理用の共通ラベルを作成します。
+GitHub CLIが利用可能で、バックログモードがIssue駆動の場合、バックログ管理用の共通ラベルを作成します。
 
 **前提条件**:
 - `gh:available` であること
+- `docs/aidlc.toml` の `[backlog].mode` が `issue` または `issue-only` であること
 
 **前提条件を満たさない場合**: このステップをスキップ。
 
