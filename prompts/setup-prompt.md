@@ -1270,6 +1270,32 @@ GitHub Issueテンプレートの配置が完了しました：
 
 **注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
 
+#### 8.2.6 Issue用基本ラベルの作成
+
+GitHub CLIが利用可能な場合、バックログ管理用の共通ラベルを作成します。
+
+**前提条件**:
+- `gh:available` であること
+
+**前提条件を満たさない場合**: このステップをスキップ。
+
+**ラベル作成**:
+
+```bash
+docs/aidlc/bin/init-labels.sh
+```
+
+**出力例**:
+
+```text
+label:backlog:created
+label:type:feature:created
+label:type:bugfix:exists
+...
+```
+
+**注意**: 既存のラベルはスキップされます（冪等性あり）。
+
 ### 8.3 同期対象のファイル一覧
 
 rsync により以下のファイルが `docs/aidlc/` に同期されます:
