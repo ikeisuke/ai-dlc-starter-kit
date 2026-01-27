@@ -125,7 +125,7 @@ $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup/bin/check-setup
 setup_type:cycle_start
 ```
 
-**dasel未インストールの場合**（`setup_type:` と空値が返る場合）: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。また、このファイル（setup-prompt.md）のディレクトリから `../version.txt` を読み込み、スターターキットのバージョンと比較してください。
+**dasel未インストールの場合**（`setup_type:` と空値が返る場合）: AIは `docs/aidlc.toml` を読み込み、`starter_kit_version` の値を取得してください。また、プロジェクトルートの `version.txt`（リポジトリルート直下）を読み込み、スターターキットのバージョンと比較してください。
 
 ### 判定結果に基づく対応
 
@@ -543,11 +543,11 @@ enabled = false
 [backlog]
 # バックログ管理モード設定
 # mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容（デフォルト）
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
 # - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
 # - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）
-mode = "git"
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
+mode = "issue-only"
 ```
 
 ### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
@@ -672,11 +672,13 @@ if ! grep -q "^\[backlog\]" docs/aidlc.toml; then
   cat >> docs/aidlc.toml << 'EOF'
 
 [backlog]
-# バックログ管理モード設定（v1.7.0で追加）
-# mode: "git" | "issue"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
-mode = "git"
+# バックログ管理モード設定（v1.7.0で追加、v1.10.0でデフォルト変更）
+# mode: "git" | "issue" | "git-only" | "issue-only"
+# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
+# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
+# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
+# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
+mode = "issue-only"
 EOF
   echo "Added [backlog] section"
 else
@@ -1156,7 +1158,7 @@ docs/aidlc/bin/setup-ai-tools.sh
 2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
 
 **ディレクトリ構成**:
-```
+```text
 .claude/skills/              ← 実ディレクトリ
 ├── codex/   → symlink → ../../docs/aidlc/skills/codex/
 ├── claude/  → symlink → ../../docs/aidlc/skills/claude/
@@ -1196,79 +1198,148 @@ sent 1,234 bytes  received 56 bytes
 
 GitHub Issueテンプレートをプロジェクトにコピーします。
 
-**状態確認**:
+**ケース1: ディレクトリが存在しない場合**:
+
 ```bash
-# .github/ISSUE_TEMPLATE/ の存在と内容確認
-if [ -d ".github/ISSUE_TEMPLATE" ]; then
-    echo "Existing Issue templates:"
-    ls .github/ISSUE_TEMPLATE/
-    echo "ISSUE_TEMPLATE_EXISTS"
-else
-    echo "ISSUE_TEMPLATE_NOT_EXISTS"
+if [ ! -d ".github/ISSUE_TEMPLATE" ]; then
+    mkdir -p .github/ISSUE_TEMPLATE
+    cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
+    echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml, feedback.yml"
 fi
 ```
 
-**ケース1: ディレクトリが存在しない場合**:
-```bash
-mkdir -p .github/ISSUE_TEMPLATE
-cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
-echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml"
-```
+**ケース2: ディレクトリが存在する場合（差分確認）**:
 
-**ケース2: 同名ファイルが存在する場合**:
+差分を確認し、変更がある場合のみユーザーに確認を求める:
 
-まず競合を確認:
 ```bash
-CONFLICT_FILES=""
-for file in backlog.yml bug.yml feature.yml; do
-    if [ -f ".github/ISSUE_TEMPLATE/$file" ]; then
-        CONFLICT_FILES="${CONFLICT_FILES}${file} "
+# 差分確認
+DIFF_FILES=""
+NEW_FILES=""
+for file in backlog.yml bug.yml feature.yml feedback.yml; do
+    SOURCE="[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file"
+    TARGET=".github/ISSUE_TEMPLATE/$file"
+    if [ -f "$SOURCE" ]; then
+        if [ -f "$TARGET" ]; then
+            # 既存ファイル: 差分確認
+            if ! diff -q "$SOURCE" "$TARGET" >/dev/null 2>&1; then
+                DIFF_FILES="${DIFF_FILES}${file} "
+            fi
+        else
+            # 新規ファイル
+            NEW_FILES="${NEW_FILES}${file} "
+        fi
     fi
 done
-echo "Conflict files: ${CONFLICT_FILES:-none}"
+
+echo "Diff files: ${DIFF_FILES:-none}"
+echo "New files: ${NEW_FILES:-none}"
 ```
 
-競合がある場合、以下のメッセージを表示しユーザーに選択を求める:
-```text
-警告: 以下のIssueテンプレートが既に存在します：
+**差分も新規ファイルもない場合**:
 
-[競合ファイル一覧]
+```text
+Issueテンプレートに差分はありません。スキップします。
+```
+
+**差分または新規ファイルがある場合**:
+
+以下のメッセージを表示しユーザーに選択を求める:
+
+**差分のあるファイルがある場合**:
+
+```text
+以下のIssueテンプレートに変更があります：
+
+差分のあるファイル: [DIFF_FILES]
+新規ファイル: [NEW_FILES]（なければ省略）
 
 選択してください:
-1. 上書きする（すべて置き換え）
-2. スキップする（既存を保持、新規のみ追加）
-3. 個別に確認する
+1. 上書きする（推奨）
+2. スキップする
+3. 差分を確認してから決める
 
 どれを選択しますか？
 ```
 
-- **選択1（上書き）**: `cp -f [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/`
-- **選択2（スキップ）**: 存在しないファイルのみコピー
-- **選択3（個別確認）**: 競合ファイルごとに上書き/スキップを選択
+**新規ファイルのみの場合（DIFF_FILESが空）**:
 
-**ケース3: 同名ファイルが存在しない場合**:
-```bash
-mkdir -p .github/ISSUE_TEMPLATE
-for file in backlog.yml bug.yml feature.yml; do
-    if [ ! -f ".github/ISSUE_TEMPLATE/$file" ]; then
-        cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
-        echo "Copied: $file"
-    fi
-done
+```text
+以下のIssueテンプレートを追加します：
+
+新規ファイル: [NEW_FILES]
+
+選択してください:
+1. 追加する（推奨）
+2. スキップする
+
+どれを選択しますか？
 ```
 
+- **選択1（上書き/追加）**: 差分のあるファイルと新規ファイルをコピー
+
+  ```bash
+  for file in $DIFF_FILES $NEW_FILES; do
+      cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
+      echo "Copied: $file"
+  done
+  ```
+
+- **選択2（スキップ）**: 何もせず終了
+
+- **選択3（差分確認）**【差分のあるファイルがある場合のみ表示】: 差分のあるファイルの詳細を表示
+
+  ```bash
+  for file in $DIFF_FILES; do
+      echo "=== $file ==="
+      diff "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/$file"
+      echo ""
+  done
+  ```
+
+  表示後、再度選択肢1または2を選択させる。
+
 **結果報告**:
+
 ```text
 GitHub Issueテンプレートの配置が完了しました：
 
 | ファイル | 状態 |
 |----------|------|
-| backlog.yml | [新規作成 / スキップ / 上書き] |
-| bug.yml | [新規作成 / スキップ / 上書き] |
-| feature.yml | [新規作成 / スキップ / 上書き] |
+| backlog.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| bug.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| feature.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| feedback.yml | [新規作成 / 更新 / スキップ / 差分なし] |
 ```
 
 **注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
+
+#### 8.2.6 Issue用基本ラベルの作成【mode=issueまたはissue-onlyの場合のみ】
+
+GitHub CLIが利用可能で、バックログモードがIssue駆動の場合、バックログ管理用の共通ラベルを作成します。
+
+**前提条件**:
+- `gh:available` であること
+- `docs/aidlc.toml` の `[backlog].mode` が `issue` または `issue-only` であること
+
+**前提条件を満たさない場合**: このステップをスキップ。
+
+**ラベル作成**:
+
+```bash
+docs/aidlc/bin/init-labels.sh
+```
+
+**出力例**:
+
+```text
+label:backlog:created
+label:type:feature:created
+label:type:bugfix:exists
+...
+```
+
+**注意**: 既存のラベルはスキップされます（冪等性あり）。
 
 ### 8.3 同期対象のファイル一覧
 
@@ -1347,6 +1418,7 @@ GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 - backlog.yml - バックログ用テンプレート
 - bug.yml - バグ報告用テンプレート
 - feature.yml - 機能要望用テンプレート
+- feedback.yml - フィードバック用テンプレート
 
 ### AIエージェント許可リストの設定（オプション）
 

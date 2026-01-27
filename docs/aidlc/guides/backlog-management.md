@@ -4,6 +4,8 @@
 
 AI-DLCにおけるバックログ管理の方式とフローを定義します。
 
+**関連ガイド**: ユーザー起点のバックログ登録時の確認フローは [backlog-registration.md](backlog-registration.md) を参照
+
 ### モード一覧
 
 | mode | 保存先 | 説明 |
