@@ -1198,76 +1198,102 @@ sent 1,234 bytes  received 56 bytes
 
 GitHub Issueテンプレートをプロジェクトにコピーします。
 
-**状態確認**:
+**ケース1: ディレクトリが存在しない場合**:
+
 ```bash
-# .github/ISSUE_TEMPLATE/ の存在と内容確認
-if [ -d ".github/ISSUE_TEMPLATE" ]; then
-    echo "Existing Issue templates:"
-    ls .github/ISSUE_TEMPLATE/
-    echo "ISSUE_TEMPLATE_EXISTS"
-else
-    echo "ISSUE_TEMPLATE_NOT_EXISTS"
+if [ ! -d ".github/ISSUE_TEMPLATE" ]; then
+    mkdir -p .github/ISSUE_TEMPLATE
+    cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
+    echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml, feedback.yml"
 fi
 ```
 
-**ケース1: ディレクトリが存在しない場合**:
-```bash
-mkdir -p .github/ISSUE_TEMPLATE
-cp [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/
-echo "Created: .github/ISSUE_TEMPLATE/ with backlog.yml, bug.yml, feature.yml"
-```
+**ケース2: ディレクトリが存在する場合（差分確認）**:
 
-**ケース2: 同名ファイルが存在する場合**:
+差分を確認し、変更がある場合のみユーザーに確認を求める:
 
-まず競合を確認:
 ```bash
-CONFLICT_FILES=""
-for file in backlog.yml bug.yml feature.yml; do
-    if [ -f ".github/ISSUE_TEMPLATE/$file" ]; then
-        CONFLICT_FILES="${CONFLICT_FILES}${file} "
+# 差分確認
+DIFF_FILES=""
+NEW_FILES=""
+for file in backlog.yml bug.yml feature.yml feedback.yml; do
+    SOURCE="[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file"
+    TARGET=".github/ISSUE_TEMPLATE/$file"
+    if [ -f "$SOURCE" ]; then
+        if [ -f "$TARGET" ]; then
+            # 既存ファイル: 差分確認
+            if ! diff -q "$SOURCE" "$TARGET" >/dev/null 2>&1; then
+                DIFF_FILES="${DIFF_FILES}${file} "
+            fi
+        else
+            # 新規ファイル
+            NEW_FILES="${NEW_FILES}${file} "
+        fi
     fi
 done
-echo "Conflict files: ${CONFLICT_FILES:-none}"
+
+echo "Diff files: ${DIFF_FILES:-none}"
+echo "New files: ${NEW_FILES:-none}"
 ```
 
-競合がある場合、以下のメッセージを表示しユーザーに選択を求める:
-```text
-警告: 以下のIssueテンプレートが既に存在します：
+**差分も新規ファイルもない場合**:
 
-[競合ファイル一覧]
+```text
+Issueテンプレートに差分はありません。スキップします。
+```
+
+**差分または新規ファイルがある場合**:
+
+以下のメッセージを表示しユーザーに選択を求める:
+
+```text
+以下のIssueテンプレートに差分があります：
+
+差分のあるファイル: [DIFF_FILES]
+新規ファイル: [NEW_FILES]
 
 選択してください:
-1. 上書きする（すべて置き換え）
-2. スキップする（既存を保持、新規のみ追加）
-3. 個別に確認する
+1. 上書きする（推奨）
+2. スキップする
+3. 差分を確認してから決める
 
 どれを選択しますか？
 ```
 
-- **選択1（上書き）**: `cp -f [スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/*.yml .github/ISSUE_TEMPLATE/`
-- **選択2（スキップ）**: 存在しないファイルのみコピー
-- **選択3（個別確認）**: 競合ファイルごとに上書き/スキップを選択
+- **選択1（上書き）**: 差分のあるファイルと新規ファイルをコピー
 
-**ケース3: 同名ファイルが存在しない場合**:
-```bash
-mkdir -p .github/ISSUE_TEMPLATE
-for file in backlog.yml bug.yml feature.yml; do
-    if [ ! -f ".github/ISSUE_TEMPLATE/$file" ]; then
-        cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
-        echo "Copied: $file"
-    fi
-done
-```
+  ```bash
+  for file in $DIFF_FILES $NEW_FILES; do
+      cp "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/"
+      echo "Copied: $file"
+  done
+  ```
+
+- **選択2（スキップ）**: 何もせず終了
+
+- **選択3（差分確認）**: 差分のあるファイルの詳細を表示
+
+  ```bash
+  for file in $DIFF_FILES; do
+      echo "=== $file ==="
+      diff "[スターターキットパス]/prompts/package/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/$file"
+      echo ""
+  done
+  ```
+
+  表示後、再度選択肢1または2を選択させる。
 
 **結果報告**:
+
 ```text
 GitHub Issueテンプレートの配置が完了しました：
 
 | ファイル | 状態 |
 |----------|------|
-| backlog.yml | [新規作成 / スキップ / 上書き] |
-| bug.yml | [新規作成 / スキップ / 上書き] |
-| feature.yml | [新規作成 / スキップ / 上書き] |
+| backlog.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| bug.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| feature.yml | [新規作成 / 更新 / スキップ / 差分なし] |
+| feedback.yml | [新規作成 / 更新 / スキップ / 差分なし] |
 ```
 
 **注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
