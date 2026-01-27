@@ -596,6 +596,14 @@ gh pr ready {PR番号}
 ```
 
 選択1の場合:
+
+**Issue番号の取得**:
+1. `docs/cycles/{{CYCLE}}/requirements/intent.md` の「対象Issue」セクションからIssue番号を取得
+2. intent.mdにない場合は `docs/cycles/{{CYCLE}}/requirements/setup-context.md` を確認
+3. Issue番号が見つからない場合は「Closes」セクションを省略
+
+**複数Issueがある場合**: 各Issue番号を別行で `Closes #xx` 形式で記載
+
 ```bash
 gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
 ## Summary
@@ -603,6 +611,12 @@ gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
 
 ## Test plan
 - [ ] 主要機能が動作する
+
+## Closes
+
+- Closes #[Issue番号1]
+- Closes #[Issue番号2]
+...
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
