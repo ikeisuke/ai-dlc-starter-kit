@@ -1158,7 +1158,7 @@ docs/aidlc/bin/setup-ai-tools.sh
 2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
 
 **ディレクトリ構成**:
-```
+```text
 .claude/skills/              ← 実ディレクトリ
 ├── codex/   → symlink → ../../docs/aidlc/skills/codex/
 ├── claude/  → symlink → ../../docs/aidlc/skills/claude/
