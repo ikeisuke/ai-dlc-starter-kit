@@ -103,13 +103,16 @@ docker run -it --rm \
 ### ネットワーク制限について
 
 Claude CodeはAnthropicのAPIと通信する必要があるため、`--network none`は使用できません。
-ファイルシステムの読み取り専用マウント（`:ro`）でファイル変更を防止し、セキュリティを確保します。
+ファイルシステムの読み取り専用マウント（`:ro`）でプロジェクト領域のファイル変更を防止し、セキュリティを確保します。
+
+**重要**: `:ro`マウントは**マウント対象のディレクトリのみ**を読み取り専用にします。コンテナのルートファイルシステムや`/tmp`などは書き込み可能のままです。完全な読み取り専用環境が必要な場合は、`--read-only`フラグと`tmpfs`を併用してください。
 
 ### 注意事項
 
 - `--dangerously-skip-permissions` は本番環境での使用を避ける
 - Docker使用時は適切なボリュームマウント設定を行う
 - APIキーは環境変数で渡し、Dockerfileやイメージに含めない
+- **サプライチェーン対策**: `npx`で毎回パッケージを取得する代わりに、バージョンを固定（`npx @anthropic-ai/claude-code@1.0.0`）するか、Dockerfileで事前インストールすることを推奨
 
 ---
 
@@ -137,7 +140,9 @@ codex -s read-only
 mode = "workspace-write"
 ```
 
-### 設定の優先順位
+### 設定の優先順位（検証時点: 2026-01、v0.89.x）
+
+以下は検証時点での挙動です。最新の仕様は[公式ドキュメント](https://github.com/openai/codex)を参照してください。
 
 1. コマンドライン引数（`--sandbox`）
 2. 環境変数（`CODEX_SANDBOX`）
@@ -218,12 +223,18 @@ services:
     read_only: true  # ルートファイルシステムを読み取り専用に
     tmpfs:
       - /tmp  # 一時ファイル用に書き込み可能領域を提供
+      - /home/developer/.config  # 設定ファイル用
+      - /home/developer/.cache   # キャッシュ用
+      - /home/developer/.npm     # npmキャッシュ用
     # ネットワーク制限（必要に応じて）
     # network_mode: none
 ```
 
-**注意**: `read_only: true` を使用する場合、ワークスペースへの書き込みが必要な場合は
-明示的にボリュームマウント（`:rw`）または `tmpfs` で書き込み可能領域を確保してください。
+**注意**:
+
+- `read_only: true` を使用する場合、ツールが書き込みに使用するホーム/キャッシュ領域を`tmpfs`で確保する必要があります
+- Claude Codeは `~/.config` やキャッシュ領域への書き込みを行うため、上記の`tmpfs`設定が必要です
+- ワークスペースへの書き込みが必要な場合は、明示的にボリュームマウント（`:rw`）を使用してください
 
 ### 実行コマンド例
 
@@ -249,8 +260,17 @@ docker run --rm -v $(pwd):/workspace:ro alpine touch /workspace/test.txt
 # → "Read-only file system" エラーが出れば成功
 
 # ネットワーク制限のテスト（API不要なツールの場合）
+# ICMP（ping）テスト
 docker run --rm --network none alpine ping -c 1 google.com
 # → "Network is unreachable" エラーが出れば成功
+
+# DNS解決テスト
+docker run --rm --network none alpine nslookup google.com
+# → "server can't find google.com" エラーが出れば成功
+
+# HTTP接続テスト
+docker run --rm --network none alpine wget -q -O- http://example.com
+# → "bad address" または接続エラーが出れば成功
 ```
 
 ---
