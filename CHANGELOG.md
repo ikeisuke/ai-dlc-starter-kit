@@ -7,6 +7,29 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.10.1] - 2026-01-28
+
+### Added
+
+- gh (GitHub CLI) Skill（#123）
+  - Git操作、Issue/PR管理、リポジトリ管理をAIエージェントから実行
+- jj (Jujutsu) Skill（#124）
+  - モダンなバージョン管理ツールjjの操作をAIエージェントから実行
+- PRマージ後の確認手順（#134）
+  - Operations Phaseでsquash使用を明示的に確認するフロー追加
+
+### Changed
+
+- README.mdのバージョン履歴を降順（新しい順）に変更（#130）
+  - 最新バージョンを先頭に表示
+
+### Fixed
+
+- Codex Skillのresume機能の説明を明確化（#132）
+  - threadId/agentIdの使い分けを明記
+
+---
+
 ## [1.10.0] - 2026-01-28
 
 ### Added
