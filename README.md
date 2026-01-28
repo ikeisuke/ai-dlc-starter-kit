@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.10.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -359,6 +359,131 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 
 `docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
 
+## 🔧 v1.11.0 の新機能
+
+v1.11.0 はOperations Phase改善とガイドドキュメント追加のためのリリースです。
+
+### 1. サンドボックス環境ガイド追加
+
+- 各AIツール（Claude Code、Codex、Cursor、KiroCLI等）のサンドボックス設定を解説
+- セキュリティを維持しながら効率的に開発を行う方法を案内
+
+### 2. AIエージェント許可リストガイド追加
+
+- 各AIツールの許可設定（allowlist）を一覧で解説
+- 毎回の確認を減らしつつセキュリティを維持する設定方法
+
+### 3. Operations Phaseスキップ確認改善
+
+- 既存の運用設定がある場合、確認なしで進行可能に
+- 運用引き継ぎ情報（operations.md）の活用を強化
+
+### 4. タスク管理説明文追加
+
+- Construction PhaseでToDo機能の活用を推奨
+- AIツールのタスク管理機能との連携を案内
+
+### 5. aidlc.tomlテンプレート化
+
+- セットアップ時にテンプレートファイルから生成
+- プレースホルダー置換による柔軟な設定
+
+## 🔧 v1.10.0 の新機能
+
+v1.10.0 はバックログ管理とUnit完了チェック強化のためのリリースです。
+
+### 1. バックログ登録時の不明点確認フロー
+- 登録前に質問を促すガイダンス追加
+- 曖昧な要件の明確化を促進
+
+### 2. Unit完了時の設計・実装整合性チェック機能
+- Construction Phase Phase 2終了時に設計との整合性を確認
+- ドメインモデル・論理設計と実装の乖離を検出
+
+### 3. AIレビュー指摘の先送り抑制ルール
+- 「あとでやる」判断時はユーザー承認必須に
+- 技術的理由の明記を要求
+
+### 4. Issueテンプレートの差分確認機能
+- セットアップ時に既存テンプレートとの差分を表示
+
+### 5. PRによるIssue自動Close機能
+- Operations PhaseのPR作成時に `Closes #xx` を自動記載
+
+### 6. Issue用基本ラベルのセットアッププロンプト統合
+- init-labels.shによるラベル自動作成
+
+## 🔧 v1.9.3 の改善点
+
+v1.9.3 はスクリプト機能強化と設定改善のためのリリースです。
+
+### 1. env-info.shに--setupオプション追加
+- セットアップ時に必要な情報を一括出力（project.name, backlog.mode, current_branch, latest_cycle）
+
+### 2. skills構成をシンボリックリンクからrsyncコピー方式に変更
+- プロジェクト独自スキルの追加が可能に
+
+### 3. KiroCLIエージェント設定の修正
+- .kiro/agents/aidlc.jsonのresources参照を修正
+
+### 4. init-cycle-dir.shのバージョン形式チェック緩和
+- 任意の文字列を受け入れ可能に（空文字・スラッシュのみ拒否）
+
+## 🔧 v1.9.2 の新機能
+
+v1.9.2 はプレリリースサポートとKiroCLI対応のためのリリースです。
+
+### 1. プレリリースバージョンサポート
+- サイクル名・ブランチ名に-alpha, -beta, -rc接尾辞を許可
+- write-history.shでプレリリース形式のバリデーション対応
+
+### 2. KiroCLI Skills対応
+- resourcesフィールドによるファイル指定ガイド
+- .kiro/agents/aidlc.json自動生成
+
+### 3. operations.mdサイズ最適化
+- 依存コマンド追加手順を外部ファイルに分離
+
+### 4. AI著者情報の自動検出機能
+- AI著者情報をツールから自動判定
+
+## 🔧 v1.9.1 の改善点
+
+v1.9.1 はスクリプト統合とコンテキスト管理改善のためのリリースです。
+
+### 1. init-cycle-dir.shに共通バックログディレクトリ作成機能を追加
+
+### 2. コンテキストコンパクション時のAIDLC情報保持指示
+- AGENTS.mdにコンテキスト要約時の情報保持ルールを追加
+
+### 3. 環境確認処理の統合
+- gh/dasel状態確認をセットアップ時1回に統合
+
+### 4. Co-Authored-By設定の柔軟化
+- aidlc.toml経由で設定可能に
+
+## 🔧 v1.9.0 の新機能
+
+v1.9.0 はプロンプトモジュール化と重複削減のためのリリースです。
+
+### 1. プロンプトモジュール化基盤
+- common/intro.md - AI-DLC概要・役割定義の共通化
+- common/rules.md - 開発ルールの共通化
+- common/review-flow.md - AIレビューフローの外部化
+
+### 2. 設定確認スクリプト
+- check-backlog-mode.sh - バックログモード確認
+- check-gh-status.sh - GitHub CLI状態確認
+
+### 3. Operations Phaseサイズチェック機能
+- [rules.size_check]設定による制御
+
+### 4. 参照漏れチェックスクリプト
+- check-references.shで参照整合性を確認
+
+### 5. プロンプト重複セクション削減
+- 約300行の重複を削減
+
 ## 🔧 v1.8.2 の新機能
 
 v1.8.2 はスキルファイル対応とセットアップ自動化のためのリリースです。
@@ -439,6 +564,105 @@ v1.8.0 はスクリプト化基盤構築とUX改善のためのリリースで�
 ### 3. プロンプト最適化準備
 
 次サイクルでのプロンプトサイズ削減に向けた分析レポートを作成しました。
+
+## 🔧 v1.7.4 の改善点
+
+v1.7.4 はツール案内強化とガイド追加のためのリリースです。
+
+### 1. ツールインストール案内セクション
+- setup-prompt.mdにgh必須、dasel/jq/curlオプションの案内を追加
+
+### 2. サブエージェント活用ガイド
+- construction.mdとguides/subagent-usage.mdに追加
+
+### 3. 質問深掘りルール
+- AGENTS.mdに追加質問の深掘り方法を明確化
+
+### 4. 受け入れ基準の書き方ガイダンス
+- inception.mdに良い例・悪い例を含むガイドを追加
+
+### 5. バグ修正
+- issue-onlyモードでのGitHub CLI検証・サイクルラベル作成の修正
+- 未追跡ファイルのみ存在する場合のコミット処理を修正
+
+## 🔧 v1.7.3 の改善点
+
+v1.7.3 はTOML読み込み改善とjjサポート強化のためのリリースです。
+
+### 1. daselによるTOML読み込み対応
+- setup-prompt.mdでdasel v3系に統一
+
+### 2. jj作業開始・終了時のガイド
+- jj-support.mdに推奨設定（auto-local-bookmark）を追加
+- Unit境界でのbookmark操作ガイドを追加
+
+### 3. Markdownlint対象範囲の最適化
+- 現在サイクルまたは変更ファイルのみを対象に
+
+### 4. バグ修正
+- aidlc.tomlのコメント内バージョン番号修正
+- cicd_setup.mdのYAML抜粋修正
+
+## 🔧 v1.7.2 の改善点
+
+v1.7.2 はClaude Code活用とIssueテンプレート追加のためのリリースです。
+
+### 1. Claude Codeプランモード活用調査文書
+- Unit 006成果物として追加
+
+### 2. iOSビルド番号確認機能
+- Inception Phaseでxcrun読み取り対応
+
+### 3. GitHub Issueテンプレート
+- backlog.yml, bug.yml, feature.ymlを追加
+
+### 4. jj許可リストガイドへのjjコマンド追加
+
+### 5. バックログ管理ガイド改善
+- issue-driven-backlog.mdをbacklog-management.mdに統合
+
+## 🔧 v1.7.1 の改善点
+
+v1.7.1 はjjサポート強化とiOSアプリ対応のためのリリースです。
+
+### 1. jjサポート有効化フラグ
+- [rules.jj].enabled設定を追加
+
+### 2. iOSアプリ向けInception Phaseでのバージョン更新対応
+
+### 3. AskUserQuestion推奨オプション順序ルール
+- 推奨を一番上に配置するルールを追加
+
+### 4. バックログラベル作成手順
+- setup.mdに追加
+
+### 5. Unitブランチ設定をconstruction.mdに統合
+- [rules.unit_branch].enabled参照
+
+## 🔧 v1.7.0 の新機能
+
+v1.7.0 はAIエージェント許可リストとjjサポートのためのリリースです。
+
+### 1. AIエージェント許可リストガイド
+- Claude Code, Cursor, Cline, Windsurf対応
+
+### 2. GitHub Issueテンプレート
+- backlog.yml, bug.yml, feature.ymlを追加
+
+### 3. setup-promptパス記録機能
+- aidlc.tomlの[paths].setup_promptに記録
+
+### 4. Issue駆動バックログ管理ガイド
+- git/issueモード切替対応
+
+### 5. jj（Jujutsu）基本ワークフローガイド
+- 実験的サポートとして追加
+
+### 6. Unitブランチ無効化設定
+- [rules.unit_branch].enabled設定を追加
+
+### 7. バックログ管理モード設定
+- [backlog].mode: git/issue切替対応
 
 ## 🔧 v1.6.1 の新機能
 
@@ -838,6 +1062,52 @@ v1.2.1 は技術的負債解消のメンテナンスリリースです。
 ### 8. バージョン・ブランチ整合性チェック
 - セットアップ時にサイクルバージョンとブランチ名の整合性をチェック
 - 不一致の場合は警告を表示し、対応を選択可能
+
+## 🔧 v1.1.0 の新機能
+
+v1.1.0 は Operations Phase 再利用性と軽量サイクルサポートのためのリリースです。
+
+### 1. Operations Phase 再利用性
+- サイクル横断でのCI/CD維持
+- 前サイクルの設定を引き継ぎ可能
+
+### 2. 軽量サイクル（Lite版）のサポート
+- 小規模な変更向けの簡易フロー
+- Full版のステップを選択的にスキップ
+
+### 3. ブランチ確認機能
+- 誤ブランチでの作業防止
+- フェーズ開始時に現在のブランチを確認
+
+### 4. コンテキストリセット提案機能
+- フェーズ移行時・Unit完了時にリセットを提案
+- 長いセッションによる応答品質低下を防止
+
+## 🔧 v1.0.1 の改善点
+
+v1.0.1 はバージョンアップ基盤構築とテンプレート追加のためのリリースです。
+
+### 1. バージョンアップ基盤の構築
+- CHANGELOG.md, version.txtによるバージョン管理
+
+### 2. テスト記録テンプレート
+- `docs/aidlc/templates/test_record_template.md`を追加
+
+### 3. バグ対応フロー文書
+- `docs/aidlc/bug-response-flow.md`を追加
+
+### 4. バックログ管理テンプレート
+- `docs/aidlc/templates/backlog_template.md`を追加
+
+### 5. セットアップファイルのフェーズ別分割
+- `prompts/setup/`に分割配置
+
+### 6. セットアッププロンプトの最適化
+- 1746行から5ファイルに分割
+
+### 7. バグ修正
+- セットアップ時の`inception/`ディレクトリ作成バグを修正
+- 日付取得方法の明確化（タイムゾーン付き）
 
 ## 🔗 関連リンク
 

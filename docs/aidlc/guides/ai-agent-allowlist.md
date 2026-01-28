@@ -75,10 +75,15 @@ sandbox環境で実行することで、被害を限定する方式。
 | `git rev-parse` | Git参照解決 | Setup |
 | `git show-ref` | 参照一覧表示 | Setup |
 | `git worktree list` | worktree一覧表示 | Setup |
-| `git remote` | リモート一覧表示 | Operations |
+| `git remote`（引数なし/`-v`のみ） | リモート一覧表示 | Operations |
 | `ls` | ファイル一覧表示 | 全フェーズ |
 | `cat` | ファイル内容表示 | 全フェーズ |
+| `head` | ファイル先頭表示 | 全フェーズ |
+| `tail` | ファイル末尾表示 | 全フェーズ |
 | `grep` | テキスト検索 | 全フェーズ |
+| `rg` (ripgrep) | 高速テキスト検索 | 全フェーズ |
+| `find` | ファイル検索 | 全フェーズ |
+| `jq` | JSON処理 | 全フェーズ |
 | `date` | 日時取得 | 全フェーズ |
 | `pwd` | 現在ディレクトリ表示 | Setup |
 | `command -v` | コマンド存在確認 | Setup, Operations |
@@ -145,12 +150,15 @@ sandbox環境で実行することで、被害を限定する方式。
 
 | コマンド | 説明 | リスク |
 |---------|------|--------|
-| `git push --force` | 強制プッシュ | 履歴上書き |
+| `git push --force` / `-f` | 強制プッシュ | 履歴上書き |
+| `git push --force-with-lease` | 条件付き強制プッシュ | 履歴上書き（安全性は限定的） |
 | `git reset --hard` | ハードリセット | 変更完全破棄 |
 | `git clean -fd` | 未追跡ファイル削除 | ファイル削除 |
 | `git rebase -i` | インタラクティブリベース | 履歴書き換え |
 | `rm -rf` | 再帰的強制削除 | ファイル削除 |
 | `curl` / `wget` | 外部URL取得 | データ漏洩・マルウェアダウンロード |
+
+**例外**: 特定の信頼できるURL（例: スターターキットのGitHub raw URL）に限定して`curl`を許可する場合は、allowリストでURLパターンを厳密に指定することでリスクを軽減できます。設定例のセクション4.1を参照してください。
 
 ---
 
@@ -232,6 +240,8 @@ deny（最優先）→ ask → allow（最低優先）
     "ask": [
       "Bash(rm -rf:*)",
       "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force-with-lease:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
       "Bash(wget:*)"
@@ -250,9 +260,10 @@ deny（最優先）→ ask → allow（最低優先）
 - `git branch:*` ではなく読み取り系のみ（`-d/-D` 除外）
 - `git remote:*` ではなく読み取り系のみ（削除系除外）
 - `git commit -m:*` で `-m` 必須（`--amend` 除外）
+- `git push:*` はallowだが、`-f`/`--force`/`--force-with-lease`はaskで確認を要求
 - `tee` は履歴ファイル限定（`docs/cycles/*/history/*`）
-- `rsync` は同期先限定（`docs/aidlc/` 配下）
-- `curl` はスターターキットURL限定
+- `rsync` は同期先限定（`docs/aidlc/` 配下）。`--delete`オプション使用時も承認なしで実行されるため、同期先を厳密に限定
+- `curl` はスターターキットURL限定（セクション3.5の例外に該当）
 
 **ワイルドカード**:
 - `:*` - プレフィックスマッチ（末尾のみ）
@@ -335,6 +346,7 @@ codex -s workspace-write -a on-failure "タスク"
 
 **重要**:
 - deniedCommandsは**substring matching**。`&&` を拒否すると、`&&` を含むすべてのコマンドがブロックされます。
+- `&` を拒否すると `2>&1` もブロックされます。セクション5.1の「`>/dev/null 2>&1`への置換」と矛盾する場合は、`&` をdenylistから除外するか、別の回避策を検討してください。
 - コマンドチェーンの扱いは現在議論中（Issue #1602）。安全のためシェル演算子をdenylistに追加することを推奨。
 
 ### 4.4 Cline

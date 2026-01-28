@@ -449,106 +449,59 @@ mkdir -p docs/aidlc
 mkdir -p docs/cycles
 ```
 
-### 7.2 aidlc.toml の内容
+### 7.2 aidlc.toml の生成
 
-以下のテンプレートを使用し、収集した情報で置換してください:
+テンプレートファイルを使用して `docs/aidlc.toml` を生成します。
 
-```toml
-# AI-DLC プロジェクト設定
-# 生成日: [現在日時]
+**重要**: `[setup_prompt パス]` の値はセクション7.2.1で判定します。プレースホルダー置換の前に7.2.1を先に実施してください。
 
-starter_kit_version = "[version.txt の内容]"
+**テンプレートファイルの取得**:
 
-[project]
-name = "[プロジェクト名]"
-description = "[プロジェクト概要]"
-type = "[プロジェクトタイプ]"
+テンプレートファイルのパスはセクション8.1.1で判定した `[スターターキットパス]` を使用:
 
-[project.tech_stack]
-languages = [[言語リスト]]
-frameworks = [[フレームワークリスト]]
-tools = ["Claude Code"]
+```bash
+# テンプレートファイルを読み込み
+TEMPLATE_FILE="[スターターキットパス]/prompts/setup/templates/aidlc.toml.template"
 
-[paths]
-# セットアッププロンプトのパス（詳細は 7.2.1 参照）
-setup_prompt = "[setup_prompt パス]"
-aidlc_dir = "docs/aidlc"
-cycles_dir = "docs/cycles"
-
-[rules]
-# 開発ルール
-
-[rules.coding]
-naming_convention = "[命名規則]"
-# 追加のコーディングルールはここに記載
-
-[rules.security]
-validate_user_input = true
-use_env_for_secrets = true
-
-[rules.git]
-# Git運用ルール
-commit_on_unit_complete = true
-commit_on_phase_complete = true
-
-[rules.commit]
-# コミット設定（v1.9.1で追加）
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
-ai_author = "Claude <noreply@anthropic.com>"
-
-[rules.documentation]
-language = "日本語"
-
-[rules.mcp_review]
-# MCPレビュー設定
-# mode: "recommend" | "required" | "disabled"
-# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
-# - required: MCP利用可能時にレビュー必須
-# - disabled: レビュー推奨を無効化
-mode = "recommend"
-# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）
-# - デフォルト: ["codex"]
-# - 例: ["codex", "claude", "gemini"]
-# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
-ai_tools = ["codex"]
-
-[rules.worktree]
-# git worktree設定
-# enabled: true | false
-# - true: サイクル開始時にworktreeの使用を提案する
-# - false: 提案しない（デフォルト）
-enabled = false
-
-[rules.history]
-# 履歴記録設定
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"
-
-[rules.jj]
-# jjサポート設定（v1.7.2で追加）
-# enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
-# - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false
-
-[rules.custom]
-# プロジェクト固有のカスタムルール
-# 必要に応じて追記してください
-
-[backlog]
-# バックログ管理モード設定
-# mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
-# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
-# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
-mode = "issue-only"
+# テンプレートが存在するか確認
+if [ ! -f "$TEMPLATE_FILE" ]; then
+    echo "ERROR: Template file not found: $TEMPLATE_FILE"
+    # フォールバック: テンプレートファイルがない場合は手動で作成を案内
+fi
 ```
+
+**プレースホルダーの置換**:
+
+テンプレートファイルには以下のプレースホルダーが含まれています。収集した情報で置換してください:
+
+| プレースホルダー | 置換する値 | 取得元 |
+|------------------|-----------|--------|
+| `[現在日時]` | YYYY-MM-DD形式の日付 | `date +%Y-%m-%d` |
+| `[version.txt の内容]` | スターターキットバージョン | `[スターターキットパス]/version.txt` |
+| `[プロジェクト名]` | プロジェクト名 | セクション5で収集 |
+| `[プロジェクト概要]` | プロジェクト概要 | セクション5で収集 |
+| `[プロジェクトタイプ]` | プロジェクトタイプ | セクション6で選択 |
+| `[[言語リスト]]` | 使用言語の配列 | セクション5で収集（例: `["TypeScript", "JavaScript"]`） |
+| `[[フレームワークリスト]]` | フレームワークの配列 | セクション5で収集（例: `["React", "Next.js"]`） |
+| `[命名規則]` | 命名規則 | セクション5で収集（デフォルト: `lowerCamelCase`） |
+| `[setup_prompt パス]` | セットアッププロンプトのパス | セクション7.2.1で判定 |
+
+**生成手順**:
+
+1. テンプレートファイルを読み込む
+2. 各プレースホルダーを収集した情報で置換
+3. `docs/aidlc.toml` として保存
+
+```bash
+# 例: テンプレートから生成（AIが置換処理を実行）
+cat "$TEMPLATE_FILE" | \
+  sed "s/\[現在日時\]/$(date +%Y-%m-%d)/g" | \
+  sed "s/\[version.txt の内容\]/$(cat [スターターキットパス]/version.txt)/g" | \
+  # ... 他のプレースホルダーも同様に置換 ...
+  > docs/aidlc.toml
+```
+
+**注意**: 上記のsedコマンドは参考例です。AIが直接ファイルを読み込み、プレースホルダーを置換して `docs/aidlc.toml` を生成してください。
 
 ### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
 
