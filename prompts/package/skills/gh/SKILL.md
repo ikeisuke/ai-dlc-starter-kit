@@ -1,6 +1,8 @@
 ---
 name: gh
-description: GitHub CLI (gh) を使用したIssue、PR、リリースの操作を実行する。使用場面: (1) Issue操作（作成、一覧、表示、クローズ）、(2) PR操作（作成、一覧、表示、マージ）、(3) リリース操作（作成、一覧）、(4) GitHub APIへのアクセス。トリガー: "gh", "github", "issue", "pr", "release", "/gh"
+description: GitHub CLIでIssue、PR、リリース操作を実行する。Issue/PR管理、リリース作成、GitHub APIアクセスに使用。
+argument-hint: [subcommand] [args]
+allowed-tools: Bash(gh:*)
 ---
 
 # GitHub CLI (gh)
