@@ -81,8 +81,8 @@ gh pr list
 # 自分が作成したPR
 gh pr list --author "@me"
 
-# レビュー待ちのPR
-gh pr list --state open
+# レビュー待ちのPR（レビューが必要なもの）
+gh pr list --search "review:required"
 ```
 
 ### PRの表示
@@ -151,8 +151,8 @@ gh pr close 456
 # リリース一覧
 gh release list
 
-# 最新リリースの情報
-gh release view --latest
+# 最新リリースの情報（タグ省略で最新を表示）
+gh release view
 ```
 
 ### リリースの作成
@@ -174,8 +174,8 @@ gh release create v1.0.0 ./dist/*.zip
 ### リリースアセットのダウンロード
 
 ```bash
-# 最新リリースのアセットをダウンロード
-gh release download --latest
+# 最新リリースのアセットをダウンロード（パターン指定が必要）
+gh release download --pattern "*.zip"
 
 # 特定のタグからダウンロード
 gh release download v1.0.0
