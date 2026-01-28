@@ -458,6 +458,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ### ステップ1: Intent明確化【重要】
 
+**タスク管理機能を活用してください。**
+
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: ユーザーと対話形式でIntentを作成
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
@@ -468,12 +470,16 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
 
+**タスク管理機能を活用してください。**
+
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
 - 既存コードベースを分析
 - `docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` を作成
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: ユーザーストーリー作成
+
+**タスク管理機能を活用してください。**
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
 - Intentに基づいてユーザーストーリーを作成
@@ -505,6 +511,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 ### ステップ4: Unit定義【重要】
 
+**タスク管理機能を活用してください。**
+
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - ユーザーストーリーを独立した価値提供ブロック（Unit）に分解
 - **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
@@ -532,6 +540,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: PRFAQ作成
+
+**タスク管理機能を活用してください。**
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - プレスリリース形式でプロジェクトを説明

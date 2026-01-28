@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.10.1"
+starter_kit_version = "1.11.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -99,7 +99,7 @@ enabled = true
 # markdown_lint: true | false
 # - true: markdownlint を実行する
 # - false: markdownlint をスキップする（デフォルト）
-markdown_lint = false
+markdown_lint = true
 
 [rules.size_check]
 # サイズチェック設定（v1.9.0で追加）

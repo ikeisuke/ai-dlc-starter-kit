@@ -9,9 +9,9 @@
 | 項目 | 値 | 参照先 |
 |------|-----|--------|
 | 検証日 | 2026-01-28 | - |
-| Claude Code | 1.0.x | https://docs.anthropic.com/claude-code |
-| Codex CLI | 0.89.x | https://github.com/openai/codex |
-| KiroCLI | 0.x | https://kiro.dev/docs/cli |
+| Claude Code | 1.0.x | [公式ドキュメント](https://docs.anthropic.com/claude-code) |
+| Codex CLI | 0.89.x | [GitHub](https://github.com/openai/codex) |
+| KiroCLI | 0.x | [公式ドキュメント](https://kiro.dev/docs/cli) |
 
 **注意**: 各ツールの仕様は頻繁に更新されます。実装時は公式ドキュメントで最新情報を確認してください。
 
@@ -44,7 +44,7 @@
 
 **選択フローチャート**:
 
-```
+```text
 1. ファイル変更が必要か？
    - いいえ → 読み取り専用
    - はい → 2へ
@@ -149,7 +149,7 @@ mode = "workspace-write"
 
 - KiroCLIは組み込みのサンドボックス機能を持たない
 - ファイル操作やコマンド実行は直接システムに影響
-- 公式ドキュメント: https://kiro.dev/docs/cli
+- 公式ドキュメント: [KiroCLI Docs](https://kiro.dev/docs/cli)
 
 **代替手段**:
 
@@ -307,7 +307,7 @@ networks:
 
 ### ファイル構成
 
-```
+```text
 prompts/package/guides/sandbox-environment.md
 ```
 
@@ -315,11 +315,11 @@ prompts/package/guides/sandbox-environment.md
 
 | リソース | URL |
 |---------|-----|
-| Claude Code公式ドキュメント | https://docs.anthropic.com/claude-code |
-| Codex CLI公式ドキュメント | https://github.com/openai/codex |
-| KiroCLI公式ドキュメント | https://kiro.dev/docs/cli |
-| Docker公式ドキュメント | https://docs.docker.com/ |
-| Dockerセキュリティベストプラクティス | https://docs.docker.com/engine/security/ |
+| Claude Code公式ドキュメント | [docs.anthropic.com](https://docs.anthropic.com/claude-code) |
+| Codex CLI公式ドキュメント | [github.com/openai/codex](https://github.com/openai/codex) |
+| KiroCLI公式ドキュメント | [kiro.dev](https://kiro.dev/docs/cli) |
+| Docker公式ドキュメント | [docs.docker.com](https://docs.docker.com/) |
+| Dockerセキュリティベストプラクティス | [Docker Security](https://docs.docker.com/engine/security/) |
 
 ## Q&A
 

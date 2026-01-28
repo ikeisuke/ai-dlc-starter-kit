@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.10.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -358,6 +358,35 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 ### 開発履歴
 
 `docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
+
+## 🔧 v1.11.0 の新機能
+
+v1.11.0 はOperations Phase改善とガイドドキュメント追加のためのリリースです。
+
+### 1. サンドボックス環境ガイド追加
+
+- 各AIツール（Claude Code、Codex、Cursor、KiroCLI等）のサンドボックス設定を解説
+- セキュリティを維持しながら効率的に開発を行う方法を案内
+
+### 2. AIエージェント許可リストガイド追加
+
+- 各AIツールの許可設定（allowlist）を一覧で解説
+- 毎回の確認を減らしつつセキュリティを維持する設定方法
+
+### 3. Operations Phaseスキップ確認改善
+
+- 既存の運用設定がある場合、確認なしで進行可能に
+- 運用引き継ぎ情報（operations.md）の活用を強化
+
+### 4. タスク管理説明文追加
+
+- Construction PhaseでToDo機能の活用を推奨
+- AIツールのタスク管理機能との連携を案内
+
+### 5. aidlc.tomlテンプレート化
+
+- セットアップ時にテンプレートファイルから生成
+- プレースホルダー置換による柔軟な設定
 
 ## 🔧 v1.10.0 の新機能
 
