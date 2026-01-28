@@ -464,8 +464,10 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 1. 6.0 CHANGELOG更新（`changelog = true` の場合）
 2. 6.1 README更新
 3. 6.2 履歴記録
-4. 6.3 Gitコミット
-5. 6.4 ドラフトPR Ready化
+4. 6.3 Markdownlint実行
+5. 6.4 Gitコミット
+6. 6.5 ドラフトPR Ready化
+7. 6.6 PRマージ
 
 #### 6.0 CHANGELOG更新
 
@@ -581,7 +583,7 @@ gh pr ready {PR番号}
 - PR #{番号}: {タイトル}
 - URL: {URL}
 
-レビューを依頼し、マージしてください。
+レビューが完了したら、ステップ6.6でマージを実行します。
 ```
 
 **ドラフトPRが見つからない場合**:
@@ -632,6 +634,71 @@ GitHub CLIが利用できません。
 2. 「Ready for review」ボタンをクリック
 ```
 
+#### 6.6 PRマージ【重要】
+
+PRがレビュー承認された後、マージを実行します。
+
+**`gh:available` 以外の場合**: スキップ（手動でマージ）
+
+**レビュー承認状況の確認**（`gh:available` の場合）:
+```bash
+gh pr view {PR番号} --json reviewDecision,state
+```
+
+**出力例**:
+- `reviewDecision: APPROVED` - レビュー承認済み
+- `reviewDecision: CHANGES_REQUESTED` - 変更要求あり
+- `reviewDecision: REVIEW_REQUIRED` - レビュー待ち
+
+**レビュー未承認の場合**:
+```text
+PRがまだレビュー承認されていません。
+レビュー承認後に再度マージを試みてください。
+```
+
+**マージ方法の確認**:
+```text
+PRをマージします。
+
+マージ方法:
+- 通常マージ（デフォルト）: コミット履歴を保持し、マージコミットを作成
+- Squashマージ: 全コミットを1つに圧縮（「squash」と指示された場合）
+- Rebaseマージ: リニアな履歴を維持（「rebase」と指示された場合）
+
+特別な指示がなければ、通常マージで進めます。
+マージ方法を変更しますか？
+```
+
+**マージ実行**:
+
+1. 通常マージ（デフォルト）:
+```bash
+gh pr merge {PR番号} --merge
+```
+
+2. Squashマージ（明示的に指示があった場合）:
+```bash
+gh pr merge {PR番号} --squash
+```
+
+3. Rebaseマージ（明示的に指示があった場合）:
+```bash
+gh pr merge {PR番号} --rebase
+```
+
+**マージ成功時**:
+```text
+PRをマージしました:
+- PR #{番号}: {タイトル}
+- マージ方法: {通常マージ / Squashマージ / Rebaseマージ}
+```
+
+**GitHub CLI利用不可時**:
+```text
+GitHub CLIが利用できません。
+GitHub上でレビュー承認を確認してから、手動でPRをマージしてください。
+```
+
 - **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ---
@@ -650,6 +717,7 @@ GitHub CLIが利用できません。
 - デプロイ完了
 - CI/CD動作
 - 監視開始
+- PRマージ完了
 
 ---
 
@@ -658,7 +726,7 @@ GitHub CLIが利用できません。
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Gitコミット、ドラフトPR Ready化がすべて完了
+   - CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Gitコミット、ドラフトPR Ready化、PRマージがすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
