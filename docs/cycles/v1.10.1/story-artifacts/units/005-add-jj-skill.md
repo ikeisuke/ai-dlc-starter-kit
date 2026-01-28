@@ -44,6 +44,25 @@ Jujutsu (jj) の操作をAIスキルとして追加し、AIとの協調作業で
 - gitコマンドとの対照表を含める（jj-support.mdから移植）
 - 既存Skillsの形式を踏襲
 
+### スキル仕様準拠（Claude Code公式: https://code.claude.com/docs/ja/skills）
+
+frontmatterは以下の形式で作成すること：
+
+```yaml
+---
+name: jj
+description: 簡潔な説明（何をするか、いつ使うか）。「トリガー:」は不要
+argument-hint: [subcommand] [args]
+allowed-tools: Bash(jj:*)
+---
+```
+
+**必須観点**:
+- descriptionは「何をするか、いつ使うか」を簡潔に記述（トリガーキーワード列挙は不要）
+- argument-hintで予想される引数を示す
+- allowed-toolsで使用可能なツールを制限
+- SKILL.mdは500行以下に
+
 ## 実装優先度
 
 Medium
