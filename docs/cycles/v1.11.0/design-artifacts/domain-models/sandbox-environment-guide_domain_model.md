@@ -9,9 +9,9 @@ AIエージェントのサンドボックス環境に関するガイドのドメ
 | 項目 | 値 | 参照先 |
 |------|-----|--------|
 | 検証日 | 2026-01-28 | - |
-| Claude Code | 1.0.x | https://docs.anthropic.com/claude-code |
-| Codex CLI | 0.89.x | https://github.com/openai/codex |
-| KiroCLI | 0.x | https://kiro.dev/docs/cli |
+| Claude Code | 1.0.x | [公式ドキュメント](https://docs.anthropic.com/claude-code) |
+| Codex CLI | 0.89.x | [GitHub](https://github.com/openai/codex) |
+| KiroCLI | 0.x | [公式ドキュメント](https://kiro.dev/docs/cli) |
 
 **注意**: 各ツールの仕様は頻繁に更新されます。実装時は公式ドキュメントで最新情報を確認してください。
 
@@ -105,7 +105,7 @@ AIエージェントのサンドボックス環境に関するガイドのドメ
 
 ## ガイド構成
 
-```
+```text
 sandbox-environment.md
 ├── 1. 概要
 │   ├── サンドボックスとは
