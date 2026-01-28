@@ -80,7 +80,7 @@ level = "standard"
 # changelog: true | false - CHANGELOG.md更新を行うか（デフォルト: false）
 # version_tag: true | false - バージョンタグを付与するか（デフォルト: false）
 changelog = true
-version_tag = true
+version_tag = false
 
 [rules.unit_branch]
 # Unitブランチ設定（v1.7.0で追加）
