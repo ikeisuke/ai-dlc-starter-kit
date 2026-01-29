@@ -347,6 +347,8 @@ Unit定義ファイルに「実装時の注意」セクションがある場合�
 この計画と完了条件で進めてよろしいですか？
 ```
 
+**AIレビュー**: 計画承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
 **承認なしで次のステップを開始してはいけない**
 
 ### 6. Unitブランチ作成【推奨】
@@ -449,7 +451,9 @@ PRは後で手動で作成するか、Unit完了時に作成してください�
 
 **タスク管理機能を活用してください。**
 
-設計内容をユーザーに提示し、承認を得る
+1. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+2. レビュー結果を反映
+3. 設計内容をユーザーに提示し、承認を得る
 
 **承認なしで実装フェーズに進んではいけない**
 
@@ -461,7 +465,9 @@ PRは後で手動で作成するか、Unit完了時に作成してください�
 
 **タスク管理機能を活用してください。**
 
-設計ファイルを読み込み、それに基づいて実装コードを生成
+1. 設計ファイルを読み込み、それに基づいて実装コードを生成
+2. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+3. レビュー結果を反映
 
 #### ステップ5: テスト生成
 
@@ -473,10 +479,12 @@ BDD/TDDに従ってテストコードを作成
 
 **タスク管理機能を活用してください。**
 
-- ビルド実行
-- テスト実行
-- コードレビュー
-- `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
+1. ビルド実行
+2. テスト実行
+3. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+4. レビュー結果を反映
+5. コードをユーザーに提示し、承認を得る
+6. `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
 
 ---
 
