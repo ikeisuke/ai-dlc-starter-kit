@@ -645,6 +645,56 @@ AIレビューが未実施のタイミングがあります。
   - **日時**: YYYY-MM-DD HH:MM:SS
   ```
 
+### 0.7 Operations引き継ぎタスク確認【必須】
+
+このUnit作業中に、Operations Phaseで実行が必要な手動作業が発生したか確認する。
+
+**確認メッセージ**:
+
+```text
+【Operations引き継ぎタスク確認】
+
+このUnit作業中に、Operations Phaseで実行が必要な手動作業はありましたか？
+
+例:
+- 手動でのデータベースマイグレーション
+- 環境変数の追加設定
+- 外部サービスの設定変更
+- 手動でのデプロイ手順
+
+1. はい - 手動作業がある（タスクを記録）
+2. いいえ - 手動作業なし
+```
+
+**「はい」の場合**:
+
+1. **タスクディレクトリ確認**:
+```bash
+mkdir -p docs/cycles/{{CYCLE}}/operations/tasks
+ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null | wc -l
+```
+
+2. **タスクファイル作成**:
+   - ファイル名: `{NNN}-{task-slug}.md`（NNN = 既存タスク数 + 1、3桁ゼロパディング）
+   - テンプレート: `docs/aidlc/templates/operations_task_template.md`
+
+3. **タスク内容を記録**:
+   - タスク名
+   - 発生Unit（現在のUnit番号と名前）
+   - 発生理由
+   - 作業手順
+   - 完了条件
+
+4. **記録完了メッセージ**:
+```text
+Operations引き継ぎタスクを記録しました:
+- ファイル: docs/cycles/{{CYCLE}}/operations/tasks/{NNN}-{task-slug}.md
+
+Operations Phase開始時に確認・実行されます。
+```
+
+**「いいえ」の場合**: 次のステップへ進む
+
 ### 1. Unit定義ファイルの「実装状態」を更新
 完了したUnitの定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`）の「実装状態」セクションを更新:
 - 状態: 進行中 → 完了
