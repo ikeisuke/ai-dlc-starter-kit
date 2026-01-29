@@ -7,6 +7,32 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.11.1] - 2026-01-29
+
+### Added
+
+- Construction → Operations引き継ぎファイル形式とテンプレート（#140）
+  - operations_task_template.mdで手動タスクを明確に引き継ぎ
+- ユーティリティスクリプト（#142）
+  - aidlc-env-check.sh: 環境確認
+  - aidlc-cycle-info.sh: サイクル情報取得
+  - aidlc-git-info.sh: Git情報取得
+- docs/shared/ ディレクトリ構成ガイドライン（#104）
+  - サイクル横断で引き継ぐ共通資料の配置場所を明確化
+
+### Changed
+
+- construction.mdの各ステップにAIレビュー実施指示を明示化（#144）
+  - Phase 1（設計）、Phase 2（実装）の承認前にレビューを必須化
+- sandbox-environment.mdを大幅拡充（#141）
+  - 認証方式比較（Keychain vs 手動、API Key vs OAuth）
+  - サンドボックス種類の説明（ファイルシステム、ネットワーク、プロセス）
+  - Cursor Read-Only Mode、Cline Auto-Approveの詳細説明
+- ai-agent-allowlist.mdにユーティリティスクリプト活用を追記（#142）
+  - 複合コマンドをスクリプト呼び出しに置き換え
+
+---
+
 ## [1.11.0] - 2026-01-29
 
 ### Added

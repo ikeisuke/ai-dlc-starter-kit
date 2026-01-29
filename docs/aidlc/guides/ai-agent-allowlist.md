@@ -461,6 +461,63 @@ daselが利用できない場合:
 
 この動作により、daselの導入有無に関わらずAI-DLCは正常に機能します。
 
+### 6.2 aidlc-* スクリプトの活用
+
+AI-DLCには、頻繁に使用する読み取り系コマンドをまとめたスクリプトが用意されています。
+
+**提供スクリプト**:
+
+| スクリプト | 機能 | 置換可能なコマンド |
+|------------|------|-------------------|
+| `aidlc-env-check.sh` | 環境チェック | `command -v`, `gh auth status` |
+| `aidlc-git-info.sh` | Git/jj状態取得 | `git status`, `git branch`, `git log`, `jj status`, `jj log` |
+| `aidlc-cycle-info.sh` | サイクル情報 | ブランチ名解析、ディレクトリ走査 |
+
+**許可リストでの活用**:
+
+従来の設定では多くの個別コマンドを許可する必要がありました:
+
+```json
+"allow": [
+  "Bash(git status)",
+  "Bash(git branch --show-current)",
+  "Bash(git log:*)",
+  "Bash(command -v:*)",
+  "Bash(gh auth status)",
+  "Bash(jj status:*)",
+  "Bash(jj log:*)",
+  ...
+]
+```
+
+スクリプトを活用すると簡潔になります:
+
+```json
+"allow": [
+  "Bash(prompts/package/bin/aidlc-env-check.sh)",
+  "Bash(prompts/package/bin/aidlc-git-info.sh)",
+  "Bash(prompts/package/bin/aidlc-cycle-info.sh)",
+  ...
+]
+```
+
+または、ワイルドカードで一括許可:
+
+```json
+"allow": [
+  "Bash(prompts/package/bin/aidlc-*:*)",
+  ...
+]
+```
+
+**メリット**:
+
+- 許可リストの行数削減
+- 出力形式が統一（パース容易）
+- 新しいコマンド追加時もスクリプト修正のみで対応
+
+**注意**: スクリプトはPATHに含まれないため、許可リストには相対パスを含める必要があります。
+
 ---
 
 ## 7. 参考リンク
