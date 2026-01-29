@@ -100,6 +100,12 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **使用タイミング**: 運用引き継ぎファイル作成時
 - **生成コマンド**: `TEMPLATE_NAME = operations_handover_template`
 
+#### operations_task_template
+- **説明**: Construction Phaseで発生した手動作業をOperations Phaseに引き継ぐタスク定義
+- **使用タイミング**: Unit完了時に手動作業がある場合
+- **配置場所**: `docs/cycles/{{CYCLE}}/operations/tasks/{NNN}-{task-slug}.md`
+- **生成コマンド**: `TEMPLATE_NAME = operations_task_template`
+
 ## テンプレート生成の仕組み
 
 ### 自動生成（推奨）

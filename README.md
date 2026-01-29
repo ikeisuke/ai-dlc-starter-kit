@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.11.1-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -359,34 +359,37 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 
 `docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
 
-## 🔧 v1.11.0 の新機能
+## 🔧 v1.11.1 の新機能
 
-v1.11.0 はOperations Phase改善とガイドドキュメント追加のためのリリースです。
+v1.11.1 は開発ワークフロー改善とドキュメント整備のためのリリースです。
 
-### 1. サンドボックス環境ガイド追加
+### 1. Construction → Operations引き継ぎの仕組み
 
-- 各AIツール（Claude Code、Codex、Cursor、KiroCLI等）のサンドボックス設定を解説
-- セキュリティを維持しながら効率的に開発を行う方法を案内
+- operations_task_template.mdで手動タスクを明確に引き継ぎ
+- フェーズ間の情報断絶によるタスク漏れを防止
 
-### 2. AIエージェント許可リストガイド追加
+### 2. AIレビュー実施タイミング明示化
 
-- 各AIツールの許可設定（allowlist）を一覧で解説
-- 毎回の確認を減らしつつセキュリティを維持する設定方法
+- construction.mdの各ステップにAIレビュー実施指示を明示化
+- Phase 1（設計）、Phase 2（実装）の承認前にレビューを必須化
 
-### 3. Operations Phaseスキップ確認改善
+### 3. サンドボックス環境ガイド大幅拡充
 
-- 既存の運用設定がある場合、確認なしで進行可能に
-- 運用引き継ぎ情報（operations.md）の活用を強化
+- 認証方式比較（Keychain vs 手動、API Key vs OAuth）
+- サンドボックス種類の説明（ファイルシステム、ネットワーク、プロセス）
+- Cursor Read-Only Mode、Cline Auto-Approveの詳細説明
 
-### 4. タスク管理説明文追加
+### 4. ユーティリティスクリプト追加
 
-- Construction PhaseでToDo機能の活用を推奨
-- AIツールのタスク管理機能との連携を案内
+- aidlc-env-check.sh: 環境確認
+- aidlc-cycle-info.sh: サイクル情報取得
+- aidlc-git-info.sh: Git情報取得
+- 複合コマンドをスクリプト呼び出しに置き換え、許可リスト運用を改善
 
-### 5. aidlc.tomlテンプレート化
+### 5. サイクル横断ドキュメント配置ガイドライン
 
-- セットアップ時にテンプレートファイルから生成
-- プレースホルダー置換による柔軟な設定
+- docs/shared/ ディレクトリ構成を明確化
+- サイクル横断で引き継ぐ共通資料の配置場所を決定
 
 ## 🔧 v1.10.0 の新機能
 

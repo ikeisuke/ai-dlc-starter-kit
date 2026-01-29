@@ -347,6 +347,8 @@ Unit定義ファイルに「実装時の注意」セクションがある場合�
 この計画と完了条件で進めてよろしいですか？
 ```
 
+**AIレビュー**: 計画承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
 **承認なしで次のステップを開始してはいけない**
 
 ### 6. Unitブランチ作成【推奨】
@@ -449,7 +451,9 @@ PRは後で手動で作成するか、Unit完了時に作成してください�
 
 **タスク管理機能を活用してください。**
 
-設計内容をユーザーに提示し、承認を得る
+1. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+2. レビュー結果を反映
+3. 設計内容をユーザーに提示し、承認を得る
 
 **承認なしで実装フェーズに進んではいけない**
 
@@ -461,7 +465,9 @@ PRは後で手動で作成するか、Unit完了時に作成してください�
 
 **タスク管理機能を活用してください。**
 
-設計ファイルを読み込み、それに基づいて実装コードを生成
+1. 設計ファイルを読み込み、それに基づいて実装コードを生成
+2. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+3. レビュー結果を反映
 
 #### ステップ5: テスト生成
 
@@ -473,10 +479,12 @@ BDD/TDDに従ってテストコードを作成
 
 **タスク管理機能を活用してください。**
 
-- ビルド実行
-- テスト実行
-- コードレビュー
-- `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
+1. ビルド実行
+2. テスト実行
+3. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+4. レビュー結果を反映
+5. コードをユーザーに提示し、承認を得る
+6. `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
 
 ---
 
@@ -636,6 +644,56 @@ AIレビューが未実施のタイミングがあります。
   - **スキップ理由**: [ユーザーが入力した理由]
   - **日時**: YYYY-MM-DD HH:MM:SS
   ```
+
+### 0.7 Operations引き継ぎタスク確認【必須】
+
+このUnit作業中に、Operations Phaseで実行が必要な手動作業が発生したか確認する。
+
+**確認メッセージ**:
+
+```text
+【Operations引き継ぎタスク確認】
+
+このUnit作業中に、Operations Phaseで実行が必要な手動作業はありましたか？
+
+例:
+- 手動でのデータベースマイグレーション
+- 環境変数の追加設定
+- 外部サービスの設定変更
+- 手動でのデプロイ手順
+
+1. はい - 手動作業がある（タスクを記録）
+2. いいえ - 手動作業なし
+```
+
+**「はい」の場合**:
+
+1. **タスクディレクトリ確認**:
+```bash
+mkdir -p docs/cycles/{{CYCLE}}/operations/tasks
+ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null | wc -l
+```
+
+2. **タスクファイル作成**:
+   - ファイル名: `{NNN}-{task-slug}.md`（NNN = 既存タスク数 + 1、3桁ゼロパディング）
+   - テンプレート: `docs/aidlc/templates/operations_task_template.md`
+
+3. **タスク内容を記録**:
+   - タスク名
+   - 発生Unit（現在のUnit番号と名前）
+   - 発生理由
+   - 作業手順
+   - 完了条件
+
+4. **記録完了メッセージ**:
+```text
+Operations引き継ぎタスクを記録しました:
+- ファイル: docs/cycles/{{CYCLE}}/operations/tasks/{NNN}-{task-slug}.md
+
+Operations Phase開始時に確認・実行されます。
+```
+
+**「いいえ」の場合**: 次のステップへ進む
 
 ### 1. Unit定義ファイルの「実装状態」を更新
 完了したUnitの定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`）の「実装状態」セクションを更新:
