@@ -14,6 +14,10 @@ sandbox-environment.mdに不足している認証方式・サンドボックス�
 - OAuth認証ツールのDocker実行例を追加
 - アプリケーションレベル vs OSレベルのサンドボックスの違いを説明
 - 各ツールの保護範囲を明確化
+- **【追加】** サブスクリプション契約（OAuth認証）でのDocker利用手順を追加
+  - Claude Code（claude.ai Pro/Team）のDocker環境構築手順
+  - Codex CLI（ChatGPT Plus等）のDocker環境構築手順
+  - KiroCLI（Amazon Q Developer）のDocker環境構築手順
 
 ## 境界
 
@@ -54,7 +58,7 @@ Medium
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
+- **状態**: 完了
+- **開始日**: 2026-01-29
+- **完了日**: 2026-01-29
 - **担当**: -
