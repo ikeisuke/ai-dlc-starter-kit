@@ -1,6 +1,6 @@
 # Setup Phase
 
-> **注意**: このプロンプトは統合版に移行しました。
+> **注意**: このプロンプトは Inception Phase に統合されました。
 
 ## 統合版プロンプト
 
@@ -10,7 +10,7 @@ Setup PhaseとInception Phaseが統合されました。
 以下のプロンプトを読み込んでください:
 
 ```
-docs/aidlc/prompts/setup-inception.md
+docs/aidlc/prompts/inception.md
 ```
 
-または、「セットアップインセプション」と指示してください。
+または、「インセプション進めて」と指示してください。

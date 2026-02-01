@@ -185,7 +185,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 **設計レビューで承認を得るまで、Phase 2に進んではいけない**
 
 ### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/setup-inception.md`）
+- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
 - **Construction Phase**: 実装とテスト（このフェーズ）
 - **Operations Phase**: デプロイと運用（`docs/aidlc/prompts/operations.md`）
 
@@ -216,7 +216,7 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 
 AIが出力を確認し、パス名が表示されれば存在、エラーなら不存在と判断。
 
-- **存在しない場合**: エラーを表示し、setup-inception.md を案内
+- **存在しない場合**: エラーを表示し、inception.md を案内
   ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
@@ -224,7 +224,7 @@ AIが出力を確認し、パス名が表示されれば存在、エラーなら
   [ls docs/cycles/ の結果]
 
   サイクルを作成するには、以下のプロンプトを読み込んでください：
-  docs/aidlc/prompts/setup-inception.md
+  docs/aidlc/prompts/inception.md
   ```
 - **存在する場合**: 処理を継続
 
@@ -885,7 +885,7 @@ Unit [名前] が完了しました。以下のメッセージをユーザーに
 ### 1. Inceptionに戻る必要がある場合（Unit追加・拡張）
 
 - 現在のUnit定義ファイルの状態を確認
-- `docs/aidlc/prompts/setup-inception.md` を読み込み
+- `docs/aidlc/prompts/inception.md` を読み込み
 - Inception Phaseの「このフェーズに戻る場合」セクションの手順に従う
 
 ### 2. Operations Phaseからバグ修正で戻ってきた場合

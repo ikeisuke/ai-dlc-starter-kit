@@ -3,7 +3,7 @@
 ## Full版プロンプトの参照【必須】
 
 **まず以下のFull版プロンプトを読み込んでください**:
-`docs/aidlc/prompts/setup-inception.md`
+`docs/aidlc/prompts/inception.md`
 
 > **注意**: Full版はSetup PhaseとInception Phaseが統合されています。
 > Lite版は**既存サイクルでの使用が前提**のため、Setup部分（Part 1）は
