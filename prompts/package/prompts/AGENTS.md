@@ -12,25 +12,25 @@
 
 ### 新規サイクル開始
 
-`docs/aidlc/prompts/setup.md` を読み込んでください。
+`docs/aidlc/prompts/setup-inception.md` を読み込んでください。
 
-既存プロジェクトで新しいサイクルを開始する場合に使用します。
+Setup PhaseとInception Phaseが統合され、1回のプロンプト読み込みで
+サイクル開始からUnit定義まで完了できます。
 
 ### 既存サイクルの継続
 
 以下のプロンプトを読み込んでください：
 
-- Inception Phase: `docs/aidlc/prompts/inception.md`
+- Setup & Inception Phase: `docs/aidlc/prompts/setup-inception.md`
 - Construction Phase: `docs/aidlc/prompts/construction.md`
 - Operations Phase: `docs/aidlc/prompts/operations.md`
 
 ## 推奨ワークフロー
 
 1. 初回は `prompts/setup-prompt.md` でセットアップ
-2. `docs/aidlc/prompts/setup.md` でサイクルを作成
-3. Inception Phaseで要件定義とUnit分解
-4. Construction Phaseで設計と実装
-5. Operations Phaseでデプロイと運用
+2. `docs/aidlc/prompts/setup-inception.md` でサイクル作成からUnit定義まで完了
+3. Construction Phaseで設計と実装
+4. Operations Phaseでデプロイと運用
 
 ## ドキュメント
 
@@ -45,10 +45,11 @@
 
 | 指示 | 対応処理 |
 |------|----------|
-| 「インセプション進めて」「start inception」 | Inception Phase |
+| 「セットアップインセプション」「start setup-inception」 | Setup & Inception Phase（新規サイクル開始、推奨） |
+| 「インセプション進めて」「start inception」 | Setup & Inception Phase（リダイレクト） |
 | 「コンストラクション進めて」「start construction」 | Construction Phase |
 | 「オペレーション進めて」「start operations」 | Operations Phase |
-| 「セットアップ」「start setup」 | Setup（新規サイクル開始） |
+| 「セットアップ」「start setup」 | Setup & Inception Phase（リダイレクト） |
 | 「AIDLCアップデート」「update aidlc」「start upgrade」 | アップグレード（環境更新） |
 | 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
 
@@ -66,7 +67,7 @@
 - ブランチ名 `cycle/vX.X.X` からサイクルを自動判定
 - mainブランチの場合:
   - 初期セットアップ: `prompts/setup-prompt.md`
-  - 新規サイクル開始: `docs/aidlc/prompts/setup.md`
+  - 新規サイクル開始: `docs/aidlc/prompts/setup-inception.md`
 - コンテキストなしで「続けて」: ユーザーに確認
 
 ---

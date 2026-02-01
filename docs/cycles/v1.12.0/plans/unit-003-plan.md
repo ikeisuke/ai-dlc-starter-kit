@@ -101,9 +101,12 @@ AIレビューとユーザー承認
 
 ## 完了条件チェックリスト
 
-- [ ] 統合版プロンプト（setup-inception.md）の作成
-- [ ] 旧版setup.md/inception.mdのリダイレクト化
-- [ ] AGENTS.mdの簡略指示更新
-- [ ] Unit 001/002の設定階層化機能の案内を統合プロンプトに含める
-- [ ] 参照確認対象ファイルの確認・更新
-- [ ] リダイレクト先パス（docs/aidlc/prompts/setup-inception.md）の正当性確認
+- [x] 統合版プロンプト（setup-inception.md）の作成
+- [x] 旧版setup.md/inception.mdのリダイレクト化
+- [x] AGENTS.mdの簡略指示更新
+- [x] Unit 001/002の設定階層化機能の案内を統合プロンプトに含める
+- [x] 参照確認対象ファイルの確認・更新
+  - [x] construction.md - Inception Phase参照、サイクル不存在時案内を更新
+  - [x] operations.md - Inception Phase参照、サイクル不存在時案内を更新
+  - [x] lite/inception.md - Full版参照を更新、説明追加
+- [x] リダイレクト先パス（docs/aidlc/prompts/setup-inception.md）の正当性確認

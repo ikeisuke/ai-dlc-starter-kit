@@ -58,11 +58,13 @@ I want to Setup/Inceptionを1回のプロンプト読み込みで完了したい
 So that 新規サイクル開始が高速化される
 
 **受け入れ基準**:
-- [ ] 統合版プロンプト（setup-inception.md）が作成されること
-- [ ] 統合版で以下の成果物が作成されること: サイクルディレクトリ、intent.md、user_stories.md、Unit定義ファイル
-- [ ] 旧版setup.mdを読み込むと「統合版setup-inception.mdを読み込んでください」と表示されること
-- [ ] 旧版inception.mdを読み込むと「統合版setup-inception.mdを読み込んでください」と表示されること
-- [ ] AGENTS.mdの簡略指示が更新されること
+- [x] 統合版プロンプト（setup-inception.md）が作成されること
+- [x] 統合版で以下の成果物が作成されること: サイクルディレクトリ、intent.md、user_stories.md、Unit定義ファイル
+- [x] 旧版setup.mdを読み込むと「統合版setup-inception.mdを読み込んでください」と表示されること
+- [x] 旧版inception.mdを読み込むと「統合版setup-inception.mdを読み込んでください」と表示されること
+- [x] AGENTS.mdの簡略指示が更新されること
+
+**実装状態**: 完了（Unit 003）
 
 **技術的考慮事項**:
 - 旧版ファイルはリダイレクト用の短いファイルに置き換え

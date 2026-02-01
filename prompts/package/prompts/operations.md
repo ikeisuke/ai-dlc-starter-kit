@@ -117,7 +117,7 @@ Inception/Construction Phaseで決定済み
 3. 修正後、Construction Phaseへのバックトラックを提案
 
 ### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
+- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/setup-inception.md`）
 - **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
 - **Operations Phase**: デプロイと運用（このフェーズ）
 
@@ -156,7 +156,7 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 
 出力があれば存在、エラーなら不存在と判断。
 
-- **存在しない場合**: エラーを表示し、setup.md を案内
+- **存在しない場合**: エラーを表示し、setup-inception.md を案内
   ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
@@ -164,7 +164,7 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
   [ls docs/cycles/ の結果]
 
   サイクルを作成するには、以下のプロンプトを読み込んでください：
-  docs/aidlc/prompts/setup.md
+  docs/aidlc/prompts/setup-inception.md
   ```
 - **存在する場合**: 処理を継続
 
