@@ -4,6 +4,14 @@
 
 Setup PhaseとInception Phaseを統合し、1回のプロンプト読み込みでサイクル開始からUnit定義まで完了できるようにする。
 
+## パス体系の説明
+
+**メタ開発ルール**: このプロジェクトでは `prompts/package/` を編集し、Operations Phaseのrsyncで `docs/aidlc/` にコピーされる。
+
+- **編集対象**: `prompts/package/prompts/` 配下
+- **rsync後の参照先**: `docs/aidlc/prompts/` 配下
+- **リダイレクト先**: rsync後のパス（`docs/aidlc/prompts/setup-inception.md`）を案内
+
 ## 変更対象ファイル
 
 すべて `prompts/package/prompts/` 配下（メタ開発ルールに従う）:
@@ -14,6 +22,17 @@ Setup PhaseとInception Phaseを統合し、1回のプロンプト読み込み�
 | `setup.md` | 更新 | リダイレクトメッセージに置き換え |
 | `inception.md` | 更新 | リダイレクトメッセージに置き換え |
 | `AGENTS.md` | 更新 | 簡略指示に「start setup-inception」を追加 |
+
+## 参照確認対象ファイル
+
+既存の `setup.md` / `inception.md` を参照している箇所を確認し、必要に応じて更新:
+
+| ファイル | 確認内容 |
+|---------|---------|
+| `prompts/package/prompts/AGENTS.md` | 簡略指示テーブル、推奨ワークフロー |
+| `README.md` | 使用方法の記載（あれば） |
+| `prompts/package/prompts/construction.md` | バックトラックセクション |
+| `prompts/package/prompts/operations.md` | 次サイクルへの案内 |
 
 ## 実装計画
 
@@ -86,3 +105,5 @@ AIレビューとユーザー承認
 - [ ] 旧版setup.md/inception.mdのリダイレクト化
 - [ ] AGENTS.mdの簡略指示更新
 - [ ] Unit 001/002の設定階層化機能の案内を統合プロンプトに含める
+- [ ] 参照確認対象ファイルの確認・更新
+- [ ] リダイレクト先パス（docs/aidlc/prompts/setup-inception.md）の正当性確認
