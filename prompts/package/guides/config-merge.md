@@ -1,15 +1,18 @@
 # 設定マージガイド
 
-AI-DLCの設定ファイル（`docs/aidlc.toml`）と個人設定ファイル（`docs/aidlc.toml.local`）のマージ仕様を説明します。
+AI-DLCの設定ファイルは3階層でマージされます。
 
 **重要**: `read-config.sh` は単一キーの値を取得するスクリプトです。以下のマージルールは、特定のキーを問い合わせた際の挙動を説明しています（ファイル全体を事前にマージするわけではありません）。
 
 ## 設定ファイルの階層
 
-| ファイル | 用途 | Git管理 |
-|----------|------|---------|
-| `docs/aidlc.toml` | プロジェクト共有設定 | Yes |
-| `docs/aidlc.toml.local` | 個人設定（上書き用） | No（.gitignore） |
+| ファイル | 用途 | Git管理 | 優先度 |
+|----------|------|---------|--------|
+| `~/.aidlc/config.toml` | ユーザー共通設定 | No | 低 |
+| `docs/aidlc.toml` | プロジェクト共有設定 | Yes | 中 |
+| `docs/aidlc.toml.local` | 個人設定（上書き用） | No（.gitignore） | 高 |
+
+**読み込み順序**: HOME → PROJECT → LOCAL（後から読み込んだ値が優先）
 
 ## マージルール
 
@@ -140,8 +143,31 @@ mode = "disabled"
 ai_tools = ["claude", "codex"]
 ```
 
+## ユーザー共通設定の作成
+
+複数プロジェクトで共通の設定を使用したい場合:
+
+```bash
+# ディレクトリ作成
+mkdir -p ~/.aidlc
+
+# テンプレートから設定ファイル作成
+cat > ~/.aidlc/config.toml << 'EOF'
+# ユーザー共通設定
+# このファイルは全プロジェクトに適用されます
+
+[rules.mcp_review]
+# mode = "recommend"  # AIレビュー設定
+
+[rules.commit]
+# ai_author = "Claude <noreply@anthropic.com>"
+EOF
+```
+
 ## 注意事項
 
 - `docs/aidlc.toml.local` は自動的に `.gitignore` に追加されます
 - `.local` ファイルがなくても正常に動作します
+- `~/.aidlc/config.toml` がなくても正常に動作します
+- `$HOME` 環境変数が未設定の場合、ユーザー共通設定はスキップされます
 - `dasel` がインストールされている必要があります（`brew install dasel`）

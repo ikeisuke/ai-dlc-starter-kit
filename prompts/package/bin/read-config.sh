@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# read-config.sh - 設定値を読み込み（.localファイルとのマージ対応）
+# read-config.sh - 設定値を読み込み（3階層マージ対応）
 #
 # 使用方法:
 #   ./read-config.sh <key> [--default <value>]
@@ -14,13 +14,16 @@
 #   1 - キー不在（デフォルトなし、何も出力しない）
 #   2 - エラー（dasel未インストール等）
 #
+# 設定ファイル階層（優先度: 低→高）:
+#   1. ~/.aidlc/config.toml - ユーザー共通設定（オプション）
+#   2. docs/aidlc.toml - プロジェクト共有設定（必須）
+#   3. docs/aidlc.toml.local - 個人設定（オプション）
+#
 # マージルール:
-#   1. docs/aidlc.toml を読み込み（ベース設定）
-#   2. docs/aidlc.toml.local が存在すれば読み込み
-#   3. .local の値が存在するキーはベースを上書き
-#   4. 配列は完全置換（マージしない）
-#   5. ネストされたテーブルは再帰的にマージ
-#   6. 型不一致時は .local の値が勝つ
+#   - 単一キーの値を取得（ファイル全体のマージではない）
+#   - 後から読み込んだファイルにキーが存在すれば上書き
+#   - 葉キー（末端の値）を問い合わせた場合のみ有効
+#   - 親テーブルを直接取得した場合は最後のファイルの値が返される
 #
 # 使用例:
 #   ./read-config.sh rules.mcp_review.mode
@@ -29,8 +32,10 @@
 
 set -euo pipefail
 
-CONFIG_FILE="docs/aidlc.toml"
-CONFIG_LOCAL_FILE="docs/aidlc.toml.local"
+# 設定ファイルパス（優先度順: 低→高）
+HOME_CONFIG_FILE="${HOME:+$HOME/.aidlc/config.toml}"
+PROJECT_CONFIG_FILE="docs/aidlc.toml"
+LOCAL_CONFIG_FILE="docs/aidlc.toml.local"
 
 # 引数パース
 KEY=""
@@ -76,9 +81,9 @@ if ! command -v dasel >/dev/null 2>&1; then
     exit 2
 fi
 
-# 設定ファイルの存在確認
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "Error: Config file not found: $CONFIG_FILE" >&2
+# プロジェクト設定ファイルの存在確認（必須）
+if [[ ! -f "$PROJECT_CONFIG_FILE" ]]; then
+    echo "Error: Config file not found: $PROJECT_CONFIG_FILE" >&2
     exit 2
 fi
 
@@ -132,66 +137,92 @@ strip_quotes() {
     fi
 }
 
-# ベース設定から値を取得
-BASE_VALUE=""
-BASE_EXISTS=false
-BASE_ERROR=false
+# 最終的な値を保持する変数
+FINAL_VALUE=""
+VALUE_EXISTS=false
 
+# ============================================================
+# 1. HOME設定から値を取得（オプション、優先度: 低）
+# ============================================================
+if [[ -n "$HOME_CONFIG_FILE" && -f "$HOME_CONFIG_FILE" ]]; then
+    set +e
+    get_value "$HOME_CONFIG_FILE" "$KEY" > /tmp/aidlc_home_value_$$
+    home_exit_code=$?
+    set -e
+
+    case $home_exit_code in
+        0)
+            FINAL_VALUE=$(cat /tmp/aidlc_home_value_$$)
+            VALUE_EXISTS=true
+            ;;
+        1)
+            # キー不在（正常）
+            ;;
+        *)
+            # HOME設定ファイルのエラーは警告のみ（スキップ）
+            echo "Warning: Failed to read home config file, skipping" >&2
+            ;;
+    esac
+    \rm -f /tmp/aidlc_home_value_$$ 2>/dev/null
+fi
+
+# ============================================================
+# 2. プロジェクト設定から値を取得（必須、優先度: 中）
+# ============================================================
 set +e
-get_value "$CONFIG_FILE" "$KEY" > /tmp/aidlc_base_value_$$
-base_exit_code=$?
+get_value "$PROJECT_CONFIG_FILE" "$KEY" > /tmp/aidlc_project_value_$$
+project_exit_code=$?
 set -e
 
-case $base_exit_code in
+case $project_exit_code in
     0)
-        BASE_VALUE=$(cat /tmp/aidlc_base_value_$$)
-        BASE_EXISTS=true
+        FINAL_VALUE=$(cat /tmp/aidlc_project_value_$$)
+        VALUE_EXISTS=true
         ;;
     1)
         # キー不在（正常）
         ;;
     *)
-        # エラー
-        BASE_ERROR=true
+        # プロジェクト設定ファイルのエラーは致命的
+        echo "Error: Failed to read project config file" >&2
+        \rm -f /tmp/aidlc_project_value_$$ 2>/dev/null
+        exit 2
         ;;
 esac
-\rm -f /tmp/aidlc_base_value_$$ 2>/dev/null
+\rm -f /tmp/aidlc_project_value_$$ 2>/dev/null
 
-if [[ "$BASE_ERROR" == "true" ]]; then
-    echo "Error: Failed to read base config file" >&2
-    exit 2
-fi
-
-# .localファイルが存在すれば、そちらの値を優先
-LOCAL_EXISTS=false
-if [[ -f "$CONFIG_LOCAL_FILE" ]]; then
+# ============================================================
+# 3. LOCAL設定から値を取得（オプション、優先度: 高）
+# ============================================================
+if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
     set +e
-    get_value "$CONFIG_LOCAL_FILE" "$KEY" > /tmp/aidlc_local_value_$$
+    get_value "$LOCAL_CONFIG_FILE" "$KEY" > /tmp/aidlc_local_value_$$
     local_exit_code=$?
     set -e
 
     case $local_exit_code in
         0)
             # .localにキーが存在すれば上書き（空文字でも上書き）
-            BASE_VALUE=$(cat /tmp/aidlc_local_value_$$)
-            LOCAL_EXISTS=true
-            BASE_EXISTS=true  # 値は存在する扱い
+            FINAL_VALUE=$(cat /tmp/aidlc_local_value_$$)
+            VALUE_EXISTS=true
             ;;
         1)
-            # キー不在（.localにはない、ベース値を使用）
+            # キー不在（.localにはない、前の値を使用）
             ;;
         *)
-            # .localファイルのエラーは警告のみ（ベース値にフォールバック）
-            echo "Warning: Failed to read local config file, using base config" >&2
+            # .localファイルのエラーは警告のみ（前の値にフォールバック）
+            echo "Warning: Failed to read local config file, using previous value" >&2
             ;;
     esac
     \rm -f /tmp/aidlc_local_value_$$ 2>/dev/null
 fi
 
+# ============================================================
 # 値の出力
-if [[ "$BASE_EXISTS" == "true" ]]; then
+# ============================================================
+if [[ "$VALUE_EXISTS" == "true" ]]; then
     # 値が存在する場合
-    strip_quotes "$BASE_VALUE"
+    strip_quotes "$FINAL_VALUE"
     exit 0
 else
     # 値が存在しない場合
