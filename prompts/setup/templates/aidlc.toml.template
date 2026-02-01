@@ -91,6 +91,16 @@ markdown_lint = false
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
 
+[inception]
+# Inception Phase設定
+
+[inception.dependabot]
+# Dependabot PR確認設定（v1.12.0で追加）
+# enabled: true | false
+# - true: Inception PhaseでDependabot PRの有無を確認する
+# - false: Dependabot PR確認をスキップする（デフォルト）
+enabled = false
+
 [backlog]
 # バックログ管理モード設定
 # mode: "git" | "issue" | "git-only" | "issue-only"
