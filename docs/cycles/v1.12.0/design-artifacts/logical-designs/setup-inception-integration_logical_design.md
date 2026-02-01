@@ -145,13 +145,9 @@ Setup PhaseとInception Phaseが統合されました。
 1回のプロンプト読み込みでサイクル開始からUnit定義まで完了できます。
 
 以下のプロンプトを読み込んでください:
-
-```
-docs/aidlc/prompts/setup-inception.md
-```
+`docs/aidlc/prompts/setup-inception.md`
 
 または、「セットアップインセプション」と指示してください。
-```
 
 ### 3.2 inception.md
 
@@ -166,10 +162,7 @@ Setup PhaseとInception Phaseが統合されました。
 1回のプロンプト読み込みでサイクル開始からUnit定義まで完了できます。
 
 以下のプロンプトを読み込んでください:
-
-```
-docs/aidlc/prompts/setup-inception.md
-```
+`docs/aidlc/prompts/setup-inception.md`
 
 または、「セットアップインセプション」と指示してください。
 
@@ -178,7 +171,6 @@ docs/aidlc/prompts/setup-inception.md
 既にサイクルが作成済みで、Inception Phaseの途中から再開する場合は
 統合版プロンプトを読み込んでください。進捗管理ファイルに基づいて
 完了済みステップをスキップします。
-```
 
 ## 4. AGENTS.md の更新箇所
 

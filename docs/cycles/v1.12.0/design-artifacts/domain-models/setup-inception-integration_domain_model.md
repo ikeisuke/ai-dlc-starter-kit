@@ -45,7 +45,7 @@ Setup PhaseとInception Phaseを1つのプロンプトに統合し、ユーザ�
 
 ### 3.1 セクション構成
 
-```
+```text
 1. AI-DLC手法の要約（setup.mdから）
 2. プロジェクト情報（マージ）
 3. あなたの役割（統合: セットアップ担当者兼PM兼BA）
@@ -113,7 +113,6 @@ mode = "disabled"
 ```
 
 詳細は `docs/aidlc/guides/config-merge.md` を参照。
-```
 
 ## 4. エンティティ定義
 
