@@ -14,9 +14,13 @@ Setup PhaseとInception Phaseを1つのプロンプトに統合し、ユーザ�
 | プロジェクト情報 | ディレクトリ構成等 | マージ |
 | あなたの役割 | セットアップ担当者 | 拡張（PM兼任） |
 | 依存コマンド確認 | env-info.sh実行 | 維持 |
+| デプロイ済みファイル確認 | docs/aidlc確認 | 維持 |
+| スターターキット開発リポジトリ判定 | name確認 | 維持 |
+| バックログモード確認 | mode確認 | 維持 |
 | バージョン確認 | スターターキット版確認 | 維持 |
 | サイクルバージョン決定 | vX.Y.Z決定 | 維持 |
 | ブランチ確認 | worktree/ブランチ作成 | 維持 |
+| サイクル存在確認 | ディレクトリ確認 | 維持 |
 | サイクルディレクトリ作成 | init-cycle-dir.sh | 維持 |
 | バックログ移行 | 旧形式移行（deprecated） | 維持 |
 
@@ -48,28 +52,34 @@ Setup PhaseとInception Phaseを1つのプロンプトに統合し、ユーザ�
 4. 設定階層化機能の案内【新規】
 5. 最初に必ず実行すること
    5.1 依存コマンド確認（setup.md）
-   5.2 バージョン確認（setup.md）
-   5.3 サイクルバージョン決定（setup.md）
-   5.4 ブランチ確認（setup.md）
-   5.5 サイクル存在確認（setup.md）
-   5.6 サイクルディレクトリ作成（setup.md）
-   5.7 バックログ移行（setup.md、deprecated）
-   5.8 追加ルール確認（inception.md）
-   5.9 環境確認（inception.md）
-   5.10 Dependabot/Issue確認（inception.md）
-   5.11 バックログ確認（inception.md）
-   5.12 進捗管理ファイル確認（inception.md）
-   5.13 既存成果物確認（inception.md）
+   5.2 デプロイ済みファイル確認（setup.md）
+   5.3 スターターキット開発リポジトリ判定（setup.md）
+   5.4 バックログモード確認（setup.md）
+   5.5 スターターキットバージョン確認（setup.md）
+   5.6 サイクルバージョン決定（setup.md）
+   5.7 ブランチ確認（setup.md）
+   5.8 サイクル存在確認（setup.md）
+   5.9 サイクルディレクトリ作成（setup.md）
+   5.10 バックログ移行（setup.md、deprecated）
+   5.11 追加ルール確認（inception.md）
+   5.12 環境確認（inception.md）
+   5.13 Dependabot PR確認（inception.md）
+   5.14 GitHub Issue確認（inception.md）
+   5.15 バックログ確認（inception.md）
+   5.16 進捗管理ファイル確認（inception.md）
+   5.17 既存成果物確認（inception.md）
 6. フロー
    6.1 Intent明確化（inception.md）
    6.2 既存コード分析（inception.md）
    6.3 ユーザーストーリー作成（inception.md）
    6.4 Unit定義（inception.md）
    6.5 PRFAQ作成（inception.md）
-7. 完了時の必須作業（マージ）
-8. 次のステップ
-9. このフェーズに戻る場合
-10. 補足: git worktree
+7. 実行ルール
+8. 完了基準
+9. 完了時の必須作業（マージ）
+10. 次のステップ
+11. このフェーズに戻る場合
+12. 補足: git worktree
 ```
 
 ### 3.2 削除・統合される重複セクション

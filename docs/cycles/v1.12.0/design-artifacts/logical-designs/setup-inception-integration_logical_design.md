@@ -8,6 +8,8 @@
 |---------|------|------|
 | setup-inception.md | `prompts/package/prompts/setup-inception.md` | 統合版プロンプト |
 
+**デプロイについて**: `prompts/package/prompts/` 配下のファイルは Operations Phase の rsync で `docs/aidlc/prompts/` にコピーされます。リダイレクト先の `docs/aidlc/prompts/setup-inception.md` は rsync 後に存在します。
+
 ### 1.2 更新ファイル
 
 | ファイル | パス | 変更内容 |
@@ -15,6 +17,8 @@
 | setup.md | `prompts/package/prompts/setup.md` | リダイレクトに置き換え |
 | inception.md | `prompts/package/prompts/inception.md` | リダイレクトに置き換え |
 | AGENTS.md | `prompts/package/prompts/AGENTS.md` | 簡略指示追加 |
+
+**注意**: `docs/aidlc/prompts/AGENTS.md` は `prompts/package/prompts/AGENTS.md` の rsync コピーです。編集は `prompts/package/prompts/AGENTS.md` のみ行い、rsync で反映されます。
 
 ## 2. setup-inception.md の構成
 
@@ -146,7 +150,7 @@ Setup PhaseとInception Phaseが統合されました。
 docs/aidlc/prompts/setup-inception.md
 ```
 
-または、「セットアップインセプション進めて」と指示してください。
+または、「セットアップインセプション」と指示してください。
 ```
 
 ### 3.2 inception.md
@@ -167,7 +171,7 @@ Setup PhaseとInception Phaseが統合されました。
 docs/aidlc/prompts/setup-inception.md
 ```
 
-または、「セットアップインセプション進めて」と指示してください。
+または、「セットアップインセプション」と指示してください。
 
 ## 既存サイクルの継続
 
@@ -225,6 +229,20 @@ docs/aidlc/prompts/setup-inception.md
 
 Setup PhaseとInception Phaseが統合され、1回のプロンプト読み込みで
 サイクル開始からUnit定義まで完了できます。
+```
+
+### 4.4 サイクル判定セクション
+
+**変更前**:
+```markdown
+- mainブランチの場合:
+  - 新規サイクル開始: `docs/aidlc/prompts/setup.md`
+```
+
+**変更後**:
+```markdown
+- mainブランチの場合:
+  - 新規サイクル開始: `docs/aidlc/prompts/setup-inception.md`
 ```
 
 ## 5. 参照確認対象ファイル
