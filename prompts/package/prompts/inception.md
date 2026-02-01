@@ -722,19 +722,27 @@ backlog_mode:issue-only
 
 #### 13. Dependabot PR確認
 
-GitHub CLIでDependabot PRの有無を確認（ステップ12で確認した `gh` ステータスを参照）：
+**設定確認**: `docs/aidlc.toml` の `[inception.dependabot]` セクションを確認し、`enabled` の値を取得する。
 
-**`gh:available` の場合のみ**:
+- `enabled = false`、未設定、または不正値の場合: このステップをスキップして次へ進む
+- `enabled = true` の場合: 以下の確認を実行
+
+**`enabled = true` の場合**（ステップ12で確認した `gh` ステータスを参照）:
+
+- **`gh:available` 以外の場合**: 「GitHub CLIが利用できないため、Dependabot PR確認をスキップします。」と表示し、次のステップへ進行
+- **`gh:available` の場合**: 以下のコマンドでDependabot PRの有無を確認
+
 ```bash
 docs/aidlc/bin/check-dependabot-prs.sh
 ```
 
 **判定**:
-- **`gh:available` 以外**: 次のステップへ進行
+
 - **PRが0件**: 「オープンなDependabot PRはありません。」と表示し、次のステップへ進行
 - **PRが1件以上**: 以下の対応確認を実施
 
 **対応確認**（PRが存在する場合）:
+
 ```text
 以下のDependabot PRがあります：
 
