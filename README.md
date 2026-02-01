@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-1.11.1-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-1.12.0-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -358,6 +358,33 @@ v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移�
 ### 開発履歴
 
 `docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
+
+## 🔧 v1.12.0 の新機能
+
+v1.12.0 は設定管理機能強化とワークフロー効率化のためのリリースです。
+
+### 1. 3階層設定マージ機能
+
+- ユーザー共通設定（~/.aidlc/config.toml）: 複数プロジェクトで共通の設定を一元管理
+- プロジェクト設定（docs/aidlc.toml）: チーム共有の設定
+- プロジェクト個人設定（docs/aidlc.toml.local）: 個人の好みを設定、.gitignoreで除外
+- 優先順位: ユーザー共通 < プロジェクト < プロジェクト個人
+
+### 2. Setup/Inception Phase統合
+
+- 1回のプロンプト読み込みでサイクル開始からUnit定義まで完了可能に
+- 通常版・Lite版の両方に対応
+- コンテキスト切り替えのオーバーヘッドを削減
+
+### 3. Codex Skill resume機能活用
+
+- AIレビュー時に同一Unit内でコンテキストを継続可能に
+- より一貫性のあるレビュー結果を実現
+
+### 4. Dependabot PR確認オプション化
+
+- aidlc.tomlの[rules.dependabot].check_prsで有効/無効を設定可能
+- デフォルト: 無効（Dependabotを使わないプロジェクト向け）
 
 ## 🔧 v1.11.1 の新機能
 

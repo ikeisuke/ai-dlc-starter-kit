@@ -2,6 +2,33 @@
 
 以下のルールは全フェーズで共通して適用されます。
 
+## 設定読み込み【重要】
+
+AI-DLCの設定は `docs/aidlc.toml` と `docs/aidlc.toml.local`（個人設定）からマージして取得します。
+
+**読み込み方法**:
+
+```bash
+# スクリプトを使用（推奨）
+docs/aidlc/bin/read-config.sh <key> [--default <value>]
+
+# 例
+docs/aidlc/bin/read-config.sh rules.mcp_review.mode
+docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
+```
+
+**終了コード**:
+- 0: 値あり
+- 1: キー不在（デフォルトなし）
+- 2: エラー
+
+**マージルール**:
+- `.local` の値が存在するキーはベースを上書き
+- 配列は完全置換（マージしない）
+- 詳細は `docs/aidlc/guides/config-merge.md` を参照
+
+**注意**: `docs/aidlc.toml.local` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
+
 ## 人間の承認プロセス【重要】
 
 計画作成後、必ず以下を実行する:
