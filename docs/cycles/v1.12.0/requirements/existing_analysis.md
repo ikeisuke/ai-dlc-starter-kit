@@ -52,7 +52,7 @@
 
 ### 読み込み順序
 
-```
+```text
 1. ~/.aidlc/config.toml      （ユーザー共通・最低優先）
 2. docs/aidlc.toml           （プロジェクト共有）
 3. docs/aidlc.toml.local     （プロジェクト個人・最高優先）

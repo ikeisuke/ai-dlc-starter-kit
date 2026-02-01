@@ -55,9 +55,9 @@
 
 ## 完了条件チェックリスト
 
-- [ ] `docs/aidlc.toml.local` ファイルの読み込みロジック追加
-- [ ] `aidlc.toml` と `.local` のマージ処理（キー単位優先、配列置換、ネスト再帰マージ）
-- [ ] `.gitignore` への `.local` ファイル追加
+- [x] `docs/aidlc.toml.local` ファイルの読み込みロジック追加
+- [x] `aidlc.toml` と `.local` のマージ処理（キー単位優先、配列置換、ネスト再帰マージ）
+- [x] `.gitignore` への `.local` ファイル追加
 
 ## 設計判断ポイント
 

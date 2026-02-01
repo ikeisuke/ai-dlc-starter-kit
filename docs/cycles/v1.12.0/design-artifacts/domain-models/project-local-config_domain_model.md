@@ -2,7 +2,7 @@
 
 ## 概要
 
-プロジェクト共有設定（`aidlc.toml`）と個人設定（`aidlc.toml.local`）をマージし、統一された設定値を提供する機能のドメインモデル。
+プロジェクト共有設定（`docs/aidlc.toml`）と個人設定（`docs/aidlc.toml.local`）をマージし、統一された設定値を提供する機能のドメインモデル。
 
 **重要**: このドメインモデル設計では**コードは書かず**、構造と責務の定義のみを行います。
 
@@ -11,10 +11,11 @@
 ### ConfigSource（設定ソース）
 
 - **属性**:
-  - path: String - ファイルパス
+  - path: String - ファイルパス（例: `docs/aidlc.toml`）
   - priority: Integer - 優先度（数値が大きいほど優先）
 - **不変性**: ソースの定義は変更されない
-- **等価性**: pathで判定
+- **等価性**: pathで判定（priorityは順序付けに使用、等価性には含めない）
+- **備考**: Unit 002で3階層（ホーム < プロジェクト < .local）に拡張予定
 
 ### ConfigKey（設定キー）
 
@@ -42,6 +43,7 @@
   1. **キー単位優先**: overrideにキーが存在すれば、baseを上書き
   2. **配列置換**: 配列型の値は完全に置換（要素のマージはしない）
   3. **ネスト再帰マージ**: テーブル型はキーごとに再帰的にマージ
+  4. **型不一致時**: overrideの値が常に勝つ（型変換なし、完全置換）
 
 ### ConfigReader（設定リーダー）
 
@@ -55,8 +57,8 @@
 ```mermaid
 flowchart TD
     subgraph Sources["設定ソース（優先度順）"]
-        BASE["aidlc.toml<br/>（優先度: 1）"]
-        LOCAL["aidlc.toml.local<br/>（優先度: 2）"]
+        BASE["docs/aidlc.toml<br/>（優先度: 1）"]
+        LOCAL["docs/aidlc.toml.local<br/>（優先度: 2）"]
     end
 
     subgraph Merger["ConfigMerger"]
@@ -77,7 +79,7 @@ flowchart TD
 
 ### ルール1: キー単位優先
 
-```
+```text
 base:     { a = 1, b = 2 }
 override: { b = 3, c = 4 }
 result:   { a = 1, b = 3, c = 4 }
@@ -85,7 +87,7 @@ result:   { a = 1, b = 3, c = 4 }
 
 ### ルール2: 配列置換
 
-```
+```text
 base:     { items = ["a", "b"] }
 override: { items = ["c"] }
 result:   { items = ["c"] }  # 置換、マージではない
@@ -93,10 +95,18 @@ result:   { items = ["c"] }  # 置換、マージではない
 
 ### ルール3: ネスト再帰マージ
 
-```
+```text
 base:     { rules = { git = { enabled = true }, jj = { enabled = false } } }
 override: { rules = { jj = { enabled = true } } }
 result:   { rules = { git = { enabled = true }, jj = { enabled = true } } }
+```
+
+### ルール4: 型不一致時
+
+```text
+base:     { rules = { git = { enabled = true } } }  # テーブル型
+override: { rules = { git = false } }               # スカラー型
+result:   { rules = { git = false } }               # overrideが勝つ
 ```
 
 ## ユビキタス言語
