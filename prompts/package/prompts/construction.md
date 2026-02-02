@@ -216,7 +216,7 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 
 AIが出力を確認し、パス名が表示されれば存在、エラーなら不存在と判断。
 
-- **存在しない場合**: エラーを表示し、setup.md を案内
+- **存在しない場合**: エラーを表示し、inception.md を案内
   ```text
   エラー: サイクル {{CYCLE}} が見つかりません。
 
@@ -224,7 +224,7 @@ AIが出力を確認し、パス名が表示されれば存在、エラーなら
   [ls docs/cycles/ の結果]
 
   サイクルを作成するには、以下のプロンプトを読み込んでください：
-  docs/aidlc/prompts/setup.md
+  docs/aidlc/prompts/inception.md
   ```
 - **存在する場合**: 処理を継続
 

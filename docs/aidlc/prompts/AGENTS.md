@@ -12,9 +12,10 @@
 
 ### 新規サイクル開始
 
-`docs/aidlc/prompts/setup.md` を読み込んでください。
+`docs/aidlc/prompts/inception.md` を読み込んでください。
 
-既存プロジェクトで新しいサイクルを開始する場合に使用します。
+Setup PhaseとInception Phaseが統合され、1回のプロンプト読み込みで
+サイクル開始からUnit定義まで完了できます。
 
 ### 既存サイクルの継続
 
@@ -27,10 +28,9 @@
 ## 推奨ワークフロー
 
 1. 初回は `prompts/setup-prompt.md` でセットアップ
-2. `docs/aidlc/prompts/setup.md` でサイクルを作成
-3. Inception Phaseで要件定義とUnit分解
-4. Construction Phaseで設計と実装
-5. Operations Phaseでデプロイと運用
+2. `docs/aidlc/prompts/inception.md` でサイクル作成からUnit定義まで完了
+3. Construction Phaseで設計と実装
+4. Operations Phaseでデプロイと運用
 
 ## ドキュメント
 
@@ -45,10 +45,10 @@
 
 | 指示 | 対応処理 |
 |------|----------|
-| 「インセプション進めて」「start inception」 | Inception Phase |
+| 「インセプション進めて」「start inception」 | Inception Phase（新規サイクル開始、推奨） |
 | 「コンストラクション進めて」「start construction」 | Construction Phase |
 | 「オペレーション進めて」「start operations」 | Operations Phase |
-| 「セットアップ」「start setup」 | Setup（新規サイクル開始） |
+| 「セットアップ」「start setup」 | Inception Phase（リダイレクト） |
 | 「AIDLCアップデート」「update aidlc」「start upgrade」 | アップグレード（環境更新） |
 | 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
 
@@ -66,7 +66,7 @@
 - ブランチ名 `cycle/vX.X.X` からサイクルを自動判定
 - mainブランチの場合:
   - 初期セットアップ: `prompts/setup-prompt.md`
-  - 新規サイクル開始: `docs/aidlc/prompts/setup.md`
+  - 新規サイクル開始: `docs/aidlc/prompts/inception.md`
 - コンテキストなしで「続けて」: ユーザーに確認
 
 ---

@@ -14,3 +14,6 @@
 
 # Worktree directory
 .worktree/
+
+# AI-DLC local config (personal settings)
+docs/aidlc.toml.local
