@@ -150,9 +150,9 @@ AI-DLC は最新です。新しいサイクルを開始します。
 ```
 
 **次のアクション**:
-1. `docs/aidlc/prompts/setup.md` の存在を確認
-2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+1. `docs/aidlc/prompts/inception.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ユーザーの操作を待たずに自動で読み込むこと。
 
@@ -178,9 +178,9 @@ AI-DLC のアップグレードが利用可能です。
 **次のアクション**: ユーザーの選択後:
 - **1 を選択**: セクション3（ファイル移行）をスキップし、セクション4（Git環境の確認）へ進む（アップグレードモード）
 - **2 を選択**:
-  1. `docs/aidlc/prompts/setup.md` の存在を確認
-  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+  1. `docs/aidlc/prompts/inception.md` の存在を確認
+  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ---
 
@@ -199,9 +199,9 @@ AI-DLC のアップグレードが利用可能です。
 ```
 
 **次のアクション**: ユーザーが続行を承認した場合:
-1. `docs/aidlc/prompts/setup.md` の存在を確認
-2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+1. `docs/aidlc/prompts/inception.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ---
 
@@ -1407,7 +1407,7 @@ AI-DLCのアップグレードが完了しました！
 新しいセッションで「start setup」と指示し、サイクルを開始してください。
 ```
 
-**重要**: アップグレード完了後は、自動で `setup.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
+**重要**: アップグレード完了後は、自動で `inception.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
 
 ### 移行の場合
 
@@ -1429,7 +1429,7 @@ AI-DLCの新ファイル構成への移行が完了しました！
 ## 次のステップ: サイクル開始
 
 **注意**: このセクションは初回セットアップ・移行の場合のみ表示してください。
-- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `setup.md` を読み込む
+- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `inception.md` を読み込む
 - **ケースC（アップグレード完了後）**: 上記「アップグレードの場合」のメッセージを表示し、セッションを終了する
 
 ### 初回セットアップ・移行の場合
