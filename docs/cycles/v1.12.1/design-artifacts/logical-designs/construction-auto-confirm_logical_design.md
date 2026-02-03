@@ -44,14 +44,23 @@
 
    1. 履歴ファイルを確認:
    ```bash
-   ls docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md 2>/dev/null
+   HISTORY_FILE="docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md"
+   if [ -f "$HISTORY_FILE" ]; then
+       # ファイルが存在する場合、パターン検索
+       if grep -q "AIレビュー\|レビュー反映" "$HISTORY_FILE"; then
+           echo "IMPLEMENTED"
+       else
+           echo "NOT_IMPLEMENTED"
+       fi
+   else
+       echo "FILE_NOT_FOUND"
+   fi
    ```
 
-   2. ファイルが存在する場合、内容を読み取り以下のパターンを検索:
-      - 「AIレビュー」
-      - 「レビュー反映」
+   - `{NN}`: 2桁ゼロパディング（例: 01, 04）
+   - 判定基準: grepの終了コードで判定（0=見つかった, 1=見つからない）
 
-   3. 確認結果を出力
+   2. 確認結果を出力
    ```
 
 3. **「確認結果フォーマット」セクションを追加**
@@ -92,10 +101,17 @@
    **自動確認手順**:
 
    ```bash
-   ls docs/cycles/{{CYCLE}}/operations/tasks/*.md 2>/dev/null
+   TASKS=$(ls docs/cycles/{{CYCLE}}/operations/tasks/*.md 2>/dev/null)
+   if [ -n "$TASKS" ]; then
+       echo "EXISTS"
+       echo "$TASKS"
+   else
+       echo "NOT_EXISTS"
+   fi
    ```
 
-   ディレクトリ内の`.md`ファイルを列挙し、存在確認を行う。
+   - 判定基準: `ls`の出力が空でなければ `EXISTS`
+   - ディレクトリ未作成、空ディレクトリ、.mdファイルなしはすべて `NOT_EXISTS`
    ```
 
 3. **「確認結果フォーマット」セクションを追加**
