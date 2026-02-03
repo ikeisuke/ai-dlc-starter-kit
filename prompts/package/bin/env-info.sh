@@ -14,7 +14,7 @@
 #   - available: 利用可能
 #   - not-installed: 未インストール
 #   - not-authenticated: インストール済みだが認証されていない（ghのみ）
-#   starter_kit_version:バージョン番号（version.txt から取得）
+#   starter_kit_version:バージョン番号（docs/aidlc.toml から取得）
 #
 
 set -euo pipefail
@@ -122,10 +122,59 @@ get_backlog_mode() {
     echo "$result" | tr -d "'"
 }
 
-# 現在のGitブランチを取得
-# Gitリポジトリ外では空値を返す
+# 現在のブランチ/bookmarkを取得
+# jj/git環境を考慮した優先順位で取得
+# jj環境ではbookmarkを、git環境ではブランチ名を返す
 get_current_branch() {
-    git branch --show-current 2>/dev/null || echo ""
+    local result=""
+
+    # 1. jj が利用可能な場合、bookmarkを取得
+    if command -v jj >/dev/null 2>&1; then
+        local bookmarks
+        bookmarks=$(jj log -r @ --no-graph -T 'bookmarks' 2>/dev/null) || bookmarks=""
+
+        if [[ -n "$bookmarks" ]]; then
+            # * マーカー（現在のワーキングコピー）を除去
+            bookmarks=$(echo "$bookmarks" | tr -d '*')
+            # 複数スペース/タブ/改行を単一スペースに正規化
+            bookmarks=$(echo "$bookmarks" | tr -s '[:space:]' ' ' | sed 's/^ //;s/ $//')
+
+            # cycle/ で始まるものを優先
+            local cycle_bookmark=""
+            local first_bookmark=""
+            for b in $bookmarks; do
+                if [[ -z "$first_bookmark" ]]; then
+                    first_bookmark="$b"
+                fi
+                if [[ "$b" == cycle/* && -z "$cycle_bookmark" ]]; then
+                    cycle_bookmark="$b"
+                fi
+            done
+
+            if [[ -n "$cycle_bookmark" ]]; then
+                result="$cycle_bookmark"
+            elif [[ -n "$first_bookmark" ]]; then
+                result="$first_bookmark"
+            fi
+        fi
+    fi
+
+    # 2. jjで取得できなかった場合、git branch --show-current を試行
+    if [[ -z "$result" ]]; then
+        result=$(git branch --show-current 2>/dev/null) || result=""
+    fi
+
+    # 3. detached HEAD の場合、git rev-parse --abbrev-ref HEAD を試行
+    if [[ -z "$result" ]]; then
+        local abbrev_ref
+        abbrev_ref=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || abbrev_ref=""
+        # "HEAD" の場合は空値として扱う
+        if [[ "$abbrev_ref" != "HEAD" ]]; then
+            result="$abbrev_ref"
+        fi
+    fi
+
+    echo "$result"
 }
 
 # docs/cycles/ 配下の最新サイクルバージョンを取得
@@ -138,18 +187,43 @@ get_latest_cycle() {
     ls -1 docs/cycles/ 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1 || echo ""
 }
 
-# version.txt からスターターキットのバージョンを取得
-# ファイル不存在/空/読み取りエラー時は空値を返す
-# 正規化: 1行目のみ取得し、CRを除去
+# docs/aidlc.toml からスターターキットのバージョンを取得
+# ファイル不存在/読み取りエラー時は空値を返す
+# dasel未インストール時はgrep+sedでフォールバック
 get_starter_kit_version() {
-    if [[ ! -f "version.txt" ]]; then
+    local toml_file="docs/aidlc.toml"
+
+    if [[ ! -f "$toml_file" ]]; then
         echo ""
         return
     fi
+
     local version=""
-    IFS= read -r version < version.txt 2>/dev/null || true
-    # CRを除去（Windows改行対応）
-    echo "${version//$'\r'/}"
+
+    # daselが利用可能な場合
+    if command -v dasel >/dev/null 2>&1; then
+        version=$(cat "$toml_file" | dasel -i toml 'starter_kit_version' 2>/dev/null) || version=""
+        # 両端の空白をトリム → 両端の引用符を除去
+        version=$(echo "$version" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        version=$(echo "$version" | sed "s/^[\"']//;s/[\"']$//")
+    else
+        # dasel未インストール時のフォールバック（grep+sed）
+        # 行頭の空白を許容、コメント行は無視、最初の定義のみ採用
+        local line
+        line=$(grep -E '^[[:space:]]*starter_kit_version[[:space:]]*=' "$toml_file" 2>/dev/null | grep -v '^[[:space:]]*#' | head -1) || line=""
+
+        if [[ -n "$line" ]]; then
+            # = の後の値部分を抽出
+            version=$(echo "$line" | sed 's/^[^=]*=[[:space:]]*//')
+            # インラインコメント（# 以降）を除去（引用符内の # は考慮しない簡易実装）
+            version=$(echo "$version" | sed 's/[[:space:]]*#.*//')
+            # 両端の空白と引用符を除去
+            version=$(echo "$version" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            version=$(echo "$version" | sed "s/^[\"']//;s/[\"']$//")
+        fi
+    fi
+
+    echo "$version"
 }
 
 # メイン処理
