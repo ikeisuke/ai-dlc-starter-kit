@@ -138,7 +138,7 @@ main() {
             # 前のアイテムを処理（セクション変更前にフラッシュ）
             if [[ -n "$item_title" ]]; then
                 if ! process_item "$item_title" "$item_content" "$current_section"; then
-                    ((error_count++))
+                    (( ++error_count ))
                 fi
                 item_title=""
                 item_content=""
@@ -153,7 +153,7 @@ main() {
             # 前のアイテムを処理
             if [[ -n "$item_title" ]]; then
                 if ! process_item "$item_title" "$item_content" "$current_section"; then
-                    ((error_count++))
+                    (( ++error_count ))
                 fi
             fi
 
@@ -208,7 +208,7 @@ process_item() {
     # 注意: 「完了」単独ではなく「対応完了」「完了済み」など明確なパターンのみマッチ
     #       「未完了」「完了条件」などの誤マッチを防止
     if [[ "$title" =~ ~~.*~~ ]] || [[ "$title" =~ 対応済み ]] || [[ "$title" =~ 対応完了 ]] || [[ "$title" =~ 完了済み ]]; then
-        ((skipped_completed++))
+        (( ++skipped_completed ))
         if [[ "$DRY_RUN" == "true" ]]; then
             echo "[スキップ:完了済み] $title"
         fi
@@ -232,7 +232,7 @@ process_item() {
 
     # 重複チェック
     if [[ -f "$filepath" ]]; then
-        ((skipped_duplicate++))
+        (( ++skipped_duplicate ))
         if [[ "$DRY_RUN" == "true" ]]; then
             echo "[スキップ:重複] $title -> $filename"
         fi
@@ -265,7 +265,7 @@ ${content}
 EOF
     fi
 
-    ((migrated_count++))
+    (( ++migrated_count ))
 }
 
 main "$@"
