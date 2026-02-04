@@ -1,0 +1,9 @@
+{
+  // markdownlint-cli2 設定
+  // AI-DLC関連ディレクトリを除外（テンプレートやサイクル成果物は厳密なlint不要）
+  "ignores": [
+    "docs/aidlc/**",
+    "docs/cycles/**",
+    "docs/versions/**"
+  ]
+}
