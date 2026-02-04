@@ -133,6 +133,15 @@ main() {
     while IFS= read -r line || [[ -n "$line" ]]; do
         # セクションヘッダー（## で始まる）
         if [[ "$line" =~ ^##[^#] ]]; then
+            # 前のアイテムを処理（セクション変更前にフラッシュ）
+            if [[ -n "$item_title" ]]; then
+                if ! process_item "$item_title" "$item_content" "$current_section"; then
+                    ((error_count++))
+                fi
+                item_title=""
+                item_content=""
+                in_item=false
+            fi
             current_section="$line"
             continue
         fi
