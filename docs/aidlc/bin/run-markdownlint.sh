@@ -18,8 +18,8 @@ fi
 
 if [ "$MARKDOWN_LINT" = "true" ]; then
     echo "markdownlintを実行中..."
-    # docs/cycles/は.markdownlintignoreで除外されているため対象外
-    npx markdownlint-cli2 "prompts/**/*.md" "*.md"
+    # docs/cycles/, docs/aidlc/, docs/versions/は.markdownlintignoreで除外
+    npx markdownlint-cli2 "docs/**/*.md" "prompts/**/*.md" "*.md"
 else
     echo "markdownlintはスキップされました（設定: markdown_lint=false）"
 fi
