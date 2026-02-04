@@ -1113,9 +1113,9 @@ docs/aidlc/bin/setup-ai-tools.sh
 **ディレクトリ構成**:
 ```text
 .claude/skills/              ← 実ディレクトリ
-├── codex/   → symlink → ../../docs/aidlc/skills/codex/
-├── claude/  → symlink → ../../docs/aidlc/skills/claude/
-├── gemini/  → symlink → ../../docs/aidlc/skills/gemini/
+├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
+├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
+├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
 .kiro/agents/
