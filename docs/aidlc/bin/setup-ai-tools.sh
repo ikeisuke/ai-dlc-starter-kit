@@ -37,14 +37,6 @@ setup_claude_skills() {
   # .claude/skills ディレクトリ作成
   mkdir -p "$CLAUDE_SKILLS_DIR"
 
-  # 壊れたシンボリックリンクを削除（リンク先が存在しないもの）
-  for link in "$CLAUDE_SKILLS_DIR"/*; do
-    if [ -L "$link" ] && [ ! -e "$link" ]; then
-      echo "Removed: $link (broken symlink)"
-      rm "$link"
-    fi
-  done
-
   # 各スキルへのシンボリックリンクを作成
   for skill_path in "$AIDLC_SKILLS_DIR"/*/; do
     skill=$(basename "$skill_path")
