@@ -150,9 +150,9 @@ AI-DLC は最新です。新しいサイクルを開始します。
 ```
 
 **次のアクション**:
-1. `docs/aidlc/prompts/setup.md` の存在を確認
-2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+1. `docs/aidlc/prompts/inception.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ユーザーの操作を待たずに自動で読み込むこと。
 
@@ -178,9 +178,9 @@ AI-DLC のアップグレードが利用可能です。
 **次のアクション**: ユーザーの選択後:
 - **1 を選択**: セクション3（ファイル移行）をスキップし、セクション4（Git環境の確認）へ進む（アップグレードモード）
 - **2 を選択**:
-  1. `docs/aidlc/prompts/setup.md` の存在を確認
-  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+  1. `docs/aidlc/prompts/inception.md` の存在を確認
+  2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ---
 
@@ -199,9 +199,9 @@ AI-DLC のアップグレードが利用可能です。
 ```
 
 **次のアクション**: ユーザーが続行を承認した場合:
-1. `docs/aidlc/prompts/setup.md` の存在を確認
-2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/setup.md` を読み込む
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/setup.md` を読み込む
+1. `docs/aidlc/prompts/inception.md` の存在を確認
+2. 存在する場合: プロジェクト内の `docs/aidlc/prompts/inception.md` を読み込む
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
 
 ---
 
@@ -1096,45 +1096,6 @@ else
 fi
 ```
 
-**AIツール設定のセットアップ**:
-
-Claude CodeとKiroCLIの設定ファイルをセットアップします。
-
-```bash
-# スクリプトで実行
-docs/aidlc/bin/setup-ai-tools.sh
-```
-
-このスクリプトは以下を行います:
-
-1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
-2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
-
-**ディレクトリ構成**:
-```text
-.claude/skills/              ← 実ディレクトリ
-├── codex/   → symlink → ../../docs/aidlc/skills/codex/
-├── claude/  → symlink → ../../docs/aidlc/skills/claude/
-├── gemini/  → symlink → ../../docs/aidlc/skills/gemini/
-└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
-
-.kiro/agents/
-└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
-```
-
-**注意**:
-- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
-- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
-
-**KiroCLI利用方法**:
-```bash
-# aidlcエージェントでKiroCLIを起動
-kiro-cli --agent aidlc
-
-# または起動後に切り替え
-> /agent swap aidlc
-```
-
 #### 8.2.4 rsync出力例
 
 ```text
@@ -1294,6 +1255,50 @@ label:type:bugfix:exists
 
 **注意**: 既存のラベルはスキップされます（冪等性あり）。
 
+#### 8.2.7 AIツール設定のセットアップ【初回・アップグレード共通】
+
+Claude CodeとKiroCLIの設定ファイルをセットアップします。
+
+```bash
+# スクリプトで実行
+docs/aidlc/bin/setup-ai-tools.sh
+```
+
+このスクリプトは以下を行います:
+
+1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
+2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
+3. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
+
+**ディレクトリ構成**:
+
+```text
+.claude/skills/              ← 実ディレクトリ
+├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
+├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
+├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
+└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
+
+.kiro/agents/
+└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
+```
+
+**注意**:
+
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
+- スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
+
+**KiroCLI利用方法**:
+
+```bash
+# aidlcエージェントでKiroCLIを起動
+kiro-cli --agent aidlc
+
+# または起動後に切り替え
+> /agent swap aidlc
+```
+
 ### 8.3 同期対象のファイル一覧
 
 rsync により以下のファイルが `docs/aidlc/` に同期されます:
@@ -1407,7 +1412,7 @@ AI-DLCのアップグレードが完了しました！
 新しいセッションで「start setup」と指示し、サイクルを開始してください。
 ```
 
-**重要**: アップグレード完了後は、自動で `setup.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
+**重要**: アップグレード完了後は、自動で `inception.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
 
 ### 移行の場合
 
@@ -1429,7 +1434,7 @@ AI-DLCの新ファイル構成への移行が完了しました！
 ## 次のステップ: サイクル開始
 
 **注意**: このセクションは初回セットアップ・移行の場合のみ表示してください。
-- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `setup.md` を読み込む
+- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `inception.md` を読み込む
 - **ケースC（アップグレード完了後）**: 上記「アップグレードの場合」のメッセージを表示し、セッションを終了する
 
 ### 初回セットアップ・移行の場合

@@ -201,9 +201,9 @@ AI-DLCは複数のAIツールで利用できます。
 
 | 呼び出したいツール | 読むファイル |
 |-------------------|-------------|
-| Codex CLI | `docs/aidlc/skills/codex/SKILL.md` |
-| Claude Code | `docs/aidlc/skills/claude/SKILL.md` |
-| Gemini CLI | `docs/aidlc/skills/gemini/SKILL.md` |
+| Codex CLI | `docs/aidlc/skills/codex-review/SKILL.md` |
+| Claude Code | `docs/aidlc/skills/claude-review/SKILL.md` |
+| Gemini CLI | `docs/aidlc/skills/gemini-review/SKILL.md` |
 
 ### KiroCLI対応
 

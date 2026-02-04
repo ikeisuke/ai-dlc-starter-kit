@@ -7,6 +7,36 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.12.1] - 2026-02-04
+
+### Added
+
+- inception.md外部化スクリプト（#151）
+  - suggest-version.sh: バージョン推測
+  - setup-branch.sh: ブランチ/worktree作成
+  - migrate-backlog.sh: バックログ移行
+  - worktree-usage.md: worktree使用ガイド
+
+### Changed
+
+- Construction Phase確認の自動化（#156）
+  - AIレビュー実施確認を履歴ファイルから自動判断
+  - 引き継ぎ確認をoperations/tasks/確認で自動化
+- inception.mdサイズ最適化（#151）
+  - 1215行→865行（350行削減）
+  - 冗長な記述をスクリプト呼び出しに外部化
+- setup-prompt.md参照先変更（#152）
+  - setup.md経由を廃止し、inception.mdを直接参照
+
+### Fixed
+
+- env-info.shバグ修正（#153）
+  - starter_kit_versionがdocs/aidlc.tomlから正しく取得されない問題
+  - current_branchがjj/git環境で正しく取得されない問題
+  - dasel未インストール環境でのフォールバック
+
+---
+
 ## [1.12.0] - 2026-02-01
 
 ### Added
