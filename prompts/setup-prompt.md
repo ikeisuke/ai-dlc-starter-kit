@@ -1096,45 +1096,6 @@ else
 fi
 ```
 
-**AIツール設定のセットアップ**:
-
-Claude CodeとKiroCLIの設定ファイルをセットアップします。
-
-```bash
-# スクリプトで実行
-docs/aidlc/bin/setup-ai-tools.sh
-```
-
-このスクリプトは以下を行います:
-
-1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
-2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
-
-**ディレクトリ構成**:
-```text
-.claude/skills/              ← 実ディレクトリ
-├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
-├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
-├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
-└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
-
-.kiro/agents/
-└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
-```
-
-**注意**:
-- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
-- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
-
-**KiroCLI利用方法**:
-```bash
-# aidlcエージェントでKiroCLIを起動
-kiro-cli --agent aidlc
-
-# または起動後に切り替え
-> /agent swap aidlc
-```
-
 #### 8.2.4 rsync出力例
 
 ```text
@@ -1293,6 +1254,50 @@ label:type:bugfix:exists
 ```
 
 **注意**: 既存のラベルはスキップされます（冪等性あり）。
+
+#### 8.2.7 AIツール設定のセットアップ【初回・アップグレード共通】
+
+Claude CodeとKiroCLIの設定ファイルをセットアップします。
+
+```bash
+# スクリプトで実行
+docs/aidlc/bin/setup-ai-tools.sh
+```
+
+このスクリプトは以下を行います:
+
+1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
+2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
+3. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
+
+**ディレクトリ構成**:
+
+```text
+.claude/skills/              ← 実ディレクトリ
+├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
+├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
+├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
+└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
+
+.kiro/agents/
+└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
+```
+
+**注意**:
+
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
+- スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
+
+**KiroCLI利用方法**:
+
+```bash
+# aidlcエージェントでKiroCLIを起動
+kiro-cli --agent aidlc
+
+# または起動後に切り替え
+> /agent swap aidlc
+```
 
 ### 8.3 同期対象のファイル一覧
 
