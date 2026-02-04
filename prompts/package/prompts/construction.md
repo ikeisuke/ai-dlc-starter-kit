@@ -693,7 +693,7 @@ AIレビューの実施状態を確認できません。
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
+docs/aidlc/bin/run-markdownlint.sh
 ```
 
 **注意**: `docs/aidlc.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。

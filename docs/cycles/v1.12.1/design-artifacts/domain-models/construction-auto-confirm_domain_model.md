@@ -17,15 +17,10 @@ Unit作業の履歴を記録するMarkdownファイル。
   - unitNumber: Unit番号（2桁ゼロパディングされた文字列、例: "04"）
   - content: ファイル内容
 
-### Operations引き継ぎタスク（OperationsTask）
+### Operations引き継ぎタスク（OperationsTask）【削除済み】
 
-Operations Phaseで実行が必要な手動作業を記録するファイル。
-
-- **パス**: `docs/cycles/{{CYCLE}}/operations/tasks/{NNN}-{task-slug}.md`
-- **属性**:
-  - taskNumber: タスク番号（3桁ゼロパディング）
-  - taskSlug: タスク識別子
-  - content: タスク内容
+> **注意**: このエンティティは実装時の議論により削除されました。
+> 理由: Unit完了時に引き継ぎタスクを確認する意味がないため（タスクは作業中に発生時点で記録される）。
 
 ## 値オブジェクト
 
@@ -36,13 +31,10 @@ Operations Phaseで実行が必要な手動作業を記録するファイル。
   - `NOT_IMPLEMENTED`: 未実施（履歴に記録なし）
   - `FILE_NOT_FOUND`: 履歴ファイルが存在しない
 
-### 引き継ぎタスク存在状態（OperationsTaskStatus）
+### 引き継ぎタスク存在状態（OperationsTaskStatus）【削除済み】
 
-- **値**:
-  - `EXISTS`: タスクあり（1件以上の.mdファイルが存在）
-  - `NOT_EXISTS`: タスクなし（.mdファイルが0件、またはディレクトリ自体が存在しない）
-
-**注意**: ディレクトリ未作成と空ディレクトリは同一扱い（`NOT_EXISTS`）とする。
+> **注意**: この値オブジェクトは実装時の議論により削除されました。
+> 理由: 0.7セクション（Operations引き継ぎタスク確認）自体が削除されたため。
 
 ## ドメインサービス
 
@@ -78,25 +70,11 @@ Operations Phaseで実行が必要な手動作業を記録するファイル。
 
 **出力**: AIReviewStatus
 
-### 引き継ぎタスク確認サービス（OperationsTaskCheckService）
+### 引き継ぎタスク確認サービス（OperationsTaskCheckService）【削除済み】
 
-**責務**: operations/tasks/ディレクトリを確認し、引き継ぎタスクの有無を判定する
-
-**入力**:
-- cycle: サイクル番号
-
-**処理フロー**:
-1. タスクディレクトリのパスを構築: `docs/cycles/{cycle}/operations/tasks/`
-2. ディレクトリ内の`.md`ファイルを列挙
-   - ディレクトリが存在しない場合: 空リストとして扱う
-3. ファイル数が1以上 → `EXISTS` を返す（ファイル名リストも付与）
-4. ファイル数が0 → `NOT_EXISTS` を返す
-
-**判定基準**:
-- `ls docs/cycles/{cycle}/operations/tasks/*.md 2>/dev/null` の出力が空でなければ `EXISTS`
-- 出力が空（ディレクトリ未作成、空ディレクトリ、.mdファイルなし）であれば `NOT_EXISTS`
-
-**出力**: OperationsTaskStatus（+ ファイル名リスト）
+> **注意**: このサービスは実装時の議論により削除されました。
+> 理由: 0.7セクション（Operations引き継ぎタスク確認）自体が削除されたため。
+> 引き継ぎタスクは作業中に発生時点で記録され、Operations Phase開始時に確認される。
 
 ## 確認結果の出力形式
 

@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # markdownlint実行スクリプト（設定による制御付き）
-# Usage: run-markdownlint.sh <cycle>
+# Usage: run-markdownlint.sh
 
 set -euo pipefail
-
-CYCLE="${1:?Usage: run-markdownlint.sh <cycle>}"
 
 # 設定確認（デフォルト: false = スキップ）
 # dasel利用可能時はdaselで読み取り、なければgrepで直接読み取る
@@ -20,7 +18,8 @@ fi
 
 if [ "$MARKDOWN_LINT" = "true" ]; then
     echo "markdownlintを実行中..."
-    npx markdownlint-cli2 "docs/cycles/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"
+    # docs/cycles/は.markdownlintignoreで除外されているため対象外
+    npx markdownlint-cli2 "prompts/**/*.md" "*.md"
 else
     echo "markdownlintはスキップされました（設定: markdown_lint=false）"
 fi
