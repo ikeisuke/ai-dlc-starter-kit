@@ -48,8 +48,11 @@ branch_exists() {
 # worktreeが存在するか確認
 worktree_exists() {
     local path="$1"
+    # 相対パスを絶対パスに変換（git worktree listは絶対パスを出力するため）
+    local abs_path
+    abs_path="$(cd "$(dirname "$path")" 2>/dev/null && pwd)/$(basename "$path")" 2>/dev/null || abs_path="$(pwd)/$path"
     # -F: 固定文字列マッチ（.などの正規表現文字を無効化）
-    git worktree list --porcelain 2>/dev/null | grep -qF "$path"
+    git worktree list --porcelain 2>/dev/null | grep -qF "$abs_path"
 }
 
 # ブランチモード
