@@ -48,7 +48,8 @@ branch_exists() {
 # worktreeが存在するか確認
 worktree_exists() {
     local path="$1"
-    git worktree list --porcelain 2>/dev/null | grep -q "^worktree.*${path}$"
+    # -F: 固定文字列マッチ（.などの正規表現文字を無効化）
+    git worktree list --porcelain 2>/dev/null | grep -qF "$path"
 }
 
 # ブランチモード
