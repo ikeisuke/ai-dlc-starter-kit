@@ -120,10 +120,12 @@ main() {
         mkdir -p "$NEW_BACKLOG_DIR"
     fi
 
-    local migrated_count=0
-    local skipped_completed=0
-    local skipped_duplicate=0
-    local error_count=0
+    # カウンター変数（process_itemからアクセスするためグローバル）
+    migrated_count=0
+    skipped_completed=0
+    skipped_duplicate=0
+    error_count=0
+    # パーサー状態（ローカル）
     local current_section=""
     local in_item=false
     local item_title=""
