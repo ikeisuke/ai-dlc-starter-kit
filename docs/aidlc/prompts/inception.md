@@ -370,40 +370,15 @@ docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 
 **注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
 
-#### 10. 旧形式バックログ移行（該当する場合）
-
-> **DEPRECATED (v1.9.0)**: v2.0.0 で削除予定
-
-旧形式の `docs/cycles/backlog.md` が存在する場合、新形式への移行を提案：
-
-```bash
-docs/aidlc/bin/migrate-backlog.sh --dry-run
-```
-
-**出力例**:
-```text
-status:no_file
-migrated_count:0
-skipped_completed:0
-skipped_duplicate:0
-deleted:false
-message:旧形式バックログが存在しません
-```
-
-- `status:no_file`: スキップ（Part 2へ進む）
-- `status:migrated`: 移行完了を表示（`--dry-run` なしで実行した場合）
-
-**移行実行時**: ユーザーに確認後、`docs/aidlc/bin/migrate-backlog.sh` を実行
-
 ---
 
 ### Part 2: インセプション準備
 
-#### 11. 追加ルール確認
+#### 10. 追加ルール確認
 
 `docs/cycles/rules.md` が存在すれば読み込む
 
-#### 12. 環境確認
+#### 11. 環境確認
 
 GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
 
@@ -420,9 +395,9 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-#### 13. GitHub Issue確認
+#### 12. GitHub Issue確認
 
-GitHub CLIでオープンなIssueの有無を確認（ステップ12で確認した `gh` ステータスを参照）：
+GitHub CLIでオープンなIssueの有無を確認（ステップ11で確認した `gh` ステータスを参照）：
 
 **`gh:available` の場合のみ**:
 ```bash
@@ -459,11 +434,11 @@ docs/aidlc/bin/label-cycle-issues.sh {{CYCLE}}
 
 詳細は `docs/aidlc/guides/issue-management.md` を参照。
 
-#### 14. バックログ確認
+#### 13. バックログ確認
 
-ステップ12で確認した `backlog_mode` を参照する。
+ステップ11で確認した `backlog_mode` を参照する。
 
-##### 14-1. 共通バックログ
+##### 13-1. 共通バックログ
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -491,7 +466,7 @@ gh issue list --label backlog --state open
   ```
   「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
-##### 14-2. 対応済みバックログとの照合
+##### 13-2. 対応済みバックログとの照合
 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
@@ -502,7 +477,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
 ```
 
 - **存在しない/空の場合**: スキップ
-- **ファイルが存在する場合**: 15-1で確認したバックログ項目と照合
+- **ファイルが存在する場合**: 13-1で確認したバックログ項目と照合
   - 対応済みに同名または類似の項目があるか、AIが文脈を読み取って判断
   - 類似項目を検出した場合、以下の形式でユーザーに通知：
     ```text
@@ -518,7 +493,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
 
-#### 15. 進捗管理ファイル確認【重要】
+#### 14. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
 ```text
@@ -532,7 +507,7 @@ docs/cycles/{{CYCLE}}/inception/progress.md
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
 
-#### 16. 既存成果物の確認（冪等性の保証）
+#### 15. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/
