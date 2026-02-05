@@ -118,15 +118,35 @@ So that アルファ版やベータ版のサイクルでも正常にワークフ
 
 ---
 
+### ストーリー 7: setup-context.md機能の廃止
+**優先順位**: Should-have
+
+As a AI-DLCスターターキット開発者
+I want to setup-context.md機能が廃止される
+So that SetupとInception統合後の不要な機能が整理され、プロンプトがシンプルになる
+
+**受け入れ基準**:
+- [ ] `prompts/package/prompts/inception.md` から `setup-context.md` 作成・読み込みに関する記述が削除される
+- [ ] `prompts/package/templates/setup_context_template.md` が削除される
+- [ ] サイクル初期化時に `docs/cycles/{cycle}/requirements/setup-context.md` が作成されない
+
+**技術的考慮事項**:
+- 変更対象: `prompts/package/prompts/inception.md`
+- 削除対象: `prompts/package/templates/setup_context_template.md`
+- 背景: SetupとInceptionが統合されたため、引き継ぎ用ファイルは不要
+
+---
+
 ## 受け入れ基準のチェック観点
 
-| チェック項目 | US1 | US2 | US3 | US4 | US5 | US6 |
-|-------------|-----|-----|-----|-----|-----|-----|
-| 具体性 | OK | OK | OK | OK | OK | OK |
-| 検証可能性 | OK | OK | OK | OK | OK | OK |
-| 完全性 | OK | OK | OK | OK | OK | OK |
-| 独立性 | OK | OK | OK | OK | OK | OK |
+| チェック項目 | US1 | US2 | US3 | US4 | US5 | US6 | US7 |
+|-------------|-----|-----|-----|-----|-----|-----|-----|
+| 具体性 | OK | OK | OK | OK | OK | OK | OK |
+| 検証可能性 | OK | OK | OK | OK | OK | OK | OK |
+| 完全性 | OK | OK | OK | OK | OK | OK | OK |
+| 独立性 | OK | OK | OK | OK | OK | OK | OK |
 
 **補足**:
 - US5は `docs/cycles/rules.md`（プロジェクト固有）の変更であり、US3（operations.md行数削減）とは独立
+- US7は `prompts/package/prompts/inception.md` と `prompts/package/templates/setup_context_template.md` の変更
 - 各ストーリーは単独で完了可能
