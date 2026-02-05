@@ -14,10 +14,13 @@
 
 ## 責務
 
-- `inception.md` の「コンテキストリセット対応」セクションにコンパクション時の再読み込み指示を追加
-- `construction.md` に同様の指示を追加
-- `operations.md` に同様の指示を追加
-- progress.mdテンプレートに「再開時に読み込むファイル」セクションを追加
+- `prompts/package/prompts/inception.md` の「コンテキストリセット対応」セクションにコンパクション時の再読み込み指示を追加
+- `prompts/package/prompts/construction.md` に同様の指示を追加
+- `prompts/package/prompts/operations.md` に同様の指示を追加
+- `prompts/package/templates/progress_inception_template.md` に「再開時に読み込むファイル」セクションを追加
+- `prompts/package/templates/progress_construction_template.md` に「再開時に読み込むファイル」セクションを追加
+
+**注**: operations用のprogress.mdテンプレートは存在しないため、inception/constructionのみ対象
 
 ## 境界
 
@@ -28,7 +31,7 @@
 
 ### 依存するUnit
 
-- なし（独立して実装可能）
+- Unit 003（依存理由: 両方ともoperations.mdを変更するため、003で行数削減後に004でセクション追加を行う）
 
 ### 外部依存
 
@@ -40,8 +43,8 @@
 
 ## 技術的考慮事項
 
-- 変更対象: `prompts/package/prompts/inception.md`, `construction.md`, `operations.md`
-- 変更対象: `prompts/package/templates/progress_inception_template.md`, `progress_construction_template.md`
+- 変更対象: `prompts/package/prompts/inception.md`, `prompts/package/prompts/construction.md`, `prompts/package/prompts/operations.md`
+- 変更対象: `prompts/package/templates/progress_inception_template.md`, `prompts/package/templates/progress_construction_template.md`
 - 「コンテキストリセット対応」セクションの拡張
 
 ## 実装優先度
