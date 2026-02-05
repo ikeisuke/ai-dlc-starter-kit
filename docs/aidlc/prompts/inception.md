@@ -420,43 +420,7 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-#### 13. Dependabot PR確認
-
-**設定確認**: `docs/aidlc.toml` の `[inception.dependabot]` セクションを確認し、`enabled` の値を取得する。
-
-- `enabled = false`、未設定、または不正値の場合: このステップをスキップして次へ進む
-- `enabled = true` の場合: 以下の確認を実行
-
-**`enabled = true` の場合**（ステップ12で確認した `gh` ステータスを参照）:
-
-- **`gh:available` 以外の場合**: 「GitHub CLIが利用できないため、Dependabot PR確認をスキップします。」と表示し、次のステップへ進行
-- **`gh:available` の場合**: 以下のコマンドでDependabot PRの有無を確認
-
-```bash
-docs/aidlc/bin/check-dependabot-prs.sh
-```
-
-**判定**:
-
-- **PRが0件**: 「オープンなDependabot PRはありません。」と表示し、次のステップへ進行
-- **PRが1件以上**: 以下の対応確認を実施
-
-**対応確認**（PRが存在する場合）:
-
-```text
-以下のDependabot PRがあります：
-
-[PR一覧表示]
-
-これらのPRを今回のサイクルで対応しますか？
-1. はい - Unit定義に追加する
-2. いいえ - 今回は対応しない（後で個別に対応）
-```
-
-- **1を選択**: ユーザーストーリーとUnit定義に「Dependabot PR対応」を追加することを案内
-- **2を選択**: 次のステップへ進行
-
-#### 14. GitHub Issue確認
+#### 13. GitHub Issue確認
 
 GitHub CLIでオープンなIssueの有無を確認（ステップ12で確認した `gh` ステータスを参照）：
 
@@ -484,11 +448,22 @@ docs/aidlc/bin/check-open-issues.sh
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
-#### 15. バックログ確認
+**サイクルラベル付与**（`gh:available` の場合、Issueを選択した後）:
+
+選択したIssueにサイクルラベルを付与します。
+
+```bash
+# 一括付与（Unit定義作成後に実行）
+docs/aidlc/bin/label-cycle-issues.sh {{CYCLE}}
+```
+
+詳細は `docs/aidlc/guides/issue-management.md` を参照。
+
+#### 14. バックログ確認
 
 ステップ12で確認した `backlog_mode` を参照する。
 
-##### 15-1. 共通バックログ
+##### 14-1. 共通バックログ
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -516,7 +491,7 @@ gh issue list --label backlog --state open
   ```
   「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
-##### 15-2. 対応済みバックログとの照合
+##### 14-2. 対応済みバックログとの照合
 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
@@ -543,7 +518,7 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
 
-#### 16. 進捗管理ファイル確認【重要】
+#### 15. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
 ```text
@@ -557,7 +532,7 @@ docs/cycles/{{CYCLE}}/inception/progress.md
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
 - **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
 
-#### 17. 既存成果物の確認（冪等性の保証）
+#### 16. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ docs/cycles/{{CYCLE}}/design-artifacts/
@@ -582,7 +557,35 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
 - **一問一答形式**: 質問の概要を先に提示した後は、1つの質問をして回答を待つ（ハイブリッド方式に従う）
 - **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
+
+**Intent明確化の質問観点【推奨】**:
+
+以下の観点で質問を行い、Intentを明確化する：
+
+1. **目的の妥当性**
+   - なぜこの機能/改善が必要か？
+   - 期待する成果は何か？
+   - この目的を達成しないとどうなるか？
+
+2. **スコープの明確さ**
+   - 含まれる機能は何か？
+   - 明示的に除外するものは何か？
+   - 境界が曖昧な部分はないか？
+
+3. **既存機能との関連**
+   - 既存の類似機能はあるか？
+   - 既存機能への影響はあるか？
+   - 依存関係や前提条件は何か？
+
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
+
+**AIレビュー**: Intent承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- 目的・狙いが明確で妥当か
+- スコープが明確に定義されているか
+- 曖昧な表現や解釈の余地がないか
+
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
 ### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
@@ -623,7 +626,26 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 数値や状態を具体的に記述する
 - テスト可能な形で書く
 
+**受け入れ基準のチェック観点【必須】**:
+
+ユーザーストーリー作成時に、以下の観点で受け入れ基準をチェックする：
+
+| チェック項目 | 確認内容 |
+|-------------|---------|
+| 具体性 | 数値、状態、動作が具体的に記述されているか |
+| 検証可能性 | テストで確認できる形式になっているか |
+| 完全性 | 正常系・異常系の両方が網羅されているか |
+| 独立性 | 他の条件と重複や矛盾がないか |
+
 - `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
+
+**AIレビュー**: ユーザーストーリー承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- INVEST原則（Independent, Negotiable, Valuable, Estimable, Small, Testable）への準拠
+- 受け入れ基準が具体的で検証可能か
+- ユーザー視点で価値が明確か
+
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
 ### ステップ4: Unit定義【重要】
@@ -654,6 +676,15 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
   - **完了日**: -
   - **担当**: -
   ```
+
+**AIレビュー**: Unit定義承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- Unit分割が適切か（独立性、凝集性）
+- 依存関係が正しく定義されているか
+- 見積もりが妥当か
+- 実装順序に矛盾がないか
+
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: PRFAQ作成
@@ -786,6 +817,10 @@ gh pr list --head "${CURRENT_BRANCH}" --state open
 ```
 
 **PR作成実行**（ユーザーが「はい」を選択した場合）:
+
+**関連Issue番号の抽出**:
+Unit定義ファイルの「関連Issue」セクションから、全Issue番号を抽出し、`Closes #XX` 形式でリスト化します。
+
 ```bash
 gh pr create --draft \
   --title "サイクル {{CYCLE}}" \
@@ -795,9 +830,16 @@ gh pr create --draft \
 
 ## 含まれるUnit
 [Unit定義ファイルから一覧を生成]
+
+## Closes
+[Unit定義ファイルの関連Issueから抽出]
+- Closes #[Issue番号1]
+- Closes #[Issue番号2]
 EOF
 )"
 ```
+
+**注意**: PRがmainにマージされると、`Closes #XX` に記載されたIssueは自動的にクローズされます。
 
 **成功時**:
 ```text

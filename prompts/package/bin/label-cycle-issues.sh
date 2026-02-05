@@ -96,18 +96,37 @@ extract_issue_numbers() {
         return 0
     fi
 
-    # awkで「## 関連Issue」セクション内の「- #数字」パターンを抽出
+    # awkで「## 関連Issue」セクション内のIssue番号を抽出
     # セクションスコープ: ## 関連Issue から次の ## まで
-    # 注: macOS/BSD awkでも動作するようgsub/subを使用
+    # 対応形式:
+    #   - "Closes #数字" / "Fixes #数字" (行頭から直接、GitHubの標準キーワード)
+    #   - "- Closes #数字" / "- Fixes #数字" (箇条書き付き)
+    #   - "- #数字" (既存形式)
+    # 注: macOS/BSD awkでも動作するようtolower()/gsub/subを使用
     awk '
         /^## 関連Issue/ { in_section = 1; next }
         /^## / { in_section = 0 }
-        in_section && /^- #[0-9]+/ {
-            # "#数字" から数字部分を抽出（BSD awk互換）
-            line = $0
-            gsub(/^- #/, "", line)
-            gsub(/[^0-9].*$/, "", line)
-            if (line != "") print line
+        in_section {
+            # tolower()で小文字変換してからマッチング（BSD awk互換）
+            lower_line = tolower($0)
+            # "Closes #数字" / "Fixes #数字" 形式（箇条書き有無問わず）
+            if (match(lower_line, /^[[:space:]]*(- )?(closes|fixes) #[0-9]+/)) {
+                line = $0
+                # 最初の # の位置を見つけて、その後の数字を抽出
+                if (match(line, /#[0-9]+/)) {
+                    num = substr(line, RSTART + 1, RLENGTH - 1)
+                    if (num != "") print num
+                }
+            }
+            # "- #数字" 形式（既存形式、回帰対応）
+            else if (match(lower_line, /^[[:space:]]*- #[0-9]+/)) {
+                line = $0
+                # 最初の # の位置を見つけて、その後の数字を抽出
+                if (match(line, /#[0-9]+/)) {
+                    num = substr(line, RSTART + 1, RLENGTH - 1)
+                    if (num != "") print num
+                }
+            }
         }
     ' "${files[@]}" 2>/dev/null | sort -n | uniq || true
 }

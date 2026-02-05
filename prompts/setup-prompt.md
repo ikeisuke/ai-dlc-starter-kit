@@ -730,6 +730,56 @@ grep -A 5 "^\[rules.commit\]" docs/aidlc.toml
 
 **注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
 
+### 7.5 廃止設定の移行【アップグレードモードのみ】
+
+新しいバージョンで廃止された設定を既存プロジェクトで使用している場合、`docs/cycles/rules.md` にコピーして保存します。
+
+**廃止設定の確認と移行**:
+
+```bash
+# [inception.dependabot].enabled = true の場合、cycles/rules.md に移行（v1.13.0で廃止）
+if grep -q "^\[inception\.dependabot\]" docs/aidlc.toml; then
+  DEPENDABOT_ENABLED=$(sed -n '/^\[inception\.dependabot\]/,/^\[/p' docs/aidlc.toml | grep "^enabled" | head -1 | sed 's/.*= *//' | tr -d ' "')
+  if [ "$DEPENDABOT_ENABLED" = "true" ]; then
+    echo "Migrating [inception.dependabot] setting to docs/cycles/rules.md..."
+    # rules.md に Dependabot 設定を追加（セクションがなければ作成）
+    if ! grep -q "## Dependabot PR確認" docs/cycles/rules.md 2>/dev/null; then
+      cat >> docs/cycles/rules.md << 'EOF'
+
+---
+
+## Dependabot PR確認（v1.13.0で廃止された機能）
+
+このプロジェクトでは以前 Dependabot PR 確認機能を使用していました。
+v1.13.0 以降、この機能はスターターキットから削除されましたが、
+必要に応じて以下のワークフローを手動で実行できます。
+
+### 手動確認手順
+
+\`\`\`bash
+# オープンな Dependabot PR を一覧表示
+gh pr list --author "app/dependabot" --state open
+\`\`\`
+
+### 推奨対応
+
+1. Inception Phase 開始時に上記コマンドで Dependabot PR を確認
+2. 対応が必要な PR がある場合、ユーザーストーリーと Unit 定義に追加
+EOF
+      echo "Migrated Dependabot setting to docs/cycles/rules.md"
+    else
+      echo "Dependabot section already exists in docs/cycles/rules.md"
+    fi
+  else
+    echo "Dependabot was disabled, no migration needed"
+  fi
+else
+  echo "No [inception.dependabot] section found"
+fi
+```
+
+**注意**: 廃止された設定は `aidlc.toml` から削除せず、そのまま残しても問題ありません（無視されます）。ユーザーが明示的に削除するまで保持されます。
+
 ---
 
 ## 8. 共通ファイルの配置

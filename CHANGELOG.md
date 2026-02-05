@@ -7,6 +7,34 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.13.0] - 2026-02-05
+
+### Added
+
+- Operations Phaseにversion.txt更新手順を明示化（#158）
+  - リリース準備ステップでバージョン更新漏れを防止
+- Inception PhaseにAIレビュー導入（#154）
+  - Intent明確化の深掘り強化
+  - 受け入れ条件の厳格化
+- Issueライフサイクル管理ガイド追加（#28）
+  - issue-management.mdでIssue状態遷移を明文化
+  - ラベル・マイルストーン活用の推奨
+- PRマージ時のIssue自動クローズ機能強化（#96）
+  - Operations PhaseのPR作成時に複数Issue対応
+
+### Fixed
+
+- label-cycle-issues.shのラベル付け漏れバグ修正（#148）
+  - 対象Issueが正しくラベル付けされるように修正
+
+### Removed
+
+- Dependabot PR確認機能を廃止（#96）
+  - aidlc.tomlの[inception.dependabot]セクションは無視される
+  - 必要な場合はrules.mdに手動確認手順を記載可能
+
+---
+
 ## [1.12.1] - 2026-02-04
 
 ### Added
