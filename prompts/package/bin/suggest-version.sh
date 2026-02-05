@@ -43,8 +43,11 @@ get_latest_cycle() {
 # バージョンをパース
 parse_version() {
     local version="$1"
+    # SemVer拡張部分を除去（prerelease: -xxx, build metadata: +xxx）
+    local base_version
+    base_version=$(printf '%s' "$version" | sed 's/^v//' | sed 's/[-+].*//')
     # v1.2.3 -> 1 2 3
-    echo "$version" | sed 's/^v//' | tr '.' ' '
+    printf '%s' "$base_version" | tr '.' ' '
 }
 
 # 次バージョンを計算
