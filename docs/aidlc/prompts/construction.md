@@ -728,7 +728,7 @@ docs/aidlc/bin/issue-ops.sh set-status <issue_number> waiting-for-review
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-docs/aidlc/bin/run-markdownlint.sh
+docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 ```
 
 **注意**: `docs/aidlc.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
@@ -736,12 +736,40 @@ docs/aidlc/bin/run-markdownlint.sh
 **エラーがある場合**: 修正してから次のステップへ進む。
 
 ### 4. Gitコミット
+
+**コミット前の確認チェックリスト**:
+
+以下のコマンドで変更ファイルを確認：
+
+```bash
+git status
+```
+
+**重要ファイルの確認**（以下が含まれているか確認）:
+
+- [ ] Unit定義ファイル: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+- [ ] 履歴ファイル: `docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md`
+- [ ] 進捗ファイル（Operations Phase）: `docs/cycles/{{CYCLE}}/operations/progress.md`
+- [ ] 設計ファイル（作成した場合）: `docs/cycles/{{CYCLE}}/design-artifacts/`
+- [ ] 実装ファイル（作成した場合）
+
 各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
+
 ```text
 feat: [{{CYCLE}}] Unit 001完了 - ドメインモデル、論理設計、コード、テストを作成
 ```
+
+**コミット実行後の確認**:
+
+```bash
+git status
+```
+
+**期待される結果**: `nothing to commit, working tree clean`
+
+**変更が残っている場合**: 追加コミットを実施
 
 ### 5. Unit PR作成・マージ【推奨】
 
