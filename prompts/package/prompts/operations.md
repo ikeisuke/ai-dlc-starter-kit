@@ -568,15 +568,50 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
 **サブステップ一覧**（順番に実行）:
-1. 6.0 CHANGELOG更新（`changelog = true` の場合）
-2. 6.1 README更新
-3. 6.2 履歴記録
-4. 6.3 Markdownlint実行
-5. 6.4 Gitコミット
-6. 6.5 ドラフトPR Ready化
-7. 6.6 PRマージ
+1. 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
+2. 6.1 CHANGELOG更新（`changelog = true` の場合）
+3. 6.2 README更新
+4. 6.3 履歴記録
+5. 6.4 Markdownlint実行
+6. 6.5 Gitコミット
+7. 6.6 ドラフトPR Ready化
+8. 6.7 PRマージ
 
-#### 6.0 CHANGELOG更新
+#### 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
+
+**スキップ判定**:
+
+`docs/aidlc.toml` の `project.name` を確認:
+- `project.name = "ai-dlc-starter-kit"` の場合: 以下を実行
+- それ以外の場合: このステップをスキップ
+
+**実行する場合**:
+
+1. **version.txt更新**:
+   - サイクル番号から `v` を除いた値に更新（例: v1.13.0 → 1.13.0）
+   ```bash
+   # サイクル番号を取得し、vプレフィックスを除去
+   CYCLE="{{CYCLE}}"
+   VERSION="${CYCLE#v}"
+   echo "${VERSION}" > version.txt
+   ```
+
+2. **docs/aidlc.toml更新**:
+   - `starter_kit_version` を同じ値に更新
+   ```bash
+   # sedで置換（macOS互換）
+   sed -i '' "s/^starter_kit_version = .*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml
+   ```
+
+3. **更新確認**:
+   ```bash
+   cat version.txt
+   grep starter_kit_version docs/aidlc.toml
+   ```
+
+**注意**: このステップはAI-DLCスターターキット自体のリリース時のみ実行されます。他のプロジェクトでは自動的にスキップされます。
+
+#### 6.1 CHANGELOG更新
 
 **設定確認**: `docs/aidlc.toml` の `[rules.release]` セクションを読み、`changelog` の値を確認
 
@@ -627,13 +662,13 @@ Keep a Changelog形式で新規作成する。
 
 **参考**: [Keep a Changelog](https://keepachangelog.com/)
 
-#### 6.1 README更新
+#### 6.2 README更新
 README.mdに今回のサイクルの変更内容を追記
 
-#### 6.2 履歴記録
+#### 6.3 履歴記録
 `docs/cycles/{{CYCLE}}/history/operations.md` に履歴を追記（write-history.sh使用）
 
-#### 6.3 Markdownlint実行【CI対応】
+#### 6.4 Markdownlint実行【CI対応】
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
@@ -644,7 +679,7 @@ docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 
-#### 6.4 Gitコミット
+#### 6.5 Gitコミット
 Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
 
 コミットメッセージ例:
@@ -652,7 +687,7 @@ Operations Phaseで作成したすべてのファイル（**operations/progress.
 chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
 ```
 
-#### 6.5 ドラフトPR Ready化【重要】
+#### 6.6 ドラフトPR Ready化【重要】
 
 Inception Phaseで作成したドラフトPRをReady for Reviewに変更します（ステップ2.5で確認した `gh` ステータスを参照）。
 
@@ -690,7 +725,7 @@ gh pr ready {PR番号}
 - PR #{番号}: {タイトル}
 - URL: {URL}
 
-レビューが完了したら、ステップ6.6でマージを実行します。
+レビューが完了したら、ステップ6.7でマージを実行します。
 ```
 
 **ドラフトPRが見つからない場合**:
@@ -741,7 +776,7 @@ GitHub CLIが利用できません。
 2. 「Ready for review」ボタンをクリック
 ```
 
-#### 6.6 PRマージ【重要】
+#### 6.7 PRマージ【重要】
 
 PRがレビュー承認された後、マージを実行します。
 
@@ -833,7 +868,7 @@ GitHub上でレビュー承認を確認してから、手動でPRをマージし
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）が完了している**こと
-   - CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Gitコミット、ドラフトPR Ready化、PRマージがすべて完了
+   - バージョンファイル更新（AI-DLCスターターキットのみ）、CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Markdownlint実行、Gitコミット、ドラフトPR Ready化、PRマージがすべて完了
    - progress.mdでステップ6が「完了」になっている
 
 2. **全ステップが完了している**こと
