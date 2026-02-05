@@ -59,7 +59,7 @@ AI-DLCスターターキットを使用する開発者
 | 2 | #162 | backlogディレクトリ作成をgitモード時のみに限定 | 改善 | `prompts/package/bin/` |
 | 3 | #172 | operations.md の行数削減（ファイル分割） | 改善 | `prompts/package/prompts/` |
 | 4 | #170 | コンパクション時にフェーズプロンプトを読み込む | 改善 | `prompts/package/prompts/` |
-| 5 | - | セルフアップデート処理の簡略化（aidlc-upgradeスキル利用） | 改善 | `prompts/package/prompts/operations.md` |
+| 5 | - | セルフアップデート処理の簡略化（aidlc-upgradeスキル利用） | 改善 | `docs/cycles/rules.md` |
 | 6 | - | setup-branch.shのプレリリースバージョン対応 | バグ修正 | `prompts/package/bin/setup-branch.sh` |
 
 ### 除外するもの
@@ -81,8 +81,9 @@ AI-DLCスターターキットを使用する開発者
 1. #169 init-label修正（最優先・バグ修正）
 2. #162 backlogディレクトリ作成の条件分岐
 3. setup-branch.shのプレリリースバージョン対応（バグ修正）
-4. #172 operations.md分割 + セルフアップデート簡略化（関連するため同時対応）
-5. #170 コンパクション時のプロンプト読み込み
+4. #172 operations.md分割
+5. セルフアップデート簡略化（rules.md変更、独立して対応可能）
+6. #170 コンパクション時のプロンプト読み込み
 
 ## 不明点と質問（Inception Phase中に記録）
 
