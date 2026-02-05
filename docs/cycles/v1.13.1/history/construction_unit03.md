@@ -36,3 +36,13 @@
   - `prompts/package/prompts/inception.md, prompts/setup-prompt.md`
 
 ---
+## 2026-02-05 22:44:45 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 03-setup-prompt-updates（setup-prompt.md関連の変更）
+- **ステップ**: 追加修正
+- **実行内容**: construction.mdのmarkdownlintコマンドにCYCLE引数を追加（run-markdownlint.sh → run-markdownlint.sh {{CYCLE}}）
+- **成果物**:
+  - `prompts/package/prompts/construction.md`
+
+---
