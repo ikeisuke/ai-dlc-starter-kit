@@ -582,7 +582,35 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - **不明点の記録**: `[Question]` タグで記録し、`[Answer]` タグでユーザーに回答を求める
 - **一問一答形式**: 質問の概要を先に提示した後は、1つの質問をして回答を待つ（ハイブリッド方式に従う）
 - **独自判断の禁止**: 独自の判断や詳細調査はせず、質問で明確化する
+
+**Intent明確化の質問観点【推奨】**:
+
+以下の観点で質問を行い、Intentを明確化する：
+
+1. **目的の妥当性**
+   - なぜこの機能/改善が必要か？
+   - 期待する成果は何か？
+   - この目的を達成しないとどうなるか？
+
+2. **スコープの明確さ**
+   - 含まれる機能は何か？
+   - 明示的に除外するものは何か？
+   - 境界が曖昧な部分はないか？
+
+3. **既存機能との関連**
+   - 既存の類似機能はあるか？
+   - 既存機能への影響はあるか？
+   - 依存関係や前提条件は何か？
+
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
+
+**AIレビュー**: Intent承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- 目的・狙いが明確で妥当か
+- スコープが明確に定義されているか
+- 曖昧な表現や解釈の余地がないか
+
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
 ### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
@@ -623,7 +651,26 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 数値や状態を具体的に記述する
 - テスト可能な形で書く
 
+**受け入れ基準のチェック観点【必須】**:
+
+ユーザーストーリー作成時に、以下の観点で受け入れ基準をチェックする：
+
+| チェック項目 | 確認内容 |
+|-------------|---------|
+| 具体性 | 数値、状態、動作が具体的に記述されているか |
+| 検証可能性 | テストで確認できる形式になっているか |
+| 完全性 | 正常系・異常系の両方が網羅されているか |
+| 独立性 | 他の条件と重複や矛盾がないか |
+
 - `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
+
+**AIレビュー**: ユーザーストーリー承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- INVEST原則（Independent, Negotiable, Valuable, Estimable, Small, Testable）への準拠
+- 受け入れ基準が具体的で検証可能か
+- ユーザー視点で価値が明確か
+
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
 ### ステップ4: Unit定義【重要】
@@ -654,6 +701,15 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
   - **完了日**: -
   - **担当**: -
   ```
+
+**AIレビュー**: Unit定義承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
+
+**Inception固有のレビュー観点**:
+- Unit分割が適切か（独立性、凝集性）
+- 依存関係が正しく定義されているか
+- 見積もりが妥当か
+- 実装順序に矛盾がないか
+
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: PRFAQ作成
