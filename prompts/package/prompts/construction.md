@@ -728,7 +728,7 @@ docs/aidlc/bin/issue-ops.sh set-status <issue_number> waiting-for-review
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-docs/aidlc/bin/run-markdownlint.sh
+docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 ```
 
 **注意**: `docs/aidlc.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
