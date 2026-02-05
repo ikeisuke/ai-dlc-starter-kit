@@ -448,6 +448,17 @@ docs/aidlc/bin/check-open-issues.sh
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
+**サイクルラベル付与**（`gh:available` の場合、Issueを選択した後）:
+
+選択したIssueにサイクルラベルを付与します。
+
+```bash
+# 一括付与（Unit定義作成後に実行）
+docs/aidlc/bin/label-cycle-issues.sh {{CYCLE}}
+```
+
+詳細は `docs/aidlc/guides/issue-management.md` を参照。
+
 #### 14. バックログ確認
 
 ステップ12で確認した `backlog_mode` を参照する。
@@ -806,6 +817,10 @@ gh pr list --head "${CURRENT_BRANCH}" --state open
 ```
 
 **PR作成実行**（ユーザーが「はい」を選択した場合）:
+
+**関連Issue番号の抽出**:
+Unit定義ファイルの「関連Issue」セクションから、全Issue番号を抽出し、`Closes #XX` 形式でリスト化します。
+
 ```bash
 gh pr create --draft \
   --title "サイクル {{CYCLE}}" \
@@ -815,9 +830,16 @@ gh pr create --draft \
 
 ## 含まれるUnit
 [Unit定義ファイルから一覧を生成]
+
+## Closes
+[Unit定義ファイルの関連Issueから抽出]
+- Closes #[Issue番号1]
+- Closes #[Issue番号2]
 EOF
 )"
 ```
+
+**注意**: PRがmainにマージされると、`Closes #XX` に記載されたIssueは自動的にクローズされます。
 
 **成功時**:
 ```text

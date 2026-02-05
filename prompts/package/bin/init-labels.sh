@@ -32,6 +32,10 @@ LABELS=(
     "priority:high|B60205|優先度: 高"
     "priority:medium|FBCA04|優先度: 中"
     "priority:low|0E8A16|優先度: 低"
+    "status:backlog|FBCA04|バックログにある未着手の状態"
+    "status:in-progress|0E8A16|作業中"
+    "status:blocked|D93F0B|他の作業にブロックされている"
+    "status:waiting-for-review|1D76DB|レビュー待ち"
 )
 
 # ヘルプメッセージを表示
@@ -39,7 +43,7 @@ show_help() {
     cat << 'EOF'
 Usage: init-labels.sh [OPTIONS]
 
-バックログ管理用の共通ラベル（11個）を一括作成します。
+バックログ管理用の共通ラベル（15個）を一括作成します。
 
 OPTIONS:
   -h, --help    このヘルプを表示
