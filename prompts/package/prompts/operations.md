@@ -733,7 +733,7 @@ gh pr create --base main --title "{{CYCLE}}" --body "## Summary
 - [ ] 主要機能が動作する
 
 ## Closes
-- Closes #[Issue番号]
+Closes #[Issue番号]
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
