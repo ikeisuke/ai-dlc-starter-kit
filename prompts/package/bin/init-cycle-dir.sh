@@ -146,14 +146,16 @@ get_backlog_mode() {
 
     # daselが利用可能な場合はそれを使用
     if command -v dasel &>/dev/null; then
-        mode=$(dasel -f "$config_file" -r toml 'backlog.mode' 2>/dev/null || echo "")
+        # dasel v2/v3共通: stdin + -i オプションで入力形式指定
+        mode=$(cat "$config_file" | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "")
     fi
 
     # daselが利用不可または取得失敗の場合はgrepでフォールバック
     if [[ -z "$mode" ]]; then
         # [backlog]セクション内のmode = "xxx" の形式を抽出
-        # sedで[backlog]から次のセクション（または末尾）までを抽出し、その中からmodeを検索
-        mode=$(sed -n '/^\[backlog\]/,/^\[/p' "$config_file" 2>/dev/null | grep -E '^\s*mode\s*=' | head -1 | sed 's/.*=\s*["'"'"']\?\([^"'"'"']*\)["'"'"']\?.*/\1/' || echo "")
+        # sedで[backlog]から次のセクション（または末尾）までを抽出し、awkで値を取得
+        # インラインコメント(#以降)とクォート・空白・タブを除去
+        mode=$(sed -n '/^\[backlog\]/,/^\[/p' "$config_file" 2>/dev/null | grep -E '^\s*mode\s*=' | head -1 | awk -F'=' '{gsub(/#.*$/, "", $2); gsub(/[" \t]/, "", $2); print $2}' || echo "")
     fi
 
     # 空または無効な値の場合はデフォルト

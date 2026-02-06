@@ -81,19 +81,26 @@ fi
 
 ### Unit定義の責務から抽出
 
-- [ ] `prompts/setup-prompt.md` にinit-labels.sh呼び出しを追加（セットアップ・アップグレード両方）
-- [ ] `prompts/package/bin/init-cycle-dir.sh` のbacklogディレクトリ作成条件を修正（issue/issue-only両方でスキップ）
+- [x] `prompts/setup-prompt.md` にinit-labels.sh呼び出しを追加（セットアップ・アップグレード両方）
+- [x] `prompts/package/bin/init-cycle-dir.sh` のbacklogディレクトリ作成条件を修正（issue/issue-only両方でスキップ）
 
 ### 関連Issue（#169）の受け入れ基準から抽出
 
-- [ ] `prompts/setup-prompt.md` の初回セットアップフロー（8.2.6節）で init-labels.sh が呼び出される
-- [ ] `prompts/setup-prompt.md` のアップグレードフロー（8.2.6節）で init-labels.sh が呼び出される
-- [ ] 既存ラベルは上書きされずスキップされる
-- [ ] `prompts/setup/bin/init-labels.sh` が存在する（セットアップ専用スクリプト）
+- [x] `prompts/setup-prompt.md` の初回セットアップフロー（8.2.6節）で init-labels.sh が呼び出される
+- [x] `prompts/setup-prompt.md` のアップグレードフロー（8.2.6節）で init-labels.sh が呼び出される
+- [x] 既存ラベルは上書きされずスキップされる（init-labels.shの既存機能）
+- [x] `prompts/setup/bin/init-labels.sh` が存在する（セットアップ専用スクリプト）
 
 ### 関連Issue（#162）の受け入れ基準から抽出
 
-- [ ] `backlog.mode=issue` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成されない
-- [ ] `backlog.mode=issue-only` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成されない
-- [ ] `backlog.mode=git` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成される
-- [ ] Issue駆動モード時の出力に `dir:docs/cycles/backlog:skipped-issue-mode` が表示される
+- [x] `backlog.mode=issue` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成されない
+- [x] `backlog.mode=issue-only` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成されない
+- [x] `backlog.mode=git` で `init-cycle-dir.sh` を実行すると、`docs/cycles/backlog/` が作成される
+- [x] Issue駆動モード時の出力に `dir:docs/cycles/backlog:skipped-issue-mode` が表示される
+
+### 追加修正（AIレビューで発見）
+
+- [x] `prompts/package/guides/backlog-management.md` のinit-labels.shパスを修正
+- [x] `docs/aidlc/guides/backlog-management.md` のinit-labels.shパスを修正
+- [x] dasel構文をリポジトリ内で統一（v2/v3共通形式）
+- [x] awkフォールバックでインラインコメントを適切に処理
