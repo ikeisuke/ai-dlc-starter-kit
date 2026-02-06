@@ -18,7 +18,7 @@
 #   - created: 新規作成
 #   - exists: 既存（スキップ）
 #   - would-create: 作成予定（--dry-runモード）
-#   - skipped-issue-only: issue-onlyモードのためスキップ
+#   - skipped-issue-mode: Issue駆動モード（issue/issue-only）のためスキップ
 #   - error: 作成失敗（詳細はstderrへ）
 #
 
@@ -60,12 +60,12 @@ OPTIONS:
   created            - 新規作成
   exists             - 既存（スキップ）
   would-create       - 作成予定（--dry-runモード）
-  skipped-issue-only - issue-onlyモードのためスキップ
+  skipped-issue-mode - Issue駆動モード（issue/issue-only）のためスキップ
   error              - 作成失敗（詳細はstderrへ）
 
 共通バックログディレクトリ:
   docs/cycles/backlog/ と docs/cycles/backlog-completed/ も作成します。
-  ただし、backlog mode が issue-only の場合はスキップします。
+  ただし、backlog mode が issue または issue-only の場合はスキップします。
 
 例:
   $ init-cycle-dir.sh v1.8.0
@@ -177,10 +177,10 @@ create_common_backlog_dirs() {
 
     backlog_mode=$(get_backlog_mode)
 
-    # issue-onlyの場合はスキップ
-    if [[ "$backlog_mode" == "issue-only" ]]; then
-        echo "dir:docs/cycles/backlog:skipped-issue-only"
-        echo "dir:docs/cycles/backlog-completed:skipped-issue-only"
+    # Issue駆動モード（issue/issue-only）の場合はスキップ
+    if [[ "$backlog_mode" == "issue" || "$backlog_mode" == "issue-only" ]]; then
+        echo "dir:docs/cycles/backlog:skipped-issue-mode"
+        echo "dir:docs/cycles/backlog-completed:skipped-issue-mode"
         return 0
     fi
 
