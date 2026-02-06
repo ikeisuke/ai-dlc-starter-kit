@@ -70,12 +70,14 @@ So that 長時間の作業でもAIの応答品質が低下しない
 - [ ] `prompts/package/prompts/inception.md` の「コンテキストリセット対応」セクションに「コンパクション時は本ファイルを再読み込み」の指示が追加される
 - [ ] `prompts/package/prompts/construction.md` の「コンテキストリセット対応」セクションに同様の指示が追加される
 - [ ] `prompts/package/prompts/operations.md` の「コンテキストリセット対応」セクションに同様の指示が追加される
-- [ ] `prompts/package/templates/progress_inception_template.md` に「再開時に読み込むファイル」セクションが追加される
-- [ ] `prompts/package/templates/progress_construction_template.md` に「再開時に読み込むファイル」セクションが追加される
+- [ ] `prompts/package/templates/inception_progress_template.md` に「再開時に読み込むファイル」セクションが追加される
+- [ ] `prompts/package/templates/operations_progress_template.md` に「再開時に読み込むファイル」セクションが追加される
+
+**注**: Construction Phase用のprogress.mdテンプレートは存在しない（Unit定義ファイルで進捗管理）
 
 **技術的考慮事項**:
 - 変更対象: `prompts/package/prompts/inception.md`, `construction.md`, `operations.md`
-- 変更対象: `prompts/package/templates/progress_*_template.md`
+- 変更対象: `prompts/package/templates/inception_progress_template.md`, `operations_progress_template.md`
 - 「コンテキストリセット対応」セクションの拡張
 
 ---
