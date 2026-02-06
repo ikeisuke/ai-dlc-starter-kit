@@ -171,6 +171,10 @@ cmd_ready() {
             # 既にready状態の場合も成功扱い
             echo "pr:${pr_number}:ready"
             return 0
+        elif echo "$error_output" | grep -qi "not a draft\|is not a draft"; then
+            # ドラフトでないPRをready化しようとした場合も成功扱い（冪等性）
+            echo "pr:${pr_number}:ready"
+            return 0
         else
             echo "pr:${pr_number}:error:unknown"
         fi
@@ -190,8 +194,9 @@ cmd_get_related_issues() {
     fi
 
     # Unit定義ファイル全体から #NNN 形式のIssue番号を抽出
+    # grep がマッチしない場合でも終了しないよう || true を追加
     local issues
-    issues=$(grep -ohE '#[0-9]+' "${units_dir}"/*.md 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//')
+    issues=$(grep -ohE '#[0-9]+' "${units_dir}"/*.md 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' || true)
 
     if [[ -z "$issues" ]]; then
         echo "issues:none"

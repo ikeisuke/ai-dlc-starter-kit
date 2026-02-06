@@ -149,10 +149,10 @@ docs/aidlc/bin/pr-ops.sh find-draft
 
 ## 完了条件チェックリスト
 
-- [ ] `prompts/package/prompts/operations.md` を1,000行以下に削減
-- [ ] AIレビューフローを `common/review-flow.md` への参照に変更（確認）
-- [ ] 冗長な記述の削減
-- [ ] `prompts/package/bin/pr-ops.sh` を作成し、PR操作をスクリプト化
+- [x] `prompts/package/prompts/operations.md` を1,000行以下に削減（998行達成）
+- [x] AIレビューフローを `common/review-flow.md` への参照に変更（確認）
+- [x] 冗長な記述の削減
+- [x] `prompts/package/bin/pr-ops.sh` を作成し、PR操作をスクリプト化
 
 ## リスク管理
 
