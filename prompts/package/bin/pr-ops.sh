@@ -21,7 +21,7 @@
 #
 # 出力形式（stdout）:
 #   find-draft:
-#     pr:found:<number>:<url>:<isDraft>
+#     pr:found:<number>:<url>
 #     pr:not-found
 #   ready:
 #     pr:<number>:ready
@@ -49,8 +49,8 @@ PR操作を行うスクリプト。
 
 SUBCOMMANDS:
   find-draft
-      現在のブランチからのオープンなPRを検索します。
-      ドラフト/非ドラフトの状態も含めて出力します。
+      現在のブランチからのドラフトPRを検索します。
+      ドラフト状態のPRのみを対象とします。
 
   ready <pr_number>
       ドラフトPRをReady for Reviewに変更します。
@@ -70,8 +70,8 @@ OPTIONS:
 
 出力形式（stdout）:
   find-draft:
-    pr:found:<number>:<url>:<isDraft>  PRが見つかった場合
-    pr:not-found                        PRが見つからない場合
+    pr:found:<number>:<url>             ドラフトPRが見つかった場合
+    pr:not-found                        ドラフトPRが見つからない場合
 
   ready:
     pr:<number>:ready                   Ready化成功
@@ -91,7 +91,7 @@ OPTIONS:
 
 例:
   $ pr-ops.sh find-draft
-  pr:found:123:https://github.com/owner/repo/pull/123:true
+  pr:found:123:https://github.com/owner/repo/pull/123
 
   $ pr-ops.sh ready 123
   pr:123:ready
@@ -132,7 +132,7 @@ require_gh() {
 }
 
 # find-draftサブコマンド
-# 現在のブランチからのオープンなPRを検索
+# 現在のブランチからのドラフトPRを検索
 cmd_find_draft() {
     require_gh
 
@@ -145,9 +145,10 @@ cmd_find_draft() {
     fi
 
     local pr_info
-    pr_info=$(gh pr list --head "${current_branch}" --state open --json number,url,isDraft --jq '.[0] | "\(.number):\(.url):\(.isDraft)"' 2>/dev/null || echo "")
+    # ドラフトPRのみを検索（isDraft=true）
+    pr_info=$(gh pr list --head "${current_branch}" --state open --json number,url,isDraft --jq '.[] | select(.isDraft == true) | "\(.number):\(.url)"' 2>/dev/null | head -1 || echo "")
 
-    if [[ -z "$pr_info" || "$pr_info" == "null:null:null" ]]; then
+    if [[ -z "$pr_info" ]]; then
         echo "pr:not-found"
     else
         echo "pr:found:${pr_info}"
