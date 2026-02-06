@@ -12,7 +12,8 @@ operations.mdを1,109行から1,000行以下に削減する（109行以上の削
 
 ## 変更対象ファイル
 
-- `prompts/package/prompts/operations.md`（正本）
+- `prompts/package/prompts/operations.md`（正本・編集対象）
+- `prompts/package/bin/pr-ops.sh`（新規作成）
 
 **注**: `docs/aidlc/prompts/operations.md` は `prompts/package/` のrsyncコピーであり直接編集禁止（`docs/cycles/rules.md` 参照）。Operations Phase完了時のアップグレード処理で自動同期される。
 
@@ -96,12 +97,49 @@ operations.mdを1,109行から1,000行以下に削減する（109行以上の削
 - マージ方法の詳細説明
 - 出力例の冗長な部分
 
-### 8. その他の軽微な削減（約20行削減）
+### 8. PR操作のスクリプト化（約30行削減）
+
+**新規スクリプト**: `prompts/package/bin/pr-ops.sh`
+- 正本: `prompts/package/bin/pr-ops.sh`
+- 呼び出しパス: `docs/aidlc/bin/pr-ops.sh`（rsyncで自動コピー）
+
+**同期タイミングの注意**:
+- 新規スクリプト作成後、Operations Phase完了時のアップグレード処理で `docs/aidlc/bin/` にコピーされる
+- このサイクル内でスクリプトを使用する場合は、作成後に手動で `rsync` または `cp` でコピーするか、正本パス（`prompts/package/bin/pr-ops.sh`）を直接使用する
+- 次サイクル以降は `docs/aidlc/bin/pr-ops.sh` が自動的に存在する
+
+**スクリプト化するコードブロック**:
+1. ドラフトPR検索（721-723行）
+2. PR Ready化（741-742行）
+3. 関連Issue番号取得（706-707行）
+4. PRマージ操作（883-895行）
+
+**スクリプトのサブコマンド**:
+- `pr-ops.sh find-draft` - 現在のブランチからのドラフトPRを検索
+- `pr-ops.sh ready <PR番号>` - ドラフトPRをReady化
+- `pr-ops.sh get-related-issues <CYCLE>` - Unit定義から関連Issue番号を取得
+- `pr-ops.sh merge <PR番号> [--squash|--rebase]` - PRをマージ
+
+**残すべき必須情報（削除禁止）**:
+- **前提条件**: `gh:available` の場合のみ実行（ステップ2.5参照）
+- **失敗時フォールバック**: GitHub CLI利用不可時は手動手順を案内
+- スクリプト内で `gh` 利用可否をチェックし、利用不可時はメッセージを出力
+
+**operations.mdでの置き換え例**:
+```bash
+# 変更前（複数行のコードブロック）
+CURRENT_BRANCH=$(git branch --show-current)
+gh pr list --head "${CURRENT_BRANCH}" --state open --json number,url,isDraft
+
+# 変更後（1行のスクリプト呼び出し）
+docs/aidlc/bin/pr-ops.sh find-draft
+```
+
+### 9. その他の軽微な削減（約10行削減）
 
 **対象**:
 - 空行の最適化
 - 重複する注意書き
-- 「**注意**:」で始まる重複説明
 
 ## 実装計画
 
@@ -112,8 +150,9 @@ operations.mdを1,109行から1,000行以下に削減する（109行以上の削
 ## 完了条件チェックリスト
 
 - [ ] `prompts/package/prompts/operations.md` を1,000行以下に削減
-- [ ] AIレビューフローを `common/review-flow.md` への参照に変更（既に参照形式だが確認）
+- [ ] AIレビューフローを `common/review-flow.md` への参照に変更（確認）
 - [ ] 冗長な記述の削減
+- [ ] `prompts/package/bin/pr-ops.sh` を作成し、PR操作をスクリプト化
 
 ## リスク管理
 
