@@ -7,6 +7,37 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.13.2] - 2026-02-07
+
+### Added
+
+- コンパクション時のフェーズプロンプト再読み込み指示（#170）
+  - 自動要約後もフェーズのルールと手順が維持されるよう対応
+  - inception.md, construction.md, operations.mdに再読み込み指示を追加
+- Issueラベル初期化処理のセットアップ/アップグレード対応（#169）
+  - init-labels.shをアップグレード時にも実行するよう修正
+
+### Changed
+
+- setup-branch.shがプレリリースバージョン（-alpha.N, -beta.N, -rc.N）に対応
+- operations.md行数削減（#172）
+  - AIレビューフローをreview-flow.mdへの外部参照に変更
+- セルフアップデート処理を `/aidlc-upgrade` スキル呼び出しに簡略化
+- progress.md更新タイミングをPRマージ前（Gitコミット前）に移動
+
+### Removed
+
+- setup-context.md機能を廃止
+  - SetupとInception統合により不要になったため
+  - setup_context_template.mdを削除
+
+### Fixed
+
+- backlogディレクトリ作成の条件分岐（#162）
+  - Issue駆動モード時に不要なディレクトリ作成を抑制
+
+---
+
 ## [1.13.1] - 2026-02-06
 
 ### Added

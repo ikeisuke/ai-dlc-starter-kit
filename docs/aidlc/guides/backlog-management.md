@@ -244,10 +244,11 @@ gh auth login
 
 ```bash
 # 共通ラベルの一括作成（11個）
-docs/aidlc/bin/init-labels.sh
+# セットアップ時: prompts/setup/bin/init-labels.sh
+# 単独実行時: [スターターキットパス]/prompts/setup/bin/init-labels.sh
 
 # 確認のみ（実際に作成しない）
-docs/aidlc/bin/init-labels.sh --dry-run
+[スターターキットパス]/prompts/setup/bin/init-labels.sh --dry-run
 ```
 
 **注**: サイクルラベル（`cycle:vX.X.X`）は上記スクリプトに含まれません。サイクル開始時に別途作成してください:

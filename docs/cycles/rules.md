@@ -32,15 +32,13 @@
 
 ### Operations Phase 完了時の必須作業【重要】
 
-このプロジェクトはメタ開発のため、Operations Phase の最後に以下を実行すること：
+このプロジェクトはメタ開発のため、Operations Phase のステップ6（リリース準備）の前に以下を実行すること：
 
 ```
-prompts/setup-prompt.md を読み込んで、AI-DLC 環境をアップグレードしてください
+/aidlc-upgrade
 ```
 
 **理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映するため。
-
-**タイミング**: ステップ6（リリース準備）の前に実行し、rsync による更新を適用してからコミット・PR作成を行う。
 
 ---
 
