@@ -29,3 +29,9 @@
 - モバイルアプリ（ios/android）: 全ステップ実施
 - デスクトップ/CLI（desktop/cli）: 全ステップ実施
 - Web/バックエンド（web/backend/general）: ステップ4（配布）をスキップ
+
+## 再開時に読み込むファイル
+
+コンパクション後やセッション再開時は、以下のファイルを読み込んでください：
+
+- `docs/aidlc/prompts/operations.md`

@@ -129,8 +129,8 @@ main() {
     local mode="$2"
 
     # バージョン形式の検証
-    if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        output "error" "" "" "無効なバージョン形式: ${version}（vX.Y.Z形式で指定してください）"
+    if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+        output "error" "" "" "無効なバージョン形式: ${version}（vX.Y.Z または vX.Y.Z-prerelease 形式で指定してください）"
         return 1
     fi
 
