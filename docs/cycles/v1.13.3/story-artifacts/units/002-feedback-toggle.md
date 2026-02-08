@@ -1,13 +1,13 @@
 # Unit: フィードバック送信機能オン/オフ設定
 
 ## 概要
-`docs/aidlc.toml` に `[rules.feedback].enabled` 設定を追加し、フィードバック送信機能のオン/オフを制御可能にする。企業内利用時の情報漏洩リスクを軽減する。
+`docs/aidlc.toml` に `[rules.feedback].enabled` 設定を追加し、フィードバック送信機能のオン/オフを制御可能にする。企業内利用時の情報漏洩リスクを軽減する。メタ開発構造のため、テンプレート（`prompts/package/`）とデプロイ先（`docs/aidlc/`）の両方を更新する。
 
 ## 含まれるユーザーストーリー
 - ストーリー 2: フィードバック送信機能のオン/オフ設定
 
 ## 責務
-- `prompts/package/aidlc.toml` に `[rules.feedback]` セクションを追加
+- `docs/aidlc.toml`（テンプレート: `prompts/setup/templates/aidlc.toml.template`）に `[rules.feedback]` セクションを追加
 - `prompts/package/prompts/AGENTS.md` のフィードバック送信セクションに設定読み込みと分岐ロジックを追加
 - `enabled = false` 時に導線全体をブロックし、メッセージを表示
 

@@ -40,5 +40,5 @@ So that 社内プロジェクトの情報がパブリックリポジトリに誤
 
 **技術的考慮事項**:
 - `prompts/package/prompts/AGENTS.md` のフィードバック送信セクションに設定読み込みと分岐ロジックを追加
-- `prompts/package/aidlc.toml` に `[rules.feedback]` セクションを追加
+- `prompts/setup/templates/aidlc.toml.template` に `[rules.feedback]` セクションを追加
 - 設定読み込みは `docs/aidlc/bin/read-config.sh rules.feedback.enabled --default "true"` を使用
