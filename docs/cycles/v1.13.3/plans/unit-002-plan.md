@@ -2,7 +2,7 @@
 
 ## 概要
 
-`docs/aidlc.toml` に `[rules.feedback]` セクションを追加し、フィードバック送信機能のオン/オフを制御可能にする。`enabled = false` 時は導線全体をブロックしメッセージを表示する。
+`docs/aidlc.toml` に `[rules.feedback]` セクションを追加し、フィードバック送信機能のオン/オフを制御可能にする。`enabled = false` 時は導線全体をブロックし「この機能は無効化されています」とメッセージを表示する。
 
 ## 変更対象ファイル
 
@@ -11,6 +11,8 @@
 | `prompts/setup/templates/aidlc.toml.template` | `[rules.feedback]` セクション追加 |
 | `prompts/package/prompts/AGENTS.md` | フィードバック送信セクションに設定読み込み・分岐ロジック追加 |
 | `docs/aidlc.toml` | `[rules.feedback]` セクション追加（現プロジェクト設定） |
+
+**注意**: `docs/aidlc/prompts/AGENTS.md` は直接編集禁止（`prompts/package/` の rsync コピー）。`prompts/package/prompts/AGENTS.md` を編集し、Operations Phaseで `/aidlc-upgrade` を実行することで `docs/aidlc/` に反映される。
 
 ## 実装計画
 
@@ -33,7 +35,7 @@ AGENTS.mdのフィードバック送信セクションの処理フロー：
 1. 「AIDLCフィードバック」「aidlc feedback」と言われた場合
 2. `read-config.sh` で `rules.feedback.enabled` を読み取り
 3. **`true` の場合**: 既存のフィードバック送信フローを実行
-4. **`false` の場合**: ブロックメッセージを表示して終了
+4. **`false` の場合**: 「この機能は無効化されています」とテキスト表示し、`gh issue create` コマンドの実行およびURL案内の表示は行わない
 
 #### ステップ3: 設計レビュー
 
@@ -49,9 +51,12 @@ AGENTS.mdのフィードバック送信セクションの処理フロー：
 
 #### ステップ5: テスト生成
 
-- `read-config.sh` の読み取り確認（手動検証）
+- `read-config.sh rules.feedback.enabled --default "true"` の読み取り確認（手動検証）
 - `enabled = true`（デフォルト）でフィードバック導線が表示されること
-- `enabled = false` でブロックメッセージが表示されること
+- `enabled = false` で「この機能は無効化されています」メッセージが表示され、Issue作成導線・URL案内が表示されないこと
+- 設定未定義時に `true`（有効）として動作すること
+- 不正値（`true`/`false` 以外）の場合に `true`（有効）として動作すること
+- `aidlc.toml.local` で上書き可能であること（既存の `read-config.sh` マージルール: local > base）
 
 #### ステップ6: 統合とレビュー
 
@@ -61,4 +66,4 @@ AIレビュー → 人間承認。
 
 - [ ] `docs/aidlc.toml`（テンプレート: `prompts/setup/templates/aidlc.toml.template`）に `[rules.feedback]` セクションを追加
 - [ ] `prompts/package/prompts/AGENTS.md` のフィードバック送信セクションに設定読み込みと分岐ロジックを追加
-- [ ] `enabled = false` 時に導線全体をブロックし、メッセージを表示
+- [ ] `enabled = false` 時に導線全体をブロックし、「この機能は無効化されています」とメッセージを表示
