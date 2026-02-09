@@ -8,7 +8,7 @@
 
 ## アーキテクチャパターン
 
-既存の設定読み込みパターン（`read-config.sh` + プロンプト内分岐）を踏襲。新たなスクリプトやツールは追加しない。
+既存の設定読み込みパターン（`docs/aidlc/bin/read-config.sh` + プロンプト内分岐）を踏襲。新たなスクリプトやツールは追加しない。
 
 ## コンポーネント構成
 
@@ -39,7 +39,7 @@
 **ステップ**:
 
 1. ユーザーが「AIDLCフィードバック」「aidlc feedback」と発言
-2. **【新規】設定確認**: `read-config.sh rules.feedback.enabled --default "true"` を実行
+2. **【新規】設定確認**: `docs/aidlc/bin/read-config.sh rules.feedback.enabled --default "true"` を実行
 3. **【新規】分岐判定**:
    - 結果が `"false"` と完全一致 → ステップ4a（ブロック）
    - それ以外 → ステップ4b（既存フロー）
@@ -53,7 +53,7 @@
 
 4. b. **有効時**: 既存のフィードバック送信フロー（ヒアリング → Issue作成/URL案内）を実行
 
-**関与するコンポーネント**: AGENTS.md, read-config.sh
+**関与するコンポーネント**: AGENTS.md, docs/aidlc/bin/read-config.sh
 
 ## AGENTS.md変更の具体的設計
 
@@ -126,7 +126,7 @@ enabled = true
 ## 技術選定
 
 - **言語**: Markdown（プロンプトテキスト）、TOML（設定ファイル）
-- **ツール**: `read-config.sh`（既存の設定読み込みスクリプト）
+- **ツール**: `docs/aidlc/bin/read-config.sh`（既存の設定読み込みスクリプト）
 
 ## 実装上の注意事項
 

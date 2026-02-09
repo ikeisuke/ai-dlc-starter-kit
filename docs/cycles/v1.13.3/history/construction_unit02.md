@@ -31,3 +31,14 @@
   - `docs/cycles/v1.13.3/design-artifacts/logical-designs/feedback-toggle_logical_design.md`
 
 ---
+## 2026-02-10 08:42:37 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 02-feedback-toggle（フィードバック送信機能オン/オフ設定）
+- **ステップ**: AIレビュー完了
+- **実行内容**: 【AIレビュー完了】指摘0件
+【対象タイミング】設計レビュー
+【対象成果物】feedback-toggle_domain_model.md, feedback-toggle_logical_design.md
+【レビューツール】Codex CLI
+
+---

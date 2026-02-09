@@ -10,10 +10,10 @@
 
 ### FeedbackEnabled
 
-- **属性**: enabled: string - `read-config.sh` から取得した設定値
+- **属性**: enabled: string - `docs/aidlc/bin/read-config.sh` から取得した設定値
 - **不変性**: 設定ファイルから読み取った値は判定処理中に変更されない
 - **等価性**: 文字列 `"false"` と完全一致する場合のみ「無効」、それ以外はすべて「有効」
-- **デフォルト**: `"true"`（`read-config.sh --default "true"` により設定未定義時に返される）
+- **デフォルト**: `"true"`（`docs/aidlc/bin/read-config.sh --default "true"` により設定未定義時に返される）
 
 ## ドメインサービス
 
@@ -21,7 +21,7 @@
 
 - **責務**: フィードバック送信機能の有効/無効判定を行い、導線を制御する
 - **操作**:
-  - `checkEnabled()`: `read-config.sh rules.feedback.enabled --default "true"` を実行し、結果が `"false"` と完全一致するか判定
+  - `checkEnabled()`: `docs/aidlc/bin/read-config.sh rules.feedback.enabled --default "true"` を実行し、結果が `"false"` と完全一致するか判定
     - `"false"` → 無効: ブロックメッセージ「この機能は無効化されています」を表示し終了
     - それ以外 → 有効: 既存のフィードバック送信フローに進む
 
@@ -40,7 +40,7 @@ enabled = true
 
 ### 設定の読み込み優先順位
 
-`read-config.sh` の既存マージルール（local > base > global）に従う：
+`docs/aidlc/bin/read-config.sh` の既存マージルール（local > base > global）に従う（ストーリー要件の最小保証は local > base）：
 
 1. `docs/aidlc.toml.local`（最高優先度）
 2. `docs/aidlc.toml`（中間優先度）
@@ -48,7 +48,7 @@ enabled = true
 
 ### フォールバック仕様
 
-| 設定状態 | `read-config.sh` 出力 | 判定結果 |
+| 設定状態 | `docs/aidlc/bin/read-config.sh` 出力 | 判定結果 |
 |----------|----------------------|----------|
 | `enabled = true` | `"true"` | 有効 |
 | `enabled = false` | `"false"` | **無効** |
