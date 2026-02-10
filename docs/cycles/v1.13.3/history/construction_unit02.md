@@ -42,3 +42,21 @@
 【レビューツール】Codex CLI
 
 ---
+## 2026-02-10 08:46:26 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 02-feedback-toggle（フィードバック送信機能オン/オフ設定）
+- **ステップ**: ステップ4: コード生成
+- **実行内容**: 3ファイルに変更を実装。aidlc.toml.templateに[rules.feedback]セクション追加、AGENTS.mdに設定確認・分岐ロジック追加、docs/aidlc.tomlに[rules.feedback]セクション追加。
+- **成果物**:
+  - `prompts/setup/templates/aidlc.toml.template, prompts/package/prompts/AGENTS.md, docs/aidlc.toml`
+
+---
+## 2026-02-10 09:02:34 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 02-feedback-toggle（フィードバック送信機能オン/オフ設定）
+- **ステップ**: ステップ5: テスト生成
+- **実行内容**: 手動検証を実施。enabled=true/キー未定義/local上書き/false完全一致判定の4ケースを確認し、すべて期待動作を確認。
+
+---

@@ -112,6 +112,13 @@ max_bytes = 150000
 max_lines = 1000
 target_pattern = "*.md"
 
+[rules.feedback]
+# フィードバック送信機能設定（v1.13.3で追加）
+# enabled: true | false
+# - true: フィードバック送信機能を有効化（デフォルト）
+# - false: フィードバック送信機能を無効化（企業利用時のセキュリティ対策）
+enabled = true
+
 [backlog]
 # バックログ管理モード設定（v1.7.0で追加）
 # mode: "git" | "issue" | "git-only" | "issue-only"
