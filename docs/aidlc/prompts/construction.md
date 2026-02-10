@@ -716,6 +716,8 @@ AIレビューの実施状態を確認できません。
 - 状態: 進行中 → 完了
 - 完了日: 現在日付（YYYY-MM-DD形式）
 
+**注意**: Unitブランチで作業する場合、Unit定義ファイルの「完了」は「PR準備完了」を意味します（Operations Phase ステップ6.4.5と同一の解釈）。この更新をGitコミット（ステップ4）に含めることで、Unit PRに正確な状態が反映されます。ステップ5以降はPR準備完了後のレビュー・マージ作業です。
+
 ### 1.5 Issueステータス更新【Issue管理】
 
 Unit完了時、関連Issueのステータスを `waiting-for-review` に更新します（`gh:available` の場合のみ）。
@@ -755,7 +757,6 @@ git status
 
 - [ ] Unit定義ファイル: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
 - [ ] 履歴ファイル: `docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md`
-- [ ] 進捗ファイル（Operations Phase）: `docs/cycles/{{CYCLE}}/operations/progress.md`
 - [ ] 設計ファイル（作成した場合）: `docs/cycles/{{CYCLE}}/design-artifacts/`
 - [ ] 実装ファイル（作成した場合）
 
@@ -798,6 +799,8 @@ Unit PRをマージしますか？
 ```
 
 **「はい」の場合**:
+
+**注意**: PR作成・Ready化後は、バグ修正や追加要件がない限り**新たな変更**を加えないでください。Unit定義ファイルの「実装状態」は既にステップ1で「完了」（= PR準備完了）として更新済みです。コミット漏れが見つかった場合は、漏れていたファイルのみ追加コミットしてください。
 
 1. **既存PRの確認**:
 ```bash

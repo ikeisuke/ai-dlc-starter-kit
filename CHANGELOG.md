@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.13.3] - 2026-02-10
+
+### Added
+
+- フィードバック送信機能のオン/オフ設定（#174）
+  - `docs/aidlc.toml` に `[rules.feedback].enabled` を追加
+  - `enabled = false` で機能を無効化可能（企業利用時の情報漏洩リスク軽減）
+  - `read-config.sh` による設定読み込みに対応
+
+### Changed
+
+- Construction Phase progress.md更新タイミング修正（#175）
+  - Unitブランチ使用時、progress.md更新をPR作成前に移動
+  - Operations Phaseの「PR準備完了」パターンをConstruction Phaseにも適用
+
+---
+
 ## [1.13.2] - 2026-02-07
 
 ### Added
