@@ -71,3 +71,13 @@
 【レビューツール】Codex CLI
 
 ---
+## 2026-02-10 16:58:13 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 02-feedback-toggle（フィードバック送信機能オン/オフ設定）
+- **ステップ**: Unit完了
+- **実行内容**: Unit 002完了。aidlc.toml.template、AGENTS.md、docs/aidlc.tomlに[rules.feedback]セクションと分岐ロジックを実装。全完了条件達成、設計・実装整合性チェックOK、AIレビュー実施済み。
+- **成果物**:
+  - `prompts/setup/templates/aidlc.toml.template, prompts/package/prompts/AGENTS.md, docs/aidlc.toml`
+
+---
