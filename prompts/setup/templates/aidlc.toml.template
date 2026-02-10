@@ -87,6 +87,13 @@ enabled = false
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = false
 
+[rules.feedback]
+# フィードバック送信機能設定（v1.13.3で追加）
+# enabled: true | false
+# - true: フィードバック送信機能を有効化（デフォルト）
+# - false: フィードバック送信機能を無効化（企業利用時のセキュリティ対策）
+enabled = true
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
