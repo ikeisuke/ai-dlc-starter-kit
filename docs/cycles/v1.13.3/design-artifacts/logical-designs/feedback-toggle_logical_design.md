@@ -30,7 +30,7 @@
 
 - **責務**: 現プロジェクトの設定ファイル
 - **変更内容**: `[rules.feedback]` セクションを追加
-- **配置位置**: `[rules.linting]` と `[rules.custom]` の間（テンプレートと同じ位置）
+- **配置位置**: `[rules.size_check]` の後、`[backlog]` の前（歴史的にテンプレートとセクション順序が異なるため）
 
 ## 処理フロー概要
 
@@ -114,7 +114,8 @@ enabled = true
 
 ### 配置位置
 
-`[rules.linting]` セクションの後、`[rules.custom]` セクションの前に配置する。
+- **テンプレート**: `[rules.linting]` セクションの後、`[rules.custom]` セクションの前に配置する
+- **現プロジェクト（`docs/aidlc.toml`）**: `[rules.size_check]` セクションの後、`[backlog]` セクションの前に配置する（歴史的にテンプレートとセクション順序が異なるため）
 
 ## 非機能要件（NFR）への対応
 

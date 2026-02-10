@@ -60,3 +60,14 @@
 - **実行内容**: 手動検証を実施。enabled=true/キー未定義/local上書き/false完全一致判定の4ケースを確認し、すべて期待動作を確認。
 
 ---
+## 2026-02-10 09:05:38 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 02-feedback-toggle（フィードバック送信機能オン/オフ設定）
+- **ステップ**: AIレビュー完了
+- **実行内容**: 【AIレビュー完了】指摘0件
+【対象タイミング】統合とレビュー
+【対象成果物】prompts/setup/templates/aidlc.toml.template, prompts/package/prompts/AGENTS.md, docs/aidlc.toml
+【レビューツール】Codex CLI
+
+---
