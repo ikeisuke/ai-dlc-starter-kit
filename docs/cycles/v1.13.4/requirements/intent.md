@@ -20,7 +20,7 @@ AI-DLCスターターキットを使用してAIレビュー（Codex/Claude）を
 - compatibilityフィールドの記載により、サンドボックス要件が明確化される
 
 ## 成功基準
-- (#177) セットアップスクリプト実行後、`~/.codex/skills/` 配下にAI-DLCのCodexスキルへのシンボリックリンクが存在し、`ls -la ~/.codex/skills/` で確認できる
+- (#177) Codex skillsの設定方法が導入ドキュメントに記載され、ユーザーが手順に従って設定できる
 - (#178) Codex skillsのSKILL.mdにcompatibilityフィールドが追加され、ネットワークアクセス等のサンドボックス要件が明記される
 - (#179) claude-reviewスキルの不安定動作について:
   - 原因が特定され、調査結果が文書化される

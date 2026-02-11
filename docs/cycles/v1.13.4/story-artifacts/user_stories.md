@@ -2,23 +2,22 @@
 
 ## Epic: AIレビュースキルの改善・安定化
 
-### ストーリー 1: Codex skillsのシンボリックリンク配置（#177）
+### ストーリー 1: Codex skillsの設定ドキュメント作成（#177）
 **優先順位**: Must-have
 
 As a AI-DLCスターターキット利用者
-I want to セットアップ実行後にCodex CLIの `~/.codex/skills/` にAI-DLCスキルが自動配置される
-So that Codex CLIからAI-DLCのレビュースキルを利用できる
+I want to Codex CLIでAI-DLCスキルを利用するための設定方法がドキュメントに記載されている
+So that Codex CLIからAI-DLCのレビュースキルを手順に従って設定・利用できる
 
 **受け入れ基準**:
-- [ ] セットアップスクリプト実行後、`~/.codex/skills/` ディレクトリが作成される
-- [ ] `~/.codex/skills/codex-review` が `docs/aidlc/skills/codex-review` へのシンボリックリンクとして存在する
-- [ ] `ls -la ~/.codex/skills/` でリンク先が正しいことを確認できる
-- [ ] 既存の `.claude/skills/` へのシンボリックリンク配置は維持される
-- [ ] 2回目以降のセットアップ実行時、既存リンクが正しければスキップされる
+- [ ] 導入ドキュメントにCodex skillsの設定手順（シンボリックリンク作成方法）が記載される
+- [ ] 設定手順にはコマンド例が含まれる
+- [ ] 設定後の確認方法（`ls -la ~/.codex/skills/`）が記載される
+- [ ] 既存のセットアップフローとの関係が説明される
 
 **技術的考慮事項**:
-- `prompts/package/bin/setup-ai-tools.sh` を編集（メタ開発ルール）
-- Codex CLIがインストールされていない環境でもエラーにならないこと
+- `prompts/package/` 配下のドキュメントを編集（メタ開発ルール）
+- 自動化はせず、ユーザーが手動で設定する前提
 
 ---
 
