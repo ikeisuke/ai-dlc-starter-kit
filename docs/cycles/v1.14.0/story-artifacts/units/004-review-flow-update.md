@@ -34,11 +34,18 @@ review-flow.mdを更新し、新しいレビュースキル（reviewing-code, re
 - 新設計ではレビュー種別選択 → ツール選択の2段階になる
 - 後方互換性: 既存の `docs/aidlc.toml` の `[rules.mcp_review]` 設定との整合性を保つ
 
+## 受け入れ基準
+- [ ] `grep -c 'skill="codex"' prompts/package/prompts/common/review-flow.md` が0である（旧スキル名が残っていない）
+- [ ] `grep -c 'skill="claude"' prompts/package/prompts/common/review-flow.md` が0である
+- [ ] `grep -c 'skill="gemini"' prompts/package/prompts/common/review-flow.md` が0である
+- [ ] review-flow.mdにレビュー種別（code/architecture/security）の選択ロジックが記載されている
+- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.mcp_review].ai_tools` 参照記述が存在する
+
 ## 実装優先度
 High
 
 ## 見積もり
-中規模（review-flow.mdの設計変更を含む）
+1日（review-flow.mdの設計変更。レビュー種別選択→ツール選択の2段階ロジック設計が主作業。不確実性: 既存フローとの整合性確認）
 
 ---
 ## 実装状態

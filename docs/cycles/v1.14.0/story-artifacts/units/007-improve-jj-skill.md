@@ -33,11 +33,17 @@ jjスキルをagentskills.ioベストプラクティスに準拠させる。fron
 - nameは `jj` のまま維持（ツール名としての例外、gerund formにしない）
 - Git対照表はreferencesに分離するが、SKILL.md本体からの参照パスを記載
 
+## 受け入れ基準
+- [ ] SKILL.md frontmatterのnameが小文字英数字+ハイフンのみで構成されている
+- [ ] SKILL.md frontmatterのdescriptionが三人称で記述されている（"I" や "You" で始まらない）
+- [ ] `ls prompts/package/skills/jj/references/` でGit対照表ファイルが存在する
+- [ ] `wc -l < prompts/package/skills/jj/SKILL.md` が500以下である
+
 ## 実装優先度
 Medium
 
 ## 見積もり
-小規模（frontmatter修正 + ファイル分離）
+0.5日（frontmatter修正 + Git対照表のreferences分離）
 
 ---
 ## 実装状態

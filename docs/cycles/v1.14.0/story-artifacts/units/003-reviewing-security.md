@@ -36,11 +36,21 @@
 - Unit 001と同様のSKILL.md構造を踏襲（ツール呼び出し部分は共通パターン）
 - セキュリティ固有の観点（OWASP Top 10、認証・認可、依存脆弱性）を重点的に記載
 
+## 受け入れ基準
+- [ ] `test -d prompts/package/skills/reviewing-security` でディレクトリが存在する
+- [ ] `test -f prompts/package/skills/reviewing-security/SKILL.md` でSKILL.mdが存在する
+- [ ] SKILL.md frontmatterに `name: reviewing-security` が記載されている
+- [ ] SKILL.md frontmatterのdescriptionが三人称で記述されている
+- [ ] SKILL.md bodyにセキュリティ観点チェックリスト（OWASP Top 10、認証・認可、依存脆弱性）が記載されている
+- [ ] SKILL.md bodyにCodex、Claude、Geminiの実行コマンドが各1つ以上記載されている
+- [ ] `ls prompts/package/skills/reviewing-security/references/` で1ファイル以上存在する
+- [ ] `wc -l < prompts/package/skills/reviewing-security/SKILL.md` が500以下である
+
 ## 実装優先度
 High
 
 ## 見積もり
-小規模（SKILL.md + references 1ファイル以上）
+0.5日（Unit 001と同様の構造。観点部分のみ差し替え）
 
 ---
 ## 実装状態

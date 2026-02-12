@@ -37,11 +37,21 @@
 - セッション管理（resume）の詳細はreferences/に分離し、SKILL.md本体は簡潔に保つ
 - compatibilityフィールドでClaude Code対応を明記
 
+## 受け入れ基準
+- [ ] `test -d prompts/package/skills/reviewing-code` でディレクトリが存在する
+- [ ] `test -f prompts/package/skills/reviewing-code/SKILL.md` でSKILL.mdが存在する
+- [ ] SKILL.md frontmatterに `name: reviewing-code` が記載されている
+- [ ] SKILL.md frontmatterのdescriptionが三人称で記述されている（"I" や "You" で始まらない）
+- [ ] SKILL.md bodyにコード品質観点チェックリスト（可読性、保守性、パフォーマンス、テスト品質）が記載されている
+- [ ] SKILL.md bodyにCodex、Claude、Geminiの実行コマンドが各1つ以上記載されている
+- [ ] `ls prompts/package/skills/reviewing-code/references/` で1ファイル以上存在する
+- [ ] `wc -l < prompts/package/skills/reviewing-code/SKILL.md` が500以下である
+
 ## 実装優先度
 High
 
 ## 見積もり
-小規模（SKILL.md + references 1ファイル以上）
+0.5日（SKILL.md作成 + references 1ファイル。既存3スキルからの情報統合が主作業）
 
 ---
 ## 実装状態
