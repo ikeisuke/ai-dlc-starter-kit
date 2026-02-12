@@ -2,6 +2,7 @@
 name: codex-review
 description: Codex CLIでコードレビューを実行する。AI-DLCの設計・実装レビューに使用。
 argument-hint: [対象ファイルまたはレビュー指示]
+compatibility: Requires codex CLI and network access (OpenAI API). Runs in read-only sandbox mode.
 allowed-tools: Bash(codex:*)
 ---
 

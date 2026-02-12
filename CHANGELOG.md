@@ -7,6 +7,26 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.13.4] - 2026-02-12
+
+### Added
+
+- Codex CLIスキル設定ドキュメント（#177）
+  - `skill-usage-guide.md` にCodex CLI / Gemini CLIセクションを分離・拡充
+  - `~/.codex/skills/` へのシンボリックリンク設定手順と確認方法を追加
+- Codex skills compatibilityフィールド（#178）
+  - `codex-review/SKILL.md` にAgent Skills Specification v1.0準拠のcompatibilityフィールドを追加
+  - サンドボックス要件（ネットワークアクセス等）を明記
+
+### Fixed
+
+- claude-reviewスキルの不安定動作対策（#179）
+  - `--output-format stream-json` オプションをデフォルトに追加し、レスポンス未返却を改善
+  - 既知の制限事項セクションを新設（レスポンス未返却、指摘の非決定性、stream-json出力形式）
+  - 全コマンド例にstream-jsonオプションを追加
+
+---
+
 ## [1.13.3] - 2026-02-10
 
 ### Added
