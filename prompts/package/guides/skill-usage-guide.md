@@ -75,9 +75,9 @@ mkdir -p ~/.codex/skills
 
 # プロジェクトのスキルへのシンボリックリンクを作成
 # <PROJECT_ROOT> はプロジェクトのルートディレクトリの絶対パスに置き換えてください
-ln -s <PROJECT_ROOT>/docs/aidlc/skills/codex-review ~/.codex/skills/codex-review
-ln -s <PROJECT_ROOT>/docs/aidlc/skills/claude-review ~/.codex/skills/claude-review
-ln -s <PROJECT_ROOT>/docs/aidlc/skills/gemini-review ~/.codex/skills/gemini-review
+ln -s "<PROJECT_ROOT>/docs/aidlc/skills/codex-review" ~/.codex/skills/codex-review
+ln -s "<PROJECT_ROOT>/docs/aidlc/skills/claude-review" ~/.codex/skills/claude-review
+ln -s "<PROJECT_ROOT>/docs/aidlc/skills/gemini-review" ~/.codex/skills/gemini-review
 ```
 
 #### 設定確認
