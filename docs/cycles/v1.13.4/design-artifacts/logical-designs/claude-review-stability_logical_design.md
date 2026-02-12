@@ -74,8 +74,8 @@ claude --session-id <uuid> -p --output-format stream-json "<追加指示>"
 **追記内容**: stream-json出力の取り扱い方法
 
 - stream-json出力はJSON Lines形式
-- 最終行の `type: "result"` にレビュー結果が含まれる
-- 呼び出し元（AI-DLCの反復レビューフロー等）は最終結果を取得して処理する
+- `type: "result"` のイベントにレビュー結果が含まれる（出力位置はCLIバージョンにより変わる可能性あり）
+- 呼び出し元（AI-DLCの反復レビューフロー等）は `result` イベントを検出して処理する
 
 ## 処理フロー概要
 
