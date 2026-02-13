@@ -6,7 +6,7 @@
 #   ./read-config.sh <key> [--default <value>]
 #
 # パラメータ:
-#   key       - ドット区切りの設定キー（例: rules.mcp_review.mode）
+#   key       - ドット区切りの設定キー（例: rules.reviewing.mode）
 #   --default - キーが存在しない場合のデフォルト値（文字列のみ）
 #
 # 終了コード:
@@ -26,7 +26,7 @@
 #   - 親テーブルを直接取得した場合は最後のファイルの値が返される
 #
 # 使用例:
-#   ./read-config.sh rules.mcp_review.mode
+#   ./read-config.sh rules.reviewing.mode
 #   ./read-config.sh rules.custom.foo --default "bar"
 #
 
