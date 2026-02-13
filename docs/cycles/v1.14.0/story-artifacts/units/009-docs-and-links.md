@@ -7,7 +7,7 @@
 - ストーリー 9: シンボリックリンクとドキュメントの更新
 
 ## 責務
-- `.claude/skills/` に reviewing-code、reviewing-architecture、reviewing-security、jj、aidlc-upgrade の5つのシンボリックリンクが存在し、それぞれ `docs/aidlc/skills/` 配下を指していることを確認
+- `.claude/skills/` に reviewing-code、reviewing-architecture、reviewing-security、jj、upgrading-aidlc の5つのシンボリックリンクが存在し、それぞれ `docs/aidlc/skills/` 配下を指していることを確認
 - `prompts/package/prompts/AGENTS.md` のスキル一覧テーブルに新スキル3つを記載し、旧スキル4つ（codex-review, claude-review, gemini-review, gh）を削除
 - `prompts/package/guides/skill-usage-guide.md` のスキル構成説明を新構成（5スキル）に更新
 - `prompts/setup-prompt.md` のシンボリックリンク作成処理を新スキル名（5スキル）に更新
@@ -16,7 +16,7 @@
 ## 境界
 - スキルのSKILL.md内容の変更は含まない（Unit 001-003で完了済み）
 - review-flow.mdの変更は含まない（Unit 004で完了済み）
-- jjスキル・aidlc-upgradeスキルのSKILL.md改善は含まない（Unit 007, 008で対応。シンボリックリンクパスは変わらないため本Unitに依存しない）
+- jjスキル・upgrading-aidlcスキルのSKILL.md改善は含まない（Unit 007, 008で対応。ただしUnit 008でスキル名がリネームされたため、シンボリックリンク名は `upgrading-aidlc` を使用する）
 
 ## 依存関係
 
@@ -37,13 +37,13 @@
 - rules.mdの `skill="codex"` は新しいレビュースキル呼び出し方法に更新
 
 ## 受け入れ基準
-- [ ] `.claude/skills/` に reviewing-code、reviewing-architecture、reviewing-security、jj、aidlc-upgrade の5つのシンボリックリンクが存在する（`ls -la .claude/skills/` で確認）
+- [ ] `.claude/skills/` に reviewing-code、reviewing-architecture、reviewing-security、jj、upgrading-aidlc の5つのシンボリックリンクが存在する（`ls -la .claude/skills/` で確認）
 - [ ] 各シンボリックリンクが `docs/aidlc/skills/` 配下を指している（`readlink .claude/skills/<name> | grep -q 'docs/aidlc/skills/'` で各5リンク確認）
 - [ ] `grep -c "reviewing-code\|reviewing-architecture\|reviewing-security" prompts/package/prompts/AGENTS.md` が3以上
 - [ ] `grep -E -c 'codex-review|claude-review|gemini-review' prompts/package/prompts/AGENTS.md` が0
 - [ ] `grep -r '"gh"' prompts/package/guides/skill-usage-guide.md` でghスキルへの参照がヒットしない（ストーリー6の受け入れ基準をUnit 009で検証）
-- [ ] `grep -E -c 'reviewing-code|reviewing-architecture|reviewing-security|jj|aidlc-upgrade' prompts/package/guides/skill-usage-guide.md` が5以上（新構成5スキルが記載されている）
-- [ ] `grep -c 'reviewing-code\|reviewing-architecture\|reviewing-security\|jj\|aidlc-upgrade' prompts/setup-prompt.md` が5以上（シンボリックリンク作成処理が新スキル名に更新されている）
+- [ ] `grep -E -c 'reviewing-code|reviewing-architecture|reviewing-security|jj|upgrading-aidlc' prompts/package/guides/skill-usage-guide.md` が5以上（新構成5スキルが記載されている）
+- [ ] `grep -c 'reviewing-code\|reviewing-architecture\|reviewing-security\|jj\|upgrading-aidlc' prompts/setup-prompt.md` が5以上（シンボリックリンク作成処理が新スキル名に更新されている）
 - [ ] `grep -c 'skill="codex"' docs/cycles/rules.md` が0（新スキル名に更新済み）
 
 ## 実装優先度
