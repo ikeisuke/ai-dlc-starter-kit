@@ -61,17 +61,17 @@
 | architecture | `skill="reviewing-architecture"` |
 | security | `skill="reviewing-security"` |
 
-#### 3. `ai_tools` 設定の役割変更
+#### 3. `tools` 設定の役割変更
 
-`docs/aidlc.toml` の `[rules.reviewing].ai_tools`（旧 `[rules.mcp_review]`）を参照する。セクション名を `[rules.reviewing]` にリネームし、新スキル名（reviewing-*）との整合性を確保する。
+`docs/aidlc.toml` の `[rules.reviewing].tools`（旧 `[rules.mcp_review]`）を参照する。セクション名を `[rules.reviewing]` にリネームし、新スキル名（reviewing-*）との整合性を確保する。
 
-**責務の明確化**: ツール選択（codex/claude/geminiのどれを使うか）は**新スキルの内部責務**とする。review-flow.mdは `ai_tools` の値を読み取り、スキル呼び出し時の引数として優先ツール名を渡す。スキル内部でそのツールが利用可能かを判定し、利用不可の場合はスキル内でフォールバックする。
+**責務の明確化**: ツール選択（codex/claude/geminiのどれを使うか）は**新スキルの内部責務**とする。review-flow.mdは `tools` の値を読み取り、スキル呼び出し時の引数として優先ツール名を渡す。スキル内部でそのツールが利用可能かを判定し、利用不可の場合はスキル内でフォールバックする。
 
 **review-flow.mdの責務**:
 
-- `ai_tools` 設定を読み取る
+- `tools` 設定を読み取る
 - レビュー種別を決定する
-- スキルを呼び出す際に `ai_tools` の優先ツール名を引数テキストに含める
+- スキルを呼び出す際に `tools` の優先ツール名を引数テキストに含める
 
 **スキル呼び出し時の引数フォーマット**:
 
@@ -130,7 +130,7 @@ skill="reviewing-code", args="[レビュー対象ファイル/ディレクトリ
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「MCPフォールバック」が残っていない
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「Skills/MCP」が残っていない
 - [ ] review-flow.mdにレビュー種別（code/architecture/security）の選択ロジックが記載されている
-- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].ai_tools` 参照記述が存在する
+- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].tools` 参照記述が存在する
 - [ ] review-flow.mdに複数種別実行時のルール（直列実行、全種別0件で完了）が記載されている
 - [ ] review-flow.mdにツール選択責務の明確化（スキル内部がツール選択、review-flowは優先ツールを引数で渡す）が記載されている
 - [ ] review-flow.mdの履歴記録テンプレートに `【レビュー種別】` フィールドが含まれている

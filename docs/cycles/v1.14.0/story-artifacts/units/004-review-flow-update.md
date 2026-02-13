@@ -10,7 +10,7 @@ review-flow.mdを更新し、新しいレビュースキル（reviewing-code, re
 - `prompts/package/prompts/common/review-flow.md` 内の `skill="codex"` / `skill="claude"` / `skill="gemini"` を新スキル名に更新
 - review-flow.md内のMCP関連記述（`mcp__codex__codex`、「MCPフォールバック」、「Skills/MCP」）の全面削除
 - レビュー種別（code/architecture/security）の選択ロジック追加
-- `docs/aidlc.toml` の `[rules.reviewing].ai_tools`（旧 `[rules.mcp_review]`）を参照してツールを選択する記述の追加
+- `docs/aidlc.toml` の `[rules.reviewing].tools`（旧 `[rules.mcp_review]`）を参照してツールを選択する記述の追加
 - `[rules.mcp_review]` → `[rules.reviewing]` セクション名リネームと関連ファイルの参照更新
 - `docs/cycles/rules.md` のAIレビューツール使用ルールの暫定更新
 
@@ -45,7 +45,7 @@ review-flow.mdを更新し、新しいレビュースキル（reviewing-code, re
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「MCPフォールバック」が残っていない
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「Skills/MCP」が残っていない
 - [ ] review-flow.mdにレビュー種別（code/architecture/security）の選択ロジックが記載されている
-- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].ai_tools` 参照記述が存在する
+- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].tools` 参照記述が存在する
 - [ ] `docs/cycles/rules.md` 内に `skill="codex"` が残っていない
 - [ ] `docs/cycles/rules.md` 内に `reviewing-code` または `reviewing-architecture` または `reviewing-security` の記述が存在する
 - [ ] `docs/aidlc.toml` 内に `[rules.mcp_review]` が残っていない
