@@ -33,3 +33,13 @@
 【レビューツール】codex (session: 019c56d4-7d82-78a1-8c41-287996202daf)
 
 ---
+## 2026-02-13 21:01:36 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 03-reviewing-security（reviewing-security スキル作成）
+- **ステップ**: Unit完了
+- **実行内容**: Unit 003完了。reviewing-securityスキルを作成。OWASP Top 10、認証・認可、依存脆弱性の3観点チェックリスト、Codex/Claude/Gemini実行コマンド、session-management.md参照ファイルを含む。
+- **成果物**:
+  - `prompts/package/skills/reviewing-security/SKILL.md, prompts/package/skills/reviewing-security/references/session-management.md`
+
+---
