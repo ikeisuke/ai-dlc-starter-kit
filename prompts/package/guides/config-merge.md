@@ -39,13 +39,13 @@ mode = "disabled"
 ```toml
 # docs/aidlc.toml
 [rules.reviewing]
-ai_tools = ["codex", "claude"]
+tools = ["codex", "claude"]
 
 # docs/aidlc.toml.local
 [rules.reviewing]
-ai_tools = ["gemini"]
+tools = ["gemini"]
 
-# 結果: ai_tools = ["gemini"]
+# 結果: tools = ["gemini"]
 ```
 
 ### 3. ネスト再帰マージ（葉キーのみ）
@@ -140,7 +140,7 @@ mode = "disabled"
 
 # 独自のAIツール優先順位
 [rules.reviewing]
-ai_tools = ["claude", "codex"]
+tools = ["claude", "codex"]
 ```
 
 ## ユーザー共通設定の作成
