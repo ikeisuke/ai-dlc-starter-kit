@@ -35,7 +35,7 @@
 このプロジェクトはメタ開発のため、Operations Phase のステップ6（リリース準備）の前に以下を実行すること：
 
 ```
-/aidlc-upgrade
+/upgrading-aidlc
 ```
 
 **理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映するため。
