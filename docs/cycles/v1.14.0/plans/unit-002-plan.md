@@ -9,7 +9,7 @@
 ### 新規作成
 
 - `prompts/package/skills/reviewing-architecture/SKILL.md` - スキル本体
-- `prompts/package/skills/reviewing-architecture/references/session-management.md` - セッション管理ガイド
+- `prompts/package/skills/reviewing-architecture/references/session-management.md` - セッション管理ガイド（Unit 001の同名ファイルを踏襲）
 
 ## 実装計画
 
@@ -38,11 +38,15 @@
 
 ## 完了条件チェックリスト
 
+> **注**: 以下はUnit定義の受け入れ基準を包含し、frontmatter全フィールドの検証と観点の粒度基準を追加したものです。
+
 - [ ] `prompts/package/skills/reviewing-architecture` ディレクトリが存在する
 - [ ] `prompts/package/skills/reviewing-architecture/SKILL.md` が存在する
 - [ ] SKILL.md frontmatterに `name: reviewing-architecture` が記載されている
 - [ ] SKILL.md frontmatterのdescriptionが三人称で記述されている
+- [ ] SKILL.md frontmatterに `argument-hint`, `compatibility`, `allowed-tools` が記載されている
 - [ ] SKILL.md bodyにアーキテクチャ観点チェックリスト（構造、パターン、API設計、依存関係）が記載されている
+- [ ] 各観点カテゴリに具体的なチェック項目が3つ以上記載されている
 - [ ] SKILL.md bodyにCodex、Claude、Geminiの実行コマンドが各1つ以上記載されている
 - [ ] `prompts/package/skills/reviewing-architecture/references/` に1ファイル以上存在する
 - [ ] SKILL.mdが500行以下である
