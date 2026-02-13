@@ -1348,10 +1348,12 @@ docs/aidlc/bin/setup-ai-tools.sh
 **ディレクトリ構成**:
 
 ```text
-.claude/skills/              ← 実ディレクトリ
-├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
-├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
-├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
+.claude/skills/                       ← 実ディレクトリ
+├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
+├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
+├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
+├── upgrading-aidlc/         → symlink → ../../docs/aidlc/skills/upgrading-aidlc/
+├── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
 .kiro/agents/
@@ -1391,7 +1393,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 - backlog-management.md（バックログ管理ガイド）
 
 **skills/** → `docs/aidlc/skills/`:
-- codex/SKILL.md, claude/SKILL.md, gemini/SKILL.md（AIスキルファイル）
+- reviewing-code/SKILL.md, reviewing-architecture/SKILL.md, reviewing-security/SKILL.md（レビュースキル）
+- upgrading-aidlc/SKILL.md（アップグレードスキル）、versioning-with-jj/SKILL.md（jjスキル）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
@@ -1434,7 +1437,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/operations.md - Operations Phase プロンプト
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
-- skills/ - AIスキルファイル（codex, claude, gemini）
+- skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, upgrading-aidlc, versioning-with-jj）
 - kiro/agents/ - KiroCLIエージェント設定
 
 プロジェクト固有ファイル（docs/cycles/）:
