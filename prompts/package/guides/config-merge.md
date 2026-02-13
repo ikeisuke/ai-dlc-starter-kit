@@ -22,11 +22,11 @@ AI-DLCの設定ファイルは3階層でマージされます。
 
 ```toml
 # docs/aidlc.toml
-[rules.mcp_review]
+[rules.reviewing]
 mode = "recommend"
 
 # docs/aidlc.toml.local
-[rules.mcp_review]
+[rules.reviewing]
 mode = "disabled"
 
 # 結果: mode = "disabled"
@@ -38,11 +38,11 @@ mode = "disabled"
 
 ```toml
 # docs/aidlc.toml
-[rules.mcp_review]
+[rules.reviewing]
 ai_tools = ["codex", "claude"]
 
 # docs/aidlc.toml.local
-[rules.mcp_review]
+[rules.reviewing]
 ai_tools = ["gemini"]
 
 # 結果: ai_tools = ["gemini"]
@@ -102,7 +102,7 @@ docs/aidlc/bin/read-config.sh <key> [--default <value>]
 
 ```bash
 # 設定値を取得
-docs/aidlc/bin/read-config.sh rules.mcp_review.mode
+docs/aidlc/bin/read-config.sh rules.reviewing.mode
 # 出力: required
 
 # デフォルト値付き
@@ -135,11 +135,11 @@ fi
 # このファイルはgitignoreされます
 
 # AIレビューを個人的に無効化
-[rules.mcp_review]
+[rules.reviewing]
 mode = "disabled"
 
 # 独自のAIツール優先順位
-[rules.mcp_review]
+[rules.reviewing]
 ai_tools = ["claude", "codex"]
 ```
 
@@ -156,7 +156,7 @@ cat > ~/.aidlc/config.toml << 'EOF'
 # ユーザー共通設定
 # このファイルは全プロジェクトに適用されます
 
-[rules.mcp_review]
+[rules.reviewing]
 # mode = "recommend"  # AIレビュー設定
 
 [rules.commit]

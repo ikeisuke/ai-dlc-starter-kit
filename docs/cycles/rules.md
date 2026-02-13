@@ -88,26 +88,27 @@
 
 ## AIレビューツールの使用ルール【重要】
 
-AI-DLCプロンプトで「AIレビュー」や「MCPレビュー」を実行する際は、以下のルールに従うこと。
+AI-DLCプロンプトで「AIレビュー」を実行する際は、以下のルールに従うこと。
 
-### 使用するツール
+### 使用するスキル
 
-**Skill ツールの codex を使用する**（MCP ツールの `mcp__codex__codex` は使用しない）
+**レビュー種別に対応するSkillを使用する**:
 
+| レビュー種別 | Skills呼び出し |
+|-------------|----------------|
+| code | `skill="reviewing-code"` |
+| architecture | `skill="reviewing-architecture"` |
+| security | `skill="reviewing-security"` |
+
+### 呼び出し方法
+
+```text
+skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|claude|gemini]"
 ```
-Skill tool: skill="codex"
-```
 
-### 理由
-
-- MCP ツール（`mcp__codex__codex`）は応答が返らない場合がある
-- Skill ツールの codex は安定して動作する
-
-### 使用例
-
-```
-レビュー対象のファイルを指定して、codex skill を呼び出す
-```
+- レビュー種別はreview-flow.mdの「レビュー種別の決定」に従い選択する
+- 優先ツールは `docs/aidlc.toml` の `[rules.reviewing].tools` の先頭を使用する
+- ツール選択の最終決定はスキル内部の責務（優先ツールはヒントのみ）
 
 ---
 
