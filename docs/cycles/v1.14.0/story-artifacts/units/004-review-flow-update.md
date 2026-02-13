@@ -9,7 +9,8 @@ review-flow.mdを更新し、新しいレビュースキル（reviewing-code, re
 ## 責務
 - `prompts/package/prompts/common/review-flow.md` 内の `skill="codex"` / `skill="claude"` / `skill="gemini"` を新スキル名に更新
 - レビュー種別（code/architecture/security）の選択ロジック追加
-- `docs/aidlc.toml` の `[rules.mcp_review].ai_tools` を参照してツールを選択する記述の追加
+- `docs/aidlc.toml` の `[rules.reviewing].ai_tools`（旧 `[rules.mcp_review]`）を参照してツールを選択する記述の追加
+- `[rules.mcp_review]` → `[rules.reviewing]` セクション名リネームと関連ファイルの参照更新
 
 ## 境界
 - 新スキルのSKILL.md作成は含まない（Unit 001-003で完了済み）
@@ -32,14 +33,16 @@ review-flow.mdを更新し、新しいレビュースキル（reviewing-code, re
 ## 技術的考慮事項
 - 現在のreview-flow.mdはツール選択（codex/claude/gemini）のみ
 - 新設計ではレビュー種別選択 → ツール選択の2段階になる
-- 後方互換性: 既存の `docs/aidlc.toml` の `[rules.mcp_review]` 設定との整合性を保つ
+- セクション名リネーム: `[rules.mcp_review]` → `[rules.reviewing]`（新スキル名との整合性確保）
 
 ## 受け入れ基準
 - [ ] `grep -c 'skill="codex"' prompts/package/prompts/common/review-flow.md` が0である（旧スキル名が残っていない）
 - [ ] `grep -c 'skill="claude"' prompts/package/prompts/common/review-flow.md` が0である
 - [ ] `grep -c 'skill="gemini"' prompts/package/prompts/common/review-flow.md` が0である
 - [ ] review-flow.mdにレビュー種別（code/architecture/security）の選択ロジックが記載されている
-- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.mcp_review].ai_tools` 参照記述が存在する
+- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].ai_tools` 参照記述が存在する
+- [ ] `docs/aidlc.toml` 内に `[rules.mcp_review]` が残っていない
+- [ ] `prompts/package/` 配下に `rules.mcp_review` が残っていない
 
 ## 実装優先度
 High

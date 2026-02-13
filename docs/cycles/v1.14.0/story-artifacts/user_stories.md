@@ -73,7 +73,8 @@ So that 既存の開発ワークフローが途切れることなく、新しい
 **受け入れ基準**:
 - [ ] `prompts/package/prompts/common/review-flow.md` 内の `skill="codex"` / `skill="claude"` / `skill="gemini"` が新スキル名に更新されている
 - [ ] review-flow.md にレビュー種別（code/architecture/security）の選択ロジックが記載されている
-- [ ] review-flow.md 内に `docs/aidlc.toml` の `[rules.mcp_review].ai_tools` を参照してツールを選択する記述が存在する
+- [ ] review-flow.md 内に `docs/aidlc.toml` の `[rules.reviewing].ai_tools` を参照してツールを選択する記述が存在する
+- [ ] `docs/aidlc.toml` のセクション名が `[rules.reviewing]` にリネーム済みである
 
 **技術的考慮事項**:
 現在のreview-flow.mdはツール選択（codex/claude/gemini）のみ。新設計ではレビュー種別選択→ツール選択の2段階になる。

@@ -8,6 +8,12 @@
 
 - `prompts/package/prompts/common/review-flow.md`（メイン）
 - `docs/cycles/rules.md`（AIレビューツール使用ルールの暫定更新）
+- `docs/aidlc.toml`（セクション名リネーム）
+- `prompts/package/prompts/common/rules.md`（設定参照キー更新）
+- `prompts/package/prompts/inception.md`（テンプレート更新）
+- `prompts/package/guides/config-merge.md`（設定参照キー更新）
+- `prompts/package/guides/ai-agent-allowlist.md`（設定参照キー更新）
+- `prompts/package/bin/read-config.sh`（コメント例更新）
 
 ## 実装計画
 
@@ -57,7 +63,7 @@
 
 #### 3. `ai_tools` 設定の役割変更
 
-`docs/aidlc.toml` の `[rules.mcp_review].ai_tools` は引き続き参照する。
+`docs/aidlc.toml` の `[rules.reviewing].ai_tools`（旧 `[rules.mcp_review]`）を参照する。セクション名を `[rules.reviewing]` にリネームし、新スキル名（reviewing-*）との整合性を確保する。
 
 **責務の明確化**: ツール選択（codex/claude/geminiのどれを使うか）は**新スキルの内部責務**とする。review-flow.mdは `ai_tools` の値を読み取り、スキル呼び出し時の引数として優先ツール名を渡す。スキル内部でそのツールが利用可能かを判定し、利用不可の場合はスキル内でフォールバックする。
 
@@ -99,7 +105,11 @@ skill="reviewing-code", args="[レビュー対象ファイル/ディレクトリ
 
 **理由**: 新スキルは各種別で複数ツール（codex/claude/gemini）に対応しており、1つのツールが利用不可でも別ツールへフォールバック可能。MCPフォールバックは不要になる。
 
-#### 5. `docs/cycles/rules.md` の暫定更新
+#### 5. `[rules.mcp_review]` → `[rules.reviewing]` セクション名リネーム
+
+`docs/aidlc.toml` のセクション名を `[rules.mcp_review]` → `[rules.reviewing]` にリネームし、関連するすべての `prompts/package/` 配下ファイルの参照を更新する。過去サイクルの履歴ファイル（`docs/cycles/v1.*/`）は変更しない。
+
+#### 6. `docs/cycles/rules.md` の暫定更新
 
 `docs/cycles/rules.md` のAIレビューツール使用ルール（L89-112）で `skill="codex"` を固定指定している箇所を、新スキル体系に合わせて暫定的に更新する。Unit 009のドキュメント整合で最終的に整理されるが、Unit 004完了時点で実運用が破綻しないようにする。
 
@@ -120,8 +130,11 @@ skill="reviewing-code", args="[レビュー対象ファイル/ディレクトリ
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「MCPフォールバック」が残っていない
 - [ ] `prompts/package/prompts/common/review-flow.md` 内に「Skills/MCP」が残っていない
 - [ ] review-flow.mdにレビュー種別（code/architecture/security）の選択ロジックが記載されている
-- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.mcp_review].ai_tools` 参照記述が存在する
+- [ ] review-flow.mdに `docs/aidlc.toml` の `[rules.reviewing].ai_tools` 参照記述が存在する
 - [ ] review-flow.mdに複数種別実行時のルール（直列実行、全種別0件で完了）が記載されている
 - [ ] review-flow.mdにツール選択責務の明確化（スキル内部がツール選択、review-flowは優先ツールを引数で渡す）が記載されている
+- [ ] review-flow.mdの履歴記録テンプレートに `【レビュー種別】` フィールドが含まれている
 - [ ] `docs/cycles/rules.md` 内に `skill="codex"` が残っていない
 - [ ] `docs/cycles/rules.md` 内に `reviewing-code` または `reviewing-architecture` または `reviewing-security` の記述が存在する
+- [ ] `docs/aidlc.toml` 内に `[rules.mcp_review]` が残っていない（`[rules.reviewing]` にリネーム済み）
+- [ ] `prompts/package/` 配下に `rules.mcp_review` が残っていない（`rules.reviewing` に更新済み）

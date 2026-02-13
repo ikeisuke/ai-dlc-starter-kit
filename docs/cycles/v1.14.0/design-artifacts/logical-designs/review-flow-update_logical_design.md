@@ -2,7 +2,7 @@
 
 ## 概要
 
-review-flow.mdの構造を再設計し、旧ツール別スキル呼び出しをレビュー種別ベースに変更する。
+review-flow.mdの構造を再設計し、旧ツール別スキル呼び出しをレビュー種別ベースに変更する。また、`docs/aidlc.toml` の設定セクション名を `[rules.mcp_review]` → `[rules.reviewing]` にリネームし、関連ファイルの参照を更新する。
 
 **重要**: この論理設計では**コードは書かず**、コンポーネント構成とインターフェース定義のみを行います。
 
@@ -54,7 +54,7 @@ review-flow.md
 #### ai_tools設定と優先ツールヒント（改修セクション）
 
 - **責務**: ai_tools設定から優先ツールのヒントを決定し、スキル呼び出し引数に含める。**ツール選択の最終決定はスキル内部の責務**であり、このセクションは最善努力のヒントを提供するのみ
-- **依存**: docs/aidlc.toml の [rules.mcp_review].ai_tools
+- **依存**: docs/aidlc.toml の [rules.reviewing].ai_tools（旧 [rules.mcp_review]）
 - **公開インターフェース**:
   - ai_tools設定の読み取り方法
   - 優先ツールヒントの決定（リスト先頭を使用）
@@ -131,6 +131,43 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 | 処理フロー 新ステップ5（現行ステップ4, L86-140） | 修正 | 種別ループ追加、スキル呼び出し名変更、履歴記録に種別追加 |
 | 処理フロー 新ステップ6（現行ステップ5, L302-323） | 修正 | 「Skills/MCP両方利用不可」→「Skills利用不可」に変更 |
 | 全体 | 修正 | 「Skills/MCP」→「Skills」に置換 |
+| 全体 | 修正 | `[rules.mcp_review]` → `[rules.reviewing]` に置換 |
+
+### docs/aidlc.toml
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| `[rules.mcp_review]`（L46-57） | 修正 | セクション名を `[rules.reviewing]` にリネーム。コメントも更新 |
+
+### prompts/package/prompts/common/rules.md
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| read-config呼び出し | 修正 | `rules.mcp_review.mode` → `rules.reviewing.mode` |
+
+### prompts/package/prompts/inception.md
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| aidlc.tomlテンプレート | 修正 | `[rules.mcp_review]` → `[rules.reviewing]` |
+
+### prompts/package/guides/config-merge.md
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| 全体 | 修正 | `[rules.mcp_review]` → `[rules.reviewing]`、`rules.mcp_review.` → `rules.reviewing.` に置換 |
+
+### prompts/package/guides/ai-agent-allowlist.md
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| daselコマンド例 | 修正 | `rules.mcp_review.mode` → `rules.reviewing.mode` |
+
+### prompts/package/bin/read-config.sh
+
+| セクション | 変更種別 | 内容 |
+|---|---|---|
+| コメント例 | 修正 | `rules.mcp_review.mode` → `rules.reviewing.mode` |
 
 ### docs/cycles/rules.md
 
@@ -147,6 +184,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 - `prompts/package/` を編集すること（`docs/aidlc/` は直接編集禁止 - メタ開発ルール）
 - 既存の履歴判定パターン（awkコマンド）との互換性を維持すること
 - `docs/cycles/rules.md` の変更はUnit 009で最終整理されるまでの暫定対応
+- `[rules.mcp_review]` → `[rules.reviewing]` リネームは `prompts/package/` 配下と `docs/aidlc.toml` のみ。過去サイクルの履歴ファイル（`docs/cycles/v1.*/`）は変更しない
 
 ## 不明点と質問（設計中に記録）
 
