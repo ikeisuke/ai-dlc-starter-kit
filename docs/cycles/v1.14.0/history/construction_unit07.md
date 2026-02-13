@@ -28,3 +28,23 @@
   - `prompts/package/skills/versioning-with-jj/SKILL.md, .claude/skills/versioning-with-jj`
 
 ---
+## 2026-02-14 01:31:03 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 07-improve-jj-skill（jjスキル改善）
+- **ステップ**: SKILL.mdリライト
+- **実行内容**: Codexレビュー指摘を反映しSKILL.mdをリライト（266行→100行）。基本コマンド一覧と対照表を削除、ワークフロー中心に再構成。各ステップにCheck行追加、description改善、例外ケース追記。
+- **成果物**:
+  - `prompts/package/skills/versioning-with-jj/SKILL.md`
+
+---
+## 2026-02-14 01:33:08 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 07-improve-jj-skill（jjスキル改善）
+- **ステップ**: jj-support.md移動
+- **実行内容**: jj-support.mdをguides/からスキルのreferences/に移動。Progressive Disclosureパターンに準拠。common/rules.mdとSKILL.mdの参照パスを更新。
+- **成果物**:
+  - `prompts/package/skills/versioning-with-jj/references/jj-support.md, prompts/package/prompts/common/rules.md, prompts/package/skills/versioning-with-jj/SKILL.md`
+
+---

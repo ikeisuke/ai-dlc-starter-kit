@@ -1,266 +1,100 @@
 ---
 name: versioning-with-jj
-description: Jujutsu (jj) でバージョン管理操作を実行。Git互換の次世代VCSで、自動追跡・安全なundo・bookmarkベースの管理を提供。jjが有効化されている環境でgit操作の代わりに使用。
+description: jjでバージョン管理操作を実行する。jjが有効化されている環境でgitコマンドの代わりに使用。bookmark移動忘れによる変更漏れ・履歴分断を防ぐワークフローを提供。
 argument-hint: [subcommand] [args]
 allowed-tools: Bash(jj:*)
 ---
 
 # Jujutsu (jj)
 
-Jujutsu (jj) を使用してバージョン管理操作を実行するスキル。
+co-locationモード（Git共存）での使用を前提とする。
 
-## 重要な注意事項
+## 最重要: bookmarkは自動で進まない
 
-### bookmarkは自動で進まない
+> **Gitとの最大の違い**: jjのbookmarkはコミット時に自動追従しない。手動で移動が必要。
 
-> **Gitとの最大の違い**: jjのbookmarkは手動で移動する必要があります。
+忘れると: 変更がpushに含まれない、サイクル判定（ブランチ名ベース）が壊れる。
 
-| 比較 | Git | jj |
-|------|-----|-----|
-| ブランチ/bookmark | コミット時に自動でHEADに追従 | **手動で移動が必要** |
+## ワークフロー
 
-**Unit完了時に必ず実行**:
-
-```bash
-jj bookmark set cycle/vX.X.X -r @-
-```
-
-### co-locationモードの使用
-
-GitとjjをリポジトリLevelで共存させるモードを推奨します。
-
-```bash
-# 既存Gitリポジトリでjjを初期化
-jj git init --colocate
-```
-
-## 状態確認
-
-### 作業状態の確認
-
-```bash
-# 現在の状態を確認
-jj status
-jj st  # 省略形
-
-# 変更の差分を表示
-jj diff
-```
-
-### 履歴の表示
-
-```bash
-# 履歴をグラフ表示
-jj log
-
-# 現在のリビジョンのみ
-jj log -r @
-
-# 特定のbookmarkを含む履歴
-jj log -r 'cycle/vX.X.X'
-```
-
-## コミット操作
-
-### コミットメッセージの設定
-
-```bash
-# 現在のリビジョンにメッセージを設定
-jj describe -m "コミットメッセージ"
-
-# エディタでメッセージを編集
-jj describe
-```
-
-### 新しいリビジョンの作成
-
-```bash
-# 現在の変更を確定し、新しい空のリビジョンを開始
-jj new
-
-# 特定のリビジョンから新しいリビジョンを作成
-jj new main
-jj new cycle/vX.X.X
-```
-
-### 変更の分離
-
-```bash
-# 現在のリビジョンを対話的に分離
-jj split
-
-# 特定ファイルを分離
-jj split <file>
-```
-
-### 操作の取り消し
-
-```bash
-# 直前の操作を取り消し
-jj undo
-
-# ファイルを復元
-jj restore <file>
-```
-
-## ブックマーク操作
-
-### ブックマーク一覧
-
-```bash
-# 全ブックマーク一覧
-jj bookmark list
-
-# 現在のリビジョンのブックマーク
-jj bookmark list -r @
-```
-
-### ブックマークの作成・移動
-
-```bash
-# 新しいブックマークを作成
-jj bookmark create <name>
-
-# ブックマークを特定のリビジョンに移動
-jj bookmark set <name> -r <revision>
-jj bookmark set cycle/vX.X.X -r @-
-```
-
-### ブックマークの削除
-
-```bash
-# ローカルブックマークを削除
-jj bookmark delete <name>
-
-# 削除をリモートに反映
-jj git push --deleted
-```
-
-### リビジョンの切り替え
-
-```bash
-# 特定のリビジョンを編集
-jj edit <revision>
-
-# bookmarkに切り替え
-jj edit cycle/vX.X.X
-```
-
-## リモート操作
-
-### フェッチ
-
-```bash
-# リモートから取得
-jj git fetch
-```
-
-### プッシュ
-
-```bash
-# 現在のbookmarkをプッシュ
-jj git push
-
-# 特定のbookmarkをプッシュ
-jj git push --bookmark <name>
-jj git push --bookmark cycle/vX.X.X
-
-# 削除をプッシュ
-jj git push --deleted
-```
-
-## Git/jjコマンド対照表
-
-### 状態確認系
-
-| 用途 | Git | jj |
-|------|-----|-----|
-| 状態確認 | `git status` | `jj status` |
-| 差分表示 | `git diff` | `jj diff` |
-| 履歴表示 | `git log` | `jj log` |
-
-### コミット操作系
-
-| 用途 | Git | jj |
-|------|-----|-----|
-| ステージング | `git add` | (自動) |
-| コミット | `git commit -m "msg"` | `jj describe -m "msg"` + `jj new` |
-| メッセージ修正 | `git commit --amend` | `jj describe -m "msg"` |
-| 変更退避 | `git stash` | (不要) |
-| 操作取り消し | `git reset` | `jj undo` |
-
-### ブックマーク操作系
-
-| 用途 | Git | jj |
-|------|-----|-----|
-| ブランチ一覧 | `git branch` | `jj bookmark list` |
-| ブランチ作成 | `git branch <name>` | `jj bookmark create <name>` |
-| 切り替え | `git checkout <name>` | `jj edit <revision>` |
-| ブランチ削除 | `git branch -d <name>` | `jj bookmark delete <name>` |
-
-### リモート操作系
-
-| 用途 | Git | jj |
-|------|-----|-----|
-| フェッチ | `git fetch` | `jj git fetch` |
-| プッシュ | `git push` | `jj git push` |
-| プル | `git pull` | `jj git fetch` + `jj rebase -d <bookmark>@origin` |
-
-## 使用例
+`cycle/vX.X.X` はサイクルのbookmark名。実行時にブランチ名から取得すること。
 
 ### 作業開始
 
 ```bash
-# 状態確認
-jj status
-jj log -r @
-
-# cycleブックマークから新しいリビジョンを開始
+jj log -r 'all()' --limit 10
+jj bookmark list
 jj new cycle/vX.X.X
 ```
 
-### 作業中
+**Check**: `jj log -r '@'` で現在位置がcycle bookmarkの子であることを確認。
+
+### コミット（3点セット）
+
+**必ずこの3つをセットで実行する**:
 
 ```bash
-# 変更を確認
-jj diff
-
-# メッセージを設定
-jj describe -m "feat: 新機能追加"
+jj describe -m "feat: [vX.X.X] 変更内容" && jj new && jj bookmark set cycle/vX.X.X -r @-
 ```
 
-### 作業終了（Unit完了時）
+**Check**: `jj log -r 'cycle/vX.X.X | @'` でbookmarkが `@` の親（`@-`）にあることを確認。
+
+**例外**: 既存リビジョンの修正（`jj describe` のみ）やsquash時はこのフローに従わなくてよい。
+
+### push
 
 ```bash
-# 1. メッセージを設定
-jj describe -m "feat: [vX.X.X] Unit NNN完了"
-
-# 2. 新しいリビジョンを作成
-jj new
-
-# 3. bookmarkを進める（重要）
-jj bookmark set cycle/vX.X.X -r @-
-
-# 4. プッシュ
+jj log -r 'cycle/vX.X.X'
 jj git push --bookmark cycle/vX.X.X
 ```
 
-### ワンライナー版
+**Check**: bookmarkが意図したリビジョンを指しているか確認してからpush。古いリビジョンを指している場合は先に `jj bookmark set` で修正。
+
+### 空リビジョンの整理
+
+`jj new` を繰り返すと空リビジョンが蓄積する。
 
 ```bash
-jj describe -m "feat: [vX.X.X] Unit NNN完了" && jj new && jj bookmark set cycle/vX.X.X -r @- && jj git push --bookmark cycle/vX.X.X
+jj log -r 'empty()'
+jj abandon <revision>
 ```
 
-## 実行手順
+### 履歴の整理（squash）
 
-1. ユーザーから依頼内容を受け取る
-2. jjがインストールされていることを確認（`jj --version`）
-3. リポジトリがjjで初期化されていることを確認（`.jj`ディレクトリの存在）
-4. 上記コマンド形式でjjを実行
-5. 結果をユーザーに報告
+小さいリビジョンが散在した場合:
+
+```bash
+# 現在のリビジョンの変更を親にまとめる
+jj squash
+
+# 特定のリビジョンに変更をまとめる
+jj squash --into <revision>
+```
+
+squash後はbookmarkの位置がずれる場合がある。**Check**: `jj log -r 'cycle/vX.X.X | @'` で確認。
+
+### トラブルシューティング
+
+**bookmarkが取り残された場合**:
+
+```bash
+jj bookmark set cycle/vX.X.X -r @-
+```
+
+**どこにいるか分からなくなった場合**:
+
+```bash
+jj log -r 'all()' --limit 20
+```
+
+**直前の操作を取り消したい場合**:
+
+```bash
+jj undo
+```
 
 ## 参考リンク
 
 - [jj 公式ドキュメント](https://martinvonz.github.io/jj/latest/)
 - [Git comparison](https://martinvonz.github.io/jj/latest/git-comparison/)
-- 詳細ガイド: `docs/aidlc/guides/jj-support.md`
+- Git/jjコマンド対照表・詳細ガイド: [references/jj-support.md](references/jj-support.md)
