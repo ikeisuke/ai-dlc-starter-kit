@@ -72,6 +72,6 @@ gemini -p "<レビュー指示>" --sandbox
 
 - **Codex**: `codex exec resume <session-id> "<指示>"`
 - **Claude**: `claude --session-id <uuid> -p --output-format stream-json "<指示>"`
-- **Gemini**: `gemini --resume <index> -p "<指示>"`
+- **Gemini**: `gemini --resume <session_index> -p "<指示>"`
 
 詳細は [references/session-management.md](references/session-management.md) を参照。
