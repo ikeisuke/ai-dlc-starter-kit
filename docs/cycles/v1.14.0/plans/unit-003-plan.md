@@ -45,7 +45,9 @@ Unit 001/002と同じ構造のため、設計フェーズは軽量に実施。
 - [ ] `prompts/package/skills/reviewing-security/SKILL.md` が存在する
 - [ ] SKILL.md frontmatterに `name: reviewing-security` が記載されている
 - [ ] SKILL.md frontmatterのdescriptionが三人称で記述されている
+- [ ] SKILL.md frontmatterにargument-hint, compatibility, allowed-toolsが記載されている（既存スキルとの構造的一貫性）
 - [ ] SKILL.md bodyにセキュリティ観点チェックリスト（OWASP Top 10、認証・認可、依存脆弱性）が記載されている
 - [ ] SKILL.md bodyにCodex、Claude、Geminiの実行コマンドが各1つ以上記載されている
-- [ ] `prompts/package/skills/reviewing-security/references/` に1ファイル以上存在する
+- [ ] SKILL.md bodyが「レビュー観点」→「実行コマンド」→「セッション継続」のセクション構成（既存スキルと同一構造）
+- [ ] `prompts/package/skills/reviewing-security/references/session-management.md` が存在する
 - [ ] SKILL.mdが500行以下である
