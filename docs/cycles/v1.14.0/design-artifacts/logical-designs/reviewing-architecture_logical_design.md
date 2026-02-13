@@ -80,8 +80,8 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 
 - 依存方向が適切か（上位レイヤーが下位に依存しない等）
 - 循環依存が存在しないか
-- 外部依存のバージョン管理が適切か
-- 依存の注入方法が統一されているか
+- コンポーネント間の境界（コンテキスト境界）が明確に定義されているか
+- 障害の伝播が適切に分離されているか（障害分離）
 
 ## 処理フロー概要
 
@@ -107,5 +107,6 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ## 実装上の注意事項
 
 - Unit 001のSKILL.mdとの構造的一貫性を維持する（セクション順序、コマンド形式）
+- 実行コマンドの一次参照先は既存レビュースキル（codex-review、claude-review、gemini-review）とし、Unit 001と同一パターンを維持する
 - descriptionは英語・三人称で記述し、アーキテクチャレビューのトリガーワードを含める
 - references/session-management.mdはUnit 001と同一内容（共通のセッション管理手順）

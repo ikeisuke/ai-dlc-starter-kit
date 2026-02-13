@@ -32,6 +32,8 @@ SKILL.mdのメタデータセクション。agentskills.io仕様に準拠。
 - **不変条件**:
   - nameはスキルディレクトリ名と一致すること
   - descriptionは三人称で記述すること
+  - compatibility、allowed-toolsは必ず記載すること
+  - allowed-toolsはUnit 001と同一値（`Bash(codex:*) Bash(claude:*) Bash(gemini:*)`）
 
 ### レビュー観点カテゴリ
 
