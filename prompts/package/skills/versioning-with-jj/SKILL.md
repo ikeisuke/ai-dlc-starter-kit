@@ -1,5 +1,5 @@
 ---
-name: jj
+name: versioning-with-jj
 description: Jujutsu (jj) でバージョン管理操作を実行。Git互換の次世代VCSで、自動追跡・安全なundo・bookmarkベースの管理を提供。jjが有効化されている環境でgit操作の代わりに使用。
 argument-hint: [subcommand] [args]
 allowed-tools: Bash(jj:*)
