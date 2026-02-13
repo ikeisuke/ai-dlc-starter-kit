@@ -10,3 +10,11 @@
   - `prompts/package/skills/jj/SKILL.md, prompts/package/skills/jj/references/git-comparison.md`
 
 ---
+## 2026-02-14 01:03:23 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 07-improve-jj-skill（jjスキル改善）
+- **ステップ**: 方針修正
+- **実行内容**: agentskills.io仕様を精査し、Git対照表のreferences/分離は不要と判断（266行で500行制限内）。対照表をSKILL.mdに復元し、references/を削除。実質的な変更はdescriptionへのwhen to use追加のみに絞った。
+
+---
