@@ -569,11 +569,11 @@ grep "^starter_kit_version" docs/aidlc.toml
 # [rules.mcp_review] → [rules.reviewing] リネーム移行（v1.14.0で追加）
 if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
   echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
-  sed -i '' 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml
+  sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
   # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
-  sed -i '' '/^\[rules.reviewing\]/,/^\[/ {
+  sed '/^\[rules.reviewing\]/,/^\[/ {
     s/^ai_tools/tools/
-  }' docs/aidlc.toml
+  }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
   echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
 fi
 
@@ -690,7 +690,7 @@ if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
   if [ "$TOOLS_IN_SECTION" = "0" ]; then
     echo "Adding tools to [rules.reviewing] section..."
     # [rules.reviewing] セクション内の mode = 行の後に追加
-    sed -i '' '/^\[rules.reviewing\]/,/^\[/ {
+    sed '/^\[rules.reviewing\]/,/^\[/ {
       /^\[rules.reviewing\]/!{
         /^\[/!{
           /^mode = /a\
@@ -701,7 +701,7 @@ if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
 tools = ["codex"]
         }
       }
-    }' docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
+    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
     echo "Added tools to [rules.reviewing] section"
   else
     echo "tools already exists in [rules.reviewing] section"
