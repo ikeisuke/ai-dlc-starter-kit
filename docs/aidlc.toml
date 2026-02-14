@@ -84,7 +84,7 @@ version_tag = false
 
 [rules.unit_branch]
 # Unitブランチ設定（v1.7.0で追加）
-# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: true）
+# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: false）
 enabled = false
 
 [rules.jj]
