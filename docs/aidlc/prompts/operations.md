@@ -346,7 +346,7 @@ Construction Phaseからの引き継ぎタスクはありません。
 
 **タスク管理機能を活用してください。**
 
-ステップ1-5の確認をスキップするかどうかを確認します。
+ステップ1-4の確認をスキップするかどうかを確認します。
 
 **確認メッセージ**:
 ```text
@@ -356,18 +356,17 @@ Construction Phaseからの引き継ぎタスクはありません。
 - ステップ2: CI/CD構築
 - ステップ3: 監視・ロギング戦略
 - ステップ4: 配布
-- ステップ5: バックログ整理と運用計画
 
 1. はい - 変更したい項目がある
-2. いいえ - 変更なし（ステップ1-5をスキップしてステップ6へ）
+2. いいえ - 変更なし（ステップ1-4をスキップしてステップ5へ）
 ```
 
 **選択に応じた処理**:
-- **「はい」選択時**: progress.mdでステップ0を「完了」に更新し、ステップ1から順に従来通りの確認フローを実行
+- **「はい」選択時**: progress.mdでステップ0を「完了」に更新し、ステップ1から順に確認フローを実行（ステップ1-4 → ステップ5 → ステップ6）
 - **「いいえ」選択時**: 以下を実行
-  1. progress.mdでステップ0を「完了」、ステップ1-5を「スキップ」に更新
-  2. 履歴に「ステップ1-5をスキップ（変更なしを選択）」と記録
-  3. ステップ6（リリース準備）に進む
+  1. progress.mdでステップ0を「完了」、ステップ1-4を「スキップ」に更新
+  2. 履歴に「ステップ1-4をスキップ（変更なしを選択）」と記録
+  3. ステップ5（バックログ整理と運用計画）に進む
 
 **注意**: `docs/cycles/rules.md`にカスタムワークフロー（例: アップグレード処理）が定義されている場合、それはスキップ対象外です。rules.mdの指示に従って実行してください。
 
@@ -377,97 +376,6 @@ Construction Phaseからの引き継ぎタスクはありません。
 
 - **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-
-#### バージョン確認【必須】
-
-##### iOSプロジェクトの場合の事前確認
-
-`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認。
-
-**project.type確認**: AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `type` 値を確認。
-**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `general` として扱う。
-
-**iOSプロジェクトの場合**: Inception履歴を確認
-
-```bash
-grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null
-```
-
-出力があれば `UPDATED_IN_INCEPTION`、なければ `NOT_UPDATED_IN_INCEPTION` と判断。
-
-**判定結果**:
-- **UPDATED_IN_INCEPTION**: 以下を表示してMARKETING_VERSION確認をスキップし、iOSビルド番号確認に進む
-  ```text
-  バージョン確認結果:
-  - project.type: ios
-  - Inception Phase履歴: MARKETING_VERSION更新実施済み
-
-  Inception PhaseでMARKETING_VERSION更新済みです。「通常のバージョン確認」をスキップし、「iOSビルド番号確認」に進みます。
-  ```
-- **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
-
-##### iOSビルド番号確認
-
-**前提条件**: `project.type = "ios"` の場合のみ実行。それ以外のプロジェクトタイプではこのセクションをスキップ。
-
-ビルド番号確認スクリプトを実行:
-
-```bash
-docs/aidlc/bin/ios-build-check.sh
-```
-
-**出力形式**:
-- `status:found|not-found|multiple` - ファイル検出状態
-- `current_build:XXX` - 現在のビルド番号
-- `previous_build:XXX` - 前回のビルド番号
-- `comparison:updated|same|unknown` - 比較結果
-- `files:...` - status=multipleの場合、ファイル一覧
-
-**判定結果に応じた対応**:
-
-| status | comparison | 対応 |
-|--------|------------|------|
-| not-found | - | スキップ |
-| multiple | - | ユーザーにファイル選択を求め、選択後に再実行 |
-| found | updated | 続行 |
-| found | same | 警告を表示し、更新を推奨 |
-| found | unknown | 手動確認を案内 |
-
-**status=multiple時の再実行**:
-```bash
-docs/aidlc/bin/ios-build-check.sh "[選択されたパス]"
-```
-
-**comparison=same時の警告**:
-```text
-【警告】iOSビルド番号が前回と同一です。App Storeは同一ビルド番号での再提出を拒否します。
-```
-
-##### 通常のバージョン確認
-
-運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
-- **設定がある場合**: 設定に従ってバージョンを確認
-- **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
-
-**確認手順**:
-1. バージョン確認対象ファイルを特定（package.json, pyproject.toml等）
-2. 現在のバージョンを確認
-3. サイクルバージョンと整合性を確認
-4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
-
-**iOSプロジェクトの注意**: サイクルバージョン（v1.7.1）からvプレフィックスを除去して使用（1.7.1）。CFBundleShortVersionStringは数値ドット区切り形式のみ受け付けます。
-
-**バージョン確認コマンド例**:
-```bash
-# Node.js
-cat package.json | grep '"version"'
-
-# Python
-cat pyproject.toml | grep 'version'
-
-# Go
-cat go.mod | head -1
-```
 
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
@@ -574,7 +482,7 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
 **サブステップ一覧**（順番に実行）:
-1. 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
+1. 6.0 バージョン確認
 2. 6.1 CHANGELOG更新（`changelog = true` の場合）
 3. 6.2 README更新
 4. 6.3 履歴記録
@@ -588,39 +496,96 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 9. 6.6.5 コミット漏れ確認
 10. 6.7 PRマージ
 
-#### 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
+#### 6.0 バージョン確認
 
-**スキップ判定**:
+##### iOSプロジェクトの場合の事前確認
 
-`docs/aidlc.toml` の `project.name` を確認:
-- `project.name = "ai-dlc-starter-kit"` の場合: 以下を実行
-- それ以外の場合: このステップをスキップ
+`project.type = "ios"` の場合、Inception Phaseでバージョン更新済みかを確認。
 
-**実行する場合**:
+**project.type確認**: AIが `docs/aidlc.toml` をReadツールで読み取り、`[project]` セクションの `type` 値を確認。
+**フォールバック規則**: ファイル未存在/読み取りエラー/構文エラー/値未設定時は `general` として扱う。
 
-1. **version.txt更新**:
-   - サイクル番号から `v` を除いた値に更新（例: v1.13.0 → 1.13.0）
-   ```bash
-   # サイクル番号を取得し、vプレフィックスを除去
-   CYCLE="{{CYCLE}}"
-   VERSION="${CYCLE#v}"
-   echo "${VERSION}" > version.txt
-   ```
+**iOSプロジェクトの場合**: Inception履歴を確認
 
-2. **docs/aidlc.toml更新**:
-   - `starter_kit_version` を同じ値に更新
-   ```bash
-   # sedで置換（macOS互換）
-   sed -i '' "s/^starter_kit_version = .*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml
-   ```
+```bash
+grep -q "iOSバージョン更新実施" docs/cycles/{{CYCLE}}/history/inception.md 2>/dev/null
+```
 
-3. **更新確認**:
-   ```bash
-   cat version.txt
-   grep starter_kit_version docs/aidlc.toml
-   ```
+出力があれば `UPDATED_IN_INCEPTION`、なければ `NOT_UPDATED_IN_INCEPTION` と判断。
 
-**注意**: このステップはAI-DLCスターターキット自体のリリース時のみ実行されます。他のプロジェクトでは自動的にスキップされます。
+**判定結果**:
+- **UPDATED_IN_INCEPTION**: 以下を表示してMARKETING_VERSION確認をスキップし、iOSビルド番号確認に進む
+  ```text
+  バージョン確認結果:
+  - project.type: ios
+  - Inception Phase履歴: MARKETING_VERSION更新実施済み
+
+  Inception PhaseでMARKETING_VERSION更新済みです。「通常のバージョン確認」をスキップし、「iOSビルド番号確認」に進みます。
+  ```
+- **NOT_UPDATED_IN_INCEPTION または iOSプロジェクト以外**: 通常のバージョン確認を実行
+
+##### iOSビルド番号確認
+
+**前提条件**: `project.type = "ios"` の場合のみ実行。それ以外のプロジェクトタイプではこのセクションをスキップ。
+
+ビルド番号確認スクリプトを実行:
+
+```bash
+docs/aidlc/bin/ios-build-check.sh
+```
+
+**出力形式**:
+- `status:found|not-found|multiple` - ファイル検出状態
+- `current_build:XXX` - 現在のビルド番号
+- `previous_build:XXX` - 前回のビルド番号
+- `comparison:updated|same|unknown` - 比較結果
+- `files:...` - status=multipleの場合、ファイル一覧
+
+**判定結果に応じた対応**:
+
+| status | comparison | 対応 |
+|--------|------------|------|
+| not-found | - | スキップ |
+| multiple | - | ユーザーにファイル選択を求め、選択後に再実行 |
+| found | updated | 続行 |
+| found | same | 警告を表示し、更新を推奨 |
+| found | unknown | 手動確認を案内 |
+
+**status=multiple時の再実行**:
+```bash
+docs/aidlc/bin/ios-build-check.sh "[選択されたパス]"
+```
+
+**comparison=same時の警告**:
+```text
+【警告】iOSビルド番号が前回と同一です。App Storeは同一ビルド番号での再提出を拒否します。
+```
+
+##### 通常のバージョン確認
+
+運用引き継ぎ（`docs/cycles/operations.md`）の「バージョン確認設定」セクションを確認:
+- **設定がある場合**: 設定に従ってバージョンを確認
+- **設定がない場合**: 対話形式でバージョン確認対象を特定し、運用引き継ぎに保存
+
+**確認手順**:
+1. バージョン確認対象ファイルを特定（package.json, pyproject.toml等）
+2. 現在のバージョンを確認
+3. サイクルバージョンと整合性を確認
+4. **バージョン未更新の場合**: 更新を提案し、ユーザー承認後に更新
+
+**iOSプロジェクトの注意**: サイクルバージョン（v1.7.1）からvプレフィックスを除去して使用（1.7.1）。CFBundleShortVersionStringは数値ドット区切り形式のみ受け付けます。
+
+**バージョン確認コマンド例**:
+```bash
+# Node.js
+cat package.json | grep '"version"'
+
+# Python
+cat pyproject.toml | grep 'version'
+
+# Go
+cat go.mod | head -1
+```
 
 #### 6.1 CHANGELOG更新
 
@@ -861,12 +826,12 @@ GitHub上でレビュー承認を確認してから、手動でPRをマージし
 Operations Phaseの完了時には、以下を確認してください:
 
 1. **ステップ6（リリース準備）がPR準備完了している**こと
-   - バージョンファイル更新（AI-DLCスターターキットのみ）、CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Markdownlint実行、progress.md更新、Gitコミットが完了
+   - バージョン確認、バージョンファイル更新（AI-DLCスターターキットのみ）、CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Markdownlint実行、progress.md更新、Gitコミットが完了
    - progress.mdでステップ6が「完了」（= PR準備完了）になっている
    - **注**: 6.6-6.7はPR準備完了後のレビュー・マージ作業
 
 2. **全ステップが完了している**こと
-   - progress.mdで全ステップ（0-6、配布スキップの場合は4除く、変更なし選択時は1-5も「スキップ」）が「完了」または「スキップ」
+   - progress.mdで全ステップ（0-6、配布スキップの場合は4除く、変更なし選択時は1-4も「スキップ」）が「完了」または「スキップ」
 
 ---
 
