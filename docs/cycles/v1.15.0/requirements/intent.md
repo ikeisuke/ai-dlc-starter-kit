@@ -22,10 +22,21 @@ AI-DLC Starter Kitを利用する開発者およびAIツール利用者
 
 ## 成功基準
 
+### コミット履歴の整理（#187）
+
 - Unit完了時に中間コミット（レビュー前/反映コミット等）が1つのコミットにまとめられること
 - git環境（`git reset --soft` + `git commit`）とjj環境（`jj squash`）の両方で動作すること
 - `git rebase -i` などインタラクティブな操作を使用しないこと
-- Skills化に向けたプロンプト構造の整理方針が確定し、リファクタリングが完了すること
+- squashスクリプトが作成され、プロンプトからの呼び出し方法が定義されていること
+- 実行トリガー: Unit完了コミット時（`feat: [vX.X.X] Unit NNN完了` コミット直後）
+- 前提条件: Unit作業開始コミット以降の中間コミットが存在し、working treeがclean（未コミット変更なし）であること
+- 失敗時: squash前のコミット状態に戻せること（`git reflog` / `jj undo` で復旧可能）
+
+### Skills化に向けた全体整理（#116）
+
+- 現在のプロンプト構造の分析ドキュメントが作成されていること
+- Skills化に必要な構造変更の方針ドキュメントが作成されていること
+- 方針に基づいたプロンプトのリファクタリングが完了していること
 
 ## 期限とマイルストーン
 
@@ -34,8 +45,15 @@ AI-DLC Starter Kitを利用する開発者およびAIツール利用者
 ## 制約事項
 
 - インタラクティブな操作（`git rebase -i` 等）は使用しない（自動化が壊れるため）
-- `docs/aidlc/` は直接編集禁止（`prompts/package/` を編集する）
+- `docs/aidlc/` は直接編集禁止（`prompts/package/` が正であり、Operations Phaseでrsyncにより `docs/aidlc/` へ反映される）
 - #116 のSkillファイル作成自体は次サイクル以降のスコープ
+
+## スコープ外（今回対応しないこと）
+
+- Skillファイル（`SKILL.md`）の新規作成（#116 は整理のみ）
+- 既存テンプレートファイル（`docs/aidlc/templates/`）の構造変更
+- 既存サイクル成果物への後方互換性対応
+- Inception Phase完了コミットやOperations Phase完了コミットのsquash（これらは元々1コミット）
 
 ## 不明点と質問（Inception Phase中に記録）
 
