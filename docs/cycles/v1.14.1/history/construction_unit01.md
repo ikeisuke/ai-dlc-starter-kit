@@ -54,3 +54,26 @@
   - `prompts/package/prompts/operations.md, docs/cycles/rules.md`
 
 ---
+## 2026-02-14 17:02:32 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 01-move-version-file-update（バージョンファイル更新のプロジェクト固有移動）
+- **ステップ**: AIレビュー完了
+- **実行内容**: 【AIレビュー完了】指摘0件
+【対象タイミング】統合とレビュー
+【対象成果物】prompts/package/prompts/operations.md, docs/cycles/rules.md
+【レビュー種別】code, security
+【レビューツール】codex
+【備考】セキュリティレビューでCYCLE変数のシェルインジェクション指摘あり。既存パターンの移動であり新規リスクではないためスコープ外と判断。
+
+---
+## 2026-02-14 17:08:37 JST
+
+- **フェーズ**: Construction Phase
+- **Unit**: 01-move-version-file-update（バージョンファイル更新のプロジェクト固有移動）
+- **ステップ**: Unit完了
+- **実行内容**: Unit 001完了。operations.mdからステップ6.0を削除し、rules.mdのカスタムワークフローにバージョンファイル更新ロジックを追加。
+- **成果物**:
+  - `prompts/package/prompts/operations.md, docs/cycles/rules.md`
+
+---
