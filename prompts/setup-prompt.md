@@ -583,6 +583,16 @@ if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
     }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
     echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
   fi
+  # オーバーライド設定ファイルの旧キー警告
+  for OVERRIDE_FILE in "$HOME/.aidlc/config.toml" "docs/aidlc.toml.local"; do
+    if [ -f "$OVERRIDE_FILE" ] && grep -q "mcp_review\|ai_tools" "$OVERRIDE_FILE"; then
+      echo ""
+      echo "WARNING: $OVERRIDE_FILE に旧キー（mcp_review/ai_tools）が残っています。"
+      echo "  [rules.mcp_review] → [rules.reviewing]"
+      echo "  ai_tools → tools"
+      echo "手動で更新してください。旧キーはv1.14.0以降では無視されます。"
+    fi
+  done
 fi
 
 # [rules.reviewing] セクションが存在しない場合は追加
