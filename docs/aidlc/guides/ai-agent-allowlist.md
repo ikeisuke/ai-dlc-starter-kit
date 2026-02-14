@@ -442,7 +442,7 @@ go install github.com/tomwright/dasel/v3/cmd/dasel@latest
 cat docs/aidlc.toml | dasel -i toml 'backlog.mode' | tr -d "'"
 
 # AIレビューモード取得
-cat docs/aidlc.toml | dasel -i toml 'rules.mcp_review.mode' | tr -d "'"
+cat docs/aidlc.toml | dasel -i toml 'rules.reviewing.mode' | tr -d "'"
 ```
 
 **dasel未インストール時の動作**:

@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.13.4"
+starter_kit_version = "1.14.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -43,18 +43,18 @@ ai_author = "Claude <noreply@anthropic.com>"
 [rules.documentation]
 language = "日本語"
 
-[rules.mcp_review]
-# MCPレビュー設定
+[rules.reviewing]
+# AIレビュー設定
 # mode: "recommend" | "required" | "disabled"
-# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
-# - required: MCP利用可能時にレビュー必須
+# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
+# - required: AIレビューツール利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "required"
-# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）
+# tools: AIレビューに使用するツールの優先順位リスト
 # - デフォルト: ["codex"]
 # - 例: ["codex", "claude", "gemini"]
-# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
-ai_tools = ["codex"]
+# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
+tools = ["codex"]
 
 [rules.custom]
 # プロジェクト固有のカスタムルール

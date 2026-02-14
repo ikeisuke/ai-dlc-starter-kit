@@ -566,22 +566,51 @@ grep "^starter_kit_version" docs/aidlc.toml
 **マイグレーション対象の確認と追加**:
 
 ```bash
-# [rules.mcp_review] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  echo "Adding [rules.mcp_review] section..."
+# [rules.mcp_review] → [rules.reviewing] リネーム移行（v1.14.0で追加）
+if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+    # 既に [rules.reviewing] が存在する場合、旧セクションを削除（重複防止）
+    echo "Both [rules.mcp_review] and [rules.reviewing] found. Removing old section..."
+    awk '/^\[rules\.mcp_review\]/{skip=1; next} /^\[/{skip=0} !skip' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    echo "Removed old [rules.mcp_review] section"
+  else
+    # [rules.reviewing] が存在しない場合のみリネーム
+    echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
+    sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
+    sed '/^\[rules.reviewing\]/,/^\[/ {
+      s/^ai_tools/tools/
+    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
+  fi
+  # オーバーライド設定ファイルの旧キー警告
+  for OVERRIDE_FILE in "$HOME/.aidlc/config.toml" "docs/aidlc.toml.local"; do
+    if [ -f "$OVERRIDE_FILE" ] && grep -q "mcp_review\|ai_tools" "$OVERRIDE_FILE"; then
+      echo ""
+      echo "WARNING: $OVERRIDE_FILE に旧キー（mcp_review/ai_tools）が残っています。"
+      echo "  [rules.mcp_review] → [rules.reviewing]"
+      echo "  ai_tools → tools"
+      echo "手動で更新してください。旧キーはv1.14.0以降では無視されます。"
+    fi
+  done
+fi
+
+# [rules.reviewing] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+  echo "Adding [rules.reviewing] section..."
   cat >> docs/aidlc.toml << 'EOF'
 
-[rules.mcp_review]
-# MCPレビュー設定（v1.4.0で追加）
+[rules.reviewing]
+# AIレビュー設定（v1.4.0で追加、v1.14.0でリネーム）
 # mode: "recommend" | "required" | "disabled"
-# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
-# - required: MCP利用可能時にレビュー必須
+# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
+# - required: AIレビューツール利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
 EOF
-  echo "Added [rules.mcp_review] section"
+  echo "Added [rules.reviewing] section"
 else
-  echo "[rules.mcp_review] section already exists"
+  echo "[rules.reviewing] section already exists"
 fi
 
 # [rules.worktree] セクションが存在しない場合は追加
@@ -672,31 +701,31 @@ else
   echo "[rules.linting] section already exists"
 fi
 
-# [rules.mcp_review] に ai_tools が存在しない場合は追加（v1.8.2で追加）
-# セクション内での存在チェック: [rules.mcp_review]から次のセクションまでの範囲でai_toolsを検索
-if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  AI_TOOLS_IN_SECTION=$(sed -n '/^\[rules.mcp_review\]/,/^\[/p' docs/aidlc.toml | grep -c "^ai_tools" || echo "0")
-  if [ "$AI_TOOLS_IN_SECTION" = "0" ]; then
-    echo "Adding ai_tools to [rules.mcp_review] section..."
-    # [rules.mcp_review] セクション内の mode = 行の後に追加
-    sed -i '' '/^\[rules.mcp_review\]/,/^\[/ {
-      /^\[rules.mcp_review\]/!{
+# [rules.reviewing] に tools が存在しない場合は追加（v1.8.2で追加、v1.14.0でリネーム）
+# セクション内での存在チェック: [rules.reviewing]から次のセクションまでの範囲でtoolsを検索
+if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+  TOOLS_IN_SECTION=$(sed -n '/^\[rules.reviewing\]/,/^\[/p' docs/aidlc.toml | grep -c "^tools" || echo "0")
+  if [ "$TOOLS_IN_SECTION" = "0" ]; then
+    echo "Adding tools to [rules.reviewing] section..."
+    # [rules.reviewing] セクション内の mode = 行の後に追加
+    sed '/^\[rules.reviewing\]/,/^\[/ {
+      /^\[rules.reviewing\]/!{
         /^\[/!{
           /^mode = /a\
-# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）\
+# tools: AIレビューに使用するツールの優先順位リスト（v1.8.2で追加、v1.14.0でリネーム）\
 # - デフォルト: ["codex"]\
 # - 例: ["codex", "claude", "gemini"]\
-# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用\
-ai_tools = ["codex"]
+# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）\
+tools = ["codex"]
         }
       }
-    }' docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
-    echo "Added ai_tools to [rules.mcp_review] section"
+    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
+    echo "Added tools to [rules.reviewing] section"
   else
-    echo "ai_tools already exists in [rules.mcp_review] section"
+    echo "tools already exists in [rules.reviewing] section"
   fi
 else
-  echo "[rules.mcp_review] section not found"
+  echo "[rules.reviewing] section not found"
 fi
 
 # [rules.commit] セクションが存在しない場合は追加
@@ -720,7 +749,7 @@ fi
 **マイグレーション結果の確認**:
 
 ```bash
-grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
+grep -A 5 "^\[rules.reviewing\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
 grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
@@ -1348,10 +1377,12 @@ docs/aidlc/bin/setup-ai-tools.sh
 **ディレクトリ構成**:
 
 ```text
-.claude/skills/              ← 実ディレクトリ
-├── codex-review/   → symlink → ../../docs/aidlc/skills/codex-review/
-├── claude-review/  → symlink → ../../docs/aidlc/skills/claude-review/
-├── gemini-review/  → symlink → ../../docs/aidlc/skills/gemini-review/
+.claude/skills/                       ← 実ディレクトリ
+├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
+├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
+├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
+├── upgrading-aidlc/         → symlink → ../../docs/aidlc/skills/upgrading-aidlc/
+├── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
 .kiro/agents/
@@ -1391,7 +1422,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 - backlog-management.md（バックログ管理ガイド）
 
 **skills/** → `docs/aidlc/skills/`:
-- codex/SKILL.md, claude/SKILL.md, gemini/SKILL.md（AIスキルファイル）
+- reviewing-code/SKILL.md, reviewing-architecture/SKILL.md, reviewing-security/SKILL.md（レビュースキル）
+- upgrading-aidlc/SKILL.md（アップグレードスキル）、versioning-with-jj/SKILL.md（jjスキル）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
@@ -1434,7 +1466,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/operations.md - Operations Phase プロンプト
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
-- skills/ - AIスキルファイル（codex, claude, gemini）
+- skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, upgrading-aidlc, versioning-with-jj）
 - kiro/agents/ - KiroCLIエージェント設定
 
 プロジェクト固有ファイル（docs/cycles/）:

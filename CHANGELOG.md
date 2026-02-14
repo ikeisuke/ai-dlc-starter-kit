@@ -7,6 +7,41 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.14.0] - 2026-02-14
+
+### Added
+
+- レビュー種別スキル新設（#181）
+  - reviewing-code: コード品質レビュー（可読性、保守性、パフォーマンス、テスト品質）
+  - reviewing-architecture: アーキテクチャレビュー（構造、パターン、API設計、依存関係）
+  - reviewing-security: セキュリティレビュー（OWASP Top 10、認証認可、依存脆弱性）
+
+### Changed
+
+- AIレビューフローをスキルベースに刷新（#181）
+  - review-flow.mdをレビュー種別スキル呼び出しに変更
+  - 設定セクション名を `[rules.mcp_review]` → `[rules.reviewing]` に変更
+  - MCP関連参照を全て削除
+- jjスキル改善
+  - agentskills.ioベストプラクティスに準拠したフロントマター
+  - Git比較表をreferences/に分離（Progressive Disclosure）
+- aidlc-upgradeスキル改善
+  - agentskills.ioベストプラクティスに準拠したフロントマター
+  - setup-prompt.md検索フローを最適化（2ステップ検索、再帰Glob禁止）
+- ドキュメント・リンク整合（#181）
+  - AGENTS.md、skill-usage-guide.md、setup-prompt.md、rules.mdを新スキル構成に更新
+
+### Removed
+
+- 旧レビュースキル削除（#181）
+  - codex-review、claude-review、gemini-review の各スキルを削除
+- ghスキル削除
+  - gh操作はスキル経由不要のため削除
+- guides/jj-support.md
+  - jjスキルのreferences/に統合済み
+
+---
+
 ## [1.13.4] - 2026-02-12
 
 ### Added

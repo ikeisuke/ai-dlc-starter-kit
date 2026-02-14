@@ -216,23 +216,24 @@ AI-DLCは複数のAIツールで利用できます。
 
 **スキル利用ガイド**: [詳細はこちら](../guides/skill-usage-guide.md)
 
-### 特定のAIツールを呼び出す
+### レビュースキル
 
-特定のAIツールを呼び出したいときは、該当するスキルファイルを読んでください:
+AIレビューを実行するスキル:
 
-| 呼び出したいツール | 読むファイル |
-|-------------------|-------------|
-| Codex CLI | `docs/aidlc/skills/codex-review/SKILL.md` |
-| Claude Code | `docs/aidlc/skills/claude-review/SKILL.md` |
-| Gemini CLI | `docs/aidlc/skills/gemini-review/SKILL.md` |
+| レビュー種別 | 読むファイル |
+|-------------|-------------|
+| コードレビュー | `docs/aidlc/skills/reviewing-code/SKILL.md` |
+| アーキテクチャレビュー | `docs/aidlc/skills/reviewing-architecture/SKILL.md` |
+| セキュリティレビュー | `docs/aidlc/skills/reviewing-security/SKILL.md` |
 
-### AI-DLCワークフロースキル
+### ワークフロースキル
 
 AI-DLCのワークフローを実行するスキル:
 
 | スキル | 読むファイル | 説明 |
 |--------|-------------|------|
-| アップグレード | `docs/aidlc/skills/aidlc-upgrade/SKILL.md` | AI-DLC環境を最新バージョンに更新 |
+| アップグレード | `docs/aidlc/skills/upgrading-aidlc/SKILL.md` | AI-DLC環境を最新バージョンに更新 |
+| jjバージョン管理 | `docs/aidlc/skills/versioning-with-jj/SKILL.md` | jjを使用したバージョン管理 |
 
 ### KiroCLI対応
 
@@ -255,7 +256,7 @@ kiro-cli --agent aidlc
 ```json
 {
   "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
+  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。コード・アーキテクチャ・セキュリティのAIレビューも実行できます。",
   "tools": ["@builtin"],
   "resources": [
     "file://AGENTS.md",

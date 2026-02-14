@@ -7,6 +7,10 @@ starter_kit_version = "[version.txt の内容]"
 name = "[プロジェクト名]"
 description = "[プロジェクト概要]"
 type = "[プロジェクトタイプ]"
+# starter_kit_repo: スターターキットのリポジトリパス（フォーク時に変更）
+# - デフォルト: "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
+# - ghq形式のパス（例: "ghq:github.com/your-org/your-fork"）
+# starter_kit_repo = "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
 
 [project.tech_stack]
 languages = [[言語リスト]]
@@ -45,18 +49,18 @@ ai_author = "Claude <noreply@anthropic.com>"
 [rules.documentation]
 language = "日本語"
 
-[rules.mcp_review]
-# MCPレビュー設定
+[rules.reviewing]
+# AIレビュー設定
 # mode: "recommend" | "required" | "disabled"
-# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
-# - required: MCP利用可能時にレビュー必須
+# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
+# - required: AIレビューツール利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
-# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）
+# tools: AIレビューに使用するツールの優先順位リスト
 # - デフォルト: ["codex"]
 # - 例: ["codex", "claude", "gemini"]
-# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用
-ai_tools = ["codex"]
+# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
+tools = ["codex"]
 
 [rules.worktree]
 # git worktree設定
