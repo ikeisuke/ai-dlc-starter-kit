@@ -574,53 +574,18 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
 **サブステップ一覧**（順番に実行）:
-1. 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
-2. 6.1 CHANGELOG更新（`changelog = true` の場合）
-3. 6.2 README更新
-4. 6.3 履歴記録
-5. 6.4 Markdownlint実行
-6. 6.4.5 progress.md更新 ← **PR準備完了**
-7. 6.5 Gitコミット
+1. 6.1 CHANGELOG更新（`changelog = true` の場合）
+2. 6.2 README更新
+3. 6.3 履歴記録
+4. 6.4 Markdownlint実行
+5. 6.4.5 progress.md更新 ← **PR準備完了**
+6. 6.5 Gitコミット
 
 **注**: 6.4.5でprogress.mdを「PR準備完了」状態に更新し、6.5でコミットしてPRに反映します。以下はレビュー・マージ作業です。
 
-8. 6.6 ドラフトPR Ready化
-9. 6.6.5 コミット漏れ確認
-10. 6.7 PRマージ
-
-#### 6.0 バージョンファイル更新（AI-DLCスターターキットのみ）
-
-**スキップ判定**:
-
-`docs/aidlc.toml` の `project.name` を確認:
-- `project.name = "ai-dlc-starter-kit"` の場合: 以下を実行
-- それ以外の場合: このステップをスキップ
-
-**実行する場合**:
-
-1. **version.txt更新**:
-   - サイクル番号から `v` を除いた値に更新（例: v1.13.0 → 1.13.0）
-   ```bash
-   # サイクル番号を取得し、vプレフィックスを除去
-   CYCLE="{{CYCLE}}"
-   VERSION="${CYCLE#v}"
-   echo "${VERSION}" > version.txt
-   ```
-
-2. **docs/aidlc.toml更新**:
-   - `starter_kit_version` を同じ値に更新
-   ```bash
-   # sedで置換（macOS互換）
-   sed -i '' "s/^starter_kit_version = .*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml
-   ```
-
-3. **更新確認**:
-   ```bash
-   cat version.txt
-   grep starter_kit_version docs/aidlc.toml
-   ```
-
-**注意**: このステップはAI-DLCスターターキット自体のリリース時のみ実行されます。他のプロジェクトでは自動的にスキップされます。
+7. 6.6 ドラフトPR Ready化
+8. 6.6.5 コミット漏れ確認
+9. 6.7 PRマージ
 
 #### 6.1 CHANGELOG更新
 
