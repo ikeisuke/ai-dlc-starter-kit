@@ -566,22 +566,33 @@ grep "^starter_kit_version" docs/aidlc.toml
 **マイグレーション対象の確認と追加**:
 
 ```bash
-# [rules.mcp_review] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  echo "Adding [rules.mcp_review] section..."
+# [rules.mcp_review] → [rules.reviewing] リネーム移行（v1.14.0で追加）
+if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
+  echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
+  sed -i '' 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml
+  # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
+  sed -i '' '/^\[rules.reviewing\]/,/^\[/ {
+    s/^ai_tools/tools/
+  }' docs/aidlc.toml
+  echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
+fi
+
+# [rules.reviewing] セクションが存在しない場合は追加
+if ! grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+  echo "Adding [rules.reviewing] section..."
   cat >> docs/aidlc.toml << 'EOF'
 
-[rules.mcp_review]
-# MCPレビュー設定（v1.4.0で追加）
+[rules.reviewing]
+# AIレビュー設定（v1.4.0で追加、v1.14.0でリネーム）
 # mode: "recommend" | "required" | "disabled"
-# - recommend: MCP利用可能時にレビューを推奨（デフォルト）
-# - required: MCP利用可能時にレビュー必須
+# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
+# - required: AIレビューツール利用可能時にレビュー必須
 # - disabled: レビュー推奨を無効化
 mode = "recommend"
 EOF
-  echo "Added [rules.mcp_review] section"
+  echo "Added [rules.reviewing] section"
 else
-  echo "[rules.mcp_review] section already exists"
+  echo "[rules.reviewing] section already exists"
 fi
 
 # [rules.worktree] セクションが存在しない場合は追加
@@ -672,31 +683,31 @@ else
   echo "[rules.linting] section already exists"
 fi
 
-# [rules.mcp_review] に ai_tools が存在しない場合は追加（v1.8.2で追加）
-# セクション内での存在チェック: [rules.mcp_review]から次のセクションまでの範囲でai_toolsを検索
-if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  AI_TOOLS_IN_SECTION=$(sed -n '/^\[rules.mcp_review\]/,/^\[/p' docs/aidlc.toml | grep -c "^ai_tools" || echo "0")
-  if [ "$AI_TOOLS_IN_SECTION" = "0" ]; then
-    echo "Adding ai_tools to [rules.mcp_review] section..."
-    # [rules.mcp_review] セクション内の mode = 行の後に追加
-    sed -i '' '/^\[rules.mcp_review\]/,/^\[/ {
-      /^\[rules.mcp_review\]/!{
+# [rules.reviewing] に tools が存在しない場合は追加（v1.8.2で追加、v1.14.0でリネーム）
+# セクション内での存在チェック: [rules.reviewing]から次のセクションまでの範囲でtoolsを検索
+if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+  TOOLS_IN_SECTION=$(sed -n '/^\[rules.reviewing\]/,/^\[/p' docs/aidlc.toml | grep -c "^tools" || echo "0")
+  if [ "$TOOLS_IN_SECTION" = "0" ]; then
+    echo "Adding tools to [rules.reviewing] section..."
+    # [rules.reviewing] セクション内の mode = 行の後に追加
+    sed -i '' '/^\[rules.reviewing\]/,/^\[/ {
+      /^\[rules.reviewing\]/!{
         /^\[/!{
           /^mode = /a\
-# ai_tools: AIレビューに使用するサービスのリスト（優先順位順）（v1.8.2で追加）\
+# tools: AIレビューに使用するツールの優先順位リスト（v1.8.2で追加、v1.14.0でリネーム）\
 # - デフォルト: ["codex"]\
 # - 例: ["codex", "claude", "gemini"]\
-# - リスト順に利用可否を確認し、最初に利用可能なサービスを使用\
-ai_tools = ["codex"]
+# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）\
+tools = ["codex"]
         }
       }
     }' docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
-    echo "Added ai_tools to [rules.mcp_review] section"
+    echo "Added tools to [rules.reviewing] section"
   else
-    echo "ai_tools already exists in [rules.mcp_review] section"
+    echo "tools already exists in [rules.reviewing] section"
   fi
 else
-  echo "[rules.mcp_review] section not found"
+  echo "[rules.reviewing] section not found"
 fi
 
 # [rules.commit] セクションが存在しない場合は追加
@@ -720,7 +731,7 @@ fi
 **マイグレーション結果の確認**:
 
 ```bash
-grep -A 5 "^\[rules.mcp_review\]" docs/aidlc.toml
+grep -A 5 "^\[rules.reviewing\]" docs/aidlc.toml
 grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
 grep -A 5 "^\[backlog\]" docs/aidlc.toml
 grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
