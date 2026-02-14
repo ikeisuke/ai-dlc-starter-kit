@@ -383,8 +383,8 @@ docs/aidlc/bin/issue-ops.sh set-status <issue_number> blocked
 
 **設定確認**:
 `docs/aidlc.toml`の`[rules.unit_branch]`セクションを確認し、`enabled`の値を取得する。
-- `enabled = false`の場合: このセクションをスキップして次へ進む
-- `enabled = true`、未設定、または不正値の場合: 以下の「前提条件チェック」から実行
+- `enabled = true`の場合: 以下の「前提条件チェック」から実行
+- `enabled = false`、未設定、または不正値の場合: このセクションをスキップして次へ進む
 
 **前提条件チェック**（ステップ2.5で確認した `gh` ステータスを参照）:
 - `gh:available` 以外の場合: スキップして次へ進む
