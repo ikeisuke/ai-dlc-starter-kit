@@ -568,13 +568,21 @@ grep "^starter_kit_version" docs/aidlc.toml
 ```bash
 # [rules.mcp_review] → [rules.reviewing] リネーム移行（v1.14.0で追加）
 if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
-  sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
-  # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
-  sed '/^\[rules.reviewing\]/,/^\[/ {
-    s/^ai_tools/tools/
-  }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
-  echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
+  if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
+    # 既に [rules.reviewing] が存在する場合、旧セクションを削除（重複防止）
+    echo "Both [rules.mcp_review] and [rules.reviewing] found. Removing old section..."
+    awk '/^\[rules\.mcp_review\]/{skip=1; next} /^\[/{skip=0} !skip' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    echo "Removed old [rules.mcp_review] section"
+  else
+    # [rules.reviewing] が存在しない場合のみリネーム
+    echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
+    sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
+    sed '/^\[rules.reviewing\]/,/^\[/ {
+      s/^ai_tools/tools/
+    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
+    echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
+  fi
 fi
 
 # [rules.reviewing] セクションが存在しない場合は追加
