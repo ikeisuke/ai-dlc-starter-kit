@@ -26,9 +26,10 @@ AI-DLC環境を最新バージョンにアップグレードするスキル。
    ```bash
    # 1. ghq root を取得
    GHQ_ROOT=$(ghq root)
-   # 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: github.com/ikeisuke/ai-dlc-starter-kit）
-   REPO=$(docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "github.com/ikeisuke/ai-dlc-starter-kit")
-   # 3. パスを組み立て
+   # 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: ghq:github.com/ikeisuke/ai-dlc-starter-kit）
+   RAW_REPO=$(docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit")
+   # 3. ghq: プレフィックスを除去してパスを組み立て
+   REPO="${RAW_REPO#ghq:}"
    SETUP_PATH="${GHQ_ROOT}/${REPO}/prompts/setup-prompt.md"
    ```
 

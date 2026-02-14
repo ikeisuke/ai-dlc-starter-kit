@@ -7,6 +7,10 @@ starter_kit_version = "[version.txt の内容]"
 name = "[プロジェクト名]"
 description = "[プロジェクト概要]"
 type = "[プロジェクトタイプ]"
+# starter_kit_repo: スターターキットのリポジトリパス（フォーク時に変更）
+# - デフォルト: "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
+# - ghq形式のパス（例: "ghq:github.com/your-org/your-fork"）
+# starter_kit_repo = "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
 
 [project.tech_stack]
 languages = [[言語リスト]]
