@@ -49,6 +49,8 @@ enabled = false / 未設定 / 不正値 → スキップ
 
 ## 影響範囲
 
-- `docs/aidlc/prompts/construction.md` は `prompts/package/prompts/construction.md` のrsyncコピーであるため、Operations Phaseで自動同期される
+- `docs/aidlc/prompts/construction.md` は `prompts/package/prompts/construction.md` のrsyncコピーであり、直接編集しない
+  - **同期タイミング**: Operations Phaseで `/upgrading-aidlc` スキル実行時にrsyncで同期される（`docs/cycles/rules.md` 参照）
+  - **同期前提条件**: この変更が `docs/aidlc/prompts/construction.md` に反映されるのは、upgrading-aidlc実行後。同期前は旧ロジックが残るが、このプロジェクトの開発フローでは問題なし
 - `enabled = true` を明示的に設定している既存プロジェクトには影響なし
 - 未設定の既存プロジェクトは、Unitブランチ作成が推奨されなくなる（意図された動作）
