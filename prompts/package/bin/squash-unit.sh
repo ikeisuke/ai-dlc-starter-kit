@@ -143,7 +143,7 @@ find_base_commit_git() {
     local merge_base=""
 
     # サイクルブランチの分岐点を特定し、その範囲内で検索
-    merge_base=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || true)
+    merge_base=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || git merge-base origin/master HEAD 2>/dev/null || git merge-base master HEAD 2>/dev/null || true)
 
     local log_range=""
     local head_hash
@@ -515,9 +515,9 @@ main() {
     # ドライラン: 対象一覧を表示して終了
     if [[ "$DRY_RUN" == "true" ]]; then
         if [[ "$VCS_TYPE" == "git" ]]; then
-            git log --oneline "${BASE_COMMIT}..HEAD" 2>/dev/null >&2
+            git log --oneline "${BASE_COMMIT}..HEAD" >&2
         elif [[ "$VCS_TYPE" == "jj" ]]; then
-            jj log --no-graph -r "${BASE_COMMIT}..@-" 2>/dev/null >&2
+            jj log --no-graph -r "${BASE_COMMIT}..@-" >&2
         fi
         echo "squash:dry-run:${TARGET_COUNT}"
         exit 0
