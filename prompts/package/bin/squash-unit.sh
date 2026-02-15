@@ -129,9 +129,21 @@ find_base_commit_git() {
     local base_hash=""
     local line
     local log_output
+    local merge_base=""
+
+    # サイクルブランチの分岐点を特定し、その範囲内で検索
+    merge_base=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || true)
+
+    local log_range=""
+    if [[ -n "$merge_base" ]]; then
+        log_range="${merge_base}..HEAD"
+    else
+        # フォールバック: 分岐点が見つからない場合は100コミットに制限
+        log_range="-n 100"
+    fi
 
     # git log の実行可否を先に確認
-    if ! log_output=$(git log --format="%H %s" -n 100 2>&1); then
+    if ! log_output=$(git log --format="%H %s" $log_range 2>&1); then
         echo "Error: git log failed: ${log_output}" >&2
         echo "squash:error:git-log-failed"
         exit 1
@@ -164,11 +176,17 @@ find_base_commit_jj() {
     local line
     local log_output
 
+    # trunk()からの範囲で検索（サイクルブランチの分岐点以降）
+    local jj_range="trunk()..@-"
+
     # jj log の実行可否を先に確認
-    if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "ancestors(@-, 50)..@-" 2>&1); then
-        echo "Error: jj log failed: ${log_output}" >&2
-        echo "squash:error:jj-log-failed"
-        exit 1
+    if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "$jj_range" 2>&1); then
+        # フォールバック: trunk()が使えない場合は従来の範囲
+        if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "ancestors(@-, 50)..@-" 2>&1); then
+            echo "Error: jj log failed: ${log_output}" >&2
+            echo "squash:error:jj-log-failed"
+            exit 1
+        fi
     fi
 
     # パターン: feat: [CYCLE] または chore: [CYCLE] ... Phase完了（change_idを使用）
@@ -392,8 +410,16 @@ main() {
         fi
     fi
 
-    # 起点コミット特定（--base 指定時はスキップ）
+    # 起点コミット特定（--base 指定時は祖先チェックのみ）
     if [[ -n "$BASE_COMMIT" ]]; then
+        # P1: 指定されたbaseがHEADの祖先であることを検証
+        if [[ "$VCS_TYPE" == "git" ]]; then
+            if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then
+                echo "Error: --base ${BASE_COMMIT} is not an ancestor of HEAD" >&2
+                echo "squash:error:base-not-ancestor"
+                exit 1
+            fi
+        fi
         echo "base_commit:${BASE_COMMIT}"
     elif [[ "$VCS_TYPE" == "git" ]]; then
         find_base_commit_git "$CYCLE"
