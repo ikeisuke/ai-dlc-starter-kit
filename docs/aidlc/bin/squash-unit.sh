@@ -6,7 +6,7 @@ set -euo pipefail
 
 # --- グローバル変数 ---
 CYCLE=""
-UNIT=""  # 現在の処理では未使用だが、呼び出し元との契約として受け取る
+UNIT=""  # オプション: 呼び出し元との契約として受け取るが、現在のロジックでは未使用
 MESSAGE=""
 DRY_RUN=false
 VCS_TYPE=""
@@ -25,11 +25,11 @@ Unit完了時に中間コミットを1つにまとめるsquashスクリプト。
 
 Required:
   --cycle <CYCLE>         サイクル名（例: v1.15.0）
-  --unit <UNIT_NUMBER>    Unit番号（例: 001）
   --message <MESSAGE>     squash後のコミットメッセージ
   --vcs <git|jj>          使用するVCS種類
 
 Optional:
+  --unit <UNIT_NUMBER>    Unit番号（例: 001）。現在は未使用だが将来の拡張用。
   --base <COMMIT>         起点コミット（git: ハッシュ, jj: change_id）を明示指定。
                           省略時はコミットメッセージのパターンから自動検出。
   --dry-run               実際のsquashを実行せず対象コミットの表示のみ
@@ -37,8 +37,8 @@ Optional:
 
 Examples:
   squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: [v1.15.0] Unit 001完了 - squashスクリプト作成"
-  squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: ..." --base abc1234
-  squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: ..." --dry-run
+  squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --base abc1234
+  squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --dry-run
 EOF
 }
 
@@ -108,10 +108,6 @@ parse_args() {
         echo "Error: --cycle is required" >&2
         exit 2
     fi
-    if [[ -z "$UNIT" ]]; then
-        echo "Error: --unit is required" >&2
-        exit 2
-    fi
     if [[ -z "$MESSAGE" ]]; then
         echo "Error: --message is required" >&2
         exit 2
@@ -119,6 +115,21 @@ parse_args() {
     if [[ -z "$VCS_TYPE" ]]; then
         echo "Error: --vcs is required" >&2
         exit 2
+    fi
+}
+
+# --- 入力バリデーション ---
+
+# jj change_idまたはgit commit hashの形式を検証（revset演算子の混入を防止）
+validate_base_format() {
+    local base="$1"
+    local vcs_type="$2"
+    # 英数字とハイフン・アンダースコアのみ許可（revset演算子 |&()~.. 等を拒否）
+    if [[ ! "$base" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "Error: --base contains invalid characters: ${base}" >&2
+        echo "Error: Only alphanumeric, hyphen, and underscore are allowed" >&2
+        echo "squash:error:invalid-base-format"
+        exit 1
     fi
 }
 
@@ -135,11 +146,19 @@ find_base_commit_git() {
     merge_base=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || true)
 
     local log_range=""
-    if [[ -n "$merge_base" ]]; then
+    local head_hash
+    if ! head_hash=$(git rev-parse HEAD 2>&1); then
+        echo "Error: no commits in this repository (unborn HEAD)" >&2
+        echo "squash:error:no-head"
+        exit 1
+    fi
+    if [[ -n "$merge_base" && "$merge_base" != "$head_hash" ]]; then
         log_range="${merge_base}..HEAD"
     else
-        # フォールバック: 分岐点が見つからない場合は100コミットに制限
-        log_range="-n 100"
+        # mainブランチ上または分岐点が見つからない場合はエラー
+        echo "Error: cannot determine branch range. Are you on a cycle branch? Use --base to specify explicitly." >&2
+        echo "squash:error:no-branch-range"
+        exit 1
     fi
 
     # git log の実行可否を先に確認
@@ -181,12 +200,11 @@ find_base_commit_jj() {
 
     # jj log の実行可否を先に確認
     if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "$jj_range" 2>&1); then
-        # フォールバック: trunk()が使えない場合は従来の範囲
-        if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "ancestors(@-, 50)..@-" 2>&1); then
-            echo "Error: jj log failed: ${log_output}" >&2
-            echo "squash:error:jj-log-failed"
-            exit 1
-        fi
+        # フォールバック: trunk()が使えない場合はエラー
+        echo "Error: jj log failed: ${log_output}" >&2
+        echo "Error: cannot determine branch range. Use --base to specify explicitly." >&2
+        echo "squash:error:jj-log-failed"
+        exit 1
     fi
 
     # パターン: feat: [CYCLE] または chore: [CYCLE] ... Phase完了（change_idを使用）
@@ -229,6 +247,31 @@ extract_co_authors() {
     else
         CO_AUTHORS=""
     fi
+}
+
+# --- コミット数取得（pipefail安全） ---
+
+get_target_count() {
+    local vcs_type="$1"
+    local base="$2"
+    local count_output
+
+    if [[ "$vcs_type" == "git" ]]; then
+        if ! count_output=$(git rev-list --count "${base}..HEAD" 2>&1); then
+            echo "Error: failed to count commits: ${count_output}" >&2
+            echo "squash:error:count-failed"
+            exit 1
+        fi
+    elif [[ "$vcs_type" == "jj" ]]; then
+        if ! count_output=$(jj log --no-graph -T 'change_id ++ "\n"' -r "${base}..@-" 2>&1); then
+            echo "Error: failed to count revisions: ${count_output}" >&2
+            echo "squash:error:count-failed"
+            exit 1
+        fi
+        count_output=$(echo "$count_output" | wc -l | tr -d ' ')
+    fi
+
+    TARGET_COUNT="$count_output"
 }
 
 # --- squash実行 ---
@@ -332,7 +375,12 @@ squash_jj() {
 
     # 順次squash: 最新側から親方向へ統合
     local remaining
-    remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>/dev/null | wc -l | tr -d ' ')
+    if ! remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>&1 | wc -l | tr -d ' '); then
+        echo "Error: failed to count jj revisions" >&2
+        echo "squash:error:count-failed"
+        echo "recovery:jj undo"
+        exit 1
+    fi
 
     while [[ "$remaining" -gt 1 ]]; do
         # 最新のリビジョンを取得して親にsquash
@@ -353,7 +401,12 @@ squash_jj() {
         fi
 
         # revsetで残りのリビジョン数を再取得
-        remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>/dev/null | wc -l | tr -d ' ')
+        if ! remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>&1 | wc -l | tr -d ' '); then
+            echo "Error: failed to recount jj revisions" >&2
+            echo "squash:error:count-failed"
+            echo "recovery:jj undo"
+            exit 1
+        fi
     done
 
     # 統合後のリビジョンにメッセージを設定
@@ -397,25 +450,47 @@ main() {
             exit 1
         fi
     elif [[ "$VCS_TYPE" == "jj" ]]; then
-        local jj_diff
-        if ! jj_diff=$(jj diff --stat 2>&1); then
-            echo "Error: jj diff failed (not a jj repository?): ${jj_diff}" >&2
+        local jj_status
+        # stdoutのみ取得（stderrの警告によるdirty誤判定を防止）
+        if ! jj_status=$(jj diff --stat 2>/dev/null); then
+            echo "Error: jj diff failed (not a jj repository?)" >&2
             echo "squash:error:not-a-repository"
             exit 1
         fi
-        if [[ -n "$jj_diff" ]]; then
+        if [[ -n "$jj_status" ]]; then
             echo "Error: working copy has uncommitted changes. Please commit changes first." >&2
             echo "squash:error:dirty-working-tree"
             exit 1
         fi
     fi
 
-    # 起点コミット特定（--base 指定時は祖先チェックのみ）
+    # mainブランチ保護: サイクルブランチ以外での実行を拒否
+    if [[ "$VCS_TYPE" == "git" ]]; then
+        local current_branch
+        current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+        if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
+            echo "Error: squash-unit.sh should not be run on the main/master branch. Use a cycle branch." >&2
+            echo "squash:error:on-main-branch"
+            exit 1
+        fi
+    fi
+
+    # 起点コミット特定（--base 指定時はバリデーション＋祖先チェック）
     if [[ -n "$BASE_COMMIT" ]]; then
-        # P1: 指定されたbaseがHEADの祖先であることを検証
+        # 入力バリデーション（revset演算子の混入防止）
+        validate_base_format "$BASE_COMMIT" "$VCS_TYPE"
+
         if [[ "$VCS_TYPE" == "git" ]]; then
             if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then
                 echo "Error: --base ${BASE_COMMIT} is not an ancestor of HEAD" >&2
+                echo "squash:error:base-not-ancestor"
+                exit 1
+            fi
+        elif [[ "$VCS_TYPE" == "jj" ]]; then
+            # jj: baseが@-の祖先であることを検証
+            local ancestor_check
+            if ! ancestor_check=$(jj log --no-graph -T 'change_id' -r "ancestors(@-) & exact:${BASE_COMMIT}" 2>/dev/null) || [[ -z "$ancestor_check" ]]; then
+                echo "Error: --base ${BASE_COMMIT} is not an ancestor of @- or is not a valid revision" >&2
                 echo "squash:error:base-not-ancestor"
                 exit 1
             fi
@@ -427,12 +502,8 @@ main() {
         find_base_commit_jj "$CYCLE"
     fi
 
-    # 対象コミット数の取得
-    if [[ "$VCS_TYPE" == "git" ]]; then
-        TARGET_COUNT=$(git log --oneline "${BASE_COMMIT}..HEAD" 2>/dev/null | wc -l | tr -d ' ')
-    elif [[ "$VCS_TYPE" == "jj" ]]; then
-        TARGET_COUNT=$(jj log --no-graph -T 'change_id ++ "\n"' -r "${BASE_COMMIT}..@-" 2>/dev/null | wc -l | tr -d ' ')
-    fi
+    # 対象コミット数の取得（pipefail安全）
+    get_target_count "$VCS_TYPE" "$BASE_COMMIT"
     echo "target_count:${TARGET_COUNT}"
 
     # 対象0件: スキップ
