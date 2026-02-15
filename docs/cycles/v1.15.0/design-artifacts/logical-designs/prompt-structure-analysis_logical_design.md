@@ -47,16 +47,16 @@
 
 **現状**: Lite版はFull版を前提として差分定義（71-117行）
 
-**方針**: Lite版は別Skillとして独立させず、Full版Skillのパラメータとして扱う
+**Unit 005での方針**: Lite版は現行の独立ファイル構造を維持する（変更なし）
 
-- Skill呼び出し時に `mode=lite` パラメータで切り替え
-- Lite版固有の変更点はFull版プロンプト末尾にインライン化
-- これにより lite/ ディレクトリの3ファイルを廃止可能
+- 既存のFull版読み込み + 差分適用パターンをそのまま維持
+- lite/ ディレクトリの3ファイルは変更しない
+- Unit 005のスコープはcommon/抽出とAGENTS.md分離に限定
 
-**代替案**（Lite版を独立Skillとして維持）:
-- 既存のFull版読み込み + 差分適用パターンを維持
-- Skill定義で `dependencies: [inception]` のように参照
-- 変更量が少ない分、移行リスクも低い
+**次サイクル以降（Skills化時）の検討事項**:
+- Lite版のインライン化（Full版末尾に統合）を検討
+- または独立Skillとして `inception-lite/SKILL.md` 等を作成
+- Skills化サイクルの設計フェーズで最終判断
 
 ## ファイル単位変更リスト
 
@@ -64,7 +64,7 @@
 
 | ファイル | 責務 | 推定行数 |
 |---------|------|---------|
-| `common/agents-rules.md` | AGENTS.mdから抽出した共通ルール（実行前検証、質問ルール、禁止事項、コンテキスト保持） | 約80行 |
+| `common/agents-rules.md` | AGENTS.mdから抽出したエージェント対話運用ルール（実行前検証、質問ルール、禁止事項、コンテキスト保持） | 約80行 |
 | `common/feedback.md` | フィードバック送信機能 | 約60行 |
 | `common/ai-tools.md` | AIツール対応情報（Skills、KiroCLI） | 約60行 |
 | `common/project-info.md` | プロジェクト情報テンプレート（概要、スタック、ディレクトリ、制約、テンプレート参照） | 約25行 |
@@ -72,6 +72,32 @@
 | `common/progress-management.md` | 進捗管理と冪等性のルール | 約10行 |
 | `common/context-reset.md` | コンテキストリセット対応の共通テンプレート | 約30行 |
 | `common/compaction.md` | コンパクション時の対応手順 | 約15行 |
+
+### 新規ファイルのインターフェース定義
+
+各新規 `common/*.md` のI/F契約:
+
+| ファイル | 必須セクション | 許可プレースホルダー | 呼び出し文言 | 禁止事項 |
+|---------|-------------|-------------------|------------|---------|
+| `agents-rules.md` | 実行前の検証、質問と深掘り、禁止事項、コンテキスト要約時の情報保持 | なし | `common/agents-rules.md を読み込んで` | フェーズ固有ロジックの混入禁止 |
+| `feedback.md` | 設定確認、手順、注意事項 | なし | `common/feedback.md を読み込んで` | フェーズ固有ロジックの混入禁止 |
+| `ai-tools.md` | レビュースキル、ワークフロースキル、KiroCLI対応 | なし | `common/ai-tools.md を読み込んで` | フェーズ固有ロジックの混入禁止 |
+| `project-info.md` | プロジェクト概要、技術スタック、ディレクトリ構成、制約事項、テンプレート参照 | `{{CYCLE}}` | `common/project-info.md を読み込んで` | フェーズ固有の制約の混入禁止 |
+| `phase-responsibilities.md` | フェーズの責務、フェーズの責務分離 | なし | `common/phase-responsibilities.md を読み込んで` | 個別フェーズの詳細手順の混入禁止 |
+| `progress-management.md` | 進捗管理と冪等性 | なし | `common/progress-management.md を読み込んで` | フェーズ固有の進捗項目の混入禁止 |
+| `context-reset.md` | コンテキストリセット対応テンプレート | `{{PHASE}}`, `{{CYCLE}}` | `common/context-reset.md を読み込んで` | 継続プロンプトのフェーズ固有部分は呼び出し元で補完 |
+| `compaction.md` | コンパクション時の対応手順 | `{{PHASE}}`, `{{CYCLE}}` | `common/compaction.md を読み込んで` | プロンプト再読み込みパスは呼び出し元で指定 |
+
+### `common/rules.md` と `common/agents-rules.md` の責務境界
+
+| 項目 | `common/rules.md` | `common/agents-rules.md` |
+|------|-------------------|-------------------------|
+| **責務領域** | 開発実務ルール | エージェント対話運用ルール |
+| **対象** | コード・ドキュメント作成時の手順 | AIとユーザーの対話・意思決定プロセス |
+| **内容例** | 設定読み込み方法、承認プロセス、コミットタイミング、Co-Authored-By、jjサポート | 実行前検証、質問と深掘りテクニック、禁止事項、コンテキスト要約保持 |
+| **読み込み元** | フェーズプロンプト（直接） | AGENTS.md（間接）→ フェーズプロンプト |
+
+**優先順位**: 両ファイルに重複する記述がある場合、`common/rules.md`（開発実務）が優先。`common/agents-rules.md` は対話運用に特化し、開発実務ルールを含めない。
 
 ### 変更するファイル
 
@@ -88,17 +114,12 @@
 |---------|------|
 | `CLAUDE.md` | Claude Code固有設定であり、共通化の対象外 |
 | `common/intro.md` | 既に適切に分離済み |
-| `common/rules.md` | 既に適切に分離済み |
+| `common/rules.md` | 既に適切に分離済み（agents-rules.mdとの責務境界は上記参照） |
 | `common/review-flow.md` | 既に適切に分離済み |
 | `setup.md` | リダイレクトのみ。変更不要 |
-
-### 将来の廃止候補（次サイクル以降で判断）
-
-| ファイル | 理由 |
-|---------|------|
-| `lite/inception.md` | Lite版インライン化（SP-4）を採用する場合 |
-| `lite/construction.md` | 同上 |
-| `lite/operations.md` | 同上 |
+| `lite/inception.md` | SP-4方針により変更なし |
+| `lite/construction.md` | SP-4方針により変更なし |
+| `lite/operations.md` | SP-4方針により変更なし |
 
 ## マイグレーションルール
 
@@ -131,6 +152,7 @@
 - 各フェーズプロンプトをSKILL.md形式でラップ
 - `prompts/package/skills/` に配置
 - KiroCLIからの直接呼び出しを実現
+- Lite版の扱い（インライン化 or 独立Skill）を最終判断
 
 ### 段階4の想定ディレクトリ構造
 
@@ -150,6 +172,94 @@ prompts/package/skills/
 - common/* モジュールへの読み込み指示を含む
 - Skill固有のメタデータ（name, description, argument-hint等）を定義
 
+## To-Be依存マトリクス（段階3完了後）
+
+### 新規common/ファイルを含む依存構造
+
+```mermaid
+graph TD
+    subgraph エントリポイント
+        AGENTS[AGENTS.md<br/>スリム化]
+    end
+
+    subgraph 共通モジュール（既存）
+        INTRO[common/intro.md]
+        RULES[common/rules.md]
+        REVIEW[common/review-flow.md]
+    end
+
+    subgraph 共通モジュール（新規）
+        AG_RULES[common/agents-rules.md]
+        FEEDBACK[common/feedback.md]
+        AI_TOOLS[common/ai-tools.md]
+        PROJ_INFO[common/project-info.md]
+        PHASE_RESP[common/phase-responsibilities.md]
+        PROGRESS[common/progress-management.md]
+        CTX_RESET[common/context-reset.md]
+        COMPACT[common/compaction.md]
+    end
+
+    subgraph フェーズプロンプト
+        INCEPTION[inception.md]
+        CONSTRUCTION[construction.md]
+        OPERATIONS[operations.md]
+    end
+
+    AGENTS -->|参照| AG_RULES
+    AGENTS -->|参照| FEEDBACK
+    AGENTS -->|参照| AI_TOOLS
+    AGENTS -->|ナビゲーション| INCEPTION
+    AGENTS -->|ナビゲーション| CONSTRUCTION
+    AGENTS -->|ナビゲーション| OPERATIONS
+
+    INCEPTION -->|読み込み| INTRO
+    INCEPTION -->|読み込み| RULES
+    INCEPTION -->|読み込み| PROJ_INFO
+    INCEPTION -->|読み込み| PHASE_RESP
+    INCEPTION -->|読み込み| PROGRESS
+    INCEPTION -->|読み込み| COMPACT
+    INCEPTION -->|読み込み| REVIEW
+
+    CONSTRUCTION -->|読み込み| INTRO
+    CONSTRUCTION -->|読み込み| RULES
+    CONSTRUCTION -->|読み込み| PROJ_INFO
+    CONSTRUCTION -->|読み込み| PHASE_RESP
+    CONSTRUCTION -->|読み込み| PROGRESS
+    CONSTRUCTION -->|読み込み| CTX_RESET
+    CONSTRUCTION -->|読み込み| COMPACT
+    CONSTRUCTION -->|読み込み| REVIEW
+
+    OPERATIONS -->|読み込み| INTRO
+    OPERATIONS -->|読み込み| RULES
+    OPERATIONS -->|読み込み| PROJ_INFO
+    OPERATIONS -->|読み込み| PHASE_RESP
+    OPERATIONS -->|読み込み| PROGRESS
+    OPERATIONS -->|読み込み| CTX_RESET
+    OPERATIONS -->|読み込み| COMPACT
+    OPERATIONS -->|読み込み| REVIEW
+```
+
+### To-Be依存マトリクス表
+
+| 依存元 ＼ 依存先 | AGENTS | 既存common/* | 新規common/* | フェーズ | Lite/* |
+|:-:|:-:|:-:|:-:|:-:|:-:|
+| **AGENTS** | - | - | Ref(agents-rules, feedback, ai-tools) | Nav | - |
+| **既存common/*** | - | - | - | - | - |
+| **新規common/*** | - | - | - | - | - |
+| **フェーズプロンプト** | - | Read(intro, rules, review) | Read(project-info, phase-resp, progress, ctx-reset, compact) | - | - |
+| **Lite/*** | - | - | - | Read(対応Full版) | - |
+
+### 各段階での循環依存チェック
+
+| 段階 | 変更内容 | 循環依存リスク | 判定 |
+|------|---------|-------------|------|
+| 段階1 | common/新規ファイル作成 | なし（新規ファイルは他に依存しない） | OK |
+| 段階2 | フェーズプロンプト → common/読み込み追加 | なし（フェーズ → common方向のみ） | OK |
+| 段階3 | AGENTS.md → common/参照追加 | なし（AGENTS → common方向のみ） | OK |
+| 段階4 | Skills化（ラッパー追加） | なし（Skill → プロンプト方向のみ） | OK |
+
+**結果: 全段階で循環依存なし**。依存は常に上位 → 下位の単方向を維持。
+
 ## Lite版整合性方針
 
 ### 現行のLite版パターン
@@ -158,49 +268,23 @@ prompts/package/skills/
 Lite版 → Full版を読み込み → 差分を適用
 ```
 
-### 整理後のLite版パターン（2案）
+### Unit 005での方針（確定）
 
-#### 案1: インライン化（推奨）
+**Lite版は変更しない**。現行の独立ファイル構造を維持する。
 
-Lite版の差分情報をFull版プロンプトの末尾に統合:
+理由:
+- Unit 005のスコープはcommon/抽出とAGENTS.md分離に限定
+- Lite版はFull版を読み込む構造のため、Full版の内部構造変更（common/への分割）はLite版に影響しない
+- Lite版のインライン化は追加リスクを伴うため、別スコープとして扱う
 
-```markdown
-## Lite版での変更点【Lite版使用時のみ適用】
+### 次サイクル以降（Skills化時）の検討事項
 
-以下はLite版（`start lite xxx`）で起動された場合にのみ適用する変更点です。
-Full版で起動された場合は無視してください。
+Skills化サイクルの設計フェーズで以下を最終判断:
 
-### スキップするステップ
-...
-### 簡略化するステップ
-...
-```
-
-**メリット**: ファイル数削減、Skill化時にFull/Lite版の切り替えが容易
-**デメリット**: Full版プロンプトの行数増加（各70-120行程度）
-
-#### 案2: 独立維持
-
-Lite版を独立ファイルとして維持し、Skills化時にも独立Skillとする:
-
-```
-prompts/package/skills/
-├── inception/SKILL.md
-├── inception-lite/SKILL.md
-├── construction/SKILL.md
-├── construction-lite/SKILL.md
-...
-```
-
-**メリット**: 変更量が少ない、既存パターン維持
-**デメリット**: ファイル数が増える、Full/Lite間の同期が必要
-
-### 推奨
-
-段階1-3（Unit 005）では**案2（独立維持）**を採用し、段階4（次サイクル、Skills化）で**案1（インライン化）**への移行を検討する。
-
-理由: Unit 005のスコープはリファクタリングであり、Lite版のインライン化は追加リスクを伴う。Skills化の段階で一括して対応する方が安全。
+1. Lite版をFull版末尾にインライン化するか
+2. 独立Skillとして `inception-lite/SKILL.md` 等を作成するか
+3. Skillパラメータ（`mode=lite`）で切り替えるか
 
 ## 不明点と質問
 
-（方針策定段階では不明点なし。レビューで確認予定。）
+（方針策定段階では不明点なし。）
