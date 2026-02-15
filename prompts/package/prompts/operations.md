@@ -2,6 +2,7 @@
 
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/intro.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/project-info.md` を読み込んで、内容を確認してください。
 
 **セットアッププロンプトパス（アップグレード時のみ）**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
 
@@ -9,20 +10,11 @@
 
 ## プロジェクト情報
 
-### プロジェクト概要
-AI-DLC (AI-Driven Development Lifecycle) スターターキット - AIを開発プロセスの中心に据えた新しい開発方法論の実践キット
-
 ### 技術スタック
 Inception/Construction Phaseで決定済み
 
-### ディレクトリ構成
-- `docs/aidlc/`: 全サイクル共通の共通プロンプト・テンプレート
-- `docs/cycles/{{CYCLE}}/`: サイクル固有成果物
+### ディレクトリ構成（フェーズ固有の追加）
 - プロジェクトルートディレクトリ: 実装コード
-
-### 制約事項
-- **ドキュメント読み込み制限**: ユーザーから明示的に指示されない限り、`docs/cycles/{{CYCLE}}/` 配下のファイルのみを読み込むこと。他のサイクルのドキュメントや関連プロジェクトのドキュメントは読まないこと（コンテキスト溢れ防止）
-- プロジェクト固有の制約は `docs/cycles/rules.md` を参照
 
 ### 開発ルール
 
@@ -62,40 +54,9 @@ Inception/Construction Phaseで決定済み
 
   **AIレビュー対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
-- **コンテキストリセット対応【重要】**: ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
-  - 「継続プロンプト」「リセットしたい」
-  - 「コンテキストが溢れそう」「コンテキストオーバーフロー」
-  - 「長くなってきた」「一旦区切りたい」
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/context-reset.md` を読み込んで、内容を確認してください。
 
-  **対応手順**:
-  1. 現在の作業状態を確認（どのステップか）
-  2. progress.mdを更新（現在のステップを「進行中」のまま保持）
-  3. 履歴記録（`history/operations.md` に中断状態を追記）
-  4. 継続用プロンプトを提示（下記フォーマット）
-
-  ````markdown
-  ---
-  ## コンテキストリセット - 作業継続
-
-  現在の作業状態を保存しました。コンテキストをリセットして作業を継続できます。
-
-  **現在の状態**:
-  - フェーズ: Operations Phase
-  - ステップ: [ステップ名]
-
-  **作業を継続するプロンプト**:
-  ```
-  以下のファイルを読み込んで、サイクル vX.X.X の Operations Phase を継続してください：
-  docs/aidlc/prompts/operations.md
-  ```
-  ---
-  ````
-
-- **コンパクション時の対応【自動要約後】**: コンテキストがコンパクション（自動要約）された後は、以下を確認・実行する：
-  1. このプロンプトファイルの内容が保持されているか確認
-  2. 保持されていない場合、以下のプロンプトを読み込む：
-     - `docs/aidlc/prompts/operations.md`
-  3. progress.md（`docs/cycles/{{CYCLE}}/operations/progress.md`）の現在のステップを確認して作業を継続
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/compaction.md` を読み込んで、内容を確認してください。
 
 ### フェーズの責務【重要】
 
@@ -122,18 +83,8 @@ Inception/Construction Phaseで決定済み
 2. 最小限の修正のみ実施
 3. 修正後、Construction Phaseへのバックトラックを提案
 
-### フェーズの責務分離
-- **Inception Phase**: 要件定義とUnit分解（`docs/aidlc/prompts/inception.md`）
-- **Construction Phase**: 実装とテスト（`docs/aidlc/prompts/construction.md`）
-- **Operations Phase**: デプロイと運用（このフェーズ）
-
-### 進捗管理と冪等性
-- 各ステップ開始時に既存成果物を確認（`ls`コマンドで確認）
-- 存在するファイルのみ読み込む（全ファイルを一度に読まない）
-- 差分のみ更新、完了済みのステップはスキップ
-
-### テンプレート参照
-ドキュメント作成時は `docs/aidlc/templates/` 配下のテンプレートを参照
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ### テスト記録とバグ対応【重要】
 - **テスト記録テンプレート**: `docs/aidlc/templates/test_record_template.md`
