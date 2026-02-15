@@ -4,6 +4,15 @@
 
 ドメインモデル（プロンプト構造分析）に基づき、各フェーズプロンプトをKiroCLI Skills形式で提供するための整理方針を策定する。アプローチBを採用し、共通部分の抽出を行った上でSkill化を実施する。
 
+## パスの基準
+
+| 区分 | パス | 説明 |
+|------|------|------|
+| **正本（Source of Truth）** | `prompts/package/prompts/` | プロンプトの原本。編集はここで行う |
+| **展開先（デプロイコピー）** | `docs/aidlc/prompts/` | `rsync` で正本から同期されるコピー。直接編集禁止 |
+
+本ドキュメントのファイルパスは、特に断りがない限り正本（`prompts/package/prompts/`）を基準とする。フェーズプロンプト内のテキスト内参照（バックトラック案内等）は展開先パス（`docs/aidlc/prompts/`）を使用している。
+
 ## 分離ポイント一覧
 
 ### SP-1: AGENTS.mdの責務分離
@@ -156,7 +165,7 @@
 
 ### 段階4の想定ディレクトリ構造
 
-```
+```text
 prompts/package/skills/
 ├── inception/
 │   └── SKILL.md         # Inception Phase Skill
@@ -220,6 +229,8 @@ graph TD
     INCEPTION -->|読み込み| COMPACT
     INCEPTION -->|読み込み| REVIEW
 
+    %% ctx-reset は inception では不要（SP-2参照）
+
     CONSTRUCTION -->|読み込み| INTRO
     CONSTRUCTION -->|読み込み| RULES
     CONSTRUCTION -->|読み込み| PROJ_INFO
@@ -246,8 +257,12 @@ graph TD
 | **AGENTS** | - | - | Ref(agents-rules, feedback, ai-tools) | Nav | - |
 | **既存common/*** | - | - | - | - | - |
 | **新規common/*** | - | - | - | - | - |
-| **フェーズプロンプト** | - | Read(intro, rules, review) | Read(project-info, phase-resp, progress, ctx-reset, compact) | - | - |
+| **inception** | - | Read(intro, rules, review) | Read(project-info, phase-resp, progress, compact) | - | - |
+| **construction** | - | Read(intro, rules, review) | Read(project-info, phase-resp, progress, ctx-reset, compact) | - | - |
+| **operations** | - | Read(intro, rules, review) | Read(project-info, phase-resp, progress, ctx-reset, compact) | - | - |
 | **Lite/*** | - | - | - | Read(対応Full版) | - |
+
+**注**: `ctx-reset`（コンテキストリセット対応）は `construction` と `operations` のみ。`inception` は対象外（SP-2参照）。
 
 ### 各段階での循環依存チェック
 
@@ -264,7 +279,7 @@ graph TD
 
 ### 現行のLite版パターン
 
-```
+```text
 Lite版 → Full版を読み込み → 差分を適用
 ```
 
@@ -284,6 +299,21 @@ Skills化サイクルの設計フェーズで以下を最終判断:
 1. Lite版をFull版末尾にインライン化するか
 2. 独立Skillとして `inception-lite/SKILL.md` 等を作成するか
 3. Skillパラメータ（`mode=lite`）で切り替えるか
+
+## 完了条件チェックリスト
+
+| # | 条件 | 状態 | エビデンス |
+|---|------|------|-----------|
+| 1 | Skills化に必要な分離ポイントの特定 | 完了 | [分離ポイント一覧](#分離ポイント一覧): SP-1〜SP-4 |
+| 2 | 各ファイルに対する具体的な変更内容 | 完了 | [ファイル単位変更リスト](#ファイル単位変更リスト): 新規8ファイル、変更4ファイル、変更なし8ファイル |
+| 3 | 新規ファイルのI/F定義 | 完了 | [新規ファイルのインターフェース定義](#新規ファイルのインターフェース定義): 8ファイル分のI/F契約 |
+| 4 | マイグレーションルール | 完了 | [マイグレーションルール](#マイグレーションルール): 4段階の移行計画 |
+| 5 | To-Be依存マトリクス | 完了 | [To-Be依存マトリクス（段階3完了後）](#to-be依存マトリクス段階3完了後): Mermaid図 + マトリクス表 |
+| 6 | 各段階での循環依存チェック | 完了 | [各段階での循環依存チェック](#各段階での循環依存チェック): 全段階OK |
+| 7 | Lite版整合性方針 | 完了 | [Lite版整合性方針](#lite版整合性方針): Unit 005で変更なし（確定） |
+| 8 | パスの基準明示 | 完了 | [パスの基準](#パスの基準): 正本 vs 展開先 |
+
+**承認**: ユーザー承認済み（2026-02-15、設計レビュー時）
 
 ## 不明点と質問
 
