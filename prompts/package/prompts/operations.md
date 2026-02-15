@@ -654,12 +654,10 @@ docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 **注意**: progress.mdでの「完了」は「PR準備完了」を意味します。この更新をGitコミット（6.5）に含めることで、PRに正確な状態が反映されます。6.6以降はPR準備完了後のレビュー・マージ作業です。
 
 #### 6.5 Gitコミット
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット
 
-コミットメッセージ例:
-```text
-chore: [{{CYCLE}}] Operations Phase完了 - デプロイ、CI/CD、監視を構築
-```
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット。
+
+`docs/aidlc/prompts/common/commit-flow.md` の「Operations Phase完了コミット」手順に従ってください。
 
 #### 6.6 ドラフトPR Ready化【重要】
 

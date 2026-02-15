@@ -802,12 +802,10 @@ EOF
 ```
 
 ### 5. Gitコミット
-Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット
 
-コミットメッセージ例:
-```text
-feat: [{{CYCLE}}] Inception Phase完了 - Intent、ユーザーストーリー、Unit定義を作成
-```
+Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。
+
+`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
 ---
 
