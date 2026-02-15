@@ -743,7 +743,142 @@ docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 
+### 3.5 Squash（コミット統合）【オプション】
+
+Unit作業中の中間コミット（レビュー前/反映コミット等）を1つの完了コミットにまとめる。
+
+**設定確認**:
+
+```bash
+docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
+```
+
+- `true` の場合: 以下の手順を実行
+- `false`、未設定の場合: このステップをスキップしてステップ4へ
+
+**VCS種類判定**:
+
+```bash
+docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
+```
+
+- `true` → `vcs=jj`
+- `false`、未設定 → `vcs=git`
+
+**手順**:
+
+1. **ユーザー確認**（中間コミット作成前に実施）:
+
+```text
+中間コミット（レビュー前/反映コミット等）を1つの完了コミットにsquashしますか？
+
+1. はい - squashを実行する（推奨）
+2. いいえ - squashをスキップしてステップ4で通常コミットを行う
+```
+
+2. **「いいえ」の場合**: ステップ4に進み、通常通りコミットを行う（未コミット変更はステップ4で処理される）
+
+3. **「はい」の場合 - 未コミット変更のコミット**: ステップ0〜3で変更されたファイルが未コミットの場合、中間コミットとして作成（squash-unit.shはclean working treeを前提とするため、先にコミットする）:
+
+   git環境:
+
+   ```bash
+   git add <変更ファイル>
+   git commit -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
+
+   Co-Authored-By: {ai_author}
+   EOF
+   )"
+   ```
+
+   jj環境（`[rules.jj].enabled = true` の場合）:
+
+   ```bash
+   jj describe -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
+
+   Co-Authored-By: {ai_author}
+   EOF
+   )"
+   jj new
+   ```
+
+   未コミット変更がない場合: このステップをスキップ
+
+   **clean状態の検証**（中間コミット後、またはスキップ後）:
+
+   ```bash
+   # git環境
+   git status --porcelain
+   # jj環境
+   jj diff --stat
+   ```
+
+   出力が空であることを確認。空でない場合: 残りの変更を追加コミットする。
+
+4. **起点コミットの特定（`--base`）**:
+
+   squash対象の範囲を正確に制御するため、AIが起点コミットを判定して `--base` で明示指定する。
+
+   **判定手順**:
+
+   ```bash
+   # git環境
+   git log --oneline -20
+   # jj環境
+   jj log --limit 20
+   ```
+
+   ログを確認し、**現在のUnitに属さない直近のコミット**（前Unitの `feat:` コミット、または `Phase完了` コミット）のハッシュ（git）/ change_id（jj）を特定する。
+
+   **判定基準**: 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）が起点となる。
+
+5. **squash実行**:
+
+   **注意**: `--message` の値構築時はシェル展開を防ぐため、ヒアドキュメントで Unit名を安全に埋め込むこと。
+
+   ```bash
+   # ヒアドキュメントでメッセージを構築し、シェル展開・クォート破綻を防止
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Unit {NNN}完了 - {Unit名}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs <vcs> --base '<起点コミット>' --message "$SQUASH_MESSAGE"
+   ```
+
+   - `squash:success` の場合: squash完了。**ステップ4をスキップ**し、ステップ6（jj環境のみ）へ進む
+   - `squash:skipped:no-commits` の場合: 「squash対象のコミットがありません。ステップ4に進みます。」と表示してスキップ（ステップ6もスキップ）
+   - `squash:error` の場合: エラーメッセージと recovery コマンドをユーザーに提示し、対応を確認（ステップ6もスキップ）
+
+6. **(jj環境かつ `squash:success` の場合のみ) bookmark更新**:
+
+   `squash:success` 以外の結果（`skipped` / `error`）では `@-` が期待するsquashedコミットを指さないため、このステップは実行しない。
+
+   ```bash
+   # bookmarkが存在する場合
+   jj bookmark set cycle/{{CYCLE}} -r @-
+   # bookmarkが存在しない場合
+   jj bookmark create cycle/{{CYCLE}} -r @-
+   ```
+
+   squash後の状態: `@-` = squashedコミット（feat: メッセージ付き）、`@` = working copy（空）。`jj new` は不要。
+
 ### 4. Gitコミット
+
+**注意**: ステップ3.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
+
+```bash
+# git環境
+git status
+# jj環境（[rules.jj].enabled = true の場合）
+jj status
+```
+
+期待される結果: `nothing to commit, working tree clean`（git）または変更なし（jj）
+
+squashを実行していない場合（ステップ3.5をスキップまたは「いいえ」を選択した場合）は、以下の通常コミット手順を実行:
 
 **コミット前の確認チェックリスト**:
 

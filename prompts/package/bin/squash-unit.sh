@@ -30,11 +30,14 @@ Required:
   --vcs <git|jj>          使用するVCS種類
 
 Optional:
+  --base <COMMIT>         起点コミット（git: ハッシュ, jj: change_id）を明示指定。
+                          省略時はコミットメッセージのパターンから自動検出。
   --dry-run               実際のsquashを実行せず対象コミットの表示のみ
   -h, --help              このヘルプを表示
 
 Examples:
   squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: [v1.15.0] Unit 001完了 - squashスクリプト作成"
+  squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: ..." --base abc1234
   squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: ..." --dry-run
 EOF
 }
@@ -76,6 +79,14 @@ parse_args() {
                     exit 2
                 fi
                 VCS_TYPE="$2"
+                shift 2
+                ;;
+            --base)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --base requires a value" >&2
+                    exit 2
+                fi
+                BASE_COMMIT="$2"
                 shift 2
                 ;;
             --dry-run)
@@ -381,8 +392,10 @@ main() {
         fi
     fi
 
-    # 起点コミット特定
-    if [[ "$VCS_TYPE" == "git" ]]; then
+    # 起点コミット特定（--base 指定時はスキップ）
+    if [[ -n "$BASE_COMMIT" ]]; then
+        echo "base_commit:${BASE_COMMIT}"
+    elif [[ "$VCS_TYPE" == "git" ]]; then
         find_base_commit_git "$CYCLE"
     elif [[ "$VCS_TYPE" == "jj" ]]; then
         find_base_commit_jj "$CYCLE"

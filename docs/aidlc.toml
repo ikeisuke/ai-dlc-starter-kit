@@ -101,6 +101,13 @@ enabled = true
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = true
 
+[rules.squash]
+# squash設定（v1.15.0で追加）
+# enabled: true | false - Unit完了時にsquashを提案するか（デフォルト: false）
+# - true: Unit完了時にsquashステップを実行
+# - false: squashステップをスキップ（従来の動作）
+enabled = true
+
 [rules.size_check]
 # サイズチェック設定（v1.9.0で追加）
 # enabled: true | false - サイズチェックを有効にするか（デフォルト: true）
