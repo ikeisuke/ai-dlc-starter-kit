@@ -140,11 +140,54 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
 ---
 
+## Codex PRレビューの再実行ルール【重要】
+
+このリポジトリではCodex（GitHub連携）によるPR自動レビューが有効になっている。
+
+**再レビューのトリガー**: 修正をプッシュしただけでは再レビューは実行されない。修正プッシュ後に以下のコメントをPRに投稿すること：
+
+```bash
+gh pr comment {PR番号} --body "@codex review"
+```
+
+**タイミング**: レビュー指摘への修正コミットをプッシュした直後に実行する。
+
+---
+
 ## 開発者向けドキュメント
 
 AI-DLCスターターキット自体の開発・保守に関するドキュメント:
 
 - **依存コマンド追加手順**: `docs/development/dependency-commands.md`
+
+---
+
+## Worktree運用ルール【重要】
+
+このプロジェクトでは `.worktree/dev` で開発を行う。
+
+### ブランチ運用フロー
+
+1. **サイクル開始時**: dev worktree で `cycle/vX.X.X` ブランチを作成して作業
+2. **PR作成・マージ**: dev worktree からpush → PRマージ
+3. **マージ後**: メインリポジトリで `git pull origin main` を実行
+4. **次サイクル開始時**: dev worktree で最新の `origin/main` から新ブランチを作成
+
+```bash
+# マージ後（メインリポジトリで実行）
+cd /Users/keisuke/repos/github.com/ikeisuke/ai-dlc-starter-kit
+git pull origin main
+
+# 次サイクル開始（dev worktreeで実行）
+git fetch origin
+git checkout -b cycle/vX.X.X origin/main
+```
+
+### 注意事項
+
+- dev worktree から `main` への checkout は不可（メインリポジトリが使用中のため）
+- main の更新は必ずメインリポジトリ側で `git pull` する
+- 古いサイクルブランチの削除はメインリポジトリ側で行う
 
 ---
 

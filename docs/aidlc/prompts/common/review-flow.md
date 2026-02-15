@@ -127,18 +127,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
      - 「いいえ」の場合: ステップ7（人間レビューフロー）へ
 
 5. **AIレビューフロー**:
-   - **レビュー前コミット**（変更がある場合のみ）:
-
-     ```bash
-     git status --porcelain
-     ```
-
-     AIが出力を確認し、変更がある場合は以下を順次実行:
-
-     ```bash
-     git add -A
-     git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
-     ```
+   - **レビュー前コミット**: `common/commit-flow.md` の「レビュー前コミット」手順に従う
 
    - **種別ごとの反復レビュー**（レビュー種別リストを先頭から順に直列実行）:
 
@@ -330,18 +319,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       - 「修正する（RESOLVE）」を選択した指摘がある場合: 修正を実施し、反復レビューのステップ7（継続確認）へ進む
       - 全て先送りの場合: 人間レビューフローへ進む
 
-   - **レビュー後コミット**（反復完了後、修正があった場合のみ）:
-
-     ```bash
-     git status --porcelain
-     ```
-
-     AIが出力を確認し、変更がある場合は以下を順次実行:
-
-     ```bash
-     git add -A
-     git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
-     ```
+   - **レビュー後コミット**: `common/commit-flow.md` の「レビュー反映コミット」手順に従う
 
    - 修正後の成果物を人間に提示
    - 人間の承認を求める
@@ -370,34 +348,12 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
    - `mode = "recommend"` の場合: 自動的にステップ7へ
 
 7. **人間レビューフロー**（mode=disabled または AIレビュー不可時）:
-   - **レビュー前コミット**（変更がある場合のみ）:
-
-     ```bash
-     git status --porcelain
-     ```
-
-     AIが出力を確認し、変更がある場合は以下を順次実行:
-
-     ```bash
-     git add -A
-     git commit -m "chore: [{{CYCLE}}] レビュー前 - {成果物名}"
-     ```
+   - **レビュー前コミット**: `common/commit-flow.md` の「レビュー前コミット」手順に従う
 
    - 成果物を人間に提示
    - 人間の承認を求める
    - 修正依頼があれば修正を反映
-   - **レビュー後コミット**（修正があった場合のみ）:
-
-     ```bash
-     git status --porcelain
-     ```
-
-     AIが出力を確認し、変更がある場合は以下を順次実行:
-
-     ```bash
-     git add -A
-     git commit -m "chore: [{{CYCLE}}] レビュー反映 - {成果物名}"
-     ```
+   - **レビュー後コミット**: `common/commit-flow.md` の「レビュー反映コミット」手順に従う
 
    - 再度人間に提示・承認を求める
 
