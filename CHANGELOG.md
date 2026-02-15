@@ -7,6 +7,32 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.15.0] - 2026-02-15
+
+### Added
+
+- Unit完了時のコミットsquashスクリプト（#187）
+  - `bin/squash-unit.sh`: git環境でのsquash実行スクリプト
+  - jj環境対応（`jj squash`コマンドによる統合）
+  - インタラクティブ操作不使用（CI/自動化対応）
+  - construction.mdにsquash呼び出しフローを統合
+
+### Changed
+
+- プロンプト構造の大規模リファクタリング（#116）
+  - 巨大な単一ファイル（inception.md, construction.md, operations.md）を共通モジュールに分割
+  - `prompts/package/prompts/common/` に共通コンポーネントを外部化
+    - agents-rules.md, ai-tools.md, commit-flow.md, compaction.md, context-reset.md
+    - feedback.md, phase-responsibilities.md, progress-management.md, project-info.md
+    - review-flow.md, rules.md
+  - 各フェーズプロンプトはフェーズ固有の内容のみに簡素化
+  - Skills化に向けた構造的基盤の整備
+- コミット処理をconstruction.mdに統合リファクタリング（#187）
+  - Unit完了コミットとsquash処理の一貫したフロー定義
+  - Co-Authored-By自動検出の共通化
+
+---
+
 ## [1.14.1] - 2026-02-14
 
 ### Changed
