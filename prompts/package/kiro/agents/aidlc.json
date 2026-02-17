@@ -4,7 +4,6 @@
   "tools": ["@builtin"],
   "resources": [
     "file://AGENTS.md",
-    "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://docs/aidlc/skills/*/SKILL.md"
+    "file://docs/aidlc/prompts/AGENTS.md"
   ]
 }
