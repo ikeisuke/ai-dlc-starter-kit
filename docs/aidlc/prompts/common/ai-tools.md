@@ -13,6 +13,7 @@ AIレビューを実行するスキル:
 | コードレビュー | `docs/aidlc/skills/reviewing-code/SKILL.md` |
 | アーキテクチャレビュー | `docs/aidlc/skills/reviewing-architecture/SKILL.md` |
 | セキュリティレビュー | `docs/aidlc/skills/reviewing-security/SKILL.md` |
+| Inceptionレビュー | `docs/aidlc/skills/reviewing-inception/SKILL.md` |
 
 ## ワークフロースキル
 

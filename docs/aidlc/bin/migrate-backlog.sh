@@ -17,6 +17,12 @@
 
 set -euo pipefail
 
+# 依存コマンドチェック
+if ! command -v perl >/dev/null 2>&1; then
+    echo "エラー: perl が見つかりません。インストールしてください。" >&2
+    exit 1
+fi
+
 # 定数
 OLD_BACKLOG="docs/cycles/backlog.md"
 NEW_BACKLOG_DIR="docs/cycles/backlog"
@@ -57,7 +63,7 @@ generate_slug() {
     local title="$1"
     echo "$title" | \
         tr '[:upper:]' '[:lower:]' | \
-        sed 's/[^a-z0-9一-龯ぁ-んァ-ヶー ]//g' | \
+        perl -pe 's/[^a-z0-9一-龯ぁ-んァ-ヶー ]//g' | \
         tr ' ' '-' | \
         sed 's/--*/-/g' | \
         sed 's/^-//;s/-$//' | \

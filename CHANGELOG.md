@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.15.1] - 2026-02-18
+
+### Added
+
+- AIDLC専用レビュースキル: Inception Phase成果物（ユーザーストーリー・インテント）のレビュー機能（#191）
+  - `reviewing-inception/SKILL.md`: ユーザーストーリー品質・Unit分解の妥当性を検証
+
+### Changed
+
+- upgrading-aidlcスキル簡略化（#189）
+  - setup-prompt.mdのローカル探索ステップを省略し、2ステップ（ローカル確認→toml経由解決）で特定
+- Kiro標準スキル呼び出し対応（#192）
+  - `setup-ai-tools.sh`で`.kiro/skills/`にシンボリックリンクを配置
+  - Kiroネイティブのスキル発見機能に対応
+
+### Fixed
+
+- migrate-backlog.sh: macOS sed互換性エラー修正（#190）
+  - 日本語文字範囲を含むsedパターンをPerl互換の正規表現に置換
+
+---
+
 ## [1.15.0] - 2026-02-15
 
 ### Added

@@ -1371,8 +1371,10 @@ docs/aidlc/bin/setup-ai-tools.sh
 このスクリプトは以下を行います:
 
 1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
-2. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
-3. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
+2. **KiroCLI スキル**: `.kiro/skills/` に各スキルへのシンボリックリンクを配置（Kiro標準スキル発見方式）
+3. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
+4. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
+5. **不正リンクの修復**: リンク先が異なるシンボリックリンクを自動修復
 
 **ディレクトリ構成**:
 
@@ -1385,6 +1387,13 @@ docs/aidlc/bin/setup-ai-tools.sh
 ├── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
+.kiro/skills/                         ← 実ディレクトリ
+├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
+├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
+├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
+├── upgrading-aidlc/         → symlink → ../../docs/aidlc/skills/upgrading-aidlc/
+└── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
+
 .kiro/agents/
 └── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
 ```
@@ -1392,6 +1401,7 @@ docs/aidlc/bin/setup-ai-tools.sh
 **注意**:
 
 - `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- `.kiro/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
 - KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
 - スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
 
@@ -1477,6 +1487,7 @@ AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
 - .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
+- .kiro/skills/ - KiroCLIスキルディレクトリ（各スキルへのシンボリックリンク）
 - .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:

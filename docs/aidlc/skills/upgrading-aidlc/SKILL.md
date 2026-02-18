@@ -14,28 +14,21 @@ AI-DLC環境を最新バージョンにアップグレードするスキル。
 
 ### setup-prompt.md 検索フロー
 
-1. `prompts/setup-prompt.md` の存在を確認する（1回のみ）
-2. **存在する場合**: そのまま読み込む
+`docs/aidlc.toml` の `[project]` セクションから `starter_kit_repo` を取得し、`ghq root` 経由でパスを解決する。
 
-   ```text
-   prompts/setup-prompt.md を読み込んで、AI-DLC 環境をアップグレードしてください
-   ```
+```bash
+# 1. ghq root を取得
+GHQ_ROOT=$(ghq root)
+# 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: ghq:github.com/ikeisuke/ai-dlc-starter-kit）
+RAW_REPO=$(docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit")
+# 3. ghq: プレフィックスを除去してパスを組み立て
+REPO="${RAW_REPO#ghq:}"
+SETUP_PATH="${GHQ_ROOT}/${REPO}/prompts/setup-prompt.md"
+```
 
-3. **存在しない場合**: `docs/aidlc.toml` の `[project]` セクションから `starter_kit_repo` を取得し、`ghq root` 経由でパスを解決する
+解決したパスのファイルを読み込む。
 
-   ```bash
-   # 1. ghq root を取得
-   GHQ_ROOT=$(ghq root)
-   # 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: ghq:github.com/ikeisuke/ai-dlc-starter-kit）
-   RAW_REPO=$(docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit")
-   # 3. ghq: プレフィックスを除去してパスを組み立て
-   REPO="${RAW_REPO#ghq:}"
-   SETUP_PATH="${GHQ_ROOT}/${REPO}/prompts/setup-prompt.md"
-   ```
-
-   解決したパスのファイルを読み込む。
-
-**重要**: Glob等の再帰検索は行わないこと。上記の2ステップ（ローカル確認 → toml経由解決）で必ず特定できる。
+**重要**: Glob等の再帰検索は行わないこと。解決できない場合は `docs/aidlc.toml` の設定を確認する。
 
 ## 処理内容
 

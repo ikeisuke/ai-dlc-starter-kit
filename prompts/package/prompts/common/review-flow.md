@@ -34,6 +34,7 @@ tools = ["codex", "claude", "gemini"]  # 優先順位順
 | code | `skill="reviewing-code"` |
 | architecture | `skill="reviewing-architecture"` |
 | security | `skill="reviewing-security"` |
+| inception | `skill="reviewing-inception"` |
 
 **スキル呼び出し引数フォーマット**:
 
@@ -62,6 +63,9 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 | Phase 1 ステップ3（設計レビュー） | architecture |
 | Phase 2 ステップ4（コード生成後） | code |
 | Phase 2 ステップ6（統合とレビュー） | code, security |
+| Intent承認前 | inception |
+| ユーザーストーリー承認前 | inception |
+| Unit定義承認前 | inception |
 
 **決定ルール**:
 
@@ -148,7 +152,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
         ```bash
         docs/aidlc/bin/write-history.sh \
             --cycle {{CYCLE}} \
-            --phase construction \
+            --phase {{PHASE}} \
             --unit {N} \
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
@@ -160,9 +164,14 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
         【レビューツール】{使用したツール名}"
         ```
 
+        - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
+        - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
         - `{呼び出し元のステップ名}`: このAIレビューフローを呼び出したステップを記載
           - Phase 1 ステップ3: `設計レビュー`
           - Phase 2 ステップ6: `統合とレビュー`
+          - Intent承認前: `Intent承認前`
+          - ユーザーストーリー承認前: `ユーザーストーリー承認前`
+          - Unit定義承認前: `Unit定義承認前`
 
      6. 3回後も指摘が残る場合は、「### 指摘対応判断フロー」を実行
      7. 判断フロー後、「修正する」を選択した指摘がある場合はユーザーに継続確認:
@@ -288,7 +297,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       ```bash
       docs/aidlc/bin/write-history.sh \
           --cycle {{CYCLE}} \
-          --phase construction \
+          --phase {{PHASE}} \
           --unit {N} \
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
@@ -298,12 +307,15 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       【先送り理由】{ユーザーが入力した理由}"
       ```
 
+      - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
+      - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
+
    6. **全指摘の判断完了後、サマリを履歴に記録**:
 
       ```bash
       docs/aidlc/bin/write-history.sh \
           --cycle {{CYCLE}} \
-          --phase construction \
+          --phase {{PHASE}} \
           --unit {N} \
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
@@ -314,6 +326,9 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
         指摘 #3: OUT_OF_SCOPE（理由記録済み）
       【次のアクション】{修正実施後に再レビュー|人間レビューへ}"
       ```
+
+      - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
+      - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
 
    7. **次のアクション決定**:
       - 「修正する（RESOLVE）」を選択した指摘がある場合: 修正を実施し、反復レビューのステップ7（継続確認）へ進む
