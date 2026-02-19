@@ -445,7 +445,8 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 
 8. 6.6 ドラフトPR Ready化
 9. 6.6.5 コミット漏れ確認
-10. 6.7 PRマージ
+10. 6.6.6 リモート同期確認
+11. 6.7 PRマージ
 
 #### 6.0 バージョン確認
 
@@ -689,7 +690,7 @@ git status --porcelain
 
 **結果に応じた対応**:
 
-- **空（変更なし）**: 次のステップ（6.7 PRマージ）へ進む
+- **空（変更なし）**: 次のステップ（6.6.6 リモート同期確認）へ進む
 - **非空（変更あり）**: 以下を実行
 
   ```text
@@ -710,6 +711,104 @@ git status --porcelain
 - stashは推奨しません。progress.mdやhistoryファイルの変更は履歴として残すべきです。
 - **破棄してよいファイル**: 明らかな誤生成ファイル、一時ファイル（`.tmp`等）のみ
 - **破棄NG**: progress.md、historyファイル、Unit定義ファイル、設計・実装成果物
+
+#### 6.6.6 リモート同期確認【必須】
+
+PRマージ前にローカルの全コミットがリモートにpushされていることを確認します。
+
+**Step 0: リモート名解決**
+
+```bash
+# upstreamのリモート名を取得（例: origin, upstream）
+REMOTE=$(git config branch.$(git branch --show-current).remote 2>/dev/null)
+if [ -z "$REMOTE" ]; then
+  REMOTE="origin"
+fi
+```
+
+**Step A: リモート最新化**
+
+```bash
+git fetch $REMOTE
+```
+
+失敗時は以下を表示してマージを停止:
+
+```text
+【エラー】git fetch {remote} に失敗しました。
+
+ネットワーク接続を確認し、以下を実行してください：
+1. ネットワーク接続を確認
+2. `git fetch {remote}` を手動で実行
+3. 成功後、再度このステップを実行
+
+リモートとの同期が確認できるまでPRマージに進まないでください。
+```
+
+**Step B: リモート追跡ブランチ解決**
+
+```bash
+# upstream tracking branchの確認
+REMOTE_REF=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
+```
+
+- 成功時: `REMOTE_REF` をそのまま使用
+- 失敗時: フォールバック
+
+```bash
+# フォールバック: {remote}/{branch} の存在確認
+git show-ref --verify refs/remotes/$REMOTE/$(git branch --show-current)
+```
+
+  - 存在する場合: `REMOTE_REF="$REMOTE/$(git branch --show-current)"` を設定
+  - 存在しない場合: 以下を表示してマージを停止:
+
+```text
+【エラー】リモート追跡ブランチが特定できません。
+
+upstream tracking branch (`@{u}`) が未設定で、
+`{remote}/{branch}` も存在しません。
+
+PRマージ前に以下を確認してください：
+1. `git push -u {remote} {branch}` でリモートにpushする
+2. push完了後、再度このステップを実行
+
+リモートとの同期が確認できるまでPRマージに進まないでください。
+```
+
+**Step C: 未pushコミット検出**
+
+```bash
+git log $REMOTE_REF..HEAD --oneline
+```
+
+**結果に応じた対応**:
+
+- **コマンド失敗（終了コード非0）**: 以下を表示してマージを停止:
+
+  ```text
+  【エラー】未pushコミットの確認に失敗しました。
+
+  コマンド `git log {remote_ref}..HEAD --oneline` がエラーを返しました。
+
+  リモート参照の状態を手動で確認し、問題を解決してから再度このステップを実行してください。
+  ```
+
+- **空（差分なし）**: 次のステップ（6.7 PRマージ）へ進む
+- **非空（未pushコミットあり）**: 以下を表示してマージを停止:
+
+  ```text
+  【警告】リモートにpushされていないコミットがあります。
+
+  未pushコミット:
+  {git log の実行結果}
+
+  PRマージ前にpushしてください：
+  git push {remote} {branch}
+
+  push完了後、再度このステップを実行してください。
+  リモートとの同期が確認できるまでPRマージに進まないでください。
+  ```
 
 #### 6.7 PRマージ【重要】
 
