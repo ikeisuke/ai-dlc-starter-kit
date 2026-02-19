@@ -99,7 +99,8 @@ create_label() {
     local error_output
 
     # ghの成功メッセージ（stdout）は抑制、エラー（stderr）はキャプチャ
-    # リダイレクト順序: まずstdoutを/dev/nullに、次にstderrをstdout(キャプチャ対象)に
+    # リダイレクト: 2>&1でstderrを変数キャプチャ先(stdout)へ、1>/dev/nullでstdoutを破棄。
+    # 結果としてstderrの内容のみが変数error_outputに格納される。
     if error_output=$(gh label create "$name" --color "$color" --description "$description" 2>&1 1>/dev/null); then
         return 0
     else

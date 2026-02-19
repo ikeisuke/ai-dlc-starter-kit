@@ -91,6 +91,7 @@ OPTIONS:
     issue:<number>:error:not-found
     issue:<number>:error:gh-not-available
     issue:<number>:error:gh-not-authenticated
+    issue:<number>:error:auth-error
     issue:<number>:error:invalid-status
     issue:<number>:error:unknown
 
@@ -148,11 +149,15 @@ format_output() {
 # ghエラーを解析してエラー理由を返す
 # 引数: $1=ghのエラー出力
 # 出力: エラー理由（ハイフン区切り）
+# 注: check_gh_availableによるプレチェック(gh-not-authenticated)とは別。
+#      この関数はghコマンド実行時のエラー出力を分類する。
 parse_gh_error() {
     local error_output="$1"
 
     if echo "$error_output" | grep -qi "not found\|could not find\|could not resolve"; then
         echo "not-found"
+    elif echo "$error_output" | grep -qi "authentication\|unauthorized\|forbidden\|401\|403\|token\|credential"; then
+        echo "auth-error"
     else
         echo "unknown"
     fi

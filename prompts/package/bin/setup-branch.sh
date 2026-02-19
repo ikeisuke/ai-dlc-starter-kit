@@ -50,7 +50,12 @@ worktree_exists() {
     local path="$1"
     # 相対パスを絶対パスに変換（git worktree listは絶対パスを出力するため）
     local abs_path
-    abs_path="$(cd "$(dirname "$path")" 2>/dev/null && pwd)/$(basename "$path")" 2>/dev/null || abs_path="$(pwd)/$path"
+    # realpath優先、利用不可または失敗時はcd+pwdにフォールバック
+    if command -v realpath >/dev/null 2>&1 && abs_path=$(realpath "$path" 2>/dev/null); then
+        : # realpathで変換成功
+    else
+        abs_path="$(cd "$(dirname "$path")" 2>/dev/null && pwd)/$(basename "$path")" 2>/dev/null || abs_path="$(pwd)/$path"
+    fi
     # -F: 固定文字列マッチ（.などの正規表現文字を無効化）
     git worktree list --porcelain 2>/dev/null | grep -qF "$abs_path"
 }

@@ -100,7 +100,7 @@ get_project_name() {
         return
     fi
     local result
-    result=$(cat docs/aidlc.toml | dasel -i toml 'project.name' 2>/dev/null) || { echo ""; return; }
+    result=$(dasel -i toml 'project.name' < docs/aidlc.toml 2>/dev/null) || { echo ""; return; }
     # daselの出力からクォートを除去
     echo "$result" | tr -d "'"
 }
@@ -117,7 +117,7 @@ get_backlog_mode() {
         return
     fi
     local result
-    result=$(cat docs/aidlc.toml | dasel -i toml 'backlog.mode' 2>/dev/null) || { echo ""; return; }
+    result=$(dasel -i toml 'backlog.mode' < docs/aidlc.toml 2>/dev/null) || { echo ""; return; }
     # daselの出力からクォートを除去
     echo "$result" | tr -d "'"
 }
@@ -202,7 +202,7 @@ get_starter_kit_version() {
 
     # daselが利用可能な場合
     if command -v dasel >/dev/null 2>&1; then
-        version=$(cat "$toml_file" | dasel -i toml 'starter_kit_version' 2>/dev/null) || version=""
+        version=$(dasel -i toml 'starter_kit_version' < "$toml_file" 2>/dev/null) || version=""
         # 両端の空白をトリム → 両端の引用符を除去
         version=$(echo "$version" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         version=$(echo "$version" | sed "s/^[\"']//;s/[\"']$//")

@@ -134,12 +134,9 @@ fi
 # docs/aidlc.toml.local
 # このファイルはgitignoreされます
 
-# AIレビューを個人的に無効化
+# AIレビューを個人的に無効化 / 独自のAIツール優先順位
 [rules.reviewing]
 mode = "disabled"
-
-# 独自のAIツール優先順位
-[rules.reviewing]
 tools = ["claude", "codex"]
 ```
 

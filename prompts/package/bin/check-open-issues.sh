@@ -11,7 +11,7 @@
 # 出力形式:
 #   - Issueあり: gh issue listの出力（Issue番号、タイトル、ラベル）
 #   - Issueなし: "open_issues:none"
-#   - エラー: "error:[エラー内容]"
+#   - エラー: "error:<エラー種別>[:<コンテキスト>]"
 #
 # 終了コード:
 #   0: 正常終了（Issueの有無に関わらず）
@@ -27,6 +27,14 @@ LIMIT=10
 while [[ $# -gt 0 ]]; do
     case $1 in
         --limit)
+            if [[ $# -lt 2 ]]; then
+                echo "error:missing-limit-value"
+                exit 1
+            fi
+            if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "error:invalid-limit-value"
+                exit 1
+            fi
             LIMIT="$2"
             shift 2
             ;;
@@ -50,8 +58,11 @@ if ! gh auth status >/dev/null 2>&1; then
 fi
 
 # オープンIssueの一覧取得
-result=$(gh issue list --state open --limit "$LIMIT" 2>&1) || {
-    echo "error:${result}"
+_tmp_stderr=$(mktemp) || { echo "error:gh-issue-list-failed"; exit 1; }
+trap '\rm -f "$_tmp_stderr"' EXIT
+result=$(gh issue list --state open --limit "$LIMIT" 2>"$_tmp_stderr") || {
+    echo "error:gh-issue-list-failed"
+    cat "$_tmp_stderr" >&2
     exit 1
 }
 
