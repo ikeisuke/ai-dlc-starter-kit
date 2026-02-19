@@ -75,6 +75,10 @@ calculate_next_version() {
         major)
             echo "v$((major + 1)).0.0"
             ;;
+        *)
+            echo "error: unknown version type: $type" >&2
+            return 1
+            ;;
     esac
 }
 

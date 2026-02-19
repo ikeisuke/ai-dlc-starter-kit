@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.15.2] - 2026-02-19
+
+### Fixed
+
+- check-open-issues.sh: `--limit` 引数の数値バリデーション追加（#194）
+- suggest-version.sh: case文にデフォルトケース追加（#194）
+- ios-version-update.md: パラメータ展開構文エラー修正（`${{CYCLE}#v}` → `${CYCLE#v}`）（#194）
+- config-merge.md: TOML同一テーブル重複定義修正（#194）
+- check-open-issues.sh: エラー処理フォールバック改善（#194）
+- issue-ops.sh: `parse_gh_error` に認証エラー対応を追加（#194）
+- cycle-label.sh: リダイレクト設定の補足コメント追加（#194）
+- setup-branch.sh: `realpath` 利用への変更（#194）
+- aidlc-git-info.sh: IFS初期化追加（#194）
+- env-info.sh: dasel `-f` オプション利用に変更（3箇所）（#194）
+
+---
+
 ## [1.15.1] - 2026-02-18
 
 ### Added

@@ -15,6 +15,7 @@
 #   recent_commit_3:<hash> <message>
 #
 
+IFS=$' \t\n'
 set -uo pipefail
 
 # VCS種類判定
