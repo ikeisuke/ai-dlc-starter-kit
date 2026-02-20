@@ -30,7 +30,7 @@ get_branch_version() {
 # 最新サイクルを取得
 get_latest_cycle() {
     local cycles
-    cycles=$(ls -d docs/cycles/v*/ 2>/dev/null | sort -V | tail -1 || echo "")
+    cycles=$(ls -d docs/cycles/v*/ 2>/dev/null | grep -E '/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)/$' | sort -V | tail -1 || echo "")
 
     if [[ -n "$cycles" ]]; then
         # ディレクトリ名からバージョンを抽出

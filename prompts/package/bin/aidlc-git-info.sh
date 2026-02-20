@@ -26,8 +26,8 @@ detect_vcs() {
         echo "jj"
         return
     fi
-    # .git 存在 → git
-    if [[ -d ".git" ]]; then
+    # .git 存在（ファイルまたはディレクトリ） かつ git コマンド利用可能 → git
+    if [[ -e ".git" ]] && command -v git >/dev/null 2>&1; then
         echo "git"
         return
     fi
