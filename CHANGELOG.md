@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.16.0] - 2026-02-20
+
+### Fixed
+
+- aidlc-git-info.sh: git worktree環境でVCSを正しく検出できない問題を修正（#198）
+- suggest-version.sh: `get_latest_cycle()`にSemVerバリデーションを追加し不正なバージョン文字列を除外（#197）
+
+### Changed
+
+- Operations Phase: PRマージ前にリモートpush確認ステップ（6.6.6）を追加（#196）
+
+---
+
 ## [1.15.2] - 2026-02-19
 
 ### Fixed
