@@ -36,7 +36,7 @@
 
 ## バックログ管理
 
-バックログの保存先は `docs/aidlc.toml` の `[backlog].mode` で設定する。
+バックログの保存先は `docs/aidlc.toml` の `[rules.backlog].mode` で設定する。
 
 | mode | 保存先 | 説明 |
 |------|--------|------|

@@ -201,7 +201,7 @@ gh:available
 backlog_mode:issue-only
 ```
 
-**`backlog_mode:` が空値の場合**: AIは `docs/aidlc.toml` を読み込み、`[backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
+**`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
 ### 3. 進捗状況確認【重要】
 

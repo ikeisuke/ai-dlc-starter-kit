@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# read-config.sh - 設定値を読み込み（3階層マージ対応）
+# read-config.sh - 設定値を読み込み（4階層マージ対応）
 #
 # 使用方法:
 #   ./read-config.sh <key> [--default <value>]
@@ -15,6 +15,7 @@
 #   2 - エラー（dasel未インストール等）
 #
 # 設定ファイル階層（優先度: 低→高）:
+#   0. docs/aidlc/config/defaults.toml - デフォルト値定義（オプション）
 #   1. ~/.aidlc/config.toml - ユーザー共通設定（オプション）
 #   2. docs/aidlc.toml - プロジェクト共有設定（必須）
 #   3. docs/aidlc.toml.local - 個人設定（オプション）
@@ -33,6 +34,9 @@
 set -euo pipefail
 
 # 設定ファイルパス（優先度順: 低→高）
+# defaults.toml: スクリプト自身の位置から相対パスで解決
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+DEFAULTS_CONFIG_FILE="${SCRIPT_DIR}/../config/defaults.toml"
 HOME_CONFIG_FILE="${HOME:+$HOME/.aidlc/config.toml}"
 PROJECT_CONFIG_FILE="docs/aidlc.toml"
 LOCAL_CONFIG_FILE="docs/aidlc.toml.local"
@@ -140,6 +144,31 @@ strip_quotes() {
 # 最終的な値を保持する変数
 FINAL_VALUE=""
 VALUE_EXISTS=false
+
+# ============================================================
+# 0. デフォルト値から取得（オプション、優先度: 最低）
+# ============================================================
+if [[ -f "$DEFAULTS_CONFIG_FILE" ]]; then
+    set +e
+    get_value "$DEFAULTS_CONFIG_FILE" "$KEY" > /tmp/aidlc_defaults_value_$$
+    defaults_exit_code=$?
+    set -e
+
+    case $defaults_exit_code in
+        0)
+            FINAL_VALUE=$(cat /tmp/aidlc_defaults_value_$$)
+            VALUE_EXISTS=true
+            ;;
+        1)
+            # キー不在（正常）
+            ;;
+        *)
+            # デフォルト値ファイルのエラーは警告のみ（スキップ）
+            echo "Warning: Failed to read defaults config file, skipping" >&2
+            ;;
+    esac
+    \rm -f /tmp/aidlc_defaults_value_$$ 2>/dev/null
+fi
 
 # ============================================================
 # 1. HOME設定から値を取得（オプション、優先度: 低）
