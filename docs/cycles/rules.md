@@ -42,29 +42,17 @@
 
 ### バージョンファイル更新【重要】
 
-`/upgrading-aidlc` 実行後、CHANGELOG更新の前に以下を実行すること：
+`/upgrading-aidlc` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
 
-1. **version.txt更新**:
-   - サイクル番号から `v` を除いた値に更新（例: v1.13.0 → 1.13.0）
-   ```bash
-   # サイクル番号を取得し、vプレフィックスを除去
-   CYCLE="{{CYCLE}}"
-   VERSION="${CYCLE#v}"
-   echo "${VERSION}" > version.txt
-   ```
+```bash
+docs/aidlc/bin/update-version.sh --version {{CYCLE}}
+```
 
-2. **docs/aidlc.toml更新**:
-   - `starter_kit_version` を同じ値に更新
-   ```bash
-   # sedで置換（macOS互換）
-   sed -i '' "s/^starter_kit_version = .*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml
-   ```
+dry-runで事前確認する場合:
 
-3. **更新確認**:
-   ```bash
-   cat version.txt
-   grep starter_kit_version docs/aidlc.toml
-   ```
+```bash
+docs/aidlc/bin/update-version.sh --version {{CYCLE}} --dry-run
+```
 
 **理由**: AI-DLCスターターキット自体のリリース時にバージョン番号を更新するため。
 
