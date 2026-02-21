@@ -682,28 +682,33 @@ Closes #[Issue番号]
 
 PRマージ前に未コミットの変更がないことを確認します。
 
-**確認コマンド**:
-
 ```bash
-git status --porcelain
+docs/aidlc/bin/validate-uncommitted.sh
 ```
 
 **結果に応じた対応**:
 
-- **空（変更なし）**: 次のステップ（6.6.6 リモート同期確認）へ進む
-- **非空（変更あり）**: 以下を実行
+- **`status:ok`**: 次のステップ（6.6.6 リモート同期確認）へ進む
+- **`status:warning`**: 以下をユーザーに提示（`file:`行はgit status porcelain形式: ステータス記号+パス）
 
   ```text
   【警告】未コミットの変更があります。PRマージ前にコミットしてください。
 
   変更されているファイル:
-  {git status --porcelain の実行結果をここに貼り付け}
+  {スクリプト出力のfile:行をそのまま列挙}
 
   以下の手順で対応してください：
   1. コミット漏れのファイルを追加コミットする（推奨）
   2. 変更を確認して不要であれば破棄する（※下記注意参照）
 
   コミット完了後、再度このステップを実行してください。
+  ```
+
+- **`status:error`**（スクリプト実行失敗/`error:git-status-failed`）: 以下を表示してマージを停止
+
+  ```text
+  【エラー】未コミット変更の確認に失敗しました。
+  gitリポジトリの状態を確認し、問題を解決してから再度このステップを実行してください。
   ```
 
 **注意**:
@@ -716,98 +721,56 @@ git status --porcelain
 
 PRマージ前にローカルの全コミットがリモートにpushされていることを確認します。
 
-**Step 0: リモート名解決**
-
 ```bash
-# upstreamのリモート名を取得（例: origin, upstream）
-REMOTE=$(git config branch.$(git branch --show-current).remote 2>/dev/null)
-if [ -z "$REMOTE" ]; then
-  REMOTE="origin"
-fi
-```
-
-**Step A: リモート最新化**
-
-```bash
-git fetch $REMOTE
-```
-
-失敗時は以下を表示してマージを停止:
-
-```text
-【エラー】git fetch {remote} に失敗しました。
-
-ネットワーク接続を確認し、以下を実行してください：
-1. ネットワーク接続を確認
-2. `git fetch {remote}` を手動で実行
-3. 成功後、再度このステップを実行
-
-リモートとの同期が確認できるまでPRマージに進まないでください。
-```
-
-**Step B: リモート追跡ブランチ解決**
-
-```bash
-# upstream tracking branchの確認
-REMOTE_REF=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
-```
-
-- 成功時: `REMOTE_REF` をそのまま使用
-- 失敗時: フォールバック
-
-```bash
-# フォールバック: {remote}/{branch} の存在確認
-git show-ref --verify refs/remotes/$REMOTE/$(git branch --show-current)
-```
-
-  - 存在する場合: `REMOTE_REF="$REMOTE/$(git branch --show-current)"` を設定
-  - 存在しない場合: 以下を表示してマージを停止:
-
-```text
-【エラー】リモート追跡ブランチが特定できません。
-
-upstream tracking branch (`@{u}`) が未設定で、
-`{remote}/{branch}` も存在しません。
-
-PRマージ前に以下を確認してください：
-1. `git push -u {remote} {branch}` でリモートにpushする
-2. push完了後、再度このステップを実行
-
-リモートとの同期が確認できるまでPRマージに進まないでください。
-```
-
-**Step C: 未pushコミット検出**
-
-```bash
-git log $REMOTE_REF..HEAD --oneline
+docs/aidlc/bin/validate-remote-sync.sh
 ```
 
 **結果に応じた対応**:
 
-- **コマンド失敗（終了コード非0）**: 以下を表示してマージを停止:
+- **`status:ok`**: 次のステップ（6.7 PRマージ）へ進む
 
-  ```text
-  【エラー】未pushコミットの確認に失敗しました。
-
-  コマンド `git log {remote_ref}..HEAD --oneline` がエラーを返しました。
-
-  リモート参照の状態を手動で確認し、問題を解決してから再度このステップを実行してください。
-  ```
-
-- **空（差分なし）**: 次のステップ（6.7 PRマージ）へ進む
-- **非空（未pushコミットあり）**: 以下を表示してマージを停止:
+- **`status:warning`**: 以下を表示してマージを停止
 
   ```text
   【警告】リモートにpushされていないコミットがあります。
-
-  未pushコミット:
-  {git log の実行結果}
-
-  PRマージ前にpushしてください：
-  git push {remote} {branch}
-
+  未pushコミット数: {unpushed_commitsの値}
+  PRマージ前にpushしてください： git push {remoteの値} {branchの値}
   push完了後、再度このステップを実行してください。
+  ```
+
+- **`status:error`**（`error:fetch-failed`）: 以下を表示してマージを停止
+
+  ```text
+  【エラー】git fetchに失敗しました。
+  1. ネットワーク接続を確認
+  2. `git fetch {remoteの値}` を手動で実行
+  3. 成功後、再度このステップを実行
   リモートとの同期が確認できるまでPRマージに進まないでください。
+  ```
+
+- **`status:error`**（`error:no-upstream`）: 以下を表示してマージを停止
+
+  ```text
+  【エラー】リモート追跡ブランチが特定できません。
+  1. `git push -u {remoteの値} {branchの値}` でリモートにpushする
+  2. push完了後、再度このステップを実行
+  リモートとの同期が確認できるまでPRマージに進まないでください。
+  ```
+
+- **`status:error`**（`error:branch-unresolved`）: 以下を表示してマージを停止
+
+  ```text
+  【エラー】現在のブランチを特定できません（detached HEAD状態の可能性）。
+  1. `git branch --show-current` でブランチ名を確認
+  2. ブランチにチェックアウトしてから再度このステップを実行
+  リモートとの同期が確認できるまでPRマージに進まないでください。
+  ```
+
+- **`status:error`**（`error:log-failed`）: 以下を表示してマージを停止
+
+  ```text
+  【エラー】未pushコミットの確認に失敗しました。
+  リモート参照の状態を手動で確認し、問題を解決してから再度このステップを実行してください。
   ```
 
 #### 6.7 PRマージ【重要】
