@@ -59,7 +59,7 @@ So that アップグレード後にワークフローが壊れるリスクなく
 - [ ] `validate-remote-sync.sh` 異常系: fetch失敗 → `status:error` + `error:fetch-failed` + exit 1
 - [ ] `validate-remote-sync.sh` 異常系: 追跡ブランチなし → `status:error` + `error:no-upstream` + exit 1
 - [ ] `validate-uncommitted.sh` 正常系: 変更なし → `status:ok` + exit 0
-- [ ] `validate-uncommitted.sh` 正常系: 変更あり → `status:warning` + `files:{ファイル一覧}` + exit 0
+- [ ] `validate-uncommitted.sh` 正常系: 変更あり → `status:warning` + `files_count:{件数}` + `file:{path}`（複数行可） + exit 0
 - [ ] operations.mdの各ステップがスクリプト呼び出し後も正しい手順で動作する（ステップ6.5〜6.7のフローを手動で確認）
 - [ ] `rsync` 同期が正常に動作する（`prompts/package/bin/` → `docs/aidlc/bin/` にスクリプトが反映される）
 - [ ] 既存スクリプト（pr-ops.sh, write-history.sh等）が変更なく動作する（`git diff` で変更なしを確認）
