@@ -653,7 +653,7 @@ if ! grep -q "^\[rules\.backlog\]" docs/aidlc.toml; then
   # 旧[backlog].mode が存在する場合はその値を引き継ぐ
   OLD_BACKLOG_MODE=""
   if grep -q "^\[backlog\]" docs/aidlc.toml 2>/dev/null; then
-    OLD_BACKLOG_MODE=$(sed -n '/^\[backlog\]/,/^\[/p' docs/aidlc.toml | grep -E '^\s*mode\s*=' | head -1 | sed "s/^[^=]*=[[:space:]]*//;s/[[:space:]]*#.*//;s/^[\"']//;s/[\"']$//" || echo "")
+    OLD_BACKLOG_MODE=$(sed -n '/^\[backlog\]/,/^\[/p' docs/aidlc.toml | grep -E '^[[:space:]]*mode[[:space:]]*=' | head -1 | sed "s/^[^=]*=[[:space:]]*//;s/[[:space:]]*#.*//;s/^[\"']//;s/[\"']$//" || echo "")
   fi
   # 有効値バリデーション（不正値の場合はデフォルトにフォールバック）
   case "$OLD_BACKLOG_MODE" in
