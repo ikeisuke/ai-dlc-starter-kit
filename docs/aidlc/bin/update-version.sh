@@ -56,9 +56,9 @@ fi
 # vプレフィックス除去
 VERSION="${VERSION#v}"
 
-# vプレフィックス除去後の空文字チェック
-if [[ -z "$VERSION" ]]; then
-    echo "error:missing-version"
+# SemVerフォーマット検証（X.Y.Z または X.Y.Z-prerelease 形式）
+if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[a-zA-Z0-9.]+)?$ ]]; then
+    echo "error:invalid-version-format"
     exit 1
 fi
 
