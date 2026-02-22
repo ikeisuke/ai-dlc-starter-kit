@@ -56,12 +56,6 @@ fi
 # vプレフィックス除去
 VERSION="${VERSION#v}"
 
-# SemVerフォーマット検証（X.Y.Z形式）
-if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-    echo "error:invalid-version-format"
-    exit 1
-fi
-
 # 対象ファイルの存在確認
 if [[ ! -f "version.txt" ]]; then
     echo "error:version-txt-not-found"
