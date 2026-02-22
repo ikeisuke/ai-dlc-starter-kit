@@ -58,7 +58,7 @@ _read_toml_value_grep() {
 
     # セクションから次のセクション（または末尾）までを抽出し、mode = の値を取得
     result=$(sed -n "/^\\[${section}\\]/,/^\\[/p" "$file" 2>/dev/null \
-        | grep -E '^\s*mode\s*=' \
+        | grep -E '^[[:space:]]*mode[[:space:]]*=' \
         | head -1 \
         | awk -F'=' '{gsub(/#.*$/, "", $2); gsub(/[" \t'\''"]/, "", $2); print $2}') || return 1
     [[ -n "$result" ]] && echo "$result" || return 1
