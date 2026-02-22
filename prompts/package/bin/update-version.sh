@@ -56,6 +56,12 @@ fi
 # vプレフィックス除去
 VERSION="${VERSION#v}"
 
+# vプレフィックス除去後の空文字チェック
+if [[ -z "$VERSION" ]]; then
+    echo "error:missing-version"
+    exit 1
+fi
+
 # 対象ファイルの存在確認
 if [[ ! -f "version.txt" ]]; then
     echo "error:version-txt-not-found"
