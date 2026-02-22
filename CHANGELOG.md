@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.16.2] - 2026-02-22
+
+### Added
+
+- `check-issue-templates.sh`: GitHub Issueテンプレートのローカル/リモート差分検出スクリプト（#205）
+- `update-version.sh`: version.txtとaidlc.tomlのバージョン一括更新スクリプト（#204）
+- `sync-package.sh`: prompts/package/からdocs/aidlc/へのrsync同期一括スクリプト（#203）
+- `defaults.toml`: read-config.shのデフォルト値集中管理ファイル（#206）
+- フェーズ実行方式（スキル化 vs サブエージェント化）の設計検討ドキュメント（#200）
+
+### Changed
+
+- aidlc.toml設定キー構造を統一: `[backlog]`セクションを`[rules.backlog]`に移動（#207）
+- read-config.shデフォルト値を集中管理に移行: 呼び出し側での`--default`指定が不要に（#206）
+- check-backlog-mode.sh, env-info.sh: 旧キー`[backlog].mode`のフォールバック読み取りを追加（#207）
+
+---
+
 ## [1.16.1] - 2026-02-21
 
 ### Added
