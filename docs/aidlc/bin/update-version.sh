@@ -79,11 +79,11 @@ _current_version_txt=$(cat version.txt) || {
     exit 1
 }
 
-_current_aidlc_toml=$(sed -n 's/^starter_kit_version = "\(.*\)"/\1/p' docs/aidlc.toml) || {
+_current_aidlc_toml=$(sed -n 's/^[[:space:]]*starter_kit_version[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' docs/aidlc.toml) || {
     echo "error:aidlc-toml-read-failed"
     exit 1
 }
-_match_count=$(grep -c '^starter_kit_version = ' docs/aidlc.toml || true)
+_match_count=$(grep -c '^[[:space:]]*starter_kit_version[[:space:]]*=' docs/aidlc.toml || true)
 if [[ "$_match_count" -ne 1 ]] || [[ -z "$_current_aidlc_toml" ]]; then
     echo "error:invalid-aidlc-toml-format"
     exit 1
@@ -110,7 +110,7 @@ printf '%s\n' "$VERSION" > "$_tmp_version" || {
 }
 
 # docs/aidlc.toml一時ファイル作成（OS非依存: mktemp + sedリダイレクト）
-sed "s/^starter_kit_version = .*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml > "$_tmp_toml" || {
+sed "s/^[[:space:]]*starter_kit_version[[:space:]]*=.*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml > "$_tmp_toml" || {
     echo "error:aidlc-toml-write-failed"
     exit 1
 }
