@@ -105,21 +105,13 @@ get_project_name() {
     echo "$result" | tr -d "'"
 }
 
-# docs/aidlc.toml から backlog.mode を取得
-# dasel未インストール時またはファイル不存在時は空値を返す
+# バックログモードを取得（resolve-backlog-mode.sh の共通ロジックを使用）
+# resolve-backlog-mode.sh を source
+_ENV_INFO_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+source "${_ENV_INFO_SCRIPT_DIR}/resolve-backlog-mode.sh"
+
 get_backlog_mode() {
-    if ! command -v dasel >/dev/null 2>&1; then
-        echo ""
-        return
-    fi
-    if [[ ! -f "docs/aidlc.toml" ]]; then
-        echo ""
-        return
-    fi
-    local result
-    result=$(dasel -i toml 'backlog.mode' < docs/aidlc.toml 2>/dev/null) || { echo ""; return; }
-    # daselの出力からクォートを除去
-    echo "$result" | tr -d "'"
+    resolve_backlog_mode
 }
 
 # 現在のブランチ/bookmarkを取得

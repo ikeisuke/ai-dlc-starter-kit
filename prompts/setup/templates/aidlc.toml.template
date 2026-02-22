@@ -105,7 +105,7 @@ enabled = true
 [inception]
 # Inception Phase設定
 
-[backlog]
+[rules.backlog]
 # バックログ管理モード設定
 # mode: "git" | "issue" | "git-only" | "issue-only"
 # - git: ローカルファイルがデフォルト、状況に応じてIssueも許容

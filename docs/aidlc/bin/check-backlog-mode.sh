@@ -11,39 +11,18 @@
 #   - issue: GitHub Issue駆動
 #   - git-only: ローカルファイルのみ
 #   - issue-only: GitHub Issueのみ
-#   - (空): dasel未インストール（AIが直接読み取り）
 #
-# エッジケース:
-#   - dasel未インストール: backlog_mode: を出力（AIに委ねる）
-#   - TOMLファイル不在: backlog_mode:git を出力（デフォルト）
-#   - キー欠落/値不正: backlog_mode:git を出力（デフォルト）
+# 解決ロジック:
+#   resolve-backlog-mode.sh の resolve_backlog_mode 関数で一元解決。
+#   新キー（rules.backlog.mode）優先、旧キー（backlog.mode）フォールバック。
+#   dasel未インストール時もgrep/sedで解決し、常に有効値を返す。
 #
 
 set -euo pipefail
 
-CONFIG_FILE="docs/aidlc.toml"
+# resolve-backlog-mode.sh を source
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+source "${SCRIPT_DIR}/resolve-backlog-mode.sh"
 
-# daselの存在確認
-if ! command -v dasel >/dev/null 2>&1; then
-    echo "backlog_mode:"
-    exit 0
-fi
-
-# 設定ファイルからバックログモードを取得
-# 失敗時は "git" にフォールバック
-MODE=$(cat "$CONFIG_FILE" 2>/dev/null | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "git")
-
-# 空の場合はデフォルト値を使用
-[ -z "$MODE" ] && MODE="git"
-
-# 有効な値のみ許可、それ以外は "git" にフォールバック
-case "$MODE" in
-    git|issue|git-only|issue-only)
-        # 有効な値
-        ;;
-    *)
-        MODE="git"
-        ;;
-esac
-
+MODE=$(resolve_backlog_mode)
 echo "backlog_mode:${MODE}"

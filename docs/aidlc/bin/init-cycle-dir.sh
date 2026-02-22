@@ -132,41 +132,14 @@ create_directory() {
     fi
 }
 
-# backlog modeを取得
+# backlog modeを取得（resolve-backlog-mode.sh の共通ロジックを使用）
 # 戻り値（stdout）: git, git-only, issue, issue-only のいずれか（デフォルト: git）
+# resolve-backlog-mode.sh を source
+_INIT_CYCLE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+source "${_INIT_CYCLE_SCRIPT_DIR}/resolve-backlog-mode.sh"
+
 get_backlog_mode() {
-    local config_file="docs/aidlc.toml"
-    local mode=""
-
-    # 設定ファイルが存在しない場合はデフォルト
-    if [[ ! -f "$config_file" ]]; then
-        echo "git"
-        return 0
-    fi
-
-    # daselが利用可能な場合はそれを使用
-    if command -v dasel &>/dev/null; then
-        # dasel v2/v3共通: stdin + -i オプションで入力形式指定
-        mode=$(cat "$config_file" | dasel -i toml 'backlog.mode' 2>/dev/null | tr -d "'" || echo "")
-    fi
-
-    # daselが利用不可または取得失敗の場合はgrepでフォールバック
-    if [[ -z "$mode" ]]; then
-        # [backlog]セクション内のmode = "xxx" の形式を抽出
-        # sedで[backlog]から次のセクション（または末尾）までを抽出し、awkで値を取得
-        # インラインコメント(#以降)とクォート・空白・タブを除去
-        mode=$(sed -n '/^\[backlog\]/,/^\[/p' "$config_file" 2>/dev/null | grep -E '^\s*mode\s*=' | head -1 | awk -F'=' '{gsub(/#.*$/, "", $2); gsub(/[" \t]/, "", $2); print $2}' || echo "")
-    fi
-
-    # 空または無効な値の場合はデフォルト
-    case "$mode" in
-        git|git-only|issue|issue-only)
-            echo "$mode"
-            ;;
-        *)
-            echo "git"
-            ;;
-    esac
+    resolve_backlog_mode
 }
 
 # 共通バックログディレクトリを作成
