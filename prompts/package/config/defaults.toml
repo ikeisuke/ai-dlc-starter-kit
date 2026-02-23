@@ -42,3 +42,14 @@ target_pattern = "*.md"
 
 [rules.commit]
 ai_author_auto_detect = true
+ai_author = ""
+
+[rules.branch]
+mode = "ask"
+
+[rules.git]
+commit_on_unit_complete = true
+commit_on_phase_complete = true
+
+[rules.documentation]
+language = "日本語"

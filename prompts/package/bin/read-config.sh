@@ -4,10 +4,12 @@
 #
 # 使用方法:
 #   ./read-config.sh <key> [--default <value>]
+#   ./read-config.sh --keys <key1> [key2] ...
 #
 # パラメータ:
 #   key       - ドット区切りの設定キー（例: rules.reviewing.mode）
-#   --default - キーが存在しない場合のデフォルト値（文字列のみ）
+#   --default - キーが存在しない場合のデフォルト値（文字列のみ、--keys と排他）
+#   --keys    - 複数キー一括指定（位置引数・--default と排他）
 #
 # 終了コード:
 #   0 - 値あり（設定値またはデフォルト値を出力）
@@ -15,7 +17,7 @@
 #   2 - エラー（dasel未インストール等）
 #
 # 設定ファイル階層（優先度: 低→高）:
-#   0. docs/aidlc/config/defaults.toml - デフォルト値定義（オプション）
+#   0. <script_dir>/../config/defaults.toml - デフォルト値定義（オプション）
 #   1. ~/.aidlc/config.toml - ユーザー共通設定（オプション）
 #   2. docs/aidlc.toml - プロジェクト共有設定（必須）
 #   3. docs/aidlc.toml.local - 個人設定（オプション）
@@ -29,6 +31,7 @@
 # 使用例:
 #   ./read-config.sh rules.reviewing.mode
 #   ./read-config.sh rules.custom.foo --default "bar"
+#   ./read-config.sh --keys rules.reviewing.mode rules.reviewing.tools rules.history.level
 #
 
 set -euo pipefail
@@ -45,6 +48,8 @@ LOCAL_CONFIG_FILE="docs/aidlc.toml.local"
 KEY=""
 DEFAULT_VALUE=""
 HAS_DEFAULT=false
+MODE="single"  # single | batch
+KEYS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -56,6 +61,15 @@ while [[ $# -gt 0 ]]; do
             DEFAULT_VALUE="$2"
             HAS_DEFAULT=true
             shift 2
+            ;;
+        --keys)
+            MODE="batch"
+            shift
+            # --keys の後、次の -* オプションまたは引数終端までをキーとして読み取る
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                KEYS+=("$1")
+                shift
+            done
             ;;
         -*)
             echo "Error: Unknown option: $1" >&2
@@ -73,9 +87,26 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$KEY" ]]; then
+# 排他チェック
+if [[ "$MODE" == "batch" && -n "$KEY" ]]; then
+    echo "Error: --keys and positional key are mutually exclusive" >&2
+    exit 2
+fi
+
+if [[ "$MODE" == "batch" && "$HAS_DEFAULT" == "true" ]]; then
+    echo "Error: --keys and --default are mutually exclusive" >&2
+    exit 2
+fi
+
+if [[ "$MODE" == "batch" && ${#KEYS[@]} -eq 0 ]]; then
+    echo "Error: --keys requires at least one key" >&2
+    exit 2
+fi
+
+if [[ "$MODE" == "single" && -z "$KEY" ]]; then
     echo "Error: Key is required" >&2
     echo "Usage: $0 <key> [--default <value>]" >&2
+    echo "       $0 --keys <key1> [key2] ..." >&2
     exit 2
 fi
 
@@ -100,10 +131,27 @@ get_value() {
     local key="$2"
     local result
     local dasel_exit_code
-    local err_file="/tmp/aidlc_dasel_err_$$_$RANDOM"
+
+    # キー入力バリデーション: 英字またはアンダースコアで始まり、許可文字のみ
+    # mktemp より前に実行し、一時ファイルのクリーンアップ漏れを防ぐ
+    if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
+        echo "Error: Invalid key format: $key" >&2
+        return 2
+    fi
+
+    local err_file
+    err_file=$(mktemp) || { echo "Error: Failed to create temp file" >&2; return 2; }
+
+    # dasel v3 予約語回避: ドット区切りキーをブラケット記法に変換
+    # 例: rules.branch.mode → rules["branch"]["mode"]
+    # 最初のセグメントはそのまま、以降をブラケット記法にすることで
+    # dasel v3 の予約語（branch等）を安全にアクセスできる
+    # 制約: 非引用・ドット区切りキーのみ対象
+    local escaped_key
+    escaped_key=$(printf '%s' "$key" | sed 's/\.\([^.]*\)/["\1"]/g')
 
     # daselを実行（エラーはファイルにリダイレクト）
-    result=$(cat "$file" 2>"$err_file" | dasel -i toml "$key" 2>>"$err_file") || dasel_exit_code=$?
+    result=$(cat "$file" 2>"$err_file" | dasel -i toml "$escaped_key" 2>>"$err_file") || dasel_exit_code=$?
     dasel_exit_code=${dasel_exit_code:-0}
 
     # エラー内容を確認
@@ -141,125 +189,177 @@ strip_quotes() {
     fi
 }
 
-# 最終的な値を保持する変数
-FINAL_VALUE=""
-VALUE_EXISTS=false
+# ============================================================
+# resolve_key: 単一キーの値を4階層マージで解決する
+# 引数: key（文字列）
+# 標準出力: 解決された値（strip_quotes適用済み）
+# 戻り値: 0=存在, 1=不在, 2=エラー
+# ============================================================
+resolve_key() {
+    local key="$1"
+    local final_value=""
+    local value_exists=false
 
-# ============================================================
-# 0. デフォルト値から取得（オプション、優先度: 最低）
-# ============================================================
-if [[ -f "$DEFAULTS_CONFIG_FILE" ]]; then
+    # 0. デフォルト値から取得（オプション、優先度: 最低）
+    if [[ -f "$DEFAULTS_CONFIG_FILE" ]]; then
+        local defaults_value
+        set +e
+        defaults_value=$(get_value "$DEFAULTS_CONFIG_FILE" "$key")
+        local defaults_exit_code=$?
+        set -e
+
+        case $defaults_exit_code in
+            0)
+                final_value="$defaults_value"
+                value_exists=true
+                ;;
+            1)
+                # キー不在（正常）
+                ;;
+            *)
+                # デフォルト値ファイルのエラーは警告のみ（スキップ）
+                echo "Warning: Failed to read defaults config file, skipping" >&2
+                ;;
+        esac
+    fi
+
+    # 1. HOME設定から値を取得（オプション、優先度: 低）
+    if [[ -n "$HOME_CONFIG_FILE" && -f "$HOME_CONFIG_FILE" ]]; then
+        local home_value
+        set +e
+        home_value=$(get_value "$HOME_CONFIG_FILE" "$key")
+        local home_exit_code=$?
+        set -e
+
+        case $home_exit_code in
+            0)
+                final_value="$home_value"
+                value_exists=true
+                ;;
+            1)
+                # キー不在（正常）
+                ;;
+            *)
+                # HOME設定ファイルのエラーは警告のみ（スキップ）
+                echo "Warning: Failed to read home config file, skipping" >&2
+                ;;
+        esac
+    fi
+
+    # 2. プロジェクト設定から値を取得（必須、優先度: 中）
+    local project_value
     set +e
-    get_value "$DEFAULTS_CONFIG_FILE" "$KEY" > /tmp/aidlc_defaults_value_$$
-    defaults_exit_code=$?
+    project_value=$(get_value "$PROJECT_CONFIG_FILE" "$key")
+    local project_exit_code=$?
     set -e
 
-    case $defaults_exit_code in
+    case $project_exit_code in
         0)
-            FINAL_VALUE=$(cat /tmp/aidlc_defaults_value_$$)
-            VALUE_EXISTS=true
+            final_value="$project_value"
+            value_exists=true
             ;;
         1)
             # キー不在（正常）
             ;;
         *)
-            # デフォルト値ファイルのエラーは警告のみ（スキップ）
-            echo "Warning: Failed to read defaults config file, skipping" >&2
+            # プロジェクト設定ファイルのエラーは致命的
+            echo "Error: Failed to read project config file" >&2
+            return 2
             ;;
     esac
-    \rm -f /tmp/aidlc_defaults_value_$$ 2>/dev/null
-fi
+
+    # 3. LOCAL設定から値を取得（オプション、優先度: 高）
+    if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
+        local local_value
+        set +e
+        local_value=$(get_value "$LOCAL_CONFIG_FILE" "$key")
+        local local_exit_code=$?
+        set -e
+
+        case $local_exit_code in
+            0)
+                # .localにキーが存在すれば上書き（空文字でも上書き）
+                final_value="$local_value"
+                value_exists=true
+                ;;
+            1)
+                # キー不在（.localにはない、前の値を使用）
+                ;;
+            *)
+                # .localファイルのエラーは警告のみ（前の値にフォールバック）
+                echo "Warning: Failed to read local config file, using previous value" >&2
+                ;;
+        esac
+    fi
+
+    # 値の出力
+    if [[ "$value_exists" == "true" ]]; then
+        strip_quotes "$final_value"
+        return 0
+    else
+        return 1
+    fi
+}
 
 # ============================================================
-# 1. HOME設定から値を取得（オプション、優先度: 低）
+# メイン処理
 # ============================================================
-if [[ -n "$HOME_CONFIG_FILE" && -f "$HOME_CONFIG_FILE" ]]; then
+if [[ "$MODE" == "single" ]]; then
+    # 単一キーモード（従来互換）
     set +e
-    get_value "$HOME_CONFIG_FILE" "$KEY" > /tmp/aidlc_home_value_$$
-    home_exit_code=$?
+    resolved_value=$(resolve_key "$KEY")
+    resolve_exit_code=$?
     set -e
 
-    case $home_exit_code in
+    case $resolve_exit_code in
         0)
-            FINAL_VALUE=$(cat /tmp/aidlc_home_value_$$)
-            VALUE_EXISTS=true
+            printf '%s\n' "$resolved_value"
+            exit 0
             ;;
         1)
-            # キー不在（正常）
+            # キー不在 → --default 確認
+            if [[ "$HAS_DEFAULT" == "true" ]]; then
+                printf '%s\n' "$DEFAULT_VALUE"
+                exit 0
+            else
+                exit 1
+            fi
             ;;
         *)
-            # HOME設定ファイルのエラーは警告のみ（スキップ）
-            echo "Warning: Failed to read home config file, skipping" >&2
+            exit 2
             ;;
     esac
-    \rm -f /tmp/aidlc_home_value_$$ 2>/dev/null
-fi
-
-# ============================================================
-# 2. プロジェクト設定から値を取得（必須、優先度: 中）
-# ============================================================
-set +e
-get_value "$PROJECT_CONFIG_FILE" "$KEY" > /tmp/aidlc_project_value_$$
-project_exit_code=$?
-set -e
-
-case $project_exit_code in
-    0)
-        FINAL_VALUE=$(cat /tmp/aidlc_project_value_$$)
-        VALUE_EXISTS=true
-        ;;
-    1)
-        # キー不在（正常）
-        ;;
-    *)
-        # プロジェクト設定ファイルのエラーは致命的
-        echo "Error: Failed to read project config file" >&2
-        \rm -f /tmp/aidlc_project_value_$$ 2>/dev/null
-        exit 2
-        ;;
-esac
-\rm -f /tmp/aidlc_project_value_$$ 2>/dev/null
-
-# ============================================================
-# 3. LOCAL設定から値を取得（オプション、優先度: 高）
-# ============================================================
-if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
-    set +e
-    get_value "$LOCAL_CONFIG_FILE" "$KEY" > /tmp/aidlc_local_value_$$
-    local_exit_code=$?
-    set -e
-
-    case $local_exit_code in
-        0)
-            # .localにキーが存在すれば上書き（空文字でも上書き）
-            FINAL_VALUE=$(cat /tmp/aidlc_local_value_$$)
-            VALUE_EXISTS=true
-            ;;
-        1)
-            # キー不在（.localにはない、前の値を使用）
-            ;;
-        *)
-            # .localファイルのエラーは警告のみ（前の値にフォールバック）
-            echo "Warning: Failed to read local config file, using previous value" >&2
-            ;;
-    esac
-    \rm -f /tmp/aidlc_local_value_$$ 2>/dev/null
-fi
-
-# ============================================================
-# 値の出力
-# ============================================================
-if [[ "$VALUE_EXISTS" == "true" ]]; then
-    # 値が存在する場合
-    strip_quotes "$FINAL_VALUE"
-    exit 0
 else
-    # 値が存在しない場合
-    if [[ "$HAS_DEFAULT" == "true" ]]; then
-        printf '%s\n' "$DEFAULT_VALUE"
+    # バッチモード（--keys）
+    found_count=0
+    output_buffer=""
+
+    for key in "${KEYS[@]}"; do
+        set +e
+        resolved_value=$(resolve_key "$key")
+        resolve_exit_code=$?
+        set -e
+
+        case $resolve_exit_code in
+            0)
+                output_buffer+="${key}:${resolved_value}"$'\n'
+                found_count=$((found_count + 1))
+                ;;
+            1)
+                # キー不在 → スキップ（他のキーに影響しない）
+                ;;
+            *)
+                # エラー → 即時終了（部分出力を防ぐ）
+                exit 2
+                ;;
+        esac
+    done
+
+    if [[ $found_count -gt 0 ]]; then
+        # 末尾の改行を除いて出力
+        printf '%s\n' "${output_buffer%$'\n'}"
         exit 0
     else
-        # デフォルトなし、キー不在
         exit 1
     fi
 fi
