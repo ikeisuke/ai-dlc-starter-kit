@@ -131,10 +131,27 @@ get_value() {
     local key="$2"
     local result
     local dasel_exit_code
-    local err_file="/tmp/aidlc_dasel_err_$$_$RANDOM"
+
+    # キー入力バリデーション: 英字またはアンダースコアで始まり、許可文字のみ
+    # mktemp より前に実行し、一時ファイルのクリーンアップ漏れを防ぐ
+    if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
+        echo "Error: Invalid key format: $key" >&2
+        return 2
+    fi
+
+    local err_file
+    err_file=$(mktemp) || { echo "Error: Failed to create temp file" >&2; return 2; }
+
+    # dasel v3 予約語回避: ドット区切りキーをブラケット記法に変換
+    # 例: rules.branch.mode → rules["branch"]["mode"]
+    # 最初のセグメントはそのまま、以降をブラケット記法にすることで
+    # dasel v3 の予約語（branch等）を安全にアクセスできる
+    # 制約: 非引用・ドット区切りキーのみ対象
+    local escaped_key
+    escaped_key=$(printf '%s' "$key" | sed 's/\.\([^.]*\)/["\1"]/g')
 
     # daselを実行（エラーはファイルにリダイレクト）
-    result=$(cat "$file" 2>"$err_file" | dasel -i toml "$key" 2>>"$err_file") || dasel_exit_code=$?
+    result=$(cat "$file" 2>"$err_file" | dasel -i toml "$escaped_key" 2>>"$err_file") || dasel_exit_code=$?
     dasel_exit_code=${dasel_exit_code:-0}
 
     # エラー内容を確認

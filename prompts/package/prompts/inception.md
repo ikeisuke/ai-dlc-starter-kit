@@ -287,8 +287,55 @@ git branch --show-current
 ```
 
 **判定**:
-- **main または master の場合**: サイクル用ブランチの作成を提案
+- **main または master の場合**: ブランチ作成方式の設定を確認し、方式に応じて処理
 
+  **7-1. ブランチ作成方式の読み取り**:
+
+  ```bash
+  docs/aidlc/bin/read-config.sh rules.branch.mode --default "ask"
+  ```
+
+  **読み取り失敗時**（終了コード2: daselエラー等）: 以下の警告を表示し、`"ask"` として扱う:
+  ```text
+  【警告】rules.branch.mode の読み取りに失敗しました。デフォルト（ask）にフォールバックします。
+  ```
+
+  **7-2. mode 値の検証**:
+  - 有効値: `"branch"`, `"worktree"`, `"ask"`
+  - 有効値以外の場合 → 以下の警告を表示し、`"ask"` として扱う:
+    ```text
+    【警告】rules.branch.mode の値 "[取得した値]" は無効です。有効値: branch, worktree, ask
+    デフォルト（ask）にフォールバックします。
+    ```
+
+  **7-3. mode に応じた分岐**:
+
+  **mode = "branch" の場合**:
+  ```text
+  設定に基づき、ブランチ方式で自動作成します（rules.branch.mode = "branch"）。
+  ```
+  → `docs/aidlc/bin/setup-branch.sh {{CYCLE}} branch` を実行
+
+  **mode = "worktree" の場合**:
+  まず worktree 機能の有効性を確認:
+  ```bash
+  docs/aidlc/bin/read-config.sh rules.worktree.enabled --default "false"
+  ```
+  読み取り失敗時（終了コード2）は `"false"` として扱う。
+  - **`true` の場合**:
+    ```text
+    設定に基づき、worktree方式で自動作成します（rules.branch.mode = "worktree"）。
+    ```
+    → `docs/aidlc/bin/setup-branch.sh {{CYCLE}} worktree` を実行
+  - **`true` 以外の場合**:
+    ```text
+    【警告】rules.branch.mode = "worktree" ですが、rules.worktree.enabled が true ではありません。
+    ブランチ方式にフォールバックします。
+    ```
+    → `docs/aidlc/bin/setup-branch.sh {{CYCLE}} branch` を実行
+
+  **mode = "ask" の場合**（デフォルト）:
+  現行通りユーザーに質問:
   ```text
   現在 main/master ブランチで作業しています。
   サイクル用ブランチで作業することを推奨します。
@@ -301,7 +348,6 @@ git branch --show-current
   ```
 
   選択に応じてスクリプトを実行:
-
   ```bash
   # ブランチ作成の場合
   docs/aidlc/bin/setup-branch.sh {{CYCLE}} branch
