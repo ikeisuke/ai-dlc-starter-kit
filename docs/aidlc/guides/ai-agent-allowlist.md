@@ -279,6 +279,131 @@ deny（最優先）→ ask → allow（最低優先）
 - `ask`: 破壊的だが必要な場合もあるコマンド（確認後に使用可能）
 - `deny`: 機密ファイルへのアクセスなど絶対に許可しないもの
 
+#### AI-DLC運用時の推奨設定パターン
+
+上記の「設定例（AI-DLC推奨）」は各コマンドを個別に列挙した**詳細リファレンス**（コピペで即利用可）です。ここでは、その設定を**カテゴリ別に整理したミニマルセット**を紹介します。ワイルドカードによる統合で設定数を削減しつつ、同等のカバレッジを提供します。どちらを採用しても構いません。
+
+##### なぜ相対パスを推奨するか
+
+許可パターンには**相対パス**を使用してください。絶対パスは以下の理由で問題になります:
+
+- **worktree環境**: `.worktree/dev/` 経由のパスと直接パスが異なる
+- **チーム共有**: 他のメンバーのホームディレクトリが異なる
+- **テンプレート化**: settings.local.json を新規プロジェクトにコピーできない
+
+```text
+# NG - 絶対パス（環境依存）
+"Bash(/Users/alice/repos/my-project/docs/aidlc/bin/write-history.sh:*)"
+
+# OK - 相対パス（環境非依存）
+"Bash(docs/aidlc/bin/write-history.sh:*)"
+```
+
+##### ミニマル推奨セット
+
+以下の設定で AI-DLC の全フェーズ（Inception / Construction / Operations）の基本操作を承認なしで実行できます。ただし、シェル演算子（`&&`, `|` 等）を含むコマンドは別途承認が必要な場合があります（詳細はセクション5.1参照）。
+
+**AI-DLCスクリプト群**（1エントリで全スクリプトをカバー）:
+
+| パターン | 対象 |
+|---------|------|
+| `Bash(docs/aidlc/bin/:*)` | write-history.sh, read-config.sh, issue-ops.sh, pr-ops.sh, squash-unit.sh 等すべて |
+
+**Git/jj操作**:
+
+| パターン | 用途 | 備考 |
+|---------|------|------|
+| `Bash(git add:*)` | ステージング | |
+| `Bash(git commit -m:*)` | コミット | `-m` 必須。`--amend` は許可されない |
+| `Bash(git checkout:*)` | ブランチ切り替え・作成 | `checkout -- <file>` も許可される点に注意。ファイル復元を制限したい場合は `git checkout -b:*` に限定 |
+| `Bash(git pull:*)` | リモート取得 | |
+| `Bash(git push:*)` | リモートプッシュ | 上記「設定例」と同一。`--force` は ask で制御されるが、`git push origin main --force`（後置フラグ）は ask をすり抜ける可能性あり。**セキュリティ優先の場合は `git push:*` を ask に移動**を推奨 |
+| `Bash(jj status:*)` | 作業状態表示 | jj使用時のみ |
+| `Bash(jj log:*)` | 履歴表示 | jj使用時のみ |
+| `Bash(jj diff:*)` | 差分表示 | jj使用時のみ |
+| `Bash(jj bookmark:*)` | ブックマーク操作 | jj使用時のみ。`bookmark delete` も含まれる。制限する場合は `jj bookmark create:*` / `jj bookmark set:*` / `jj bookmark list:*` に分割 |
+| `Bash(jj describe -m:*)` | メッセージ設定 | jj使用時のみ |
+| `Bash(jj new:*)` | 新規変更作成 | jj使用時のみ |
+| `Bash(jj git push:*)` | リモートプッシュ | jj使用時のみ |
+
+**GitHub CLI**:
+
+| パターン | 用途 |
+|---------|------|
+| `Bash(gh pr view:*)` | PR詳細表示 |
+| `Bash(gh pr create:*)` | PR作成 |
+| `Bash(gh pr ready:*)` | ドラフト→Ready |
+| `Bash(gh pr list:*)` | PR一覧 |
+| `Bash(gh issue create:*)` | Issue作成 |
+| `Bash(gh issue view:*)` | Issue詳細表示 |
+| `Bash(gh issue list:*)` | Issue一覧 |
+
+
+> **注**: `gh api:*` は DELETE/PATCH/POST を含む全APIメソッドを許可するため、ミニマルセットには含めていません。AI-DLC運用では上記の `gh pr`/`gh issue` 系コマンドで大半の操作が完結します。`gh api` が必要な場合は下記の ask 推奨セクションを参照してください。
+
+**AIレビューSkill**:
+
+| パターン | 用途 |
+|---------|------|
+| `Skill(reviewing-code)` | コードレビュー |
+| `Skill(reviewing-architecture)` | アーキテクチャレビュー |
+| `Skill(reviewing-security)` | セキュリティレビュー |
+| `Skill(reviewing-inception)` | Inceptionレビュー |
+
+##### オプション追加
+
+プロジェクトの利用状況に応じて追加してください。
+
+| パターン | いつ必要か | リスク |
+|---------|-----------|--------|
+| `Bash(codex exec:*)` | Codex CLIでAIレビューを実行する場合 | サブプロセスが親の権限制御外で動作する。**`ask` への配置を推奨** |
+| `Bash(claude:*)` | Claudeサブプロセスでレビューを実行する場合 | 同上。**`ask` への配置を推奨**。プロンプト注入経由の意図しない実行リスクあり |
+| `Bash(dasel:*)` | daselでTOML設定を読み取る場合 | 書き込みオプション（`-w`）も許可される。読み取り専用に限定する場合は `Bash(dasel -r toml:*)` に変更 |
+| `Bash(rsync:*)` | `/upgrading-aidlc` でパッケージ同期する場合 | `--delete` や任意パス指定が可能。既存設定例のように宛先固定パターン推奨 |
+| `Bash(prompts/package/bin/setup-:*)` | セットアップスクリプト（`prompts/package/bin/setup-*.sh`）を実行する場合 | - |
+
+##### ask推奨（破壊的操作）
+
+上記の「設定例」のask設定に加え、以下の追加を推奨します:
+
+| パターン | リスク |
+|---------|-------|
+| `Bash(gh api:*)` | 全APIメソッド（DELETE含む）が実行可能 |
+| `Bash(gh pr merge:*)` | PRマージ（不可逆） |
+| `Bash(gh release create:*)` | リリース作成 |
+
+##### deny推奨（セキュリティ）
+
+機密情報への読み取りをブロックします。
+
+| パターン | 保護対象 |
+|---------|---------|
+| `Read(.env)` | 環境変数ファイル |
+| `Read(.env.*)` | 環境変数ファイル（派生） |
+| `Read(~/.ssh/**)` | SSH鍵 |
+| `Read(~/.aws/**)` | AWSクレデンシャル |
+
+利用環境に応じて以下も追加を検討してください:
+
+| パターン | 保護対象 |
+|---------|---------|
+| `Read(.envrc)` | direnv環境変数 |
+| `Read(~/.config/gh/**)` | GitHub CLIトークン |
+| `Read(~/.npmrc)` | npmレジストリトークン |
+| `Read(~/.docker/**)` | Dockerクレデンシャル |
+| `Read(~/.kube/**)` | Kubernetes設定 |
+| `Read(**/*.pem)` | PEM証明書・秘密鍵 |
+| `Read(**/*.key)` | 秘密鍵ファイル |
+
+##### 既存設定からの移行
+
+現在の `settings.local.json` に絶対パスや重複エントリがある場合:
+
+1. **絶対パスの特定**: `/Users/` や `/home/` で始まるエントリを検索
+2. **相対パスに置換**: プロジェクトルートからの相対パスに変更
+3. **統合パターンで置換**: 個別スクリプトエントリを `Bash(docs/aidlc/bin/:*)` に統合
+4. **不要エントリの削除**: Claude Code専用ツール（Read/Grep/Glob/Write）でカバーされる `ls`/`cat`/`grep` 等のBashエントリは削除可能
+
 ### 4.2 Codex CLI
 
 **設定ファイル**: `~/.codex/rules/*.rules`（プロンプトルール用）

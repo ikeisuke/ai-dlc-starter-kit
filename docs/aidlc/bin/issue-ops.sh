@@ -122,14 +122,29 @@ EOF
 
 # gh CLIが利用可能かチェック
 # 戻り値: 0=利用可能, 1=gh未インストール, 2=gh未認証
+# 環境変数 GH_HOST で対象ホストを指定可能（デフォルト: github.com）
 check_gh_available() {
     if ! command -v gh >/dev/null 2>&1; then
         return 1
     fi
-    if ! gh auth status >/dev/null 2>&1; then
-        return 2
+
+    local host="${GH_HOST:-github.com}"
+    local error_output
+
+    # --hostname オプション付きで特定ホストの認証を確認
+    if error_output=$(gh auth status --hostname "$host" 2>&1); then
+        return 0
     fi
-    return 0
+
+    # --hostname 未対応（旧バージョン gh CLI）の場合のみフォールバック
+    if [[ "$error_output" =~ [Uu]nknown[[:space:]](flag|command) ]]; then
+        # フォールバック: --hostname なしで認証確認
+        if gh auth status >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+
+    return 2
 }
 
 # 出力フォーマット生成（Issue番号あり）
@@ -171,9 +186,8 @@ cmd_label() {
     local gh_status
     local error_output
 
-    # gh利用可否確認
-    check_gh_available
-    gh_status=$?
+    # gh利用可否確認（|| true で set -e による即時終了を防止）
+    check_gh_available && gh_status=0 || gh_status=$?
     if [[ $gh_status -ne 0 ]]; then
         if [[ $gh_status -eq 1 ]]; then
             format_output "$issue_number" "error" "gh-not-available"
@@ -203,9 +217,8 @@ cmd_remove_label() {
     local gh_status
     local error_output
 
-    # gh利用可否確認
-    check_gh_available
-    gh_status=$?
+    # gh利用可否確認（|| true で set -e による即時終了を防止）
+    check_gh_available && gh_status=0 || gh_status=$?
     if [[ $gh_status -ne 0 ]]; then
         if [[ $gh_status -eq 1 ]]; then
             format_output "$issue_number" "error" "gh-not-available"
@@ -256,9 +269,8 @@ cmd_set_status() {
             ;;
     esac
 
-    # gh利用可否確認
-    check_gh_available
-    gh_status=$?
+    # gh利用可否確認（|| true で set -e による即時終了を防止）
+    check_gh_available && gh_status=0 || gh_status=$?
     if [[ $gh_status -ne 0 ]]; then
         if [[ $gh_status -eq 1 ]]; then
             format_output "$issue_number" "error" "gh-not-available"
@@ -300,9 +312,8 @@ cmd_close() {
     local gh_status
     local error_output
 
-    # gh利用可否確認
-    check_gh_available
-    gh_status=$?
+    # gh利用可否確認（|| true で set -e による即時終了を防止）
+    check_gh_available && gh_status=0 || gh_status=$?
     if [[ $gh_status -ne 0 ]]; then
         if [[ $gh_status -eq 1 ]]; then
             format_output "$issue_number" "error" "gh-not-available"

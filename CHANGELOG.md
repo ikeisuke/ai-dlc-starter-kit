@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.16.4] - 2026-02-26
+
+### Fixed
+
+- read-config.sh: dasel v3予約語（`type`, `name`等）を含むTOMLキーのクオート処理を追加（#223）
+- issue-ops.sh: 認証済みgh環境でも `gh-not-authenticated` エラーを返すバグを修正（#225）
+- Operations Phase完了メッセージの「start setup」を「start inception」に修正（#229）
+
+### Changed
+
+- read-config.shドキュメント: 古い呼び出しパターンを現行インターフェースに更新（#224）
+- ai-agent-allowlist.md: Claude Code許可設定の推奨パターンを策定・追記（#219）
+
+---
+
 ## [1.16.3] - 2026-02-23
 
 ### Changed
