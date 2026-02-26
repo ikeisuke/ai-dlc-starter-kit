@@ -24,7 +24,7 @@ squash-unit.sh に `--retroactive` オプションを追加し、GIT_SEQUENCE_ED
 ## 依存関係
 
 ### 依存する Unit
-- なし
+- Unit 006: Inception squash（依存理由: commit-flow.md のSquash統合フロー基本構造が確定した後に事後squash手順を追加するため）
 
 ### 外部依存
 - なし
