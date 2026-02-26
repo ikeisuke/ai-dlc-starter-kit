@@ -13,14 +13,14 @@
 
 加えて、レビューフロー内で以下のタイミングでもコミットする:
 
-- AIレビュー/人間レビュー前（変更がある場合のみ）
+- AIレビュー/ユーザーレビュー前（変更がある場合のみ）
 - レビュー反映後（修正があった場合のみ）
 
 ### コミットメッセージフォーマット一覧
 
 | ID | prefix | テンプレート | 使用場面 |
 |-----|--------|------------|---------|
-| REVIEW_PRE | `chore:` | `chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}` | AIレビュー/人間レビュー前 |
+| REVIEW_PRE | `chore:` | `chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}` | AIレビュー/ユーザーレビュー前 |
 | REVIEW_POST | `chore:` | `chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}` | レビュー修正反映後 |
 | INCEPTION_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}` | Inception Phase完了時 |
 | UNIT_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}` | Unit完了時（標準パス） |
