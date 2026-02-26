@@ -122,6 +122,19 @@ if [[ ! -f "$PROJECT_CONFIG_FILE" ]]; then
     exit 2
 fi
 
+# dasel v2/v3 機能検出（2段階）
+# dasel v3 では 'branch' 等が予約語のため、ブラケット記法 key["prop"] を使用する必要がある
+# dasel v2 ではブラケット記法が非対応のため、ドット区切りをそのまま使用する
+# 段階1: ドット記法の基本動作を確認（dasel自体の正常性チェック）
+# 段階2: ブラケット記法の動作を確認（v3機能の検出）
+_DASEL_USE_BRACKET="false"
+_DASEL_TEST_DATA=$(printf '[t]\nv = 1')
+if printf '%s' "$_DASEL_TEST_DATA" | dasel -i toml 't.v' >/dev/null 2>&1; then
+    if printf '%s' "$_DASEL_TEST_DATA" | dasel -i toml 't["v"]' >/dev/null 2>&1; then
+        _DASEL_USE_BRACKET="true"
+    fi
+fi
+
 # 設定値を取得（存在チェック付き）
 # 戻り値: 0=存在, 1=不在, 2=エラー
 # 標準出力: 値（存在する場合）
@@ -142,13 +155,18 @@ get_value() {
     local err_file
     err_file=$(mktemp) || { echo "Error: Failed to create temp file" >&2; return 2; }
 
-    # dasel v3 予約語回避: ドット区切りキーをブラケット記法に変換
+    # dasel v3 予約語回避: ブラケット記法が使用可能な場合のみ変換
     # 例: rules.branch.mode → rules["branch"]["mode"]
     # 最初のセグメントはそのまま、以降をブラケット記法にすることで
     # dasel v3 の予約語（branch等）を安全にアクセスできる
-    # 制約: 非引用・ドット区切りキーのみ対象
+    # 制約: 先頭セグメントはブラケット化できない（dasel v3 の制約: ["key"] は配列アクセスと解釈される）
+    #        AI-DLC設定のトップレベルキー（starter_kit_version, project, paths, rules）には予約語が含まれないため実害なし
     local escaped_key
-    escaped_key=$(printf '%s' "$key" | sed 's/\.\([^.]*\)/["\1"]/g')
+    if [[ "${_DASEL_USE_BRACKET:-false}" == "true" ]]; then
+        escaped_key=$(printf '%s' "$key" | sed 's/\.\([^.]*\)/["\1"]/g')
+    else
+        escaped_key="$key"
+    fi
 
     # daselを実行（エラーはファイルにリダイレクト）
     result=$(cat "$file" 2>"$err_file" | dasel -i toml "$escaped_key" 2>>"$err_file") || dasel_exit_code=$?
