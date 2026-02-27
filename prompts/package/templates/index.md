@@ -68,6 +68,11 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **使用タイミング**: 統合とレビューステップ
 - **生成コマンド**: `TEMPLATE_NAME = implementation_record_template`
 
+#### review_summary_template
+- **説明**: AIレビュー結果のサマリ（レビュー種別、指摘、対応を蓄積）
+- **使用タイミング**: AIレビュー完了時に自動生成・追記
+- **生成コマンド**: `TEMPLATE_NAME = review_summary_template`
+
 ### Operations Phase
 
 #### deployment_checklist_template
