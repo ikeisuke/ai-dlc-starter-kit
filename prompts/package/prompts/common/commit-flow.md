@@ -24,7 +24,8 @@
 | REVIEW_POST | `chore:` | `chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}` | レビュー修正反映後 |
 | INCEPTION_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}` | Inception Phase完了時 |
 | UNIT_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}` | Unit完了時（標準パス） |
-| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` | Squash前の中間コミット |
+| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` | Unit完了squash前の中間コミット |
+| INCEPTION_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Inception Phase完了 - 完了準備` | Inception Phase完了squash前の中間コミット |
 | OPERATIONS_COMPLETE | `chore:` | `chore: [{{CYCLE}}] Operations Phase完了 - {DESCRIPTION}` | Operations Phase完了時 |
 
 ### Co-Authored-By 設定
@@ -148,6 +149,19 @@ EOF
 
 ### Inception Phase完了コミット
 
+**注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
+
+```bash
+# git環境
+git status
+# jj環境（[rules.jj].enabled = true の場合）
+jj status
+```
+
+期待される結果: `nothing to commit, working tree clean`（git）または変更なし（jj）
+
+squashを実行していない場合は、以下の通常コミット手順を実行:
+
 Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。
 
 ```bash
@@ -229,7 +243,18 @@ git status
 
 ## Squash統合フロー
 
-Unit作業中の中間コミット（レビュー前/反映コミット等）を1つの完了コミットにまとめる。
+フェーズ完了時の中間コミット（レビュー前/反映コミット等）を1つの完了コミットにまとめる。
+
+### 適用対象判定
+
+呼び出し元フェーズに応じて、以下の手順を参照する:
+
+| 呼び出し元 | 適用対象 | 中間コミットメッセージ | squashコミットメッセージ |
+|-----------|---------|---------------------|----------------------|
+| Construction Phase（Unit完了時） | Unit完了squash | `UNIT_SQUASH_PREP` | `UNIT_COMPLETE` |
+| Inception Phase（Phase完了時） | Inception Phase完了squash | `INCEPTION_SQUASH_PREP` | `INCEPTION_COMPLETE` |
+
+以降の手順では、呼び出し元フェーズに対応するメッセージテンプレートを使用する。
 
 ### 設定確認・VCS判定
 
@@ -266,6 +291,10 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
 3. **「はい」の場合 - 未コミット変更のコミット**: 変更ファイルが未コミットの場合、中間コミットとして作成（squash-unit.shはclean working treeを前提とするため、先にコミットする）:
 
+   **コミットメッセージ**: 「適用対象判定」テーブルの中間コミットメッセージを使用する。
+
+   **Unit完了squashの場合**:
+
    git環境:
 
    ```bash
@@ -283,6 +312,32 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    ```bash
    jj describe -m "$(cat <<'EOF'
    chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
+
+   Co-Authored-By: {AI_AUTHOR}
+   EOF
+   )"
+   jj new
+   ```
+
+   **Inception Phase完了squashの場合**:
+
+   git環境:
+
+   ```bash
+   git add <変更ファイル>
+   git commit -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
+
+   Co-Authored-By: {AI_AUTHOR}
+   EOF
+   )"
+   ```
+
+   jj環境（`[rules.jj].enabled = true` の場合）:
+
+   ```bash
+   jj describe -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
 
    Co-Authored-By: {AI_AUTHOR}
    EOF
@@ -318,13 +373,20 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    jj log --limit 20
    ```
 
-   ログを確認し、**現在のUnitに属さない直近のコミット**（前Unitの `feat:` コミット、または `Phase完了` コミット）のハッシュ（git）/ change_id（jj）を特定する。
+   ログを確認し、squash対象範囲の起点となるコミットを特定する。
 
-   **判定基準**: 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）が起点となる。
+   **フェーズ別の判定基準**:
+
+   | フェーズ | git | jj |
+   |---------|-----|-----|
+   | Unit完了squash | 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）のハッシュ | `jj log` から同様に判定し、change_idを特定 |
+   | Inception Phase完了squash | `git merge-base origin/main HEAD`（サイクルブランチの分岐点）。`origin/main` が存在しない場合はユーザーに起点コミットを確認 | `jj log` で `main` ブランチとの分岐リビジョンを特定 |
 
 5. **squash実行**:
 
-   **注意**: `--message` の値構築時はシェル展開を防ぐため、ヒアドキュメントで Unit名を安全に埋め込むこと。
+   **注意**: `--message` の値構築時はシェル展開を防ぐため、ヒアドキュメントで安全に埋め込むこと。
+
+   **Unit完了squashの場合**:
 
    ```bash
    # ヒアドキュメントでメッセージを構築し、シェル展開・クォート破綻を防止
@@ -333,6 +395,17 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    EOF
    )"
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs <vcs> --base '<起点コミット>' --message "$SQUASH_MESSAGE"
+   ```
+
+   **Inception Phase完了squashの場合**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
      --vcs <vcs> --base '<起点コミット>' --message "$SQUASH_MESSAGE"
    ```
 
