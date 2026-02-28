@@ -706,7 +706,7 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ## 実行ルール
 
 1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成
-2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
+2. **ユーザーの承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後に実行
 
 ---
@@ -826,11 +826,19 @@ EOF
 このPRはOperations Phase完了時にReady for Reviewに変更されます。
 ```
 
+### 4.5 Squash（コミット統合）【オプション】
+
+**【次のアクション】** `docs/aidlc/prompts/common/commit-flow.md` の「Squash統合フロー」を読み込んで、Inception Phase完了squashの手順に従ってください。
+
+- `squash:success` の場合: ステップ5をスキップ
+- `squash:skipped:no-commits` の場合: ステップ5に進む
+- `squash:error` の場合: commit-flow.mdのエラーリカバリ手順に従う。リカバリ後、ステップ5（通常コミット）に進む
+
 ### 5. Gitコミット
 
-Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。
+**注意**: ステップ4.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境: `jj status`）で確認のみ行ってください。
 
-`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
+squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
 ### 6. コンテキストリセット提示【必須】
 

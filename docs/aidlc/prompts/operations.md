@@ -643,6 +643,35 @@ docs/aidlc/bin/pr-ops.sh find-draft
 docs/aidlc/bin/pr-ops.sh ready {PR番号}
 ```
 
+**PR本文の更新**（Ready化後、レビューサマリの記載手順は下記参照）:
+```bash
+gh pr edit {PR番号} --body "$(cat <<'EOF'
+## Summary
+[Intentから抽出した概要]
+
+## 受け入れ基準
+[各Unit計画ファイルの「完了条件チェックリスト」から集約して記載]
+
+## 変更概要
+[全Unitの主な変更点を箇条書き]
+
+## Test plan
+- [ ] 主要機能が動作する
+
+## Closes
+Closes #[Issue番号]
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+
+**レビューサマリの記載手順**:
+1. 以下のディレクトリでサマリファイルを検索:
+   - `docs/cycles/{{CYCLE}}/construction/units/*-review-summary.md`
+   - `docs/cycles/{{CYCLE}}/inception/*-review-summary.md`
+2. いずれかのファイルが存在する場合: 「## Closes」セクションの直前に「## レビューサマリ」セクションを挿入し、ファイルへのリンクを列挙（例: `- [Unit 001 レビューサマリ](docs/cycles/{{CYCLE}}/construction/units/001-review-summary.md)`）
+3. いずれも存在しない場合: レビューサマリセクションは追加しない（PR本文はheredocの内容のみ）
+
 **ドラフトPRが見つからない場合**:
 
 ```text
@@ -664,8 +693,15 @@ docs/aidlc/bin/pr-ops.sh ready {PR番号}
 **複数Issueがある場合**: 各Issue番号を別行で `Closes #xx` 形式で記載
 
 ```bash
-gh pr create --base main --title "{{CYCLE}}" --body "## Summary
-[変更点]
+gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
+## Summary
+[Intentから抽出した概要]
+
+## 受け入れ基準
+[各Unit計画ファイルの「完了条件チェックリスト」から集約して記載]
+
+## 変更概要
+[全Unitの主な変更点を箇条書き]
 
 ## Test plan
 - [ ] 主要機能が動作する
@@ -673,8 +709,11 @@ gh pr create --base main --title "{{CYCLE}}" --body "## Summary
 ## Closes
 Closes #[Issue番号]
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)"
-```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+
+**レビューサマリの記載手順**: Ready化時と同じ手順に従う（上記参照）。
 
 **GitHub CLI利用不可時**: 手動でPRを作成してください。
 
@@ -817,7 +856,7 @@ GitHub上でレビュー承認を確認してから、手動でPRをマージし
 ## 実行ルール
 
 1. **計画作成**: 各ステップ開始前に計画ファイルを `docs/cycles/{{CYCLE}}/plans/` に作成
-2. **人間の承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
+2. **ユーザーの承認【重要】**: 計画ファイルのパスを提示し「この計画で進めてよろしいですか？」と明示的に質問、承認を待つ
 3. **実行**: 承認後に実行
 
 ---

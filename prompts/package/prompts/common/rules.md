@@ -38,7 +38,7 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.jj.enabled rules
 
 **注意**: `docs/aidlc.toml.local` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
 
-## 人間の承認プロセス【重要】
+## ユーザーの承認プロセス【重要】
 
 計画作成後、必ず以下を実行する:
 

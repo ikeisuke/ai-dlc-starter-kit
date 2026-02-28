@@ -13,18 +13,19 @@
 
 加えて、レビューフロー内で以下のタイミングでもコミットする:
 
-- AIレビュー/人間レビュー前（変更がある場合のみ）
+- AIレビュー/ユーザーレビュー前（変更がある場合のみ）
 - レビュー反映後（修正があった場合のみ）
 
 ### コミットメッセージフォーマット一覧
 
 | ID | prefix | テンプレート | 使用場面 |
 |-----|--------|------------|---------|
-| REVIEW_PRE | `chore:` | `chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}` | AIレビュー/人間レビュー前 |
+| REVIEW_PRE | `chore:` | `chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}` | AIレビュー/ユーザーレビュー前 |
 | REVIEW_POST | `chore:` | `chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}` | レビュー修正反映後 |
 | INCEPTION_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}` | Inception Phase完了時 |
 | UNIT_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}` | Unit完了時（標準パス） |
-| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` | Squash前の中間コミット |
+| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` | Unit完了squash前の中間コミット |
+| INCEPTION_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Inception Phase完了 - 完了準備` | Inception Phase完了squash前の中間コミット |
 | OPERATIONS_COMPLETE | `chore:` | `chore: [{{CYCLE}}] Operations Phase完了 - {DESCRIPTION}` | Operations Phase完了時 |
 
 ### Co-Authored-By 設定
@@ -148,6 +149,19 @@ EOF
 
 ### Inception Phase完了コミット
 
+**注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
+
+```bash
+# git環境
+git status
+# jj環境（[rules.jj].enabled = true の場合）
+jj status
+```
+
+期待される結果: `nothing to commit, working tree clean`（git）または変更なし（jj）
+
+squashを実行していない場合は、以下の通常コミット手順を実行:
+
 Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。
 
 ```bash
@@ -229,7 +243,18 @@ git status
 
 ## Squash統合フロー
 
-Unit作業中の中間コミット（レビュー前/反映コミット等）を1つの完了コミットにまとめる。
+フェーズ完了時の中間コミット（レビュー前/反映コミット等）を1つの完了コミットにまとめる。
+
+### 適用対象判定
+
+呼び出し元フェーズに応じて、以下の手順を参照する:
+
+| 呼び出し元 | 適用対象 | 中間コミットメッセージ | squashコミットメッセージ |
+|-----------|---------|---------------------|----------------------|
+| Construction Phase（Unit完了時） | Unit完了squash | `UNIT_SQUASH_PREP` | `UNIT_COMPLETE` |
+| Inception Phase（Phase完了時） | Inception Phase完了squash | `INCEPTION_SQUASH_PREP` | `INCEPTION_COMPLETE` |
+
+以降の手順では、呼び出し元フェーズに対応するメッセージテンプレートを使用する。
 
 ### 設定確認・VCS判定
 
@@ -266,6 +291,10 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
 3. **「はい」の場合 - 未コミット変更のコミット**: 変更ファイルが未コミットの場合、中間コミットとして作成（squash-unit.shはclean working treeを前提とするため、先にコミットする）:
 
+   **コミットメッセージ**: 「適用対象判定」テーブルの中間コミットメッセージを使用する。
+
+   **Unit完了squashの場合**:
+
    git環境:
 
    ```bash
@@ -283,6 +312,32 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    ```bash
    jj describe -m "$(cat <<'EOF'
    chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
+
+   Co-Authored-By: {AI_AUTHOR}
+   EOF
+   )"
+   jj new
+   ```
+
+   **Inception Phase完了squashの場合**:
+
+   git環境:
+
+   ```bash
+   git add <変更ファイル>
+   git commit -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
+
+   Co-Authored-By: {AI_AUTHOR}
+   EOF
+   )"
+   ```
+
+   jj環境（`[rules.jj].enabled = true` の場合）:
+
+   ```bash
+   jj describe -m "$(cat <<'EOF'
+   chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
 
    Co-Authored-By: {AI_AUTHOR}
    EOF
@@ -318,13 +373,20 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    jj log --limit 20
    ```
 
-   ログを確認し、**現在のUnitに属さない直近のコミット**（前Unitの `feat:` コミット、または `Phase完了` コミット）のハッシュ（git）/ change_id（jj）を特定する。
+   ログを確認し、squash対象範囲の起点となるコミットを特定する。
 
-   **判定基準**: 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）が起点となる。
+   **フェーズ別の判定基準**:
+
+   | フェーズ | git | jj |
+   |---------|-----|-----|
+   | Unit完了squash | 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）のハッシュ | `jj log` から同様に判定し、change_idを特定 |
+   | Inception Phase完了squash | `git merge-base origin/main HEAD`（サイクルブランチの分岐点）。`origin/main` が存在しない場合はユーザーに起点コミットを確認 | `jj log` で `main` ブランチとの分岐リビジョンを特定 |
 
 5. **squash実行**:
 
-   **注意**: `--message` の値構築時はシェル展開を防ぐため、ヒアドキュメントで Unit名を安全に埋め込むこと。
+   **注意**: `--message` の値構築時はシェル展開を防ぐため、ヒアドキュメントで安全に埋め込むこと。
+
+   **Unit完了squashの場合**:
 
    ```bash
    # ヒアドキュメントでメッセージを構築し、シェル展開・クォート破綻を防止
@@ -333,6 +395,17 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    EOF
    )"
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs <vcs> --base '<起点コミット>' --message "$SQUASH_MESSAGE"
+   ```
+
+   **Inception Phase完了squashの場合**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
      --vcs <vcs> --base '<起点コミット>' --message "$SQUASH_MESSAGE"
    ```
 
@@ -354,6 +427,58 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    ```
 
    squash後の状態: `@-` = squashedコミット（feat: メッセージ付き）、`@` = working copy（空）。`jj new` は不要。
+
+### 事後squash（retroactive）
+
+過去のUnit（HEADの最新Unitではない）のコミットを後からsquashする場合に使用する。通常のsquash（`git reset --soft` 方式）では過去のUnitを対象にできないため、`--retroactive` オプションでGIT_SEQUENCE_EDITOR方式の非対話的rebaseを実行する。
+
+**使用条件**:
+
+- `--vcs=git` のみ対応（jjは非対応）
+- `--unit` の指定が必須（3桁数字形式、例: 003）
+- working treeがcleanであること
+
+**使用場面**:
+
+- 通常squashを実行し忘れてUnit完了後に後続のコミットが積まれた場合
+- 過去のUnitの中間コミットを事後的にまとめたい場合
+
+**実行手順**:
+
+1. **ドライランで対象確認**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs git --retroactive --dry-run --message "$SQUASH_MESSAGE"
+   ```
+
+   出力の `unit_range` と `unit_commit_count` で対象範囲を確認する。
+
+2. **事後squash実行**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs git --retroactive --message "$SQUASH_MESSAGE"
+   ```
+
+   - `squash:success` の場合: 事後squash完了
+   - `squash:error:unit-not-found` の場合: 対象Unitのコミットが見つからない。コミットメッセージのパターンを確認
+   - `squash:error:conflict` の場合: rebase中にコンフリクト発生。自動的に `git rebase --abort` で復帰済み。手動での対応が必要
+   - `squash:error:unsupported-vcs` の場合: jj環境では事後squash非対応
+
+**注意事項**:
+
+- 事後squashはgit rebaseを使用するため、コミットハッシュが変更される（対象Unitだけでなく、それ以降のコミットも新しいハッシュになる）
+- rebase中にコンフリクトが発生した場合は自動的にabortされ、元の状態に復帰する
+- squash前後のツリーハッシュを検証し、内容が変わっていないことを確認する（不一致時は警告を出力）
 
 ## コミット前確認チェックリスト
 
