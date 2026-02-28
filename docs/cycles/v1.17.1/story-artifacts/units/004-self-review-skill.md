@@ -37,7 +37,7 @@ review-flow.mdのステップ5.5（セルフレビューフォールバック）
 ## 技術的考慮事項
 - サブエージェントの指示テンプレート（現在review-flow.md内にある）をスキル側に移動
 - スキル呼び出し失敗時は従来のインラインセルフレビューにフォールバックし、履歴に記録
-- 変更対象: prompts/package/docs/review-flow.md, .claude/skills/reviewing-*/SKILL.md
+- 変更対象: prompts/package/prompts/common/review-flow.md, prompts/package/skills/reviewing-*/SKILL.md
 
 ## 実装優先度
 High
@@ -48,7 +48,7 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-02-28
+- **完了日**: 2026-02-28
+- **担当**: @ai
