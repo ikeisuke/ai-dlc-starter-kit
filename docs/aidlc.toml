@@ -57,6 +57,13 @@ mode = "required"
 # - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
 tools = ["codex"]
 
+[rules.automation]
+# 自動化設定（v1.18.0で追加）
+# mode: "manual" | "semi_auto"
+# - manual: 従来どおりすべての承認ポイントでユーザー確認（デフォルト）
+# - semi_auto: AIレビュー合格時にユーザー承認を省略し自動遷移
+mode = "semi_auto"
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
