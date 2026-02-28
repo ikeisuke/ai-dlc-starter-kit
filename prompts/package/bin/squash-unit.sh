@@ -351,6 +351,10 @@ find_unit_commit_range_git() {
                     last_short="$short_hash"
                     last_full="$full_hash"
                     hashes="$short_hash"
+                    # 単一コミットUnit: 最初のコミットが完了コミットなら即終了
+                    if [[ "$subject" == "${target_unit_pattern}"* ]]; then
+                        break
+                    fi
                 fi
             else
                 # Unit 002+: 前Unitの完了コミットの次から開始
@@ -365,6 +369,10 @@ find_unit_commit_range_git() {
                     last_short="$short_hash"
                     last_full="$full_hash"
                     hashes="$short_hash"
+                    # 単一コミットUnit: 最初のコミットが完了コミットなら即終了
+                    if [[ "$subject" == "${target_unit_pattern}"* ]]; then
+                        break
+                    fi
                 fi
             fi
         else
