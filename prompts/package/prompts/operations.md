@@ -668,7 +668,19 @@ docs/aidlc/bin/pr-ops.sh get-related-issues {{CYCLE}}
 gh pr view {PR番号} --json body --jq '.body'
 ```
 
-記載漏れがある場合は `gh pr view {PR番号} --web` でブラウザから編集してください。
+**記載漏れがある場合**、以下の警告を表示してユーザーに対応を促す:
+
+```text
+【警告】PR本文に `Closes #XX` が記載されていないIssueがあります。
+
+未記載のIssue:
+- #[Issue番号]
+
+PRマージ時にIssueが自動クローズされません。
+PR本文の「Closes」セクションに追記してください。
+```
+
+修正方法: `gh pr view {PR番号} --web` でブラウザから編集してください。
 
 **ドラフトPR検索**（`gh:available` の場合）:
 ```bash

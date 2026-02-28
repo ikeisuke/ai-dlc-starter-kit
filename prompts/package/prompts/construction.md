@@ -681,17 +681,6 @@ AIレビューの実施状態を確認できません。
 
 **注意**: Unitブランチで作業する場合、Unit定義ファイルの「完了」は「PR準備完了」を意味します（Operations Phase ステップ6.4.5と同一の解釈）。この更新をGitコミット（ステップ4）に含めることで、Unit PRに正確な状態が反映されます。ステップ5以降はPR準備完了後のレビュー・マージ作業です。
 
-### 1.5 Issueステータス更新【Issue管理】
-
-Unit完了時、関連Issueのステータスを `waiting-for-review` に更新します（`gh:available` の場合のみ）。
-
-```bash
-# Unit定義ファイルから関連Issue番号を取得し、ステータスを更新
-docs/aidlc/bin/issue-ops.sh set-status <issue_number> waiting-for-review
-```
-
-詳細は `docs/aidlc/guides/issue-management.md` を参照。
-
 ### 2. 履歴記録
 `docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md` に履歴を追記（write-history.sh使用）
 
