@@ -381,6 +381,160 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
       - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
 
+   5a. **OUT_OF_SCOPEバックログ自動登録**（OUT_OF_SCOPE判断があった場合のみ）:
+
+       ステップ2でOUT_OF_SCOPEと判断された指摘について、バックログ登録を実行する。各OUT_OF_SCOPE指摘ごとに以下を繰り返す。
+
+       **安全規則**（5a全体に適用）:
+       - heredoc終端トークン（`CONTENT_EOF`, `BODY_EOF`）を含む入力値は拒否し、再入力を要求する
+       - `{slug}` は `^[a-z0-9][a-z0-9-]{0,63}$` のパターンのみ許可（パストラバーサル防止）
+       - すべての引数・パスは二重引用符で囲んで使用すること
+
+       **バックログ種別の決定**:
+
+       レビュー種別からバックログの種別ラベルを決定する（allowlist: `security` / `chore` のみ許可）:
+       - securityレビュー指摘の場合: `type:security`
+       - その他（code / architecture / inception）の場合: `type:chore`
+       - 上記以外の種別が検出された場合: `type:chore` にフォールバック
+
+       **mode判定**:
+
+       バックログ管理ガイド（`docs/aidlc/guides/backlog-management.md`）のモード解決手順に従い、`[rules.backlog].mode` を取得する。取得失敗時や想定外の値の場合は `git` として扱う。
+
+       **登録方法の決定と実行**:
+
+       - `mode = git` または `mode = git-only` の場合:
+
+         `docs/cycles/backlog/{type}-{slug}.md` にファイルを作成する。
+         `{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
+         slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイルが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
+
+         ファイル内容は `docs/aidlc/templates/backlog_item_template.md` に準拠:
+
+         ```markdown
+         # [指摘内容の要約]
+
+         - **発見日**: {YYYY-MM-DD}
+         - **発見フェーズ**: {Construction / Inception}
+         - **発見サイクル**: {現在のサイクル}
+         - **優先度**: 中
+
+         ## 概要
+
+         AIレビュー指摘（{レビュー種別}）でスコープ外と判断された項目。
+
+         ## 詳細
+
+         {指摘内容}
+
+         ## 対応案
+
+         次サイクル以降で対応を検討。
+         先送り理由: {ユーザーが入力した理由}
+         ```
+
+         ファイル作成に失敗した場合（ディレクトリ不在、権限不足等）:
+         警告メッセージを表示し、手動でのバックログ登録を依頼する。
+
+       - `mode = issue` または `mode = issue-only` の場合:
+
+         **gh CLI可用性の確認**:
+         1. `gh` コマンドの存在確認
+         2. `gh auth status` による認証状態確認
+
+         - **可用な場合**: Issue作成を実行
+
+           **タイトルのサニタイズ**: タイトルにシェル展開文字（`$`, `` ` ``, `"`, `\`）を含めないこと。改行は除去し、80文字以内に切り詰める。
+
+           ラベルは種別に基づき1つの文字列に解決してから渡す:
+           - securityレビュー指摘の場合: `"backlog,type:security,priority:medium"`
+           - その他のレビュー指摘の場合: `"backlog,type:chore,priority:medium"`
+
+           ```bash
+           gh issue create \
+               --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
+               --label "backlog,type:{決定済みの種別},priority:medium" \
+               --body "$(cat <<'BODY_EOF'
+           ## スラッグ
+
+           {slug}
+
+           ## 概要
+
+           AIレビュー指摘（{レビュー種別}）でスコープ外と判断された項目。
+
+           ## 詳細
+
+           {指摘内容}
+
+           ## 検出元
+
+           - **発見サイクル**: {現在のサイクル}
+           - **発見フェーズ**: {Construction / Inception}
+           - **先送り理由**: {ユーザーが入力した理由}
+
+           ## 対応案
+
+           次サイクル以降で対応を検討。
+           BODY_EOF
+           )"
+           ```
+
+           Issue作成に失敗した場合:
+           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
+           - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
+
+         - **不可用な場合**:
+           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
+           - `mode = issue-only`: 以下の警告を表示し、手動対応を依頼
+
+             ```text
+             【警告】GitHub CLIが利用できないため、バックログIssueを自動作成できません。
+             issue-only モードのため、ファイルベースのフォールバックも使用できません。
+             以下の指摘を手動でバックログに登録してください:
+             - 指摘内容: {指摘内容}
+             - 先送り理由: {理由}
+             ```
+
+       **バックログ登録完了の履歴記録**（各OUT_OF_SCOPE指摘ごとに1件記録）:
+
+       constructionフェーズの場合:
+
+       ```bash
+       docs/aidlc/bin/write-history.sh \
+           --cycle {{CYCLE}} \
+           --phase construction \
+           --unit {N} \
+           --unit-name "[Unit名]" \
+           --unit-slug "[unit-slug]" \
+           --step "バックログ自動登録" \
+           --content "$(cat <<'CONTENT_EOF'
+       【バックログ自動登録】OUT_OF_SCOPE指摘のバックログ登録
+       【指摘内容】{指摘内容の要約}
+       【登録方法】{Issue / File / スキップ（手動対応依頼）}
+       【登録先】{Issue番号 / ファイルパス / -}
+       CONTENT_EOF
+       )"
+       ```
+
+       inceptionフェーズの場合（`--unit*` 引数を省略）:
+
+       ```bash
+       docs/aidlc/bin/write-history.sh \
+           --cycle {{CYCLE}} \
+           --phase inception \
+           --step "バックログ自動登録" \
+           --content "$(cat <<'CONTENT_EOF'
+       【バックログ自動登録】OUT_OF_SCOPE指摘のバックログ登録
+       【指摘内容】{指摘内容の要約}
+       【登録方法】{Issue / File / スキップ（手動対応依頼）}
+       【登録先】{Issue番号 / ファイルパス / -}
+       CONTENT_EOF
+       )"
+       ```
+
+       > **注意**: `CONTENT_EOF` / `BODY_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
+
    6. **全指摘の判断完了後、サマリを履歴に記録**:
 
       ```bash
