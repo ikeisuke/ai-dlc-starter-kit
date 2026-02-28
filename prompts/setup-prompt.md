@@ -562,266 +562,60 @@ grep "^starter_kit_version" docs/aidlc.toml
 
 ### 7.4 設定マイグレーション【アップグレードモードのみ】
 
-新しいバージョンで追加された設定セクションを既存の `docs/aidlc.toml` に追加します。
+新しいバージョンで追加された設定セクションを既存の `docs/aidlc.toml` に追加し、廃止設定の移行も行います。
 
-**マイグレーション対象の確認と追加**:
+**マイグレーション実行**:
 
-```bash
-# [rules.mcp_review] → [rules.reviewing] リネーム移行（v1.14.0で追加）
-if grep -q "^\[rules.mcp_review\]" docs/aidlc.toml; then
-  if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
-    # 既に [rules.reviewing] が存在する場合、旧セクションを削除（重複防止）
-    echo "Both [rules.mcp_review] and [rules.reviewing] found. Removing old section..."
-    awk '/^\[rules\.mcp_review\]/{skip=1; next} /^\[/{skip=0} !skip' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
-    echo "Removed old [rules.mcp_review] section"
-  else
-    # [rules.reviewing] が存在しない場合のみリネーム
-    echo "Migrating [rules.mcp_review] → [rules.reviewing]..."
-    sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
-    # ai_tools → tools リネーム（[rules.reviewing]セクション内のみ）
-    sed '/^\[rules.reviewing\]/,/^\[/ {
-      s/^ai_tools/tools/
-    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml
-    echo "Migrated [rules.mcp_review] to [rules.reviewing] (ai_tools → tools)"
-  fi
-  # オーバーライド設定ファイルの旧キー警告
-  for OVERRIDE_FILE in "$HOME/.aidlc/config.toml" "docs/aidlc.toml.local"; do
-    if [ -f "$OVERRIDE_FILE" ] && grep -q "mcp_review\|ai_tools" "$OVERRIDE_FILE"; then
-      echo ""
-      echo "WARNING: $OVERRIDE_FILE に旧キー（mcp_review/ai_tools）が残っています。"
-      echo "  [rules.mcp_review] → [rules.reviewing]"
-      echo "  ai_tools → tools"
-      echo "手動で更新してください。旧キーはv1.14.0以降では無視されます。"
-    fi
-  done
-fi
-
-# [rules.reviewing] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
-  echo "Adding [rules.reviewing] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.reviewing]
-# AIレビュー設定（v1.4.0で追加、v1.14.0でリネーム）
-# mode: "recommend" | "required" | "disabled"
-# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
-# - required: AIレビューツール利用可能時にレビュー必須
-# - disabled: レビュー推奨を無効化
-mode = "recommend"
-EOF
-  echo "Added [rules.reviewing] section"
-else
-  echo "[rules.reviewing] section already exists"
-fi
-
-# [rules.worktree] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.worktree\]" docs/aidlc.toml; then
-  echo "Adding [rules.worktree] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.worktree]
-# git worktree設定（v1.4.0で追加）
-# enabled: true | false
-# - true: サイクル開始時にworktreeの使用を提案する
-# - false: 提案しない（デフォルト）
-enabled = false
-EOF
-  echo "Added [rules.worktree] section"
-else
-  echo "[rules.worktree] section already exists"
-fi
-
-# [rules.history] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.history\]" docs/aidlc.toml; then
-  echo "Adding [rules.history] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.history]
-# 履歴記録設定（v1.5.1で追加）
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"
-EOF
-  echo "Added [rules.history] section"
-else
-  echo "[rules.history] section already exists"
-fi
-
-# [rules.backlog] セクションが存在しない場合は追加（旧[backlog]からの移行も対応）
-if ! grep -q "^\[rules\.backlog\]" docs/aidlc.toml; then
-  # 旧[backlog].mode が存在する場合はその値を引き継ぐ
-  OLD_BACKLOG_MODE=""
-  if grep -q "^\[backlog\]" docs/aidlc.toml 2>/dev/null; then
-    OLD_BACKLOG_MODE=$(sed -n '/^\[backlog\]/,/^\[/p' docs/aidlc.toml | grep -E '^[[:space:]]*mode[[:space:]]*=' | head -1 | sed "s/^[^=]*=[[:space:]]*//;s/[[:space:]]*#.*//;s/^[\"']//;s/[\"']$//" || echo "")
-  fi
-  # 有効値バリデーション（不正値の場合はデフォルトにフォールバック）
-  case "$OLD_BACKLOG_MODE" in
-    git|issue|git-only|issue-only) ;;
-    *) OLD_BACKLOG_MODE="" ;;
-  esac
-  BACKLOG_MODE="${OLD_BACKLOG_MODE:-issue-only}"
-  echo "Adding [rules.backlog] section (mode=${BACKLOG_MODE})..."
-  cat >> docs/aidlc.toml << EOF
-
-[rules.backlog]
-# バックログ管理モード設定（v1.7.0で追加、v1.10.0でデフォルト変更、v1.16.2で[backlog]から移動）
-# mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
-# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
-# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
-mode = "${BACKLOG_MODE}"
-EOF
-  echo "Added [rules.backlog] section"
-else
-  echo "[rules.backlog] section already exists"
-fi
-
-# [rules.jj] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.jj\]" docs/aidlc.toml; then
-  echo "Adding [rules.jj] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.jj]
-# jjサポート設定（v1.7.2で追加）
-# enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
-# - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false
-EOF
-  echo "Added [rules.jj] section"
-else
-  echo "[rules.jj] section already exists"
-fi
-
-# [rules.linting] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.linting\]" docs/aidlc.toml; then
-  echo "Adding [rules.linting] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.linting]
-# markdownlint設定（v1.8.0で追加）
-# markdown_lint: true | false
-# - true: markdownlint を実行する
-# - false: markdownlint をスキップする（デフォルト）
-markdown_lint = false
-EOF
-  echo "Added [rules.linting] section"
-else
-  echo "[rules.linting] section already exists"
-fi
-
-# [rules.reviewing] に tools が存在しない場合は追加（v1.8.2で追加、v1.14.0でリネーム）
-# セクション内での存在チェック: [rules.reviewing]から次のセクションまでの範囲でtoolsを検索
-if grep -q "^\[rules.reviewing\]" docs/aidlc.toml; then
-  TOOLS_IN_SECTION=$(sed -n '/^\[rules.reviewing\]/,/^\[/p' docs/aidlc.toml | grep -c "^tools" || echo "0")
-  if [ "$TOOLS_IN_SECTION" = "0" ]; then
-    echo "Adding tools to [rules.reviewing] section..."
-    # [rules.reviewing] セクション内の mode = 行の後に追加
-    sed '/^\[rules.reviewing\]/,/^\[/ {
-      /^\[rules.reviewing\]/!{
-        /^\[/!{
-          /^mode = /a\
-# tools: AIレビューに使用するツールの優先順位リスト（v1.8.2で追加、v1.14.0でリネーム）\
-# - デフォルト: ["codex"]\
-# - 例: ["codex", "claude", "gemini"]\
-# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）\
-tools = ["codex"]
-        }
-      }
-    }' docs/aidlc.toml > docs/aidlc.toml.tmp && \mv docs/aidlc.toml.tmp docs/aidlc.toml 2>/dev/null || echo "Manual addition may be required"
-    echo "Added tools to [rules.reviewing] section"
-  else
-    echo "tools already exists in [rules.reviewing] section"
-  fi
-else
-  echo "[rules.reviewing] section not found"
-fi
-
-# [rules.commit] セクションが存在しない場合は追加
-if ! grep -q "^\[rules.commit\]" docs/aidlc.toml; then
-  echo "Adding [rules.commit] section..."
-  cat >> docs/aidlc.toml << 'EOF'
-
-[rules.commit]
-# コミット設定（v1.9.1で追加）
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
-ai_author = "Claude <noreply@anthropic.com>"
-EOF
-  echo "Added [rules.commit] section"
-else
-  echo "[rules.commit] section already exists"
-fi
-```
-
-**マイグレーション結果の確認**:
+セクション8.1.1で判定した `[スターターキットパス]` を使用してスクリプトを実行:
 
 ```bash
-grep -A 5 "^\[rules.reviewing\]" docs/aidlc.toml
-grep -A 5 "^\[rules.worktree\]" docs/aidlc.toml
-grep -A 5 "^\[rules\.backlog\]" docs/aidlc.toml
-grep -A 5 "^\[rules.jj\]" docs/aidlc.toml
-grep -A 5 "^\[rules.linting\]" docs/aidlc.toml
-grep -A 5 "^\[rules.commit\]" docs/aidlc.toml
+[スターターキットパス]/prompts/package/bin/migrate-config.sh
 ```
 
-**注意**: 今後のバージョンで新しい設定セクションが追加された場合、このセクションにマイグレーションコマンドを追加してください。
+**注意**: アップグレードモード（同期済み）の場合は `docs/aidlc/bin/migrate-config.sh` を使用。
 
-### 7.5 廃止設定の移行【アップグレードモードのみ】
-
-新しいバージョンで廃止された設定を既存プロジェクトで使用している場合、`docs/cycles/rules.md` にコピーして保存します。
-
-**廃止設定の確認と移行**:
-
-```bash
-# [inception.dependabot].enabled = true の場合、cycles/rules.md に移行（v1.13.0で廃止）
-if grep -q "^\[inception\.dependabot\]" docs/aidlc.toml; then
-  DEPENDABOT_ENABLED=$(sed -n '/^\[inception\.dependabot\]/,/^\[/p' docs/aidlc.toml | grep "^enabled" | head -1 | sed 's/.*= *//' | tr -d ' "')
-  if [ "$DEPENDABOT_ENABLED" = "true" ]; then
-    echo "Migrating [inception.dependabot] setting to docs/cycles/rules.md..."
-    # rules.md に Dependabot 設定を追加（セクションがなければ作成）
-    if ! grep -q "## Dependabot PR確認" docs/cycles/rules.md 2>/dev/null; then
-      cat >> docs/cycles/rules.md << 'EOF'
-
----
-
-## Dependabot PR確認（v1.13.0で廃止された機能）
-
-このプロジェクトでは以前 Dependabot PR 確認機能を使用していました。
-v1.13.0 以降、この機能はスターターキットから削除されましたが、
-必要に応じて以下のワークフローを手動で実行できます。
-
-### 手動確認手順
-
-\`\`\`bash
-# オープンな Dependabot PR を一覧表示
-gh pr list --author "app/dependabot" --state open
-\`\`\`
-
-### 推奨対応
-
-1. Inception Phase 開始時に上記コマンドで Dependabot PR を確認
-2. 対応が必要な PR がある場合、ユーザーストーリーと Unit 定義に追加
-EOF
-      echo "Migrated Dependabot setting to docs/cycles/rules.md"
-    else
-      echo "Dependabot section already exists in docs/cycles/rules.md"
-    fi
-  else
-    echo "Dependabot was disabled, no migration needed"
-  fi
-else
-  echo "No [inception.dependabot] section found"
-fi
+出力例:
+```text
+mode:execute
+config:docs/aidlc.toml
+skip:not-found:rules.mcp_review
+skip:already-exists:rules.reviewing
+skip:already-exists:rules.worktree
+skip:already-exists:rules.history
+skip:already-exists:rules.backlog
+skip:already-exists:rules.jj
+skip:already-exists:rules.linting
+skip:already-exists:rules.reviewing.tools
+skip:already-exists:rules.commit
+skip:not-found:inception.dependabot
 ```
+
+**出力の解釈**:
+
+| プレフィックス | 意味 |
+|-------------|------|
+| `migrate:add-section:<name>` | 新セクションを追加した |
+| `migrate:rename:<from->to>` | セクションをリネームした |
+| `migrate:add-key:<name>` | 既存セクションにキーを追加した |
+| `migrate:deprecate:<detail>` | 廃止設定をrules.mdに移行した |
+| `skip:already-exists:<name>` | 既に存在するためスキップ |
+| `skip:not-found:<name>` | 移行元が存在しないためスキップ |
+| `warn:override-old-keys:<file>` | オーバーライドファイルに旧キーが残っている（手動更新が必要） |
+
+**終了コード**:
+- `0`: 正常完了
+- `1`: エラー（ファイル不在等）
+- `2`: 正常完了だがユーザー対応が必要な警告あり（`warn:` 行を確認）
+
+`warn:override-old-keys` が出力された場合、該当ファイル内の旧キーを手動で更新するようユーザーに案内してください:
+- `[rules.mcp_review]` → `[rules.reviewing]`
+- `ai_tools` → `tools`
+
+**注意**: 今後のバージョンで新しい設定セクションが追加された場合、`migrate-config.sh` にマイグレーション処理を追加してください。
 
 **注意**: 廃止された設定は `aidlc.toml` から削除せず、そのまま残しても問題ありません（無視されます）。ユーザーが明示的に削除するまで保持されます。
 
-### 7.6 旧形式バックログ移行【アップグレードモードのみ】
+### 7.5 旧形式バックログ移行【アップグレードモードのみ】
 
 > **DEPRECATED (v1.9.0)**: v2.0.0 で削除予定
 
@@ -910,36 +704,64 @@ mode:META_DEV
 **移行モード・アップグレードモード共通**:
 rsync実行前に**必ず**削除対象ファイルを確認し、ユーザーの承認を得てください。
 
-**手順**:
-1. ドライランで削除対象を確認
-2. 削除対象があればユーザーに表示
-3. ユーザー承認後に実際の同期を実行
-4. 承認が得られない場合は `--delete` オプションなしで同期
-
 **重要**:
 - rsync で完全同期（差分のみ更新、不要ファイル削除）
 - プロジェクト固有のファイルは別途処理
 
-#### 8.2.1 フェーズプロンプトの同期（rsync）
+**同期スクリプト**:
 
-**手順**:
-1. まずドライランで削除対象を確認
-2. 削除されるファイルがあればユーザーに確認
-3. 承認後に実行
+各ディレクトリの同期には `sync-package.sh` を使用します。
+- メタ開発モード: `prompts/package/bin/sync-package.sh`
+- アップグレードモード（同期済み）: `docs/aidlc/bin/sync-package.sh`
+- 初回セットアップ: `[スターターキットパス]/prompts/package/bin/sync-package.sh`
 
-**削除対象の確認**:
+**同期対象ディレクトリ一覧**:
+
+| # | ソース | 宛先 | 内容 |
+|---|--------|------|------|
+| 1 | `[スターターキットパス]/prompts/package/prompts/` | `docs/aidlc/prompts/` | フェーズプロンプト |
+| 2 | `[スターターキットパス]/prompts/package/templates/` | `docs/aidlc/templates/` | ドキュメントテンプレート |
+| 3 | `[スターターキットパス]/prompts/package/guides/` | `docs/aidlc/guides/` | ガイド |
+| 4 | `[スターターキットパス]/prompts/package/bin/` | `docs/aidlc/bin/` | スクリプト |
+| 5 | `[スターターキットパス]/prompts/package/skills/` | `docs/aidlc/skills/` | スキルファイル |
+| 6 | `[スターターキットパス]/prompts/package/kiro/` | `docs/aidlc/kiro/` | KiroCLIエージェント設定 |
+
+**各ディレクトリの同期手順**（全ディレクトリ共通）:
+
+1. 宛先ディレクトリが存在しない場合は作成:
 ```bash
-# 削除対象を抽出
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/prompts/ \
-  docs/aidlc/prompts/ 2>&1 | grep "^deleting"
+mkdir -p [宛先ディレクトリ]
 ```
 
-**削除対象がある場合**:
+2. ドライランで削除対象を確認:
+```bash
+sync-package.sh --source [ソース] --dest [宛先] --delete --dry-run
+```
+
+3. 出力を確認:
+
+出力例:
+```text
+sync:dry-run
+source:[ソース]/
+destination:[宛先]/
+sync_deleted:old-file.md
+sync_updated:construction.md
+sync_added:new-feature.md
+```
+
+| プレフィックス | 意味 |
+|-------------|------|
+| `sync_deleted:<file>` | 削除されるファイル |
+| `sync_updated:<file>` | 更新されるファイル |
+| `sync_added:<file>` | 新規追加されるファイル |
+
+4. `sync_deleted:` 行がある場合、削除対象をユーザーに表示し確認:
+
 ```text
 警告: 以下のファイルが削除されます：
 
-[削除対象のファイル一覧]
+[sync_deleted: のファイル一覧]
 
 これらはスターターキットに存在しないファイルです。
 プロジェクト固有のカスタマイズが含まれている可能性があります。
@@ -952,172 +774,27 @@ rsync -avn --checksum --delete \
 どれを選択しますか？
 ```
 
-**選択に応じた処理**:
-- 1: `rsync -av --checksum --delete ...` を実行
-- 2: `rsync -av --checksum ...` を実行（--deleteなし）
+5. 選択に応じた実行:
+- 1: `sync-package.sh --source [ソース] --dest [宛先] --delete`
+- 2: `sync-package.sh --source [ソース] --dest [宛先]`
 - 3: 同期をスキップし、手動対応を案内
 
-**削除対象がない場合**:
+6. `sync_deleted:` 行がない場合は削除なしで直接実行:
 ```bash
-# 2. 実際の同期を実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/prompts/ \
-  docs/aidlc/prompts/
+sync-package.sh --source [ソース] --dest [宛先] --delete
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `-av` | アーカイブモード + 詳細出力 |
-| `-n` | ドライラン（実際には実行しない） |
-| `--checksum` | ハッシュで比較、同一内容ならスキップ |
-| `--delete` | コピー元にないファイルを削除 |
+**変更要約の表示【アップグレードモードのみ】**:
 
-**同期対象**:
-- inception.md, construction.md, operations.md
-- setup.md
-- lite/ ディレクトリ（簡易版プロンプト）
+同期実行後、出力の `sync_updated:` と `sync_added:` 行をまとめて要約表示する。
 
-#### 8.2.1.1 プロンプト変更要約の表示【アップグレードモードのみ】
-
-rsync実行後、更新されたファイルを要約表示：
-
-```bash
-# rsync出力から更新されたファイルを抽出（>f で始まる行が更新対象）
-UPDATED_PROMPTS=$(rsync -avn --checksum \
-  [スターターキットパス]/prompts/package/prompts/ \
-  docs/aidlc/prompts/ 2>&1 | grep "^>f" | awk '{print $2}')
-
-if [ -n "$UPDATED_PROMPTS" ]; then
-  echo "更新されたプロンプト:"
-  echo "$UPDATED_PROMPTS" | while read f; do echo "  - $f"; done
-fi
-```
-
-**表示例**:
+表示例:
 ```text
-更新されたプロンプト:
-  - construction.md
-  - lite/operations.md
+[prompts] 更新されたファイル:
+  - construction.md（更新）
+  - lite/operations.md（更新）
+  - new-prompt.md（新規）
 ```
-
-#### 8.2.2 ドキュメントテンプレートの同期（rsync）
-
-同様にドライラン → 確認 → 実行の手順で同期：
-
-```bash
-# 1. ドライランで削除対象を確認
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/templates/ \
-  docs/aidlc/templates/ 2>&1 | grep "^deleting"
-
-# 2. 承認後に実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/templates/ \
-  docs/aidlc/templates/
-```
-
-テンプレートも同様に完全同期します。
-
-#### 8.2.2.1 テンプレート変更要約の表示【アップグレードモードのみ】
-
-rsync実行後、更新されたテンプレートを要約表示：
-
-```bash
-# rsync出力から更新されたファイルを抽出
-UPDATED_TEMPLATES=$(rsync -avn --checksum \
-  [スターターキットパス]/prompts/package/templates/ \
-  docs/aidlc/templates/ 2>&1 | grep "^>f" | awk '{print $2}')
-
-if [ -n "$UPDATED_TEMPLATES" ]; then
-  echo "更新されたテンプレート:"
-  echo "$UPDATED_TEMPLATES" | while read f; do echo "  - $f"; done
-fi
-```
-
-**表示例**:
-```text
-更新されたテンプレート:
-  - unit_definition_template.md
-  - implementation_record_template.md
-```
-
-#### 8.2.2.2 ガイドの同期（rsync）
-
-同様にドライラン → 確認 → 実行の手順で同期：
-
-```bash
-# 1. ドライランで削除対象を確認
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/guides/ \
-  docs/aidlc/guides/ 2>&1 | grep "^deleting"
-
-# 2. 承認後に実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/guides/ \
-  docs/aidlc/guides/
-```
-
-ガイドも同様に完全同期します。
-
-#### 8.2.2.3 スクリプトの同期（rsync）
-
-同様にドライラン → 確認 → 実行の手順で同期：
-
-```bash
-# 1. ドライランで削除対象を確認
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/bin/ \
-  docs/aidlc/bin/ 2>&1 | grep "^deleting"
-
-# 2. 承認後に実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/bin/ \
-  docs/aidlc/bin/
-```
-
-スクリプトも同様に完全同期します。
-
-#### 8.2.2.4 スキルファイルの同期（rsync）
-
-同様にドライラン → 確認 → 実行の手順で同期：
-
-```bash
-# 1. 宛先ディレクトリ作成
-mkdir -p docs/aidlc/skills
-
-# 2. ドライランで削除対象を確認
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/skills/ \
-  docs/aidlc/skills/ 2>&1 | grep "^deleting"
-
-# 3. 承認後に実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/skills/ \
-  docs/aidlc/skills/
-```
-
-スキルファイル（AIエージェント拡張機能）も同様に完全同期します。
-
-#### 8.2.2.5 KiroCLIエージェント設定の同期（rsync）
-
-同様にドライラン → 確認 → 実行の手順で同期：
-
-```bash
-# 1. 宛先ディレクトリ作成
-mkdir -p docs/aidlc/kiro/agents
-
-# 2. ドライランで削除対象を確認
-rsync -avn --checksum --delete \
-  [スターターキットパス]/prompts/package/kiro/ \
-  docs/aidlc/kiro/ 2>&1 | grep "^deleting"
-
-# 3. 承認後に実行
-rsync -av --checksum --delete \
-  [スターターキットパス]/prompts/package/kiro/ \
-  docs/aidlc/kiro/
-```
-
-KiroCLIエージェント設定も同様に完全同期します。
 
 #### 8.2.3 プロジェクト固有ファイル（初回のみコピー / 参照行追記）
 
