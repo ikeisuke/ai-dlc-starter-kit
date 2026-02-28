@@ -428,6 +428,58 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    squash後の状態: `@-` = squashedコミット（feat: メッセージ付き）、`@` = working copy（空）。`jj new` は不要。
 
+### 事後squash（retroactive）
+
+過去のUnit（HEADの最新Unitではない）のコミットを後からsquashする場合に使用する。通常のsquash（`git reset --soft` 方式）では過去のUnitを対象にできないため、`--retroactive` オプションでGIT_SEQUENCE_EDITOR方式の非対話的rebaseを実行する。
+
+**使用条件**:
+
+- `--vcs=git` のみ対応（jjは非対応）
+- `--unit` の指定が必須（3桁数字形式、例: 003）
+- working treeがcleanであること
+
+**使用場面**:
+
+- 通常squashを実行し忘れてUnit完了後に後続のコミットが積まれた場合
+- 過去のUnitの中間コミットを事後的にまとめたい場合
+
+**実行手順**:
+
+1. **ドライランで対象確認**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs git --retroactive --dry-run --message "$SQUASH_MESSAGE"
+   ```
+
+   出力の `unit_range` と `unit_commit_count` で対象範囲を確認する。
+
+2. **事後squash実行**:
+
+   ```bash
+   SQUASH_MESSAGE="$(cat <<'EOF'
+   feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+   EOF
+   )"
+   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+     --vcs git --retroactive --message "$SQUASH_MESSAGE"
+   ```
+
+   - `squash:success` の場合: 事後squash完了
+   - `squash:error:unit-not-found` の場合: 対象Unitのコミットが見つからない。コミットメッセージのパターンを確認
+   - `squash:error:conflict` の場合: rebase中にコンフリクト発生。自動的に `git rebase --abort` で復帰済み。手動での対応が必要
+   - `squash:error:unsupported-vcs` の場合: jj環境では事後squash非対応
+
+**注意事項**:
+
+- 事後squashはgit rebaseを使用するため、コミットハッシュが変更される（対象Unitだけでなく、それ以降のコミットも新しいハッシュになる）
+- rebase中にコンフリクトが発生した場合は自動的にabortされ、元の状態に復帰する
+- squash前後のツリーハッシュを検証し、内容が変わっていないことを確認する（不一致時は警告を出力）
+
 ## コミット前確認チェックリスト
 
 コミット前に以下のコマンドで変更ファイルを確認:

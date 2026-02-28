@@ -14,6 +14,17 @@ BASE_COMMIT=""
 TARGET_COUNT=0
 CO_AUTHORS=""
 SAVED_HEAD=""
+RETROACTIVE=false
+UNIT_FIRST_COMMIT=""
+UNIT_FIRST_COMMIT_FULL=""
+UNIT_LAST_COMMIT=""
+UNIT_LAST_COMMIT_FULL=""
+UNIT_COMMIT_HASHES=""
+TREE_HASH_BEFORE=""
+TMPFILES=()
+
+# 一時ファイルのクリーンアップ用trap
+trap 'for f in "${TMPFILES[@]}"; do [[ -f "$f" ]] && \rm -f "$f"; done' EXIT
 
 # --- ヘルプ・引数解析 ---
 
@@ -29,9 +40,11 @@ Required:
   --vcs <git|jj>          使用するVCS種類
 
 Optional:
-  --unit <UNIT_NUMBER>    Unit番号（例: 001）。現在は未使用だが将来の拡張用。
+  --unit <UNIT_NUMBER>    Unit番号（例: 001）。--retroactive時は必須。
   --base <COMMIT>         起点コミット（git: ハッシュ, jj: change_id）を明示指定。
                           省略時はコミットメッセージのパターンから自動検出。
+  --retroactive           事後squashモード。過去のUnit（HEAD以外）をrebase方式でsquash。
+                          --vcs=git のみ対応。--unit 必須。
   --dry-run               実際のsquashを実行せず対象コミットの表示のみ
   -h, --help              このヘルプを表示
 
@@ -39,6 +52,7 @@ Examples:
   squash-unit.sh --cycle v1.15.0 --unit 001 --vcs git --message "feat: [v1.15.0] Unit 001完了 - squashスクリプト作成"
   squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --base abc1234
   squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --dry-run
+  squash-unit.sh --cycle v1.17.0 --unit 003 --vcs git --retroactive --message "feat: [v1.17.0] Unit 003完了 - 説明"
 EOF
 }
 
@@ -89,6 +103,10 @@ parse_args() {
                 BASE_COMMIT="$2"
                 shift 2
                 ;;
+            --retroactive)
+                RETROACTIVE=true
+                shift
+                ;;
             --dry-run)
                 DRY_RUN=true
                 shift
@@ -130,6 +148,22 @@ validate_base_format() {
         echo "Error: Only alphanumeric, hyphen, and underscore are allowed" >&2
         echo "squash:error:invalid-base-format"
         exit 1
+    fi
+}
+
+validate_retroactive_args() {
+    if [[ "$VCS_TYPE" != "git" ]]; then
+        echo "Error: --retroactive is only supported with --vcs=git" >&2
+        echo "squash:error:unsupported-vcs"
+        exit 1
+    fi
+    if [[ -z "$UNIT" ]]; then
+        echo "Error: --unit is required when using --retroactive" >&2
+        exit 2
+    fi
+    if [[ ! "$UNIT" =~ ^[0-9]{3}$ ]]; then
+        echo "Error: --unit must be a 3-digit number (e.g., 003), got: ${UNIT}" >&2
+        exit 2
     fi
 }
 
@@ -228,6 +262,141 @@ find_base_commit_jj() {
     echo "base_commit:${BASE_COMMIT}"
 }
 
+# --- Unit範囲特定（retroactive用） ---
+
+find_unit_commit_range_git() {
+    local cycle="$1"
+    local unit="$2"
+    local log_output
+    local log_range=""
+
+    # 検索範囲の決定
+    if [[ -n "$BASE_COMMIT" ]]; then
+        log_range="${BASE_COMMIT}..HEAD"
+    else
+        local merge_base=""
+        merge_base=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || git merge-base origin/master HEAD 2>/dev/null || git merge-base master HEAD 2>/dev/null || true)
+        local head_hash
+        if ! head_hash=$(git rev-parse HEAD 2>&1); then
+            echo "Error: no commits in this repository (unborn HEAD)" >&2
+            echo "squash:error:no-head"
+            exit 1
+        fi
+        if [[ -n "$merge_base" && "$merge_base" != "$head_hash" ]]; then
+            log_range="${merge_base}..HEAD"
+        else
+            echo "Error: cannot determine branch range. Use --base to specify explicitly." >&2
+            echo "squash:error:no-branch-range"
+            exit 1
+        fi
+    fi
+
+    # コミット一覧取得（古い順: --reverse）
+    if ! log_output=$(git log --reverse --format="%h %H %s" "$log_range" 2>&1); then
+        echo "Error: git log failed: ${log_output}" >&2
+        echo "squash:error:git-log-failed"
+        exit 1
+    fi
+
+    if [[ -z "$log_output" ]]; then
+        echo "Error: no commits found in range ${log_range}" >&2
+        echo "squash:error:unit-not-found"
+        exit 1
+    fi
+
+    # Unit番号から前Unitを計算
+    local prev_unit_num
+    prev_unit_num=$((10#$unit - 1))
+    local prev_unit
+    prev_unit=$(printf "%03d" "$prev_unit_num")
+
+    # 境界アンカーパターン
+    local inception_pattern="feat: [${cycle}] Inception Phase完了"
+    local prev_unit_pattern="feat: [${cycle}] Unit ${prev_unit}完了"
+    local target_unit_pattern="feat: [${cycle}] Unit ${unit}完了"
+
+    # 次Unitの完了パターン（対象Unitの完了コミットがない場合の終端検出用）
+    local next_unit_num
+    next_unit_num=$((10#$unit + 1))
+    local next_unit
+    next_unit=$(printf "%03d" "$next_unit_num")
+    local next_unit_pattern="feat: [${cycle}] Unit ${next_unit}完了"
+
+    # 状態変数
+    local in_unit=false
+    local found_start=false
+    local first_short="" first_full=""
+    local last_short="" last_full=""
+    local hashes=""
+    local line short_hash full_hash subject
+
+    while IFS= read -r line; do
+        short_hash="${line%% *}"
+        local rest="${line#* }"
+        full_hash="${rest%% *}"
+        subject="${rest#* }"
+
+        if [[ "$in_unit" == "false" ]]; then
+            # 開始境界の検出
+            if [[ "$unit" == "001" ]]; then
+                # Unit 001: Inception完了の次から開始
+                if [[ "$subject" == "${inception_pattern}"* ]]; then
+                    found_start=true
+                    continue
+                fi
+                if [[ "$found_start" == "true" ]]; then
+                    in_unit=true
+                    first_short="$short_hash"
+                    first_full="$full_hash"
+                    last_short="$short_hash"
+                    last_full="$full_hash"
+                    hashes="$short_hash"
+                fi
+            else
+                # Unit 002+: 前Unitの完了コミットの次から開始
+                if [[ "$subject" == "${prev_unit_pattern}"* ]]; then
+                    found_start=true
+                    continue
+                fi
+                if [[ "$found_start" == "true" ]]; then
+                    in_unit=true
+                    first_short="$short_hash"
+                    first_full="$full_hash"
+                    last_short="$short_hash"
+                    last_full="$full_hash"
+                    hashes="$short_hash"
+                fi
+            fi
+        else
+            # Unit内: 終了境界の検出
+            if [[ "$subject" == "${next_unit_pattern}"* ]]; then
+                # 次Unitの完了コミットに到達 → 対象Unit終了
+                break
+            fi
+            last_short="$short_hash"
+            last_full="$full_hash"
+            hashes="${hashes}"$'\n'"${short_hash}"
+
+            if [[ "$subject" == "${target_unit_pattern}"* ]]; then
+                # 対象Unitの完了コミットに到達 → 対象Unit終了
+                break
+            fi
+        fi
+    done <<< "$log_output"
+
+    if [[ -z "$first_short" ]]; then
+        echo "Error: commits for Unit ${unit} not found in cycle ${cycle}" >&2
+        echo "squash:error:unit-not-found"
+        exit 1
+    fi
+
+    UNIT_FIRST_COMMIT="$first_short"
+    UNIT_FIRST_COMMIT_FULL="$first_full"
+    UNIT_LAST_COMMIT="$last_short"
+    UNIT_LAST_COMMIT_FULL="$last_full"
+    UNIT_COMMIT_HASHES="$hashes"
+}
+
 # --- Co-Authored-By抽出 ---
 
 extract_co_authors() {
@@ -242,6 +411,20 @@ extract_co_authors() {
     fi
 
     # 重複排除（raw行全体で比較）
+    if [[ -n "$raw_authors" ]]; then
+        CO_AUTHORS=$(echo "$raw_authors" | sort -u)
+    else
+        CO_AUTHORS=""
+    fi
+}
+
+extract_co_authors_for_range() {
+    local first_full="$1"
+    local last_full="$2"
+    local raw_authors=""
+
+    raw_authors=$(git log --format="%b" "${first_full}^..${last_full}" 2>/dev/null | grep -i "^Co-Authored-By:" || true)
+
     if [[ -n "$raw_authors" ]]; then
         CO_AUTHORS=$(echo "$raw_authors" | sort -u)
     else
@@ -429,12 +612,192 @@ squash_jj() {
     echo "squash:success:${final_rev}"
 }
 
+# --- retroactive squash用関数群 ---
+
+cleanup_tmpfiles() {
+    local f
+    for f in "${TMPFILES[@]}"; do
+        [[ -f "$f" ]] && \rm -f "$f"
+    done
+}
+
+build_sequence_editor_script() {
+    local first_commit="$1"
+    local commit_hashes="$2"
+    local script_file
+    script_file=$(mktemp)
+    TMPFILES+=("$script_file")
+
+    # コミットハッシュをパイプ区切りの正規表現パターンに変換
+    local hashes_for_script
+    hashes_for_script=$(echo "$commit_hashes" | tr '\n' '|' | sed 's/|$//')
+
+    cat > "$script_file" << SCRIPT_EOF
+#!/usr/bin/env bash
+set -euo pipefail
+TODO_FILE="\$1"
+FIRST_COMMIT="${first_commit}"
+TMP_FILE=\$(mktemp)
+while IFS= read -r line; do
+    if [[ "\$line" == "#"* ]] || [[ "\$line" == "break"* ]] || [[ -z "\$line" ]]; then
+        echo "\$line" >> "\$TMP_FILE"
+        continue
+    fi
+    hash=\$(echo "\$line" | awk '{print \$2}')
+    rest=\$(echo "\$line" | cut -d' ' -f3-)
+    if [[ "\$hash" == "\$FIRST_COMMIT" ]]; then
+        echo "reword \${hash} \${rest}" >> "\$TMP_FILE"
+    elif echo "\$hash" | grep -qE "^(${hashes_for_script})\$"; then
+        echo "fixup \${hash} \${rest}" >> "\$TMP_FILE"
+    else
+        echo "\$line" >> "\$TMP_FILE"
+    fi
+done < "\$TODO_FILE"
+\\mv "\$TMP_FILE" "\$TODO_FILE"
+SCRIPT_EOF
+
+    chmod +x "$script_file"
+    echo "$script_file"
+}
+
+build_commit_message_file() {
+    local message="$1"
+    local co_authors="$2"
+    local msg_file
+    msg_file=$(mktemp)
+    TMPFILES+=("$msg_file")
+
+    if [[ -n "$co_authors" ]]; then
+        printf '%s\n\n%s\n' "$message" "$co_authors" > "$msg_file"
+    else
+        printf '%s\n' "$message" > "$msg_file"
+    fi
+
+    echo "$msg_file"
+}
+
+build_editor_script() {
+    local msg_file="$1"
+    local editor_script
+    editor_script=$(mktemp)
+    TMPFILES+=("$editor_script")
+
+    cat > "$editor_script" << EDITOR_EOF
+#!/usr/bin/env bash
+cat -- "${msg_file}" > "\$1"
+EDITOR_EOF
+
+    chmod +x "$editor_script"
+    echo "$editor_script"
+}
+
+capture_tree_hash() {
+    TREE_HASH_BEFORE=$(git rev-parse HEAD^{tree} 2>/dev/null)
+}
+
+verify_tree_hash() {
+    local tree_hash_after
+    tree_hash_after=$(git rev-parse HEAD^{tree} 2>/dev/null)
+    if [[ "$TREE_HASH_BEFORE" != "$tree_hash_after" ]]; then
+        echo "Warning: tree hash mismatch after retroactive squash. Before: ${TREE_HASH_BEFORE}, After: ${tree_hash_after}" >&2
+    fi
+}
+
+squash_retroactive_git() {
+    # 1. Unit コミット範囲特定
+    find_unit_commit_range_git "$CYCLE" "$UNIT"
+
+    local commit_count
+    commit_count=$(echo "$UNIT_COMMIT_HASHES" | wc -l | tr -d ' ')
+    echo "unit_range:${UNIT_FIRST_COMMIT}..${UNIT_LAST_COMMIT}"
+    echo "unit_commit_count:${commit_count}"
+
+    # 対象0件チェック
+    if [[ -z "$UNIT_COMMIT_HASHES" ]]; then
+        echo "squash:skipped:no-commits"
+        return
+    fi
+
+    # ドライラン
+    if [[ "$DRY_RUN" == "true" ]]; then
+        git log --oneline "${UNIT_FIRST_COMMIT_FULL}^..${UNIT_LAST_COMMIT_FULL}" >&2
+        echo "squash:dry-run:${commit_count}"
+        return
+    fi
+
+    # 1件の場合: rewordのみ（rebaseで処理）
+    # 2件以上の場合: reword + fixup
+
+    # 2. ツリーハッシュ記録
+    capture_tree_hash
+
+    # 3. Co-Authored-By抽出（対象Unit範囲のみ）
+    extract_co_authors_for_range "$UNIT_FIRST_COMMIT_FULL" "$UNIT_LAST_COMMIT_FULL"
+
+    # 4. rebaseスクリプト生成
+    local seq_editor_script
+    seq_editor_script=$(build_sequence_editor_script "$UNIT_FIRST_COMMIT" "$UNIT_COMMIT_HASHES")
+
+    # 5. コミットメッセージファイル生成
+    local msg_file
+    msg_file=$(build_commit_message_file "$MESSAGE" "$CO_AUTHORS")
+
+    # 6. GIT_EDITOR用ラッパースクリプト生成
+    local editor_script
+    editor_script=$(build_editor_script "$msg_file")
+
+    # 7. rebase起点（対象Unitの最初のコミットの親）
+    local rebase_base
+    rebase_base=$(git rev-parse "${UNIT_FIRST_COMMIT_FULL}^" 2>/dev/null)
+
+    # 8. git rebase -i 実行
+    local rebase_result=0
+    GIT_SEQUENCE_EDITOR="bash \"${seq_editor_script}\"" \
+    GIT_EDITOR="bash \"${editor_script}\"" \
+    git rebase -i "$rebase_base" 2>/dev/null || rebase_result=$?
+
+    if [[ "$rebase_result" -ne 0 ]]; then
+        # rebase進行中（conflict）か否かを判定
+        if [[ -d "$(git rev-parse --git-dir)/rebase-merge" ]] || [[ -d "$(git rev-parse --git-dir)/rebase-apply" ]]; then
+            echo "Error: rebase failed due to conflict. Aborting rebase." >&2
+            git rebase --abort 2>/dev/null || true
+            cleanup_tmpfiles
+            echo "squash:error:conflict"
+            exit 1
+        else
+            echo "Error: rebase failed (editor script or other error)." >&2
+            cleanup_tmpfiles
+            echo "squash:error:rebase-failed"
+            exit 1
+        fi
+    fi
+
+    # 8. 一時ファイルクリーンアップ
+    cleanup_tmpfiles
+
+    # 9. ツリーハッシュ検証
+    verify_tree_hash
+
+    # 10. 結果出力
+    local new_hash
+    new_hash=$(git rev-parse HEAD 2>/dev/null)
+    echo "squash:success:${new_hash}"
+}
+
 # --- メイン処理 ---
 
 main() {
     parse_args "$@"
 
+    # retroactive バリデーション
+    if [[ "$RETROACTIVE" == "true" ]]; then
+        validate_retroactive_args
+    fi
+
     echo "vcs_type:${VCS_TYPE}"
+    if [[ "$RETROACTIVE" == "true" ]]; then
+        echo "retroactive:true"
+    fi
 
     # 事前チェック: working tree / working copy がcleanであること
     if [[ "$VCS_TYPE" == "git" ]]; then
@@ -474,6 +837,24 @@ main() {
             exit 1
         fi
     fi
+
+    # retroactive モード: 専用フローへ分岐
+    if [[ "$RETROACTIVE" == "true" ]]; then
+        # --base 指定時のバリデーション
+        if [[ -n "$BASE_COMMIT" ]]; then
+            validate_base_format "$BASE_COMMIT" "$VCS_TYPE"
+            if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then
+                echo "Error: --base ${BASE_COMMIT} is not an ancestor of HEAD" >&2
+                echo "squash:error:base-not-ancestor"
+                exit 1
+            fi
+            echo "base_commit:${BASE_COMMIT}"
+        fi
+        squash_retroactive_git
+        exit 0
+    fi
+
+    # --- 以下、通常（非retroactive）フロー ---
 
     # 起点コミット特定（--base 指定時はバリデーション＋祖先チェック）
     if [[ -n "$BASE_COMMIT" ]]; then
