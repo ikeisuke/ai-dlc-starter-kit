@@ -23,8 +23,8 @@
 | REVIEW_PRE | `chore:` | `chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}` | AIレビュー/ユーザーレビュー前 |
 | REVIEW_POST | `chore:` | `chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}` | レビュー修正反映後 |
 | INCEPTION_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}` | Inception Phase完了時 |
-| UNIT_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}` | Unit完了時（標準パス） |
-| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` | Unit完了squash前の中間コミット |
+| UNIT_COMPLETE | `feat:` | `feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}` + `Unit-Number: {NNN}` trailer | Unit完了時（標準パス） |
+| UNIT_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備` + `Unit-Number: {NNN}` trailer | Unit完了squash前の中間コミット |
 | INCEPTION_SQUASH_PREP | `chore:` | `chore: [{{CYCLE}}] Inception Phase完了 - 完了準備` | Inception Phase完了squash前の中間コミット |
 | OPERATIONS_COMPLETE | `chore:` | `chore: [{{CYCLE}}] Operations Phase完了 - {DESCRIPTION}` | Operations Phase完了時 |
 
@@ -204,6 +204,7 @@ git add -A
 git commit -m "$(cat <<'EOF'
 feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}
 
+Unit-Number: {NNN}
 Co-Authored-By: {AI_AUTHOR}
 EOF
 )"
@@ -302,6 +303,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    git commit -m "$(cat <<'EOF'
    chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
 
+   Unit-Number: {NNN}
    Co-Authored-By: {AI_AUTHOR}
    EOF
    )"
@@ -313,6 +315,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    jj describe -m "$(cat <<'EOF'
    chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
 
+   Unit-Number: {NNN}
    Co-Authored-By: {AI_AUTHOR}
    EOF
    )"
@@ -392,6 +395,8 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    # ヒアドキュメントでメッセージを構築し、シェル展開・クォート破綻を防止
    SQUASH_MESSAGE="$(cat <<'EOF'
    feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+
+   Unit-Number: {NNN}
    EOF
    )"
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
@@ -450,6 +455,8 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    ```bash
    SQUASH_MESSAGE="$(cat <<'EOF'
    feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+
+   Unit-Number: {NNN}
    EOF
    )"
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
@@ -463,6 +470,8 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    ```bash
    SQUASH_MESSAGE="$(cat <<'EOF'
    feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+
+   Unit-Number: {NNN}
    EOF
    )"
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
@@ -474,11 +483,39 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    - `squash:error:conflict` の場合: rebase中にコンフリクト発生。自動的に `git rebase --abort` で復帰済み。手動での対応が必要
    - `squash:error:unsupported-vcs` の場合: jj環境では事後squash非対応
 
+**`--from`/`--to` によるコミット範囲の手動指定**:
+
+コミットメッセージのパターンやトレーラーによる自動検出が失敗した場合、`--from`/`--to` でUnit境界を手動指定できる。
+
+```bash
+# 1. 対象コミットの特定
+git log --oneline -30
+
+# 2. 対象範囲を --from/--to で指定（--base は不要）
+SQUASH_MESSAGE="$(cat <<'EOF'
+feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
+
+Unit-Number: {NNN}
+EOF
+)"
+docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+  --vcs git --retroactive \
+  --from '<Unit開始コミット>' --to '<Unit終了コミット>' \
+  --message "$SQUASH_MESSAGE"
+```
+
+- `--from`: Unit開始コミットのハッシュ（このコミットを含む）
+- `--to`: Unit終了コミットのハッシュ（このコミットを含む）
+- `--from`/`--to` は両方同時に指定する必要がある（片方のみはエラー）
+- `--from`/`--to` と `--base` は排他（同時指定はエラー）
+
 **注意事項**:
 
 - 事後squashはgit rebaseを使用するため、コミットハッシュが変更される（対象Unitだけでなく、それ以降のコミットも新しいハッシュになる）
 - rebase中にコンフリクトが発生した場合は自動的にabortされ、元の状態に復帰する
 - squash前後のツリーハッシュを検証し、内容が変わっていないことを確認する（不一致時は警告を出力）
+- dry-run実行後に同一履歴で本実行する場合、ハッシュは同じまま使用可能
+- rebase後はすべてのコミットハッシュが変更されるため、`--from`/`--to` で指定するハッシュは再取得が必須
 
 ## コミット前確認チェックリスト
 

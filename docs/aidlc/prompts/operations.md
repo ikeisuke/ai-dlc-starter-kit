@@ -406,12 +406,47 @@ mv docs/cycles/backlog/{対応済みファイル}.md docs/cycles/backlog-complet
 gh issue list --label backlog --state open
 ```
 
-対応済み項目は Issue をクローズ:
+**自動クローズ判定**:
+
+PRの`Closes`セクションに記載されたIssueはマージ時に自動クローズされるため、手動クローズをスキップする。
+
+1. **PR番号の取得**（draft/ready両方を検索）:
+
+```bash
+# 現在ブランチのopen PR（draft/ready両方）を検索
+gh pr list --head "$(git branch --show-current)" --state open --json number --jq '.[0].number'
+```
+
+- PR番号が取得できた場合: 次のステップへ
+- PR番号が取得できない場合（PRなし、gh利用不可等）: 従来どおり全Issueについて手動クローズ確認
+
+2. **Closesセクションの解析**:
+
+```bash
+# PR本文を取得
+gh pr view {PR番号} --json body --jq '.body'
+```
+
+取得したPR本文から `Closes #数字` パターン（大文字小文字不問）を抽出してIssue番号のリストを作成する。Closesパターンが0件の場合も正常系として扱い、全Issueを手動クローズ確認対象とする。
+
+3. **クローズ判定**:
+
+- **Closesに含まれるIssue**: 「PRマージ時に自動クローズされます」と表示し、手動クローズをスキップ
+- **Closesに含まれないIssue**: 対応済みか確認し、手動でクローズ
+
+**注意**: この判定は暫定であり、最終確定はステップ6.7（PRマージ）直前のCloses確認結果に従う。PRマージまでにClosesセクションが変更された場合は再判定が必要。
+
+対応済み項目の手動クローズ（自動クローズ対象外のみ）:
 ```bash
 docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 ```
 
 **出力例**: `issue:123:closed`
+
+**全Issueが自動クローズ対象の場合**:
+```text
+全対応済みIssueはPRマージ時に自動クローズされます。手動クローズは不要です。
+```
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
