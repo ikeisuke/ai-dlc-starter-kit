@@ -7,6 +7,29 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.17.1] - 2026-02-28
+
+### Added
+
+- セルフレビューのスキル統合: reviewing-code/architecture/security/inceptionのSKILL.mdにself-reviewモードを追加し、review-flow.mdのステップ5.5からスキル経由でセルフレビューを実行可能に（#241）
+- スコープ外指摘のバックログ自動登録: 指摘対応判断フローで「スコープ外」選択時にバックログ登録を必須化（#240）
+- アップグレード処理スクリプト化: migrate-config.sh（設定マイグレーション）とresolve-starter-kit-path.sh（パス解決）をdocs/aidlc/bin/に追加（#233）
+- $()コマンドのスクリプトファイル化: pr-ops.sh（PR操作）、issue-ops.sh拡張等でClaude Codeの許可プロンプトを削減（#243）
+
+### Changed
+
+- 千日手検出の同種指摘判定基準を明確化: review-flow.mdに判定条件を明文化（#239）
+- mode=required時のステップ6フォールバック承認強化: ユーザー承認へ進む選択時に理由・対象成果物のwrite-history.sh記録を必須化（#238）
+- ステップ6スキップ記録をwrite-history.sh形式に統一（#237）
+- squash-unit.sh retroactiveモード改善: コミットフォーマット依存リスクを軽減（#244）
+- Operations PhaseのIssueクローズ確認改善: PRのClosesセクションに含まれるIssueの手動確認を簡素化（#242）
+
+### Security
+
+- write-history.shの--contentパラメータでヒアドキュメント方式によるエスケープ処理を実装し、コマンドインジェクションリスクを排除（#236）
+
+---
+
 ## [1.17.0] - 2026-02-28
 
 ### Added

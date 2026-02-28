@@ -21,6 +21,8 @@ UNIT_LAST_COMMIT=""
 UNIT_LAST_COMMIT_FULL=""
 UNIT_COMMIT_HASHES=""
 TREE_HASH_BEFORE=""
+FROM_COMMIT=""
+TO_COMMIT=""
 TMPFILES=()
 
 # 一時ファイルのクリーンアップ用trap
@@ -45,6 +47,8 @@ Optional:
                           省略時はコミットメッセージのパターンから自動検出。
   --retroactive           事後squashモード。過去のUnit（HEAD以外）をrebase方式でsquash。
                           --vcs=git のみ対応。--unit 必須。
+  --from <COMMIT>         retroactive時のUnit開始コミット（--to と同時指定必須、--baseと排他）
+  --to <COMMIT>           retroactive時のUnit終了コミット（--from と同時指定必須、--baseと排他）
   --dry-run               実際のsquashを実行せず対象コミットの表示のみ
   -h, --help              このヘルプを表示
 
@@ -53,6 +57,7 @@ Examples:
   squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --base abc1234
   squash-unit.sh --cycle v1.15.0 --vcs git --message "feat: ..." --dry-run
   squash-unit.sh --cycle v1.17.0 --unit 003 --vcs git --retroactive --message "feat: [v1.17.0] Unit 003完了 - 説明"
+  squash-unit.sh --cycle v1.17.0 --unit 003 --vcs git --retroactive --from abc1234 --to def5678 --message "feat: ..."
 EOF
 }
 
@@ -103,6 +108,22 @@ parse_args() {
                 BASE_COMMIT="$2"
                 shift 2
                 ;;
+            --from)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --from requires a value" >&2
+                    exit 2
+                fi
+                FROM_COMMIT="$2"
+                shift 2
+                ;;
+            --to)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --to requires a value" >&2
+                    exit 2
+                fi
+                TO_COMMIT="$2"
+                shift 2
+                ;;
             --retroactive)
                 RETROACTIVE=true
                 shift
@@ -151,6 +172,53 @@ validate_base_format() {
     fi
 }
 
+validate_from_to_args() {
+    # --from/--to は両方同時に指定する必要がある
+    if [[ -n "$FROM_COMMIT" && -z "$TO_COMMIT" ]] || [[ -z "$FROM_COMMIT" && -n "$TO_COMMIT" ]]; then
+        echo "Error: --from and --to must be specified together" >&2
+        exit 2
+    fi
+
+    # --from/--to 未指定時は何もしない
+    if [[ -z "$FROM_COMMIT" ]]; then
+        return
+    fi
+
+    # --from/--to と --base は排他
+    if [[ -n "$BASE_COMMIT" ]]; then
+        echo "Error: --from/--to and --base are mutually exclusive in retroactive mode" >&2
+        exit 2
+    fi
+
+    # 入力バリデーション（revset演算子混入防止）
+    validate_base_format "$FROM_COMMIT" "$VCS_TYPE"
+    validate_base_format "$TO_COMMIT" "$VCS_TYPE"
+
+    # フルハッシュへ正規化（-- でオプション注入を防止）
+    local from_full to_full
+    if ! from_full=$(git rev-parse --verify "${FROM_COMMIT}^{commit}" 2>/dev/null); then
+        echo "Error: --from ${FROM_COMMIT} is not a valid commit" >&2
+        echo "squash:error:invalid-from"
+        exit 1
+    fi
+    if ! to_full=$(git rev-parse --verify "${TO_COMMIT}^{commit}" 2>/dev/null); then
+        echo "Error: --to ${TO_COMMIT} is not a valid commit" >&2
+        echo "squash:error:invalid-to"
+        exit 1
+    fi
+    FROM_COMMIT="$from_full"
+    TO_COMMIT="$to_full"
+
+    # --from が --to の祖先（またはイコール）であることを検証
+    if [[ "$FROM_COMMIT" != "$TO_COMMIT" ]]; then
+        if ! git merge-base --is-ancestor "$FROM_COMMIT" "$TO_COMMIT" 2>/dev/null; then
+            echo "Error: --from ${FROM_COMMIT:0:7} is not an ancestor of --to ${TO_COMMIT:0:7}" >&2
+            echo "squash:error:from-not-ancestor"
+            exit 1
+        fi
+    fi
+}
+
 validate_retroactive_args() {
     if [[ "$VCS_TYPE" != "git" ]]; then
         echo "Error: --retroactive is only supported with --vcs=git" >&2
@@ -163,6 +231,10 @@ validate_retroactive_args() {
     fi
     if [[ ! "$UNIT" =~ ^[0-9]{3}$ ]]; then
         echo "Error: --unit must be a 3-digit number (e.g., 003), got: ${UNIT}" >&2
+        exit 2
+    fi
+    if [[ "$((10#$UNIT))" -lt 1 ]]; then
+        echo "Error: --unit must be 001 or greater, got: ${UNIT}" >&2
         exit 2
     fi
 }
@@ -267,10 +339,35 @@ find_base_commit_jj() {
 find_unit_commit_range_git() {
     local cycle="$1"
     local unit="$2"
-    local log_output
-    local log_range=""
 
-    # 検索範囲の決定
+    # === 戦略1: --from/--to 直接指定 ===
+    if [[ -n "$FROM_COMMIT" && -n "$TO_COMMIT" ]]; then
+        local log_output
+        if ! log_output=$(git log --reverse --format="%h %H %s" "${FROM_COMMIT}^..${TO_COMMIT}" 2>&1); then
+            echo "Error: git log failed for --from/--to range: ${log_output}" >&2
+            echo "squash:error:git-log-failed"
+            exit 1
+        fi
+        if [[ -z "$log_output" ]]; then
+            echo "Error: no commits found in range ${FROM_COMMIT:0:7}..${TO_COMMIT:0:7}" >&2
+            echo "squash:error:unit-not-found"
+            exit 1
+        fi
+        local first_line last_line
+        first_line=$(echo "$log_output" | head -1)
+        last_line=$(echo "$log_output" | tail -1)
+        UNIT_FIRST_COMMIT="${first_line%% *}"
+        local rest="${first_line#* }"
+        UNIT_FIRST_COMMIT_FULL="${rest%% *}"
+        UNIT_LAST_COMMIT="${last_line%% *}"
+        rest="${last_line#* }"
+        UNIT_LAST_COMMIT_FULL="${rest%% *}"
+        UNIT_COMMIT_HASHES=$(echo "$log_output" | awk '{print $1}')
+        return
+    fi
+
+    # === 共通: 検索範囲の決定 ===
+    local log_range=""
     if [[ -n "$BASE_COMMIT" ]]; then
         log_range="${BASE_COMMIT}..HEAD"
     else
@@ -285,13 +382,128 @@ find_unit_commit_range_git() {
         if [[ -n "$merge_base" && "$merge_base" != "$head_hash" ]]; then
             log_range="${merge_base}..HEAD"
         else
-            echo "Error: cannot determine branch range. Use --base to specify explicitly." >&2
+            echo "Error: cannot determine branch range. Use --base or --from/--to to specify explicitly." >&2
             echo "squash:error:no-branch-range"
             exit 1
         fi
     fi
 
-    # コミット一覧取得（古い順: --reverse）
+    # === 戦略2: トレーラー検索 ===
+    # subject + Unit-Number trailerを同時取得（Unit Separator 0x1F区切り）
+    # 注: NUL(0x00)はコマンド置換で消失するため、0x1Fを使用
+    local trailer_log
+    if trailer_log=$(git log --reverse --format="%h %H %s%x1F%(trailers:key=Unit-Number,valueonly)" "$log_range" 2>/dev/null); then
+        local prev_unit_num prev_unit
+        prev_unit_num=$((10#$unit - 1))
+        prev_unit=$(printf "%03d" "$prev_unit_num")
+
+        # トレーラーの存在を確認
+        local has_any_trailer=false
+        local trailer_start_boundary="" trailer_end_boundary=""
+        local trailer_end_subject=""
+        local t_first_short="" t_first_full=""
+        local t_last_short="" t_last_full=""
+        local t_in_unit=false t_found_start=false
+        local t_hashes=""
+        local t_line t_subject_part t_trailer_part
+        local target_unit_pattern_for_trailer="feat: [${cycle}] Unit ${unit}完了"
+
+        while IFS= read -r t_line; do
+            # Unit Separator(0x1F)区切りでsubject部とtrailer部を分離
+            t_subject_part="${t_line%%$'\x1F'*}"
+            t_trailer_part="${t_line#*$'\x1F'}"
+            # trailer部の前後空白を除去
+            t_trailer_part=$(echo "$t_trailer_part" | tr -d '[:space:]')
+
+            local t_short t_rest t_full t_subject
+            t_short="${t_subject_part%% *}"
+            t_rest="${t_subject_part#* }"
+            t_full="${t_rest%% *}"
+            t_subject="${t_rest#* }"
+
+            if [[ -n "$t_trailer_part" ]]; then
+                has_any_trailer=true
+            fi
+
+            if [[ "$t_in_unit" == "false" ]]; then
+                # 開始境界: 前Unitのトレーラーを検出
+                if [[ "$unit" == "001" ]]; then
+                    # Unit 001: Inception完了（トレーラーなし）→ subjectパターンで検出
+                    local inception_pattern="feat: [${cycle}] Inception Phase完了"
+                    if [[ "$t_subject" == "${inception_pattern}"* ]]; then
+                        t_found_start=true
+                        continue
+                    fi
+                else
+                    # Unit 002+: 前Unitの最後のトレーラー付きコミットを検出
+                    if [[ "$t_trailer_part" == "${prev_unit}" ]]; then
+                        trailer_start_boundary="$t_short"
+                        t_found_start=true
+                        continue
+                    fi
+                fi
+                if [[ "$t_found_start" == "true" ]]; then
+                    t_in_unit=true
+                    t_first_short="$t_short"
+                    t_first_full="$t_full"
+                    t_last_short="$t_short"
+                    t_last_full="$t_full"
+                    t_hashes="$t_short"
+                    # 終端チェック: feat: パターン優先
+                    if [[ "$t_subject" == "${target_unit_pattern_for_trailer}"* ]]; then
+                        trailer_end_boundary="$t_short"
+                        trailer_end_subject="$t_subject"
+                        break
+                    fi
+                    if [[ "$t_trailer_part" == "${unit}" ]]; then
+                        trailer_end_boundary="$t_short"
+                        trailer_end_subject="$t_subject"
+                    fi
+                fi
+            else
+                # Unit内: 次Unitのトレーラーに到達したら終了
+                local next_unit_num next_unit
+                next_unit_num=$((10#$unit + 1))
+                next_unit=$(printf "%03d" "$next_unit_num")
+                if [[ "$t_trailer_part" == "${next_unit}" ]]; then
+                    break
+                fi
+                t_last_short="$t_short"
+                t_last_full="$t_full"
+                t_hashes="${t_hashes}"$'\n'"${t_short}"
+                # 終端チェック: feat: パターン優先、なければ最後のトレーラー付きコミット
+                if [[ "$t_subject" == "${target_unit_pattern_for_trailer}"* ]]; then
+                    trailer_end_boundary="$t_short"
+                    trailer_end_subject="$t_subject"
+                    break
+                fi
+                if [[ "$t_trailer_part" == "${unit}" ]]; then
+                    trailer_end_boundary="$t_short"
+                    trailer_end_subject="$t_subject"
+                fi
+            fi
+        done <<< "$trailer_log"
+
+        # トレーラー戦略の結果判定
+        if [[ -n "$t_first_short" && -n "$trailer_end_boundary" ]]; then
+            # トレーラーで両境界が確定
+            UNIT_FIRST_COMMIT="$t_first_short"
+            UNIT_FIRST_COMMIT_FULL="$t_first_full"
+            UNIT_LAST_COMMIT="$t_last_short"
+            UNIT_LAST_COMMIT_FULL="$t_last_full"
+            UNIT_COMMIT_HASHES="$t_hashes"
+            return
+        fi
+
+        if [[ "$has_any_trailer" == "true" ]]; then
+            echo "Warning: partial Unit-Number trailers found, falling back to pattern matching" >&2
+        fi
+    fi
+
+    # === 戦略3: パターンマッチ（既存ロジック、フォールバック） ===
+    echo "Warning: Unit-Number trailer not found, using commit message pattern matching" >&2
+
+    local log_output
     if ! log_output=$(git log --reverse --format="%h %H %s" "$log_range" 2>&1); then
         echo "Error: git log failed: ${log_output}" >&2
         echo "squash:error:git-log-failed"
@@ -394,6 +606,9 @@ find_unit_commit_range_git() {
 
     if [[ -z "$first_short" ]]; then
         echo "Error: commits for Unit ${unit} not found in cycle ${cycle}" >&2
+        echo "Hint: Ensure commit messages follow the pattern 'feat: [${cycle}] Unit ${unit}完了 - ...'" >&2
+        echo "Hint: Or add 'Unit-Number: ${unit}' trailer to commit messages" >&2
+        echo "Hint: Or use --from/--to to specify the commit range explicitly" >&2
         echo "squash:error:unit-not-found"
         exit 1
     fi
@@ -802,6 +1017,12 @@ main() {
         validate_retroactive_args
     fi
 
+    # --from/--to は retroactive モードでのみ使用可能
+    if [[ "$RETROACTIVE" != "true" ]] && [[ -n "$FROM_COMMIT" || -n "$TO_COMMIT" ]]; then
+        echo "Error: --from/--to can only be used with --retroactive" >&2
+        exit 2
+    fi
+
     echo "vcs_type:${VCS_TYPE}"
     if [[ "$RETROACTIVE" == "true" ]]; then
         echo "retroactive:true"
@@ -848,7 +1069,13 @@ main() {
 
     # retroactive モード: 専用フローへ分岐
     if [[ "$RETROACTIVE" == "true" ]]; then
-        # --base 指定時のバリデーション
+        # --from/--to バリデーション（排他チェック、フルハッシュ正規化、祖先検証）
+        validate_from_to_args
+        if [[ -n "$FROM_COMMIT" ]]; then
+            echo "from_commit:${FROM_COMMIT:0:7}"
+            echo "to_commit:${TO_COMMIT:0:7}"
+        fi
+        # --base 指定時のバリデーション（--from/--to 未指定時のみ）
         if [[ -n "$BASE_COMMIT" ]]; then
             validate_base_format "$BASE_COMMIT" "$VCS_TYPE"
             if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then

@@ -381,8 +381,9 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
       - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
 
-   5a. **OUT_OF_SCOPEバックログ自動登録**（OUT_OF_SCOPE判断があった場合のみ）:
+   <!-- markdownlint-disable MD046 -->
 
+   5a. **OUT_OF_SCOPEバックログ自動登録**（OUT_OF_SCOPE判断があった場合のみ）:
        ステップ2でOUT_OF_SCOPEと判断された指摘について、バックログ登録を実行する。各OUT_OF_SCOPE指摘ごとに以下を繰り返す。
 
        **安全規則**（5a全体に適用）:
@@ -534,6 +535,8 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        ```
 
        > **注意**: `CONTENT_EOF` / `BODY_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
+
+   <!-- markdownlint-enable MD046 -->
 
    6. **全指摘の判断完了後、サマリを履歴に記録**:
 
