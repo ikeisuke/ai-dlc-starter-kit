@@ -157,12 +157,17 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content "【AIレビュー完了】指摘0件
+            --content "$(cat <<'CONTENT_EOF'
+        【AIレビュー完了】指摘0件
         【対象タイミング】{呼び出し元のステップ名（例: 設計レビュー、統合とレビュー）}
         【対象成果物】{成果物名}
         【レビュー種別】{実行した全種別（例: code, security）}
-        【レビューツール】{使用したツール名}"
+        【レビューツール】{使用したツール名}
+        CONTENT_EOF
+        )"
         ```
+
+        > **注意**: `CONTENT_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
 
         - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
         - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -256,10 +261,13 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --unit-name "[Unit名]" \
            --unit-slug "[unit-slug]" \
            --step "千日手判断" \
-           --content "【千日手検出】AIレビューが収束せず、ユーザー判断によりユーザー承認へ移行
+           --content "$(cat <<'CONTENT_EOF'
+       【千日手検出】AIレビューが収束せず、ユーザー判断によりユーザー承認へ移行
        【対象成果物】{成果物名}
        【反復回数】{過去の反復レビュー回数}
-       【繰り返し指摘】{繰り返されていた指摘の要約}"
+       【繰り返し指摘】{繰り返されていた指摘の要約}
+       CONTENT_EOF
+       )"
        ```
 
        - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
@@ -341,9 +349,12 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断" \
-          --content "【指摘 #{index}】{指摘内容の要約}
+          --content "$(cat <<'CONTENT_EOF'
+      【指摘 #{index}】{指摘内容の要約}
       【判断種別】{TECHNICAL_BLOCKER|OUT_OF_SCOPE}
-      【先送り理由】{ユーザーが入力した理由}"
+      【先送り理由】{ユーザーが入力した理由}
+      CONTENT_EOF
+      )"
       ```
 
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
@@ -359,11 +370,14 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断サマリ" \
-          --content "【AIレビュー指摘対応判断サマリ】
+          --content "$(cat <<'CONTENT_EOF'
+      【AIレビュー指摘対応判断サマリ】
         指摘 #1: RESOLVE（修正予定）
         指摘 #2: TECHNICAL_BLOCKER（理由記録済み）
         指摘 #3: OUT_OF_SCOPE（理由記録済み）
-      【次のアクション】{修正実施後に再レビュー|ユーザーレビューへ}"
+      【次のアクション】{修正実施後に再レビュー|ユーザーレビューへ}
+      CONTENT_EOF
+      )"
       ```
 
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
@@ -483,12 +497,15 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content "【AIレビュー完了（セルフレビュー）】指摘0件
+            --content "$(cat <<'CONTENT_EOF'
+        【AIレビュー完了（セルフレビュー）】指摘0件
         【対象タイミング】{呼び出し元のステップ名}
         【対象成果物】{成果物名}
         【レビュー種別】{実行した全種別}
         【レビューツール】{self-review(subagent) | self-review(inline)}
-        【注記】セルフレビューによる実施。"
+        【注記】セルフレビューによる実施。
+        CONTENT_EOF
+        )"
         ```
 
         - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
