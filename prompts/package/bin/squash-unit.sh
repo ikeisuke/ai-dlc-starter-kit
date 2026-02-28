@@ -409,6 +409,8 @@ find_unit_commit_range_git() {
         local target_unit_pattern_for_trailer="feat: [${cycle}] Unit ${unit}完了"
 
         while IFS= read -r t_line; do
+            # 空行をスキップ（トレーラー出力の改行で生じる空レコード対策）
+            [[ -z "$t_line" ]] && continue
             # Unit Separator(0x1F)区切りでsubject部とtrailer部を分離
             t_subject_part="${t_line%%$'\x1F'*}"
             t_trailer_part="${t_line#*$'\x1F'}"

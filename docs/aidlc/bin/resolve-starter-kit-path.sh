@@ -62,7 +62,13 @@ fi
 
 # 2. ghq判定
 if command -v ghq >/dev/null 2>&1; then
-    ghq_root=$(ghq root)
+    if ! ghq_root=$(ghq root 2>/dev/null); then
+        # ghq rootが失敗した場合は手動入力へフォールバック
+        echo "path:"
+        echo "mode:MANUAL_REQUIRED"
+        echo "ghq root の実行に失敗しました。スターターキットのパスを手動で指定してください。" >&2
+        exit 1
+    fi
     starter_kit_path="${ghq_root}/github.com/ikeisuke/ai-dlc-starter-kit"
     if [[ -d "${starter_kit_path}/prompts/package" ]]; then
         echo "path:${starter_kit_path}"
