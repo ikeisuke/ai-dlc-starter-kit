@@ -115,9 +115,12 @@ pwd
 # メタ開発モードの場合
 prompts/setup/bin/check-setup-type.sh
 
-# 通常利用の場合（ghq使用時）
-$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup/bin/check-setup-type.sh
+# 通常利用の場合
+# setup-prompt.mdを読み込んだスターターキットの基底パスから実行
+# 例: [スターターキットパス]/prompts/setup/bin/check-setup-type.sh
 ```
+
+**注意**: 通常利用では、AIがsetup-prompt.mdを読み込んだパスからスターターキットの基底パスを推定してください。
 
 **出力例**:
 
@@ -524,14 +527,12 @@ cat "$TEMPLATE_FILE" | \
 
 **判定補助**:
 - プロジェクトルートは `docs/aidlc.toml` が作成されるディレクトリ
-- 外部リポジトリの場合、以下のコマンドでghq形式パスを構築可能:
+- 外部リポジトリの場合、`resolve-starter-kit-path.sh` でスターターキットパスを自動解決可能:
   ```bash
-  # ghq root を取得
-  GHQ_ROOT=$(ghq root)
-  # スターターキットの相対パスを取得（ghq root からの相対パス）
-  STARTER_KIT_PATH="github.com/[owner]/[repo]"
-  # 完成形: ghq:github.com/[owner]/[repo]/prompts/setup-prompt.md
+  # 同期済み環境: docs/aidlc/bin/resolve-starter-kit-path.sh
+  # メタ開発: prompts/package/bin/resolve-starter-kit-path.sh
   ```
+  `mode:GHQ` の場合のみ、`path:` 値からghq形式パスを構築（完成形: `ghq:github.com/[owner]/[repo]/prompts/setup-prompt.md`）。`mode:META_DEV` の場合はghq形式不要（同一リポジトリ内）。
 
 **アップグレードモードの場合**: 既存の `[paths].setup_prompt` を保持（変更しない）
 
@@ -863,39 +864,30 @@ rsync実行前に、スターターキットパスを特定してください。
 **環境判定**:
 
 ```bash
-# メタ開発環境の判定（prompts/package/ が存在するか）
-if [ -d "prompts/package" ]; then
-    echo "META_DEV_MODE"
-    STARTER_KIT_PATH="."  # 同一リポジトリ内
-elif command -v ghq >/dev/null 2>&1; then
-    # ghq形式でパスを構築
-    STARTER_KIT_PATH="$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit"
-    # パスの存在確認
-    if [ -d "${STARTER_KIT_PATH}/prompts/package" ]; then
-        echo "NORMAL_MODE (ghq)"
-    else
-        echo "NORMAL_MODE (ghq path not found, fallback to manual)"
-        STARTER_KIT_PATH=""
-    fi
-else
-    echo "NORMAL_MODE (manual)"
-    STARTER_KIT_PATH=""
-fi
-
-# パスが未設定の場合は手動入力
-if [ -z "$STARTER_KIT_PATH" ]; then
-    echo "スターターキットの絶対パスを入力してください:"
-    echo "例: /path/to/ai-dlc-starter-kit"
-    # ユーザー入力を待つ
-fi
+# スターターキットパス解決スクリプトを実行
+# メタ開発モード: prompts/package/bin/resolve-starter-kit-path.sh
+# アップグレードモード（同期済み）: docs/aidlc/bin/resolve-starter-kit-path.sh
+# 初回セットアップ: [スターターキットパス]/prompts/package/bin/resolve-starter-kit-path.sh
 ```
+
+出力例:
+```text
+path:.
+mode:META_DEV
+```
+
+スクリプトの終了コードを確認し、`path:` の値を `[スターターキットパス]` として以降の手順で使用する。
+
+- 終了コード0 + `mode:META_DEV`: メタ開発モード（`path:` は `.`）
+- 終了コード0 + `mode:GHQ`: ghq経由で自動解決（`path:` は絶対パス）
+- 終了コード1 + `mode:MANUAL_REQUIRED`: 自動解決失敗。ユーザーにスターターキットの絶対パスを確認する
 
 **パス参照の読み替え**:
 
 | 環境 | `[スターターキットパス]` の実際の値 |
 |------|-----------------------------------|
 | メタ開発 | `.`（カレントディレクトリ = プロジェクトルート） |
-| 通常利用（ghq） | `$(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit` |
+| 通常利用（ghq） | ghq rootからの自動解決パス |
 | 通常利用（手動） | ユーザーに確認した絶対パス（例: `/path/to/ai-dlc-starter-kit`） |
 
 **非ghq環境の場合**:
