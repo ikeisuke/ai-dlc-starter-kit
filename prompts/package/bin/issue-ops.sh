@@ -88,6 +88,7 @@ OPTIONS:
     issue:<number>:closed:not-planned
 
   エラー時:
+    issue:<number>:error:label-not-found
     issue:<number>:error:not-found
     issue:<number>:error:gh-not-available
     issue:<number>:error:gh-not-authenticated
@@ -99,6 +100,7 @@ OPTIONS:
     error:missing-subcommand
     error:unknown-subcommand:<name>
     error:missing-issue-number
+    error:invalid-issue-number
     error:missing-label-name
     error:missing-status
 
@@ -147,6 +149,17 @@ check_gh_available() {
     return 2
 }
 
+# Issue番号の形式検証
+# 引数: $1=issue_number
+# 戻り値: 0=有効, 1=無効
+validate_issue_number() {
+    local issue_number="$1"
+    if [[ "$issue_number" =~ ^[1-9][0-9]*$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
 # 出力フォーマット生成（Issue番号あり）
 # 引数: $1=issue_number, $2=status, $3=detail（optional）
 format_output() {
@@ -169,7 +182,10 @@ format_output() {
 parse_gh_error() {
     local error_output="$1"
 
-    if echo "$error_output" | grep -qi "not found\|could not find\|could not resolve"; then
+    # ラベル固有パターンを汎用パターンより先に検査（label文脈に限定）
+    if echo "$error_output" | grep -qi "label.*not found\|could not add label"; then
+        echo "label-not-found"
+    elif echo "$error_output" | grep -qi "not found\|could not find\|could not resolve"; then
         echo "not-found"
     elif echo "$error_output" | grep -qi "authentication\|unauthorized\|forbidden\|401\|403\|token\|credential"; then
         echo "auth-error"
@@ -391,6 +407,11 @@ main() {
             local issue_number="$1"
             local label_name="$2"
 
+            if ! validate_issue_number "$issue_number"; then
+                echo "error:invalid-issue-number"
+                exit 1
+            fi
+
             if cmd_label "$issue_number" "$label_name"; then
                 exit 0
             else
@@ -411,6 +432,11 @@ main() {
 
             local issue_number="$1"
             local label_name="$2"
+
+            if ! validate_issue_number "$issue_number"; then
+                echo "error:invalid-issue-number"
+                exit 1
+            fi
 
             if cmd_remove_label "$issue_number" "$label_name"; then
                 exit 0
@@ -433,6 +459,11 @@ main() {
             local issue_number="$1"
             local status="$2"
 
+            if ! validate_issue_number "$issue_number"; then
+                echo "error:invalid-issue-number"
+                exit 1
+            fi
+
             if cmd_set_status "$issue_number" "$status"; then
                 exit 0
             else
@@ -449,6 +480,11 @@ main() {
 
             local issue_number="$1"
             shift
+
+            if ! validate_issue_number "$issue_number"; then
+                echo "error:invalid-issue-number"
+                exit 1
+            fi
 
             local not_planned="false"
             while [[ $# -gt 0 ]]; do

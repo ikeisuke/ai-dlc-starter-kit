@@ -1,86 +1,80 @@
 #!/usr/bin/env bash
 #
-# resolve-starter-kit-path.sh - スターターキットのルートパスを解決
+# resolve-starter-kit-path.sh - スターターキットパス解決スクリプト
+#
+# スクリプトの実行位置からAI-DLCスターターキットのルートパスを解決する。
+# メタ開発モード（prompts/package/bin/ から実行）と
+# 利用プロジェクトモード（docs/aidlc/bin/ から実行）の両方に対応。
 #
 # 使用方法:
-#   ./resolve-starter-kit-path.sh [OPTIONS]
+#   STARTER_KIT_ROOT=$(resolve-starter-kit-path.sh)
 #
-# OPTIONS:
-#   -h, --help    ヘルプを表示
-#
-# 出力形式（stdout）:
-#   path:<パス>
-#   mode:<META_DEV|GHQ|MANUAL_REQUIRED>
+# 出力（stdout）:
+#   成功時: スターターキットのルート絶対パス
+#   エラー時: なし（stderrにエラーメッセージ）
 #
 # 終了コード:
-#   0: パス解決成功
-#   1: パス解決失敗（手動入力が必要）
+#   0: 成功
+#   1: パス解決失敗
+#
+# 環境変数:
+#   AIDLC_STARTER_KIT_PATH: 利用プロジェクトモード時のスターターキットパス（必須）
 #
 
 set -euo pipefail
 
-show_help() {
-    cat << 'EOF'
-Usage: resolve-starter-kit-path.sh [OPTIONS]
+# スクリプト自身のディレクトリを取得（symlink解決済み）
+resolve_script_dir() {
+    local source="${BASH_SOURCE[0]:-$0}"
 
-スターターキット（ai-dlc-starter-kit）のルートパスを自動解決します。
+    # symlink を解決（macOS互換: readlink -f は使わない）
+    while [[ -L "$source" ]]; do
+        local dir
+        dir="$(cd "$(dirname "$source")" && pwd)"
+        source="$(readlink "$source")"
+        # 相対パスの場合、元のディレクトリからの相対パスとして解決
+        [[ "$source" != /* ]] && source="$dir/$source"
+    done
 
-判定順序:
-  1. メタ開発モード: prompts/package/ が存在 → カレントディレクトリ
-  2. ghq: ghq root から標準パスを構築
-  3. 手動: 上記いずれも失敗 → 終了コード1
-
-OPTIONS:
-  -h, --help    このヘルプを表示
-
-出力形式（stdout）:
-  path:<パス>
-  mode:<META_DEV|GHQ|MANUAL_REQUIRED>
-EOF
+    cd "$(dirname "$source")" && pwd
 }
 
-# 引数解析
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        *)
-            echo "Error: unknown option: $1" >&2
-            exit 2
-            ;;
-    esac
-done
+main() {
+    local script_dir
+    script_dir=$(resolve_script_dir)
 
-# 1. メタ開発モード判定
-if [[ -d "prompts/package" ]]; then
-    echo "path:."
-    echo "mode:META_DEV"
-    exit 0
-fi
+    # パス構造からコンテキストを判定
+    if [[ "$script_dir" == */prompts/package/bin ]]; then
+        # メタ開発モード: スクリプトの3階層上がスターターキットルート
+        local starter_kit_root
+        starter_kit_root="$(cd "$script_dir/../../.." && pwd)"
+        echo "$starter_kit_root"
+        return 0
 
-# 2. ghq判定
-if command -v ghq >/dev/null 2>&1; then
-    if ! ghq_root=$(ghq root 2>/dev/null); then
-        # ghq rootが失敗した場合は手動入力へフォールバック
-        echo "path:"
-        echo "mode:MANUAL_REQUIRED"
-        echo "ghq root の実行に失敗しました。スターターキットのパスを手動で指定してください。" >&2
-        exit 1
+    elif [[ "$script_dir" == */docs/aidlc/bin ]]; then
+        # 利用プロジェクトモード: 環境変数からスターターキットパスを取得
+        if [[ -z "${AIDLC_STARTER_KIT_PATH:-}" ]]; then
+            echo "Error: AIDLC_STARTER_KIT_PATH is not set" >&2
+            echo "Error: Set AIDLC_STARTER_KIT_PATH to the AI-DLC starter kit root directory" >&2
+            return 1
+        fi
+
+        if [[ ! -d "$AIDLC_STARTER_KIT_PATH" ]]; then
+            echo "Error: AIDLC_STARTER_KIT_PATH directory does not exist: $AIDLC_STARTER_KIT_PATH" >&2
+            return 1
+        fi
+
+        # 絶対パスに正規化して出力
+        local resolved_path
+        resolved_path="$(cd "$AIDLC_STARTER_KIT_PATH" && pwd)"
+        echo "$resolved_path"
+        return 0
+
+    else
+        echo "Error: cannot resolve starter kit path from $script_dir" >&2
+        echo "Error: script must be located in prompts/package/bin/ or docs/aidlc/bin/" >&2
+        return 1
     fi
-    starter_kit_path="${ghq_root}/github.com/ikeisuke/ai-dlc-starter-kit"
-    if [[ -d "${starter_kit_path}/prompts/package" ]]; then
-        echo "path:${starter_kit_path}"
-        echo "mode:GHQ"
-        exit 0
-    fi
-fi
+}
 
-# 3. 手動入力が必要
-echo "path:"
-echo "mode:MANUAL_REQUIRED"
-echo "スターターキットのパスを自動解決できませんでした。" >&2
-echo "スターターキットの絶対パスを手動で指定してください。" >&2
-echo "例: /path/to/ai-dlc-starter-kit" >&2
-exit 1
+main "$@"

@@ -239,6 +239,52 @@ validate_retroactive_args() {
     fi
 }
 
+# --- ルートコミット判定 ---
+
+# 指定コミットがルートコミット（親なし）かどうかを判定
+# 引数: $1=コミットハッシュ（short or full）
+# 戻り値: 0=ルートコミット, 1=ルートコミットではない（無効ハッシュ含む）
+is_root_commit() {
+    local hash="$1"
+    # コミットの存在を確認（無効ハッシュの誤判定を防止）
+    if ! git cat-file -e "${hash}^{commit}" 2>/dev/null; then
+        return 1
+    fi
+    if ! git rev-parse "${hash}^" >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+# ルートコミット対応のgit log用範囲引数を構築
+# 引数: $1=first_hash, $2=last_hash
+# 出力: git log に渡す範囲引数（stdout）
+# 通常時: first^..last（firstを含む）
+# ルートコミット時: last（ルートからlastまで全コミットを含む）
+safe_log_range() {
+    local first="$1"
+    local last="$2"
+    if is_root_commit "$first"; then
+        echo "$last"
+    else
+        echo "${first}^..${last}"
+    fi
+}
+
+# ルートコミット対応のgit rebase起点引数を構築
+# 引数: $1=first_hash
+# 出力: git rebase -i に渡す引数（stdout）
+# 通常時: first^ を出力、終了コード0
+# ルートコミット時: --root を出力、終了コード0
+rebase_base_args() {
+    local first="$1"
+    if is_root_commit "$first"; then
+        echo "--root"
+    else
+        git rev-parse "${first}^" 2>/dev/null
+    fi
+}
+
 # --- 起点特定 ---
 
 find_base_commit_git() {
@@ -647,8 +693,10 @@ extract_co_authors_for_range() {
     local first_full="$1"
     local last_full="$2"
     local raw_authors=""
+    local log_range
 
-    raw_authors=$(git log --format="%b" "${first_full}^..${last_full}" 2>/dev/null | grep -i "^Co-Authored-By:" || true)
+    log_range=$(safe_log_range "$first_full" "$last_full")
+    raw_authors=$(git log --format="%b" $log_range 2>/dev/null | grep -i "^Co-Authored-By:" || true)
 
     if [[ -n "$raw_authors" ]]; then
         CO_AUTHORS=$(echo "$raw_authors" | sort -u)
@@ -945,7 +993,9 @@ squash_retroactive_git() {
 
     # ドライラン
     if [[ "$DRY_RUN" == "true" ]]; then
-        git log --oneline "${UNIT_FIRST_COMMIT_FULL}^..${UNIT_LAST_COMMIT_FULL}" >&2
+        local dry_run_range
+        dry_run_range=$(safe_log_range "$UNIT_FIRST_COMMIT_FULL" "$UNIT_LAST_COMMIT_FULL")
+        git log --oneline $dry_run_range >&2
         echo "squash:dry-run:${commit_count}"
         return
     fi
@@ -971,15 +1021,15 @@ squash_retroactive_git() {
     local editor_script
     editor_script=$(build_editor_script "$msg_file")
 
-    # 7. rebase起点（対象Unitの最初のコミットの親）
+    # 7. rebase起点（対象Unitの最初のコミットの親、ルートコミット時は--root）
     local rebase_base
-    rebase_base=$(git rev-parse "${UNIT_FIRST_COMMIT_FULL}^" 2>/dev/null)
+    rebase_base=$(rebase_base_args "$UNIT_FIRST_COMMIT_FULL")
 
     # 8. git rebase -i 実行
     local rebase_result=0
     GIT_SEQUENCE_EDITOR="bash \"${seq_editor_script}\"" \
     GIT_EDITOR="bash \"${editor_script}\"" \
-    git rebase -i "$rebase_base" 2>/dev/null || rebase_result=$?
+    git rebase -i $rebase_base 2>/dev/null || rebase_result=$?
 
     if [[ "$rebase_result" -ne 0 ]]; then
         # rebase進行中（conflict）か否かを判定
