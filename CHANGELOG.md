@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.18.1] - 2026-03-02
+
+### Added
+
+- worktreeクリーンアップスクリプト: PRマージ後の手動クリーンアップ作業（5ステップ）を自動化する`post-merge-cleanup.sh`を新規作成（#227）
+
+### Changed
+
+- operations.md分割リファクタリング: 1000行超のoperations.mdからステップ6をoperations-release.mdに分離し保守性向上（#257）
+- バリデーションスクリプト統合: validate-uncommitted.shとvalidate-remote-sync.shをvalidate-git.shに統合、後方互換ラッパー提供（#248）
+
+### Security
+
+- write-history.shの--contentパラメータの安全性に関するドキュメント改善: ヒアドキュメント方式の安全性根拠を技術的に明記（#254）
+
+---
+
 ## [1.18.0] - 2026-03-01
 
 ### Added
