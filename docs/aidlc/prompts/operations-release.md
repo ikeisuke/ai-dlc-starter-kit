@@ -248,8 +248,10 @@ EOF
 1. 以下のディレクトリでサマリファイルを検索:
    - `docs/cycles/{{CYCLE}}/construction/units/*-review-summary.md`
    - `docs/cycles/{{CYCLE}}/inception/*-review-summary.md`
-2. いずれかのファイルが存在する場合: 「## Closes」セクションの直前に「## レビューサマリ」セクションを挿入し、ファイルへのリンクを列挙（例: `- [Unit 001 レビューサマリ](docs/cycles/{{CYCLE}}/construction/units/001-review-summary.md)`）
-3. いずれも存在しない場合: レビューサマリセクションは追加しない（PR本文はheredocの内容のみ）
+2. リポジトリURLを取得: `gh repo view --json url --jq '.url'`
+3. いずれかのファイルが存在する場合: 「## Closes」セクションの直前に「## レビューサマリ」セクションを挿入し、ファイルへのリンクを列挙。**リンクはGitHub blob URL形式で記載する**（GitHub PR本文の相対リンクはデフォルトブランチを参照するため、サイクルブランチのファイルに正しくリンクするには絶対URLが必要）
+   - 形式: `- [Unit 001 レビューサマリ]({REPO_URL}/blob/cycle/{{CYCLE}}/docs/cycles/{{CYCLE}}/construction/units/001-review-summary.md)`
+4. いずれも存在しない場合: レビューサマリセクションは追加しない（PR本文はheredocの内容のみ）
 
 **ドラフトPRが見つからない場合**:
 
