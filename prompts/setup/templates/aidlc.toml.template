@@ -98,6 +98,13 @@ markdown_lint = false
 # - false: フィードバック送信機能を無効化（企業利用時のセキュリティ対策）
 enabled = true
 
+[rules.automation]
+# 自動化設定（v1.18.0で追加）
+# mode: "manual" | "semi_auto"
+# - manual: 従来どおりすべての承認ポイントでユーザー確認（デフォルト）
+# - semi_auto: AIレビュー合格時にユーザー承認を省略し自動遷移
+mode = "manual"
+
 [rules.custom]
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください

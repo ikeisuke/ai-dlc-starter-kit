@@ -94,7 +94,7 @@
 - テストコードを書く
 - 設計ドキュメントの詳細化（Construction Phaseで実施）
 
-**承認なしにConstruction Phaseに進んではいけない**
+**承認なしにConstruction Phaseに進んではいけない**（`automation_mode=semi_auto` での自動承認を除く）
 
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/progress-management.md` を読み込んで、内容を確認してください。
@@ -591,6 +591,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - スコープが明確に定義されているか
 - 曖昧な表現や解釈の余地がないか
 
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
 ### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
@@ -651,6 +653,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 受け入れ基準が具体的で検証可能か
 - ユーザー視点で価値が明確か
 
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
 ### ステップ4: Unit定義【重要】
@@ -689,6 +693,8 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 依存関係が正しく定義されているか
 - 見積もりが妥当か
 - 実装順序に矛盾がないか
+
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
@@ -841,6 +847,8 @@ EOF
 squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
 ### 6. コンテキストリセット提示【必須】
+
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、以下のメッセージを**必ず提示**してください。デフォルトはリセットです。
 

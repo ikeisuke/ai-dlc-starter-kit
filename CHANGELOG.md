@@ -7,6 +7,26 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.18.0] - 2026-03-01
+
+### Added
+
+- セミオートモード実装: `[rules.automation].mode = "semi_auto"` 設定でAIレビュー合格時のユーザー承認を省略し自動遷移（#164）
+- Amazon AI-DLCリポジトリ調査レポート: awslabs/aidlc-workflows との4軸比較分析と取り込み候補11件のリストアップ（#218）
+
+### Changed
+
+- レビューサマリ指摘一覧の詳細化: 問題点と対応内容を明確に記載するようテンプレートを改善（#247）
+- Issueクローズタイミング変更: Unit完了時からPRマージ時（Operations Phase）に変更（#249）
+
+### Fixed
+
+- issue-ops.sh: ラベル未作成時のエラーハンドリング改善（label-not-found分類追加）（#250）
+- squash-unit.sh: ルートコミットでのretroactive squash対応（#251）
+- resolve-starter-kit-path.sh: スクリプト実行位置ベースのパス解決に書き直し（#252）
+
+---
+
 ## [1.17.1] - 2026-02-28
 
 ### Added
