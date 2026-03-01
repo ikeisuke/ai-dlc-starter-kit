@@ -104,7 +104,9 @@ resolve_default_branch() {
     # 1. symbolic-refから解決
     ref=$(git -C "$repo_path" symbolic-ref "refs/remotes/${remote}/HEAD" 2>/dev/null || true)
     if [ -n "$ref" ]; then
-        printf '%s\n' "${ref##*/}"
+        # refs/remotes/<remote>/ プレフィックスを除去（スラッシュ含みブランチ名に対応）
+        local prefix="refs/remotes/${remote}/"
+        printf '%s\n' "${ref#"$prefix"}"
         return
     fi
 
