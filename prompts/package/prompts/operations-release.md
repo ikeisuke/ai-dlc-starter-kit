@@ -304,7 +304,7 @@ EOF
 PRマージ前に未コミットの変更がないことを確認します。
 
 ```bash
-docs/aidlc/bin/validate-uncommitted.sh
+docs/aidlc/bin/validate-git.sh uncommitted
 ```
 
 **結果に応じた対応**:
@@ -343,7 +343,7 @@ docs/aidlc/bin/validate-uncommitted.sh
 PRマージ前にローカルの全コミットがリモートにpushされていることを確認します。
 
 ```bash
-docs/aidlc/bin/validate-remote-sync.sh
+docs/aidlc/bin/validate-git.sh remote-sync
 ```
 
 **結果に応じた対応**:
