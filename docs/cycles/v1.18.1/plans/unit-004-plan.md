@@ -169,6 +169,7 @@ branch:cycle/v1.5.3
 step_result:0a:ok
 step:0b:作業状態検証
 step_result:0b:ok
+step:dry-run:git -C /path/to/main-repo checkout main
 step:dry-run:git -C /path/to/main-repo pull origin main
 step:dry-run:git fetch origin
 step:dry-run:git checkout --detach origin/main

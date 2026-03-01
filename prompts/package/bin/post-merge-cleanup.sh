@@ -239,9 +239,15 @@ step_1() {
     fi
 
     if [ "$DRY_RUN" = true ]; then
+        echo "step:dry-run:git -C ${MAIN_REPO_PATH} checkout ${DEFAULT_BRANCH}"
         echo "step:dry-run:git -C ${MAIN_REPO_PATH} pull ${MAIN_REMOTE} ${DEFAULT_BRANCH}"
         echo "step_result:1:ok"
         return
+    fi
+
+    # デフォルトブランチをチェックアウト（メインリポジトリが別ブランチにいる場合に備える）
+    if ! git -C "$MAIN_REPO_PATH" checkout "$DEFAULT_BRANCH" >/dev/null 2>&1; then
+        fatal_error "1" "pull-failed" "メインリポジトリのデフォルトブランチへのチェックアウトに失敗しました: git -C ${MAIN_REPO_PATH} checkout ${DEFAULT_BRANCH}"
     fi
 
     if ! GIT_TERMINAL_PROMPT=0 git -C "$MAIN_REPO_PATH" pull -- "$MAIN_REMOTE" "$DEFAULT_BRANCH" >/dev/null 2>&1; then
