@@ -4,7 +4,7 @@
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/project-info.md` を読み込んで、内容を確認してください。
 
-**セットアッププロンプトパス（アップグレード時のみ）**: $(ghq root)/github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md
+**アップグレード**: `/upgrading-aidlc` スキルを使用してください。
 
 ---
 
@@ -669,8 +669,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 **次のステップ**: 「start inception」と指示してください。
 
-**AI-DLCスターターキットをアップグレードする場合**: `${SETUP_PROMPT}` を読み込んでください。
-（ghq形式の場合: `$(ghq root)/${SETUP_PROMPT#ghq:}` で展開可能）
+**AI-DLCスターターキットをアップグレードする場合**: `/upgrading-aidlc` スキルを実行してください。
 ---
 ````
 
