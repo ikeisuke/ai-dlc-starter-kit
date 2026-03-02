@@ -206,7 +206,11 @@ if [[ ! -x "$CHECK_SETUP_TYPE" ]]; then
     echo "warn:check-setup-type-not-found"
     SETUP_TYPE=""
 else
-    SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" 2>/dev/null || true)
+    SETUP_TYPE_ARGS=()
+    if [[ "$CONFIG_PATH" != "docs/aidlc.toml" ]]; then
+        SETUP_TYPE_ARGS+=("$CONFIG_PATH")
+    fi
+    SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" "${SETUP_TYPE_ARGS[@]}" 2>/dev/null || true)
     SETUP_TYPE="${SETUP_TYPE_RAW#setup_type:}"
 fi
 
@@ -325,6 +329,8 @@ else
         if [[ ! -d "$local_dest" ]]; then
             if [[ "$DRY_RUN" == "true" ]]; then
                 echo "sync_mkdir:${local_dest}(dry-run)"
+                # dry-runでもsync-package.shが宛先を要求するため一時作成
+                mkdir -p "$local_dest"
             else
                 mkdir -p "$local_dest"
             fi
