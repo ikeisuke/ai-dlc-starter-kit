@@ -76,9 +76,50 @@ git worktree list
 cd .worktree/cycle-{{CYCLE}}
 ```
 
-## worktreeの削除
+## PRマージ後のクリーンアップ
 
-不要になったworktreeを削除する場合:
+PRマージ後の定型作業（pull、fetch、detach、ブランチ削除）を自動化できます。
+
+> **注**: `docs/aidlc/bin/` のパスは `sync-package.sh` 実行後に利用可能です。
+> 開発時は `prompts/package/bin/post-merge-cleanup.sh` を使用してください。
+
+```bash
+# 基本的な使い方（worktree内で実行）
+docs/aidlc/bin/post-merge-cleanup.sh --cycle v1.5.3
+
+# 事前確認（dry-run）
+docs/aidlc/bin/post-merge-cleanup.sh --cycle v1.5.3 --dry-run
+```
+
+出力例（dry-run）:
+
+```text
+step:0a:実行環境検証
+main_repo_path:/path/to/main-repo
+branch:cycle/v1.5.3
+step_result:0a:ok
+step:0b:作業状態検証
+step_result:0b:ok
+step:dry-run:git -C /path/to/main-repo pull origin main
+step:dry-run:git fetch origin
+step:dry-run:git checkout --detach origin/main
+step:dry-run:git branch -d cycle/v1.5.3
+step:dry-run:git push origin --delete cycle/v1.5.3
+status:success
+message:dry-run完了（実際のコマンドは実行されていません）
+```
+
+このスクリプトは以下を自動実行します:
+
+1. メインリポジトリでpull
+2. worktreeでfetch
+3. detached HEADに切り替え
+4. ローカルブランチを削除
+5. リモートブランチを削除
+
+## worktreeの削除（手動）
+
+不要になったworktreeを手動で削除する場合:
 
 ```bash
 # worktreeを削除

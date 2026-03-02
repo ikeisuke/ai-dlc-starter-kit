@@ -147,6 +147,14 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 - `fallback` 時: `reason_code` は `none` 以外、`fallback_reason` は空でない文字列
 - `automation_mode=manual` 時: シグナルを生成しない
 
+### `--content`引数の安全パターン【重要】
+
+`write-history.sh`の`--content`引数は、クォート付きヒアドキュメント（`<<'TOKEN'`）のみ許可する。
+
+- **許可**: `--content "$(cat <<'CONTENT_EOF' ... CONTENT_EOF )"`
+- **禁止**: クォートなしヒアドキュメント（`<<TOKEN`）、変数展開やコマンド置換を含む直接文字列（`--content "$(cmd)"`、`--content "$VAR"`）
+- **終端トークン衝突**: 本文に`CONTENT_EOF`が含まれる場合は代替トークン（例: `HISTORY_EOF`）を使用
+
 ### 自動承認時の履歴記録フォーマット
 
 ```bash
@@ -157,10 +165,13 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオート自動承認" \
-    --content "【セミオート自動承認】
+    --content "$(cat <<'CONTENT_EOF'
+【セミオート自動承認】
 【承認ポイントID】{承認ポイントID}
 【判定結果】auto_approved
-【AIレビュー結果】指摘0件"
+【AIレビュー結果】指摘0件
+CONTENT_EOF
+)"
 ```
 
 - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定
@@ -175,11 +186,14 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオートフォールバック" \
-    --content "【セミオートフォールバック】
+    --content "$(cat <<'CONTENT_EOF'
+【セミオートフォールバック】
 【承認ポイントID】{承認ポイントID}
 【判定結果】fallback
 【reason_code】{reason_code}
-【詳細】{fallback_reason}"
+【詳細】{fallback_reason}
+CONTENT_EOF
+)"
 ```
 
 - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定
