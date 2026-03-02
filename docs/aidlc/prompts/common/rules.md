@@ -147,15 +147,41 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 - `fallback` 時: `reason_code` は `none` 以外、`fallback_reason` は空でない文字列
 - `automation_mode=manual` 時: シグナルを生成しない
 
-### `--content`引数の安全パターン【重要】
+### Bashコードブロック内の`$()`使用禁止【重要】
 
-`write-history.sh`の`--content`引数は、クォート付きヒアドキュメント（`<<'TOKEN'`）のみ許可する。
+プロンプト`.md`ファイルのBashコードブロック（` ```bash ` 〜 ` ``` ` の範囲）内で`$()`コマンド置換を使用しない。Claude Codeのセミオートモードで許可プロンプトが発生するため。
 
-- **許可**: `--content "$(cat <<'CONTENT_EOF' ... CONTENT_EOF )"`
-- **禁止**: クォートなしヒアドキュメント（`<<TOKEN`）、変数展開やコマンド置換を含む直接文字列（`--content "$(cmd)"`、`--content "$VAR"`）
-- **終端トークン衝突**: 本文に`CONTENT_EOF`が含まれる場合は代替トークン（例: `HISTORY_EOF`）を使用
+- **禁止**: `git commit -m "$(cat <<'EOF'...)"`, `SQUASH_MESSAGE="$(cat <<'EOF'...)"`, `--content "$(cat <<'CONTENT_EOF'...)"` 等
+- **代替方式**:
+  - コミット: Writeツールで一時ファイル作成 → `git commit -F <tmpfile>` → 削除
+  - jj: Writeツールで一時ファイル作成 → `jj describe --stdin < <tmpfile>` → 削除
+  - write-history.sh: Writeツールで一時ファイル作成 → `--content-file <tmpfile>` → 削除
+  - squash-unit.sh: Writeツールで一時ファイル作成 → `--message-file <tmpfile>` → 削除
+  - gh pr create/edit: Writeツールで一時ファイル作成 → `--body-file <tmpfile>` → 削除
+  - 変数取得: 事前にBashでコマンド実行し結果を変数に格納
+- **例外**: `.sh`スクリプト内部の`$()`は対象外（Claude Codeの許可対象外）
+- **例外**: 説明文中のインラインコード・リテラルテキスト内の`$()`は対象外
+
+### `--content`/`--content-file`引数の安全パターン【重要】
+
+`write-history.sh`の`--content-file`方式を推奨。`--content`直接指定も後方互換として動作する。
+
+- **推奨**: Writeツールで一時ファイル作成 → `--content-file <tmpfile>` → 削除
+- **許可（後方互換）**: `--content "直接文字列"`（`$()`を含まないリテラル文字列のみ）
+- **禁止**: `--content "$(cmd)"`、`--content "$VAR"` 等のコマンド置換・変数展開を含む文字列
 
 ### 自動承認時の履歴記録フォーマット
+
+1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+```text
+【セミオート自動承認】
+【承認ポイントID】{承認ポイントID}
+【判定結果】auto_approved
+【AIレビュー結果】指摘0件
+```
+
+2. 以下を実行:
 
 ```bash
 docs/aidlc/bin/write-history.sh \
@@ -165,18 +191,26 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオート自動承認" \
-    --content "$(cat <<'CONTENT_EOF'
-【セミオート自動承認】
-【承認ポイントID】{承認ポイントID}
-【判定結果】auto_approved
-【AIレビュー結果】指摘0件
-CONTENT_EOF
-)"
+    --content-file <一時ファイルパス>
 ```
+
+3. 一時ファイルを削除
 
 - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定
 
 ### フォールバック時の履歴記録フォーマット
+
+1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+```text
+【セミオートフォールバック】
+【承認ポイントID】{承認ポイントID}
+【判定結果】fallback
+【reason_code】{reason_code}
+【詳細】{fallback_reason}
+```
+
+2. 以下を実行:
 
 ```bash
 docs/aidlc/bin/write-history.sh \
@@ -186,15 +220,10 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオートフォールバック" \
-    --content "$(cat <<'CONTENT_EOF'
-【セミオートフォールバック】
-【承認ポイントID】{承認ポイントID}
-【判定結果】fallback
-【reason_code】{reason_code}
-【詳細】{fallback_reason}
-CONTENT_EOF
-)"
+    --content-file <一時ファイルパス>
 ```
+
+3. 一時ファイルを削除
 
 - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定
 
