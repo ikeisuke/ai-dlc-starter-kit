@@ -170,6 +170,22 @@ docs/aidlc/bin/env-info.sh --setup
 - gh: ドラフトPR作成、Issue操作、ラベル作成をスキップ
 - dasel: AIが設定ファイルを直接読み取る（機能上の影響なし）
 
+#### 1.5 セッションタイトル設定
+
+ターミナルタイトルを設定して複数セッションの判別を容易にする。
+
+ステップ1の出力から `project.name` と `current_branch` を使用する。`current_branch` が `cycle/vX.X.X` 形式の場合はバージョン部分を抽出し、それ以外（detached HEAD等）は `unknown` を使用する。
+
+以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
+
+```bash
+printf '\033]0;%s\007' "{{project.name}} / Inception / {{CYCLE}}"
+```
+
+- AIが `project.name` と `current_branch` の値を直接置換してコマンドを組み立てること
+- コマンド内に `$()` を使用しない
+- `{{CYCLE}}`: `current_branch` から抽出したサイクルバージョン、不明時は `unknown`
+
 #### 2. デプロイ済みファイル確認
 
 ```bash

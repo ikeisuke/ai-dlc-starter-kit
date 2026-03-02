@@ -203,6 +203,21 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
+### 2.6 セッションタイトル設定
+
+ターミナルタイトルを設定して複数セッションの判別を容易にする。
+
+`docs/aidlc.toml` の `[project].name` からプロジェクト名を取得し、`{{CYCLE}}` をサイクルバージョンとして使用する。`{{CYCLE}}` が解決不能（detached HEAD等）の場合は `unknown` を使用する。
+
+以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
+
+```bash
+printf '\033]0;%s\007' "{{project.name}} / Construction / {{CYCLE}}"
+```
+
+- AIが値を直接置換してコマンドを組み立てること
+- コマンド内に `$()` を使用しない
+
 ### 3. 進捗状況確認【重要】
 
 **Unit定義ファイルから進捗を確認**:
@@ -794,7 +809,6 @@ gh pr edit --body-file <一時ファイルパス>
 1. `docs/cycles/{{CYCLE}}/construction/units/{NNN}-review-summary.md` の存在を確認
 2. 存在する場合: ファイル内容を読み込み、PR本文の末尾に「## レビューサマリ」セクションとして追記
 3. 存在しない場合: レビューサマリセクションは追加しない（PR本文はheredocの内容のみ）
-```
 
 3. **PRが存在しない場合（新規作成）**:
 

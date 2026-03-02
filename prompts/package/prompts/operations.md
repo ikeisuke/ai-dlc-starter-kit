@@ -145,6 +145,21 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
+### 2.6 セッションタイトル設定
+
+ターミナルタイトルを設定して複数セッションの判別を容易にする。
+
+`docs/aidlc.toml` の `[project].name` からプロジェクト名を取得し、`{{CYCLE}}` をサイクルバージョンとして使用する。`{{CYCLE}}` が解決不能（detached HEAD等）の場合は `unknown` を使用する。
+
+以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
+
+```bash
+printf '\033]0;%s\007' "{{project.name}} / Operations / {{CYCLE}}"
+```
+
+- AIが値を直接置換してコマンドを組み立てること
+- コマンド内に `$()` を使用しない
+
 ### 3. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
