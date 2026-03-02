@@ -16,15 +16,23 @@ AI-DLC環境を最新バージョンにアップグレードするスキル。
 
 `docs/aidlc.toml` の `[project]` セクションから `starter_kit_repo` を取得し、`ghq root` 経由でパスを解決する。
 
+1. 事前にBashで以下を順に実行し、結果を変数に格納:
+
 ```bash
 # 1. ghq root を取得
-GHQ_ROOT=$(ghq root)
-# 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: ghq:github.com/ikeisuke/ai-dlc-starter-kit）
-RAW_REPO=$(docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit")
-# 3. ghq: プレフィックスを除去してパスを組み立て
-REPO="${RAW_REPO#ghq:}"
-SETUP_PATH="${GHQ_ROOT}/${REPO}/prompts/setup-prompt.md"
+ghq root
 ```
+
+```bash
+# 2. docs/aidlc.toml から starter_kit_repo を取得（デフォルト: ghq:github.com/ikeisuke/ai-dlc-starter-kit）
+docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
+```
+
+2. 取得した値を使ってパスを組み立て:
+   - `GHQ_ROOT`: 手順1の出力
+   - `RAW_REPO`: 手順2の出力
+   - `REPO`: RAW_REPOから `ghq:` プレフィックスを除去
+   - `SETUP_PATH`: `{GHQ_ROOT}/{REPO}/prompts/setup-prompt.md`
 
 解決したパスのファイルを読み込む。
 
