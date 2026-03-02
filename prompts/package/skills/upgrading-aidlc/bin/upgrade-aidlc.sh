@@ -155,8 +155,9 @@ resolve_starter_kit_root() {
         raw_repo=$("$read_config" project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit" 2>/dev/null || true)
 
         if [[ -z "$raw_repo" ]]; then
-            echo "error:starter-kit-not-found:cannot read starter_kit_repo" >&2
-            return 1
+            # dasel未インストール時などread-config.shが失敗する場合、デフォルト値を使用
+            raw_repo="ghq:github.com/ikeisuke/ai-dlc-starter-kit"
+            echo "warn:read-config-fallback:using default starter_kit_repo"
         fi
 
         # ghq:プレフィックスを除去
@@ -329,8 +330,8 @@ else
         if [[ ! -d "$local_dest" ]]; then
             if [[ "$DRY_RUN" == "true" ]]; then
                 echo "sync_mkdir:${local_dest}(dry-run)"
-                # dry-runでもsync-package.shが宛先を要求するため一時作成
-                mkdir -p "$local_dest"
+                echo "sync_new:${subdir}(all files)"
+                continue
             else
                 mkdir -p "$local_dest"
             fi
