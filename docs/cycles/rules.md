@@ -45,13 +45,13 @@
 `/upgrading-aidlc` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
 
 ```bash
-docs/aidlc/bin/update-version.sh --version {{CYCLE}}
+bin/update-version.sh --version {{CYCLE}}
 ```
 
 dry-runで事前確認する場合:
 
 ```bash
-docs/aidlc/bin/update-version.sh --version {{CYCLE}} --dry-run
+bin/update-version.sh --version {{CYCLE}} --dry-run
 ```
 
 **理由**: AI-DLCスターターキット自体のリリース時にバージョン番号を更新するため。
