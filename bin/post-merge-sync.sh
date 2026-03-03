@@ -95,6 +95,18 @@ echo "worktree_dir:${WORKTREE_DIR}"
 echo ""
 echo "=== Step 1: 親リポジトリの更新 ==="
 
+# 親リポジトリがmainブランチであることを確認
+PARENT_BRANCH=$(cd "$PARENT_REPO" && git branch --show-current 2>/dev/null) || PARENT_BRANCH=""
+if [[ "$PARENT_BRANCH" != "main" ]]; then
+    echo "error: 親リポジトリがmainブランチではありません (current: ${PARENT_BRANCH:-detached HEAD})" >&2
+    echo "" >&2
+    echo "手動で以下を実行してください:" >&2
+    echo "  cd ${PARENT_REPO}" >&2
+    echo "  git checkout main" >&2
+    echo "  git pull origin main" >&2
+    exit 1
+fi
+
 if [[ "$DRY_RUN" == "true" ]]; then
     echo "[dry-run] cd ${PARENT_REPO} && git pull origin main"
 else

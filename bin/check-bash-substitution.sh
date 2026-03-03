@@ -73,7 +73,7 @@ check_file() {
             }
             next
         }
-        in_bash && /\$\(/ {
+        in_bash && /\$\(/ && !/\$\(\(/ {
             printf "%s:%d: $() command substitution found: %s\n", FILENAME, FNR, $0
         }
         in_bash && /`/ {
