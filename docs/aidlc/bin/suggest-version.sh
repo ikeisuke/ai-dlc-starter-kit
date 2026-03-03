@@ -12,6 +12,7 @@
 # suggested_patch:v1.12.1
 # suggested_minor:v1.13.0
 # suggested_major:v2.0.0
+# all_cycles:v1.12.0,v1.12.1,feature-auth
 
 set -euo pipefail
 
@@ -82,13 +83,34 @@ calculate_next_version() {
     esac
 }
 
+# 全サイクルを列挙（SemVer・非SemVer問わず）
+get_all_cycles() {
+    local result=()
+    local dir_name
+
+    for dir in docs/cycles/*/; do
+        [[ ! -d "$dir" ]] && continue
+        dir_name=$(basename "$dir")
+        # 非サイクルディレクトリを除外
+        case "$dir_name" in
+            backlog|backlog-completed) continue ;;
+        esac
+        result+=("$dir_name")
+    done
+
+    # カンマ区切りで出力
+    local IFS=','
+    echo "${result[*]}"
+}
+
 # メイン処理
 main() {
-    local branch_version latest_cycle
+    local branch_version latest_cycle all_cycles
     local suggested_patch suggested_minor suggested_major
 
     branch_version=$(get_branch_version)
     latest_cycle=$(get_latest_cycle)
+    all_cycles=$(get_all_cycles)
 
     # 次バージョンの計算（最新サイクルがある場合はそれを基準に）
     if [[ -n "$latest_cycle" ]]; then
@@ -107,6 +129,7 @@ main() {
     echo "suggested_patch:${suggested_patch}"
     echo "suggested_minor:${suggested_minor}"
     echo "suggested_major:${suggested_major}"
+    echo "all_cycles:${all_cycles}"
 }
 
 main "$@"
