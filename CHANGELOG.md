@@ -7,6 +7,26 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.18.3] - 2026-03-04
+
+### Added
+
+- CI Bashコードブロック置換チェック: `prompts/package/prompts/` 配下のMarkdownファイル内のBashコードブロックで `$()` やバッククォートによるコマンド置換を自動検出するCIジョブを追加（#261）
+- バージョン決定コンテキスト表示: Inception Phaseのバージョン提案前にバックログ一覧と直近サイクルの概要を表示（#217）
+- 非SemVerサイクル命名対応: suggest-version.shで全サイクル一覧を出力し、カスタム名の重複チェックをサポート（#217）
+- マージ後worktree同期自動化: `bin/post-merge-sync.sh` で親リポジトリのmain pull、worktreeのdetached HEAD化、マージ済みサイクルブランチ削除を自動化（#211）
+
+### Changed
+
+- upgrade-aidlc.sh: daselを必須依存に変更し、未インストール時にエラー終了とインストール手順を表示（#263）
+- upgrade-aidlc.sh: `--config` オプションを廃止（全ユーザーがデフォルトパスを使用しており実需なし）（#264）
+
+### Fixed
+
+- セミオートモードでConstruction Phaseのレビューサマリが生成されないバグを修正（#262）
+
+---
+
 ## [1.18.2] - 2026-03-02
 
 ### Added

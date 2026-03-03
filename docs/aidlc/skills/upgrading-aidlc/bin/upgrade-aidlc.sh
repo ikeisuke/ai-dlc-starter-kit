@@ -10,6 +10,7 @@
 #
 # オプション:
 #   --dry-run       実際の変更を行わず差分を表示
+#   --config PATH   aidlc.tomlのパス（デフォルト: docs/aidlc.toml）
 #   --no-sync       パッケージ同期をスキップ
 #   --no-migrate    設定マイグレーションをスキップ
 #   --force         アップグレード不要でも強制実行
@@ -42,6 +43,7 @@ AI-DLCアップグレードオーケストレーションスクリプト。
 
 Options:
   --dry-run       実際の変更を行わず差分を表示
+  --config PATH   aidlc.tomlのパス（デフォルト: docs/aidlc.toml）
   --no-sync       パッケージ同期をスキップ
   --no-migrate    設定マイグレーションをスキップ
   --force         アップグレード不要でも強制実行
@@ -55,6 +57,14 @@ while [[ $# -gt 0 ]]; do
         --dry-run)
             DRY_RUN=true
             shift
+            ;;
+        --config)
+            if [[ -z "${2:-}" ]]; then
+                echo "error:missing-config-value" >&2
+                exit 1
+            fi
+            CONFIG_PATH="$2"
+            shift 2
             ;;
         --no-sync)
             NO_SYNC=true
@@ -78,15 +88,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-# === dasel必須チェック ===
-if ! command -v dasel >/dev/null 2>&1; then
-    echo "error:dasel-required" >&2
-    echo "daselがインストールされていません。以下の方法でインストールしてください:" >&2
-    echo "  macOS:  brew install dasel" >&2
-    echo "  Linux:  https://github.com/TomWright/dasel#installation" >&2
-    exit 1
-fi
 
 # === 一時ファイル管理 ===
 _cleanup_files=()
@@ -154,7 +155,7 @@ resolve_starter_kit_root() {
         raw_repo=$("$read_config" project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit" 2>/dev/null || true)
 
         if [[ -z "$raw_repo" ]]; then
-            # read-config.shが設定値を取得できない場合、デフォルト値を使用
+            # dasel未インストール時などread-config.shが失敗する場合、デフォルト値を使用
             raw_repo="ghq:github.com/ikeisuke/ai-dlc-starter-kit"
             echo "warn:read-config-fallback:using default starter_kit_repo"
         fi
@@ -206,7 +207,11 @@ if [[ ! -x "$CHECK_SETUP_TYPE" ]]; then
     echo "warn:check-setup-type-not-found"
     SETUP_TYPE=""
 else
-    SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" 2>/dev/null || true)
+    SETUP_TYPE_ARGS=()
+    if [[ "$CONFIG_PATH" != "docs/aidlc.toml" ]]; then
+        SETUP_TYPE_ARGS+=("$CONFIG_PATH")
+    fi
+    SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" "${SETUP_TYPE_ARGS[@]}" 2>/dev/null || true)
     SETUP_TYPE="${SETUP_TYPE_RAW#setup_type:}"
 fi
 
@@ -234,8 +239,9 @@ case "$SETUP_TYPE" in
         exit 1
         ;;
     "")
-        # check-setup-type.sh不在（daselは必須チェック済み）
-        echo "warn:setup-type-empty"
+        # dasel未インストールまたはcheck-setup-type.sh不在
+        echo "warn:dasel-not-found"
+        # version.txt直接比較で続行
         ;;
     *)
         echo "warn:unknown-setup-type:${SETUP_TYPE}"
