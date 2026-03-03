@@ -135,6 +135,69 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 5. **AIレビューフロー**:
    - **レビュー前コミット**: `common/commit-flow.md` の「レビュー前コミット」手順に従う
 
+   - **機密情報除外スキャン**:
+
+     レビュー対象ファイルを外部AIツールへ渡す前に、機密情報を含む可能性のあるファイルを除外する。
+
+     **スキップ条件**: セルフレビュー（ステップ5.5）は外部AIへの情報送信がないため、このスキャンをスキップする。
+
+     **デフォルト除外パターン**（常に適用）:
+
+     | パターン | 対象 |
+     |---------|------|
+     | `.env*` | 環境変数ファイル |
+     | `*.key` | 秘密鍵ファイル |
+     | `*.pem` | 証明書・鍵ファイル |
+     | `credentials.*` | 認証情報ファイル |
+     | `*secret*` | シークレット関連ファイル |
+
+     **カスタムパターン**: `docs/aidlc.toml` の `[rules.reviewing].exclude_patterns` を読み取る。
+
+     ```toml
+     [rules.reviewing]
+     exclude_patterns = ["*.p12", "config/secrets/**"]
+     ```
+
+     - 未設定・空配列: デフォルトパターンのみ適用
+     - 非配列型（文字列・数値等）: 警告を出力しデフォルトパターンのみ適用
+     - 設定あり: デフォルトパターンに**追加**して適用（デフォルトは常に適用）
+
+     **パターンマッチルール**:
+     - デフォルトパターンおよび `/` を含まないカスタムパターン: ファイルの**ベース名**に適用（例: `credentials.*` は `config/credentials.json` のベース名 `credentials.json` にマッチ）
+     - `/` を含むカスタムパターン: **フルパス**（プロジェクトルート相対）に適用（例: `config/secrets/**`）
+     - 照合は**ケースインセンシティブ**で行う（例: `Credentials.JSON` も `credentials.*` にマッチ）
+
+     **スキャン手順**:
+     1. レビュー対象ファイル一覧を取得（git diff や変更ファイル一覧から）
+     2. 各ファイルのベース名（またはフルパス）をデフォルト+カスタムパターンと照合
+        - `/` を含まないパターン: ファイルのベース名と照合（例: `*.key` → `server.key` にマッチ）
+        - `/` を含むパターン: プロジェクトルート相対パスと照合（例: `config/secrets/**` → `config/secrets/db.yml` にマッチ）
+     3. マッチしたファイルをレビュー対象から除外
+     4. **全ファイル除外チェック**: 除外後のファイル一覧が空（全ファイルが除外された）場合、以下の警告を出力しレビューを続行しない:
+
+        ```text
+        【警告】除外パターンにより全てのレビュー対象ファイルが除外されました。
+        exclude_patterns の設定を確認してください。
+        適用パターン: [適用されたパターン一覧]
+        ```
+
+        この場合、AIレビューはスキップされ、ステップ7（ユーザーレビューフロー）へ遷移する。
+     5. 除外後のファイル一覧を以降のAIレビュー呼び出し引数に使用する
+
+     **除外通知フォーマット**:
+
+     除外ファイルがある場合、ファイルパスのみをユーザーに通知（ファイル内容は含まない）:
+
+     ```text
+     【機密情報除外】以下のファイルをレビュー対象から除外しました:
+     - .env.local（パターン: .env*）
+     - config/credentials.json（パターン: credentials.*）
+
+     除外パターンは docs/aidlc.toml の [rules.reviewing].exclude_patterns でカスタマイズできます。
+     ```
+
+     除外ファイルがない場合: 通知なし（無言で続行）。
+
    - **種別ごとの反復レビュー**（レビュー種別リストを先頭から順に直列実行）:
 
      各種別で以下を実行:
@@ -151,6 +214,18 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
         **履歴への記録**:
 
+        1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+        ```text
+        【AIレビュー完了】指摘0件
+        【対象タイミング】{呼び出し元のステップ名（例: 設計レビュー、統合とレビュー）}
+        【対象成果物】{成果物名}
+        【レビュー種別】{実行した全種別（例: code, security）}
+        【レビューツール】{使用したツール名}
+        ```
+
+        2. 以下を実行:
+
         ```bash
         docs/aidlc/bin/write-history.sh \
             --cycle {{CYCLE}} \
@@ -159,17 +234,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content "$(cat <<'CONTENT_EOF'
-        【AIレビュー完了】指摘0件
-        【対象タイミング】{呼び出し元のステップ名（例: 設計レビュー、統合とレビュー）}
-        【対象成果物】{成果物名}
-        【レビュー種別】{実行した全種別（例: code, security）}
-        【レビューツール】{使用したツール名}
-        CONTENT_EOF
-        )"
+            --content-file <一時ファイルパス>
         ```
 
-        > **注意**: `CONTENT_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
+        3. 一時ファイルを削除
 
         - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
         - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -276,6 +344,17 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
      - 選択肢1: 通常の判断フローへ進む
      - 選択肢2: 以下を履歴に記録し、ユーザー承認ステップへ進む:
 
+       1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+       ```text
+       【千日手検出】AIレビューが収束せず、ユーザー判断によりユーザー承認へ移行
+       【対象成果物】{成果物名}
+       【反復回数】{過去の反復レビュー回数}
+       【繰り返し指摘】{繰り返されていた指摘の要約}
+       ```
+
+       2. 以下を実行:
+
        ```bash
        docs/aidlc/bin/write-history.sh \
            --cycle {{CYCLE}} \
@@ -284,14 +363,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --unit-name "[Unit名]" \
            --unit-slug "[unit-slug]" \
            --step "千日手判断" \
-           --content "$(cat <<'CONTENT_EOF'
-       【千日手検出】AIレビューが収束せず、ユーザー判断によりユーザー承認へ移行
-       【対象成果物】{成果物名}
-       【反復回数】{過去の反復レビュー回数}
-       【繰り返し指摘】{繰り返されていた指摘の要約}
-       CONTENT_EOF
-       )"
+           --content-file <一時ファイルパス>
        ```
+
+       3. 一時ファイルを削除
 
        - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
        - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -364,6 +439,16 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
    5. **先送り判断の履歴記録**（選択肢2または3の場合、各指摘ごと）:
 
+      1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+      ```text
+      【指摘 #{index}】{指摘内容の要約}
+      【判断種別】{TECHNICAL_BLOCKER|OUT_OF_SCOPE}
+      【先送り理由】{ユーザーが入力した理由}
+      ```
+
+      2. 以下を実行:
+
       ```bash
       docs/aidlc/bin/write-history.sh \
           --cycle {{CYCLE}} \
@@ -372,13 +457,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断" \
-          --content "$(cat <<'CONTENT_EOF'
-      【指摘 #{index}】{指摘内容の要約}
-      【判断種別】{TECHNICAL_BLOCKER|OUT_OF_SCOPE}
-      【先送り理由】{ユーザーが入力した理由}
-      CONTENT_EOF
-      )"
+          --content-file <一時ファイルパス>
       ```
+
+      3. 一時ファイルを削除
 
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
       - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -453,11 +535,9 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            - securityレビュー指摘の場合: `"backlog,type:security,priority:medium"`
            - その他のレビュー指摘の場合: `"backlog,type:chore,priority:medium"`
 
-           ```bash
-           gh issue create \
-               --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
-               --label "backlog,type:{決定済みの種別},priority:medium" \
-               --body "$(cat <<'BODY_EOF'
+           1. Writeツールで一時ファイルを作成（内容: Issue本文）:
+
+           ```text
            ## スラッグ
 
            {slug}
@@ -479,9 +559,18 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            ## 対応案
 
            次サイクル以降で対応を検討。
-           BODY_EOF
-           )"
            ```
+
+           2. 以下を実行:
+
+           ```bash
+           gh issue create \
+               --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
+               --label "backlog,type:{決定済みの種別},priority:medium" \
+               --body-file <一時ファイルパス>
+           ```
+
+           3. 一時ファイルを削除
 
            Issue作成に失敗した場合:
            - `mode = issue`: ファイルベース（上記git方式）にフォールバック
@@ -501,7 +590,16 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
        **バックログ登録完了の履歴記録**（各OUT_OF_SCOPE指摘ごとに1件記録）:
 
-       constructionフェーズの場合:
+       1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+       ```text
+       【バックログ自動登録】OUT_OF_SCOPE指摘のバックログ登録
+       【指摘内容】{指摘内容の要約}
+       【登録方法】{Issue / File / スキップ（手動対応依頼）}
+       【登録先】{Issue番号 / ファイルパス / -}
+       ```
+
+       2. 以下を実行（constructionフェーズの場合）:
 
        ```bash
        docs/aidlc/bin/write-history.sh \
@@ -511,13 +609,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --unit-name "[Unit名]" \
            --unit-slug "[unit-slug]" \
            --step "バックログ自動登録" \
-           --content "$(cat <<'CONTENT_EOF'
-       【バックログ自動登録】OUT_OF_SCOPE指摘のバックログ登録
-       【指摘内容】{指摘内容の要約}
-       【登録方法】{Issue / File / スキップ（手動対応依頼）}
-       【登録先】{Issue番号 / ファイルパス / -}
-       CONTENT_EOF
-       )"
+           --content-file <一時ファイルパス>
        ```
 
        inceptionフェーズの場合（`--unit*` 引数を省略）:
@@ -527,20 +619,26 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --cycle {{CYCLE}} \
            --phase inception \
            --step "バックログ自動登録" \
-           --content "$(cat <<'CONTENT_EOF'
-       【バックログ自動登録】OUT_OF_SCOPE指摘のバックログ登録
-       【指摘内容】{指摘内容の要約}
-       【登録方法】{Issue / File / スキップ（手動対応依頼）}
-       【登録先】{Issue番号 / ファイルパス / -}
-       CONTENT_EOF
-       )"
+           --content-file <一時ファイルパス>
        ```
 
-       > **注意**: `CONTENT_EOF` / `BODY_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
+       3. 一時ファイルを削除
 
    <!-- markdownlint-enable MD046 -->
 
    6. **全指摘の判断完了後、サマリを履歴に記録**:
+
+      1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+      ```text
+      【AIレビュー指摘対応判断サマリ】
+        指摘 #1: RESOLVE（修正予定）
+        指摘 #2: TECHNICAL_BLOCKER（理由記録済み）
+        指摘 #3: OUT_OF_SCOPE（理由記録済み）
+      【次のアクション】{修正実施後に再レビュー|ユーザーレビューへ}
+      ```
+
+      2. 以下を実行:
 
       ```bash
       docs/aidlc/bin/write-history.sh \
@@ -550,15 +648,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断サマリ" \
-          --content "$(cat <<'CONTENT_EOF'
-      【AIレビュー指摘対応判断サマリ】
-        指摘 #1: RESOLVE（修正予定）
-        指摘 #2: TECHNICAL_BLOCKER（理由記録済み）
-        指摘 #3: OUT_OF_SCOPE（理由記録済み）
-      【次のアクション】{修正実施後に再レビュー|ユーザーレビューへ}
-      CONTENT_EOF
-      )"
+          --content-file <一時ファイルパス>
       ```
+
+      3. 一時ファイルを削除
 
       - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
       - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -651,6 +744,19 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
         **履歴への記録**:
 
+        1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+        ```text
+        【AIレビュー完了（セルフレビュー）】指摘0件
+        【対象タイミング】{呼び出し元のステップ名}
+        【対象成果物】{成果物名}
+        【レビュー種別】{実行した全種別}
+        【レビューツール】{self-review(skill) | self-review(inline)}
+        【注記】セルフレビューによる実施。
+        ```
+
+        2. 以下を実行:
+
         ```bash
         docs/aidlc/bin/write-history.sh \
             --cycle {{CYCLE}} \
@@ -659,16 +765,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content "$(cat <<'CONTENT_EOF'
-        【AIレビュー完了（セルフレビュー）】指摘0件
-        【対象タイミング】{呼び出し元のステップ名}
-        【対象成果物】{成果物名}
-        【レビュー種別】{実行した全種別}
-        【レビューツール】{self-review(skill) | self-review(inline)}
-        【注記】セルフレビューによる実施。
-        CONTENT_EOF
-        )"
+            --content-file <一時ファイルパス>
         ```
+
+        3. 一時ファイルを削除
 
         - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
         - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する
@@ -757,6 +857,16 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
        3. 以下を履歴に記録してステップ7へ:
 
+          1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+
+          ```text
+          【AIレビュースキップ】外部AIレビュー継続不能
+          【スキップ理由】{ユーザーが入力した理由}
+          【対象成果物】{成果物名}
+          ```
+
+          2. 以下を実行:
+
           ```bash
           docs/aidlc/bin/write-history.sh \
               --cycle {{CYCLE}} \
@@ -765,15 +875,10 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
               --unit-name "[Unit名]" \
               --unit-slug "[unit-slug]" \
               --step "AIレビュースキップ" \
-              --content "$(cat <<'CONTENT_EOF'
-          【AIレビュースキップ】外部AIレビュー継続不能
-          【スキップ理由】{ユーザーが入力した理由}
-          【対象成果物】{成果物名}
-          CONTENT_EOF
-          )"
+              --content-file <一時ファイルパス>
           ```
 
-          > **注意**: `CONTENT_EOF` 終端行は、実行時には行頭（インデントなし）に配置すること。上記コード例ではドキュメントの可読性のためインデントしている。
+          3. 一時ファイルを削除
 
           - `{{PHASE}}`: 呼び出し元のフェーズ（`construction` または `inception`）
           - `--unit`, `--unit-name`, `--unit-slug`: constructionフェーズの場合のみ指定。inceptionフェーズではこれらの引数を省略する

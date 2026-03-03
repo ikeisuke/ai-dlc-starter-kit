@@ -220,9 +220,9 @@ docs/aidlc/bin/pr-ops.sh ready {PR番号}
 
 **PR本文の更新**（Ready化後、レビューサマリの記載手順は下記参照）:
 
-<!-- markdownlint-disable MD031 -->
-```bash
-gh pr edit {PR番号} --body "$(cat <<'EOF'
+1. Writeツールで一時ファイルを作成（内容: PR本文）:
+
+```text
 ## Summary
 [Intentから抽出した概要]
 
@@ -239,10 +239,15 @@ gh pr edit {PR番号} --body "$(cat <<'EOF'
 Closes #[Issue番号]
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
 ```
-<!-- markdownlint-enable MD031 -->
+
+2. 以下を実行:
+
+```bash
+gh pr edit {PR番号} --body-file <一時ファイルパス>
+```
+
+3. 一時ファイルを削除
 
 **レビューサマリの記載手順**:
 1. 以下のディレクトリでサマリファイルを検索:
@@ -273,29 +278,15 @@ EOF
 
 **複数Issueがある場合**: 各Issue番号を別行で `Closes #xx` 形式で記載
 
-<!-- markdownlint-disable MD031 -->
+1. Writeツールで一時ファイルを作成（内容: PR本文、上記Ready化時と同内容）
+
+2. 以下を実行:
+
 ```bash
-gh pr create --base main --title "{{CYCLE}}" --body "$(cat <<'EOF'
-## Summary
-[Intentから抽出した概要]
-
-## 受け入れ基準
-[各Unit計画ファイルの「完了条件チェックリスト」から集約して記載]
-
-## 変更概要
-[全Unitの主な変更点を箇条書き]
-
-## Test plan
-- [ ] 主要機能が動作する
-
-## Closes
-Closes #[Issue番号]
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+gh pr create --base main --title "{{CYCLE}}" --body-file <一時ファイルパス>
 ```
-<!-- markdownlint-enable MD031 -->
+
+3. 一時ファイルを削除
 
 **レビューサマリの記載手順**: Ready化時と同じ手順に従う（上記参照）。
 

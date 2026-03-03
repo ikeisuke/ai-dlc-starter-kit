@@ -45,13 +45,13 @@
 `/upgrading-aidlc` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
 
 ```bash
-docs/aidlc/bin/update-version.sh --version {{CYCLE}}
+bin/update-version.sh --version {{CYCLE}}
 ```
 
 dry-runで事前確認する場合:
 
 ```bash
-docs/aidlc/bin/update-version.sh --version {{CYCLE}} --dry-run
+bin/update-version.sh --version {{CYCLE}} --dry-run
 ```
 
 **理由**: AI-DLCスターターキット自体のリリース時にバージョン番号を更新するため。
@@ -60,7 +60,15 @@ docs/aidlc/bin/update-version.sh --version {{CYCLE}} --dry-run
 
 ## コーディング規約
 
-プロジェクトのコーディング規約を記載してください。
+### Bashコードブロック内の `$()` 使用禁止【重要】
+
+プロンプト（`prompts/package/prompts/` 配下の `.md` ファイル）内の Bash コードブロックでは、`$()` によるコマンド置換を使用しない。
+
+**理由**: `$()` を含むコードブロックは、AIエージェントがプロンプトを読み込む際に意図せず展開・実行される可能性がある。
+
+**対応方法**:
+- 動的な値はAIエージェントがコンテキスト変数から直接置換する（例: `{{CYCLE}}`, `{{project.name}}`）
+- コマンド出力が必要な場合は別ステップで実行し、結果を変数として保持する
 
 （例）
 - 命名規則: lowerCamelCase、UPPER_SNAKE_CASE等

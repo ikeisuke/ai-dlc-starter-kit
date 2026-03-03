@@ -12,7 +12,8 @@
 #   --unit-name <NAME>      Unit名（constructionフェーズの場合必須）
 #   --unit-slug <SLUG>      Unitスラッグ（constructionフェーズの場合必須）
 #   --step <STEP>           ステップ名（必須）
-#   --content <CONTENT>     実行内容（必須）
+#   --content <CONTENT>     実行内容（必須、--content-fileと排他）
+#   --content-file <PATH>   実行内容をファイルから読み込み（--contentと排他）
 #   --artifacts <PATHS>     成果物パス（オプション、複数回指定可能）
 #   -h, --help              ヘルプを表示
 #   --dry-run               ファイル追記せず、状態のみ表示
@@ -39,6 +40,7 @@ UNIT_NAME=""
 UNIT_SLUG=""
 STEP=""
 CONTENT=""
+CONTENT_FILE=""
 ARTIFACTS=()
 DRY_RUN=false
 
@@ -56,7 +58,8 @@ OPTIONS:
   --unit-name <NAME>      Unit名（constructionフェーズの場合必須）
   --unit-slug <SLUG>      Unitスラッグ（constructionフェーズの場合必須）
   --step <STEP>           ステップ名（必須）
-  --content <CONTENT>     実行内容（必須）
+  --content <CONTENT>     実行内容（必須、--content-fileと排他）
+  --content-file <PATH>   実行内容をファイルから読み込み（--contentと排他）
   --artifacts <PATHS>     成果物パス（オプション、複数回指定可能）
   -h, --help              このヘルプを表示
   --dry-run               ファイル追記せず、状態のみ表示
@@ -278,6 +281,14 @@ main() {
                 CONTENT="$2"
                 shift 2
                 ;;
+            --content-file)
+                if [[ -z "${2:-}" ]]; then
+                    echo "error:--content-file requires a value" >&2
+                    exit 1
+                fi
+                CONTENT_FILE="$2"
+                shift 2
+                ;;
             --artifacts)
                 if [[ -z "${2:-}" ]]; then
                     echo "error:--artifacts requires a value" >&2
@@ -325,6 +336,23 @@ main() {
     if [[ -z "$STEP" ]]; then
         echo "error:--step is required" >&2
         exit 1
+    fi
+
+    # --content と --content-file の排他チェック・ファイル読み込み
+    if [[ -n "${CONTENT_FILE:-}" ]]; then
+        if [[ -n "$CONTENT" ]]; then
+            echo "error:--content and --content-file are mutually exclusive" >&2
+            exit 1
+        fi
+        if [[ ! -f "$CONTENT_FILE" ]]; then
+            echo "error:file-not-found:$CONTENT_FILE" >&2
+            exit 1
+        fi
+        if [[ ! -s "$CONTENT_FILE" ]]; then
+            echo "error:empty-file:$CONTENT_FILE" >&2
+            exit 1
+        fi
+        CONTENT="$(cat "$CONTENT_FILE")"
     fi
 
     if [[ -z "$CONTENT" ]]; then

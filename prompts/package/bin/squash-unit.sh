@@ -8,6 +8,7 @@ set -euo pipefail
 CYCLE=""
 UNIT=""  # オプション: 呼び出し元との契約として受け取るが、現在のロジックでは未使用
 MESSAGE=""
+MESSAGE_FILE=""
 DRY_RUN=false
 VCS_TYPE=""
 BASE_COMMIT=""
@@ -38,7 +39,8 @@ Unit完了時に中間コミットを1つにまとめるsquashスクリプト。
 
 Required:
   --cycle <CYCLE>         サイクル名（例: v1.15.0）
-  --message <MESSAGE>     squash後のコミットメッセージ
+  --message <MESSAGE>     squash後のコミットメッセージ（--message-fileと排他）
+  --message-file <PATH>   コミットメッセージをファイルから読み込み（--messageと排他）
   --vcs <git|jj>          使用するVCS種類
 
 Optional:
@@ -86,6 +88,14 @@ parse_args() {
                     exit 2
                 fi
                 MESSAGE="$2"
+                shift 2
+                ;;
+            --message-file)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --message-file requires a value" >&2
+                    exit 2
+                fi
+                MESSAGE_FILE="$2"
                 shift 2
                 ;;
             --vcs)
@@ -146,6 +156,22 @@ parse_args() {
     if [[ -z "$CYCLE" ]]; then
         echo "Error: --cycle is required" >&2
         exit 2
+    fi
+    # --message と --message-file の排他チェック・ファイル読み込み
+    if [[ -n "$MESSAGE_FILE" ]]; then
+        if [[ -n "$MESSAGE" ]]; then
+            echo "Error: --message and --message-file are mutually exclusive" >&2
+            exit 2
+        fi
+        if [[ ! -f "$MESSAGE_FILE" ]]; then
+            echo "Error: file not found: $MESSAGE_FILE" >&2
+            exit 2
+        fi
+        if [[ ! -s "$MESSAGE_FILE" ]]; then
+            echo "Error: file is empty: $MESSAGE_FILE" >&2
+            exit 2
+        fi
+        MESSAGE="$(cat "$MESSAGE_FILE")"
     fi
     if [[ -z "$MESSAGE" ]]; then
         echo "Error: --message is required" >&2

@@ -17,6 +17,7 @@ mode = "git"
 [rules.reviewing]
 mode = "recommend"
 tools = ["codex"]
+exclude_patterns = []
 
 [rules.worktree]
 enabled = false

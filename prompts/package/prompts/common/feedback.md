@@ -35,16 +35,23 @@ docs/aidlc/bin/read-config.sh rules.feedback.enabled --default "true"
    - ユーザーが内容を確認・編集してから送信できる
    - **重要**: ユーザー入力はヒアドキュメントで安全に渡すこと
 
+   1. Writeツールで一時ファイルを作成（内容: フィードバック本文）:
+
+   ```text
+   フィードバック内容をここに記載
+   ```
+
+   2. 以下を実行:
+
    ```bash
    gh issue create --web \
      --repo ikeisuke/ai-dlc-starter-kit \
      --template feedback.yml \
      --title "[Feedback] タイトル" \
-     --body "$(cat <<'EOF'
-   フィードバック内容をここに記載
-   EOF
-   )"
+     --body-file <一時ファイルパス>
    ```
+
+   3. 一時ファイルを削除
 
 3. **GitHub CLIが利用できない場合**:
    - 以下のURLを案内する

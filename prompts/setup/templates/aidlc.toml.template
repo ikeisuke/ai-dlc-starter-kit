@@ -61,6 +61,10 @@ mode = "recommend"
 # - 例: ["codex", "claude", "gemini"]
 # - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
 tools = ["codex"]
+# exclude_patterns: レビュー対象から除外するファイルパターン（配列）
+# - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
+# - ここに追加のパターンを指定可能
+# exclude_patterns = ["*.p12", "config/secrets/**"]
 
 [rules.worktree]
 # git worktree設定
