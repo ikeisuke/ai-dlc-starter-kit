@@ -7,6 +7,17 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.18.4] - 2026-03-05
+
+### Added
+
+- セミオートモードPhase遷移改善: Construction→Operations遷移時の不要な停止を解消し、全Unit完了時に自動遷移（#267）
+- エラー時バックログ記録支援: Construction Phaseでエラー発生時にバックログ登録を提案するフローを追加（#266）
+- session-titleスキル: macOS専用のターミナルタブタイトル＋iTerm2バッジ設定スキルを新規作成。osascript（on run argv）でインジェクション防止（#269）
+- PRマージ前レビューコメント確認: Operations Phase 6.7実行前にGitHub REST APIでCHANGES_REQUESTED状態と未返信コメントを検出する必須ゲートを追加（#268）
+
+---
+
 ## [1.18.3] - 2026-03-04
 
 ### Added
