@@ -147,7 +147,7 @@ backlog_mode:issue-only
 
 ### 2.6 セッション判別設定
 
-`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（エラー時はスキップして続行）。
+`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
 引数: `project.name`=`docs/aidlc.toml` の `[project].name`、`phase`=`Operations`、`cycle`=`{{CYCLE}}`（不明時は `unknown`）
 

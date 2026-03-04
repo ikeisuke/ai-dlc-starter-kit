@@ -1,12 +1,14 @@
 ---
 name: session-title
-description: Sets terminal tab title and iTerm2 badge for AI-DLC session identification. Use at step 1.5 (Inception) or step 2.6 (Construction/Operations) of each AI-DLC phase. Also use when the user says "セッションタイトル", "set session title", or "session-title".
+description: "macOS専用: Sets terminal tab title and iTerm2 badge for AI-DLC session identification. Use at step 1.5 (Inception) or step 2.6 (Construction/Operations) of each AI-DLC phase. Also use when the user says \"セッションタイトル\", \"set session title\", or \"session-title\". Requires macOS (uses osascript). On non-macOS, silently skipped."
 argument-hint: <project_name> <phase> <cycle>
 ---
 
-# Session Title
+# Session Title（macOS専用）
 
 ターミナルのタブタイトルとiTerm2バッジを設定し、複数セッションの判別を容易にする。
+
+**動作環境**: macOS のみ。osascript（Apple Events）を使用するため、Linux/Windows環境では動作しない（エラーにはならずスキップされる）。
 
 ## 実行方法
 
@@ -29,10 +31,12 @@ fi
 - コマンド内に `$()` を使用しない（AIが値を事前に解決してから組み立てる）
 - エラー時はスキップして続行（フロー停止しない）
 
-## 対応ターミナル
+## 対応環境
 
-| ターミナル | タブタイトル | 背景バッジ |
-|-----------|------------|-----------|
+**macOS専用**。Linux/Windowsでは全機能がスキップされる（exit 0）。
+
+| ターミナル（macOS） | タブタイトル | 背景バッジ |
+|-------------------|------------|-----------|
 | iTerm2 | osascript | iTerm2エスケープシーケンス |
 | Terminal.app | osascript | 非対応 |
-| その他 | TTY直接書き込み | 非対応 |
+| その他（macOS） | TTY直接書き込み | 非対応 |

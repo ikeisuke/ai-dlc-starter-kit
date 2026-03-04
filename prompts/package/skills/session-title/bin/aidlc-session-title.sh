@@ -1,8 +1,15 @@
 #!/bin/bash
-# AI-DLC Session Title Script
+# AI-DLC Session Title Script (macOS only)
 # Sets terminal tab title and iTerm2 badge for session identification.
+# Uses osascript (Apple Events) - requires macOS.
+# On non-macOS, silently exits 0.
 # Usage: aidlc-session-title.sh <project_name> <phase> <cycle>
 # Always exits 0 (non-blocking).
+
+# macOS check
+if [ "$(uname -s)" != "Darwin" ]; then
+  exit 0
+fi
 
 PROJECT_NAME="${1:-}"
 PHASE="${2:-}"

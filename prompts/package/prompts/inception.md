@@ -172,7 +172,7 @@ docs/aidlc/bin/env-info.sh --setup
 
 #### 1.5 セッション判別設定
 
-`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（エラー時はスキップして続行）。
+`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
 引数: `project.name`=ステップ1の出力、`phase`=`Inception`、`cycle`=`current_branch` から抽出（不明時は `unknown`）
 
