@@ -145,20 +145,11 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-### 2.6 セッションタイトル設定
+### 2.6 セッション判別設定
 
-ターミナルタイトルを設定して複数セッションの判別を容易にする。
+`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
-`docs/aidlc.toml` の `[project].name` からプロジェクト名を取得し、`{{CYCLE}}` をサイクルバージョンとして使用する。`{{CYCLE}}` が解決不能（detached HEAD等）の場合は `unknown` を使用する。
-
-以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
-
-```bash
-printf '\033]0;%s\007' "{{project.name}} / Operations / {{CYCLE}}"
-```
-
-- AIが値を直接置換してコマンドを組み立てること
-- コマンド内に `$()` を使用しない
+引数: `project.name`=`docs/aidlc.toml` の `[project].name`、`phase`=`Operations`、`cycle`=`{{CYCLE}}`（不明時は `unknown`）
 
 ### 3. 進捗管理ファイル確認【重要】
 
@@ -205,6 +196,15 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 ```
 
 各Unit定義ファイルの「## 実装状態」セクションを確認し、「状態」が「完了」であることを確認します。
+
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）:
+
+承認ポイントID: `operations.startup.unit_verification`
+
+- `automation_mode=semi_auto` かつ全Unit完了の場合: `auto_approved` として自動遷移（ユーザー確認なしで「全Unit完了の場合」の出力を表示し、次ステップへ進む）。履歴記録
+- `automation_mode=semi_auto` かつ未完了Unitがある場合: `fallback`（reason_code: `incomplete_conditions`）として従来フロー（ユーザー確認）へ。履歴記録
+- `automation_mode=semi_auto` かつUnit状態の判定に失敗した場合: `fallback`（reason_code: `error`）として従来フロー（ユーザー確認）へ。履歴記録
+- `automation_mode=manual`: ゲート判定スキップ、従来フローを実行
 
 **全Unit完了の場合**:
 

@@ -203,20 +203,11 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-### 2.6 セッションタイトル設定
+### 2.6 セッション判別設定
 
-ターミナルタイトルを設定して複数セッションの判別を容易にする。
+`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
-`docs/aidlc.toml` の `[project].name` からプロジェクト名を取得し、`{{CYCLE}}` をサイクルバージョンとして使用する。`{{CYCLE}}` が解決不能（detached HEAD等）の場合は `unknown` を使用する。
-
-以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
-
-```bash
-printf '\033]0;%s\007' "{{project.name}} / Construction / {{CYCLE}}"
-```
-
-- AIが値を直接置換してコマンドを組み立てること
-- コマンド内に `$()` を使用しない
+引数: `project.name`=`docs/aidlc.toml` の `[project].name`、`phase`=`Construction`、`cycle`=`{{CYCLE}}`（不明時は `unknown`）
 
 ### 3. 進捗状況確認【重要】
 
@@ -495,10 +486,54 @@ BDD/TDDに従ってテストコードを作成
 
 1. ビルド実行
 2. テスト実行
-3. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
-4. レビュー結果を反映
-5. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外はコードをユーザーに提示し、承認を得る
-6. `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
+3. **エラー時バックログ登録提案**（ビルドまたはテストでエラーが発生した場合のみ）:
+
+   エラー発生時はcommon/rules.mdのフォールバック条件（`reason_code=error`）に該当するため、`automation_mode` に関わらず常にユーザー確認を行う（`fallback(error)` として処理）。
+
+   1. ユーザーに「バックログに記録しますか？」と確認
+   2. ユーザーが「はい」の場合、以下の処理順でバックログ登録を実行:
+
+      **a. 安全規則の検証**（登録処理の前に必ず確認）:
+      - heredoc終端トークンを含む入力値は拒否する
+      - `{slug}` は `^[a-z0-9][a-z0-9-]{0,63}$` のパターンのみ許可
+      - すべての引数・パスは二重引用符で囲む
+
+      **b. slug生成**: エラー内容から短い識別子を生成（英数字・ハイフン）。空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイル/Issue存在時はサフィックス（`-2`, `-3`...）を付与。
+
+      **c. mode判定**: `docs/aidlc/bin/check-backlog-mode.sh` で `[rules.backlog].mode` を取得。取得失敗時は `git` として扱う。
+
+      **d. 登録方法の選択と実行**:
+
+      - `mode = git` または `mode = git-only`:
+        `docs/cycles/backlog/bugfix-{slug}.md` にファイルを作成。テンプレートは `docs/aidlc/templates/backlog_item_template.md` に準拠。
+        ファイル作成失敗時は警告表示し、手動でのバックログ登録を依頼。
+
+      - `mode = issue` または `mode = issue-only`:
+        ステップ2.5の `gh:available` 判定結果を参照し、GitHub Issue作成を試みる。
+        タイトルは `[Backlog] bugfix: {エラー要約}`、ラベルは `"backlog,type:bugfix,priority:medium"`。
+        Issue本文はWriteツールで一時ファイルに書き出し、`gh issue create --body-file` で作成後、一時ファイルを削除。
+
+        **e. 失敗時フォールバック**:
+        - `mode = issue`: ファイルベース（git方式）にフォールバック
+        - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
+        - gh CLI不可用時も同様のフォールバック/警告を行う。
+
+   3. ユーザーが「いいえ」の場合: スキップ
+   4. 選択結果を履歴に記録:
+
+      ```text
+      【エラー時バックログ登録】{登録 / スキップ}
+      【エラー種別】{ビルドエラー / テストエラー}
+      【バックログモード】{mode}
+      【登録先】{Issue番号 / ファイルパス / なし}
+      ```
+
+   5. エラー修正を実施し、ビルド/テストを再実行（項目1〜3を繰り返す）
+
+4. **AIレビュー実施**（`docs/aidlc/prompts/common/review-flow.md` に従う）
+5. レビュー結果を反映
+6. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外はコードをユーザーに提示し、承認を得る
+7. `docs/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
 
 ---
 

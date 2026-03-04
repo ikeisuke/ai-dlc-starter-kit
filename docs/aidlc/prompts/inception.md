@@ -170,21 +170,11 @@ docs/aidlc/bin/env-info.sh --setup
 - gh: ドラフトPR作成、Issue操作、ラベル作成をスキップ
 - dasel: AIが設定ファイルを直接読み取る（機能上の影響なし）
 
-#### 1.5 セッションタイトル設定
+#### 1.5 セッション判別設定
 
-ターミナルタイトルを設定して複数セッションの判別を容易にする。
+`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
-ステップ1の出力から `project.name` と `current_branch` を使用する。`current_branch` が `cycle/vX.X.X` 形式の場合はバージョン部分を抽出し、それ以外（detached HEAD等）は `unknown` を使用する。
-
-以下のコマンドを実行する（エラー時はエラー出力をユーザーに表示せずスキップして続行）:
-
-```bash
-printf '\033]0;%s\007' "{{project.name}} / Inception / {{CYCLE}}"
-```
-
-- AIが `project.name` と `current_branch` の値を直接置換してコマンドを組み立てること
-- コマンド内に `$()` を使用しない
-- `{{CYCLE}}`: `current_branch` から抽出したサイクルバージョン、不明時は `unknown`
+引数: `project.name`=ステップ1の出力、`phase`=`Inception`、`cycle`=`current_branch` から抽出（不明時は `unknown`）
 
 #### 2. デプロイ済みファイル確認
 
@@ -276,6 +266,72 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`starter_kit_version` 
 
 #### 6. サイクルバージョンの決定
 
+**6-1. コンテキスト表示**（バージョン提案前に実行）:
+
+バックログと直近サイクルの情報を表示し、バージョン決定の判断材料を提供する。
+
+**バックログ表示**:
+
+ステップ1で確認した `backlog_mode` を参照する（未確認の場合は以下を実行）:
+
+```bash
+docs/aidlc/bin/check-backlog-mode.sh
+```
+
+取得した `backlog_mode` に応じて:
+
+- **`issue` または `issue-only`の場合**:
+
+  ```bash
+  docs/aidlc/bin/check-open-issues.sh --limit 5
+  ```
+
+  - エラー出力（`error:*`）の場合は「バックログ取得失敗」と警告を表示し、バックログ表示をスキップする
+  - このスクリプトはバックログ専用ではなくオープンIssue全件を返す。表示時に「オープンIssue」として案内する
+
+- **`git` または `git-only`の場合**:
+
+  ```bash
+  ls docs/cycles/backlog/ 2>/dev/null
+  ```
+
+- 取得結果が0件の場合は「バックログ項目なし」と表示する
+
+以下の形式で表示する:
+
+```text
+【バックログ状況】（オープンIssue / バックログファイル）
+件数: N件
+---
+#123 タイトル1
+#124 タイトル2
+...（上位5件まで）
+```
+
+**直近サイクル表示**:
+
+```bash
+ls -d docs/cycles/v*/ 2>/dev/null | sort -V | tail -3
+```
+
+各サイクルディレクトリの `requirements/intent.md` を読み、「開発の目的」（`## 開発の目的` 見出し）セクションの最初の非空行を抽出する。以下の形式で表示する:
+
+```text
+【直近サイクル】
+| サイクル | Intent要約 |
+|----------|------------|
+| v1.18.2  | upgrade-aidlc.shの信頼性向上 |
+| v1.18.1  | ... |
+| v1.18.0  | ... |
+```
+
+- `requirements/intent.md` が存在しない場合は「（Intent不明）」と表示する
+- 「開発の目的」見出しが存在しない、または見出し直後に非空行がない場合も「（Intent不明）」と表示する
+- サイクルディレクトリが0件の場合は「直近サイクルなし」と表示する
+- 3件未満の場合は存在する分だけ表示する
+
+**6-2. バージョン提案**:
+
 ```bash
 docs/aidlc/bin/suggest-version.sh
 ```
@@ -287,12 +343,14 @@ latest_cycle:v1.12.0
 suggested_patch:v1.12.1
 suggested_minor:v1.13.0
 suggested_major:v2.0.0
+all_cycles:v1.12.0,v1.11.0,feature-auth
 ```
 
 **AIの判断フロー**:
 1. `branch_version` が設定されている場合: そのバージョンを提案
-2. そうでない場合: `suggested_*` から選択肢を提示
-3. 選択されたバージョンが既存サイクルと重複する場合、エラーを表示して再選択
+2. そうでない場合: `suggested_*` から選択肢を提示し、「カスタム名を入力する」も選択肢に含める
+3. 「カスタム名を入力する」が選択された場合: ユーザーに自由入力を求める（例: `feature-auth`, `2026-03`）
+4. 選択または入力されたサイクル名が `all_cycles` に含まれる場合: 「このサイクル名は既に使用されています」エラーを表示して再選択を求める
 
 #### 7. ブランチ確認【推奨】
 
