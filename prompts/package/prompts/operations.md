@@ -206,6 +206,15 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 各Unit定義ファイルの「## 実装状態」セクションを確認し、「状態」が「完了」であることを確認します。
 
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）:
+
+承認ポイントID: `operations.startup.unit_verification`
+
+- `automation_mode=semi_auto` かつ全Unit完了の場合: `auto_approved` として自動遷移（ユーザー確認なしで「全Unit完了の場合」の出力を表示し、次ステップへ進む）。履歴記録
+- `automation_mode=semi_auto` かつ未完了Unitがある場合: `fallback`（reason_code: `incomplete_conditions`）として従来フロー（ユーザー確認）へ。履歴記録
+- `automation_mode=semi_auto` かつUnit状態の判定に失敗した場合: `fallback`（reason_code: `error`）として従来フロー（ユーザー確認）へ。履歴記録
+- `automation_mode=manual`: ゲート判定スキップ、従来フローを実行
+
 **全Unit完了の場合**:
 
 ```text
