@@ -472,7 +472,7 @@ docs/aidlc/bin/init-cycle-dir.sh {{CYCLE}}
 
 **注**: `--dry-run` オプションで作成予定を確認できます。
 
-**注意**: サイクル固有バックログは廃止されました。気づきは共通バックログ（`docs/cycles/backlog/`）に直接記録します。
+**注意**: サイクル固有バックログは廃止されました。気づきは共通バックログに直接記録します（保存先は `backlog_mode` に従う）。
 
 ---
 
@@ -542,6 +542,8 @@ docs/aidlc/bin/label-cycle-issues.sh {{CYCLE}}
 
 ステップ11で確認した `backlog_mode` を参照する。
 
+**排他モード時の注意**: `issue-only` の場合、ローカルファイル操作（`docs/cycles/backlog/`, `docs/cycles/backlog-completed/` の探索・照合）はスキップする。`git-only` の場合、GitHub Issue操作はスキップする。
+
 ##### 13-1. 共通バックログ
 
 **mode=git または mode=git-only の場合**:
@@ -549,10 +551,11 @@ docs/aidlc/bin/label-cycle-issues.sh {{CYCLE}}
 ls docs/cycles/backlog/ 2>/dev/null
 ```
 
-**mode=issue または mode=issue-only の場合**:
+**mode=issue または mode=issue-only の場合**（`gh:available` の場合のみ）:
 ```bash
 gh issue list --label backlog --state open
 ```
+`gh:available` 以外の場合: `mode=issue` はローカルファイルにフォールバック、`mode=issue-only` はスキップ
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 
@@ -571,7 +574,10 @@ gh issue list --label backlog --state open
   「はい」の場合は各項目の内容を表示し、今回のサイクルで対応する項目を確認
 
 ##### 13-2. 対応済みバックログとの照合
-対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
+
+**排他モード（`issue-only`）の場合**: ローカルファイルが存在しないため、このサブステップをスキップし次のステップへ進む。
+
+**上記以外の場合**: 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
 # 新形式（サイクル別ディレクトリ）
