@@ -555,7 +555,7 @@ ls docs/cycles/backlog/ 2>/dev/null
 ```bash
 gh issue list --label backlog --state open
 ```
-`gh:available` 以外の場合: `mode=issue` はローカルファイルにフォールバック、`mode=issue-only` はスキップ
+`gh:available` 以外の場合: `mode=issue` はローカルファイルにフォールバック、`mode=issue-only` は「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示しユーザーに続行可否を確認
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
 

@@ -258,7 +258,7 @@ ls docs/cycles/backlog/ 2>/dev/null
   ```
 - `gh:available` 以外の場合:
   - `mode=issue`: 「警告: GitHub CLIが利用できません。ローカルバックログを確認します。」と表示し、`ls docs/cycles/backlog/ 2>/dev/null` にフォールバック
-  - `mode=issue-only`: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示しスキップ
+  - `mode=issue-only`: 「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示し、ユーザーに続行可否を確認
 
 **非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認
 
