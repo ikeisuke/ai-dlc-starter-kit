@@ -243,11 +243,26 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ### 3.5 バックログ確認
 
-`docs/cycles/backlog/` ディレクトリを確認し、対象Unitに関連する気づきがあれば確認する。
+ステップ2.5で確認した `backlog_mode` を参照し、対象Unitに関連する気づきがあれば確認する。
 
+**mode=git または mode=git-only の場合**:
 ```bash
-ls docs/cycles/backlog/
+ls docs/cycles/backlog/ 2>/dev/null
 ```
+
+**mode=issue または mode=issue-only の場合**:
+
+- `gh:available` の場合:
+  ```bash
+  gh issue list --label backlog --state open
+  ```
+- `gh:available` 以外の場合:
+  - `mode=issue`: 「警告: GitHub CLIが利用できません。ローカルバックログを確認します。」と表示し、`ls docs/cycles/backlog/ 2>/dev/null` にフォールバック
+  - `mode=issue-only`: 「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示し、ユーザーに続行可否を確認
+
+**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認
+
+**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
 Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
 

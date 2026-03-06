@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.18.5] - 2026-03-06
+
+### Fixed
+
+- upgrade-aidlc.sh: worktree環境でのrsync同期漏れを修正 - Tier 3にメタ開発環境検出ガードを追加し、worktree内の最新ファイルがdocs/aidlc/に正しく反映されるように（#274）
+
+### Changed
+
+- コンパクション後のautomation_mode復元手順を強化: 適用範囲をsemi_auto限定からモード非依存に変更し、不到達の終了コード1を削除（#273）
+- issue-onlyモード時のバックログ操作一貫性: inception.md・construction.mdのバックログ関連ロジックに4モードチェックを追加し、排他モード時のローカルファイル操作をスキップ（#272）
+
+### Removed
+
+- 既存ローカルバックログファイル（backlog-completed.md + backlog-completed/ 54ファイル）を削除 - issue-onlyモードで不要（#272）
+
+---
+
 ## [1.18.4] - 2026-03-05
 
 ### Added

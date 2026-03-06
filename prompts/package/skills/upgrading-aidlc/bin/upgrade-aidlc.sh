@@ -139,11 +139,20 @@ resolve_starter_kit_root() {
 
     # 3. 利用プロジェクトモード: */docs/aidlc/skills/*/bin
     if [[ "$SCRIPT_DIR" == */docs/aidlc/skills/*/bin ]]; then
-        # ghqフォールバック: read-config.sh + ghq root でパス解決
         local project_root
         # 5階層上: bin/ → skill-name/ → skills/ → aidlc/ → docs/ → project-root
         project_root="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
 
+        # メタ開発環境検出: project_root がスターターキット本体であればローカル使用
+        # （worktree環境でghq経由のメインリポジトリ参照を防ぐ）
+        if [[ -d "${project_root}/prompts/package" ]] \
+            && [[ -f "${project_root}/version.txt" ]] \
+            && [[ -x "${project_root}/prompts/package/bin/sync-package.sh" ]]; then
+            echo "$project_root"
+            return 0
+        fi
+
+        # 外部プロジェクト: ghqフォールバックでスターターキットパスを解決
         local read_config="${project_root}/docs/aidlc/bin/read-config.sh"
         if [[ ! -x "$read_config" ]]; then
             echo "error:starter-kit-not-found:read-config.sh not available" >&2
