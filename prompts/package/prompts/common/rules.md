@@ -103,6 +103,90 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.jj.enabled rules
 
 コミットタイミング、メッセージフォーマット、Co-Authored-By設定は `common/commit-flow.md` を参照。
 
+## Depth Level仕様【重要】
+
+成果物詳細度（Depth Level）の3段階制御。タスクの複雑度に応じて成果物の詳細度を調整する。
+
+### 設定読み込み
+
+```bash
+docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
+```
+
+**注意**: 設定キーは完全修飾キー `rules.depth_level.level` で参照する。`rules.history.level`（履歴記録レベル）とは別の設定。
+
+### レベル定義
+
+| レベル | 用途 | 説明 |
+|--------|------|------|
+| `minimal` | シンプルなバグ修正・小規模変更 | 設計省略可、受け入れ基準簡略化 |
+| `standard` | 通常の機能開発（デフォルト） | 現行の動作と同等 |
+| `comprehensive` | 複雑な機能開発・アーキテクチャ変更 | リスク分析・代替案検討等を追加 |
+
+### レベル別成果物要件一覧
+
+#### minimal（簡略モード）
+
+| フェーズ | 成果物 | 要件 |
+|---------|--------|------|
+| Inception | Intent | 1-2文の簡潔な記述 |
+| Inception | ユーザーストーリー | 受け入れ基準を主要ケースのみに簡略化 |
+| Inception | Unit定義 | 最小限の責務・境界記述 |
+| Construction | ドメインモデル | スキップ可能（設計省略を明記） |
+| Construction | 論理設計 | スキップ可能（設計省略を明記） |
+| Construction | コード・テスト | 通常通り |
+| Operations | リリース準備 | 通常通り |
+
+#### standard（標準モード）
+
+| フェーズ | 成果物 | 要件 |
+|---------|--------|------|
+| Inception | Intent | 標準的な記述（背景・目的・スコープ） |
+| Inception | ユーザーストーリー | 完全な受け入れ基準（INVEST準拠） |
+| Inception | Unit定義 | 完全な責務・境界・依存関係記述 |
+| Construction | ドメインモデル | 標準的なドメインモデル設計 |
+| Construction | 論理設計 | 標準的な論理設計 |
+| Construction | コード・テスト | 通常通り |
+| Operations | リリース準備 | 通常通り |
+
+#### comprehensive（詳細モード）
+
+| フェーズ | 成果物 | 要件 |
+|---------|--------|------|
+| Inception | Intent | 詳細な記述 + リスク分析・代替案検討セクション追加 |
+| Inception | ユーザーストーリー | 完全な受け入れ基準 + エッジケース網羅 |
+| Inception | Unit定義 | 完全な記述 + 技術的リスク評価 |
+| Construction | ドメインモデル | 詳細なドメインモデル + ドメインイベント定義 |
+| Construction | 論理設計 | 詳細な論理設計 + シーケンス図・状態遷移図 |
+| Construction | コード・テスト | 通常通り + 統合テスト強化 |
+| Operations | リリース準備 | 通常通り + ロールバック手順の詳細化 |
+
+### バリデーション仕様
+
+取得した値に対して以下の順序でバリデーションを行う:
+
+1. **正規化**: 前後の空白をトリム
+2. **有効値チェック**: `minimal` / `standard` / `comprehensive` のいずれか（小文字完全一致）
+3. **無効値時の動作**: 警告を出力し `"standard"` にフォールバック
+
+**警告文言**:
+
+```text
+【警告】rules.depth_level.level に無効な値 "{入力値}" が設定されています。"standard" にフォールバックします。有効値: minimal / standard / comprehensive
+```
+
+**無効値の例**: 空文字、大文字混在（`Standard`）、typo（`standerd`）、未定義値（`full`）
+
+### Unit 003向け契約仕様
+
+各フェーズプロンプトでは、以下の手順でDepth Levelに基づく成果物要件の分岐を実装する:
+
+1. `read-config.sh rules.depth_level.level --default "standard"` で設定値を取得
+2. 本セクションのバリデーション仕様に従い正規化・有効値チェックを実施
+3. 本セクションの「レベル別成果物要件一覧」を参照し、該当フェーズの要件を適用
+
+**仕様の参照ルール**: 判定ロジックの仕様（有効値、警告文言、フォールバック動作、成果物要件）は本セクション（`rules.md`）を唯一の定義源（Single Source of Truth）とする。各フェーズプロンプトに仕様を重複記述してはならない。
+
 ## jjサポート設定
 
 `docs/aidlc.toml`の`[rules.jj]`セクションを確認:

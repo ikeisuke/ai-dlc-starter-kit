@@ -113,6 +113,14 @@ enabled = false
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = true
 
+[rules.depth_level]
+# 成果物詳細度設定（v1.19.0で追加）
+# level: "minimal" | "standard" | "comprehensive"
+# - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
+# - standard: 通常の機能開発向け（デフォルト）
+# - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
+level = "standard"
+
 [rules.squash]
 # squash設定（v1.15.0で追加）
 # enabled: true | false - Unit完了時にsquashを提案するか（デフォルト: false）
