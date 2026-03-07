@@ -14,6 +14,10 @@
 | Construction | `docs/aidlc/prompts/construction.md` | Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
 | Operations | `docs/aidlc/prompts/operations.md` | `docs/cycles/{{CYCLE}}/operations/progress.md` |
 
+## session-state.md の生成【コンパクション前】
+
+コンパクションが発生した時点で、`common/session-continuity.md` の「session-state.md の生成」セクションに従い、現在の作業状態を保存する。
+
 ## automation_mode の復元【コンパクション後 必須】
 
 コンパクション後は `automation_mode` が失われるため、**モードに関わらず**以下の手順1〜5を必ず実行する（`common/rules.md` のセミオートゲート仕様を参照）:

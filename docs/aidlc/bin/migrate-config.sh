@@ -217,6 +217,14 @@ _add_section "rules\\.linting" '[rules.linting]
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = false'
 
+_add_section "rules\\.depth_level" '[rules.depth_level]
+# 成果物詳細度設定（v1.19.0で追加）
+# level: "minimal" | "standard" | "comprehensive"
+# - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
+# - standard: 通常の機能開発向け（デフォルト）
+# - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
+level = "standard"'
+
 # 3. [rules.reviewing] に tools が存在しない場合は追加（awk で BSD/GNU 互換）
 if grep -q "^\[rules\.reviewing\]" "$_target"; then
     _tools_count=$(sed -n '/^\[rules\.reviewing\]/,/^\[/p' "$_target" | { grep -c "^tools" || true; })
