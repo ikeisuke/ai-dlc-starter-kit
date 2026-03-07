@@ -499,6 +499,16 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
+#### 11.5 Depth Level確認
+
+`common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
+
+```bash
+docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
+```
+
+取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+
 #### 12. GitHub Issue確認
 
 GitHub CLIでオープンなIssueの有無を確認（ステップ11で確認した `gh` ステータスを参照）：
@@ -664,6 +674,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 1-2文の簡潔な記述。質問観点も最小限に絞る
+- `comprehensive`: 詳細な記述に加え、リスク分析・代替案検討セクションをIntentに追加
+- `standard`: 変更なし（現行動作）
+
 **AIレビュー**: Intent承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
 
 **Inception固有のレビュー観点**:
@@ -726,6 +741,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
 
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 受け入れ基準を主要ケースのみに簡略化（主要エラーケースは維持）
+- `comprehensive`: 完全な受け入れ基準に加え、エッジケースを網羅
+- `standard`: 変更なし（現行動作）
+
 **AIレビュー**: ユーザーストーリー承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
 
 **Inception固有のレビュー観点**:
@@ -747,6 +767,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
 - 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 最小限の責務・境界記述。依存関係と優先度のみ記載
+- `comprehensive`: 完全な記述に加え、技術的リスク評価セクションを追加
+- `standard`: 変更なし（現行動作）
 
 **Unit定義ファイルの命名規則**:
 - ファイル名形式: `{NNN}-{unit-name}.md`（例: `001-setup-database.md`）
@@ -781,6 +806,10 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ### ステップ5: PRFAQ作成
 
 **タスク管理機能を活用してください。**
+
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: このステップをスキップ可能。スキップする場合はprogress.mdでステップ5を「スキップ」に更新し、完了時の必須作業へ進む
+- `comprehensive` / `standard`: 通常通り実行
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - プレスリリース形式でプロジェクトを説明

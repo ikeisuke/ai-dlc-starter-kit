@@ -132,6 +132,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 | Inception | Intent | 1-2文の簡潔な記述 |
 | Inception | ユーザーストーリー | 受け入れ基準を主要ケースのみに簡略化 |
 | Inception | Unit定義 | 最小限の責務・境界記述 |
+| Inception | PRFAQ | スキップ可能 |
 | Construction | ドメインモデル | スキップ可能（設計省略を明記） |
 | Construction | 論理設計 | スキップ可能（設計省略を明記） |
 | Construction | コード・テスト | 通常通り |
@@ -144,6 +145,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 | Inception | Intent | 標準的な記述（背景・目的・スコープ） |
 | Inception | ユーザーストーリー | 完全な受け入れ基準（INVEST準拠） |
 | Inception | Unit定義 | 完全な責務・境界・依存関係記述 |
+| Inception | PRFAQ | 通常通り |
 | Construction | ドメインモデル | 標準的なドメインモデル設計 |
 | Construction | 論理設計 | 標準的な論理設計 |
 | Construction | コード・テスト | 通常通り |
@@ -156,6 +158,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 | Inception | Intent | 詳細な記述 + リスク分析・代替案検討セクション追加 |
 | Inception | ユーザーストーリー | 完全な受け入れ基準 + エッジケース網羅 |
 | Inception | Unit定義 | 完全な記述 + 技術的リスク評価 |
+| Inception | PRFAQ | 通常通り |
 | Construction | ドメインモデル | 詳細なドメインモデル + ドメインイベント定義 |
 | Construction | 論理設計 | 詳細な論理設計 + シーケンス図・状態遷移図 |
 | Construction | コード・テスト | 通常通り + 統合テスト強化 |

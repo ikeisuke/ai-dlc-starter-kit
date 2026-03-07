@@ -151,6 +151,16 @@ backlog_mode:issue-only
 
 引数: `project.name`=`docs/aidlc.toml` の `[project].name`、`phase`=`Operations`、`cycle`=`{{CYCLE}}`（不明時は `unknown`）
 
+### 2.7 Depth Level確認
+
+`common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
+
+```bash
+docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
+```
+
+取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+
 ### 3. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
@@ -482,6 +492,10 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 ### ステップ6: リリース準備
 
 **タスク管理機能を活用してください。**
+
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `comprehensive`: 通常のリリース準備に加え、ロールバック手順を詳細化（手順書作成、ロールバック判定基準の明記）
+- `minimal` / `standard`: 変更なし（現行動作）
 
 - **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 
