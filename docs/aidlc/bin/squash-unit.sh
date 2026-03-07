@@ -107,6 +107,9 @@ parse_args() {
                     echo "Error: --vcs must be 'git' or 'jj', got: $2" >&2
                     exit 2
                 fi
+                if [[ "$2" == "jj" ]]; then
+                    echo "warn:jj-deprecated"
+                fi
                 VCS_TYPE="$2"
                 shift 2
                 ;;

@@ -18,8 +18,9 @@ set -uo pipefail
 get_current_branch() {
     local branch=""
 
-    # jj優先
+    # jj優先（非推奨: v1.19.0）
     if [[ -d ".jj" ]] && command -v jj >/dev/null 2>&1; then
+        echo "warn:jj-deprecated" >&2
         branch=$(jj log -r @ --no-graph -T 'bookmarks' 2>/dev/null) || branch=""
         # 複数ある場合は最初の1つ
         branch="${branch%% *}"

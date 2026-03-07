@@ -305,11 +305,13 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
 **VCS種類判定**:
 
+> **非推奨（v1.19.0）**: jjサポートは非推奨です。`vcs=jj` は将来のバージョンで削除予定です。
+
 ```bash
 docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 ```
 
-- `true` → `vcs=jj`
+- `true` → `vcs=jj`（非推奨）
 - `false`、未設定 → `vcs=git`
 
 ### ユーザー確認・中間コミット

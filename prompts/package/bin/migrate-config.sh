@@ -204,9 +204,10 @@ else
 fi
 
 _add_section "rules\\.jj" '[rules.jj]
-# jjサポート設定（v1.7.2で追加）
+# jjサポート設定（v1.7.2で追加、v1.19.0で非推奨）
+# 【非推奨】将来のバージョンで削除予定です。gitへの移行を推奨します。
 # enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
+# - true: プロンプト内でjj-support.md参照を案内（非推奨）
 # - false: 従来のgitコマンドを使用（デフォルト）
 enabled = false'
 

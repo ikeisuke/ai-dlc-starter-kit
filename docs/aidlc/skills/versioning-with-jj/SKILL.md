@@ -5,6 +5,8 @@ argument-hint: [subcommand] [args]
 allowed-tools: Bash(jj:*)
 ---
 
+> **非推奨（v1.19.0）**: jjサポートは非推奨です。将来のバージョンで削除予定です。現在の機能は引き続き動作しますが、新規での利用は推奨しません。
+
 # Jujutsu (jj)
 
 co-locationモード（Git共存）での使用を前提とする。

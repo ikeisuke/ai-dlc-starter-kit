@@ -22,7 +22,7 @@ AI-DLCのワークフローを実行するスキル:
 | スキル | 読むファイル | 説明 |
 |--------|-------------|------|
 | アップグレード | `docs/aidlc/skills/upgrading-aidlc/SKILL.md` | AI-DLC環境を最新バージョンに更新 |
-| jjバージョン管理 | `docs/aidlc/skills/versioning-with-jj/SKILL.md` | jjを使用したバージョン管理 |
+| jjバージョン管理（非推奨） | `docs/aidlc/skills/versioning-with-jj/SKILL.md` | jjを使用したバージョン管理（v1.19.0で非推奨、将来削除予定） |
 
 ## KiroCLI対応
 

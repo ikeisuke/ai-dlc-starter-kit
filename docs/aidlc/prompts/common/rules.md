@@ -190,11 +190,13 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 
 **仕様の参照ルール**: 判定ロジックの仕様（有効値、警告文言、フォールバック動作、成果物要件）は本セクション（`rules.md`）を唯一の定義源（Single Source of Truth）とする。各フェーズプロンプトに仕様を重複記述してはならない。
 
-## jjサポート設定
+## jjサポート設定（非推奨）
+
+> **非推奨（v1.19.0）**: jjサポートは非推奨です。将来のバージョンで削除予定です。`enabled = true` に設定している場合は、gitへの移行を検討してください。
 
 `docs/aidlc.toml`の`[rules.jj]`セクションを確認:
 
-- `enabled = true`: jjを使用。gitコマンドを`docs/aidlc/skills/versioning-with-jj/references/jj-support.md`の対照表で読み替えて実行
+- `enabled = true`: jjを使用（非推奨）。gitコマンドを`docs/aidlc/skills/versioning-with-jj/references/jj-support.md`の対照表で読み替えて実行
 - `enabled = false`、未設定、または不正値: 以下のgitコマンドをそのまま使用
 
 ## セミオートゲート仕様【重要】

@@ -813,7 +813,7 @@ docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 
 ### 4. Gitコミット
 
-**注意**: ステップ3.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境: `jj diff --stat`）で確認のみ行ってください。
+**注意**: ステップ3.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境（非推奨）: `jj diff --stat`）で確認のみ行ってください。
 
 squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Unit完了コミット」手順に従ってください。
 
