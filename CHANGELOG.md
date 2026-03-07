@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.19.0] - 2026-03-07
+
+### Added
+
+- Overconfidence Prevention原則: AIの過信防止ルールを共通ルール（rules.md）に明文化 - 確信度が低い場合は推測せず質問するフロー、質問すべき場面のチェックリスト、レッドフラグと成功指標を追加（#218）
+- Depth Levels（成果物詳細度の3段階制御）: `docs/aidlc.toml` に `[rules.depth_level]` 設定を追加し、minimal/standard/comprehensive の3レベルで成果物の詳細度を調整可能に。全フェーズプロンプト（Inception/Construction/Operations）にDepth Level分岐ロジックを実装（#218）
+- Session Continuity: セッション中断・再開の正式サポート - `session-state.md` による状態保存・復元の仕組みを構築。コンテキストリセット時・ユーザー明示的中断時に自動生成し、再開時に中断地点から作業を継続可能に（#218）
+
+### Changed
+
+- Reverse Engineering強化: Inception Phaseの既存コード分析（ステップ2）を体系的手順に強化 - 構造解析・パターン検出・技術スタック推定を含むリバースエンジニアリングステージとして再構成（#218）
+
+### Deprecated
+
+- jjサポートを非推奨化: `[rules.jj].enabled = true` 設定時に非推奨警告を表示。将来のバージョンで完全削除予定。移行先: 別リポジトリのversioning-with-jjスキル（#276）
+
+### Removed
+
+- jj関連スクリプト・プロンプトを本体から削除: `skills/versioning-with-jj/` ディレクトリ全体、jj-support.md参照、jj固有ブランチ操作ロジックを除去（#276）
+
+---
+
 ## [1.18.5] - 2026-03-06
 
 ### Fixed
