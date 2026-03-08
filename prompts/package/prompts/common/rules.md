@@ -256,11 +256,11 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 - `fallback` 時: `reason_code` は `none` 以外、`fallback_reason` は空でない文字列
 - `automation_mode=manual` 時: シグナルを生成しない
 
-### Bashコードブロック内の`$()`使用禁止【重要】
+### Bashコードブロック内の`$()`・バッククォート使用禁止【重要】
 
-プロンプト`.md`ファイルのBashコードブロック（` ```bash ` 〜 ` ``` ` の範囲）内で`$()`コマンド置換を使用しない。Claude Codeのセミオートモードで許可プロンプトが発生するため。
+プロンプト`.md`ファイルのBashコードブロック（` ```bash ` 〜 ` ``` ` の範囲）内で`$()`コマンド置換およびバッククォート（`` ` ``）によるコマンド置換を使用しない。Claude Codeのセミオートモードで許可プロンプトが発生するため。また、バッククォートは`$()`の旧式構文であり、ネストが困難で可読性も低いため使用を禁止する。
 
-- **禁止**: `git commit -m "$(cat <<'EOF'...)"`, `SQUASH_MESSAGE="$(cat <<'EOF'...)"`, `--content "$(cat <<'CONTENT_EOF'...)"` 等
+- **禁止**: `git commit -m "$(cat <<'EOF'...)"`, `SQUASH_MESSAGE="$(cat <<'EOF'...)"`, `--content "$(cat <<'CONTENT_EOF'...)"`, `` VAR=`command` `` 等
 - **代替方式**:
   - コミット: Writeツールで一時ファイル作成 → `git commit -F <tmpfile>` → 削除
   - jj: Writeツールで一時ファイル作成 → `jj describe --stdin < <tmpfile>` → 削除
@@ -269,7 +269,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
   - gh pr create/edit: Writeツールで一時ファイル作成 → `--body-file <tmpfile>` → 削除
   - 変数取得: 事前にBashでコマンド実行し結果を変数に格納
 - **例外**: `.sh`スクリプト内部の`$()`は対象外（Claude Codeの許可対象外）
-- **例外**: 説明文中のインラインコード・リテラルテキスト内の`$()`は対象外
+- **例外**: 説明文中のインラインコード・リテラルテキスト内の`$()`およびバッククォートによるコマンド置換表記は対象外
 
 ### `--content`/`--content-file`引数の安全パターン【重要】
 
@@ -343,6 +343,29 @@ docs/aidlc/bin/write-history.sh \
 - `construction.plan.approval`, `construction.design.review`
 - `inception.intent.approval`, `inception.stories.approval`
 - `operations.plan.approval`
+
+### 改善提案のバックログ登録ルール【重要】
+
+「次のサイクルで対応」「将来的に改善」「改善の余地がある」等の改善提案を行う場合、**必ずバックログに登録**すること。口頭（テキスト出力のみ）で提案だけして、バックログ（issueまたはファイル）を作成しないことを禁止する。
+
+**理由**: セッション終了時に口頭の提案は消失し、追跡不能になるため。
+
+**ルール**:
+
+1. 改善提案をする際は、同時にバックログ登録を実行する
+2. バックログ登録方法は `docs/aidlc.toml` の `[rules.backlog].mode` に従う
+   - `issue` / `issue-only`: GitHub Issueを作成（`gh issue create`）
+   - `git` / `git-only`: `docs/cycles/backlog/` にファイルを作成
+   - 詳細は `docs/aidlc/guides/backlog-management.md` を参照
+3. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
+
+**禁止例**:
+- 「次のサイクルで改善を検討できます」（← issueやファイル未作成）
+- 「将来的に対応したほうがよいでしょう」（← バックログ未登録）
+
+**正しい例**:
+- 「次のサイクルで改善を検討できます。バックログIssueを作成しました: #XXX」
+- 「将来的に対応したほうがよいでしょう。バックログファイルを作成しました: `docs/cycles/backlog/chore-xxx.md`」
 
 ## コード品質基準
 
