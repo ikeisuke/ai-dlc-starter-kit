@@ -675,8 +675,10 @@ fi
 AIが探索結果のパスを使用して以下を実行する:
 
 ```bash
-bash prompts/package/bin/post-merge-cleanup.sh --cycle {{CYCLE}} --dry-run
+bash <探索結果のパス> --cycle {{CYCLE}} --dry-run
 ```
+
+**注意**: 探索結果が `docs/aidlc/bin/` の場合はそのパスを使用する。
 
 実行予定を確認し、問題がないことを確認する。
 
@@ -688,10 +690,8 @@ bash prompts/package/bin/post-merge-cleanup.sh --cycle {{CYCLE}} --dry-run
 **W-2. 本実行**:
 
 ```bash
-bash prompts/package/bin/post-merge-cleanup.sh --cycle {{CYCLE}}
+bash <探索結果のパス> --cycle {{CYCLE}}
 ```
-
-**注意**: 探索結果が `docs/aidlc/bin/` の場合はそのパスを使用する。
 
 - **成功時**: ステップ3（バージョンタグ付け）へ合流（ステップ4はスクリプトが実行済みのためスキップ）
 - **失敗時**: エラー内容を表示し、メインリポジトリ側での手動復旧を案内
