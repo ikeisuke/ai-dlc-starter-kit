@@ -176,7 +176,7 @@ docs/aidlc/bin/env-info.sh --setup
 
 `session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
 
-引数: `project.name`=ステップ1の出力、`phase`=`Inception`、`cycle`=`current_branch` から抽出（不明時は `unknown`）
+引数: `project.name`=ステップ1の出力、`cycle`=`current_branch` から抽出（不明時は空文字列）、`phase`=`Inception`
 
 #### 2. デプロイ済みファイル確認
 
