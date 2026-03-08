@@ -108,7 +108,7 @@ parse_args() {
                     exit 2
                 fi
                 if [[ "$2" == "jj" ]]; then
-                    echo "warn:jj-deprecated"
+                    echo "warn:jj-deprecated" >&2
                 fi
                 VCS_TYPE="$2"
                 shift 2

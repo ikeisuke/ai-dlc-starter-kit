@@ -23,10 +23,6 @@ AI-DLC Starter Kit の変更履歴です。
 
 - jjサポートを非推奨化: `[rules.jj].enabled = true` 設定時に非推奨警告を表示。将来のバージョンで完全削除予定。移行先: 別リポジトリのversioning-with-jjスキル（#276）
 
-### Removed
-
-- jj関連スクリプト・プロンプトを本体から削除: `skills/versioning-with-jj/` ディレクトリ全体、jj-support.md参照、jj固有ブランチ操作ロジックを除去（#276）
-
 ---
 
 ## [1.18.5] - 2026-03-06
