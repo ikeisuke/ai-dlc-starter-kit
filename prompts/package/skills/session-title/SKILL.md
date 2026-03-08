@@ -1,7 +1,7 @@
 ---
 name: session-title
-description: "macOS専用: Sets terminal tab title and iTerm2 badge for AI-DLC session identification. Use at step 1.5 (Inception) or step 2.6 (Construction/Operations) of each AI-DLC phase. Also use when the user says \"セッションタイトル\", \"set session title\", or \"session-title\". Requires macOS (uses osascript). On non-macOS, silently skipped."
-argument-hint: <project_name> <phase> <cycle>
+description: "macOS専用: Sets terminal tab title and iTerm2 badge for AI-DLC session identification. Use at step 1.5 (Inception), step 2.6 (Construction/Operations), or step 4.5 (Construction, after Unit selection) of each AI-DLC phase. Also use when the user says \"セッションタイトル\", \"set session title\", or \"session-title\". Requires macOS (uses osascript). On non-macOS, silently skipped."
+argument-hint: <project_name> <cycle> <phase> [unit]
 ---
 
 # Session Title（macOS専用）
@@ -14,16 +14,17 @@ argument-hint: <project_name> <phase> <cycle>
 
 1. 引数を決定する:
    - `project_name`: `docs/aidlc.toml` の `[project].name`、取得失敗時はディレクトリ名
+   - `cycle`: サイクルバージョン（`current_branch` から抽出、不明時は空文字列）
    - `phase`: 現在のフェーズ名（`Inception` / `Construction` / `Operations`）
-   - `cycle`: サイクルバージョン（`current_branch` から抽出、不明時は `unknown`）
+   - `unit`（オプション）: Unit名（Construction Phase でUnit確定後のみ指定）
 
 2. スクリプトを探索して実行する:
 
 ```bash
 if [ -x "prompts/package/skills/session-title/bin/aidlc-session-title.sh" ]; then
-  bash prompts/package/skills/session-title/bin/aidlc-session-title.sh "$PROJECT_NAME" "$PHASE" "$CYCLE"
+  bash prompts/package/skills/session-title/bin/aidlc-session-title.sh "$PROJECT_NAME" "$CYCLE" "$PHASE" "$UNIT"
 elif [ -x "docs/aidlc/skills/session-title/bin/aidlc-session-title.sh" ]; then
-  bash docs/aidlc/skills/session-title/bin/aidlc-session-title.sh "$PROJECT_NAME" "$PHASE" "$CYCLE"
+  bash docs/aidlc/skills/session-title/bin/aidlc-session-title.sh "$PROJECT_NAME" "$CYCLE" "$PHASE" "$UNIT"
 fi
 ```
 

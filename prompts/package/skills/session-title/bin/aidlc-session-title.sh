@@ -3,7 +3,7 @@
 # Sets terminal tab title and iTerm2 badge for session identification.
 # Uses osascript (Apple Events) - requires macOS.
 # On non-macOS, silently exits 0.
-# Usage: aidlc-session-title.sh <project_name> <phase> <cycle>
+# Usage: aidlc-session-title.sh <project_name> <cycle> <phase> [unit]
 # Always exits 0 (non-blocking).
 
 # macOS check
@@ -12,14 +12,25 @@ if [ "$(uname -s)" != "Darwin" ]; then
 fi
 
 PROJECT_NAME="${1:-}"
-PHASE="${2:-}"
-CYCLE="${3:-}"
+CYCLE="${2:-}"
+PHASE="${3:-}"
+UNIT="${4:-}"
 
-if [ -z "$PROJECT_NAME" ] || [ -z "$PHASE" ] || [ -z "$CYCLE" ]; then
+if [ -z "$PROJECT_NAME" ] || [ -z "$PHASE" ]; then
   exit 0
 fi
 
-TITLE="$PROJECT_NAME / $PHASE / $CYCLE"
+# Sanitize inputs: strip control characters (0x00-0x1F, 0x7F)
+PROJECT_NAME=$(printf '%s' "$PROJECT_NAME" | tr -d '\000-\037\177')
+CYCLE=$(printf '%s' "$CYCLE" | tr -d '\000-\037\177')
+PHASE=$(printf '%s' "$PHASE" | tr -d '\000-\037\177')
+UNIT=$(printf '%s' "$UNIT" | tr -d '\000-\037\177')
+
+# Build title: project / [cycle /] phase [/ unit]
+TITLE="$PROJECT_NAME"
+[ -n "$CYCLE" ] && TITLE="$TITLE / $CYCLE"
+TITLE="$TITLE / $PHASE"
+[ -n "$UNIT" ] && TITLE="$TITLE / $UNIT"
 
 # --- Find parent TTY device ---
 get_parent_tty() {

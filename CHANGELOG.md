@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.19.1] - 2026-03-09
+
+### Added
+
+- Error Handling基本定義: エラー重大度レベル（Critical/High/Medium/Low）の定義と、Inception・Construction・Operationsフェーズごとの代表的エラーと回復手順をガイドとして追加（#282）
+- Terminology/Glossary作成: AI-DLC用語集を新規作成 - Cycle, Phase, Intent, Unit, Story, PRFAQ等の10以上の用語を定義・参照先付きで整備（#283）
+
+### Changed
+
+- プロンプトルール明確化: `$()` 禁止ルールにバッククォート禁止を追加、改善提案時のバックログIssue登録ルールを`rules.md`に明文化（#286, #289）
+- レビュースキル外部ツール優先: `review-flow.md`を更新し、外部CLIツール（codex, claude, gemini）をセルフレビューより優先するフローに変更。セルフレビューはフォールバックとして機能（#285）
+- session-title表示順変更: `aidlc-session-title.sh`の表示フォーマットを「プロジェクト / バージョン / フェーズ / Unit」に変更し、オプションのunit引数を追加（#287）
+- post-merge-cleanup.sh運用組み込み: Operations PhaseのPRマージワークフローに`post-merge-cleanup.sh`の実行を統合。worktree環境検出とdry-runバリデーションを追加（#288）
+
+---
+
 ## [1.19.0] - 2026-03-07
 
 ### Added

@@ -20,3 +20,7 @@ AI-DLCは、AIを開発の中心に据えた新しい開発手法です。従来
 - **Unit**: 独立した価値提供ブロック（Epic/Subdomainに相当）
 - **Domain Design**: DDDに従ったビジネスロジックの構造化
 - **Logical Design**: 非機能要件を反映した設計層
+
+**関連ドキュメント**:
+
+- [エラーハンドリングガイド](../../guides/error-handling.md) — フェーズ横断のエラー重大度定義と復旧手順
