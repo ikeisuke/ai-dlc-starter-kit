@@ -204,9 +204,10 @@ else
 fi
 
 _add_section "rules\\.jj" '[rules.jj]
-# jjサポート設定（v1.7.2で追加）
+# jjサポート設定（v1.7.2で追加、v1.19.0で非推奨）
+# 【非推奨】将来のバージョンで削除予定です。gitへの移行を推奨します。
 # enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
+# - true: プロンプト内でjj-support.md参照を案内（非推奨）
 # - false: 従来のgitコマンドを使用（デフォルト）
 enabled = false'
 
@@ -216,6 +217,14 @@ _add_section "rules\\.linting" '[rules.linting]
 # - true: markdownlint を実行する
 # - false: markdownlint をスキップする（デフォルト）
 markdown_lint = false'
+
+_add_section "rules\\.depth_level" '[rules.depth_level]
+# 成果物詳細度設定（v1.19.0で追加）
+# level: "minimal" | "standard" | "comprehensive"
+# - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
+# - standard: 通常の機能開発向け（デフォルト）
+# - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
+level = "standard"'
 
 # 3. [rules.reviewing] に tools が存在しない場合は追加（awk で BSD/GNU 互換）
 if grep -q "^\[rules\.reviewing\]" "$_target"; then

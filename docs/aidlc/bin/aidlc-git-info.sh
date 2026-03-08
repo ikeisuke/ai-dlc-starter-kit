@@ -114,6 +114,9 @@ main() {
     local vcs
     vcs=$(detect_vcs)
 
+    if [[ "$vcs" == "jj" ]]; then
+        echo "warn:jj-deprecated" >&2
+    fi
     echo "vcs_type:$vcs"
     echo "current_branch:$(get_current_branch "$vcs")"
     echo "worktree_status:$(get_worktree_status "$vcs")"

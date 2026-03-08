@@ -65,6 +65,7 @@
 - **Unitの進行状況**: 現在のステップ（例: `Phase 2: 実装 - ステップ4`）
 - **完了済みUnit**: 完了したUnit番号のリスト
 - **次に実行すべきアクション**: 中断時の継続ポイント
+- **automation_mode**: `semi_auto` または `manual`（コンパクション後に `read-config.sh` で再取得。詳細は `common/compaction.md` を参照）
 
 **保持形式の例**:
 
@@ -75,4 +76,5 @@
 - Current Unit: 005 (コンテキスト情報保持) - Phase 2 実装中
 - Completed Units: 001
 - Next Action: AGENTS.md への変更完了後、テスト実行
+- Automation Mode: semi_auto
 ```

@@ -54,12 +54,14 @@
   - 「継続プロンプト」「リセットしたい」
   - 「コンテキストが溢れそう」「コンテキストオーバーフロー」
   - 「長くなってきた」「一旦区切りたい」
+  - 「中断したい」「ここで止める」「一時停止」（明示的な中断指示）
 
   **対応手順**:
   1. 現在の作業状態を確認（どのステップか）
   2. progress.mdを更新（現在のステップを「進行中」のまま保持）
   3. 履歴記録（`history/inception.md` に中断状態を追記）
-  4. 継続用プロンプトを提示（下記フォーマット）
+  4. session-state.mdを生成（`common/session-continuity.md` の「session-state.md の生成」セクションに従う）。**注意**: この手順は `automation_mode` に関係なく必ず実行する
+  5. 継続用プロンプトを提示（下記フォーマット）
 
   ````markdown
   ---
@@ -146,7 +148,7 @@ docs/aidlc/bin/env-info.sh --setup
 |------|------|
 | gh | GitHub CLI状態 |
 | dasel | dasel状態 |
-| jj | jj状態 |
+| jj | jj状態（非推奨: v1.19.0） |
 | git | git状態 |
 | project.name | プロジェクト名 |
 | backlog.mode | バックログモード |
@@ -499,6 +501,16 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
+#### 11.5 Depth Level確認
+
+`common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
+
+```bash
+docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
+```
+
+取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+
 #### 12. GitHub Issue確認
 
 GitHub CLIでオープンなIssueの有無を確認（ステップ11で確認した `gh` ステータスを参照）：
@@ -603,9 +615,21 @@ cat docs/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
 
-#### 14. 進捗管理ファイル確認【重要】
+#### 14. セッション状態の復元
+
+`docs/cycles/{{CYCLE}}/inception/session-state.md` の存在を確認する。
+
+- **存在する場合**: 読み込み、以下のバリデーションを実施する:
+  - `schema_version` が `1` であること
+  - 必須セクション（メタ情報、基本情報、完了済みステップ、未完了タスク、次のアクション）が全て存在すること
+  - バリデーション成功: 中断時点のステップから作業を再開する。下記の進捗管理ファイル確認はスキップ可能
+  - バリデーション失敗: 警告を表示し、下記の進捗管理ファイル確認にフォールバック
+- **存在しない場合**: 下記の進捗管理ファイル確認で復元（新規インストール環境との互換性）
+
+#### 14.1 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
+
 ```text
 docs/cycles/{{CYCLE}}/inception/progress.md
                       ^^^^^^^^^
@@ -664,6 +688,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - **Intent作成**: 回答を得てから `docs/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `docs/aidlc/templates/intent_template.md`）
 
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 1-2文の簡潔な記述。質問観点も最小限に絞る
+- `comprehensive`: 詳細な記述に加え、リスク分析・代替案検討セクションをIntentに追加
+- `standard`: 変更なし（現行動作）
+
 **AIレビュー**: Intent承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
 
 **Inception固有のレビュー観点**:
@@ -675,13 +704,80 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
 
-### ステップ2: 既存コード分析（brownfieldのみ、greenfieldはスキップ）
+### ステップ2: Reverse Engineering（brownfieldのみ、greenfieldはスキップ）
 
 **タスク管理機能を活用してください。**
 
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
-- 既存コードベースを分析
-- `docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` を作成
+- **greenfieldの場合**: このステップ全体をスキップし、ステップ3へ進む
+
+既存コードベースを体系的に解析し、`docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` に結果を記録する。以下の4つの解析手順を順に実行する。
+
+#### 2.1 ディレクトリ構造・ファイル構成の解析
+
+- プロジェクトルートのディレクトリツリーを取得（深さ2-3程度）
+- 主要ディレクトリの役割を特定（src, lib, test, docs等）
+- ファイル命名規則・配置規則を把握
+
+#### 2.2 アーキテクチャ・パターンの検出
+
+- アーキテクチャパターンの特定（MVC, レイヤードアーキテクチャ, クリーンアーキテクチャ等）
+- デザインパターンの検出（Repository, Factory, Observer等）
+- コーディング規約・スタイルの推定
+- 各項目に「根拠」（検出元のファイルやコードパターン）を記録する
+
+#### 2.3 技術スタック推定
+
+- プログラミング言語・バージョン（根拠ファイル: package.json, Gemfile, go.mod等）
+- フレームワーク・ランタイム（根拠ファイル: 設定ファイルやインポート文）
+- 主要ライブラリ・ツール（パッケージマネージャの設定ファイルから取得）
+
+#### 2.4 依存関係マッピング
+
+- 内部モジュール間の依存関係（境界単位: パッケージまたはディレクトリ）
+- 外部ライブラリの依存関係
+- エントリポイントとデータフローの概要
+- チェック観点: 依存方向の一貫性、循環依存の有無
+
+**大規模コードベースの場合**: トップレベルディレクトリが多数あり単一エージェントでの探索に時間がかかる場合（目安: 主要ディレクトリ6個以上またはファイル総数500以上）、サブエージェントによる並行解析を推奨する。分割単位はトップレベルディレクトリ単位とし、統合時に重複記述のマージ・抜け漏れチェックを実施する。
+
+#### 2.5 解析結果の確定
+
+解析結果を `docs/cycles/{{CYCLE}}/requirements/existing_analysis.md` に以下の構成で記録する:
+
+```markdown
+# 既存コードベース分析
+
+## ディレクトリ構造・ファイル構成
+<!-- ディレクトリツリー（深さ2-3程度）と各ディレクトリの役割説明 -->
+
+## アーキテクチャ・パターン
+<!-- 各項目に「根拠」（検出元のファイルやコードパターン）を付記 -->
+
+## 技術スタック
+
+以下の必須項目を表形式で記載する:
+
+| 項目 | 値 | 根拠ファイル |
+|------|-----|-------------|
+| 言語 | | |
+| フレームワーク | | |
+| 主要ライブラリ | | |
+
+## 依存関係
+<!-- 内部モジュール間（境界単位明記）・外部ライブラリ・エントリポイント・循環依存の有無 -->
+
+## 特記事項
+<!-- 解析中に発見した注意点・制約・未完了箇所とその理由 -->
+```
+
+**エラー時のフォールバック**:
+
+- **非致命的エラー**（個別ファイルの読み取り不可、特定ライブラリの解決失敗等）: 取得済みの解析結果を記録し、未完了箇所を「特記事項」セクションに明示する。次の解析手順へ自動継続し、全手順完了後にまとめてユーザーに未完了箇所を報告して継続可否を確認する
+- **致命的エラー**（プロジェクトルートへのアクセス不可、ファイルシステム全体の問題等）: 取得済みの解析結果があれば記録した上で、即座にユーザーに継続可否を確認する
+
+**Done条件**: `existing_analysis.md` が作成され、全4セクション（ディレクトリ構造、アーキテクチャ、技術スタック、依存関係）に記載がある。エラー発生時は未完了箇所が「特記事項」に明示されていること。
+
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: ユーザーストーリー作成
@@ -726,6 +822,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 - `docs/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
 
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 受け入れ基準を主要ケースのみに簡略化（主要エラーケースは維持）
+- `comprehensive`: 完全な受け入れ基準に加え、エッジケースを網羅
+- `standard`: 変更なし（現行動作）
+
 **AIレビュー**: ユーザーストーリー承認前に `docs/aidlc/prompts/common/review-flow.md` に従ってAIレビューを実施すること。
 
 **Inception固有のレビュー観点**:
@@ -747,6 +848,11 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
 - 各Unitは `docs/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: 最小限の責務・境界記述。依存関係と優先度のみ記載
+- `comprehensive`: 完全な記述に加え、技術的リスク評価セクションを追加
+- `standard`: 変更なし（現行動作）
 
 **Unit定義ファイルの命名規則**:
 - ファイル名形式: `{NNN}-{unit-name}.md`（例: `001-setup-database.md`）
@@ -781,6 +887,10 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 ### ステップ5: PRFAQ作成
 
 **タスク管理機能を活用してください。**
+
+**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+- `minimal`: このステップをスキップ可能。スキップする場合はprogress.mdでステップ5を「スキップ」に更新し、完了時の必須作業へ進む
+- `comprehensive` / `standard`: 通常通り実行
 
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - プレスリリース形式でプロジェクトを説明
@@ -932,7 +1042,7 @@ gh pr create --draft \
 
 ### 5. Gitコミット
 
-**注意**: ステップ4.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境: `jj status`）で確認のみ行ってください。
+**注意**: ステップ4.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境（非推奨）: `jj status`）で確認のみ行ってください。
 
 squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 

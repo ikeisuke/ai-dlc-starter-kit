@@ -1,0 +1,40 @@
+name: "Feature Request / 機能要望"
+description: "Suggest a new feature or enhancement / 新機能や改善の要望"
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Feature Summary / 機能の概要"
+      description: "A clear and concise description of the feature / 機能の明確で簡潔な説明"
+      placeholder: "Describe the feature you'd like..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: "Motivation / 背景・動機"
+      description: "Why is this feature needed? What problem does it solve? / なぜこの機能が必要ですか？どのような問題を解決しますか？"
+      placeholder: "Explain the use case and why this would be valuable..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed Solution / 提案内容"
+      description: "How do you think this should be implemented? / どのように実装すべきだと思いますか？"
+      placeholder: "Describe your proposed solution..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered / 代替案"
+      description: "Any alternative solutions you've considered / 検討した代替案があれば記載"
+      placeholder: "Describe any alternative approaches..."
+    validations:
+      required: false
