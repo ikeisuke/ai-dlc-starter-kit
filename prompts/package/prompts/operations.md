@@ -637,6 +637,67 @@ PRがマージされたら、次サイクル開始前に以下を実行：
    3. 破棄する - 誤生成/一時ファイルのみ（progress.md, history, Unit定義は破棄NG）
    ```
 
+0.5. **worktree環境判定**:
+
+   事前にBashで `git rev-parse --git-dir` を実行し、結果を確認する。
+
+   - 結果が `.git` で終わる（通常リポジトリ）: **通常環境フロー**（ステップ1-4）へ
+   - 結果が `.git/worktrees/` を含む（worktree環境）: **worktreeフロー**（ステップW）へ
+
+#### worktreeフロー（ステップW）
+
+worktree環境では `post-merge-cleanup.sh` がmain pull、fetch、detached HEAD切り替え、ブランチ削除をすべて実行するため、**ステップ1・2・4をスキップ**してステップ3（タグ付け）へ合流する。
+
+**スクリプトパス探索と実行**:
+
+事前にBashで以下の順にスクリプトの存在を確認する:
+
+```bash
+if [ -x "prompts/package/bin/post-merge-cleanup.sh" ]; then
+    echo "found:prompts/package/bin/post-merge-cleanup.sh"
+elif [ -x "docs/aidlc/bin/post-merge-cleanup.sh" ]; then
+    echo "found:docs/aidlc/bin/post-merge-cleanup.sh"
+else
+    echo "not_found"
+fi
+```
+
+- **スクリプトが見つからない場合**（`not_found`）: 以下を表示し、手動対応を案内する（worktree環境では `git checkout main` が利用できないため、メインリポジトリ側で手動操作が必要）
+
+  ```text
+  【警告】post-merge-cleanup.sh が見つかりません。
+  worktree環境ではスクリプトによるクリーンアップが必要です。
+  メインリポジトリ側で手動操作を行ってください。
+  ```
+
+**W-1. dry-run実行**:
+
+AIが探索結果のパスを使用して以下を実行する:
+
+```bash
+bash prompts/package/bin/post-merge-cleanup.sh --cycle {{CYCLE}} --dry-run
+```
+
+実行予定を確認し、問題がないことを確認する。
+
+**失敗判定基準**: 終了コード `!= 0` で失敗と判定（`status:error` 出力を伴う）。終了コード `0` かつ `status:warning` は成功扱い。
+
+- **dry-run成功時**: ステップW-2へ
+- **dry-run失敗時**: エラー内容を表示し、手動対応を案内する。**注意**: worktree環境では `main` ブランチが他のworktreeでcheckout済みのため、通常環境のステップ1（`git checkout main`）は実行できない。スクリプトのエラー出力にある `main_repo_path` を参照し、メインリポジトリ側で手動操作を行うこと
+
+**W-2. 本実行**:
+
+```bash
+bash prompts/package/bin/post-merge-cleanup.sh --cycle {{CYCLE}}
+```
+
+**注意**: 探索結果が `docs/aidlc/bin/` の場合はそのパスを使用する。
+
+- **成功時**: ステップ3（バージョンタグ付け）へ合流（ステップ4はスクリプトが実行済みのためスキップ）
+- **失敗時**: エラー内容を表示し、メインリポジトリ側での手動復旧を案内
+
+#### 通常環境フロー（ステップ1-4）
+
 1. **mainブランチに移動**:
 
    ```bash
