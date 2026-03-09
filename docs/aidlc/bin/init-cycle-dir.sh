@@ -96,9 +96,21 @@ validate_version() {
         return 1
     fi
 
-    # スラッシュ含有チェック（パス生成で問題になるため）
-    if [[ "$version" == */* ]]; then
-        echo "[error] ${version}: Version cannot contain slashes" >&2
+    # パストラバーサル防止
+    if [[ "$version" == *..* ]]; then
+        echo "[error] ${version}: Version cannot contain path traversal (..)" >&2
+        return 1
+    fi
+
+    # 2レベル以上のスラッシュ拒否（[name]/vX.X.X の1レベルは許可）
+    if [[ "$version" == */*/* ]]; then
+        echo "[error] ${version}: Version cannot contain more than one slash" >&2
+        return 1
+    fi
+
+    # 先頭・末尾スラッシュや空セグメント拒否
+    if [[ "$version" == /* ]] || [[ "$version" == */ ]] || [[ "$version" == *"//"* ]]; then
+        echo "[error] ${version}: Invalid format (leading/trailing slash or empty segment)" >&2
         return 1
     fi
 

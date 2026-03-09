@@ -88,7 +88,7 @@ handle_branch_mode() {
 handle_worktree_mode() {
     local version="$1"
     local branch="cycle/${version}"
-    local worktree_path=".worktree/cycle-${version}"
+    local worktree_path=".worktree/cycle-${version//\//-}"
 
     # worktreeが既に登録されているか確認
     if worktree_exists "$worktree_path"; then
@@ -133,9 +133,15 @@ main() {
     local version="$1"
     local mode="$2"
 
+    # パストラバーサル防止
+    if [[ "$version" == *..* ]]; then
+        output "error" "" "" "無効なバージョン形式: ${version}（パストラバーサル（..）は許可されていません）"
+        return 1
+    fi
+
     # バージョン形式の検証
-    if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-        output "error" "" "" "無効なバージョン形式: ${version}（vX.Y.Z または vX.Y.Z-prerelease 形式で指定してください）"
+    if [[ ! "$version" =~ ^([^/]+/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+        output "error" "" "" "無効なバージョン形式: ${version}（vX.Y.Z, vX.Y.Z-prerelease, または [name]/vX.Y.Z 形式で指定してください）"
         return 1
     fi
 
