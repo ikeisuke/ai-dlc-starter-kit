@@ -121,6 +121,14 @@ markdown_lint = true
 # - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
 level = "standard"
 
+[rules.cycle]
+# サイクルモード設定（v1.20.0で追加）
+# mode: "default" | "named" | "ask"
+# - default: 従来形式（docs/cycles/vX.X.X/）で動作（デフォルト）
+# - named: 名前付きサイクル（docs/cycles/[name]/vX.X.X/）で動作
+# - ask: Inception Phase開始時に名前付き/名前なしを選択
+# mode = "default"
+
 [rules.squash]
 # squash設定（v1.15.0で追加）
 # enabled: true | false - Unit完了時にsquashを提案するか（デフォルト: false）
