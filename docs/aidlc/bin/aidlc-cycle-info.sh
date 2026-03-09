@@ -51,7 +51,9 @@ extract_version() {
 }
 
 # 最新サイクルバージョン取得
-# docs/cycles/ 内のバージョンディレクトリを走査
+# docs/cycles/ 内のトップレベルのバージョンディレクトリのみ走査（従来形式）
+# 注意: 名前付きサイクル（docs/cycles/[name]/vX.X.X/）は走査対象外。
+# current_cycle が名前付きの場合、latest_cycle は異なる系列の値を返す可能性がある
 get_latest_cycle() {
     if [[ ! -d "docs/cycles" ]]; then
         echo ""
@@ -107,13 +109,14 @@ main() {
     fi
 
     # cycle_name / cycle_version（v1.20.0で追加）
+    # センチネル値: 空文字 = 名前なしサイクル、"none" = サイクルブランチ外
     if [[ -n "$version" ]]; then
         if [[ "$version" == */* ]]; then
             # 名前付き: waf/v1.0.0 → cycle_name:waf, cycle_version:v1.0.0
             echo "cycle_name:${version%%/*}"
             echo "cycle_version:${version##*/}"
         else
-            # 名前なし: v1.0.0 → cycle_name:(空), cycle_version:v1.0.0
+            # 名前なし: v1.0.0 → cycle_name:(空文字), cycle_version:v1.0.0
             echo "cycle_name:"
             echo "cycle_version:$version"
         fi

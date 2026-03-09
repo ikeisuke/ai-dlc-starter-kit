@@ -104,7 +104,7 @@ calculate_next_version() {
 # 名前付きサイクルは [name]/vX.X.X 形式で含む
 get_all_cycles() {
     local result=()
-    local dir_name parent_name
+    local dir_name sub_name has_version_subdir
 
     for dir in docs/cycles/*/; do
         [[ ! -d "$dir" ]] && continue
@@ -119,20 +119,18 @@ get_all_cycles() {
             result+=("$dir_name")
         else
             # 名前ディレクトリの場合、中のバージョンディレクトリを列挙
-            local has_version_subdir=false
+            has_version_subdir=false
             for subdir in "${dir}"*/; do
                 [[ ! -d "$subdir" ]] && continue
-                local sub_name
                 sub_name=$(basename "$subdir")
                 if [[ "$sub_name" =~ ^v[0-9] ]]; then
                     result+=("${dir_name}/${sub_name}")
                     has_version_subdir=true
                 fi
             done
-            # バージョンサブディレクトリがない場合のみ名前ディレクトリ自体を含める
-            if [[ "$has_version_subdir" == false ]]; then
-                result+=("$dir_name")
-            fi
+            # 名前ディレクトリ自体も常に含める（重複チェック用）
+            # バージョンサブディレクトリがある場合でも、名前単体での衝突を防止
+            result+=("$dir_name")
         fi
     done
 
@@ -147,9 +145,10 @@ main() {
     local suggested_patch suggested_minor suggested_major
 
     local branch_info cycle_name
+    local tab=$'\t'
     branch_info=$(get_branch_version)
-    branch_version="${branch_info%%	*}"   # TAB前: バージョン
-    cycle_name="${branch_info#*	}"        # TAB後: サイクル名
+    branch_version="${branch_info%%${tab}*}"   # TAB前: バージョン
+    cycle_name="${branch_info#*${tab}}"        # TAB後: サイクル名
     latest_cycle=$(get_latest_cycle "$cycle_name")
     all_cycles=$(get_all_cycles)
 
