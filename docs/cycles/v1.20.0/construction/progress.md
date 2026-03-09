@@ -7,24 +7,25 @@
 | 001 名前付きサイクル設定 | 完了 | なし | 2026-03-09 |
 | 002 名前付きサイクルスクリプト対応 | 完了 | なし | 2026-03-10 |
 | 003 Inceptionプロンプト名前付きサイクル統合 | 完了 | 001, 002 | 2026-03-10 |
-| 004 squash-unit スキル定義 | 未着手 | なし | - |
+| 004 squash-unit スキル定義 | 完了 | なし | 2026-03-10 |
 
 ## 現在の Unit
 
-次回: Unit 004（依存なし、最後のUnit）
+全Unit完了。Construction Phase完了。
 
 ## 完了済み Unit
 
 - Unit 001 名前付きサイクル設定（2026-03-09）
 - Unit 002 名前付きサイクルスクリプト対応（2026-03-10）
 - Unit 003 Inceptionプロンプト名前付きサイクル統合（2026-03-10）
+- Unit 004 squash-unit スキル定義（2026-03-10）
 
 ## 次回実行時の指示
 
-Construction Phaseを開始してください。Unit 004（依存なし、最後のUnit）を着手してください。
+Construction Phase完了。Operations Phaseに進んでください。
 
 ## 再開時に読み込むファイル
 
 コンパクション後やセッション再開時は、以下のファイルを読み込んでください：
 
-- `docs/aidlc/prompts/construction.md`
+- `docs/aidlc/prompts/operations.md`
