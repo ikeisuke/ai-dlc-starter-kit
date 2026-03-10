@@ -140,7 +140,7 @@ main() {
     fi
 
     # バージョン形式の検証
-    if [[ ! "$version" =~ ^([^/]+/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+    if [[ ! "$version" =~ ^([a-z0-9][a-z0-9-]*/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
         output "error" "" "" "無効なバージョン形式: ${version}（vX.Y.Z, vX.Y.Z-prerelease, または [name]/vX.Y.Z 形式で指定してください）"
         return 1
     fi
