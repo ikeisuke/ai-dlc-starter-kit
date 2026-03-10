@@ -389,9 +389,15 @@ parse_args() {
         exit 1
     fi
 
+    # パストラバーサル防止
+    if printf '%s\n' "$CYCLE" | grep -qF '..'; then
+        echo "Error: バージョンにパストラバーサル（..）は許可されていません: ${CYCLE}" >&2
+        exit 1
+    fi
+
     # バージョン形式バリデーション
-    if ! printf '%s\n' "$CYCLE" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
-        echo "Error: バージョン形式が不正です: ${CYCLE}（例: v1.5.3）" >&2
+    if ! printf '%s\n' "$CYCLE" | grep -qE '^([a-z0-9][a-z0-9-]*/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+        echo "Error: バージョン形式が不正です: ${CYCLE}（例: v1.5.3 または waf/v1.5.3）" >&2
         exit 1
     fi
 }

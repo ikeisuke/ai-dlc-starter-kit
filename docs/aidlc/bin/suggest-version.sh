@@ -17,21 +17,38 @@
 set -euo pipefail
 
 # ブランチ名からバージョン推測
+# 出力: "version\tcycle_name" 形式（TAB区切り）
+# 例: "v1.0.0\t" (名前なし), "v1.0.0\twaf" (名前付き)
 get_branch_version() {
     local branch
     branch=$(git branch --show-current 2>/dev/null || echo "")
 
-    if [[ "$branch" =~ ^cycle/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-        echo "v${BASH_REMATCH[1]}"
+    if [[ "$branch" =~ ^cycle/(([^/]+/)?(v([0-9]+\.[0-9]+\.[0-9]+)))$ ]]; then
+        # BASH_REMATCH[1] = "waf/v1.0.0" or "v1.0.0" (全体)
+        # BASH_REMATCH[2] = "waf/" or "" (名前部分+スラッシュ)
+        # BASH_REMATCH[3] = "v1.0.0" (v付きバージョン)
+        # BASH_REMATCH[4] = "1.0.0" (数字部分のみ)
+        local cycle_name="${BASH_REMATCH[2]%/}"  # 末尾スラッシュを除去
+        printf '%s\t%s' "${BASH_REMATCH[3]}" "${cycle_name}"
     else
-        echo ""
+        printf '\t'
     fi
 }
 
 # 最新サイクルを取得
+# 引数: $1=サイクル名（名前付きの場合）。空文字の場合は名前なし（従来動作）
 get_latest_cycle() {
-    local cycles
-    cycles=$(ls -d docs/cycles/v*/ 2>/dev/null | grep -E '/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)/$' | sort -V | tail -1 || echo "")
+    local cycle_name="${1:-}"
+    local cycles scan_dir
+    if [[ -n "$cycle_name" ]]; then
+        # 名前付き: docs/cycles/[name]/v*/ をスキャン
+        scan_dir="docs/cycles/${cycle_name}"
+    else
+        # 名前なし: docs/cycles/v*/ をスキャン（従来動作）
+        scan_dir="docs/cycles"
+    fi
+
+    cycles=$(ls -d "${scan_dir}"/v*/ 2>/dev/null | grep -E '/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)/$' | sort -V | tail -1 || echo "")
 
     if [[ -n "$cycles" ]]; then
         # ディレクトリ名からバージョンを抽出
@@ -84,9 +101,10 @@ calculate_next_version() {
 }
 
 # 全サイクルを列挙（SemVer・非SemVer問わず）
+# 名前付きサイクルは [name]/vX.X.X 形式で含む
 get_all_cycles() {
     local result=()
-    local dir_name
+    local dir_name sub_name has_version_subdir
 
     for dir in docs/cycles/*/; do
         [[ ! -d "$dir" ]] && continue
@@ -95,7 +113,25 @@ get_all_cycles() {
         case "$dir_name" in
             backlog|backlog-completed) continue ;;
         esac
-        result+=("$dir_name")
+        # 名前付きサイクルのサブディレクトリをチェック
+        if [[ "$dir_name" =~ ^v[0-9] ]]; then
+            # 従来形式のバージョンディレクトリ
+            result+=("$dir_name")
+        else
+            # 名前ディレクトリの場合、中のバージョンディレクトリを列挙
+            has_version_subdir=false
+            for subdir in "${dir}"*/; do
+                [[ ! -d "$subdir" ]] && continue
+                sub_name=$(basename "$subdir")
+                if [[ "$sub_name" =~ ^v[0-9] ]]; then
+                    result+=("${dir_name}/${sub_name}")
+                    has_version_subdir=true
+                fi
+            done
+            # 名前ディレクトリ自体も常に含める（重複チェック用）
+            # バージョンサブディレクトリがある場合でも、名前単体での衝突を防止
+            result+=("$dir_name")
+        fi
     done
 
     # カンマ区切りで出力
@@ -108,8 +144,12 @@ main() {
     local branch_version latest_cycle all_cycles
     local suggested_patch suggested_minor suggested_major
 
-    branch_version=$(get_branch_version)
-    latest_cycle=$(get_latest_cycle)
+    local branch_info cycle_name
+    local tab=$'\t'
+    branch_info=$(get_branch_version)
+    branch_version="${branch_info%%${tab}*}"   # TAB前: バージョン
+    cycle_name="${branch_info#*${tab}}"        # TAB後: サイクル名
+    latest_cycle=$(get_latest_cycle "$cycle_name")
     all_cycles=$(get_all_cycles)
 
     # 次バージョンの計算（最新サイクルがある場合はそれを基準に）

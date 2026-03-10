@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.20.0] - 2026-03-10
+
+### Added
+
+- 名前付きサイクル機能: `rules.cycle.mode` 設定（default/named/ask）を追加し、機能ドメイン別の並行開発を可能に。Inception Phaseプロンプトに名前入力・バリデーション・バージョン提案フローを統合（#293）
+- squash-unitスキル定義: `squash-unit.sh` をスキル呼び出しで実行可能にするSKILL.mdを作成。引数自動解決・dry-runフロー・エラーハンドリングを定義し、commit-flow.mdにスキル呼び出し推奨を追記（#291）
+
+### Changed
+
+- 名前付きサイクル対応スクリプト修正: `setup-branch.sh`、`aidlc-cycle-info.sh`、`post-merge-cleanup.sh`、`init-cycle-dir.sh`、`suggest-version.sh` を `[name]/vX.X.X` 形式に対応。従来形式との後方互換を維持（#293）
+
+---
+
 ## [1.19.1] - 2026-03-09
 
 ### Added
