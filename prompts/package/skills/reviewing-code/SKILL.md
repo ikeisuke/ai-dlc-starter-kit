@@ -46,6 +46,48 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 - 各テストが独立しているか
 - アサーションが適切で意味のあるエラーメッセージを含むか
 
+### ASCII図バリデーション
+
+対象ファイルにASCII図（罫線で描画された図）が含まれる場合にのみ適用する。
+
+- 罫線接続: ボックス間の接続線（`─`, `│`, `┌`, `┐`, `└`, `┘`, `├`, `┤`, `┬`, `┴`, `┼`, `|`, `-`, `+`等）が途切れず接続されているか
+- ラベル対応: 図中のラベル（ボックス内テキスト、矢印ラベル）が本文の用語・定義と一致しているか
+- 交差線ゼロ原則: 接続線の交差を避けるレイアウトになっているか。交差が不可避な場合は交差理由がコメントまたは本文で説明されているか
+- 整列・余白: ボックスやラベルの水平・垂直方向の整列が一貫しているか
+
+### Mermaid図バリデーション
+
+対象ファイルにMermaidコードブロック（` ```mermaid `）が含まれる場合にのみ適用する。
+
+#### 共通観点
+
+- 構文準拠: Mermaid公式構文に準拠しているか（宣言キーワード、ノード定義、エッジ記法）
+- ノードID/ラベル重複: 同一図内でノードIDが重複していないか（ID重複は原則NG）。ラベルの重複は、文脈上の曖昧性がある場合のみ指摘する
+
+#### 対象6種別と種別固有観点
+
+| 種別 | 宣言キーワード |
+|------|-------------|
+| flowchart | `flowchart` / `graph` |
+| sequenceDiagram | `sequenceDiagram` |
+| classDiagram | `classDiagram` |
+| stateDiagram | `stateDiagram-v2` / `stateDiagram` |
+| erDiagram | `erDiagram` |
+| gantt | `gantt` |
+
+- flowchart: 方向（`TB`, `TD`, `LR`, `RL`, `BT`）が明示されているか
+- sequenceDiagram: `participant`/`actor`の明示定義が望ましい（暗黙定義でも構文上妥当であれば許容）
+- classDiagram: 継承（`<|--`）、実装（`<|..`）、関連（`-->`）等の関係記法が正しいか
+- stateDiagram: 遷移（`-->`）、開始状態（`[*]`）、終了状態（`[*]`）が適切に定義されているか
+- erDiagram: カーディナリティ記法（`||--o{`等）が正しいか
+- gantt: `dateFormat`が指定されているか
+
+#### 構文検証対象外の種別
+
+上記対象6種別以外のMermaid図種別はすべて構文検証の対象外とする。対象外種別については構文の検証は行わないが、図としての可読性（ラベルの明確さ、本文との整合性）は可読性カテゴリの一般ルールで確認する。
+
+既知の対象外種別: `pie`, `mindmap`, `timeline`, `journey`, `quadrantChart`, `gitGraph`, `c4Context`/`c4Container`/`c4Component`/`c4Deployment`, `block-beta`, `sankey-beta`, `xychart-beta`, `packet-beta`, `kanban`, `architecture-beta`
+
 ## 実行コマンド
 
 ### Codex
