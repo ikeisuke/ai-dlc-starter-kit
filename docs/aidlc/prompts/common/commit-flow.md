@@ -129,7 +129,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F /tmp/aidlc-commit-msg.txt
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -156,7 +156,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F /tmp/aidlc-commit-msg.txt
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -192,7 +192,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F /tmp/aidlc-commit-msg.txt
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -235,7 +235,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F /tmp/aidlc-commit-msg.txt
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -266,7 +266,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F /tmp/aidlc-commit-msg.txt
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -352,7 +352,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    git add <変更ファイル>
-   git commit -F /tmp/aidlc-commit-msg.txt
+   git commit -F /tmp/aidlc-commit-msg.XXXXXX
    ```
 
    3. 一時ファイルを削除
@@ -371,7 +371,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    2. 以下を実行:
 
    ```bash
-   jj describe --stdin < /tmp/aidlc-commit-msg.txt
+   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
    jj new
    ```
 
@@ -393,7 +393,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    git add <変更ファイル>
-   git commit -F /tmp/aidlc-commit-msg.txt
+   git commit -F /tmp/aidlc-commit-msg.XXXXXX
    ```
 
    3. 一時ファイルを削除
@@ -411,7 +411,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    2. 以下を実行:
 
    ```bash
-   jj describe --stdin < /tmp/aidlc-commit-msg.txt
+   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
    jj new
    ```
 
