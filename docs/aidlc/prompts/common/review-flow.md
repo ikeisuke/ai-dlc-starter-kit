@@ -101,6 +101,8 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 - Claude Code: Skillツールが存在し、`skill="reviewing-[type]"` で呼び出し可能かを確認
 - KiroCLI等の他環境: Skill一覧取得APIがあればそれを利用
 
+> **テンポラリファイル規約**: 本ドキュメント内の一時ファイル操作は `common/rules.md` のテンポラリファイル規約に従う。パスは `mktemp` で事前に生成すること。コードブロック内の `/tmp/aidlc-*` で始まるパスはパターン例示である。
+
 ## 処理フロー
 
 1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
@@ -302,7 +304,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content-file <一時ファイルパス>
+            --content-file /tmp/aidlc-history-content.txt
         ```
 
         3. 一時ファイルを削除
@@ -429,7 +431,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --unit-name "[Unit名]" \
            --unit-slug "[unit-slug]" \
            --step "千日手判断" \
-           --content-file <一時ファイルパス>
+           --content-file /tmp/aidlc-history-content.txt
        ```
 
        3. 一時ファイルを削除
@@ -523,7 +525,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断" \
-          --content-file <一時ファイルパス>
+          --content-file /tmp/aidlc-history-content.txt
       ```
 
       3. 一時ファイルを削除
@@ -633,7 +635,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            gh issue create \
                --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
                --label "backlog,type:{決定済みの種別},priority:medium" \
-               --body-file <一時ファイルパス>
+               --body-file /tmp/aidlc-pr-body.txt
            ```
 
            3. 一時ファイルを削除
@@ -675,7 +677,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --unit-name "[Unit名]" \
            --unit-slug "[unit-slug]" \
            --step "バックログ自動登録" \
-           --content-file <一時ファイルパス>
+           --content-file /tmp/aidlc-history-content.txt
        ```
 
        inceptionフェーズの場合（`--unit*` 引数を省略）:
@@ -685,7 +687,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
            --cycle {{CYCLE}} \
            --phase inception \
            --step "バックログ自動登録" \
-           --content-file <一時ファイルパス>
+           --content-file /tmp/aidlc-history-content.txt
        ```
 
        3. 一時ファイルを削除
@@ -714,7 +716,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           --unit-name "[Unit名]" \
           --unit-slug "[unit-slug]" \
           --step "AIレビュー指摘対応判断サマリ" \
-          --content-file <一時ファイルパス>
+          --content-file /tmp/aidlc-history-content.txt
       ```
 
       3. 一時ファイルを削除
@@ -833,7 +835,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
             --unit-name "[Unit名]" \
             --unit-slug "[unit-slug]" \
             --step "AIレビュー完了" \
-            --content-file <一時ファイルパス>
+            --content-file /tmp/aidlc-history-content.txt
         ```
 
         3. 一時ファイルを削除
@@ -943,7 +945,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
               --unit-name "[Unit名]" \
               --unit-slug "[unit-slug]" \
               --step "AIレビュースキップ" \
-              --content-file <一時ファイルパス>
+              --content-file /tmp/aidlc-history-content.txt
           ```
 
           3. 一時ファイルを削除

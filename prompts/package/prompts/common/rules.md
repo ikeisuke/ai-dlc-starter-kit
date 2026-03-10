@@ -262,11 +262,11 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 - **禁止**: `git commit -m "$(cat <<'EOF'...)"`, `SQUASH_MESSAGE="$(cat <<'EOF'...)"`, `--content "$(cat <<'CONTENT_EOF'...)"`, `` VAR=`command` `` 等
 - **代替方式**:
-  - コミット: Writeツールで一時ファイル作成 → `git commit -F <tmpfile>` → 削除
-  - jj: Writeツールで一時ファイル作成 → `jj describe --stdin < <tmpfile>` → 削除
-  - write-history.sh: Writeツールで一時ファイル作成 → `--content-file <tmpfile>` → 削除
-  - squash-unit.sh: Writeツールで一時ファイル作成 → `--message-file <tmpfile>` → 削除
-  - gh pr create/edit: Writeツールで一時ファイル作成 → `--body-file <tmpfile>` → 削除
+  - コミット: `mktemp` でパス生成 → Writeツールで書き込み → `git commit -F <パス>` → 削除
+  - jj: `mktemp` でパス生成 → Writeツールで書き込み → `jj describe --stdin < <パス>` → 削除
+  - write-history.sh: `mktemp` でパス生成 → Writeツールで書き込み → `--content-file <パス>` → 削除
+  - squash-unit.sh: `mktemp` でパス生成 → Writeツールで書き込み → `--message-file <パス>` → 削除
+  - gh pr create/edit: `mktemp` でパス生成 → Writeツールで書き込み → `--body-file <パス>` → 削除
   - 変数取得: 事前にBashでコマンド実行し結果を変数に格納
 - **例外**: `.sh`スクリプト内部の`$()`は対象外（Claude Codeの許可対象外）
 - **例外**: 説明文中のインラインコード・リテラルテキスト内の`$()`およびバッククォートによるコマンド置換表記は対象外
@@ -275,9 +275,53 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 `write-history.sh`の`--content-file`方式を推奨。`--content`直接指定も後方互換として動作する。
 
-- **推奨**: Writeツールで一時ファイル作成 → `--content-file <tmpfile>` → 削除
+- **推奨**: `mktemp` でパス生成 → Writeツールで書き込み → `--content-file <パス>` → 削除
 - **許可（後方互換）**: `--content "直接文字列"`（`$()`を含まないリテラル文字列のみ）
 - **禁止**: `--content "$(cmd)"`、`--content "$VAR"` 等のコマンド置換・変数展開を含む文字列
+
+### テンポラリファイル規約【重要】
+
+一時ファイルの生成・使用・削除について以下の規約に従う。
+
+#### 出力先ディレクトリ
+
+`/tmp`（OS標準の一時ディレクトリ）を使用する。
+
+#### ファイル生成方法
+
+`mktemp` コマンドで一意なパスを生成する。**固定パスの直接使用は禁止**する。
+
+| 用途 | mktemp テンプレート |
+|------|------|
+| コミットメッセージ | `mktemp /tmp/aidlc-commit-msg.XXXXXX` |
+| スカッシュメッセージ | `mktemp /tmp/aidlc-squash-msg.XXXXXX` |
+| 履歴コンテンツ | `mktemp /tmp/aidlc-history-content.XXXXXX` |
+| PRボディ | `mktemp /tmp/aidlc-pr-body.XXXXXX` |
+
+#### 使用手順
+
+1. **パス生成**: Bashツールで上記 `mktemp` コマンドを実行し、出力されたパスを取得する
+2. **書き込み**: Writeツールで取得したパスにコンテンツを書き込む
+3. **使用**: 取得したパスをコマンド引数として使用する
+4. **削除**: コマンド実行直後に一時ファイルを削除する
+
+**コードブロック内のパス表記**: 本ドキュメント群のコードブロックに記載される `/tmp/aidlc-*` で始まるパスはパターン例示である。実行時は上記手順で `mktemp` により生成された実際のパスを使用すること。
+
+#### 使用後の削除義務
+
+一時ファイルは使用後に**必ず削除**する。`/tmp`のOS再起動時自動クリーンアップも補助的に機能する。
+
+#### セキュリティ注意事項
+
+- `mktemp` により一意なパスが生成されるため、シンボリックリンク攻撃や並行セッションでのファイル衝突を防止できる
+- 一時ファイルに**機密情報（秘密鍵、トークン、パスワード等）を含めない**こと。用途はコミットメッセージ、履歴コンテンツ、PRボディ等の非機密情報に限定する
+- 万一機密情報を含むファイルが必要な場合は、本規約のスコープ外とし、適切なセキュリティ対策（パーミッション制御等）を個別に実施する
+
+#### 規約外パスの使用
+
+1. **デフォルトは必ず `mktemp` でパスを生成する**（`/tmp` ディレクトリ、`aidlc-{purpose}.XXXXXX` テンプレート）
+2. 規約外パスの使用は、明示的な技術的要件がある場合のみ許可する（例: ツールが特定パスを要求する場合）
+3. 規約外パスを使用する場合は、その理由をコメントで明記する
 
 ### 自動承認時の履歴記録フォーマット
 
@@ -300,7 +344,7 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオート自動承認" \
-    --content-file <一時ファイルパス>
+    --content-file /tmp/aidlc-history-content.txt
 ```
 
 3. 一時ファイルを削除
@@ -329,7 +373,7 @@ docs/aidlc/bin/write-history.sh \
     --unit-name "[Unit名]" \
     --unit-slug "[unit-slug]" \
     --step "セミオートフォールバック" \
-    --content-file <一時ファイルパス>
+    --content-file /tmp/aidlc-history-content.txt
 ```
 
 3. 一時ファイルを削除

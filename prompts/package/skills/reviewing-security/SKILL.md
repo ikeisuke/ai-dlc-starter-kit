@@ -12,17 +12,22 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 
 ## レビュー観点
 
-以下の観点でセキュリティをレビューする。
+以下の観点でセキュリティをレビューする。各観点はAmazon AIDLC SECURITY-01〜15に対応している（対応表は末尾を参照）。
 
 ### OWASP Top 10
 
 - インジェクション対策が適切か（SQL、OS コマンド、XSS、LDAP）
 - アクセス制御が適切に実装されているか（認可バイパス、IDOR の防止）
 - 暗号化が適切か（平文保存の回避、強いアルゴリズムの使用、TLS の適用）
+- 保存時暗号化（encryption at rest）が適用されているか（データベース、ファイルストレージ、バックアップ）
 - セキュリティ設定が適切か（デフォルト設定の変更、不要な機能の無効化、エラーメッセージの制御）
+- デフォルトクレデンシャルが変更されているか、不要なサービス・ポートが無効化されているか
+- HTTPセキュリティヘッダーが適切に設定されているか（Content-Security-Policy、Strict-Transport-Security、X-Content-Type-Options、X-Frame-Options、Referrer-Policy）
 - ソフトウェア・データの整合性が保たれているか（署名検証、CI/CD パイプラインの安全性）
 - セキュリティログ・監視が適切か（認証イベントの記録、改ざん防止、アラート設定）
 - SSRF 対策が施されているか（URL 検証、内部ネットワークへのアクセス制限）
+- 例外処理でセキュリティ情報が漏洩しないか（スタックトレース、内部パス、デバッグ情報）
+- フェイルセーフデフォルトが実装されているか（失敗時にセキュアな状態にフォールバックする設計）
 
 ### 認証・認可
 
@@ -38,6 +43,63 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 - 依存バージョンが適切に管理されているか（ロックファイル、バージョン固定）
 - サプライチェーンリスクが評価されているか
 - 不要な依存が含まれていないか
+- ソフトウェア成果物の整合性が検証されているか（署名検証、チェックサム確認）
+- データの完全性チェックが実装されているか（改ざん検知、ハッシュ検証）
+
+### ログ・監視
+
+- ネットワーク中間点（ロードバランサー、APIゲートウェイ、プロキシ）でアクセスログが有効化されているか
+- アプリケーションレベルのログが適切に実装されているか（認証イベント、権限変更、データアクセス）
+- ログに機密情報（パスワード、トークン、個人情報）が含まれていないか
+- ログの保存期間と保護が適切か（改ざん防止、アクセス制限）
+- セキュリティイベントに対するアラートが設定されているか
+- 監視ダッシュボードまたは通知が構成されているか
+- 異常検知の仕組みがあるか（閾値ベース、パターンベース）
+
+### ネットワークセキュリティ
+
+- ネットワーク設定が最小権限原則に基づいているか（不要なポートの閉鎖、セキュリティグループ/ファイアウォールルールの制限）
+- 内部サービス間通信が適切に分離されているか（VPC、サブネット、セグメンテーション）
+- パブリックアクセスが必要最小限に制限されているか
+- 通信経路が暗号化されているか（TLS/mTLS）
+
+### セキュアデザイン
+
+- 脅威モデリングが実施されているか（STRIDE等）
+- セキュリティ要件がアーキテクチャ設計に組み込まれているか
+- 攻撃面（Attack Surface）が最小化されているか
+- 防御の多層化（Defense in Depth）が考慮されているか
+
+### N/A判定ガイダンス
+
+プロジェクトの特性により一部の観点が該当しない場合がある。N/A判定時はレビュー記録に「N/A: 理由」を明記すること。下表に記載のないカテゴリは原則N/A不可とし、N/Aとする場合は具体的な技術的理由を必須とする。
+
+| カテゴリ | N/A条件の例 |
+|---------|-----------|
+| ログ・監視 | ネットワーク中間点を使用しないローカルアプリケーション |
+| ネットワークセキュリティ | ネットワーク通信を行わないCLIツール・ライブラリ |
+| セキュアデザイン | 設計フェーズが対象外のバグ修正・パッチ変更 |
+| OWASP Top 10（HTTP関連） | HTTPを使用しないバッチ処理・データパイプライン |
+
+### SECURITY-01〜15 対応表
+
+| rule_id | タイトル | カテゴリ | チェック項目 |
+|---------|---------|---------|-----------|
+| SECURITY-01 | Encryption at Rest and in Transit | OWASP Top 10 | 暗号化（平文回避・強アルゴリズム・TLS）、保存時暗号化（DB・ストレージ・バックアップ） |
+| SECURITY-02 | Access Logging on Network Intermediaries | ログ・監視 | ネットワーク中間点（LB・APIゲートウェイ・プロキシ）のアクセスログ有効化 |
+| SECURITY-03 | Application-Level Logging | ログ・監視 | アプリケーションログ（認証・権限変更・データアクセス）、ログへの機密情報混入防止、ログ保存期間・保護 |
+| SECURITY-04 | HTTP Security Headers | OWASP Top 10 | HTTPセキュリティヘッダー（CSP・HSTS・X-Content-Type-Options・X-Frame-Options・Referrer-Policy） |
+| SECURITY-05 | Input Validation on All API Parameters | OWASP Top 10 | インジェクション対策（SQL・OSコマンド・XSS・LDAP）、SSRF対策（URL検証・内部NWアクセス制限） |
+| SECURITY-06 | Least-Privilege Access Policies | 認証・認可 | 最小権限の原則の遵守 |
+| SECURITY-07 | Restrictive Network Configuration | ネットワークセキュリティ | NW最小権限（ポート閉鎖・FWルール）、通信分離（VPC・サブネット）、パブリックアクセス制限、通信暗号化（TLS/mTLS） |
+| SECURITY-08 | Application-Level Access Control | 認証・認可 | アクセス制御（認可バイパス・IDOR防止）、権限昇格防止 |
+| SECURITY-09 | Security Hardening and Misconfiguration Prevention | OWASP Top 10 | セキュリティ設定（デフォルト変更・不要機能無効化）、デフォルトクレデンシャル変更、不要サービス・ポート無効化 |
+| SECURITY-10 | Software Supply Chain Security | 依存脆弱性 | 既知脆弱性の依存チェック、依存バージョン管理（ロックファイル）、サプライチェーンリスク評価、不要依存の除去 |
+| SECURITY-11 | Secure Design Principles | セキュアデザイン | 脅威モデリング（STRIDE等）、セキュリティ要件の設計組込、攻撃面最小化、防御多層化 |
+| SECURITY-12 | Authentication and Credential Management | 認証・認可 | 認証メカニズム（MFA・ブルートフォース対策）、セッション管理、トークン・クレデンシャル管理 |
+| SECURITY-13 | Software and Data Integrity Verification | 依存脆弱性 | ソフトウェア成果物の整合性（署名検証・チェックサム）、データ完全性チェック（改ざん検知・ハッシュ検証） |
+| SECURITY-14 | Alerting and Monitoring | ログ・監視 | セキュリティイベントアラート、監視ダッシュボード・通知、異常検知（閾値・パターンベース） |
+| SECURITY-15 | Exception Handling and Fail-Safe Defaults | OWASP Top 10 | 例外処理での情報漏洩防止（スタックトレース・内部パス）、フェイルセーフデフォルト（失敗時セキュア状態） |
 
 ## 実行コマンド
 

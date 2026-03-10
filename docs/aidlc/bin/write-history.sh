@@ -414,9 +414,14 @@ main() {
         fi
     fi
 
-    # タイムスタンプ取得
+    # タイムスタンプ取得（ISO 8601形式）
+    # set -euo pipefail 下でも date/sed 失敗時にフォールバックできるよう
+    # || true でパイプライン失敗を吸収する
     local timestamp
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S %Z')
+    timestamp=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/') || true
+    if [[ -z "$timestamp" ]]; then
+        timestamp="1970-01-01T00:00:00+00:00"
+    fi
 
     # フェーズ表示名取得
     local phase_display

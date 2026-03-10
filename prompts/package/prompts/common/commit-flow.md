@@ -103,6 +103,8 @@ Co-Authored-By: {AI_AUTHOR}
 | `{DESCRIPTION}` | 自由記述 | コミットの説明文 |
 | `{AI_AUTHOR}` | `名前 <メール>` | Co-Authored-By値 |
 
+> **テンポラリファイル規約**: 本ドキュメント内の一時ファイル操作は `common/rules.md` のテンポラリファイル規約に従う。パスは `mktemp` で事前に生成すること。コードブロック内の `/tmp/aidlc-*` で始まるパスはパターン例示である。
+
 ## レビューコミット手順
 
 ### レビュー前コミット
@@ -127,7 +129,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F <一時ファイルパス>
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -154,7 +156,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F <一時ファイルパス>
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -190,7 +192,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F <一時ファイルパス>
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -233,7 +235,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F <一時ファイルパス>
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -264,7 +266,7 @@ Co-Authored-By: {AI_AUTHOR}
 
 ```bash
 git add -A
-git commit -F <一時ファイルパス>
+git commit -F /tmp/aidlc-commit-msg.XXXXXX
 ```
 
 3. 一時ファイルを削除
@@ -350,7 +352,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    git add <変更ファイル>
-   git commit -F <一時ファイルパス>
+   git commit -F /tmp/aidlc-commit-msg.XXXXXX
    ```
 
    3. 一時ファイルを削除
@@ -369,7 +371,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    2. 以下を実行:
 
    ```bash
-   jj describe --stdin < <一時ファイルパス>
+   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
    jj new
    ```
 
@@ -391,7 +393,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    git add <変更ファイル>
-   git commit -F <一時ファイルパス>
+   git commit -F /tmp/aidlc-commit-msg.XXXXXX
    ```
 
    3. 一時ファイルを削除
@@ -409,7 +411,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    2. 以下を実行:
 
    ```bash
-   jj describe --stdin < <一時ファイルパス>
+   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
    jj new
    ```
 
@@ -468,7 +470,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs <vcs> --base '<起点コミット>' --message-file <一時ファイルパス>
+     --vcs <vcs> --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    3. 一時ファイルを削除
@@ -485,7 +487,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-     --vcs <vcs> --base '<起点コミット>' --message-file <一時ファイルパス>
+     --vcs <vcs> --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    3. 一時ファイルを削除
@@ -540,7 +542,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs git --retroactive --dry-run --message-file <一時ファイルパス>
+     --vcs git --retroactive --dry-run --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    出力の `unit_range` と `unit_commit_count` で対象範囲を確認する。
@@ -551,7 +553,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs git --retroactive --message-file <一時ファイルパス>
+     --vcs git --retroactive --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    一時ファイルを削除
@@ -584,7 +586,7 @@ Unit-Number: {NNN}
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive \
   --from '<Unit開始コミット>' --to '<Unit終了コミット>' \
-  --message-file <一時ファイルパス>
+  --message-file /tmp/aidlc-squash-msg.txt
 ```
 
 4. 一時ファイルを削除

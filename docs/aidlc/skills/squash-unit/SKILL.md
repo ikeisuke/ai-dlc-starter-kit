@@ -18,7 +18,7 @@ Unit完了時またはInception Phase完了時の中間コミットを1つの完
 | `--unit` | 現在作業中のUnit番号（3桁ゼロ埋め）。Inception Phase完了squashでは省略する | `003` |
 | `--vcs` | `docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"` → `true`: jj / `false`: git | `git` |
 | `--base` | コミット履歴からUnit開始コミットの直前を特定（後述） | `cdbf67ab` |
-| `--message` / `--message-file` | Writeツールで一時ファイル作成 → `--message-file` で渡す | `/tmp/squash-msg.txt` |
+| `--message` / `--message-file` | `mktemp /tmp/aidlc-squash-msg.XXXXXX` でパス生成 → Writeツールで書き込み → `--message-file` で渡す | `/tmp/aidlc-squash-msg.XXXXXX` |
 
 ### ブランチ名からの `--cycle` 解決
 
@@ -67,7 +67,7 @@ dry-run結果をユーザーに提示し、続行を確認する。
 
 ### 3. メッセージファイル作成
 
-Writeツールで一時ファイル（例: `/tmp/squash-msg.txt`）を作成:
+Bashツールで `mktemp /tmp/aidlc-squash-msg.XXXXXX` を実行してパスを生成し、Writeツールで生成されたパスに書き込む:
 
 **Unit完了squashの場合**:
 ```text
@@ -86,13 +86,13 @@ feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
 **Unit完了squashの場合**:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-  --vcs <vcs> --base '<起点コミット>' --message-file <一時ファイルパス>
+  --vcs <vcs> --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
 **Inception Phase完了squashの場合**（`--unit` 省略）:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-  --vcs <vcs> --base '<起点コミット>' --message-file <一時ファイルパス>
+  --vcs <vcs> --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
 ### 5. 一時ファイル削除・結果確認
@@ -109,7 +109,7 @@ docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
 
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-  --vcs git --retroactive --message-file <一時ファイルパス>
+  --vcs git --retroactive --message-file <生成されたパス>
 ```
 
 `--from` / `--to` でUnit開始・終了コミットを明示的に指定することも可能:
@@ -117,7 +117,7 @@ docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive --from '<開始コミット>' --to '<終了コミット>' \
-  --message-file <一時ファイルパス>
+  --message-file <生成されたパス>
 ```
 
 ## エラーハンドリング
