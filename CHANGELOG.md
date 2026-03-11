@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.20.2] - 2026-03-12
+
+### Added
+
+- 名前付きサイクル継続確認: Inception Phaseのバージョン決定前に既存の名前付きサイクルを検出し、継続利用を提案するフローを追加
+- mktemp $()使用禁止徹底: テンポラリファイル規約とsetup-prompt.mdからmktemp使用時の`$()`を排除し、一貫した手順に統一
+
+### Changed
+
+- ガイドドキュメント品質改善: ai-agent-allowlist.md、sandbox-environment.md、skill-usage-guide.mdからCodex CLI/Cline/Cursor/Gemini CLI等の不要ツール記述を削除し、Claude Code/KiroCLIのみに整理
+- スクリプト参照整合性確認: backlog-management.md、issue-management.md、worktree-usage.md内のスクリプトパス参照が実在ファイルと一致することを確認（修正不要）
+- その他ガイド事実誤記修正: glossary.md、error-handling.md、backlog-registration.md、config-merge.md、ios-version-update.md、plan-mode.md、subagent-usage.mdの事実誤記を確認・修正
+
+---
+
 ## [1.20.1] - 2026-03-10
 
 ### Added
