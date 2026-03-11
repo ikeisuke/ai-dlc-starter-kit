@@ -90,3 +90,12 @@
 【変更成果物】intent.md, user_stories.md, 006-named-cycle-continuation.md
 
 ---
+## 2026-03-11T22:46:16+09:00
+
+- **フェーズ**: Inception Phase
+- **ステップ**: バックトラック
+- **実行内容**: 【Inception Phaseバックトラック】ストーリー7・Unit 007追加
+【追加要件】mktempでの$()使用禁止の徹底（setup-prompt.md修正 + rules.md規約明確化）
+【変更成果物】intent.md, user_stories.md, 007-mktemp-no-dollar-paren.md
+
+---

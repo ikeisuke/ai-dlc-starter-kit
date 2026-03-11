@@ -145,3 +145,24 @@ So that 既存の名前付きサイクルを見落とさずに継続開発でき
 - 編集対象は `prompts/package/prompts/inception.md` のステップ5.5〜6の間
 - 名前付きサイクルの検出: `docs/cycles/` 配下で `v[0-9]` で始まらず `backlog` でもないディレクトリを対象とする
 - `suggest-version.sh` の `all_cycles` 出力からも名前付きサイクルを抽出可能
+
+---
+
+### ストーリー 7: mktempでの$()使用禁止の徹底
+
+**優先順位**: Should-have
+
+As a AI-DLCスターターキット利用者
+I want to テンポラリファイル規約でmktempを使用する際に`$()`が使われていない
+So that Claude Codeの許可プロンプト問題を回避し、一貫した手順でテンポラリファイルを利用できる
+
+**受け入れ基準**:
+
+- [ ] `prompts/setup-prompt.md` 内の `TEMP_FILE=$(mktemp)` パターン（3件）が `$()` を使わない方式に修正されている
+- [ ] `prompts/package/prompts/common/rules.md` のテンポラリファイル規約で、mktemp実行時に `$()` を使わないことが明記されている
+- [ ] 手順説明が「Bashツールで `mktemp` コマンドを単独実行し出力されたパスを取得」という流れで統一されている
+
+**技術的考慮事項**:
+
+- 編集対象: `prompts/setup-prompt.md`、`prompts/package/prompts/common/rules.md`
+- `.sh` スクリプト内の `$(mktemp)` は既存例外ルールにより対象外
