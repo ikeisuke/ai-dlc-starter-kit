@@ -1,0 +1,36 @@
+{
+  "name": "ai-dlc-starter-kit",
+  "owner": {
+    "name": "ikeisuke",
+    "email": "keisuke@reirou.jp"
+  },
+  "metadata": {
+    "description": "AI-DLC (AI-Driven Development Lifecycle) skills for Claude Code",
+    "version": "1.21.0"
+  },
+  "plugins": [
+    {
+      "name": "aidlc",
+      "description": "AI-DLC workflow skills for development lifecycle management",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./prompts/package/skills/aidlc-setup",
+        "./prompts/package/skills/reviewing-architecture",
+        "./prompts/package/skills/reviewing-code",
+        "./prompts/package/skills/reviewing-inception",
+        "./prompts/package/skills/reviewing-security",
+        "./prompts/package/skills/squash-unit"
+      ]
+    },
+    {
+      "name": "tools",
+      "description": "Utility skills for Claude Code workflows",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./prompts/package/skills/session-title"
+      ]
+    }
+  ]
+}
