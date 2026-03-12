@@ -407,7 +407,7 @@ ls -d docs/cycles/v*/ 2>/dev/null | sort -V | tail -3
 【直近サイクル】
 | サイクル | Intent要約 |
 |----------|------------|
-| v1.18.2  | upgrade-aidlc.shの信頼性向上 |
+| v1.18.2  | aidlc-setup.shの信頼性向上 |
 | v1.18.1  | ... |
 | v1.18.0  | ... |
 ```

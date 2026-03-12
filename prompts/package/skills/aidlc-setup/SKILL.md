@@ -1,10 +1,10 @@
 ---
-name: upgrading-aidlc
-description: Upgrades the AI-DLC environment to the latest version. Syncs prompts and templates from the starter kit. Use when the user says "AIDLCアップデート", "update aidlc", or "start upgrade".
+name: aidlc-setup
+description: Upgrades the AI-DLC environment to the latest version. Syncs prompts and templates from the starter kit. Use when the user says "AIDLCアップデート", "update aidlc", "aidlc setup", "start setup", or "/aidlc-setup".
 argument-hint: (引数なし)
 ---
 
-# AI-DLC Upgrade
+# AI-DLC Setup
 
 AI-DLC環境を最新バージョンにアップグレードするスキル。
 
@@ -15,7 +15,7 @@ AI-DLC環境を最新バージョンにアップグレードするスキル。
 1. アップグレードスクリプトの存在を確認:
 
 ```bash
-ls docs/aidlc/skills/upgrading-aidlc/bin/upgrade-aidlc.sh
+ls docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh
 ```
 
 スクリプトが存在しない場合、AI-DLCのバージョンが古い可能性があります。
@@ -44,7 +44,7 @@ docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com
 1. dry-runで変更内容を確認:
 
 ```bash
-docs/aidlc/skills/upgrading-aidlc/bin/upgrade-aidlc.sh --dry-run
+docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh --dry-run
 ```
 
 2. 結果をユーザーに提示し、続行の承認を得る
@@ -78,7 +78,7 @@ docs/aidlc/skills/upgrading-aidlc/bin/upgrade-aidlc.sh --dry-run
 4. アップグレードを実行:
 
 ```bash
-docs/aidlc/skills/upgrading-aidlc/bin/upgrade-aidlc.sh
+docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh
 ```
 
 5. 変更をコミット:

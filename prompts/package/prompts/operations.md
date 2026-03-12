@@ -4,7 +4,7 @@
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/project-info.md` を読み込んで、内容を確認してください。
 
-**アップグレード**: `/upgrading-aidlc` スキルを使用してください。
+**アップグレード**: `/aidlc-setup` スキルを使用してください。
 
 ---
 
@@ -771,7 +771,7 @@ bash <探索結果のパス> --cycle {{CYCLE}}
 
 **次のステップ**: 「start inception」と指示してください。
 
-**AI-DLCスターターキットをアップグレードする場合**: `/upgrading-aidlc` スキルを実行してください。
+**AI-DLCスターターキットをアップグレードする場合**: `/aidlc-setup` スキルを実行してください。
 ---
 ````
 

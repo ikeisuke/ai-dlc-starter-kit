@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# upgrade-aidlc.sh - AI-DLCアップグレードオーケストレーションスクリプト
+# aidlc-setup.sh - AI-DLCアップグレードオーケストレーションスクリプト
 #
 # バージョン更新・設定マイグレーション・rsync同期を一括実行する。
 # プロジェクトルートをカレントディレクトリとして実行すること。
 #
 # 使用方法:
-#   ./upgrade-aidlc.sh [OPTIONS]
+#   ./aidlc-setup.sh [OPTIONS]
 #
 # オプション:
 #   --dry-run       実際の変更を行わず差分を表示
@@ -35,7 +35,7 @@ FORCE=false
 # === ヘルプ ===
 show_help() {
     cat <<'HELP'
-Usage: upgrade-aidlc.sh [OPTIONS]
+Usage: aidlc-setup.sh [OPTIONS]
 
 AI-DLCアップグレードオーケストレーションスクリプト。
 バージョン更新・設定マイグレーション・rsync同期を一括実行します。
@@ -170,6 +170,12 @@ resolve_starter_kit_root() {
 
         # ghq:プレフィックスを除去
         local repo="${raw_repo#ghq:}"
+
+        # パストラバーサル防止: リポジトリパスのバリデーション
+        if [[ "$repo" == *..* ]] || [[ "$repo" == /* ]]; then
+            echo "error:invalid-repo-path:${repo}" >&2
+            return 1
+        fi
 
         # ghqが利用可能か確認
         if ! command -v ghq >/dev/null 2>&1; then
