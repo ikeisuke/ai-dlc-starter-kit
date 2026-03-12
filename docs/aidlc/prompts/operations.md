@@ -20,8 +20,6 @@ Inception/Construction Phaseで決定済み
 
 **共通ルールは `docs/aidlc/prompts/common/rules.md` を参照**
 
-- **タグ操作注意【Operations固有】**: タグ操作（`git tag`）はjjでサポートされていないため、`docs/aidlc.toml`の`[rules.jj].enabled = true`（非推奨: v1.19.0）でもgitを使用
-
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
   **設定確認**: `docs/aidlc.toml` の `[rules.history]` セクションを確認

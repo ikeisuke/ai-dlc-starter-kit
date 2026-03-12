@@ -26,7 +26,6 @@ AI-DLCは複数のAIツールで利用できます。
 | `aidlc` | `reviewing-inception` | `aidlc:reviewing-inception` | `docs/aidlc/skills/reviewing-inception/SKILL.md` | active | Yes |
 | `aidlc` | `aidlc-setup` | `aidlc:aidlc-setup` | `docs/aidlc/skills/aidlc-setup/SKILL.md` | active | Yes |
 | `aidlc` | `squash-unit` | `aidlc:squash-unit` | `docs/aidlc/skills/squash-unit/SKILL.md` | active | Yes |
-| `aidlc` | `versioning-with-jj` | `aidlc:versioning-with-jj` | `docs/aidlc/skills/versioning-with-jj/SKILL.md` | deprecated | No |
 | `tools` | `session-title` | `tools:session-title` | `docs/aidlc/skills/session-title/SKILL.md` | active | Yes |
 
 - **MP掲載**: marketplace.json に掲載されているか。deprecated スキルはマーケットプレイスに非掲載
@@ -54,7 +53,6 @@ AI-DLCのワークフローを実行するスキル（`aidlc` 名前空間）:
 |-----------|------|
 | `aidlc-setup` | AI-DLC環境を最新バージョンに更新 |
 | `squash-unit` | Unit完了時のコミットスカッシュ |
-| `versioning-with-jj` | jjバージョン管理（非推奨、将来削除予定） |
 
 #### ツールスキル
 

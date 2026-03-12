@@ -16,7 +16,7 @@ Unit完了時またはInception Phase完了時の中間コミットを1つの完
 |------|---------|-----|
 | `--cycle` | ブランチ名から抽出（`cycle/` プレフィックス除去） | `v1.20.0`, `waf/v1.0.0` |
 | `--unit` | 現在作業中のUnit番号（3桁ゼロ埋め）。Inception Phase完了squashでは省略する | `003` |
-| `--vcs` | `docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"` → `true`: jj / `false`: git | `git` |
+| `--vcs` | 常に `git` を指定 | `git` |
 | `--base` | コミット履歴からUnit開始コミットの直前を特定（後述） | `cdbf67ab` |
 | `--message` / `--message-file` | `mktemp /tmp/aidlc-squash-msg.XXXXXX` でパス生成 → Writeツールで書き込み → `--message-file` で渡す | `/tmp/aidlc-squash-msg.XXXXXX` |
 
@@ -46,13 +46,13 @@ git branch --show-current
 **Unit完了squashの場合**:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-  --vcs <vcs> --base '<起点コミット>' --dry-run
+  --vcs git --base '<起点コミット>' --dry-run
 ```
 
 **Inception Phase完了squashの場合**（`--unit` 省略）:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-  --vcs <vcs> --base '<起点コミット>' --dry-run
+  --vcs git --base '<起点コミット>' --dry-run
 ```
 
 出力例:
@@ -86,13 +86,13 @@ feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
 **Unit完了squashの場合**:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-  --vcs <vcs> --base '<起点コミット>' --message-file <生成されたパス>
+  --vcs git --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
 **Inception Phase完了squashの場合**（`--unit` 省略）:
 ```bash
 docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-  --vcs <vcs> --base '<起点コミット>' --message-file <生成されたパス>
+  --vcs git --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
 ### 5. 一時ファイル削除・結果確認

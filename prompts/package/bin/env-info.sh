@@ -24,7 +24,7 @@ show_help() {
     cat << 'EOF'
 Usage: env-info.sh [OPTIONS]
 
-依存ツール（gh, dasel, jj, git）の状態を一覧で出力します。
+依存ツール（gh, dasel, git）の状態を一覧で出力します。
 
 OPTIONS:
   -h, --help    このヘルプを表示
@@ -43,14 +43,12 @@ OPTIONS:
   $ env-info.sh
   gh:available
   dasel:not-installed
-  jj:available
   git:available
   starter_kit_version:1.9.2
 
   $ env-info.sh --setup
   gh:available
   dasel:available
-  jj:available
   git:available
   starter_kit_version:1.9.2
   project.name:my-project
@@ -114,49 +112,14 @@ get_backlog_mode() {
     resolve_backlog_mode
 }
 
-# 現在のブランチ/bookmarkを取得
-# jj/git環境を考慮した優先順位で取得
-# jj環境ではbookmarkを、git環境ではブランチ名を返す
+# 現在のブランチを取得
 get_current_branch() {
     local result=""
 
-    # 1. jj が利用可能な場合、bookmarkを取得
-    if command -v jj >/dev/null 2>&1; then
-        local bookmarks
-        bookmarks=$(jj log -r @ --no-graph -T 'bookmarks' 2>/dev/null) || bookmarks=""
+    # 1. git branch --show-current を試行
+    result=$(git branch --show-current 2>/dev/null) || result=""
 
-        if [[ -n "$bookmarks" ]]; then
-            # * マーカー（現在のワーキングコピー）を除去
-            bookmarks=$(echo "$bookmarks" | tr -d '*')
-            # 複数スペース/タブ/改行を単一スペースに正規化
-            bookmarks=$(echo "$bookmarks" | tr -s '[:space:]' ' ' | sed 's/^ //;s/ $//')
-
-            # cycle/ で始まるものを優先
-            local cycle_bookmark=""
-            local first_bookmark=""
-            for b in $bookmarks; do
-                if [[ -z "$first_bookmark" ]]; then
-                    first_bookmark="$b"
-                fi
-                if [[ "$b" == cycle/* && -z "$cycle_bookmark" ]]; then
-                    cycle_bookmark="$b"
-                fi
-            done
-
-            if [[ -n "$cycle_bookmark" ]]; then
-                result="$cycle_bookmark"
-            elif [[ -n "$first_bookmark" ]]; then
-                result="$first_bookmark"
-            fi
-        fi
-    fi
-
-    # 2. jjで取得できなかった場合、git branch --show-current を試行
-    if [[ -z "$result" ]]; then
-        result=$(git branch --show-current 2>/dev/null) || result=""
-    fi
-
-    # 3. detached HEAD の場合、git rev-parse --abbrev-ref HEAD を試行
+    # 2. detached HEAD の場合、git rev-parse --abbrev-ref HEAD を試行
     if [[ -z "$result" ]]; then
         local abbrev_ref
         abbrev_ref=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || abbrev_ref=""
@@ -240,10 +203,9 @@ main() {
         shift
     done
 
-    # 出力順序は固定（gh → dasel → jj → git → starter_kit_version）
+    # 出力順序は固定（gh → dasel → git → starter_kit_version）
     echo "gh:$(check_gh)"
     echo "dasel:$(check_tool dasel)"
-    echo "jj:$(check_tool jj)"
     echo "git:$(check_tool git)"
     echo "starter_kit_version:$(get_starter_kit_version)"
 

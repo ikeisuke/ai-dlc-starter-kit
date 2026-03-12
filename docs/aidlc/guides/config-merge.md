@@ -58,15 +58,15 @@ tools = ["gemini"]
 # docs/aidlc.toml
 [rules]
 git = { enabled = true }
-jj = { enabled = false }
+worktree = { enabled = false }
 
 # docs/aidlc.toml.local
 [rules]
-jj = { enabled = true }
+worktree = { enabled = true }
 
 # 葉キーを問い合わせた場合:
 # read-config.sh rules.git.enabled → true（ベースから）
-# read-config.sh rules.jj.enabled → true（.localから）
+# read-config.sh rules.worktree.enabled → true（.localから）
 
 # 親テーブルを問い合わせた場合（非推奨）:
 # read-config.sh rules → .local の [rules] 全体が返される
@@ -125,11 +125,11 @@ docs/aidlc/bin/read-config.sh --keys <key1> [key2] ...
 **使用例**:
 
 ```bash
-docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.jj.enabled rules.squash.enabled
+docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled rules.worktree.enabled
 # 出力:
 # rules.reviewing.mode:required
-# rules.jj.enabled:false
 # rules.squash.enabled:true
+# rules.worktree.enabled:false
 ```
 
 **排他制約**:

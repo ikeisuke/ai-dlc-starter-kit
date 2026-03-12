@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # squash-unit.sh - Unit完了時に中間コミットを1つにまとめるsquashスクリプト
-# git環境（git reset --soft方式）とjj環境（jj squash方式）に対応
+# git環境（git reset --soft方式）に対応
 
 # --- グローバル変数 ---
 CYCLE=""
@@ -41,11 +41,11 @@ Required:
   --cycle <CYCLE>         サイクル名（例: v1.15.0）
   --message <MESSAGE>     squash後のコミットメッセージ（--message-fileと排他）
   --message-file <PATH>   コミットメッセージをファイルから読み込み（--messageと排他）
-  --vcs <git|jj>          使用するVCS種類
+  --vcs <git>              使用するVCS種類
 
 Optional:
   --unit <UNIT_NUMBER>    Unit番号（例: 001）。--retroactive時は必須。
-  --base <COMMIT>         起点コミット（git: ハッシュ, jj: change_id）を明示指定。
+  --base <COMMIT>         起点コミット（gitハッシュ）を明示指定。
                           省略時はコミットメッセージのパターンから自動検出。
   --retroactive           事後squashモード。過去のUnit（HEAD以外）をrebase方式でsquash。
                           --vcs=git のみ対応。--unit 必須。
@@ -100,15 +100,12 @@ parse_args() {
                 ;;
             --vcs)
                 if [[ -z "${2:-}" ]]; then
-                    echo "Error: --vcs requires a value (git or jj)" >&2
+                    echo "Error: --vcs requires a value (git)" >&2
                     exit 2
                 fi
-                if [[ "$2" != "git" && "$2" != "jj" ]]; then
-                    echo "Error: --vcs must be 'git' or 'jj', got: $2" >&2
+                if [[ "$2" != "git" ]]; then
+                    echo "Error: --vcs must be 'git', got: $2" >&2
                     exit 2
-                fi
-                if [[ "$2" == "jj" ]]; then
-                    echo "warn:jj-deprecated" >&2
                 fi
                 VCS_TYPE="$2"
                 shift 2
@@ -188,7 +185,7 @@ parse_args() {
 
 # --- 入力バリデーション ---
 
-# jj change_idまたはgit commit hashの形式を検証（revset演算子の混入を防止）
+# git commit hashの形式を検証（revset演算子の混入を防止）
 validate_base_format() {
     local base="$1"
     local vcs_type="$2"
@@ -249,11 +246,6 @@ validate_from_to_args() {
 }
 
 validate_retroactive_args() {
-    if [[ "$VCS_TYPE" != "git" ]]; then
-        echo "Error: --retroactive is only supported with --vcs=git" >&2
-        echo "squash:error:unsupported-vcs"
-        exit 1
-    fi
     if [[ -z "$UNIT" ]]; then
         echo "Error: --unit is required when using --retroactive" >&2
         exit 2
@@ -367,45 +359,6 @@ find_base_commit_git() {
     fi
 
     BASE_COMMIT="$base_hash"
-    echo "base_commit:${BASE_COMMIT}"
-}
-
-find_base_commit_jj() {
-    local cycle="$1"
-    local base_change_id=""
-    local line
-    local log_output
-
-    # trunk()からの範囲で検索（サイクルブランチの分岐点以降）
-    local jj_range="trunk()..@-"
-
-    # jj log の実行可否を先に確認
-    if ! log_output=$(jj log --no-graph -T 'change_id ++ " " ++ description.first_line()' -r "$jj_range" 2>&1); then
-        # フォールバック: trunk()が使えない場合はエラー
-        echo "Error: jj log failed: ${log_output}" >&2
-        echo "Error: cannot determine branch range. Use --base to specify explicitly." >&2
-        echo "squash:error:jj-log-failed"
-        exit 1
-    fi
-
-    # パターン: feat: [CYCLE] または chore: [CYCLE] ... Phase完了（change_idを使用）
-    while IFS= read -r line; do
-        local cid desc
-        cid="${line%% *}"
-        desc="${line#* }"
-        if [[ "$desc" == "feat: [${cycle}]"* ]] || [[ "$desc" == "chore: [${cycle}]"*"Phase完了" ]]; then
-            base_change_id="$cid"
-            break
-        fi
-    done <<< "$log_output"
-
-    if [[ -z "$base_change_id" ]]; then
-        echo "Error: base revision not found for cycle ${cycle}. Expected 'feat: [${cycle}] ...' or 'chore: [${cycle}] ... Phase完了' pattern." >&2
-        echo "squash:error:base-not-found"
-        exit 1
-    fi
-
-    BASE_COMMIT="$base_change_id"
     echo "base_commit:${BASE_COMMIT}"
 }
 
@@ -706,8 +659,6 @@ extract_co_authors() {
 
     if [[ "$vcs_type" == "git" ]]; then
         raw_authors=$(git log --format="%b" "${base}..HEAD" 2>/dev/null | grep -i "^Co-Authored-By:" || true)
-    elif [[ "$vcs_type" == "jj" ]]; then
-        raw_authors=$(jj log --no-graph -T 'description' -r "${base}..@-" 2>/dev/null | grep -i "^Co-Authored-By:" || true)
     fi
 
     # 重複排除（raw行全体で比較）
@@ -747,13 +698,6 @@ get_target_count() {
             echo "squash:error:count-failed"
             exit 1
         fi
-    elif [[ "$vcs_type" == "jj" ]]; then
-        if ! count_output=$(jj log --no-graph -T 'change_id ++ "\n"' -r "${base}..@-" 2>&1); then
-            echo "Error: failed to count revisions: ${count_output}" >&2
-            echo "squash:error:count-failed"
-            exit 1
-        fi
-        count_output=$(echo "$count_output" | wc -l | tr -d ' ')
     fi
 
     TARGET_COUNT="$count_output"
@@ -805,113 +749,6 @@ squash_git() {
     local new_hash
     new_hash=$(git rev-parse HEAD 2>/dev/null)
     echo "squash:success:${new_hash}"
-}
-
-squash_jj() {
-    local base_change_id="$1"
-    local message="$2"
-    local co_authors="$3"
-    local target_count="$4"
-
-    # 最終メッセージの組み立て
-    local full_message="$message"
-    if [[ -n "$co_authors" ]]; then
-        full_message="${message}"$'\n\n'"${co_authors}"
-    fi
-
-    if [[ "$target_count" -eq 1 ]]; then
-        # 1件: メッセージ整形のみ（describe）
-        local target_rev
-        target_rev=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>/dev/null | head -1)
-        if [[ -z "$target_rev" ]]; then
-            echo "Error: could not resolve target revision for describe" >&2
-            echo "squash:error:resolve-failed"
-            exit 1
-        fi
-        if ! jj describe -r "$target_rev" -m "$full_message" 2>/dev/null; then
-            echo "Error: jj describe failed" >&2
-            echo "squash:error:describe-failed"
-            exit 1
-        fi
-        echo "squash:success:${target_rev}"
-        return
-    fi
-
-    # 2件以上: 最新側から順にsquash
-    # bookmark確認（警告のみ）
-    local bookmarks
-    bookmarks=$(jj bookmark list 2>/dev/null || true)
-    if [[ -n "$bookmarks" ]]; then
-        local rev_list
-        rev_list=$(jj log --no-graph -T 'change_id ++ "\n"' -r "${base_change_id}..@-" 2>/dev/null || true)
-        local bookmark_warning=false
-        while IFS= read -r bm_line; do
-            local bm_rev
-            bm_rev=$(echo "$bm_line" | awk '{print $NF}' || true)
-            if [[ -n "$bm_rev" ]] && echo "$rev_list" | grep -q "$bm_rev" 2>/dev/null; then
-                bookmark_warning=true
-                break
-            fi
-        done <<< "$bookmarks"
-        if [[ "$bookmark_warning" == "true" ]]; then
-            echo "Warning: bookmarks found in target revision range. They may need manual adjustment after squash." >&2
-        fi
-    fi
-
-    # 順次squash: 最新側から親方向へ統合
-    local remaining
-    if ! remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>&1 | wc -l | tr -d ' '); then
-        echo "Error: failed to count jj revisions" >&2
-        echo "squash:error:count-failed"
-        echo "recovery:jj undo"
-        exit 1
-    fi
-
-    while [[ "$remaining" -gt 1 ]]; do
-        # 最新のリビジョンを取得して親にsquash
-        local newest_rev
-        newest_rev=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" -n 1 2>/dev/null)
-        if [[ -z "$newest_rev" ]]; then
-            echo "Error: could not resolve revision for squash" >&2
-            echo "squash:error:resolve-failed"
-            echo "recovery:jj undo"
-            exit 1
-        fi
-
-        if ! jj squash -r "$newest_rev" 2>/dev/null; then
-            echo "Error: jj squash -r ${newest_rev} failed" >&2
-            echo "squash:error:squash-failed"
-            echo "recovery:jj undo"
-            exit 1
-        fi
-
-        # revsetで残りのリビジョン数を再取得
-        if ! remaining=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>&1 | wc -l | tr -d ' '); then
-            echo "Error: failed to recount jj revisions" >&2
-            echo "squash:error:count-failed"
-            echo "recovery:jj undo"
-            exit 1
-        fi
-    done
-
-    # 統合後のリビジョンにメッセージを設定
-    local final_rev
-    final_rev=$(jj log --no-graph -T 'change_id' -r "${base_change_id}..@-" 2>/dev/null | head -1)
-    if [[ -z "$final_rev" ]]; then
-        echo "Error: could not resolve final revision after squash" >&2
-        echo "squash:error:resolve-failed"
-        echo "recovery:jj undo"
-        exit 1
-    fi
-
-    if ! jj describe -r "$final_rev" -m "$full_message" 2>/dev/null; then
-        echo "Error: jj describe failed after squash" >&2
-        echo "squash:error:describe-failed"
-        echo "recovery:jj undo"
-        exit 1
-    fi
-
-    echo "squash:success:${final_rev}"
 }
 
 # --- retroactive squash用関数群 ---
@@ -1109,43 +946,26 @@ main() {
         echo "retroactive:true"
     fi
 
-    # 事前チェック: working tree / working copy がcleanであること
-    if [[ "$VCS_TYPE" == "git" ]]; then
-        local porcelain
-        if ! porcelain=$(git status --porcelain 2>&1); then
-            echo "Error: git status failed (not a git repository?): ${porcelain}" >&2
-            echo "squash:error:not-a-repository"
-            exit 1
-        fi
-        if [[ -n "$porcelain" ]]; then
-            echo "Error: working tree is not clean. Please commit or stash changes first." >&2
-            echo "squash:error:dirty-working-tree"
-            exit 1
-        fi
-    elif [[ "$VCS_TYPE" == "jj" ]]; then
-        local jj_status
-        # stdoutのみ取得（stderrの警告によるdirty誤判定を防止）
-        if ! jj_status=$(jj diff --stat 2>/dev/null); then
-            echo "Error: jj diff failed (not a jj repository?)" >&2
-            echo "squash:error:not-a-repository"
-            exit 1
-        fi
-        if [[ -n "$jj_status" ]]; then
-            echo "Error: working copy has uncommitted changes. Please commit changes first." >&2
-            echo "squash:error:dirty-working-tree"
-            exit 1
-        fi
+    # 事前チェック: working tree がcleanであること
+    local porcelain
+    if ! porcelain=$(git status --porcelain 2>&1); then
+        echo "Error: git status failed (not a git repository?): ${porcelain}" >&2
+        echo "squash:error:not-a-repository"
+        exit 1
+    fi
+    if [[ -n "$porcelain" ]]; then
+        echo "Error: working tree is not clean. Please commit or stash changes first." >&2
+        echo "squash:error:dirty-working-tree"
+        exit 1
     fi
 
     # mainブランチ保護: サイクルブランチ以外での実行を拒否
-    if [[ "$VCS_TYPE" == "git" ]]; then
-        local current_branch
-        current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
-        if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
-            echo "Error: squash-unit.sh should not be run on the main/master branch. Use a cycle branch." >&2
-            echo "squash:error:on-main-branch"
-            exit 1
-        fi
+    local current_branch
+    current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+    if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
+        echo "Error: squash-unit.sh should not be run on the main/master branch. Use a cycle branch." >&2
+        echo "squash:error:on-main-branch"
+        exit 1
     fi
 
     # retroactive モード: 専用フローへ分岐
@@ -1177,26 +997,14 @@ main() {
         # 入力バリデーション（revset演算子の混入防止）
         validate_base_format "$BASE_COMMIT" "$VCS_TYPE"
 
-        if [[ "$VCS_TYPE" == "git" ]]; then
-            if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then
-                echo "Error: --base ${BASE_COMMIT} is not an ancestor of HEAD" >&2
-                echo "squash:error:base-not-ancestor"
-                exit 1
-            fi
-        elif [[ "$VCS_TYPE" == "jj" ]]; then
-            # jj: baseが@-の祖先であることを検証
-            local ancestor_check
-            if ! ancestor_check=$(jj log --no-graph -T 'change_id' -r "ancestors(@-) & exact:${BASE_COMMIT}" 2>/dev/null) || [[ -z "$ancestor_check" ]]; then
-                echo "Error: --base ${BASE_COMMIT} is not an ancestor of @- or is not a valid revision" >&2
-                echo "squash:error:base-not-ancestor"
-                exit 1
-            fi
+        if ! git merge-base --is-ancestor "$BASE_COMMIT" HEAD 2>/dev/null; then
+            echo "Error: --base ${BASE_COMMIT} is not an ancestor of HEAD" >&2
+            echo "squash:error:base-not-ancestor"
+            exit 1
         fi
         echo "base_commit:${BASE_COMMIT}"
-    elif [[ "$VCS_TYPE" == "git" ]]; then
+    else
         find_base_commit_git "$CYCLE"
-    elif [[ "$VCS_TYPE" == "jj" ]]; then
-        find_base_commit_jj "$CYCLE"
     fi
 
     # 対象コミット数の取得（pipefail安全）
@@ -1211,11 +1019,7 @@ main() {
 
     # ドライラン: 対象一覧を表示して終了
     if [[ "$DRY_RUN" == "true" ]]; then
-        if [[ "$VCS_TYPE" == "git" ]]; then
-            git log --oneline "${BASE_COMMIT}..HEAD" >&2
-        elif [[ "$VCS_TYPE" == "jj" ]]; then
-            jj log --no-graph -r "${BASE_COMMIT}..@-" >&2
-        fi
+        git log --oneline "${BASE_COMMIT}..HEAD" >&2
         echo "squash:dry-run:${TARGET_COUNT}"
         exit 0
     fi
@@ -1224,11 +1028,7 @@ main() {
     extract_co_authors "$VCS_TYPE" "$BASE_COMMIT"
 
     # squash実行
-    if [[ "$VCS_TYPE" == "git" ]]; then
-        squash_git "$BASE_COMMIT" "$MESSAGE" "$CO_AUTHORS" "$TARGET_COUNT"
-    elif [[ "$VCS_TYPE" == "jj" ]]; then
-        squash_jj "$BASE_COMMIT" "$MESSAGE" "$CO_AUTHORS" "$TARGET_COUNT"
-    fi
+    squash_git "$BASE_COMMIT" "$MESSAGE" "$CO_AUTHORS" "$TARGET_COUNT"
 }
 
 main "$@"

@@ -148,7 +148,6 @@ docs/aidlc/bin/env-info.sh --setup
 |------|------|
 | gh | GitHub CLI状態 |
 | dasel | dasel状態 |
-| jj | jj状態（非推奨: v1.19.0） |
 | git | git状態 |
 | project.name | プロジェクト名 |
 | backlog.mode | バックログモード |
@@ -1141,7 +1140,7 @@ gh pr create --draft \
 
 ### 5. Gitコミット
 
-**注意**: ステップ4.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`（jj環境（非推奨）: `jj status`）で確認のみ行ってください。
+**注意**: ステップ4.5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`で確認のみ行ってください。
 
 squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
