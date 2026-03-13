@@ -26,7 +26,7 @@ body:
     attributes:
       label: "Discovery Cycle / 発見サイクル"
       description: "The cycle where this was discovered (if applicable) / 発見したサイクル（該当する場合）"
-      placeholder: "e.g., v1.7.0"
+      placeholder: "e.g., v1.7.0 or waf/v1.0.0"
     validations:
       required: false
 
