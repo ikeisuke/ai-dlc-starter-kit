@@ -824,31 +824,37 @@ fi
 AGENTS.mdとCLAUDE.mdは、AI-DLC設定ファイルへの参照を追記します。
 参照先ファイル（`docs/aidlc/prompts/AGENTS.md`, `docs/aidlc/prompts/CLAUDE.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
 
+**AGENTS.md の処理（全AIツール共通）**:
+
+AGENTS.mdが存在しない場合は新規作成する:
+
 ```bash
-# AGENTS.md の処理（全AIツール共通）
 if [ ! -f AGENTS.md ]; then
-  # 新規作成
   cat > AGENTS.md << 'EOF'
 # AGENTS.md
 
 @docs/aidlc/prompts/AGENTS.md を参照してください。
 EOF
   echo "Created: AGENTS.md"
-else
-  # 参照行がなければ先頭に追記
-  if ! grep -q "@docs/aidlc/prompts/AGENTS.md" AGENTS.md; then
-    TEMP_FILE=$(mktemp)
-    echo "@docs/aidlc/prompts/AGENTS.md を参照してください。" > "$TEMP_FILE"
-    echo "" >> "$TEMP_FILE"
-    cat AGENTS.md >> "$TEMP_FILE"
-    mv "$TEMP_FILE" AGENTS.md
-    echo "Added reference to AGENTS.md: @docs/aidlc/prompts/AGENTS.md"
-  fi
 fi
+```
 
-# CLAUDE.md の処理（Claude Code専用）
+AGENTS.mdが既に存在し、参照行がない場合は先頭に追記する:
+
+1. Bashツールで追記が必要か確認する: `grep -q "@docs/aidlc/prompts/AGENTS.md" AGENTS.md || echo "NEEDS_UPDATE"`
+2. 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
+3. 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
+
+```bash
+echo "@docs/aidlc/prompts/AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat AGENTS.md >> "<パス>" && \mv "<パス>" AGENTS.md && echo "Added reference to AGENTS.md"
+```
+
+**CLAUDE.md の処理（Claude Code専用）**:
+
+CLAUDE.mdが存在しない場合は新規作成する:
+
+```bash
 if [ ! -f CLAUDE.md ]; then
-  # 新規作成（AGENTS.md参照も含む）
   cat > CLAUDE.md << 'EOF'
 # CLAUDE.md
 
@@ -856,28 +862,28 @@ if [ ! -f CLAUDE.md ]; then
 @docs/aidlc/prompts/CLAUDE.md を参照してください。
 EOF
   echo "Created: CLAUDE.md"
-else
-  # 参照行を追記（順序: @AGENTS.md → @CLAUDE.md となるように逆順で先頭挿入）
-  # 1. CLAUDE.md参照がなければ先頭に追記
-  if ! grep -q "@docs/aidlc/prompts/CLAUDE.md" CLAUDE.md; then
-    TEMP_FILE=$(mktemp)
-    echo "@docs/aidlc/prompts/CLAUDE.md を参照してください。" > "$TEMP_FILE"
-    echo "" >> "$TEMP_FILE"
-    cat CLAUDE.md >> "$TEMP_FILE"
-    mv "$TEMP_FILE" CLAUDE.md
-    echo "Added reference to CLAUDE.md: @docs/aidlc/prompts/CLAUDE.md"
-  fi
-  # 2. AGENTS.md参照がなければ先頭に追記（これが最上段になる）
-  if ! grep -q "@AGENTS.md" CLAUDE.md; then
-    TEMP_FILE=$(mktemp)
-    echo "@AGENTS.md を参照してください。" > "$TEMP_FILE"
-    echo "" >> "$TEMP_FILE"
-    cat CLAUDE.md >> "$TEMP_FILE"
-    mv "$TEMP_FILE" CLAUDE.md
-    echo "Added reference to CLAUDE.md: @AGENTS.md"
-  fi
 fi
 ```
+
+CLAUDE.mdが既に存在する場合、以下の参照行を逆順で先頭に追記する（最終的に `@AGENTS.md` → `@CLAUDE.md` の順になる）:
+
+1. `@docs/aidlc/prompts/CLAUDE.md` 参照の追記:
+   - Bashツールで追記が必要か確認する: `grep -q "@docs/aidlc/prompts/CLAUDE.md" CLAUDE.md || echo "NEEDS_UPDATE"`
+   - 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
+   - 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
+
+   ```bash
+   echo "@docs/aidlc/prompts/CLAUDE.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @docs/aidlc/prompts/CLAUDE.md"
+   ```
+
+2. `@AGENTS.md` 参照の追記（これが最上段になる）:
+   - Bashツールで追記が必要か確認する: `grep -q "@AGENTS.md" CLAUDE.md || echo "NEEDS_UPDATE"`
+   - 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
+   - 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
+
+   ```bash
+   echo "@AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @AGENTS.md"
+   ```
 
 #### 8.2.4 rsync出力例
 

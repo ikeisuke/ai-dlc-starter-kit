@@ -280,6 +280,8 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 `mktemp` コマンドで一意なパスを生成する。**固定パスの直接使用は禁止**する。
 
+**重要**: `mktemp` 実行時に `$()` を使用しない。`TEMP=$(mktemp ...)` のようなコマンド置換ではなく、Bashツールで `mktemp` を単独実行し、出力されたパスを取得すること（`.sh` スクリプト内部は例外）。
+
 | 用途 | mktemp テンプレート |
 |------|------|
 | コミットメッセージ | `mktemp /tmp/aidlc-commit-msg.XXXXXX` |
