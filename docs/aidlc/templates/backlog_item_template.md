@@ -2,7 +2,7 @@
 
 - **発見日**: YYYY-MM-DD
 - **発見フェーズ**: [Inception / Construction / Operations]
-- **発見サイクル**: vX.X.X
+- **発見サイクル**: {{CYCLE}}（例: v1.0.0 または waf/v1.0.0）
 - **優先度**: [高 / 中 / 低]
 
 ## 概要

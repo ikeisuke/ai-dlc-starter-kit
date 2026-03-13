@@ -88,15 +88,19 @@ OPTIONS:
 EOF
 }
 
-# サイクル名を検証（空文字とパス区切り文字を拒否）
+# サイクル名を検証（vX.Y.Z または name/vX.Y.Z 形式のみ許可）
 validate_cycle() {
     local cycle="$1"
     # 空文字チェック
     if [[ -z "$cycle" ]]; then
         return 1
     fi
-    # パス区切り文字を拒否（ディレクトリトラバーサル防止）
-    if [[ "$cycle" == */* ]]; then
+    # パストラバーサル防止
+    if [[ "$cycle" == *..* ]]; then
+        return 1
+    fi
+    # 形式チェック（setup-branch.shと同一パターン）
+    if [[ ! "$cycle" =~ ^([a-z0-9][a-z0-9-]*/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
         return 1
     fi
     return 0
@@ -319,7 +323,7 @@ main() {
     fi
 
     if ! validate_cycle "$CYCLE"; then
-        echo "error:Invalid cycle name. Cannot be empty or contain '/'" >&2
+        echo "error:Invalid cycle name. Expected format: vX.Y.Z, vX.Y.Z-prerelease, name/vX.Y.Z, or name/vX.Y.Z-prerelease" >&2
         exit 1
     fi
 
