@@ -13,6 +13,7 @@
 #   branch:cycle/v1.12.1
 #   worktree_path:.worktree/cycle-v1.12.1  (worktreeモードのみ)
 #   message:詳細メッセージ
+#   main_status:up-to-date|behind|fetch-failed  (オプション、成功時のみ)
 
 set -euo pipefail
 
@@ -58,6 +59,41 @@ worktree_exists() {
     fi
     # -F: 固定文字列マッチ（.などの正規表現文字を無効化）
     git worktree list --porcelain 2>/dev/null | grep -qF "$abs_path"
+}
+
+# mainブランチの最新化チェック
+check_main_freshness() {
+    local target_ref="${1:-HEAD}"
+
+    # fetch（GIT_TERMINAL_PROMPT=0で非対話、失敗時はfetch-failedで即return）
+    if ! GIT_TERMINAL_PROMPT=0 git fetch -- origin >/dev/null 2>&1; then
+        echo "main_status:fetch-failed"
+        return 0
+    fi
+
+    # リモートのデフォルトブランチ検出（get-default-branch.shと同じロジック）
+    local remote_main=""
+    local default_branch
+    default_branch=$(git remote show origin 2>/dev/null | grep "HEAD branch" | awk '{print $NF}')
+    if [[ -n "$default_branch" ]]; then
+        remote_main="origin/${default_branch}"
+    elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+        remote_main="origin/main"
+    elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+        remote_main="origin/master"
+    else
+        echo "main_status:fetch-failed"
+        return 0
+    fi
+
+    # 最新化判定: remote_mainがtarget_refの祖先かを確認
+    if git merge-base --is-ancestor "$remote_main" "$target_ref" 2>/dev/null; then
+        echo "main_status:up-to-date"
+    else
+        echo "main_status:behind"
+    fi
+
+    return 0
 }
 
 # ブランチモード
@@ -157,6 +193,10 @@ main() {
             return 1
             ;;
     esac
+
+    # ブランチ/worktree作成成功後にmain最新化チェック
+    # サイクルブランチのHEADを判定対象にする
+    check_main_freshness "cycle/${version}"
 }
 
 main "$@"

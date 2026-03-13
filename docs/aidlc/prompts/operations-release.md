@@ -341,7 +341,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
 
 **結果に応じた対応**:
 
-- **`status:ok`**: 次のステップ（6.7 PRマージ）へ進む
+- **`status:ok`**: 次のステップ（6.6.7 mainブランチとの差分チェック）へ進む
 
 - **`status:warning`**: 以下を表示してマージを停止
 
@@ -386,6 +386,93 @@ docs/aidlc/bin/validate-git.sh remote-sync
   【エラー】未pushコミットの確認に失敗しました。
   リモート参照の状態を手動で確認し、問題を解決してから再度このステップを実行してください。
   ```
+
+## 6.6.7 mainブランチとの差分チェック【推奨】
+
+PRマージ前に、サイクルブランチがmainブランチの最新変更を取り込んでいるか確認します。
+
+```bash
+# リモートの最新情報を取得
+GIT_TERMINAL_PROMPT=0 git fetch origin 2>/dev/null
+```
+
+**fetchに失敗した場合**:
+```text
+【情報】リモートの確認に失敗しました（オフライン環境等）。
+mainブランチとの差分チェックをスキップして処理を続行します。
+```
+→ 次のステップ（6.7 PRマージ）へ進む
+
+**fetchに成功した場合**:
+
+リモートのデフォルトブランチを検出し、現在のブランチがその変更を含んでいるか確認する。
+
+**手順**:
+
+1. 事前にBashでデフォルトブランチを検出する:
+
+```bash
+git remote show origin 2>/dev/null | grep "HEAD branch" | awk '{print $NF}'
+```
+
+出力があればその値を `DEFAULT_BRANCH` として保持する。
+
+2. 出力が空の場合、フォールバックで `main` → `master` の順に確認:
+
+```bash
+git rev-parse --verify origin/main >/dev/null 2>&1
+```
+
+成功すれば `DEFAULT_BRANCH=main`。失敗した場合:
+
+```bash
+git rev-parse --verify origin/master >/dev/null 2>&1
+```
+
+成功すれば `DEFAULT_BRANCH=master`。
+
+3. `DEFAULT_BRANCH` が特定できた場合、差分チェックを実行:
+
+```bash
+git merge-base --is-ancestor origin/main HEAD
+```
+
+（`origin/main` の部分は特定した `DEFAULT_BRANCH` で置換する）
+
+**結果に応じた対応**:
+
+- **デフォルトブランチが検出できない場合**: 警告を表示し、次のステップへ進む
+  ```text
+  【警告】リモートのデフォルトブランチを特定できませんでした。
+  mainブランチとの差分チェックをスキップします。
+  ```
+
+- **up-to-date**（`merge-base --is-ancestor` が成功）:
+  ```text
+  mainブランチの変更はすべて取り込み済みです。
+  ```
+  → 次のステップ（6.7 PRマージ）へ進む
+
+- **behind**（`merge-base --is-ancestor` が失敗）:
+  ```text
+  【警告】mainブランチに未取り込みの変更があります。
+  PRマージ前にmainの変更を取り込むことを推奨します。
+
+  推奨コマンド:
+  → git merge origin/{DEFAULT_BRANCH}
+  → または git rebase origin/{DEFAULT_BRANCH}
+
+  マージ後、再度このステップを実行してください。
+  ```
+
+  AskUserQuestion機能で対応を確認:
+  ```text
+  1. mainの変更を取り込んでからマージする(推奨)
+  2. そのままマージを続行する
+  ```
+
+  - 「1」選択時: ユーザーにマージ/リベース実行を促し、完了後に再度このステップを実行
+  - 「2」選択時: 次のステップ（6.7 PRマージ）へ進む
 
 ## 6.7 PRマージ【重要】
 
