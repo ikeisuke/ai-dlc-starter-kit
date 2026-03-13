@@ -323,7 +323,7 @@ deny（最優先）→ ask → allow（最低優先）
 |---------|-----------|--------|
 | `Bash(claude:*)` | Claudeサブプロセスでレビューを実行する場合 | サブプロセスが親の権限制御外で動作する。**`ask` への配置を推奨**。プロンプト注入経由の意図しない実行リスクあり |
 | `Bash(dasel:*)` | daselでTOML設定を読み取る場合 | 書き込みオプション（`-w`）も許可される。読み取り専用に限定する場合は `Bash(dasel -r toml:*)` に変更 |
-| `Bash(rsync:*)` | `/upgrading-aidlc` でパッケージ同期する場合 | `--delete` や任意パス指定が可能。既存設定例のように宛先固定パターン推奨 |
+| `Bash(rsync:*)` | `/aidlc-setup` でパッケージ同期する場合 | `--delete` や任意パス指定が可能。既存設定例のように宛先固定パターン推奨 |
 | `Bash(prompts/package/bin/setup-:*)` | セットアップスクリプト（`prompts/package/bin/setup-*.sh`）を実行する場合 | - |
 
 ##### ask推奨（破壊的操作）

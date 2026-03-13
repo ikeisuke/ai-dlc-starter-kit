@@ -35,14 +35,14 @@
 このプロジェクトはメタ開発のため、Operations Phase のステップ6（リリース準備）の前に以下を実行すること：
 
 ```
-/upgrading-aidlc
+/aidlc-setup
 ```
 
 **理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映するため。
 
 ### バージョンファイル更新【重要】
 
-`/upgrading-aidlc` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
+`/aidlc-setup` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
 
 ```bash
 bin/update-version.sh --version {{CYCLE}}

@@ -4,7 +4,7 @@
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/common/project-info.md` を読み込んで、内容を確認してください。
 
-**アップグレード**: `/upgrading-aidlc` スキルを使用してください。
+**アップグレード**: `/aidlc-setup` スキルを使用してください。
 
 ---
 
@@ -19,8 +19,6 @@ Inception/Construction Phaseで決定済み
 ### 開発ルール
 
 **共通ルールは `docs/aidlc/prompts/common/rules.md` を参照**
-
-- **タグ操作注意【Operations固有】**: タグ操作（`git tag`）はjjでサポートされていないため、`docs/aidlc.toml`の`[rules.jj].enabled = true`（非推奨: v1.19.0）でもgitを使用
 
 - **プロンプト履歴管理【重要】**: 履歴は `docs/cycles/{{CYCLE}}/history/operations.md` に記録。
 
@@ -771,7 +769,7 @@ bash <探索結果のパス> --cycle {{CYCLE}}
 
 **次のステップ**: 「start inception」と指示してください。
 
-**AI-DLCスターターキットをアップグレードする場合**: `/upgrading-aidlc` スキルを実行してください。
+**AI-DLCスターターキットをアップグレードする場合**: `/aidlc-setup` スキルを実行してください。
 ---
 ````
 

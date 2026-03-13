@@ -81,13 +81,6 @@ enabled = false
 # - minimal: Unit完了時にまとめて記録
 level = "standard"
 
-[rules.jj]
-# jjサポート設定（v1.7.2で追加）
-# enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
-# - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false
-
 [rules.linting]
 # markdownlint設定（v1.8.0で追加）
 # markdown_lint: true | false

@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.20.2"
+starter_kit_version = "1.21.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -97,13 +97,6 @@ version_tag = false
 [rules.unit_branch]
 # Unitブランチ設定（v1.7.0で追加）
 # enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: false）
-enabled = false
-
-[rules.jj]
-# jjサポート設定（v1.8.0で追加）
-# enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内
-# - false: 従来のgitコマンドを使用（デフォルト）
 enabled = false
 
 [rules.linting]

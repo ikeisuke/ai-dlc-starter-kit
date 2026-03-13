@@ -583,7 +583,6 @@ skip:already-exists:rules.reviewing
 skip:already-exists:rules.worktree
 skip:already-exists:rules.history
 skip:already-exists:rules.backlog
-skip:already-exists:rules.jj
 skip:already-exists:rules.linting
 skip:already-exists:rules.reviewing.tools
 skip:already-exists:rules.commit
@@ -1069,16 +1068,14 @@ docs/aidlc/bin/setup-ai-tools.sh
 ├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
 ├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
 ├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
-├── upgrading-aidlc/         → symlink → ../../docs/aidlc/skills/upgrading-aidlc/
-├── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
+├── aidlc-setup/         → symlink → ../../docs/aidlc/skills/aidlc-setup/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
 .kiro/skills/                         ← 実ディレクトリ
 ├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
 ├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
 ├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
-├── upgrading-aidlc/         → symlink → ../../docs/aidlc/skills/upgrading-aidlc/
-└── versioning-with-jj/      → symlink → ../../docs/aidlc/skills/versioning-with-jj/
+└── aidlc-setup/         → symlink → ../../docs/aidlc/skills/aidlc-setup/
 
 .kiro/agents/
 └── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
@@ -1119,7 +1116,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 
 **skills/** → `docs/aidlc/skills/`:
 - reviewing-code/SKILL.md, reviewing-architecture/SKILL.md, reviewing-security/SKILL.md（レビュースキル）
-- upgrading-aidlc/SKILL.md（アップグレードスキル）、versioning-with-jj/SKILL.md（jjスキル）
+- aidlc-setup/SKILL.md（アップグレードスキル）
 
 **注意**: バージョン情報は `docs/aidlc.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。
 
@@ -1162,7 +1159,7 @@ AI-DLC環境のセットアップが完了しました！
 - prompts/operations.md - Operations Phase プロンプト
 - prompts/setup.md - サイクルセットアップ プロンプト
 - templates/ - ドキュメントテンプレート
-- skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, upgrading-aidlc, versioning-with-jj）
+- skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, aidlc-setup）
 - kiro/agents/ - KiroCLIエージェント設定
 
 プロジェクト固有ファイル（docs/cycles/）:

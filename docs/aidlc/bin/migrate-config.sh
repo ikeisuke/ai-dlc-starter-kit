@@ -203,14 +203,6 @@ else
     echo "skip:already-exists:rules.backlog"
 fi
 
-_add_section "rules\\.jj" '[rules.jj]
-# jjサポート設定（v1.7.2で追加、v1.19.0で非推奨）
-# 【非推奨】将来のバージョンで削除予定です。gitへの移行を推奨します。
-# enabled: true | false
-# - true: プロンプト内でjj-support.md参照を案内（非推奨）
-# - false: 従来のgitコマンドを使用（デフォルト）
-enabled = false'
-
 _add_section "rules\\.linting" '[rules.linting]
 # markdownlint設定（v1.8.0で追加）
 # markdown_lint: true | false
@@ -312,6 +304,18 @@ RULES_EOF
     fi
 else
     echo "skip:not-found:inception.dependabot"
+fi
+
+# [rules.jj] 廃止設定検出
+if grep -q "^\[rules\.jj\]" "$_target"; then
+    echo "warn:deprecated-config:rules.jj"
+    echo "[jj設定の廃止] aidlc.toml に [rules.jj] セクションが検出されました。" >&2
+    echo "jjサポートは v1.21.0 でスターターキット本体から削除されました。" >&2
+    echo "移行手順: docs/aidlc/guides/jj-migration.md" >&2
+    echo "[rules.jj] セクションは手動で削除してください。" >&2
+    _has_warnings=true
+else
+    echo "skip:not-found:rules.jj"
 fi
 
 # 終了コード判定

@@ -8,7 +8,6 @@
 # 出力形式:
 #   gh:available|not-installed|not-authenticated
 #   dasel:available|not-installed
-#   jj:available|not-installed
 #   git:available|not-installed
 #
 
@@ -43,10 +42,9 @@ check_gh() {
 
 # メイン処理
 main() {
-    # 出力順序は env-info.sh と同じ（gh → dasel → jj → git）
+    # 出力順序は env-info.sh と同じ（gh → dasel → git）
     echo "gh:$(check_gh)"
     echo "dasel:$(check_tool dasel)"
-    echo "jj:$(check_tool jj)"
     echo "git:$(check_tool git)"
 }
 

@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.21.0] - 2026-03-13
+
+### Added
+
+- マーケットプレイス対応: `.claude-plugin/marketplace.json` によるスキルカタログ機能を追加。`/plugin marketplace add` および `/plugin install` によるスキルインストールに対応（#292）
+- スキル名前空間分離: `aidlc:` および `tools:` の論理名前空間プレフィックスをスキルカタログに導入し、AI-DLCスキルとツールスキルを区別可能に（#292）
+- jj移行ガイド: 外部リポジトリのversioning-with-jjスキルへの移行手順ドキュメント `guides/jj-migration.md` を追加（#276）
+- マルチプラットフォーム対応調査: AIエージェント7種（Claude Code, KiroCLI, Codex CLI, Gemini CLI, Cursor, Cline, Windsurf）の対応状況マトリクス・ギャップ分析・固有表現一覧・優先対応提案を含む調査ドキュメントを作成（#281）
+
+### Changed
+
+- `upgrading-aidlc` スキルを `aidlc-setup` にリネーム: ディレクトリパス、スクリプト名、シンボリックリンク、全参照箇所を更新（#292）
+
+### Removed
+
+- jj (Jujutsu) VCS関連コード完全削除: `versioning-with-jj` スキルディレクトリ、各スクリプト（aidlc-git-info.sh, aidlc-cycle-info.sh, squash-unit.sh, aidlc-env-check.sh）のjj検出・分岐ロジック、`aidlc.toml` の `[rules.jj]` 設定セクション、プロンプト内のjj参照を削除（#276）
+
+---
+
 ## [1.20.2] - 2026-03-12
 
 ### Added

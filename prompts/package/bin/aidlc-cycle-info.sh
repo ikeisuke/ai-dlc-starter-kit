@@ -14,20 +14,11 @@
 
 set -uo pipefail
 
-# 現在ブランチ取得（git/jj両対応）
+# 現在ブランチ取得
 get_current_branch() {
     local branch=""
 
-    # jj優先（非推奨: v1.19.0）
-    if [[ -d ".jj" ]] && command -v jj >/dev/null 2>&1; then
-        echo "warn:jj-deprecated" >&2
-        branch=$(jj log -r @ --no-graph -T 'bookmarks' 2>/dev/null) || branch=""
-        # 複数ある場合は最初の1つ
-        branch="${branch%% *}"
-    fi
-
-    # jjで取得できなければgit
-    if [[ -z "$branch" ]] && [[ -d ".git" ]]; then
+    if [[ -d ".git" ]]; then
         branch=$(git branch --show-current 2>/dev/null) || branch=""
     fi
 

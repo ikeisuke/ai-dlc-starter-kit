@@ -5,9 +5,6 @@
 [rules.squash]
 enabled = false
 
-[rules.jj]
-enabled = false
-
 [rules.feedback]
 enabled = true
 

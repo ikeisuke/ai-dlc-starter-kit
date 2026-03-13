@@ -168,13 +168,10 @@ git commit -F /tmp/aidlc-commit-msg.XXXXXX
 **注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
 
 ```bash
-# git環境
 git status
-# jj環境（[rules.jj].enabled = true の場合）
-jj status
 ```
 
-期待される結果: `nothing to commit, working tree clean`（git）または変更なし（jj）
+期待される結果: `nothing to commit, working tree clean`
 
 squashを実行していない場合は、以下の通常コミット手順を実行:
 
@@ -210,13 +207,10 @@ git status
 **注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
 
 ```bash
-# git環境
 git status
-# jj環境（[rules.jj].enabled = true の場合）
-jj status
 ```
 
-期待される結果: `nothing to commit, working tree clean`（git）または変更なし（jj）
+期待される結果: `nothing to commit, working tree clean`
 
 squashを実行していない場合は、以下の通常コミット手順を実行:
 
@@ -307,17 +301,6 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 - `true` の場合: 以下の手順を実行
 - `false`、未設定の場合: このフローをスキップ
 
-**VCS種類判定**:
-
-> **非推奨（v1.19.0）**: jjサポートは非推奨です。`vcs=jj` は将来のバージョンで削除予定です。
-
-```bash
-docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
-```
-
-- `true` → `vcs=jj`（非推奨）
-- `false`、未設定 → `vcs=git`
-
 ### ユーザー確認・中間コミット
 
 1. **ユーザー確認**（中間コミット作成前に実施）:
@@ -357,26 +340,6 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    3. 一時ファイルを削除
 
-   jj環境（`[rules.jj].enabled = true` の場合）:
-
-   1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
-
-   ```text
-   chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
-
-   Unit-Number: {NNN}
-   Co-Authored-By: {AI_AUTHOR}
-   ```
-
-   2. 以下を実行:
-
-   ```bash
-   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
-   jj new
-   ```
-
-   3. 一時ファイルを削除
-
    **Inception Phase完了squashの場合**:
 
    git環境:
@@ -398,34 +361,12 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    3. 一時ファイルを削除
 
-   jj環境（`[rules.jj].enabled = true` の場合）:
-
-   1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
-
-   ```text
-   chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
-
-   Co-Authored-By: {AI_AUTHOR}
-   ```
-
-   2. 以下を実行:
-
-   ```bash
-   jj describe --stdin < /tmp/aidlc-commit-msg.XXXXXX
-   jj new
-   ```
-
-   3. 一時ファイルを削除
-
    未コミット変更がない場合: このステップをスキップ
 
    **clean状態の検証**（中間コミット後、またはスキップ後）:
 
    ```bash
-   # git環境
    git status --porcelain
-   # jj環境
-   jj diff --stat
    ```
 
    出力が空であることを確認。空でない場合: 残りの変更を追加コミットする。
@@ -439,20 +380,17 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    **判定手順**:
 
    ```bash
-   # git環境
    git log --oneline -20
-   # jj環境
-   jj log --limit 20
    ```
 
    ログを確認し、squash対象範囲の起点となるコミットを特定する。
 
    **フェーズ別の判定基準**:
 
-   | フェーズ | git | jj |
-   |---------|-----|-----|
-   | Unit完了squash | 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）のハッシュ | `jj log` から同様に判定し、change_idを特定 |
-   | Inception Phase完了squash | `git merge-base origin/main HEAD`（サイクルブランチの分岐点）。`origin/main` が存在しない場合はユーザーに起点コミットを確認 | `jj log` で `main` ブランチとの分岐リビジョンを特定 |
+   | フェーズ | 判定基準 |
+   |---------|---------|
+   | Unit完了squash | 前Unitの完了コミット（`feat: [{{CYCLE}}] Unit {前のNNN}完了`）、またはサイクル開始コミット（`feat: [{{CYCLE}}] Inception Phase完了`）のハッシュ |
+   | Inception Phase完了squash | `git merge-base origin/main HEAD`（サイクルブランチの分岐点）。`origin/main` が存在しない場合はユーザーに起点コミットを確認 |
 
 5. **squash実行**:
 
@@ -470,7 +408,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs <vcs> --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
+     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    3. 一時ファイルを削除
@@ -487,29 +425,14 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-     --vcs <vcs> --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
+     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
    ```
 
    3. 一時ファイルを削除
 
-   - `squash:success` の場合: squash完了。通常コミットをスキップし、jj環境の場合のみブックマーク更新へ進む
+   - `squash:success` の場合: squash完了。通常コミットをスキップ
    - `squash:skipped:no-commits` の場合: 「squash対象のコミットがありません。通常コミットに進みます。」と表示してスキップ
    - `squash:error` の場合: エラーメッセージと recovery コマンドをユーザーに提示し、対応を確認
-
-### jjブックマーク更新・エラーリカバリ
-
-6. **(jj環境かつ `squash:success` の場合のみ) bookmark更新**:
-
-   `squash:success` 以外の結果（`skipped` / `error`）では `@-` が期待するsquashedコミットを指さないため、このステップは実行しない。
-
-   ```bash
-   # bookmarkが存在する場合
-   jj bookmark set cycle/{{CYCLE}} -r @-
-   # bookmarkが存在しない場合
-   jj bookmark create cycle/{{CYCLE}} -r @-
-   ```
-
-   squash後の状態: `@-` = squashedコミット（feat: メッセージ付き）、`@` = working copy（空）。`jj new` は不要。
 
 ### 事後squash（retroactive）
 
@@ -517,7 +440,6 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
 
 **使用条件**:
 
-- `--vcs=git` のみ対応（jjは非対応）
 - `--unit` の指定が必須（3桁数字形式、例: 003）
 - working treeがcleanであること
 
@@ -561,7 +483,7 @@ docs/aidlc/bin/read-config.sh rules.jj.enabled --default "false"
    - `squash:success` の場合: 事後squash完了
    - `squash:error:unit-not-found` の場合: 対象Unitのコミットが見つからない。コミットメッセージのパターンを確認
    - `squash:error:conflict` の場合: rebase中にコンフリクト発生。自動的に `git rebase --abort` で復帰済み。手動での対応が必要
-   - `squash:error:unsupported-vcs` の場合: jj環境では事後squash非対応
+
 
 **`--from`/`--to` によるコミット範囲の手動指定**:
 
