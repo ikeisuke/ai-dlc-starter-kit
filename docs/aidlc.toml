@@ -72,6 +72,14 @@ mode = "semi_auto"
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
 
+[rules.branch]
+# ブランチ作成方式設定（v1.21.2で追加）
+# mode: "branch" | "worktree" | "ask"
+# - branch: 常にブランチ方式で自動作成
+# - worktree: 常にworktree方式で自動作成（rules.worktree.enabled=trueが必要）
+# - ask: ユーザーに都度質問（デフォルト）
+mode = "branch"
+
 [rules.worktree]
 # git worktree設定（v1.4.0で追加）
 # enabled: true | false
