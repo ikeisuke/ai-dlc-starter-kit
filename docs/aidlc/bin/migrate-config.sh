@@ -306,6 +306,18 @@ else
     echo "skip:not-found:inception.dependabot"
 fi
 
+# [rules.jj] 廃止設定検出
+if grep -q "^\[rules\.jj\]" "$_target"; then
+    echo "warn:deprecated-config:rules.jj"
+    echo "[jj設定の廃止] aidlc.toml に [rules.jj] セクションが検出されました。" >&2
+    echo "jjサポートは v1.21.0 でスターターキット本体から削除されました。" >&2
+    echo "移行手順: docs/aidlc/guides/jj-migration.md" >&2
+    echo "[rules.jj] セクションは手動で削除してください。" >&2
+    _has_warnings=true
+else
+    echo "skip:not-found:rules.jj"
+fi
+
 # 終了コード判定
 if [[ "$_has_warnings" == "true" ]]; then
     exit 2
