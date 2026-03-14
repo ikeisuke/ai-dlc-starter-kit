@@ -32,6 +32,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # グローバル変数
 CYCLE=""
 PHASE=""
@@ -88,23 +91,6 @@ OPTIONS:
 EOF
 }
 
-# サイクル名を検証（vX.Y.Z または name/vX.Y.Z 形式のみ許可）
-validate_cycle() {
-    local cycle="$1"
-    # 空文字チェック
-    if [[ -z "$cycle" ]]; then
-        return 1
-    fi
-    # パストラバーサル防止
-    if [[ "$cycle" == *..* ]]; then
-        return 1
-    fi
-    # 形式チェック（setup-branch.shと同一パターン）
-    if [[ ! "$cycle" =~ ^([a-z0-9][a-z0-9-]*/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-        return 1
-    fi
-    return 0
-}
 
 # フェーズを検証
 validate_phase() {
@@ -323,7 +309,7 @@ main() {
     fi
 
     if ! validate_cycle "$CYCLE"; then
-        echo "error:Invalid cycle name. Expected format: vX.Y.Z, vX.Y.Z-prerelease, name/vX.Y.Z, or name/vX.Y.Z-prerelease" >&2
+        echo "error:Invalid cycle name: ${CYCLE}" >&2
         exit 1
     fi
 
