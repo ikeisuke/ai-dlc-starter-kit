@@ -20,7 +20,7 @@
 #   0. <script_dir>/../config/defaults.toml - デフォルト値定義（オプション）
 #   1. ~/.aidlc/config.toml - ユーザー共通設定（オプション）
 #   2. docs/aidlc.toml - プロジェクト共有設定（必須）
-#   3. docs/aidlc.toml.local - 個人設定（オプション）
+#   3. docs/aidlc.local.toml - 個人設定（オプション、旧名 docs/aidlc.toml.local もフォールバック）
 #
 # マージルール:
 #   - 単一キーの値を取得（ファイル全体のマージではない）
@@ -43,7 +43,8 @@ source "${SCRIPT_DIR}/../lib/validate.sh"
 DEFAULTS_CONFIG_FILE="${SCRIPT_DIR}/../config/defaults.toml"
 HOME_CONFIG_FILE="${HOME:+$HOME/.aidlc/config.toml}"
 PROJECT_CONFIG_FILE="docs/aidlc.toml"
-LOCAL_CONFIG_FILE="docs/aidlc.toml.local"
+LOCAL_CONFIG_FILE="docs/aidlc.local.toml"
+LOCAL_CONFIG_FILE_LEGACY="docs/aidlc.toml.local"
 
 # 引数パース
 KEY=""
@@ -288,10 +289,19 @@ resolve_key() {
     esac
 
     # 3. LOCAL設定から値を取得（オプション、優先度: 高）
+    # 新名（aidlc.local.toml）を優先、旧名（aidlc.toml.local）にフォールバック
+    local local_file=""
     if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
+        local_file="$LOCAL_CONFIG_FILE"
+    elif [[ -f "$LOCAL_CONFIG_FILE_LEGACY" ]]; then
+        local_file="$LOCAL_CONFIG_FILE_LEGACY"
+        echo "Warning: docs/aidlc.toml.local is deprecated. Please rename to docs/aidlc.local.toml" >&2
+    fi
+
+    if [[ -n "$local_file" ]]; then
         local local_value
         set +e
-        local_value=$(get_value "$LOCAL_CONFIG_FILE" "$key")
+        local_value=$(get_value "$local_file" "$key")
         local local_exit_code=$?
         set -e
 

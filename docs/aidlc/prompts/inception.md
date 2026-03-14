@@ -117,11 +117,11 @@
 | ファイル | 用途 | Git管理 |
 |----------|------|---------|
 | `docs/aidlc.toml` | プロジェクト共有設定 | Yes |
-| `docs/aidlc.toml.local` | 個人設定（上書き用） | No（.gitignore） |
+| `docs/aidlc.local.toml` | 個人設定（上書き用） | No（.gitignore） |
 
 例: AIレビューを個人的に無効化
 ```toml
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules.reviewing]
 mode = "disabled"
 ```

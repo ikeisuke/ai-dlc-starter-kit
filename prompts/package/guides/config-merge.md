@@ -11,7 +11,7 @@ AI-DLCの設定ファイルは4階層でマージされます。
 | `defaults.toml`（スクリプト内蔵） | デフォルト値定義 | Yes（スターターキット同梱） | 最低 |
 | `~/.aidlc/config.toml` | ユーザー共通設定 | No | 低 |
 | `docs/aidlc.toml` | プロジェクト共有設定 | Yes | 中 |
-| `docs/aidlc.toml.local` | 個人設定（上書き用） | No（.gitignore） | 高 |
+| `docs/aidlc.local.toml` | 個人設定（上書き用） | No（.gitignore） | 高 |
 
 **読み込み順序**: DEFAULTS → HOME → PROJECT → LOCAL（後から読み込んだ値が優先）
 
@@ -26,7 +26,7 @@ AI-DLCの設定ファイルは4階層でマージされます。
 [rules.reviewing]
 mode = "recommend"
 
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules.reviewing]
 mode = "disabled"
 
@@ -42,7 +42,7 @@ mode = "disabled"
 [rules.reviewing]
 tools = ["codex", "claude"]
 
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules.reviewing]
 tools = ["gemini"]
 
@@ -61,7 +61,7 @@ tools = ["gemini"]
 git = { enabled = true }
 worktree = { enabled = false }
 
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules]
 worktree = { enabled = true }
 
@@ -82,7 +82,7 @@ worktree = { enabled = true }
 [rules]
 custom = { enabled = true, level = 3 }
 
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules]
 custom = false
 
@@ -163,7 +163,7 @@ fi
 ## .local ファイルの作成例
 
 ```toml
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 # このファイルはgitignoreされます
 
 # AIレビューを個人的に無効化 / 独自のAIツール優先順位
@@ -195,7 +195,7 @@ EOF
 
 ## 注意事項
 
-- `docs/aidlc.toml.local` は自動的に `.gitignore` に追加されます
+- `docs/aidlc.local.toml` は自動的に `.gitignore` に追加されます
 - `.local` ファイルがなくても正常に動作します
 - `~/.aidlc/config.toml` がなくても正常に動作します
 - `$HOME` 環境変数が未設定の場合、ユーザー共通設定はスキップされます

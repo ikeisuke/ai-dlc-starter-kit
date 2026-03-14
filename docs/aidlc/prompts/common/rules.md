@@ -4,7 +4,7 @@
 
 ## 設定読み込み【重要】
 
-AI-DLCの設定は `docs/aidlc.toml` と `docs/aidlc.toml.local`（個人設定）からマージして取得します。
+AI-DLCの設定は `docs/aidlc.toml` と `docs/aidlc.local.toml`（個人設定）からマージして取得します。
 
 **読み込み方法**:
 
@@ -35,7 +35,7 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled
 - 配列は完全置換（マージしない）
 - 詳細は `docs/aidlc/guides/config-merge.md` を参照
 
-**注意**: `docs/aidlc.toml.local` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
+**注意**: `docs/aidlc.local.toml` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
 
 ## ユーザーの承認プロセス【重要】
 
