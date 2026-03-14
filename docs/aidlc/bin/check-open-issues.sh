@@ -20,6 +20,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # デフォルト値
 LIMIT=10
 
@@ -28,18 +31,18 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --limit)
             if [[ $# -lt 2 ]]; then
-                echo "error:missing-limit-value"
+                emit_error "missing-limit-value" "--limit requires a value"
                 exit 1
             fi
             if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
-                echo "error:invalid-limit-value"
+                emit_error "invalid-limit-value" "--limit value must be a positive integer"
                 exit 1
             fi
             LIMIT="$2"
             shift 2
             ;;
         *)
-            echo "error:unknown-option:$1"
+            emit_error "unknown-option" "Unknown option: $1"
             exit 1
             ;;
     esac
@@ -47,21 +50,21 @@ done
 
 # GitHub CLIの存在確認
 if ! command -v gh >/dev/null 2>&1; then
-    echo "error:gh-not-installed"
+    emit_error "gh-not-installed" "gh is not installed"
     exit 1
 fi
 
 # 認証確認
 if ! gh auth status >/dev/null 2>&1; then
-    echo "error:gh-not-authenticated"
+    emit_error "gh-not-authenticated" "gh is not authenticated"
     exit 1
 fi
 
 # オープンIssueの一覧取得
-_tmp_stderr=$(mktemp) || { echo "error:gh-issue-list-failed"; exit 1; }
+_tmp_stderr=$(mktemp) || { emit_error "gh-issue-list-failed" "Failed to list issues"; exit 1; }
 trap '\rm -f "$_tmp_stderr"' EXIT
 result=$(gh issue list --state open --limit "$LIMIT" 2>"$_tmp_stderr") || {
-    echo "error:gh-issue-list-failed"
+    emit_error "gh-issue-list-failed" "Failed to list issues"
     cat "$_tmp_stderr" >&2
     exit 1
 }

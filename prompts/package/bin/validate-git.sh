@@ -40,6 +40,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # ヘルプメッセージを表示
 show_help() {
     cat << 'EOF'
@@ -75,8 +78,7 @@ run_uncommitted() {
     local files
     files=$(git status --porcelain 2>/dev/null) || {
         echo "status:error"
-        echo "error:git-status-failed"
-        echo "Error: git status --porcelain failed" >&2
+        emit_error "git-status-failed" "git status --porcelain failed"
         return 1
     }
 
@@ -101,8 +103,7 @@ run_remote_sync() {
         echo "status:error"
         echo "remote:unknown"
         echo "branch:unknown"
-        echo "error:branch-unresolved"
-        echo "Error: Cannot determine current branch (detached HEAD?)" >&2
+        emit_error "branch-unresolved" "Cannot determine current branch (detached HEAD?)"
         return 1
     fi
 
@@ -117,8 +118,7 @@ run_remote_sync() {
         echo "status:error"
         echo "remote:${remote}"
         echo "branch:${branch}"
-        echo "error:fetch-failed"
-        echo "Error: git fetch ${remote} failed" >&2
+        emit_error "fetch-failed" "git fetch ${remote} failed"
         return 1
     fi
 
@@ -133,8 +133,7 @@ run_remote_sync() {
             echo "status:error"
             echo "remote:${remote}"
             echo "branch:${branch}"
-            echo "error:no-upstream"
-            echo "Error: No upstream tracking branch found for ${branch}" >&2
+            emit_error "no-upstream" "No upstream tracking branch found for ${branch}"
             return 1
         fi
     fi
@@ -145,8 +144,7 @@ run_remote_sync() {
         echo "status:error"
         echo "remote:${remote}"
         echo "branch:${branch}"
-        echo "error:log-failed"
-        echo "Error: git log ${remote_ref}..HEAD failed" >&2
+        emit_error "log-failed" "git log ${remote_ref}..HEAD failed"
         return 1
     }
 
@@ -223,12 +221,12 @@ case "${1:-}" in
         show_help
         ;;
     "")
-        echo "Error: サブコマンドを指定してください" >&2
+        emit_error "missing-subcommand" "サブコマンドを指定してください"
         echo "Usage: validate-git.sh <uncommitted|remote-sync|all>" >&2
         exit 1
         ;;
     *)
-        echo "Error: 不明なサブコマンド: $1" >&2
+        emit_error "unknown-subcommand" "不明なサブコマンド: $1"
         echo "Usage: validate-git.sh <uncommitted|remote-sync|all>" >&2
         exit 1
         ;;

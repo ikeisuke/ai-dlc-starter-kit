@@ -318,7 +318,7 @@ docs/aidlc/bin/validate-git.sh uncommitted
   コミット完了後、再度このステップを実行してください。
   ```
 
-- **`status:error`**（スクリプト実行失敗/`error:git-status-failed`）: 以下を表示してマージを停止
+- **`status:error`**（スクリプト実行失敗/`error:git-status-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】未コミット変更の確認に失敗しました。
@@ -352,7 +352,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   push完了後、再度このステップを実行してください。
   ```
 
-- **`status:error`**（`error:fetch-failed`）: 以下を表示してマージを停止
+- **`status:error`**（`error:fetch-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】git fetchに失敗しました。
@@ -362,7 +362,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:no-upstream`）: 以下を表示してマージを停止
+- **`status:error`**（`error:no-upstream:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】リモート追跡ブランチが特定できません。
@@ -371,7 +371,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:branch-unresolved`）: 以下を表示してマージを停止
+- **`status:error`**（`error:branch-unresolved:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】現在のブランチを特定できません（detached HEAD状態の可能性）。
@@ -380,7 +380,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:log-failed`）: 以下を表示してマージを停止
+- **`status:error`**（`error:log-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】未pushコミットの確認に失敗しました。
