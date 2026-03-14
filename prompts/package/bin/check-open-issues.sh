@@ -51,22 +51,22 @@ done
 # GitHub CLIの存在確認
 if ! command -v gh >/dev/null 2>&1; then
     emit_error "gh-not-installed" "gh is not installed"
-    exit 1
+    exit 2
 fi
 
 # 認証確認
 if ! gh auth status >/dev/null 2>&1; then
     emit_error "gh-not-authenticated" "gh is not authenticated"
-    exit 1
+    exit 2
 fi
 
 # オープンIssueの一覧取得
-_tmp_stderr=$(mktemp) || { emit_error "gh-issue-list-failed" "Failed to list issues"; exit 1; }
+_tmp_stderr=$(mktemp) || { emit_error "gh-issue-list-failed" "Failed to list issues"; exit 2; }
 trap '\rm -f "$_tmp_stderr"' EXIT
 result=$(gh issue list --state open --limit "$LIMIT" 2>"$_tmp_stderr") || {
     emit_error "gh-issue-list-failed" "Failed to list issues"
     cat "$_tmp_stderr" >&2
-    exit 1
+    exit 2
 }
 
 if [[ -z "$result" ]]; then

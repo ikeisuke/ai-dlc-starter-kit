@@ -17,13 +17,13 @@
 #   uncommitted:
 #     status:{ok|warning|error}
 #     warning時: files_count:{件数}, file:{porcelain行}
-#     error時: error:{git-status-failed}
+#     error時: error:<code>:<message>（例: error:git-status-failed:git status --porcelain failed）
 #
 #   remote-sync:
 #     status:{ok|warning|error}
 #     warning時: remote:{名前}, branch:{名前}, unpushed_commits:{件数}
 #     error時: remote:{名前|unknown}, branch:{名前|unknown},
-#              error:{fetch-failed|no-upstream|log-failed|branch-unresolved}
+#              error:<code>:<message>（例: error:fetch-failed:git fetch origin failed）
 #
 #   all:
 #     --- uncommitted ---
@@ -35,7 +35,7 @@
 #
 # 終了コード:
 #   0: 正常（ok/warning）
-#   1: エラー
+#   2: 操作エラー（git操作失敗等）
 #
 
 set -euo pipefail
@@ -79,7 +79,7 @@ run_uncommitted() {
     files=$(git status --porcelain 2>/dev/null) || {
         echo "status:error"
         emit_error "git-status-failed" "git status --porcelain failed"
-        return 1
+        return 2
     }
 
     if [ -z "$files" ]; then
@@ -104,7 +104,7 @@ run_remote_sync() {
         echo "remote:unknown"
         echo "branch:unknown"
         emit_error "branch-unresolved" "Cannot determine current branch (detached HEAD?)"
-        return 1
+        return 2
     fi
 
     local remote
@@ -119,7 +119,7 @@ run_remote_sync() {
         echo "remote:${remote}"
         echo "branch:${branch}"
         emit_error "fetch-failed" "git fetch ${remote} failed"
-        return 1
+        return 2
     fi
 
     # Step B: 追跡ブランチ解決
@@ -134,7 +134,7 @@ run_remote_sync() {
             echo "remote:${remote}"
             echo "branch:${branch}"
             emit_error "no-upstream" "No upstream tracking branch found for ${branch}"
-            return 1
+            return 2
         fi
     fi
 
@@ -145,7 +145,7 @@ run_remote_sync() {
         echo "remote:${remote}"
         echo "branch:${branch}"
         emit_error "log-failed" "git log ${remote_ref}..HEAD failed"
-        return 1
+        return 2
     }
 
     if [ -z "$unpushed" ]; then

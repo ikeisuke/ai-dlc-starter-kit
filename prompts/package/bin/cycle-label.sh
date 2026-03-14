@@ -57,26 +57,26 @@ EOF
 }
 
 # gh CLIが利用可能かチェック
-# 戻り値: 0=利用可能, 1=利用不可
+# 戻り値: 0=利用可能, 2=利用不可
 check_gh_available() {
     if ! command -v gh >/dev/null 2>&1; then
         emit_error "gh-not-installed" "gh is not installed"
-        return 1
+        return 2
     fi
     if ! gh auth status >/dev/null 2>&1; then
         emit_error "gh-not-authenticated" "gh is not authenticated"
-        return 1
+        return 2
     fi
     return 0
 }
 
 # 既存ラベル一覧を取得
 # 出力: 改行区切りのラベル名一覧
-# 戻り値: 0=成功, 1=失敗
+# 戻り値: 0=成功, 2=失敗
 get_existing_labels() {
     if ! gh label list --limit 1000 --json name -q '.[].name'; then
         emit_error "label-list-failed" "Failed to list labels"
-        return 1
+        return 2
     fi
 }
 
@@ -151,13 +151,13 @@ main() {
 
     # gh CLI利用可否確認
     if ! check_gh_available; then
-        exit 1
+        exit 2
     fi
 
     # 既存ラベル一覧を一括取得
     local existing_labels
     if ! existing_labels=$(get_existing_labels); then
-        exit 1
+        exit 2
     fi
 
     # ラベルの存在確認と作成

@@ -177,10 +177,10 @@ main() {
     check_gh_available || gh_status=$?
     if [[ $gh_status -eq 1 ]]; then
         emit_error "gh-not-available" "gh is not installed"
-        exit 1
+        exit 2
     elif [[ $gh_status -eq 2 ]]; then
         emit_error "gh-not-authenticated" "gh is not authenticated"
-        exit 1
+        exit 2
     fi
 
     # ラベル名生成

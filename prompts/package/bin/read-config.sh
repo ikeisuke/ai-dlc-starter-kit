@@ -150,7 +150,7 @@ get_value() {
     # mktemp より前に実行し、一時ファイルのクリーンアップ漏れを防ぐ
     if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
         emit_error "invalid-key-format" "Invalid key format: $key"
-        return 2
+        return 1
     fi
 
     local err_file

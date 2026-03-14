@@ -26,8 +26,8 @@
 #   - would-append: 追記予定（--dry-runモード）
 #   - error: 処理失敗
 #
-# エラー出力形式（引数エラー時）:
-#   error:<理由>
+# エラー出力形式:
+#   error:<code>:<message>
 #
 
 set -euo pipefail

@@ -22,9 +22,7 @@ source "${SCRIPT_DIR}/../lib/validate.sh"
 
 # 使用方法を表示
 usage() {
-    echo "使用方法: $0 <version> <mode>"
-    echo "  version: サイクルバージョン（例: v1.12.1）"
-    echo "  mode: branch または worktree"
+    output "error" "" "" "使用方法: setup-branch.sh <version> <mode>" "invalid-arguments"
     exit 1
 }
 
@@ -115,7 +113,7 @@ handle_branch_mode() {
             output "already_exists" "$branch" "" "既存のブランチ ${branch} に切り替えました"
         else
             output "error" "$branch" "" "ブランチの切り替えに失敗しました" "branch-checkout-failed"
-            return 1
+            return 2
         fi
     else
         # 新規ブランチを作成して切り替え
@@ -123,7 +121,7 @@ handle_branch_mode() {
             output "success" "$branch" "" "新しいブランチ ${branch} を作成して切り替えました"
         else
             output "error" "$branch" "" "ブランチの作成に失敗しました" "branch-creation-failed"
-            return 1
+            return 2
         fi
     fi
 }
@@ -143,7 +141,7 @@ handle_worktree_mode() {
     # ディレクトリは存在するがworktreeとして登録されていない場合
     if [[ -d "$worktree_path" ]]; then
         output "error" "$branch" "$worktree_path" "ディレクトリ ${worktree_path} が存在しますがworktreeとして登録されていません" "directory-exists-not-registered"
-        return 1
+        return 2
     fi
 
     # .worktreeディレクトリを作成
@@ -155,7 +153,7 @@ handle_worktree_mode() {
             output "success" "$branch" "$worktree_path" "既存ブランチ ${branch} でworktreeを作成しました"
         else
             output "error" "$branch" "$worktree_path" "worktreeの作成に失敗しました" "worktree-creation-failed"
-            return 1
+            return 2
         fi
     else
         # 新規ブランチとworktreeを同時に作成
@@ -163,7 +161,7 @@ handle_worktree_mode() {
             output "success" "$branch" "$worktree_path" "新しいブランチ ${branch} でworktreeを作成しました"
         else
             output "error" "$branch" "$worktree_path" "worktreeの作成に失敗しました" "worktree-creation-failed"
-            return 1
+            return 2
         fi
     fi
 }
