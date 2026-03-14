@@ -118,6 +118,27 @@ validate_cycle "name//v1.0.0" && rc=0 || rc=$?
 assert_exit_code "連続スラッシュ: name//v1.0.0" 1 "$rc"
 
 echo ""
+echo "-- 末尾ドット（Git ref禁止） --"
+for tc in "foo." "bar./baz"; do
+    validate_cycle "$tc" >/dev/null 2>&1 && rc=0 || rc=$?
+    assert_exit_code "末尾ドット: $tc" 1 "$rc"
+done
+
+echo ""
+echo "-- .lock接尾辞（Git予約パターン） --"
+for tc in "foo.lock" "foo.lock/bar"; do
+    validate_cycle "$tc" >/dev/null 2>&1 && rc=0 || rc=$?
+    assert_exit_code ".lock接尾辞: $tc" 1 "$rc"
+done
+
+echo ""
+echo "-- ドット含み正当名（影響なし確認） --"
+for tc in "v1.0.0" "v1.22.0" "v1.0.0-rc.1"; do
+    validate_cycle "$tc"; rc=$?
+    assert_exit_code "ドット含み正当名: $tc" 0 "$rc"
+done
+
+echo ""
 echo "=== 結果: PASS=$PASS, FAIL=$FAIL ==="
 if [[ $FAIL -gt 0 ]]; then
     exit 1
