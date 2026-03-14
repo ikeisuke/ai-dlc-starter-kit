@@ -9,10 +9,11 @@
 #   setup_type:{種類}
 #   - initial: 初回セットアップ
 #   - cycle_start: サイクル開始（バージョン同じ）
-#   - upgrade:{project}:{kit}: アップグレード可能
+#   - upgrade: アップグレード（バージョン比較不能時）
+#   - upgrade:{project}:{kit}: アップグレード可能（バージョン付き）
 #   - warning_newer:{project}:{kit}: プロジェクトが新しい
 #   - migration: 旧形式からの移行
-#   - (空): dasel未インストール（AIに委ねる）
+#   - (空): dasel未インストールまたは未知の状態（AIに委ねる）
 #
 # エッジケース:
 #   - dasel未インストール: setup_type: を出力（AIに委ねる）
@@ -65,12 +66,12 @@ if [ -f "$AIDLC_TOML" ]; then
             echo "setup_type:warning_newer:${VERSIONS}"
             ;;
         "not_found")
-            # バージョン情報がない = 初回扱い
-            echo "setup_type:initial"
+            # aidlc.tomlが存在するがバージョン比較不能 = アップグレード扱い
+            echo "setup_type:upgrade"
             ;;
         *)
-            # 未知の状態
-            echo "setup_type:initial"
+            # 未知の状態 = AIに委ねる（fail-open防止）
+            echo "setup_type:"
             ;;
     esac
 elif [ -f "$PROJECT_TOML" ]; then
