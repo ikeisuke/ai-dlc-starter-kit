@@ -177,7 +177,7 @@ run_all() {
         overall="error"
         echo "--- summary ---"
         echo "status:${overall}"
-        return 1
+        return 2
     fi
     if printf '%s\n' "$output" | grep -q "^status:warning"; then
         overall="warning"
@@ -201,7 +201,7 @@ run_all() {
     echo "status:${overall}"
 
     if [ "$overall" = "error" ]; then
-        return 1
+        return 2
     fi
 }
 
