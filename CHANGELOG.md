@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.22.0] - 2026-03-15
+
+### Added
+
+- vプレフィックス正規化: `check-version.sh` に `sanitize_version()` 関数を追加し、`v1.22.0` 形式のバージョンを正しく処理（#317）
+- Self-Healingテストループ: Construction Phaseにテスト失敗時の自動修正ループを追加（#318）
+- 外部レビューツール制約: 外部CLIレビューツール使用時のトラブルシューティングガイドを追加（#319）
+- aidlc-setup.shフォールバック: `setup-ai-tools.sh` のパス解決にスターターキット側フォールバックを追加
+
+### Changed
+
+- フェーズ内操作順序の明示化: Construction/Operations Phase内の操作順序ルールを文書化（#317）
+- アップグレード判定改善: `check-setup-type.sh` の `not_found` フォールバックを `initial` から `upgrade` に変更（既存プロジェクトの誤判定を防止）
+- validate_cycle() Git ref安全性: サイクル名にGit refとして無効な文字列を拒否する検証を追加（#326）
+
+### Fixed
+
+- アップグレード検出の修正: vプレフィックス付きバージョン（例: `v1.22.0`）がsemver正規表現に拒否される問題を修正
+- setup-prompt.md setup-ai-tools.sh参照: フォールバックパス記載を他スクリプト参照と同一の3パターン記載方式に統一
+
+---
+
 ## [1.21.2] - 2026-03-14
 
 ### Added
