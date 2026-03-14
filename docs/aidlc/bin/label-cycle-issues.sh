@@ -30,6 +30,7 @@ set -euo pipefail
 
 # スクリプトのディレクトリを取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
 
 # ヘルプメッセージを表示
 show_help() {
@@ -153,7 +154,7 @@ label_issues() {
 main() {
     # 引数がない場合
     if [[ $# -eq 0 ]]; then
-        echo "error:missing-cycle"
+        emit_error "missing-cycle" "Cycle argument is required"
         exit 1
     fi
 
@@ -164,7 +165,7 @@ main() {
             exit 0
             ;;
         -*)
-            echo "error:unknown-option:$1"
+            emit_error "unknown-option" "Unknown option: $1"
             exit 1
             ;;
     esac
@@ -175,11 +176,11 @@ main() {
     local gh_status=0
     check_gh_available || gh_status=$?
     if [[ $gh_status -eq 1 ]]; then
-        echo "error:gh-not-available"
-        exit 1
+        emit_error "gh-not-available" "gh is not installed"
+        exit 2
     elif [[ $gh_status -eq 2 ]]; then
-        echo "error:gh-not-authenticated"
-        exit 1
+        emit_error "gh-not-authenticated" "gh is not authenticated"
+        exit 2
     fi
 
     # ラベル名生成

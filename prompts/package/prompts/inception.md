@@ -117,11 +117,11 @@
 | ファイル | 用途 | Git管理 |
 |----------|------|---------|
 | `docs/aidlc.toml` | プロジェクト共有設定 | Yes |
-| `docs/aidlc.toml.local` | 個人設定（上書き用） | No（.gitignore） |
+| `docs/aidlc.local.toml` | 個人設定（上書き用） | No（.gitignore） |
 
 例: AIレビューを個人的に無効化
 ```toml
-# docs/aidlc.toml.local
+# docs/aidlc.local.toml
 [rules.reviewing]
 mode = "disabled"
 ```
@@ -595,7 +595,7 @@ git branch --show-current
   docs/aidlc/bin/setup-branch.sh {{CYCLE}} worktree
   ```
 
-  **出力例**:
+  **出力例（成功時）**:
   ```text
   status:success
   branch:cycle/v1.12.1
@@ -603,6 +603,17 @@ git branch --show-current
   message:新しいブランチ cycle/v1.12.1 でworktreeを作成しました
   main_status:up-to-date
   ```
+
+  **出力例（エラー時）**:
+  ```text
+  status:error
+  branch:cycle/v1.12.1
+  worktree_path:.worktree/cycle-v1.12.1
+  message:worktreeの作成に失敗しました
+  error_code:worktree-creation-failed
+  ```
+
+  エラー時は `status:error` でエラーを検出し、`error_code:<code>` でエラー種別を判定する。
 
   worktree作成の詳細は `docs/aidlc/guides/worktree-usage.md` を参照。
 

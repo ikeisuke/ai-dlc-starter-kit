@@ -158,6 +158,20 @@ docs/aidlc/bin/run-markdownlint.sh {{CYCLE}}
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 
+## 6.4.2 Bash Substitution Check実行【CI対応】
+
+コミット前にBashコードブロック内のコマンド置換（`$()` やバッククォート）を検出し、違反があれば修正する。
+
+```bash
+bin/check-bash-substitution.sh
+```
+
+- **違反なし（終了コード0）**: 次のステップへ進む
+- **違反あり（終了コード1）**: 違反箇所を修正してから次のステップへ進む。コマンド置換の代わりにリテラル文字列やプレースホルダーを使用すること
+- **スクリプトエラー（終了コード2）**: スクリプトの状態を確認し、問題を解決してから再実行
+
+**注意**: このチェックはGitHub Actions CIでも実行されます。ローカルで事前に検出・修正することで、CI失敗によるやり直しを防ぎます。
+
 ## 6.4.5 progress.md更新
 
 `docs/cycles/{{CYCLE}}/operations/progress.md` をPR準備完了（progress.mdの状態は「完了」）に更新し、完了日を記録します。
@@ -318,7 +332,7 @@ docs/aidlc/bin/validate-git.sh uncommitted
   コミット完了後、再度このステップを実行してください。
   ```
 
-- **`status:error`**（スクリプト実行失敗/`error:git-status-failed`）: 以下を表示してマージを停止
+- **`status:error`**（スクリプト実行失敗/`error:git-status-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】未コミット変更の確認に失敗しました。
@@ -352,7 +366,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   push完了後、再度このステップを実行してください。
   ```
 
-- **`status:error`**（`error:fetch-failed`）: 以下を表示してマージを停止
+- **`status:error`**（`error:fetch-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】git fetchに失敗しました。
@@ -362,7 +376,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:no-upstream`）: 以下を表示してマージを停止
+- **`status:error`**（`error:no-upstream:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】リモート追跡ブランチが特定できません。
@@ -371,7 +385,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:branch-unresolved`）: 以下を表示してマージを停止
+- **`status:error`**（`error:branch-unresolved:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】現在のブランチを特定できません（detached HEAD状態の可能性）。
@@ -380,7 +394,7 @@ docs/aidlc/bin/validate-git.sh remote-sync
   リモートとの同期が確認できるまでPRマージに進まないでください。
   ```
 
-- **`status:error`**（`error:log-failed`）: 以下を表示してマージを停止
+- **`status:error`**（`error:log-failed:<message>`）: 以下を表示してマージを停止
 
   ```text
   【エラー】未pushコミットの確認に失敗しました。

@@ -20,7 +20,7 @@
 #   0. <script_dir>/../config/defaults.toml - デフォルト値定義（オプション）
 #   1. ~/.aidlc/config.toml - ユーザー共通設定（オプション）
 #   2. docs/aidlc.toml - プロジェクト共有設定（必須）
-#   3. docs/aidlc.toml.local - 個人設定（オプション）
+#   3. docs/aidlc.local.toml - 個人設定（オプション、旧名 docs/aidlc.toml.local もフォールバック）
 #
 # マージルール:
 #   - 単一キーの値を取得（ファイル全体のマージではない）
@@ -39,10 +39,12 @@ set -euo pipefail
 # 設定ファイルパス（優先度順: 低→高）
 # defaults.toml: スクリプト自身の位置から相対パスで解決
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
 DEFAULTS_CONFIG_FILE="${SCRIPT_DIR}/../config/defaults.toml"
 HOME_CONFIG_FILE="${HOME:+$HOME/.aidlc/config.toml}"
 PROJECT_CONFIG_FILE="docs/aidlc.toml"
-LOCAL_CONFIG_FILE="docs/aidlc.toml.local"
+LOCAL_CONFIG_FILE="docs/aidlc.local.toml"
+LOCAL_CONFIG_FILE_LEGACY="docs/aidlc.toml.local"
 
 # 引数パース
 KEY=""
@@ -55,8 +57,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --default)
             if [[ $# -lt 2 ]]; then
-                echo "Error: --default requires a value" >&2
-                exit 2
+                emit_error "missing-default-value" "--default requires a value"
+                exit 1
             fi
             DEFAULT_VALUE="$2"
             HAS_DEFAULT=true
@@ -72,15 +74,15 @@ while [[ $# -gt 0 ]]; do
             done
             ;;
         -*)
-            echo "Error: Unknown option: $1" >&2
-            exit 2
+            emit_error "unknown-option" "Unknown option: $1"
+            exit 1
             ;;
         *)
             if [[ -z "$KEY" ]]; then
                 KEY="$1"
             else
-                echo "Error: Multiple keys specified" >&2
-                exit 2
+                emit_error "multiple-keys" "Multiple keys specified"
+                exit 1
             fi
             shift
             ;;
@@ -89,36 +91,36 @@ done
 
 # 排他チェック
 if [[ "$MODE" == "batch" && -n "$KEY" ]]; then
-    echo "Error: --keys and positional key are mutually exclusive" >&2
-    exit 2
+    emit_error "keys-positional-exclusive" "--keys and positional key are mutually exclusive"
+    exit 1
 fi
 
 if [[ "$MODE" == "batch" && "$HAS_DEFAULT" == "true" ]]; then
-    echo "Error: --keys and --default are mutually exclusive" >&2
-    exit 2
+    emit_error "keys-default-exclusive" "--keys and --default are mutually exclusive"
+    exit 1
 fi
 
 if [[ "$MODE" == "batch" && ${#KEYS[@]} -eq 0 ]]; then
-    echo "Error: --keys requires at least one key" >&2
-    exit 2
+    emit_error "keys-requires-keys" "--keys requires at least one key"
+    exit 1
 fi
 
 if [[ "$MODE" == "single" && -z "$KEY" ]]; then
-    echo "Error: Key is required" >&2
+    emit_error "missing-key" "Key is required"
     echo "Usage: $0 <key> [--default <value>]" >&2
     echo "       $0 --keys <key1> [key2] ..." >&2
-    exit 2
+    exit 1
 fi
 
 # daselの存在確認
 if ! command -v dasel >/dev/null 2>&1; then
-    echo "Error: dasel is not installed" >&2
+    emit_error "dasel-not-installed" "dasel is not installed"
     exit 2
 fi
 
 # プロジェクト設定ファイルの存在確認（必須）
 if [[ ! -f "$PROJECT_CONFIG_FILE" ]]; then
-    echo "Error: Config file not found: $PROJECT_CONFIG_FILE" >&2
+    emit_error "config-file-not-found" "Config file not found: $PROJECT_CONFIG_FILE"
     exit 2
 fi
 
@@ -148,12 +150,12 @@ get_value() {
     # キー入力バリデーション: 英字またはアンダースコアで始まり、許可文字のみ
     # mktemp より前に実行し、一時ファイルのクリーンアップ漏れを防ぐ
     if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
-        echo "Error: Invalid key format: $key" >&2
+        emit_error "invalid-key-format" "Invalid key format: $key"
         return 2
     fi
 
     local err_file
-    err_file=$(mktemp) || { echo "Error: Failed to create temp file" >&2; return 2; }
+    err_file=$(mktemp) || { emit_error "temp-file-creation-failed" "Failed to create temp file"; return 2; }
 
     # dasel v3 予約語回避: ブラケット記法が使用可能な場合のみ変換
     # 例: rules.branch.mode → rules["branch"]["mode"]
@@ -281,16 +283,25 @@ resolve_key() {
             ;;
         *)
             # プロジェクト設定ファイルのエラーは致命的
-            echo "Error: Failed to read project config file" >&2
+            emit_error "project-config-read-failed" "Failed to read project config file"
             return 2
             ;;
     esac
 
     # 3. LOCAL設定から値を取得（オプション、優先度: 高）
+    # 新名（aidlc.local.toml）を優先、旧名（aidlc.toml.local）にフォールバック
+    local local_file=""
     if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
+        local_file="$LOCAL_CONFIG_FILE"
+    elif [[ -f "$LOCAL_CONFIG_FILE_LEGACY" ]]; then
+        local_file="$LOCAL_CONFIG_FILE_LEGACY"
+        echo "Warning: docs/aidlc.toml.local is deprecated. Please rename to docs/aidlc.local.toml" >&2
+    fi
+
+    if [[ -n "$local_file" ]]; then
         local local_value
         set +e
-        local_value=$(get_value "$LOCAL_CONFIG_FILE" "$key")
+        local_value=$(get_value "$local_file" "$key")
         local local_exit_code=$?
         set -e
 

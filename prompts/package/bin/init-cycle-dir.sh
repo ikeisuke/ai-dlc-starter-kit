@@ -24,6 +24,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # 作成するディレクトリ一覧（10個）
 DIRECTORIES=(
     "plans"
@@ -92,25 +95,25 @@ validate_version() {
 
     # 空文字チェック
     if [[ -z "$version" ]]; then
-        echo "[error] VERSION argument is required" >&2
+        emit_error "missing-version" "VERSION argument is required"
         return 1
     fi
 
     # パストラバーサル防止
     if [[ "$version" == *..* ]]; then
-        echo "[error] ${version}: Version cannot contain path traversal (..)" >&2
+        emit_error "version-path-traversal" "${version}: Version cannot contain path traversal (..)"
         return 1
     fi
 
     # 2レベル以上のスラッシュ拒否（[name]/vX.X.X の1レベルは許可）
     if [[ "$version" == */*/* ]]; then
-        echo "[error] ${version}: Version cannot contain more than one slash" >&2
+        emit_error "version-multiple-slashes" "${version}: Version cannot contain more than one slash"
         return 1
     fi
 
     # 先頭・末尾スラッシュや空セグメント拒否
     if [[ "$version" == /* ]] || [[ "$version" == */ ]] || [[ "$version" == *"//"* ]]; then
-        echo "[error] ${version}: Invalid format (leading/trailing slash or empty segment)" >&2
+        emit_error "version-invalid-format" "${version}: Invalid format (leading/trailing slash or empty segment)"
         return 1
     fi
 
@@ -139,7 +142,7 @@ create_directory() {
         return 0
     else
         echo "dir:${path}:error"
-        echo "[error] ${path}: Failed to create directory" >&2
+        emit_error "failed-create-directory" "Failed to create directory: ${path}"
         return 1
     fi
 }
@@ -224,7 +227,7 @@ EOF
         return 0
     else
         echo "file:${file_path}:error"
-        echo "[error] ${file_path}: Failed to create file" >&2
+        emit_error "failed-create-file" "Failed to create file: ${file_path}"
         return 1
     fi
 }
@@ -246,14 +249,14 @@ main() {
                 dry_run=true
                 ;;
             -*)
-                echo "[error] Unknown option: $1" >&2
+                emit_error "unknown-option" "Unknown option: $1"
                 exit 1
                 ;;
             *)
                 if [[ -z "$version" ]]; then
                     version="$1"
                 else
-                    echo "[error] Unexpected argument: $1" >&2
+                    emit_error "unexpected-argument" "Unexpected argument: $1"
                     exit 1
                 fi
                 ;;
@@ -263,7 +266,7 @@ main() {
 
     # バージョン引数必須チェック
     if [[ -z "$version" ]]; then
-        echo "[error] VERSION argument is required" >&2
+        emit_error "missing-version" "VERSION argument is required"
         echo "Usage: init-cycle-dir.sh <VERSION> [OPTIONS]" >&2
         echo "Run 'init-cycle-dir.sh --help' for more information." >&2
         exit 1

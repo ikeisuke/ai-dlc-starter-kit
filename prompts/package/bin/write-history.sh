@@ -26,11 +26,14 @@
 #   - would-append: 追記予定（--dry-runモード）
 #   - error: 処理失敗
 #
-# エラー出力形式（引数エラー時）:
-#   error:<理由>
+# エラー出力形式:
+#   error:<code>:<message>
 #
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
 
 # グローバル変数
 CYCLE=""
@@ -88,23 +91,6 @@ OPTIONS:
 EOF
 }
 
-# サイクル名を検証（vX.Y.Z または name/vX.Y.Z 形式のみ許可）
-validate_cycle() {
-    local cycle="$1"
-    # 空文字チェック
-    if [[ -z "$cycle" ]]; then
-        return 1
-    fi
-    # パストラバーサル防止
-    if [[ "$cycle" == *..* ]]; then
-        return 1
-    fi
-    # 形式チェック（setup-branch.shと同一パターン）
-    if [[ ! "$cycle" =~ ^([a-z0-9][a-z0-9-]*/)?v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-        return 1
-    fi
-    return 0
-}
 
 # フェーズを検証
 validate_phase() {
@@ -231,7 +217,7 @@ main() {
                 ;;
             --cycle)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--cycle requires a value" >&2
+                    emit_error "missing-cycle-value" "--cycle requires a value"
                     exit 1
                 fi
                 CYCLE="$2"
@@ -239,7 +225,7 @@ main() {
                 ;;
             --phase)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--phase requires a value" >&2
+                    emit_error "missing-phase-value" "--phase requires a value"
                     exit 1
                 fi
                 PHASE="$2"
@@ -247,7 +233,7 @@ main() {
                 ;;
             --unit)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--unit requires a value" >&2
+                    emit_error "missing-unit-value" "--unit requires a value"
                     exit 1
                 fi
                 UNIT="$2"
@@ -255,7 +241,7 @@ main() {
                 ;;
             --unit-name)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--unit-name requires a value" >&2
+                    emit_error "missing-unit-name-value" "--unit-name requires a value"
                     exit 1
                 fi
                 UNIT_NAME="$2"
@@ -263,7 +249,7 @@ main() {
                 ;;
             --unit-slug)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--unit-slug requires a value" >&2
+                    emit_error "missing-unit-slug-value" "--unit-slug requires a value"
                     exit 1
                 fi
                 UNIT_SLUG="$2"
@@ -271,7 +257,7 @@ main() {
                 ;;
             --step)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--step requires a value" >&2
+                    emit_error "missing-step-value" "--step requires a value"
                     exit 1
                 fi
                 STEP="$2"
@@ -279,7 +265,7 @@ main() {
                 ;;
             --content)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--content requires a value" >&2
+                    emit_error "missing-content-value" "--content requires a value"
                     exit 1
                 fi
                 CONTENT="$2"
@@ -287,7 +273,7 @@ main() {
                 ;;
             --content-file)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--content-file requires a value" >&2
+                    emit_error "missing-content-file-value" "--content-file requires a value"
                     exit 1
                 fi
                 CONTENT_FILE="$2"
@@ -295,7 +281,7 @@ main() {
                 ;;
             --artifacts)
                 if [[ -z "${2:-}" ]]; then
-                    echo "error:--artifacts requires a value" >&2
+                    emit_error "missing-artifacts-value" "--artifacts requires a value"
                     exit 1
                 fi
                 ARTIFACTS+=("$2")
@@ -306,11 +292,11 @@ main() {
                 shift
                 ;;
             -*)
-                echo "error:unknown-option:$1"
+                emit_error "unknown-option" "Unknown option: $1"
                 exit 1
                 ;;
             *)
-                echo "error:unexpected-argument:$1"
+                emit_error "unexpected-argument" "Unexpected argument: $1"
                 exit 1
                 ;;
         esac
@@ -318,71 +304,71 @@ main() {
 
     # 必須引数のバリデーション
     if [[ -z "$CYCLE" ]]; then
-        echo "error:--cycle is required" >&2
+        emit_error "missing-cycle" "--cycle is required"
         exit 1
     fi
 
     if ! validate_cycle "$CYCLE"; then
-        echo "error:Invalid cycle name. Expected format: vX.Y.Z, vX.Y.Z-prerelease, name/vX.Y.Z, or name/vX.Y.Z-prerelease" >&2
+        emit_error "invalid-cycle-name" "Invalid cycle name: ${CYCLE}"
         exit 1
     fi
 
     if [[ -z "$PHASE" ]]; then
-        echo "error:--phase is required" >&2
+        emit_error "missing-phase" "--phase is required"
         exit 1
     fi
 
     if ! validate_phase "$PHASE"; then
-        echo "error:Invalid phase. Must be inception, construction, or operations" >&2
+        emit_error "invalid-phase" "Invalid phase. Must be inception, construction, or operations"
         exit 1
     fi
 
     if [[ -z "$STEP" ]]; then
-        echo "error:--step is required" >&2
+        emit_error "missing-step" "--step is required"
         exit 1
     fi
 
     # --content と --content-file の排他チェック・ファイル読み込み
     if [[ -n "${CONTENT_FILE:-}" ]]; then
         if [[ -n "$CONTENT" ]]; then
-            echo "error:--content and --content-file are mutually exclusive" >&2
+            emit_error "content-mutually-exclusive" "--content and --content-file are mutually exclusive"
             exit 1
         fi
         if [[ ! -f "$CONTENT_FILE" ]]; then
-            echo "error:file-not-found:$CONTENT_FILE" >&2
+            emit_error "content-file-not-found" "File not found: $CONTENT_FILE"
             exit 1
         fi
         if [[ ! -s "$CONTENT_FILE" ]]; then
-            echo "error:empty-file:$CONTENT_FILE" >&2
+            emit_error "content-file-empty" "File is empty: $CONTENT_FILE"
             exit 1
         fi
         CONTENT="$(cat "$CONTENT_FILE")"
     fi
 
     if [[ -z "$CONTENT" ]]; then
-        echo "error:--content is required" >&2
+        emit_error "missing-content" "--content is required"
         exit 1
     fi
 
     # constructionフェーズの場合、Unit関連引数が必須
     if [[ "$PHASE" == "construction" ]]; then
         if [[ -z "$UNIT" ]]; then
-            echo "error:--unit is required for construction phase" >&2
+            emit_error "missing-unit-construction" "--unit is required for construction phase"
             exit 1
         fi
 
         if ! validate_unit "$UNIT"; then
-            echo "error:Invalid unit number. Must be 1-99" >&2
+            emit_error "invalid-unit-number" "Invalid unit number. Must be 1-99"
             exit 1
         fi
 
         if [[ -z "$UNIT_NAME" ]]; then
-            echo "error:--unit-name is required for construction phase" >&2
+            emit_error "missing-unit-name" "--unit-name is required for construction phase"
             exit 1
         fi
 
         if [[ -z "$UNIT_SLUG" ]]; then
-            echo "error:--unit-slug is required for construction phase" >&2
+            emit_error "missing-unit-slug" "--unit-slug is required for construction phase"
             exit 1
         fi
     fi
@@ -413,7 +399,7 @@ main() {
     if [[ ! -d "$dir" ]]; then
         if ! mkdir -p "$dir" 2>/dev/null; then
             echo "history:${filepath}:error"
-            echo "error:failed-to-create-directory:$dir" >&2
+            emit_error "failed-create-directory" "Failed to create directory: $dir"
             exit 2
         fi
     fi
@@ -445,7 +431,7 @@ main() {
         header=$(generate_header "$PHASE" "$UNIT")
         if ! echo "$header" > "$filepath" 2>/dev/null; then
             echo "history:${filepath}:error"
-            echo "error:failed-to-create-file:$filepath" >&2
+            emit_error "failed-create-file" "Failed to create file: $filepath"
             exit 2
         fi
         echo "" >> "$filepath"
@@ -457,7 +443,7 @@ main() {
 
     if ! echo "$entry" >> "$filepath" 2>/dev/null; then
         echo "history:${filepath}:error"
-        echo "error:failed-to-append-to-file:$filepath" >&2
+        emit_error "failed-append-file" "Failed to append to file: $filepath"
         exit 2
     fi
 

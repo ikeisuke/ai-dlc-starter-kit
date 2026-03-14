@@ -20,6 +20,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # ラベル属性
 LABEL_COLOR="7057FF"
 
@@ -54,26 +57,26 @@ EOF
 }
 
 # gh CLIが利用可能かチェック
-# 戻り値: 0=利用可能, 1=利用不可
+# 戻り値: 0=利用可能, 2=利用不可
 check_gh_available() {
     if ! command -v gh >/dev/null 2>&1; then
-        echo "error:gh-not-installed" >&2
-        return 1
+        emit_error "gh-not-installed" "gh is not installed"
+        return 2
     fi
     if ! gh auth status >/dev/null 2>&1; then
-        echo "error:gh-not-authenticated" >&2
-        return 1
+        emit_error "gh-not-authenticated" "gh is not authenticated"
+        return 2
     fi
     return 0
 }
 
 # 既存ラベル一覧を取得
 # 出力: 改行区切りのラベル名一覧
-# 戻り値: 0=成功, 1=失敗
+# 戻り値: 0=成功, 2=失敗
 get_existing_labels() {
     if ! gh label list --limit 1000 --json name -q '.[].name'; then
-        echo "error:label-list-failed" >&2
-        return 1
+        emit_error "label-list-failed" "Failed to list labels"
+        return 2
     fi
 }
 
@@ -104,7 +107,7 @@ create_label() {
     if error_output=$(gh label create "$name" --color "$color" --description "$description" 2>&1 1>/dev/null); then
         return 0
     else
-        echo "[error] ${name}: ${error_output}" >&2
+        emit_error "label-creation-failed" "Failed to create label ${name}: ${error_output}"
         return 1
     fi
 }
@@ -121,14 +124,14 @@ main() {
                 exit 0
                 ;;
             -*)
-                echo "Error: Unknown option: $1" >&2
+                emit_error "unknown-option" "Unknown option: $1"
                 exit 1
                 ;;
             *)
                 if [[ -z "$version" ]]; then
                     version="$1"
                 else
-                    echo "Error: Too many arguments" >&2
+                    emit_error "too-many-arguments" "Too many arguments"
                     exit 1
                 fi
                 ;;
@@ -138,7 +141,7 @@ main() {
 
     # バージョン引数の存在確認
     if [[ -z "$version" ]]; then
-        echo "error:missing-version" >&2
+        emit_error "missing-version" "Version argument is required"
         exit 1
     fi
 
@@ -148,13 +151,13 @@ main() {
 
     # gh CLI利用可否確認
     if ! check_gh_available; then
-        exit 1
+        exit 2
     fi
 
     # 既存ラベル一覧を一括取得
     local existing_labels
     if ! existing_labels=$(get_existing_labels); then
-        exit 1
+        exit 2
     fi
 
     # ラベルの存在確認と作成

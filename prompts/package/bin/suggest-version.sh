@@ -16,6 +16,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/validate.sh"
+
 # ブランチ名からバージョン推測
 # 出力: "version\tcycle_name" 形式（TAB区切り）
 # 例: "v1.0.0\t" (名前なし), "v1.0.0\twaf" (名前付き)
@@ -94,7 +97,7 @@ calculate_next_version() {
             echo "v$((major + 1)).0.0"
             ;;
         *)
-            echo "error: unknown version type: $type" >&2
+            emit_error "unknown-version-type" "Unknown version type: $type"
             return 1
             ;;
     esac

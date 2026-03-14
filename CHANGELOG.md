@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.21.2] - 2026-03-14
+
+### Added
+
+- エラーAPI統一: `emit_error` 共通関数を `validate.sh` に追加し、全CLIスクリプトのエラー出力を `error:<code>:<message>` 形式に統一（#310）
+- ローカルCIチェック: Operations Phaseにステップ6.4.2としてBash Substitution Checkのローカル実行手順を追加（#311）
+- emit_errorテスト: `test_emit_error.sh` を追加（7テストケース）
+
+### Changed
+
+- 終了コードポリシー統一: 全CLIスクリプトで `exit 1` = 入力/バリデーションエラー、`exit 2` = 操作/外部依存エラーに統一（#310）
+- setup-branch.sh: エラー時に `error_code:<code>` フィールドを構造化出力に追加（#310）
+- 個人設定ファイルリネーム: `docs/aidlc.toml.local` → `docs/aidlc.local.toml` に変更。旧名はフォールバックとして継続サポート、使用時に移行警告を表示
+- サイクル名バリデーション緩和: `validate_cycle()` で非SemVer形式・名前付きサイクルに対応（#309, #312）
+
+---
+
 ## [1.21.1] - 2026-03-13
 
 ### Fixed
