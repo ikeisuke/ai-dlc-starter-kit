@@ -125,7 +125,7 @@ if grep -q "^\[rules\.mcp_review\]" "$_target"; then
         echo "migrate:rename:rules.mcp_review->rules.reviewing"
     fi
     # オーバーライドファイルの旧キー警告
-    for _override_file in "$HOME/.aidlc/config.toml" "docs/aidlc.local.toml"; do
+    for _override_file in "$HOME/.aidlc/config.toml" "docs/aidlc.local.toml" "docs/aidlc.toml.local"; do
         if [[ -f "$_override_file" ]] && grep -qE "mcp_review|ai_tools" "$_override_file"; then
             echo "warn:override-old-keys:${_override_file}"
             _has_warnings=true
