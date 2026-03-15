@@ -323,7 +323,7 @@ else
         exit 1
     fi
 
-    # 6ディレクトリの同期
+    # 7ディレクトリの同期
     declare -a SYNC_DIRS=(
         "prompts"
         "templates"
@@ -331,6 +331,7 @@ else
         "bin"
         "skills"
         "kiro"
+        "lib"
     )
 
     for subdir in "${SYNC_DIRS[@]}"; do
