@@ -261,6 +261,8 @@ esac
 VERSION_FILE="${STARTER_KIT_ROOT}/version.txt"
 if [[ -f "$VERSION_FILE" ]]; then
     KIT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
+    # vプレフィックス除去（v1.22.0 → 1.22.0）
+    KIT_VERSION="${KIT_VERSION#v}"
 else
     KIT_VERSION="unknown"
 fi
