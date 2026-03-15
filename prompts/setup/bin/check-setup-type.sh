@@ -67,7 +67,7 @@ if [ -f "$AIDLC_TOML" ]; then
             ;;
         "not_found")
             # aidlc.tomlが存在するがバージョン比較不能 = アップグレード扱い
-            echo "setup_type:upgrade"
+            echo "setup_type:upgrade:unknown:unknown"
             ;;
         *)
             # 未知の状態 = AIに委ねる（fail-open防止）

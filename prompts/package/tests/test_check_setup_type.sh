@@ -78,9 +78,9 @@ run_setup_type_test "v付きversion.txt→cycle_start" "v1.22.0" 'starter_kit_ve
 
 echo ""
 echo "--- フォールバック改善 ---"
-run_setup_type_test "aidlc.toml+version.txt欠落→upgrade" "__ABSENT__" 'starter_kit_version = "1.22.0"' "__ABSENT__" "setup_type:upgrade"
-run_setup_type_test "aidlc.toml+null値→upgrade" "1.22.0" 'starter_kit_version = "null"' "__ABSENT__" "setup_type:upgrade"
-run_setup_type_test "aidlc.toml+空文字値→upgrade" "1.22.0" 'starter_kit_version = ""' "__ABSENT__" "setup_type:upgrade"
+run_setup_type_test "aidlc.toml+version.txt欠落→upgrade" "__ABSENT__" 'starter_kit_version = "1.22.0"' "__ABSENT__" "setup_type:upgrade:unknown:unknown"
+run_setup_type_test "aidlc.toml+null値→upgrade" "1.22.0" 'starter_kit_version = "null"' "__ABSENT__" "setup_type:upgrade:unknown:unknown"
+run_setup_type_test "aidlc.toml+空文字値→upgrade" "1.22.0" 'starter_kit_version = ""' "__ABSENT__" "setup_type:upgrade:unknown:unknown"
 
 echo ""
 echo "--- aidlc.toml非存在 ---"
