@@ -102,6 +102,39 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled
 
 コミットタイミング、メッセージフォーマット、Co-Authored-By設定は `common/commit-flow.md` を参照。
 
+## アップグレードチェック設定
+
+Inception Phase開始時のスターターキットバージョン確認（ステップ5）を制御する。
+
+### 設定読み込み
+
+```bash
+docs/aidlc/bin/read-config.sh rules.upgrade_check.enabled --default "true"
+```
+
+### 有効値
+
+| 値 | 動作 |
+|----|------|
+| `true` | バージョン確認を実行（デフォルト、従来の動作） |
+| `false` | バージョン確認をスキップ |
+
+### バリデーション仕様
+
+1. **読み取り失敗時**（終了コード2）: 以下の警告を表示し、`"true"` にフォールバック:
+   ```text
+   【警告】rules.upgrade_check.enabled の読み取りに失敗しました。デフォルト（true）にフォールバックします。
+   ```
+
+2. **非boolean値**（`true`/`false` 以外）: 以下の警告を表示し、`"true"` にフォールバック:
+   ```text
+   【警告】rules.upgrade_check.enabled に無効な値 "{入力値}" が設定されています。"true" にフォールバックします。有効値: true / false
+   ```
+
+### 参照ルール
+
+判定ロジックの仕様（有効値、警告文言、フォールバック動作）は本セクション（`rules.md`）を唯一の定義源（Single Source of Truth）とする。`inception.md` には仕様を重複記述せず、本セクションへの参照のみ記載する。
+
 ## Depth Level仕様【重要】
 
 成果物詳細度（Depth Level）の3段階制御。タスクの複雑度に応じて成果物の詳細度を調整する。
