@@ -143,11 +143,13 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-### 2.6 セッション判別設定
+### 2.6 セッション判別設定【オプション】
 
-`session-title` スキルを実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用、非macOS環境では自動スキップ。エラー時もスキップして続行）。
+`session-title` スキルが利用可能な場合に実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用）。スキルが利用不可の場合はスキップして続行。
 
 引数: `project.name`=`docs/aidlc.toml` の `[project].name`、`cycle`=`{{CYCLE}}`（不明時は空文字列）、`phase`=`Operations`
+
+**注記**: `session-title` はスターターキット同梱ではありません。利用するには外部リポジトリからインストールが必要です。詳細は `guides/skill-usage-guide.md` を参照。
 
 ### 2.7 Depth Level確認
 

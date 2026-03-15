@@ -11,7 +11,6 @@ AI-DLCは複数のAIツールで利用できます。
 | 名前空間キー | プレフィックス | 説明 |
 |------------|-------------|------|
 | `aidlc` | `aidlc:` | AI-DLC固有のワークフロー・レビュースキル |
-| `tools` | `tools:` | 汎用ツールスキル |
 
 - **名前空間キー**: marketplace.json の `plugins[].name` と一致する識別子
 - **プレフィックス**: カタログ表示名の接頭辞（`キー:` 形式）
@@ -26,7 +25,6 @@ AI-DLCは複数のAIツールで利用できます。
 | `aidlc` | `reviewing-inception` | `aidlc:reviewing-inception` | `docs/aidlc/skills/reviewing-inception/SKILL.md` | active | Yes |
 | `aidlc` | `aidlc-setup` | `aidlc:aidlc-setup` | `docs/aidlc/skills/aidlc-setup/SKILL.md` | active | Yes |
 | `aidlc` | `squash-unit` | `aidlc:squash-unit` | `docs/aidlc/skills/squash-unit/SKILL.md` | active | Yes |
-| `tools` | `session-title` | `tools:session-title` | `docs/aidlc/skills/session-title/SKILL.md` | active | Yes |
 
 - **MP掲載**: marketplace.json に掲載されているか。deprecated スキルはマーケットプレイスに非掲載
 - **呼び出し名**: `/skill` コマンドで使用するディレクトリ名ベースの識別子
@@ -53,14 +51,6 @@ AI-DLCのワークフローを実行するスキル（`aidlc` 名前空間）:
 |-----------|------|
 | `aidlc-setup` | AI-DLC環境を最新バージョンに更新 |
 | `squash-unit` | Unit完了時のコミットスカッシュ |
-
-#### ツールスキル
-
-汎用ツールスキル（`tools` 名前空間）:
-
-| 呼び出し名 | 説明 |
-|-----------|------|
-| `session-title` | ターミナルタブタイトル設定（macOS専用） |
 
 ## KiroCLI対応
 

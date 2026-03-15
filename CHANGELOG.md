@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.22.1] - 2026-03-15
+
+### Added
+
+- lib/ディレクトリrsync同期: `aidlc-setup.sh` のrsync対象に `lib/` ディレクトリを追加し、新規セットアップ時のスクリプトエラーを防止（#330）
+- アップグレードチェックスキップ: `rules.upgrade_check.enabled = false` 設定でInception Phase開始時のバージョン確認をスキップ可能に（#331）
+- PRマージ前レビューゲート: Operations Phase 6.7実行前にPRレビューコメントの未対応指摘を確認する必須ゲートを追加（#325, #332）
+
+### Changed
+
+- session-titleスキル移行: スターターキット内蔵のsession-titleスキルを外部リポジトリ（claude-skills）へ移行し、インストール案内に変更（#333, #328）
+- 承認プロンプト対策: プロンプトファイル内のBashコードブロックにおける `$()` 使用禁止ルールを強化し、`--content-file` 方式を推奨に変更（#329）
+
+---
+
 ## [1.22.0] - 2026-03-15
 
 ### Added

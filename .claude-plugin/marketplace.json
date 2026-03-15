@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "AI-DLC (AI-Driven Development Lifecycle) skills for Claude Code",
-    "version": "1.21.0"
+    "version": "1.22.1"
   },
   "plugins": [
     {
@@ -21,15 +21,6 @@
         "./prompts/package/skills/reviewing-inception",
         "./prompts/package/skills/reviewing-security",
         "./prompts/package/skills/squash-unit"
-      ]
-    },
-    {
-      "name": "tools",
-      "description": "Utility skills for Claude Code workflows",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./prompts/package/skills/session-title"
       ]
     }
   ]
