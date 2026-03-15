@@ -1050,7 +1050,9 @@ Claude CodeとKiroCLIの設定ファイルをセットアップします。
 
 ```bash
 # スクリプトで実行
-docs/aidlc/bin/setup-ai-tools.sh
+# メタ開発モード: prompts/package/bin/setup-ai-tools.sh
+# アップグレードモード（同期済み）: docs/aidlc/bin/setup-ai-tools.sh
+# 初回セットアップ: [スターターキットパス]/prompts/package/bin/setup-ai-tools.sh
 ```
 
 このスクリプトは以下を行います:

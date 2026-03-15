@@ -261,6 +261,8 @@ esac
 VERSION_FILE="${STARTER_KIT_ROOT}/version.txt"
 if [[ -f "$VERSION_FILE" ]]; then
     KIT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
+    # vプレフィックス除去（v1.22.0 → 1.22.0）
+    KIT_VERSION="${KIT_VERSION#v}"
 else
     KIT_VERSION="unknown"
 fi
@@ -370,23 +372,31 @@ else
 fi
 
 # === Step 7: AIツール設定 ===
-SETUP_AI_TOOLS="docs/aidlc/bin/setup-ai-tools.sh"
-
-if [[ "$DRY_RUN" == "true" ]]; then
-    echo "setup_ai_tools:skipped(dry-run)"
-elif [[ ! -x "$SETUP_AI_TOOLS" ]]; then
-    echo "warn:setup-ai-tools-not-found"
-else
+_run_setup_ai_tools() {
+    local script_path="$1"
     set +e
-    "$SETUP_AI_TOOLS" >/dev/null 2>&1
-    AI_TOOLS_EXIT=$?
+    "$script_path" >/dev/null 2>&1
+    local exit_code=$?
     set -e
-
-    if [[ "$AI_TOOLS_EXIT" -ne 0 ]]; then
+    if [[ "$exit_code" -ne 0 ]]; then
         echo "error:setup-ai-tools-failed" >&2
         exit 1
     fi
     echo "setup_ai_tools:success"
+}
+
+SETUP_AI_TOOLS="docs/aidlc/bin/setup-ai-tools.sh"
+SETUP_AI_TOOLS_FALLBACK="${STARTER_KIT_ROOT}/prompts/package/bin/setup-ai-tools.sh"
+
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo "setup_ai_tools:skipped(dry-run)"
+elif [[ -x "$SETUP_AI_TOOLS" ]]; then
+    _run_setup_ai_tools "$SETUP_AI_TOOLS"
+elif [[ -x "$SETUP_AI_TOOLS_FALLBACK" ]]; then
+    echo "info:setup-ai-tools-fallback:${SETUP_AI_TOOLS_FALLBACK}"
+    _run_setup_ai_tools "$SETUP_AI_TOOLS_FALLBACK"
+else
+    echo "warn:setup-ai-tools-not-found"
 fi
 
 # === Step 8: バージョン更新 ===

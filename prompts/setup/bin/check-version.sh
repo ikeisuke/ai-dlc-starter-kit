@@ -46,6 +46,9 @@ if [ -z "$KIT_VERSION" ]; then
     exit 0
 fi
 
+# vプレフィックス除去（v1.22.0 → 1.22.0）
+KIT_VERSION="${KIT_VERSION#v}"
+
 # セマンティックバージョン形式の検証（数字とドットのみ）
 if ! echo "$KIT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
     echo "version_status:not_found"
@@ -65,6 +68,8 @@ if [ -z "$PROJECT_VERSION" ] || [ "$PROJECT_VERSION" = "null" ]; then
     echo "version_status:not_found"
     exit 0
 fi
+
+PROJECT_VERSION="${PROJECT_VERSION#v}"
 
 # セマンティックバージョン形式の検証（数字とドットのみ）
 if ! echo "$PROJECT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
