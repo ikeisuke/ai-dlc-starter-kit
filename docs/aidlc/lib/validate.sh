@@ -69,5 +69,23 @@ validate_cycle() {
         return 1
     fi
 
+    # 末尾ドットチェック（Git refで禁止）
+    if [[ "$cycle" == *. ]] || [[ "$cycle" == *./* ]]; then
+        return 1
+    fi
+
+    # .lock接尾辞チェック（Git予約パターン）
+    if [[ "$cycle" == *.lock ]] || [[ "$cycle" == *.lock/* ]]; then
+        return 1
+    fi
+
+    # git check-ref-format チェック（最終防衛線、フェイルクローズ）
+    if ! command -v git >/dev/null 2>&1; then
+        return 1
+    fi
+    if ! git check-ref-format --branch "cycle/${cycle}" >/dev/null 2>&1; then
+        return 1
+    fi
+
     return 0
 }

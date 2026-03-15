@@ -47,12 +47,7 @@ if [ -z "$KIT_VERSION" ]; then
 fi
 
 # vプレフィックス除去（v1.22.0 → 1.22.0）
-sanitize_version() {
-    local version="$1"
-    echo "${version#v}"
-}
-
-KIT_VERSION=$(sanitize_version "$KIT_VERSION")
+KIT_VERSION="${KIT_VERSION#v}"
 
 # セマンティックバージョン形式の検証（数字とドットのみ）
 if ! echo "$KIT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
@@ -74,7 +69,7 @@ if [ -z "$PROJECT_VERSION" ] || [ "$PROJECT_VERSION" = "null" ]; then
     exit 0
 fi
 
-PROJECT_VERSION=$(sanitize_version "$PROJECT_VERSION")
+PROJECT_VERSION="${PROJECT_VERSION#v}"
 
 # セマンティックバージョン形式の検証（数字とドットのみ）
 if ! echo "$PROJECT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
