@@ -1,5 +1,51 @@
 {
-  "name": "aidlc-poc",
-  "resources": [],
-  "tools": ["read", "write", "shell"]
+  "name": "aidlc",
+  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
+  "tools": ["@builtin"],
+  "allowedTools": [
+    "fs_read",
+    "grep",
+    "glob",
+    "code",
+    "thinking",
+    "todo_list",
+    "knowledge"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        "docs/aidlc/bin/.*",
+        "ls .*",
+        "cat .*",
+        "head .*",
+        "tail .*",
+        "find .*",
+        "sort .*",
+        "mkdir .*",
+        "printf .*",
+        "date .*",
+        "pwd",
+        "jq .*",
+        "command -v .*",
+        "wc .*",
+        "touch .*",
+        "git status",
+        "git log .*",
+        "git branch .*",
+        "git diff .*",
+        "git show .*",
+        "git rev-parse .*",
+        "git remote .*",
+        "git add .*",
+        "git checkout .*",
+        "git stash .*",
+        "gh auth status",
+        "gh issue list .*",
+        "gh pr list .*",
+        "gh pr view .*"
+      ],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": ["file://AGENTS.md", "file://docs/aidlc/prompts/AGENTS.md"]
 }
