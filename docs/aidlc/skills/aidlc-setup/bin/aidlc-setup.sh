@@ -88,6 +88,11 @@ if ! command -v dasel >/dev/null 2>&1; then
     exit 1
 fi
 
+# === 出力サニタイズ（制御文字除去） ===
+_sanitize() {
+    printf '%s' "$1" | tr -d '\r\n\t'
+}
+
 # === 一時ファイル管理 ===
 _cleanup_files=()
 _cleanup() {
@@ -124,6 +129,7 @@ resolve_starter_kit_root() {
     if [[ -n "${AIDLC_STARTER_KIT_PATH:-}" ]]; then
         if [[ ! -d "$AIDLC_STARTER_KIT_PATH" ]]; then
             echo "error:starter-kit-path-not-directory:$AIDLC_STARTER_KIT_PATH" >&2
+            echo "detail:action:verify the path exists and is a directory" >&2
             return 1
         fi
         cd "$AIDLC_STARTER_KIT_PATH" && pwd
@@ -156,6 +162,9 @@ resolve_starter_kit_root() {
         local read_config="${project_root}/docs/aidlc/bin/read-config.sh"
         if [[ ! -x "$read_config" ]]; then
             echo "error:starter-kit-not-found:read-config.sh not available" >&2
+            echo "detail:searched-path:$(_sanitize "${read_config}")" >&2
+            echo "detail:project-root:$(_sanitize "${project_root}")" >&2
+            echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
             return 1
         fi
 
@@ -180,6 +189,9 @@ resolve_starter_kit_root() {
         # ghqが利用可能か確認
         if ! command -v ghq >/dev/null 2>&1; then
             echo "error:starter-kit-not-found:ghq not available, set AIDLC_STARTER_KIT_PATH" >&2
+            echo "detail:searched-pattern:docs/aidlc/skills/*/bin" >&2
+            echo "detail:project-root:$(_sanitize "${project_root}")" >&2
+            echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
             return 1
         fi
 
@@ -187,12 +199,15 @@ resolve_starter_kit_root() {
         ghq_root=$(ghq root 2>/dev/null || true)
         if [[ -z "$ghq_root" ]]; then
             echo "error:starter-kit-not-found:ghq root failed" >&2
+            echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
             return 1
         fi
 
         local kit_path="${ghq_root}/${repo}"
         if [[ ! -d "$kit_path" ]]; then
             echo "error:starter-kit-not-found:${kit_path}" >&2
+            echo "detail:searched-path:$(_sanitize "${kit_path}")" >&2
+            echo "detail:action:clone the starter kit or export AIDLC_STARTER_KIT_PATH" >&2
             return 1
         fi
 
@@ -201,7 +216,10 @@ resolve_starter_kit_root() {
     fi
 
     # 4. 上記以外
-    echo "error:starter-kit-not-found:unknown script location: $SCRIPT_DIR" >&2
+    echo "error:starter-kit-not-found:unknown script location" >&2
+    echo "detail:searched-pattern:prompts/package/skills/*/bin or docs/aidlc/skills/*/bin" >&2
+    echo "detail:script-dir:$(_sanitize "${SCRIPT_DIR}")" >&2
+    echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
     return 1
 }
 
@@ -219,6 +237,7 @@ CHECK_SETUP_TYPE="${STARTER_KIT_ROOT}/prompts/setup/bin/check-setup-type.sh"
 
 if [[ ! -x "$CHECK_SETUP_TYPE" ]]; then
     echo "warn:check-setup-type-not-found"
+    echo "info:searched-path:$(_sanitize "${CHECK_SETUP_TYPE}")"
     SETUP_TYPE=""
 else
     SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" 2>/dev/null || true)
@@ -286,6 +305,7 @@ else
 
     if [[ ! -x "$MIGRATE_CONFIG" ]]; then
         echo "warn:migrate-config-not-found"
+        echo "info:searched-path:$(_sanitize "${MIGRATE_CONFIG}")"
     else
         MIGRATE_ARGS=("--config" "$CONFIG_PATH")
         if [[ "$DRY_RUN" == "true" ]]; then
@@ -320,6 +340,8 @@ else
 
     if [[ ! -x "$SYNC_PACKAGE" ]]; then
         echo "error:sync-package-not-found" >&2
+        echo "detail:searched-path:$(_sanitize "${SYNC_PACKAGE}")" >&2
+        echo "detail:action:verify STARTER_KIT_ROOT is correct ($(_sanitize "${STARTER_KIT_ROOT}"))" >&2
         exit 1
     fi
 

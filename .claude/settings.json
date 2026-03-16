@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docs/aidlc/bin/write-history.sh:*)",
+      "Bash(docs/aidlc/bin/read-config.sh:*)",
+      "Bash(docs/aidlc/bin/check-gh-status.sh)",
+      "Bash(docs/aidlc/bin/check-backlog-mode.sh)",
+      "Bash(docs/aidlc/bin/run-markdownlint.sh:*)",
+      "Bash(docs/aidlc/bin/issue-ops.sh:*)",
+      "Bash(docs/aidlc/bin/squash-unit.sh:*)",
+      "Bash(docs/aidlc/bin/setup-ai-tools.sh)",
+      "Bash(docs/aidlc/bin/setup-branch.sh:*)",
+      "Bash(docs/aidlc/bin/env-info.sh:*)",
+      "Bash(docs/aidlc/bin/suggest-version.sh:*)",
+      "Bash(docs/aidlc/bin/init-cycle-dir.sh:*)",
+      "Bash(docs/aidlc/bin/pr-ops.sh:*)",
+      "Bash(docs/aidlc/bin/check-open-issues.sh:*)",
+      "Bash(docs/aidlc/bin/validate-uncommitted.sh:*)",
+      "Bash(docs/aidlc/bin/validate-remote-sync.sh:*)",
+      "Bash(docs/aidlc/bin/cycle-label.sh:*)",
+      "Bash(docs/aidlc/bin/label-cycle-issues.sh:*)",
+      "Bash(docs/aidlc/bin/post-merge-cleanup.sh:*)",
+      "Bash(docs/aidlc/bin/sync-package.sh:*)",
+      "Bash(docs/aidlc/bin/validate-git.sh:*)",
+      "Bash(mktemp /tmp/aidlc-commit-msg.XXXXXX)",
+      "Bash(mktemp /tmp/aidlc-squash-msg.XXXXXX)",
+      "Bash(mktemp /tmp/aidlc-history-content.XXXXXX)",
+      "Bash(mktemp /tmp/aidlc-pr-body.XXXXXX)",
+      "Bash(mktemp /tmp/aidlc-review-input.XXXXXX)",
+      "Skill(reviewing-architecture)",
+      "Skill(reviewing-code)",
+      "Skill(reviewing-security)",
+      "Skill(reviewing-inception)",
+      "Skill(squash-unit)",
+      "Skill(aidlc-setup)"
+    ]
+  }
+}

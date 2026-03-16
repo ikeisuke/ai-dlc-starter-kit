@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.22.2] - 2026-03-16
+
+### Fixed
+
+- aidlc-setup.sh: `check-setup-type.sh` / `sync-package.sh` が見つからないエラーを修正（#338）
+- aidlc-setup rsync同期: `lib/` ディレクトリがユーザープロジェクトにデプロイされない問題を修正（#339）
+
+### Changed
+
+- アップグレード用ブランチ名: `upgrade/` プレフィックスに統一し、プロジェクトバージョンとの混同を防止。`post-merge-sync.sh` も `upgrade/` ブランチの削除に対応（#337）
+- デフォルト許可パターン: セットアップ時に `.claude/settings.json` へAI-DLCスクリプトの実行許可パターンを自動追加し、初回セットアップ体験を改善（#335）
+- CLAUDE.mdフェーズ手順明文化: AI-DLCフェーズ簡略指示セクションをCLAUDE.mdに追加し、AIエージェントのフェーズ認識を向上（#314）
+
+---
+
 ## [1.22.1] - 2026-03-15
 
 ### Added
