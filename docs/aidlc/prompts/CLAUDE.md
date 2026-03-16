@@ -61,6 +61,28 @@ git commit -m "feat: add new feature"
 タスク管理にはTodoWriteツールを積極的に使用してください。
 複雑なタスクは細分化し、進捗を可視化することで、ユーザーとの協調作業を円滑にします。
 
+## フェーズ簡略指示
+
+以下の簡略指示でフェーズを開始できます。正本は `prompts/package/prompts/AGENTS.md` の「フェーズ簡略指示」セクションです。
+
+| 指示 | 対応処理 |
+|------|----------|
+| 「インセプション進めて」「start inception」 | Inception Phase（新規サイクル開始、推奨） |
+| 「コンストラクション進めて」「start construction」 | Construction Phase |
+| 「オペレーション進めて」「start operations」 | Operations Phase |
+| 「セットアップ」「start setup」 | Inception Phase（リダイレクト） |
+| 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
+
+**Lite版を使用する場合**:
+
+| 指示 | 対応処理 |
+|------|----------|
+| 「start lite inception」 | Inception Phase (Lite) |
+| 「start lite construction」 | Construction Phase (Lite) |
+| 「start lite operations」 | Operations Phase (Lite) |
+
+**後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）も引き続き有効です。
+
 ## Compact Instructions
 
 @docs/aidlc/prompts/common/compaction.md

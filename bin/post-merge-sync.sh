@@ -3,7 +3,7 @@
 # post-merge-sync.sh - PRマージ後のworktree同期スクリプト
 #
 # 親リポジトリのmain pull、worktreeのdetached HEAD化、
-# マージ済みサイクルブランチの削除を自動化する。
+# マージ済みブランチ（cycle/ + upgrade/）の削除を自動化する。
 #
 # 使用方法:
 #   ./bin/post-merge-sync.sh [OPTIONS]
@@ -34,7 +34,7 @@ PRマージ後のworktree同期を自動化します。
 処理内容:
   1. 親リポジトリで git pull origin main を実行
   2. worktreeをdetached HEAD状態にする
-  3. マージ済みの cycle/ ブランチをローカル・リモートから削除
+  3. マージ済みの cycle/ および upgrade/ ブランチをローカル・リモートから削除
 
 Options:
   --dry-run   実際の操作を行わず実行予定を表示
@@ -108,9 +108,9 @@ if [[ "$PARENT_BRANCH" != "main" ]]; then
 fi
 
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] cd ${PARENT_REPO} && git pull origin main"
+    echo "[dry-run] cd ${PARENT_REPO} && git pull --ff-only origin main"
 else
-    if ! (cd "$PARENT_REPO" && git pull origin main); then
+    if ! (cd "$PARENT_REPO" && git pull --ff-only origin main); then
         echo "error: git pull origin main に失敗しました" >&2
         echo "" >&2
         echo "手動で以下を実行してください:" >&2
@@ -139,20 +139,23 @@ else
     echo "ok:detached"
 fi
 
-# === Step 4: マージ済みサイクルブランチの削除 ===
+# === Step 4: マージ済みブランチの削除 ===
 echo ""
-echo "=== Step 3: マージ済みサイクルブランチの削除 ==="
+echo "=== Step 3: マージ済みブランチの削除 ==="
 
 DELETE_FAILED=false
 
-# ローカルのcycle/ブランチを列挙
-CYCLE_BRANCHES=$(cd "$PARENT_REPO" && git branch --list 'cycle/*' --merged main 2>/dev/null | sed 's/^[* ]*//' || true)
+# ローカルのcycle/ + upgrade/ブランチを列挙
+MERGED_BRANCHES=$(cd "$PARENT_REPO" && {
+    git branch --list 'cycle/*' --merged main 2>/dev/null
+    git branch --list 'upgrade/*' --merged main 2>/dev/null
+} | sed 's/^[* ]*//' || true)
 
-if [[ -z "$CYCLE_BRANCHES" ]]; then
-    echo "削除対象のサイクルブランチはありません"
+if [[ -z "$MERGED_BRANCHES" ]]; then
+    echo "削除対象のマージ済みブランチはありません"
 else
     echo "削除対象ブランチ:"
-    echo "$CYCLE_BRANCHES" | while read -r branch; do
+    echo "$MERGED_BRANCHES" | while read -r branch; do
         echo "  - $branch"
     done
 
@@ -171,20 +174,23 @@ else
                 DELETE_FAILED=true
             fi
         fi
-    done <<< "$CYCLE_BRANCHES"
+    done <<< "$MERGED_BRANCHES"
 
     # リモートブランチ削除
     echo ""
     echo "--- リモートブランチ削除 ---"
 
-    # リモートのcycle/ブランチを列挙
-    REMOTE_CYCLE_BRANCHES=$(cd "$PARENT_REPO" && git branch -r --list 'origin/cycle/*' --merged main 2>/dev/null | sed 's|^ *origin/||' || true)
+    # リモートのcycle/ + upgrade/ブランチを列挙
+    REMOTE_MERGED_BRANCHES=$(cd "$PARENT_REPO" && {
+        git branch -r --list 'origin/cycle/*' --merged main 2>/dev/null
+        git branch -r --list 'origin/upgrade/*' --merged main 2>/dev/null
+    } | sed 's|^ *origin/||' || true)
 
-    if [[ -z "$REMOTE_CYCLE_BRANCHES" ]]; then
-        echo "削除対象のリモートサイクルブランチはありません"
+    if [[ -z "$REMOTE_MERGED_BRANCHES" ]]; then
+        echo "削除対象のリモートマージ済みブランチはありません"
     else
         echo "削除対象リモートブランチ:"
-        echo "$REMOTE_CYCLE_BRANCHES" | while read -r branch; do
+        echo "$REMOTE_MERGED_BRANCHES" | while read -r branch; do
             echo "  - origin/$branch"
         done
 
@@ -193,7 +199,7 @@ else
             while read -r branch; do
                 [[ -z "$branch" ]] && continue
                 echo "[dry-run] git push origin --delete $branch"
-            done <<< "$REMOTE_CYCLE_BRANCHES"
+            done <<< "$REMOTE_MERGED_BRANCHES"
         elif [[ "$YES" == "true" ]]; then
             while read -r branch; do
                 [[ -z "$branch" ]] && continue
@@ -203,7 +209,7 @@ else
                     echo "warn:remote-delete-failed:$branch"
                     DELETE_FAILED=true
                 fi
-            done <<< "$REMOTE_CYCLE_BRANCHES"
+            done <<< "$REMOTE_MERGED_BRANCHES"
         else
             echo ""
             read -rp "リモートブランチを削除しますか？ [y/N]: " answer
@@ -216,7 +222,7 @@ else
                         echo "warn:remote-delete-failed:$branch"
                         DELETE_FAILED=true
                     fi
-                done <<< "$REMOTE_CYCLE_BRANCHES"
+                done <<< "$REMOTE_MERGED_BRANCHES"
             else
                 echo "skip:remote-delete"
             fi
