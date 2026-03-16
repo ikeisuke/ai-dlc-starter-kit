@@ -93,6 +93,49 @@ check_file() {
     ((FILE_COUNT++)) || true
 }
 
+# project.name を取得（取得できない場合は空文字を返す）
+_get_project_name() {
+    local config_script="$REPO_ROOT/docs/aidlc/bin/read-config.sh"
+    local config_file="$REPO_ROOT/docs/aidlc.toml"
+
+    # read-config.sh で取得を試みる
+    if [[ -x "$config_script" ]]; then
+        local result
+        if result=$("$config_script" project.name 2>/dev/null) && [[ -n "$result" ]]; then
+            echo "$result"
+            return 0
+        fi
+    fi
+
+    # フォールバック: grep で直接 docs/aidlc.toml から読み取る
+    if [[ -f "$config_file" ]]; then
+        local name
+        name=$(grep -E '^\s*name\s*=' "$config_file" | head -1 | sed 's/.*=\s*"\{0,1\}\([^"]*\)"\{0,1\}/\1/' | tr -d '[:space:]') || true
+        if [[ -n "$name" ]]; then
+            echo "$name"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# スコープ判定: ai-dlc-starter-kit リポジトリでのみ実行
+_check_scope() {
+    local project_name
+    if project_name=$(_get_project_name); then
+        if [[ "$project_name" == "ai-dlc-starter-kit" ]]; then
+            return 0
+        fi
+        echo "Skipped: check-bash-substitution.sh is scoped to ai-dlc-starter-kit (current: $project_name)"
+        exit 0
+    fi
+
+    # 判定不能: 警告を出力してスキップ
+    echo "Warning: Could not determine project.name, skipping check-bash-substitution.sh" >&2
+    exit 0
+}
+
 # メイン処理
 main() {
     # 引数解析
@@ -129,6 +172,9 @@ main() {
         echo "Error: Not a git repository. Run this script from within a git repository." >&2
         exit 2
     }
+
+    # スコープ判定
+    _check_scope
 
     # デフォルトターゲットディレクトリ
     if [ -z "$TARGET_DIR" ]; then
