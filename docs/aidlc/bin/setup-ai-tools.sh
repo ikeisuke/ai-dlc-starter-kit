@@ -448,6 +448,13 @@ setup_claude_permissions() {
 
   echo "Done: Claude permissions setup complete"
   echo "result:${result}"
+
+  # 失敗時は非ゼロを返し、set -e によりスクリプト全体を終了させる。
+  # 呼び出し元 (_run_setup_ai_tools) が set +e で exit code を検出する。
+  case "$result" in
+    created|updated|skipped|degraded) return 0 ;;
+    *) return 1 ;;  # failed および未知値
+  esac
 }
 
 # ============================================

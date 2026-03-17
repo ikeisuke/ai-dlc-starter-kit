@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.22.3] - 2026-03-17
+
+### Fixed
+
+- setup_claude_permissions: 失敗時のexit status伝播を修正し、setup-ai-tools.shが適切にエラーハンドリングできるように改善（#343）
+- check-bash-substitution.sh: フックのスコープをprompts/package配下に制限し、外部ファイルでの誤検出を防止（#342）
+- sync-package.sh: rsync同期対象ディレクトリ内から `prompts/bin/` に移動し、不要コピーの生成を解消。後方互換ラッパーを配置（#346）
+
+### Added
+
+- 直接実行優先原則: タスク実行時の不要な中間ステップを排除し、直接的なアプローチを優先する開発ルールを追加（#316）
+
+### Changed
+
+- Kiro agent設定: `.kiro/agents/aidlc-poc.json` をツール権限・リソース参照を含む詳細な設定にアップデート（#344）
+
+---
+
 ## [1.22.2] - 2026-03-16
 
 ### Fixed

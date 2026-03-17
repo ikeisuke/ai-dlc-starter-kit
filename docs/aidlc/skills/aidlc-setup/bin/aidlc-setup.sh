@@ -153,7 +153,7 @@ resolve_starter_kit_root() {
         # （worktree環境でghq経由のメインリポジトリ参照を防ぐ）
         if [[ -d "${project_root}/prompts/package" ]] \
             && [[ -f "${project_root}/version.txt" ]] \
-            && [[ -x "${project_root}/prompts/package/bin/sync-package.sh" ]]; then
+            && [[ -x "${project_root}/prompts/bin/sync-package.sh" ]]; then
             echo "$project_root"
             return 0
         fi
@@ -336,7 +336,7 @@ fi
 if [[ "$NO_SYNC" == "true" ]]; then
     echo "sync:skipped"
 else
-    SYNC_PACKAGE="${STARTER_KIT_ROOT}/prompts/package/bin/sync-package.sh"
+    SYNC_PACKAGE="${STARTER_KIT_ROOT}/prompts/bin/sync-package.sh"
 
     if [[ ! -x "$SYNC_PACKAGE" ]]; then
         echo "error:sync-package-not-found" >&2
