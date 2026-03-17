@@ -15,8 +15,6 @@
       "Bash(docs/aidlc/bin/init-cycle-dir.sh:*)",
       "Bash(docs/aidlc/bin/pr-ops.sh:*)",
       "Bash(docs/aidlc/bin/check-open-issues.sh:*)",
-      "Bash(docs/aidlc/bin/validate-uncommitted.sh:*)",
-      "Bash(docs/aidlc/bin/validate-remote-sync.sh:*)",
       "Bash(docs/aidlc/bin/cycle-label.sh:*)",
       "Bash(docs/aidlc/bin/label-cycle-issues.sh:*)",
       "Bash(docs/aidlc/bin/post-merge-cleanup.sh:*)",
