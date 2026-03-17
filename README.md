@@ -11,1423 +11,234 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 - **AI-DLC とは**: AI を「支援ツール」ではなく、開発プロセスの「中心的な協働者」として位置づける新しいソフトウェア開発方法論
 - **3つのフェーズ**: Inception（起動）→ Construction（構築）→ Operations（運用）
 
-## 📂 リポジトリ構成
+## リポジトリ構成
 
 ```text
 ai-dlc-starter-kit/
 ├── docs/
 │   ├── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
-│   │   ├── README.md
-│   │   ├── AI-DLC_I_CONTEXT_Translation.md
-│   │   ├── AI-DLC_II_KEY_PRINCIPLES_Translation.md
-│   │   ├── AI-DLC_III_CORE_FRAMEWORK_Translation.md
-│   │   ├── AI-DLC_IV_IN_ACTION_Translation.md
-│   │   ├── AI-DLC_V_IN_ACTION_BrownField_Translation.md
-│   │   ├── AI-DLC_VI_Adopting_Translation.md
-│   │   ├── AI-DLC_AppendixA_ja.md
-│   │   └── AI-Driven_Development_Lifecycle_Summary.md
+│   ├── aidlc.toml             # プロジェクト設定
+│   ├── aidlc/                 # 全サイクル共通ファイル
+│   │   ├── bin/               # ユーティリティスクリプト
+│   │   ├── config/            # デフォルト設定
+│   │   ├── guides/            # 各種ガイドドキュメント
+│   │   ├── lib/               # 共通ライブラリ
+│   │   ├── prompts/           # フェーズプロンプト（inception/construction/operations）
+│   │   ├── skills/            # AIエージェントスキル定義
+│   │   ├── templates/         # ドキュメントテンプレート
+│   │   └── tests/             # シェルスクリプトテスト
 │   │
-│   ├── aidlc.toml             # プロジェクト設定（v1.2.2から位置変更）
-│   ├── aidlc/                 # 全サイクル共通の共通ファイル（v1.0.0から）
-│   │   ├── prompts/           # 共通プロンプト（inception.md, construction.md, operations.md等）
-│   │   └── templates/         # 全テンプレートファイル（セットアップ時に事前作成）
-│   │
-│   ├── cycles/                # サイクル固有成果物（v1.0.0から）
-│   │   ├── rules.md           # プロジェクト固有ルール（v1.2.2から位置変更）
-│   │   ├── operations.md      # サイクル横断の運用引き継ぎ情報（v1.2.1から）
-│   │   └── {{CYCLE}}/         # サイクル識別子で管理（例: v1.0.0, 2024-12, feature-x）
-│   │       ├── inception/
-│   │       │   └── progress.md       # Inception進捗管理（v1.0.0新機能）
-│   │       ├── requirements/         # 要件定義成果物
-│   │       ├── story-artifacts/      # ユーザーストーリー、Unit定義
-│   │       ├── design-artifacts/     # ドメインモデル、論理設計
-│   │       ├── construction/
-│   │       │   ├── progress.md       # Construction進捗管理
-│   │       │   └── units/            # Unit実装記録
-│   │       ├── operations/
-│   │       │   └── progress.md       # Operations進捗管理（v1.0.0新機能）
-│   │       └── history.md            # 開発履歴
-│   │
-│   └── versions/              # このプロジェクト自体の開発記録（参考資料）
-│       └── v1.0.0/            # v0.1.0を使ってv1.0.0を開発した記録
+│   └── cycles/                # サイクル固有成果物
+│       ├── rules.md           # プロジェクト固有ルール
+│       ├── operations.md      # サイクル横断の運用引き継ぎ情報
+│       └── {{CYCLE}}/         # サイクル識別子で管理（例: v1.0.0, 2024-12）
+│           ├── inception/     # Inception進捗管理
+│           ├── requirements/  # 要件定義成果物
+│           ├── story-artifacts/  # ユーザーストーリー、Unit定義
+│           ├── design-artifacts/ # ドメインモデル、論理設計
+│           ├── construction/  # Construction進捗・実装記録
+│           ├── operations/    # Operations進捗管理
+│           ├── plans/         # 実装計画
+│           └── history/       # 開発履歴
 │
 └── prompts/
-    └── setup-prompt.md        # セットアッププロンプト（v1.0.0）
+    └── setup-prompt.md        # セットアッププロンプト（エントリーポイント）
 ```
 
-**注**: `docs/versions/v1.0.0/` は v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録で、参考資料として残してあります。セットアップすると `docs/aidlc/` に共通プロンプトが配置され、`docs/cycles/{{CYCLE}}/` にサイクル固有の成果物が作成されます。
-
-## 🚀 クイックスタート
+## クイックスタート
 
 ### 1. AI-DLC について学ぶ
 
 まず、AI-DLC の概要を理解しましょう：
 
-```bash
-# 要約版を読む（10分）
-cat docs/translations/AI-Driven_Development_Lifecycle_Summary.md
-
-# 詳細を読む（30分〜1時間）
-cat docs/translations/AI-DLC_I_CONTEXT_Translation.md
-cat docs/translations/AI-DLC_II_KEY_PRINCIPLES_Translation.md
-cat docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md
-```
-
-推奨する読み方は [docs/translations/README.md](docs/translations/README.md) を参照してください。
+- [要約版](docs/translations/AI-Driven_Development_Lifecycle_Summary.md)（10分）
+- [詳細版](docs/translations/README.md)（30分〜1時間）
 
 ### 2. プロジェクトをセットアップ
 
-別プロジェクトのルートディレクトリで、このスターターキットの `prompts/setup-prompt.md` を Claude に読み込ませます：
+別プロジェクトのルートディレクトリで、このスターターキットの `prompts/setup-prompt.md` を利用中のAIエージェントに読み込ませます：
 
 ```markdown
 以下のファイルを読み込んで、AI-DLC 開発環境をセットアップしてください：
 /path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
 ```
 
-セットアップ時に変数の確認があるので、プロジェクトに合わせて変更してください：
-- `PROJECT_NAME`: プロジェクト名
-- `CYCLE`: **サイクル識別子**（例: `v1.0.0`, `2024-12`, `feature-x` など自由に命名可能）
-- `PROJECT_TYPE`: `ios` / `android` / `web` / `backend` / `general`
-- `DEVELOPMENT_TYPE`: `greenfield`（新規） / `brownfield`（既存）
-- `DOCS_ROOT`: ドキュメントルート（例: `docs`）
-  - `docs/aidlc/` に共通プロンプト・テンプレート
-  - `docs/cycles/` にサイクル固有成果物
+セットアップ時に以下の変数を確認されます：
 
-セットアップが完了すると、以下のディレクトリ構造が作成されます：
+| 変数 | 説明 | 例 |
+|------|------|-----|
+| `PROJECT_NAME` | プロジェクト名 | `my-app` |
+| `CYCLE` | サイクル識別子 | `v1.0.0`, `2024-12`, `feature-x` |
+| `PROJECT_TYPE` | プロジェクト種別 | `ios` / `android` / `web` / `backend` / `general` |
+| `DEVELOPMENT_TYPE` | 開発種別 | `greenfield`（新規）/ `brownfield`（既存） |
+| `DOCS_ROOT` | ドキュメントルート | `docs` |
+
+セットアップ完了後、以下のディレクトリ構造が作成されます：
+
 ```text
 docs/
 ├── aidlc.toml                # プロジェクト設定
-├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成）
+├── aidlc/                    # 全サイクル共通（初回セットアップ時のみ作成、主要部分のみ抜粋）
+│   ├── bin/                  # ユーティリティスクリプト
 │   ├── prompts/              # 各フェーズのプロンプトファイル
-│   │   ├── inception.md      # Inception Phase用
-│   │   ├── construction.md   # Construction Phase用
-│   │   └── operations.md     # Operations Phase用
-│   └── templates/            # ドキュメントテンプレート（セットアップ時に事前作成）
+│   ├── templates/            # ドキュメントテンプレート
+│   └── ...                   # guides/, skills/, config/ 等
 │
 └── cycles/
     ├── rules.md              # プロジェクト固有ルール
     ├── operations.md         # サイクル横断の運用引き継ぎ情報
     └── {{CYCLE}}/            # サイクル固有成果物
-        ├── inception/
-        │   └── progress.md   # Inception進捗管理
-        ├── requirements/     # 要件定義
-        ├── story-artifacts/  # ユーザーストーリー、Unit定義
-        ├── design-artifacts/ # ドメインモデル、論理設計
-        ├── construction/
-        │   ├── progress.md   # Construction進捗管理
-        │   └── units/        # Unit実装記録
-        ├── operations/
-        │   └── progress.md   # Operations進捗管理
-        └── history.md        # 開発履歴
 ```
 
 **重要**:
-- セットアップ完了後、`docs/cycles/rules.md` をプロジェクトに合わせてカスタマイズしてください（コーディング規約、セキュリティ要件等）
-- **このスターターキットはサイクル単位で環境を構築します**。新サイクル開発時は新しい`CYCLE`でsetup-prompt.mdを再実行します
+
+- セットアップ完了後、`docs/cycles/rules.md` をプロジェクトに合わせてカスタマイズしてください
+- 新サイクル開発時は新しい `CYCLE` で `setup-prompt.md` を再実行します
 
 ### 3. 開発を開始
 
-**各フェーズは新しいセッションで開始**してください（コンテキストリセット）：
+各フェーズは**新しいセッション**で開始してください（コンテキストリセット）。
+
+簡略指示でフェーズを開始できます：
+
+| 指示 | 対応処理 |
+|------|----------|
+| 「インセプション進めて」 | Inception Phase |
+| 「コンストラクション進めて」 | Construction Phase |
+| 「オペレーション進めて」 | Operations Phase |
+
+または、プロンプトファイルを直接指定：
+
+```markdown
+docs/aidlc/prompts/inception.md を読み込んでください
+```
 
 #### Inception Phase（要件定義）
-```markdown
-以下のファイルを読み込んで、Inception Phase を開始してください：
-docs/aidlc/prompts/inception.md
-```
 
-AIが以下を実施します：
-- **進捗管理ファイル（inception/progress.md）を確認**: 6ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
-- **対話形式でIntentを作成**: 不明点は `[Question]`/`[Answer]` タグで記録し、質問してきます
-- ユーザーストーリー作成
-- Unit定義（依存関係、優先度、見積もりを含む）
-- PRFAQ作成
-- **Construction用進捗管理ファイル（construction/progress.md）作成**: 全Unit情報を1つのファイルで管理
-
-**完了後**: 自動的にGitコミットが作成されます
+- 進捗管理ファイルで6ステップの進捗を管理
+- 対話形式でIntentを作成（不明点は質問）
+- ユーザーストーリー・Unit定義を作成
+- コンテキストリセット時は未完了ステップから自動再開
 
 #### Construction Phase（実装）
-```markdown
-以下のファイルを読み込んで、Construction Phase を開始してください：
-docs/aidlc/prompts/construction.md
-```
 
-AIが以下を実施します：
-- **進捗管理ファイル（construction/progress.md）を読み込み**: 1つのファイルで全Unit状態を把握
-- **Unit依存関係に基づいて実行順を自動判断**（複数実行可能な場合はユーザーに提案）
-- **Phase 1: 設計**（コードは書かない）
-  - **対話形式でドメインモデル設計**: 構造と責務を定義
-  - **対話形式で論理設計**: コンポーネント構成とインターフェースを定義
-  - 設計レビュー（ユーザー承認）
-- **Phase 2: 実装**（設計を参照してコード生成）
-  - コード生成、テスト生成
-  - ビルド、テスト実行
-
-**各Unit完了後**: 自動的にGitコミットが作成されます
-**重要**: 1つのUnit完了後、新しいセッションで次のUnitを実施してください
-
-**バックトラック**: Unit追加が必要になった場合は、Inception Phaseに戻ってUnit定義を追加できます
+- Unit依存関係に基づいて実行順を自動判断
+- Phase 1（設計）: コードは書かず、構造・責務・インターフェースを定義
+- Phase 2（実装）: 設計を参照してコード生成・テスト
+- 各Unit完了後に自動Gitコミット
 
 #### Operations Phase（デプロイ・運用）
-```markdown
-以下のファイルを読み込んで、Operations Phase を開始してください：
-docs/aidlc/prompts/operations.md
-```
 
-AIが以下を実施します：
-- **進捗管理ファイル（operations/progress.md）を確認**: 6ステップの進捗を管理、コンテキストリセット時は未完了ステップから再開
-- Construction完了確認（コンテキスト溢れ防止のため、最小限のファイルのみ読み込み）
-- **対話形式でデプロイ準備、CI/CD構築、監視設定**: 不明点を質問してきます
+- デプロイ準備、CI/CD構築、監視設定
 - リリース後の運用
+- 完了後に自動Gitコミット
 
-**完了後**: 自動的にGitコミットが作成されます
+### 4. 次サイクルの開発
 
-**バックトラック**: バグ修正が必要になった場合は、Construction Phaseに戻って修正できます
+Operations Phase 完了後、新しい `CYCLE` で `setup-prompt.md` を再実行してライフサイクルを継続します。
 
-### 4. 次サイクルの開発（ライフサイクルの継続）
+- `docs/cycles/rules.md` と `docs/cycles/operations.md` は全サイクル共通で引き継がれます
+- 前サイクルの `requirements/intent.md` を参照して改善点を反映
 
-Operations Phase完了後、フィードバックを収集して次サイクルの開発を開始します：
+## 主要な機能
 
-```markdown
-以下のファイルを読み込んで、{PROJECT_NAME} の次サイクル の AI-DLC 環境をセットアップしてください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+### 対話形式による開発
 
-変数を以下に設定してください：
-- CYCLE = v2.0.0（または 2024-12、feature-y など）
-- DOCS_ROOT = docs（前サイクルと同じ）
-- その他の変数も適宜設定
-```
+AIが独自判断をせず、不明点は質問して明確化。ユーザーとの対話を通じて要件や設計を策定します。
 
-**必要に応じて前サイクルのファイルを引き継ぐ**:
-- `docs/cycles/rules.md` は全サイクル共通なので引き継がれます
-- `docs/cycles/operations.md` も全サイクル共通（運用設定の引き継ぎ）
-- `docs/cycles/v1.0.0/requirements/intent.md` → 参照して改善点を反映
-- その他、引き継ぎたいファイルがあればコピー
+### 進捗管理の一元化
 
-セットアップ完了後、新しいセッションで Inception Phase を開始し、**Inception → Construction → Operations → (次サイクル)** のライフサイクルを継続します。
+全フェーズで `progress.md` を自動管理。コンテキストオーバーフロー時も未完了ステップから自動再開できます。
 
-## ✨ 主要な機能
+### Unit依存関係の自動管理
 
-### 1. 対話形式による開発
-- AIが独自判断をせず、不明点は `[Question]`/`[Answer]` タグで質問
-- ユーザーとの対話を通じて要件や設計を明確化
+Inception Phase で定義した依存関係を解析し、実行可能な Unit を自動判断。複数候補がある場合は優先度と見積もりを提示します。
 
-### 2. 進捗管理の一元化（v1.0.0新機能）
-- **全フェーズでprogress.mdを自動管理**
-  - Inception Phase: 6ステップの進捗（`inception/progress.md`）
-  - Construction Phase: Unit一覧、状態、依存関係、優先度、見積もりを1つのファイルで管理（`construction/progress.md`）
-  - Operations Phase: 6ステップの進捗（`operations/progress.md`）
-- **コンテキストオーバーフロー対策**: 長いセッションで中断しても、progress.mdを読み込むだけで未完了ステップから自動再開
-- Construction Phase実行時に1ファイル読むだけで全体状況を把握（コンテキスト削減）
-- 各Unit完了後に自動更新（次回実行可能なUnit候補を再計算）
+### 設計と実装の分離
 
-### 3. Unit依存関係の自動管理
-- Inception PhaseでUnit間の依存関係を定義
-- Construction PhaseでAIが依存関係を解析し、実行可能なUnitを自動判断
-- 複数のUnitが実行可能な場合は優先度と見積もりを提示し、推奨を提案
+Phase 1（設計）ではコードを書かず構造・責務・インターフェースを定義。Phase 2（実装）で設計を参照してコード生成。レビューしやすい設計書を作成します。
 
-### 4. 設計と実装の明確な分離
-- **Phase 1（設計）**: コードは書かず、構造・責務・インターフェースのみを定義
-- **Phase 2（実装）**: 設計ファイルを参照してコードを生成
-- 設計時点でのコード大量生成を防止し、レビューしやすい設計書を作成
+### AIレビュー統合
 
-### 5. テンプレートの事前作成（v1.0.0で変更）
-- セットアップ時に全テンプレートを `docs/aidlc/templates/` に作成
-- 各フェーズで必要なテンプレートを即座に利用可能
-- **v0.1.0からの変更**: JIT生成から事前作成に変更し、セットアップを一度で完結
+外部AIツール（Codex、Claude CLI、Gemini CLI）によるコード・アーキテクチャ・セキュリティレビューを統合。レビュー種別ごとの専門スキルで品質を確保します。
 
-### 6. コンテキスト溢れ防止
-- 各フェーズで必要最小限のファイルのみ読み込み
-- `ls` / `grep` コマンドで効率的に情報取得
-- 指定されたDOCS_ROOT配下のファイルのみ読み込む制限
+### スクリプト化基盤
 
-### 7. 人間の承認プロセス
-- 計画作成後、必ず「進めてよろしいですか？」と質問
-- 設計完了後、実装前にレビューと承認を要求
-- 承認なしで次のステップに進まない
+`docs/aidlc/bin/` にユーティリティスクリプトを配置。環境情報取得、Issue操作、履歴書き込み、markdownlint実行等をスクリプト化し、AIエージェントの許可リスト運用を改善しています。
 
-### 8. 自動Gitコミット
-- セットアップ完了時
-- Inception Phase完了時
-- 各Unit完了時
-- Operations Phase完了時
+### バックトラック機能
 
-### 9. プラットフォーム対応
-- `PROJECT_TYPE` 変数でプラットフォームを指定
-- iOS/Android固有の注意事項（ローカライゼーション等）を自動表示
+フェーズ間を柔軟に行き来可能：
 
-### 10. バックトラック機能（v1.0.0新機能）
-- **フェーズ間を柔軟に行き来できる仕組み**
-  - Inception ← Construction: Unit追加・拡張が必要な場合
-  - Construction ← Operations: バグ修正が必要な場合
-- 各フェーズプロンプトに「このフェーズに戻る場合」セクションを追加
-- progress.mdを活用して、既存成果物を保持しながら追加作業が可能
-- 短サイクル開発と要件変更への柔軟な対応をサポート
+- Inception ← Construction: Unit追加・拡張が必要な場合
+- Construction ← Operations: バグ修正が必要な場合
 
-### 11. 履歴管理の簡素化
-- Bash heredoc (`cat <<'EOF' | tee -a`) で履歴を追記
-- ファイルを読み込まずに追記可能（テンプレートがファイル先頭に配置）
+### コンテキスト効率
 
-## 📚 ドキュメント
+各フェーズで必要最小限のファイルのみ読み込み、コンテキスト溢れを防止。長いセッションで中断しても自動再開できます。
+
+### 人間の承認プロセス
+
+計画作成後・設計完了後に必ず承認を要求。承認なしで次のステップに進みません。
+
+### 自動Gitコミット
+
+セットアップ完了時、Inception Phase完了時、各Unit完了時、Operations Phase完了時に自動でGitコミットを作成します。
+
+### カスタマイズ
+
+- `docs/cycles/rules.md` にプロジェクト固有のルール（コーディング規約、セキュリティ要件等）を記述可能
+- `docs/aidlc.toml` で各種設定（バックログモード、レビューモード、squash等）を制御
+- `PROJECT_TYPE` でプラットフォーム固有の注意事項を自動表示
+
+## ドキュメント
 
 ### AI-DLC 翻訳文書
 
-- [README](docs/translations/README.md) - 翻訳文書の読み方ガイド
-- [要約版](docs/translations/AI-Driven_Development_Lifecycle_Summary.md) - 全体の概要（最初に読むことを推奨）
-- [背景](docs/translations/AI-DLC_I_CONTEXT_Translation.md) - なぜ AI-DLC が必要か
-- [主要原則](docs/translations/AI-DLC_II_KEY_PRINCIPLES_Translation.md) - AI-DLC を支える 10 の原則
-- [コアフレームワーク](docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md) - 3つのフェーズの詳細
-- [実践例（新規開発）](docs/translations/AI-DLC_IV_IN_ACTION_Translation.md) - Green-Field プロジェクト
-- [実践例（既存システム）](docs/translations/AI-DLC_V_IN_ACTION_BrownField_Translation.md) - Brown-Field プロジェクト
-- [導入方法](docs/translations/AI-DLC_VI_Adopting_Translation.md) - 組織への導入戦略
-- [付録A](docs/translations/AI-DLC_AppendixA_ja.md) - プロンプトテンプレート集
+| ドキュメント | 内容 |
+|------------|------|
+| [要約版](docs/translations/AI-Driven_Development_Lifecycle_Summary.md) | 全体の概要（最初に読むことを推奨） |
+| [背景](docs/translations/AI-DLC_I_CONTEXT_Translation.md) | なぜ AI-DLC が必要か |
+| [主要原則](docs/translations/AI-DLC_II_KEY_PRINCIPLES_Translation.md) | AI-DLC を支える 10 の原則 |
+| [コアフレームワーク](docs/translations/AI-DLC_III_CORE_FRAMEWORK_Translation.md) | 3つのフェーズの詳細 |
+| [実践例（新規）](docs/translations/AI-DLC_IV_IN_ACTION_Translation.md) | Green-Field プロジェクト |
+| [実践例（既存）](docs/translations/AI-DLC_V_IN_ACTION_BrownField_Translation.md) | Brown-Field プロジェクト |
+| [導入方法](docs/translations/AI-DLC_VI_Adopting_Translation.md) | 組織への導入戦略 |
+| [付録A](docs/translations/AI-DLC_AppendixA_ja.md) | プロンプトテンプレート集 |
 
-### セットアッププロンプト
+詳細な読み方ガイドは [docs/translations/README.md](docs/translations/README.md) を参照してください。
 
-- [setup-prompt.md](prompts/setup-prompt.md) - 環境セットアップ用プロンプト（これだけ読み込めば、プロジェクトに合わせたプロンプトとテンプレートが自動生成されます）
+### その他
 
-## 🎯 このスターターキットの設計原則
+- [セットアッププロンプト](prompts/setup-prompt.md) - 環境セットアップ用（エントリーポイント）
+- [CHANGELOG.md](CHANGELOG.md) - バージョンごとの変更履歴
 
-1. **会話の反転（Reverse the Conversation）** - AIが作業計画を提示し、人間が承認・判断する
-2. **対話による明確化** - AIが独自判断をせず、不明点は質問して明確化する
+## 設計原則
+
+1. **会話の反転** - AIが作業計画を提示し、人間が承認・判断する
+2. **対話による明確化** - AIが独自判断をせず、不明点は質問
 3. **設計技法の統合** - DDD・BDD・TDDをAIが自動適用
-4. **短サイクル反復** - 各フェーズを短いサイクルで反復し、継続的に価値を提供
+4. **短サイクル反復** - 各フェーズを短いサイクルで反復
 5. **人間との共創** - リスク管理や重要判断は人間が担当
 6. **冪等性の保証** - 各ステップで既存成果物を確認し、差分のみ更新
-7. **コンテキスト効率** - 必要最小限のファイルのみ読み込み、コンテキスト溢れを防止
-8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成し、進捗を記録
-9. **プラットフォーム対応** - iOS/Android等の固有要件を自動で含める
-10. **カスタマイズ可能** - プロジェクト固有のルールを rules.md に記述可能
+7. **コンテキスト効率** - 必要最小限のファイルのみ読み込み
+8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成
 
-## 🔄 v0.1.0 から v1.0.0 への移行
-
-### 破壊的変更（BREAKING CHANGES）
-
-v1.0.0 では以下の破壊的変更があります：
-
-#### 1. 変数名の変更
-- `VERSION` → `CYCLE`（開発サイクル識別子）
-- `VERSIONS_ROOT` → `CYCLES_ROOT`
-- **理由**: 「バージョン」概念はモバイルアプリには適応的だが、Web/バックエンド開発には馴染まないため、より汎用的な「サイクル」に変更
-
-#### 2. ディレクトリ構造の変更
-```text
-# v0.1.0
-docs/example/v1/
-├── prompts/
-├── templates/
-└── ...
-
-# v1.0.0
-docs/
-├── aidlc/              # 全サイクル共通（新規）
-│   ├── prompts/
-│   └── templates/
-└── cycles/v1.0.0/      # サイクル固有
-    ├── inception/
-    ├── requirements/
-    └── ...
-```
-
-### v1.0.0 の新機能
-
-1. **全フェーズでのprogress.md対応**
-   - Inception/Operations Phaseでも進捗管理
-   - コンテキストオーバーフロー時の自動再開
-
-2. **バックトラック機能**
-   - Inception ← Construction（Unit追加）
-   - Construction ← Operations（バグ修正）
-   - フェーズ間を柔軟に行き来できる
-
-3. **テンプレートの事前作成**
-   - v0.1.0: JIT（Just-In-Time）生成
-   - v1.0.0: セットアップ時に全テンプレート作成
-
-4. **共通プロンプトの分離**
-   - `docs/aidlc/` に全サイクル共通ファイルを配置
-   - メンテナンス性とスケーラビリティの向上
-
-### 既存プロジェクトの移行
-
-v0.1.0 を使用中のプロジェクトは、以下の手順で v1.0.0 に移行できます：
-
-1. **変数の読み替え**: `VERSION` → `CYCLE` として継続使用可能
-2. **新規サイクル作成時**: 新しい `CYCLE` で v1.0.0 の setup-prompt.md を実行
-3. **既存成果物**: v0.1.0 で作成したファイルは参考資料として保持可能
-
-### 開発履歴
-
-`docs/versions/v1.0.0/` には、v0.1.0 を使ってこのプロジェクト自体（v1.0.0）を開発した記録が残されています。AI-DLC の実践例として参考にしてください。
-
-## 🔧 v1.22.0 の改善点
-
-v1.22.0 はフリクション削減と堅牢性改善のためのリリースです。
-
-### 1. フェーズ内操作順序の明示化
-
-- 各フェーズプロンプトの環境確認・進捗読み込み等の操作順序を明確に定義（#319）
-- 暗黙的だった実行順序を文書化し、再現性を向上
-
-### 2. Self-Healingテストループ
-
-- シェルスクリプトテストでの失敗時自動修正ループを導入（#320）
-- テスト失敗→修正→再テストの反復を自動化
-
-### 3. 外部レビューツール制約のドキュメント化
-
-- Codex/Claude/Gemini CLIの制約事項（read-onlyサンドボックス等）をドキュメント化（#321）
-- レビュースキルにセッション継続方式の参照情報を追加
-
-### 4. validate_cycle() Git ref安全性修正
-
-- `write-history.sh`の`validate_cycle()`でGit refインジェクション防止を強化（#322）
-- パターンマッチとgit check-ref-formatの二重検証を実装
-
-### 5. アップグレード判定修正
-
-- `check-version.sh`にvプレフィックス正規化（`sanitize_version()`）を追加（#323）
-- `check-setup-type.sh`のdaselエラーハンドリングとsed POSIX互換性を改善
-- テストカバレッジを24件に拡充
-
-### 6. アップグレードパスフォールバック
-
-- `aidlc-setup.sh`のStep 7（AIツール設定）にprimary/fallbackパス解決を追加（#324）
-- `setup-prompt.md`のsetup-ai-tools.sh参照を3パターン形式に統一
-- DRY改善のため`_run_setup_ai_tools()`ヘルパー関数を導入
-
-## 🔧 v1.21.0 の改善点
-
-v1.21.0 はスキル管理の一般化（マーケットプレイス対応・jj外部化）とマルチプラットフォーム調査のためのリリースです。
-
-### 1. マーケットプレイス対応
-
-- `.claude-plugin/marketplace.json` によるスキルカタログ機能を追加（#292）
-- `/plugin marketplace add` および `/plugin install` によるスキルインストールに対応
-- 組み込みインストール（sync-package.sh → setup-ai-tools.sh）との共存
-
-### 2. スキル名前空間分離
-
-- `aidlc:` および `tools:` の論理名前空間プレフィックスを導入（#292）
-- AI-DLCスキルとツールスキルを名前で区別可能に
-
-### 3. jj関連コード完全削除
-
-- v1.19.0で非推奨化したjj (Jujutsu) VCS関連コードを完全削除（#276）
-- versioning-with-jjスキルは外部リポジトリに移行済み
-- 移行ガイド `guides/jj-migration.md` を追加
-
-### 4. aidlc-setupリネーム
-
-- `upgrading-aidlc` スキルを `aidlc-setup` にリネーム（#292）
-- ディレクトリパス、スクリプト名、シンボリックリンク、全参照箇所を更新
-
-### 5. マルチプラットフォーム対応調査
-
-- AIエージェント7種の対応状況マトリクス・ギャップ分析・固有表現一覧・優先対応提案を含む調査ドキュメントを作成（#281）
-
-## 🔧 v1.18.5 の改善点
-
-v1.18.5 はworktreeメタ開発の同期修正とプロンプトのissue-onlyモード一貫性強化のためのリリースです。
-
-### 1. worktree rsync同期修正
-
-- upgrade-aidlc.shのTier 3にメタ開発環境検出ガードを追加（#274）
-- worktree内のprompts/package/変更がdocs/aidlc/に正しく反映されるように
-
-### 2. コンパクション後automation_mode復元強化
-
-- 復元手順の適用範囲をsemi_auto限定からモード非依存に変更（#273）
-- 不到達の終了コード1を削除、agents-rules.mdに保持必須情報を追加
-
-### 3. issue-onlyモードのバックログ操作一貫性
-
-- inception.md・construction.mdのバックログロジックに4モードチェックを追加（#272）
-- 排他モード時のローカルファイル操作をスキップ
-- 既存ローカルバックログファイル55ファイルを削除
-
-## 🔧 v1.16.4 の改善点
-
-v1.16.4 はシェルスクリプトのバグ修正とドキュメント改善のためのリリースです。
-
-### 1. シェルスクリプトバグ修正
-
-- `read-config.sh`: dasel v3予約語（`type`, `name`等）を含むTOMLキーのクオート処理を追加（#223）
-- `issue-ops.sh`: 認証済みgh環境でも `gh-not-authenticated` エラーを返すバグを修正（#225）
-- Operations Phase完了メッセージの「start setup」を「start inception」に修正（#229）
-
-### 2. ドキュメント改善
-
-- `read-config.sh`ドキュメント: 古い呼び出しパターンを現行インターフェースに更新（#224）
-- `ai-agent-allowlist.md`: Claude Code許可設定の推奨パターンを策定・追記（#219）
-
-## 🔧 v1.16.2 の改善点
-
-v1.16.2 はAI-DLC基盤整備と設計検討のためのリリースです。
-
-### 1. 設定基盤の統一
-
-- aidlc.toml設定キー構造を統一: `[backlog]`を`[rules.backlog]`に移動（#207）
-- `defaults.toml`によるread-config.shデフォルト値の集中管理化（#206）
-- 旧キーのフォールバック読み取りによる後方互換性を維持
-
-### 2. Operations Phase定型処理の新規スクリプト
-
-- `check-issue-templates.sh`: Issueテンプレートのローカル/リモート差分検出（#205）
-- `update-version.sh`: version.txtとaidlc.tomlのバージョン一括更新（#204）
-- `sync-package.sh`: prompts/package/からdocs/aidlc/へのrsync同期一括実行（#203）
-
-### 3. フェーズ実行方式の設計検討
-
-- スキル化 vs サブエージェント化の比較・推奨案を文書化（#200）
-- 移行計画と段階的導入アプローチを策定
-
-## 🔧 v1.16.1 の改善点
-
-v1.16.1 はプロンプト軽量化（スクリプト化・スキル化設計）のためのリリースです。
-
-### 1. Operations Phase定型処理のスクリプト化
-
-- `validate-remote-sync.sh`: リモート同期確認ロジックをスクリプト化（#201）
-- `validate-uncommitted.sh`: コミット漏れ確認ロジックをスクリプト化（#201）
-- operations.mdの該当セクションをスクリプト呼び出しに置き換え、1033行→996行に削減
-
-### 2. 共通処理スキル化の全体設計
-
-- 各フェーズプロンプトの共通処理をスキルとして切り出す全体設計ドキュメントを作成（#200）
-- スキル化対象の洗い出し・優先度付け・構成設計・移行計画を策定
-
-## 🔧 v1.15.2 の改善点
-
-v1.15.2 はシェルスクリプト・ドキュメントの品質改善のためのリリースです（Issue #194対応）。
-
-### 1. シェルスクリプトバグ修正（critical）
-
-- check-open-issues.sh: `--limit` 引数の数値バリデーション追加
-- suggest-version.sh: case文にデフォルトケース追加
-- ios-version-update.md: パラメータ展開構文エラー修正
-- config-merge.md: TOML同一テーブル重複定義修正
-
-### 2. エラー処理改善
-
-- check-open-issues.sh: エラー処理フォールバック改善
-- issue-ops.sh: `parse_gh_error` に認証エラー対応を追加
-- cycle-label.sh: リダイレクト設定の補足コメント追加
-- setup-branch.sh: `realpath` 利用への変更
-
-### 3. コード品質向上
-
-- aidlc-git-info.sh: IFS初期化追加
-- env-info.sh: dasel `-f` オプション利用に変更（3箇所）
-
-## 🔧 v1.15.0 の新機能
-
-v1.15.0 はsquashコミット機能の追加とSkills化に向けたプロンプト構造リファクタリングのためのリリースです。
-
-### 1. Unit完了時のコミットsquash機能
-
-- `bin/squash-unit.sh` スクリプトを新規追加
-- Unit完了時に中間コミット（レビュー前/反映等）を1つのコミットにまとめる
-- git環境（`git reset --soft` + `git commit`）とjj環境（`jj squash`）の両方に対応
-- construction.mdにsquash呼び出しフローを統合
-
-### 2. プロンプト構造の大規模リファクタリング
-
-- 巨大な単一ファイル（inception.md, construction.md, operations.md）を共通モジュールに分割
-- `prompts/package/prompts/common/` に11個の共通コンポーネントを外部化
-- 各フェーズプロンプトはフェーズ固有の内容のみに簡素化
-- Skills化に向けた構造的基盤の整備
-
-## 🔧 v1.14.1 の改善点
-
-v1.14.1 はOperations Phaseのプロンプト品質改善と設定デフォルト値の修正のためのリリースです。
-
-### 1. バージョンファイル更新のプロジェクト固有移動
-
-- operations.md（パッケージ側）からステップ6.0を削除し、rules.mdのカスタムワークフローに移動
-- プロジェクト固有ロジックを標準プロンプトから分離し、他プロジェクトでの利用時に不要なステップが表示されない
-
-### 2. Operations Phaseスキップ判定改善
-
-- バージョン確認をステップ1（デプロイ準備）からステップ6（リリース準備）に移動
-- ステップ5（バックログ整理）を常に実行に変更（Issue整理・運用計画は独立した作業）
-- ステップ0「変更なし」選択時のスキップ対象をステップ1-4に限定
-
-### 3. unit_branch.enabledデフォルト値変更
-
-- 未設定時のデフォルトを `true` から `false` に変更
-- ユーザーが意図せずUnitブランチ作成を推奨される問題を解消
-
-## 🔧 v1.14.0 の新機能
-
-v1.14.0 はAIレビューアーキテクチャの刷新とスキル最適化のためのリリースです。
-
-### 1. レビュー種別スキル新設
-
-旧来のツール別スキル（codex-review, claude-review, gemini-review）を廃止し、レビュー種別ごとのスキルに刷新しました。
-
-- **reviewing-code**: コード品質レビュー（可読性、保守性、パフォーマンス、テスト品質）
-- **reviewing-architecture**: アーキテクチャレビュー（構造、パターン、API設計、依存関係）
-- **reviewing-security**: セキュリティレビュー（OWASP Top 10、認証認可、依存脆弱性）
-
-### 2. AIレビューフロー刷新
-
-- review-flow.mdをレビュー種別スキル呼び出しに変更
-- 設定セクション名を `[rules.mcp_review]` → `[rules.reviewing]` に変更
-- MCP関連参照を全て削除
-
-### 3. 既存スキル改善
-
-- jjスキル: agentskills.ioベストプラクティス準拠、Git比較表をreferences/に分離
-- aidlc-upgradeスキル: setup-prompt.md検索フローを最適化（2ステップ検索、再帰Glob禁止）
-
-### 4. レガシースキル削除
-
-- codex-review、claude-review、gemini-review、ghスキルを削除
-- 最終スキル構成: reviewing-code, reviewing-architecture, reviewing-security, versioning-with-jj, upgrading-aidlc
-
-## 🔧 v1.13.0 の新機能
-
-v1.13.0 はInception Phase強化とIssue管理改善のためのリリースです。
-
-### 1. Inception PhaseにAIレビュー導入
-
-- Intent明確化の深掘り強化
-- 受け入れ条件の厳格化
-- 上流工程での品質向上
-
-### 2. Operations Phaseにversion.txt更新手順を明示化
-
-- リリース準備ステップでバージョン更新漏れを防止
-- 明確な更新タイミングを定義
-
-### 3. Issueライフサイクル管理ガイド追加
-
-- issue-management.mdでIssue状態遷移を明文化
-- ラベル・マイルストーン活用の推奨
-- PRマージ時の自動クローズ機能強化
-
-### 4. バグ修正
-
-- label-cycle-issues.shのラベル付け漏れ修正
-
-### 5. Dependabot機能廃止
-
-- aidlc.tomlの[inception.dependabot]セクションは無視される
-- 必要な場合はrules.mdに手動確認手順を記載可能
-
-## 🔧 v1.12.1 の改善点
-
-v1.12.1 はプロンプト最適化とワークフロー効率化のためのリリースです。
-
-### 1. inception.mdサイズ最適化
-
-- 冗長な記述をスクリプト呼び出しに外部化（350行削減）
-- suggest-version.sh: バージョン推測
-- setup-branch.sh: ブランチ/worktree作成
-- migrate-backlog.sh: バックログ移行
-
-### 2. Construction Phase確認の自動化
-
-- AIレビュー実施確認を履歴ファイルから自動判断
-- 引き継ぎ確認をoperations/tasks/確認で自動化
-- ユーザーへの不要な質問を削減
-
-### 3. setup-prompt.md参照先変更
-
-- setup.md経由を廃止し、inception.mdを直接参照
-- セットアップ時のリダイレクトステップを削減
-
-### 4. env-info.shバグ修正
-
-- starter_kit_versionがdocs/aidlc.tomlから正しく取得されない問題を修正
-- current_branchがjj/git環境で正しく取得されない問題を修正
-
-## 🔧 v1.12.0 の新機能
-
-v1.12.0 は設定管理機能強化とワークフロー効率化のためのリリースです。
-
-### 1. 3階層設定マージ機能
-
-- ユーザー共通設定（~/.aidlc/config.toml）: 複数プロジェクトで共通の設定を一元管理
-- プロジェクト設定（docs/aidlc.toml）: チーム共有の設定
-- プロジェクト個人設定（docs/aidlc.toml.local）: 個人の好みを設定、.gitignoreで除外
-- 優先順位: ユーザー共通 < プロジェクト < プロジェクト個人
-
-### 2. Setup/Inception Phase統合
-
-- 1回のプロンプト読み込みでサイクル開始からUnit定義まで完了可能に
-- 通常版・Lite版の両方に対応
-- コンテキスト切り替えのオーバーヘッドを削減
-
-### 3. Codex Skill resume機能活用
-
-- AIレビュー時に同一Unit内でコンテキストを継続可能に
-- より一貫性のあるレビュー結果を実現
-
-## 🔧 v1.11.1 の新機能
-
-v1.11.1 は開発ワークフロー改善とドキュメント整備のためのリリースです。
-
-### 1. Construction → Operations引き継ぎの仕組み
-
-- operations_task_template.mdで手動タスクを明確に引き継ぎ
-- フェーズ間の情報断絶によるタスク漏れを防止
-
-### 2. AIレビュー実施タイミング明示化
-
-- construction.mdの各ステップにAIレビュー実施指示を明示化
-- Phase 1（設計）、Phase 2（実装）の承認前にレビューを必須化
-
-### 3. サンドボックス環境ガイド大幅拡充
-
-- 認証方式比較（Keychain vs 手動、API Key vs OAuth）
-- サンドボックス種類の説明（ファイルシステム、ネットワーク、プロセス）
-- Cursor Read-Only Mode、Cline Auto-Approveの詳細説明
-
-### 4. ユーティリティスクリプト追加
-
-- aidlc-env-check.sh: 環境確認
-- aidlc-cycle-info.sh: サイクル情報取得
-- aidlc-git-info.sh: Git情報取得
-- 複合コマンドをスクリプト呼び出しに置き換え、許可リスト運用を改善
-
-### 5. サイクル横断ドキュメント配置ガイドライン
-
-- docs/shared/ ディレクトリ構成を明確化
-- サイクル横断で引き継ぐ共通資料の配置場所を決定
-
-## 🔧 v1.10.0 の新機能
-
-v1.10.0 はバックログ管理とUnit完了チェック強化のためのリリースです。
-
-### 1. バックログ登録時の不明点確認フロー
-- 登録前に質問を促すガイダンス追加
-- 曖昧な要件の明確化を促進
-
-### 2. Unit完了時の設計・実装整合性チェック機能
-- Construction Phase Phase 2終了時に設計との整合性を確認
-- ドメインモデル・論理設計と実装の乖離を検出
-
-### 3. AIレビュー指摘の先送り抑制ルール
-- 「あとでやる」判断時はユーザー承認必須に
-- 技術的理由の明記を要求
-
-### 4. Issueテンプレートの差分確認機能
-- セットアップ時に既存テンプレートとの差分を表示
-
-### 5. PRによるIssue自動Close機能
-- Operations PhaseのPR作成時に `Closes #xx` を自動記載
-
-### 6. Issue用基本ラベルのセットアッププロンプト統合
-- init-labels.shによるラベル自動作成
-
-## 🔧 v1.9.3 の改善点
-
-v1.9.3 はスクリプト機能強化と設定改善のためのリリースです。
-
-### 1. env-info.shに--setupオプション追加
-- セットアップ時に必要な情報を一括出力（project.name, backlog.mode, current_branch, latest_cycle）
-
-### 2. skills構成をシンボリックリンクからrsyncコピー方式に変更
-- プロジェクト独自スキルの追加が可能に
-
-### 3. KiroCLIエージェント設定の修正
-- .kiro/agents/aidlc.jsonのresources参照を修正
-
-### 4. init-cycle-dir.shのバージョン形式チェック緩和
-- 任意の文字列を受け入れ可能に（空文字・スラッシュのみ拒否）
-
-## 🔧 v1.9.2 の新機能
-
-v1.9.2 はプレリリースサポートとKiroCLI対応のためのリリースです。
-
-### 1. プレリリースバージョンサポート
-- サイクル名・ブランチ名に-alpha, -beta, -rc接尾辞を許可
-- write-history.shでプレリリース形式のバリデーション対応
-
-### 2. KiroCLI Skills対応
-- resourcesフィールドによるファイル指定ガイド
-- .kiro/agents/aidlc.json自動生成
-
-### 3. operations.mdサイズ最適化
-- 依存コマンド追加手順を外部ファイルに分離
-
-### 4. AI著者情報の自動検出機能
-- AI著者情報をツールから自動判定
-
-## 🔧 v1.9.1 の改善点
-
-v1.9.1 はスクリプト統合とコンテキスト管理改善のためのリリースです。
-
-### 1. init-cycle-dir.shに共通バックログディレクトリ作成機能を追加
-
-### 2. コンテキストコンパクション時のAIDLC情報保持指示
-- AGENTS.mdにコンテキスト要約時の情報保持ルールを追加
-
-### 3. 環境確認処理の統合
-- gh/dasel状態確認をセットアップ時1回に統合
-
-### 4. Co-Authored-By設定の柔軟化
-- aidlc.toml経由で設定可能に
-
-## 🔧 v1.9.0 の新機能
-
-v1.9.0 はプロンプトモジュール化と重複削減のためのリリースです。
-
-### 1. プロンプトモジュール化基盤
-- common/intro.md - AI-DLC概要・役割定義の共通化
-- common/rules.md - 開発ルールの共通化
-- common/review-flow.md - AIレビューフローの外部化
-
-### 2. 設定確認スクリプト
-- check-backlog-mode.sh - バックログモード確認
-- check-gh-status.sh - GitHub CLI状態確認
-
-### 3. Operations Phaseサイズチェック機能
-- [rules.size_check]設定による制御
-
-### 4. 参照漏れチェックスクリプト
-- check-references.shで参照整合性を確認
-
-### 5. プロンプト重複セクション削減
-- 約300行の重複を削減
-
-## 🔧 v1.8.2 の新機能
-
-v1.8.2 はスキルファイル対応とセットアップ自動化のためのリリースです。
-
-### 1. スキルファイル対応
-
-- AIエージェントのスキル拡張機能（`docs/aidlc/skills/`）
-- codex, claude, gemini向けSKILL.mdを同期対象に追加
-- Claude Code用シンボリックリンク（`.claude/skills`）作成
-
-### 2. セットアップスクリプト
-
-- `setup-aidlc.sh` による対話型セットアップの自動化
-- プロジェクト情報の推測と確認フロー
-
-### 3. KiroCLI対応
-
-- AGENTS.mdにKiroCLI設定セクション追加
-- resourcesフィールド設定ガイド
-
-### 4. AIレビュー設定強化
-
-- `ai_tools` リストで複数AIサービスの優先順位設定
-- 全フェーズで反復レビュー処理を統一化
-
-### 5. jjサポート強化
-
-- よくあるミスと対処法セクション追加
-- スキル使用ガイド（`skill-usage-guide.md`）追加
-
-## 🔧 v1.8.1 の改善点
-
-v1.8.1 はスクリプト活用拡大とAIレビュー改善のためのリリースです。
-
-### 1. スクリプト活用の拡大
-
-- `env-info.sh` を setup.md の依存ツール確認セクションで活用
-- `write-history.sh` を各フェーズプロンプト（inception/construction/operations）に統合
-- `label-cycle-issues.sh` 新規作成: Unit定義ファイルからIssue番号を抽出しサイクルラベルを一括付与
-
-### 2. AIレビュー設定の改善
-
-- Skills優先（MCPフォールバック）方式に変更
-- Skills利用可能時はSkill使用、不可時はMCPフォールバック
-- 関連Issue: #70, #73
-
-### 3. ドキュメント整備
-
-- 依存コマンド追加手順を operations.md にドキュメント化（#72）
-- 新しい依存コマンドを追加する際の手順を明文化
-
-## 🔧 v1.8.0 の新機能
-
-v1.8.0 はスクリプト化基盤構築とUX改善のためのリリースです。
-
-### 1. スクリプト化基盤（docs/aidlc/bin/）
-
-プロンプト内の複合コマンドを独立スクリプトに移行し、AIエージェントの許可リスト運用を改善しました。
-
-- `env-info.sh` - 環境情報取得
-- `init-labels.sh` - GitHubラベル初期化
-- `init-cycle-dir.sh` - サイクルディレクトリ初期化
-- `cycle-label.sh` - サイクルラベル管理
-- `issue-ops.sh` - Issue操作
-- `write-history.sh` - 履歴書き込み
-- `sync-prompts.sh` - プロンプト同期
-- `run-markdownlint.sh` - Markdownlint実行
-
-### 2. UX改善機能
-
-- **プランモード活用ガイド**: Claude Codeのプランモード使い方を文書化
-- **フェーズ間連携**: セットアップで決めた内容をインセプションに引き継ぐ仕組み
-- **Unit完了チェック**: Construction Phase終了時の受け入れ基準確認
-- **markdownlint設定**: `[rules.linting].markdown_lint` で有効/無効を切替可能
-- **簡略指示追加**: 「AIDLCアップデート」で環境更新を開始
-- **worktreeサブディレクトリ化**: worktree使用時のディレクトリ構造改善
-
-### 3. プロンプト最適化準備
-
-次サイクルでのプロンプトサイズ削減に向けた分析レポートを作成しました。
-
-## 🔧 v1.7.4 の改善点
-
-v1.7.4 はツール案内強化とガイド追加のためのリリースです。
-
-### 1. ツールインストール案内セクション
-- setup-prompt.mdにgh必須、dasel/jq/curlオプションの案内を追加
-
-### 2. サブエージェント活用ガイド
-- construction.mdとguides/subagent-usage.mdに追加
-
-### 3. 質問深掘りルール
-- AGENTS.mdに追加質問の深掘り方法を明確化
-
-### 4. 受け入れ基準の書き方ガイダンス
-- inception.mdに良い例・悪い例を含むガイドを追加
-
-### 5. バグ修正
-- issue-onlyモードでのGitHub CLI検証・サイクルラベル作成の修正
-- 未追跡ファイルのみ存在する場合のコミット処理を修正
-
-## 🔧 v1.7.3 の改善点
-
-v1.7.3 はTOML読み込み改善とjjサポート強化のためのリリースです。
-
-### 1. daselによるTOML読み込み対応
-- setup-prompt.mdでdasel v3系に統一
-
-### 2. jj作業開始・終了時のガイド
-- jj-support.mdに推奨設定（auto-local-bookmark）を追加
-- Unit境界でのbookmark操作ガイドを追加
-
-### 3. Markdownlint対象範囲の最適化
-- 現在サイクルまたは変更ファイルのみを対象に
-
-### 4. バグ修正
-- aidlc.tomlのコメント内バージョン番号修正
-- cicd_setup.mdのYAML抜粋修正
-
-## 🔧 v1.7.2 の改善点
-
-v1.7.2 はClaude Code活用とIssueテンプレート追加のためのリリースです。
-
-### 1. Claude Codeプランモード活用調査文書
-- Unit 006成果物として追加
-
-### 2. iOSビルド番号確認機能
-- Inception Phaseでxcrun読み取り対応
-
-### 3. GitHub Issueテンプレート
-- backlog.yml, bug.yml, feature.ymlを追加
-
-### 4. jj許可リストガイドへのjjコマンド追加
-
-### 5. バックログ管理ガイド改善
-- issue-driven-backlog.mdをbacklog-management.mdに統合
-
-## 🔧 v1.7.1 の改善点
-
-v1.7.1 はjjサポート強化とiOSアプリ対応のためのリリースです。
-
-### 1. jjサポート有効化フラグ
-- [rules.jj].enabled設定を追加
-
-### 2. iOSアプリ向けInception Phaseでのバージョン更新対応
-
-### 3. AskUserQuestion推奨オプション順序ルール
-- 推奨を一番上に配置するルールを追加
-
-### 4. バックログラベル作成手順
-- setup.mdに追加
-
-### 5. Unitブランチ設定をconstruction.mdに統合
-- [rules.unit_branch].enabled参照
-
-## 🔧 v1.7.0 の新機能
-
-v1.7.0 はAIエージェント許可リストとjjサポートのためのリリースです。
-
-### 1. AIエージェント許可リストガイド
-- Claude Code, Cursor, Cline, Windsurf対応
-
-### 2. GitHub Issueテンプレート
-- backlog.yml, bug.yml, feature.ymlを追加
-
-### 3. setup-promptパス記録機能
-- aidlc.tomlの[paths].setup_promptに記録
-
-### 4. Issue駆動バックログ管理ガイド
-- git/issueモード切替対応
-
-### 5. jj（Jujutsu）基本ワークフローガイド
-- 実験的サポートとして追加
-
-### 6. Unitブランチ無効化設定
-- [rules.unit_branch].enabled設定を追加
-
-### 7. バックログ管理モード設定
-- [backlog].mode: git/issue切替対応
-
-## 🔧 v1.6.1 の新機能
-
-v1.6.1 はフェーズ開始の簡略化とルール責務分離のためのリリースです。
-
-### 1. フェーズ簡略指示機能
-- 「インセプション進めて」「コンストラクション進めて」等のキーワードでプロンプト自動読み込み
-- ブランチ名からサイクルを自動判定
-- mainブランチ時はセットアップを促すメッセージを表示
-
-### 2. ルール責務分離
-- AGENTS.mdテンプレートに共通ルールセクションを追加
-- rules_template.md をプロジェクト固有ルールに特化
-- AI-DLC共通ルールをAGENTS.mdに集約
-
-### 3. 完了時メッセージの簡略指示対応
-- 各フェーズ完了時のメッセージを簡略指示形式に更新
-- 例: 「コンストラクション進めて」と指示してください
-
-## 🔧 v1.6.0 の新機能
-
-v1.6.0 は開発ワークフロー改善とリリース管理の整備のためのリリースです。
-
-### 1. セットアップフロー改善
-- worktree/ブランチ操作の簡略化
-- ブランチ作成とワークツリー作成を一括実行可能に
-- `ls -d` コマンドのスラッシュ二重表示問題を修正
-
-### 2. Claude Code固有機能の活用
-- AskUserQuestion機能の活用ルールをCLAUDE.mdに追記
-- 選択肢が明確な質問ではAskUserQuestion機能を使用
-- TodoWriteツール活用の明記
-
-### 3. レビュー前後コミットワークフロー
-- 各プロンプトにレビュー前後のコミット手順を追加
-- AIレビューモードの設定追加（required/recommend/disabled）
-- レビュー前コミット → AIレビュー → 修正 → レビュー後コミットのフロー
-
-### 4. CHANGELOG.md作成
-- プロジェクト全体の変更履歴を記録するCHANGELOG.mdを導入
-- v1.0.0以降の全バージョン履歴を記載
-
-### 5. バージョンタグ運用手順
-- Operations Phaseにタグ付け手順を追加
-- version.txt更新 → mainブランチマージ → 自動タグ作成のフロー
-- 過去バージョンへのタグ付与対応
-
-### 6. AGENTS.md統合
-- AGENTS.mdを活用したプロンプト自動解決
-- プロンプトパス指定の省略が可能に
-
-## 🔧 v1.5.4 の改善点
-
-v1.5.4 はバグ修正と機能改善のためのリリースです。
-
-### バグ修正
-- **AIレビュー必須設定の修正**: `mcp_review.mode = "required"` 設定が正しく機能しない問題を修正
-- **macOS grep互換性**: `grep -oP` を使用しない POSIX 互換コマンドに変更
-- **Unitブランチ PR作成**: Construction Phase での Unit ブランチから PR が作成されない問題を修正
-
-### 機能改善
-- **AGENTS.md/CLAUDE.md統合**: AI エージェントからの認識改善のため、AI-DLC への誘導を追加
-- **スターターキットアップグレードフロー**: 開発リポジトリでのアップグレード案内スキップ機能を追加
-- **バックログ移行重複警告**: 同名タイトルのバックログ項目がある場合に警告を表示
-- **markdownlintルール有効化**: MD009（末尾空白）、MD034（URLの自動リンク化）、MD040（コードブロック言語指定）を有効化
-
-## 🔧 v1.5.3 の改善点
-
-v1.5.3 はシェル互換性・後方互換性の強化と開発体験向上のためのリリースです。
-
-### 1. シェル互換性の改善
-- zsh/bash両方での動作を保証
-- `grep -oP` を使用しない互換性のある実装に変更
-- macOS標準環境での動作安定化
-
-### 2. 後方互換性の強化
-- v1.5.0以前のプロジェクトからのアップグレード時に `setup.md` が見つからない問題を修正
-- スターターキット側のファイルを参照するように変更
-
-### 3. サイクル名自動検出機能
-- ブランチ名から自動でサイクル名を検出
-- 入力の手間を削減
-
-### 4. アップグレードフローの改善
-- アップグレード後に自動でサイクル開始フローに入らないよう修正
-- ユーザーが明示的に操作するまで待機
-
-### 5. worktree機能の改善
-- worktree使用時のディレクトリ構造を改善
-- 並行作業時の体験向上
-
-### 6. AIレビュー機能の強化
-- 人間の承認前にAIレビューを優先実行
-- AIが検出できる問題を事前にフィルタリング
-
-### 7. CI/CD構築
-- GitHub Actions による Markdown リンター追加
-- PR時に自動でリントチェックを実行
-
-### 8. 監視・分析ガイドの作成
-- GitHub Insights活用ガイドを追加
-- プロジェクトの利用状況把握方法を文書化
-
-## 🔧 v1.5.2 の新機能
-
-v1.5.2 は並行作業対応とセットアップ改善のためのリリースです。
-
-### 1. ドラフトPRベースの並行作業ワークフロー
-- Inception Phase 完了時に main へのドラフト PR を作成
-- 各 Unit は サイクルブランチに対して PR を作成・マージ
-- Operations Phase 完了時にドラフト PR を Ready 化
-- 複数人・複数セッションでの並行開発を支援
-
-### 2. バックログ移行の自動化
-- 旧形式 `backlog.md` を新形式（個別ファイル方式）に自動移行
-- 完了済みバックログとの重複チェック機能
-- セットアップ時に移行を実行
-
-### 3. セットアップ柔軟性向上
-- アップグレードしない場合でも新サイクルを開始可能
-- `setup-prompt.md` でアップグレード不要時の案内を追加
-
-## 🔧 v1.5.1 の改善点
-
-v1.5.1 はセットアップ体験とプロンプト構成を改善するメンテナンスリリースです。
-
-### 1. プロジェクトタイプ設定機能
-- 初回セットアップ時にプロジェクトタイプを明示的に設定
-- Operations Phase でプロジェクトタイプに応じた自動判断（配布ステップのスキップ等）
-
-### 2. 履歴記録設定機能
-- `aidlc.toml` に `[rules.history]` セクションを追加
-- 履歴記録レベルを選択可能: `detailed`（詳細）/ `standard`（標準）/ `minimal`（最小）
-
-### 3. コミットメッセージ改善
-- Unit 完了時のコミットメッセージにサイクル名を含める形式に変更
-- 例: `feat: [v1.5.1] Unit 001完了 - 機能追加`
-
-### 4. セットアップエントリーポイント変更
-- 通常のサイクル開始は `docs/aidlc/prompts/setup.md` を使用
-- アップデート時のみ `prompts/setup-prompt.md` を使用
-- 毎回アップデート確認を行わず効率的に
-
-### 5. セットアッププロンプト統合
-- `setup-cycle.md` を `setup.md` に統合
-- 責務分離と導線の明確化
-
-## 🔧 v1.5.0 の新機能
-
-v1.5.0 は AI の振る舞い改善とセットアップ体験向上のためのリリースです。
-
-### 1. 予想禁止・一問一答質問ルール
-- AIが独自に予想して方針を決定することを禁止
-- 不明点は必ずユーザーに質問し、一問一答形式で対話
-
-### 2. コード記述制限ルール
-- Construction Phase の実装時以外でのコード記述を原則禁止
-- 計画なしに実装が進むリスクを防止
-
-### 3. 外部入力検証ルール
-- AI MCP 呼び出しやユーザー入力を受け取る際、そのまま信頼せず AI の判断を明示的に提示
-- 外部入力に対して批判的に評価するルールを追加
-
-### 4. サイクルセットアップ処理の分離
-- サイクルディレクトリ作成処理を専用プロンプト（setup-cycle.md）に移動
-- inception.md からはサイクル存在確認のみ行い、存在しない場合は専用プロンプトを案内
-
-### 5. グリーンフィールドセットアップ改善
-- グリーンフィールド（新規プロジェクト）セットアップの体験向上
-- セットアップ手順の簡略化
-
-### 6. セルフアップデート機能廃止
-- Operations Phase での setup-init 実行を廃止
-- アップデートは通常のセットアップフローを使用するように変更
-
-## 🔧 v1.4.1 の改善点
-
-v1.4.1 はプロンプト・テンプレートの改善を行うメンテナンスリリースです。
-
-### 1. コミットハッシュ記録の廃止
-- Unit定義テンプレートからコミットハッシュフィールドを削除
-- git log で履歴参照する運用に変更
-
-### 2. Unit定義ファイルの番号付け
-- Unit定義ファイル名に実行順序番号を付与（例: `001-setup-database.md`）
-- 依存関係の実行順序を明示化
-
-### 3. workaround時のバックログ追加ルール
-- その場しのぎの対応をする際に本質的な対応をバックログに記録するルールを追加
-- コード内にTODOコメント（バックログファイル名を参照）を追加するルール
-
-### 4. README.mdリンク辿りルール
-- セットアップ時にREADME.mdのリンク先ドキュメントも読み込むルールを追加
-- プロジェクト内部のドキュメントリンクのみ対象（外部リンクは辿らない）
-
-### 5. CLIプロジェクトタイプ追加
-- Operations Phaseのプロジェクトタイプに `cli` を追加
-- CLIツールは配布ステップを実施（デスクトップアプリと同様の扱い）
-
-## 🔧 v1.4.0 の新機能
-
-v1.4.0 は開発体験向上とチーム開発サポートのためのリリースです。
-
-### 1. サイクルバージョン提案改善
-- 既存サイクルから次バージョンを自動推測
-- バージョン番号の入力ミスを防止
-
-### 2. GitHub Issue確認とセットアップ統合
-- Inception Phase開始時にGitHub Issueを確認
-- main/masterブランチでの作業時にサイクル用ブランチ作成を提案
-
-### 3. npm-scripts自動実行の提案
-- package.json検出時に利用可能なスクリプトを表示
-- ビルド・テスト実行の効率化
-
-### 4. 割り込み対応ルール追加
-- 作業中の割り込み要望を適切に分類
-- 計画を崩さずに追加要望を管理
-
-### 5. AI MCPレビュー推奨機能
-- MCPサーバーが利用可能な場合にレビュー活用を提案
-- 成果物の品質向上をサポート
-
-### 6. git worktree提案機能
-- セットアップ時にgit worktreeの使用を提案
-- 複数サイクルの並行作業を支援
-
-### 7. 複数人開発時コンフリクト対策
-- history.mdとbacklog.mdのコンフリクト防止策を追加
-- チーム開発でのスムーズな運用をサポート
-
-## 🔧 v1.3.2 の改善点
-
-v1.3.2 はドキュメント改善とアップグレード体験向上のためのパッチリリースです。
-
-### 1. バージョン同期の修正
-- Operations Phase の setup-init 実行時に `aidlc.toml` の `starter_kit_version` が適切に更新されるよう修正
-
-### 2. コミットハッシュ記録の注意事項追加
-- Unit完了時のコミットハッシュ記録後に --amend や rebase すると記録が無効になる問題への注意書きを追加
-
-### 3. PRマージ後のブランチ削除ルール追加
-- `operations.md` の「PRマージ後の手順」でブランチ削除を標準手順として明記
-
-### 4. 「最終更新」セクションの廃止
-- 全ファイルから「最終更新」セクションを削除
-- Git履歴で代替可能であり、手動メンテナンスコストを削減
-
-### 5. アップグレード時の変更要約表示
-- setup-init.md に更新されるファイルの要約表示機能を追加
-- rsync 実行後に更新されたプロンプト・テンプレートを一覧表示
-
-## 🔧 v1.3.1 の改善点
-
-v1.3.1 は Inception Phase 効率化のためのパッチリリースです。
-
-### 1. バックログ対応済みチェック機能
-- Inception Phase でバックログ確認時に、過去サイクルで対応済みかどうかを自動チェック
-- history.md や backlog-completed.md を参照して重複作業を防止
-
-### 2. セットアップスキップ機能
-- AI-DLC ツールキットのアップグレードが不要な場合、セットアップを経由せず直接 Inception Phase を開始可能
-- Inception Phase でサイクルディレクトリを自動作成
-- 最新バージョンチェックを行い、必要に応じてセットアップを案内
-
-## 🔧 v1.3.0 の改善点
-
-v1.3.0 は運用効率化・安定性向上のためのリリースです。
-
-### 1. 進捗管理再設計
-- progress.mdを廃止し、Unit定義ファイルに実装状態を追加
-- 複数人開発時のコンフリクト問題を解消
-- Git状態や既存ファイルから進捗を自動検出する方式に変更
-
-### 2. バージョン管理改善
-- Operations Phaseでのstarter_kit_version更新手順を改善
-- 初回セットアップ時にプロジェクトの既存バージョン（package.json等）を調査するステップを追加
-
-### 3. ワークフロー改善
-- PRマージ後のmainブランチ移動・pull手順をoperations.mdに追加
-- サイクル完了後のブランチ整理手順を明確化
-
-### 4. バックログ構造改善
-- 「最終更新」セクションを廃止し、追記しやすい構造に変更
-- heredocで追記しても構造が崩れない形式を採用
-
-## 🔧 v1.2.3 の改善点
-
-v1.2.3 は運用中に発見された問題点を修正するパッチリリースです。
-
-### 1. Lite版パス解決安定化
-- Lite版プロンプトでファイルパスをより明示的に指定
-- 相対パスの基準ディレクトリを明確化
-
-### 2. フェーズ遷移ガードレール強化
-- 各プロンプトに「このフェーズでは実装しない」等のガードレール追加
-- フェーズごとの許可アクションを明確化
-
-### 3. starter_kit_versionフィールド追加
-- aidlc.toml テンプレートに `starter_kit_version` フィールドを追加
-- setup-init.md でフィールドを自動生成
-
-### 4. 移行時ファイル削除確認追加
-- アップグレード時にrsyncで削除されるファイル一覧をユーザーに表示
-- 削除前に必ずユーザー確認を要求
-
-### 5. 日時記録必須ルール化
-- プロンプトに「日時を記録する際は必ず `date` コマンドで現在時刻を取得すること」を明記
-- セッション開始時の日時使い回しを防止
-
-### 6. Inception Phaseステップ6削除
-- v1.2.1で対応済みのConstruction用進捗管理ファイル作成ステップを削除
-- Construction Phaseが自身で作成する責務に集中
-
-## 🔧 v1.2.2 の改善点
-
-v1.2.2 はファイル構成の整理とプロンプト改善のメンテナンスリリースです。
-
-### 1. ファイル構成の変更（破壊的変更）
-- `docs/aidlc/project.toml` → `docs/aidlc.toml` に移動
-- `docs/aidlc/prompts/additional-rules.md` → `docs/cycles/rules.md` に移動
-- `docs/aidlc/version.txt` 廃止（`aidlc.toml` に統合）
-- **効果**: `docs/aidlc/` がスターターキットと rsync で完全同期可能に
-
-### 2. Operations Phase の改善
-- 開始時に運用引き継ぎ情報（`docs/cycles/operations.md`）を自動確認
-- 前回サイクルの設定を再利用可能、毎回同じ質問を繰り返さない
-
-### 3. Lite版プロンプトの改善
-- パスがプロジェクトルートからの絶対パスであることを明示
-- 簡易実装先確認ステップを追加
-
-### 4. コンテキストリセットルールの強化
-- 継続プロンプトを「推奨」から「必須」に変更
-- progress.md のパスを明確化（サブディレクトリ内であることを強調）
-
-### 5. 既存プロジェクトの移行
-v1.2.1 以前を使用中のプロジェクトは、setup-init.md を実行すると自動で移行されます。
-
-## 🔧 v1.2.1 の改善点
-
-v1.2.1 は技術的負債解消のメンテナンスリリースです。
-
-### 1. セットアップ体験の向上
-- プロジェクト情報の確認を一問一答形式からまとめて確認する形式に変更
-- デフォルト値を一覧表示し、変更があるものだけ指定可能
-
-### 2. バックログ管理の自動化
-- Operations Phase完了時に対応済み項目を自動的に `backlog-completed.md` に移動
-- サイクル固有バックログ（`docs/cycles/{{CYCLE}}/backlog.md`）の導入
-
-### 3. フェーズ間の責務明確化
-- Construction Phase開始時に自身でprogress.mdを作成するよう変更
-- Inception Phaseの責務を要件定義に集中
-
-### 4. 運用引き継ぎの強化
-- サイクル横断の運用引き継ぎファイル（`docs/cycles/operations.md`）を追加
-- CI/CD設定、監視設定、デプロイ手順などをサイクル間で引き継ぎ可能
-
-## 🆕 v1.2.0 の新機能
-
-### 1. プロンプトの分割・短縮化
-- AIがプロンプトを最後まで読まない問題への対策
-- 各フェーズプロンプトを簡潔化し、必要な情報のみを記載
-- セットアッププロンプトを複数ファイルに分割
-
-### 2. セットアップ処理の分離
-- **初回セットアップ** (`setup-init.md`): 新規プロジェクトへの導入・アップグレード
-- **サイクルセットアップ** (`setup-cycle.md`): 既存プロジェクトでの新サイクル開始
-- `setup-prompt.md` がエントリーポイントとして状態を判定し、適切なセットアップに誘導
-
-### 3. ライト版プロンプト
-- `docs/aidlc/prompts/lite/` にライト版（簡易版）プロンプトを追加
-- 小規模な変更や迅速な開発に最適
-- Full版を参照しつつ、スキップ・簡略化するステップを定義
-
-### 4. バックログ機能
-- **Inception Phase**: `docs/cycles/backlog.md` を確認し、前サイクルからの引き継ぎタスクを表示
-- **Operations Phase**: 次サイクルへの引き継ぎタスクをバックログに記録
-
-### 5. サイクル存在確認
-- 各フェーズプロンプト開始時にサイクルディレクトリの存在を確認
-- 存在しない場合はエラーを表示し、既存サイクル一覧を提示
-
-### 6. rules.md の上書き防止
-- アップグレード時にプロジェクト固有のルールファイルを保護
-- 既に存在する場合はコピーをスキップ
-
-### 7. GitHub Actions による自動タグ付け
-- main ブランチへのマージ時に `version.txt` を読み取り自動でタグを作成
-- `.github/workflows/auto-tag.yml` で設定
-
-### 8. バージョン・ブランチ整合性チェック
-- セットアップ時にサイクルバージョンとブランチ名の整合性をチェック
-- 不一致の場合は警告を表示し、対応を選択可能
-
-## 🔧 v1.1.0 の新機能
-
-v1.1.0 は Operations Phase 再利用性と軽量サイクルサポートのためのリリースです。
-
-### 1. Operations Phase 再利用性
-- サイクル横断でのCI/CD維持
-- 前サイクルの設定を引き継ぎ可能
-
-### 2. 軽量サイクル（Lite版）のサポート
-- 小規模な変更向けの簡易フロー
-- Full版のステップを選択的にスキップ
-
-### 3. ブランチ確認機能
-- 誤ブランチでの作業防止
-- フェーズ開始時に現在のブランチを確認
-
-### 4. コンテキストリセット提案機能
-- フェーズ移行時・Unit完了時にリセットを提案
-- 長いセッションによる応答品質低下を防止
-
-## 🔧 v1.0.1 の改善点
-
-v1.0.1 はバージョンアップ基盤構築とテンプレート追加のためのリリースです。
-
-### 1. バージョンアップ基盤の構築
-- CHANGELOG.md, version.txtによるバージョン管理
-
-### 2. テスト記録テンプレート
-- `docs/aidlc/templates/test_record_template.md`を追加
-
-### 3. バグ対応フロー文書
-- `docs/aidlc/bug-response-flow.md`を追加
-
-### 4. バックログ管理テンプレート
-- `docs/aidlc/templates/backlog_template.md`を追加
-
-### 5. セットアップファイルのフェーズ別分割
-- `prompts/setup/`に分割配置
-
-### 6. セットアッププロンプトの最適化
-- 1746行から5ファイルに分割
-
-### 7. バグ修正
-- セットアップ時の`inception/`ディレクトリ作成バグを修正
-- 日付取得方法の明確化（タイムゾーン付き）
-
-## 🔗 関連リンク
+## 関連リンク
 
 - [オリジナルのホワイトペーパー](https://prod.d13rzhkk8cj2z0.amplifyapp.com) - AWS による AI-DLC 公式ドキュメント
 
-## 📄 ライセンス
+## ライセンス
 
 このリポジトリのオリジナルコンテンツ（プロンプトテンプレート等）は MIT License で提供されています。
 
 AI-DLC 翻訳文書については、オリジナルのホワイトペーパーは AWS (Amazon Web Services) により公開されており、著者は Raju SP です。オリジナルドキュメントには明示的なライセンス情報が記載されていないため、このリポジトリの翻訳文書は学習・参考目的での利用を想定しています。商用利用や再配布については、AWS または著者に直接確認することを推奨します。
 
-## 🤝 コントリビューション
+## コントリビューション
 
 問題や改善提案がありましたら、Issue や Pull Request をお気軽にお送りください。
 
-## 📮 フィードバック
+## フィードバック
 
 このスターターキットについてのフィードバックや質問は、GitHub Issues でお願いします。
 
