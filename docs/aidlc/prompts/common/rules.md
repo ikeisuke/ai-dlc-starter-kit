@@ -133,7 +133,7 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled
 
 ## アップグレードチェック設定
 
-Inception Phase開始時のスターターキットバージョン確認（ステップ5）を制御する。
+Inception Phase開始時のスターターキットバージョン確認（ステップ6）を制御する。
 
 ### 設定読み込み
 

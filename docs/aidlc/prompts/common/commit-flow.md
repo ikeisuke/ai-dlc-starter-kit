@@ -132,19 +132,24 @@ AIが順序違反を検知した場合、以下の手順で自己修正する:
 4. **先行操作の実行**: 特定した先行操作を実行（例: 未コミット変更をコミット）
 5. **再開**: 先行操作の完了後、元の後続操作を再開
 
+## コミット実行の共通手順
+
+すべてのコミットは以下の手順で実行する:
+
+1. `git status --porcelain` で変更を確認（変更がない場合はスキップ）
+2. `mktemp /tmp/aidlc-commit-msg.XXXXXX` で一時ファイルパスを生成
+3. Writeツールで一時ファイルにコミットメッセージを書き込む（内容は各セクションのテンプレートを使用）
+4. `git add -A`（または指定ファイルのみ）でステージング
+5. `git commit -F <一時ファイルパス>` でコミット
+6. 一時ファイルを削除
+7. `git status` でコミット完了を確認（期待: `nothing to commit, working tree clean`）
+8. 変更が残っている場合は追加コミットを実施
+
 ## レビューコミット手順
 
 ### レビュー前コミット
 
-**レビュー前コミット**（変更がある場合のみ）:
-
-```bash
-git status --porcelain
-```
-
-AIが出力を確認し、変更がある場合は以下を順次実行:
-
-1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+変更がある場合のみ、共通手順に従いコミット。メッセージテンプレート:
 
 ```text
 chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}
@@ -152,26 +157,9 @@ chore: [{{CYCLE}}] レビュー前 - {ARTIFACT_NAME}
 Co-Authored-By: {AI_AUTHOR}
 ```
 
-2. 以下を実行:
-
-```bash
-git add -A
-git commit -F /tmp/aidlc-commit-msg.XXXXXX
-```
-
-3. 一時ファイルを削除
-
 ### レビュー反映コミット
 
-**レビュー反映コミット**（修正があった場合のみ）:
-
-```bash
-git status --porcelain
-```
-
-AIが出力を確認し、変更がある場合は以下を順次実行:
-
-1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+修正があった場合のみ、共通手順に従いコミット。メッセージテンプレート:
 
 ```text
 chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}
@@ -179,32 +167,13 @@ chore: [{{CYCLE}}] レビュー反映 - {ARTIFACT_NAME}
 Co-Authored-By: {AI_AUTHOR}
 ```
 
-2. 以下を実行:
-
-```bash
-git add -A
-git commit -F /tmp/aidlc-commit-msg.XXXXXX
-```
-
-3. 一時ファイルを削除
-
 ## フェーズ完了コミット手順
+
+**共通注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status` で確認のみ行い、新規コミットは作成しません。
 
 ### Inception Phase完了コミット
 
-**注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
-
-```bash
-git status
-```
-
-期待される結果: `nothing to commit, working tree clean`
-
-squashを実行していない場合は、以下の通常コミット手順を実行:
-
-Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。
-
-1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+Inception Phaseで作成・変更したすべてのファイル（**inception/progress.md、履歴ファイルを含む**）をコミット。メッセージテンプレート:
 
 ```text
 feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
@@ -212,38 +181,9 @@ feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
 Co-Authored-By: {AI_AUTHOR}
 ```
 
-2. 以下を実行:
-
-```bash
-git add -A
-git commit -F /tmp/aidlc-commit-msg.XXXXXX
-```
-
-3. 一時ファイルを削除
-
-**コミット実行後の確認**:
-
-```bash
-git status
-```
-
-**期待される結果**: `nothing to commit, working tree clean`
-
 ### Unit完了コミット
 
-**注意**: Squash統合フローでsquashを実行した場合（`squash:success`）、コミットは既に完了しています。以下の確認のみ行い、新規コミットは作成しません:
-
-```bash
-git status
-```
-
-期待される結果: `nothing to commit, working tree clean`
-
-squashを実行していない場合は、以下の通常コミット手順を実行:
-
-「コミット前確認チェックリスト」を確認した後、コミットを実行:
-
-1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+「コミット前確認チェックリスト」を確認した後、共通手順に従いコミット。メッセージテンプレート:
 
 ```text
 feat: [{{CYCLE}}] Unit {NNN}完了 - {DESCRIPTION}
@@ -252,53 +192,15 @@ Unit-Number: {NNN}
 Co-Authored-By: {AI_AUTHOR}
 ```
 
-2. 以下を実行:
-
-```bash
-git add -A
-git commit -F /tmp/aidlc-commit-msg.XXXXXX
-```
-
-3. 一時ファイルを削除
-
-**コミット実行後の確認**:
-
-```bash
-git status
-```
-
-**期待される結果**: `nothing to commit, working tree clean`
-
-**変更が残っている場合**: 追加コミットを実施
-
 ### Operations Phase完了コミット
 
-Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット。
-
-1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット。メッセージテンプレート:
 
 ```text
 chore: [{{CYCLE}}] Operations Phase完了 - {DESCRIPTION}
 
 Co-Authored-By: {AI_AUTHOR}
 ```
-
-2. 以下を実行:
-
-```bash
-git add -A
-git commit -F /tmp/aidlc-commit-msg.XXXXXX
-```
-
-3. 一時ファイルを削除
-
-**コミット実行後の確認**:
-
-```bash
-git status
-```
-
-**期待される結果**: `nothing to commit, working tree clean`
 
 ## Squash統合フロー
 
@@ -341,15 +243,11 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
 2. **「いいえ」の場合**: フローを終了し、通常コミットに進む（未コミット変更は通常コミットで処理される）
 
-3. **「はい」の場合 - 未コミット変更のコミット**: 変更ファイルが未コミットの場合、中間コミットとして作成（squash-unit.shはclean working treeを前提とするため、先にコミットする）:
+3. **「はい」の場合 - 未コミット変更のコミット**: 変更ファイルが未コミットの場合、中間コミットとして作成（squash-unit.shはclean working treeを前提とするため、先にコミットする）。未コミット変更がない場合はスキップ。
 
-   **コミットメッセージ**: 「適用対象判定」テーブルの中間コミットメッセージを使用する。
+   「適用対象判定」テーブルの中間コミットメッセージテンプレートを使用し、共通手順に従いコミット（ステージングは `git add <変更ファイル>` で対象ファイルのみ）。
 
-   **Unit完了squashの場合**:
-
-   git環境:
-
-   1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+   **Unit完了squashのメッセージテンプレート**:
 
    ```text
    chore: [{{CYCLE}}] Unit {NNN}完了 - 完了準備
@@ -358,37 +256,13 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
    Co-Authored-By: {AI_AUTHOR}
    ```
 
-   2. 以下を実行:
-
-   ```bash
-   git add <変更ファイル>
-   git commit -F /tmp/aidlc-commit-msg.XXXXXX
-   ```
-
-   3. 一時ファイルを削除
-
-   **Inception Phase完了squashの場合**:
-
-   git環境:
-
-   1. Writeツールで一時ファイルを作成（内容: コミットメッセージ）:
+   **Inception Phase完了squashのメッセージテンプレート**:
 
    ```text
    chore: [{{CYCLE}}] Inception Phase完了 - 完了準備
 
    Co-Authored-By: {AI_AUTHOR}
    ```
-
-   2. 以下を実行:
-
-   ```bash
-   git add <変更ファイル>
-   git commit -F /tmp/aidlc-commit-msg.XXXXXX
-   ```
-
-   3. 一時ファイルを削除
-
-   未コミット変更がない場合: このステップをスキップ
 
    **clean状態の検証**（中間コミット後、またはスキップ後）:
 
@@ -421,9 +295,9 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
 5. **squash実行**:
 
-   **Unit完了squashの場合**:
+   「適用対象判定」テーブルのsquashコミットメッセージテンプレートを使用。`mktemp /tmp/aidlc-squash-msg.XXXXXX` でパスを生成し、Writeツールでメッセージを書き込む。
 
-   1. Writeツールで一時ファイルを作成（内容: squashメッセージ）:
+   **Unit完了squashのメッセージテンプレートとコマンド**:
 
    ```text
    feat: [{{CYCLE}}] Unit {NNN}完了 - {UNIT_NAME}
@@ -431,31 +305,23 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
    Unit-Number: {NNN}
    ```
 
-   2. 以下を実行:
-
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
+     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.XXXXXX
    ```
 
-   3. 一時ファイルを削除
-
-   **Inception Phase完了squashの場合**:
-
-   1. Writeツールで一時ファイルを作成（内容: squashメッセージ）:
+   **Inception Phase完了squashのメッセージテンプレートとコマンド**:
 
    ```text
    feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
    ```
 
-   2. 以下を実行:
-
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.txt
+     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.XXXXXX
    ```
 
-   3. 一時ファイルを削除
+   実行後、一時ファイルを削除。結果に応じた処理:
 
    - `squash:success` の場合: squash完了。通常コミットをスキップ
    - `squash:skipped:no-commits` の場合: 「squash対象のコミットがありません。通常コミットに進みます。」と表示してスキップ
@@ -516,8 +382,9 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
 コミットメッセージのパターンやトレーラーによる自動検出が失敗した場合、`--from`/`--to` でUnit境界を手動指定できる。
 
+1. 対象コミットの特定:
+
 ```bash
-# 1. 対象コミットの特定
 git log --oneline -30
 ```
 

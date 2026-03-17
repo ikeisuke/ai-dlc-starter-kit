@@ -126,7 +126,7 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
-### 2.5 環境確認
+### 3. 環境確認
 
 GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
 
@@ -143,7 +143,7 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
-### 2.6 セッション判別設定【オプション】
+### 4. セッション判別設定【オプション】
 
 `session-title` スキルが利用可能な場合に実行し、ターミナルのタブタイトルとバッジを設定する（macOS専用）。スキルが利用不可の場合はスキップして続行。
 
@@ -151,7 +151,7 @@ backlog_mode:issue-only
 
 **注記**: `session-title` はスターターキット同梱ではありません。利用するには外部リポジトリからインストールが必要です。詳細は `guides/skill-usage-guide.md` を参照。
 
-### 2.7 Depth Level確認
+### 5. Depth Level確認
 
 `common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
 
@@ -161,7 +161,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 
 取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
 
-### 3. セッション状態の復元
+### 6. セッション状態の復元
 
 `docs/cycles/{{CYCLE}}/operations/session-state.md` の存在を確認する。
 
@@ -172,7 +172,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
   - バリデーション失敗: 警告を表示し、下記の進捗管理ファイル確認にフォールバック
 - **存在しない場合**: 下記の進捗管理ファイル確認で復元（新規インストール環境との互換性）
 
-### 3.1 進捗管理ファイル確認【重要】
+### 7. 進捗管理ファイル確認【重要】
 
 **progress.mdのパス（正確に）**:
 
@@ -185,9 +185,9 @@ docs/cycles/{{CYCLE}}/operations/progress.md
 **注意**: `docs/cycles/{{CYCLE}}/progress.md` ではありません。必ず `operations/` ディレクトリ内のファイルを確認してください。
 
 - **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
-- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（ステップ0-6を「未着手」、`docs/aidlc.toml` の `project.type` に応じて配布ステップ（ステップ4）を「スキップ」に設定）
+- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（ステップ1-7を「未着手」、`docs/aidlc.toml` の `project.type` に応じて配布ステップ（ステップ5）を「スキップ」に設定）
 
-### 4. 既存成果物の確認（冪等性の保証）
+### 8. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls docs/cycles/{{CYCLE}}/operations/
@@ -197,7 +197,7 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 既存ファイルがある場合は内容を読み込んで差分のみ更新
 
-### 5. 運用引き継ぎ情報の確認【重要】
+### 9. 運用引き継ぎ情報の確認【重要】
 
 `docs/cycles/operations.md` が存在すれば読み込み、前回サイクルで決定した運用設定・方針を確認する。
 
@@ -206,7 +206,7 @@ ls docs/cycles/{{CYCLE}}/operations/
 
 **効果**: 毎回同じ質問を繰り返さずに済む
 
-### 6. 全Unit完了確認【重要】
+### 10. 全Unit完了確認【重要】
 
 Construction Phaseで定義された全Unitが完了していることを確認します。
 
@@ -268,7 +268,7 @@ ls docs/cycles/{{CYCLE}}/story-artifacts/units/ | sort
   ```
 - **選択2の場合**: 警告を記録し、Operations Phaseを継続
 
-### 7. Construction引き継ぎタスク確認【重要】
+### 11. Construction引き継ぎタスク確認【重要】
 
 Construction Phaseで発生した手動作業タスクを確認し、実行します。
 
@@ -301,7 +301,7 @@ ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
 これらのタスクを確認・実行しますか？
 
 1. はい - タスクを順番に確認・実行する
-2. 後で実行する - ステップ5（バックログ整理）で対応
+2. 後で実行する - ステップ6（バックログ整理）で対応
 ```
 
 **「はい」の場合**:
@@ -314,7 +314,7 @@ ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
    - 実行日: 現在日付
    - 実行者: @username または -
 
-**「後で実行する」の場合**: ステップ5で再度確認
+**「後で実行する」の場合**: ステップ6で再度確認
 
 **タスクが存在しない場合**:
 
@@ -330,90 +330,90 @@ Construction Phaseからの引き継ぎタスクはありません。
 
 各ステップ完了時にprogress.mdを更新
 
-### ステップ0: 変更確認
+### ステップ1: 変更確認
 
 **タスク管理機能を活用してください。**
 
-ステップ1-4の確認をスキップするかどうかを確認します。
+ステップ2-5の確認をスキップするかどうかを確認します。
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、「いいえ」（変更なし）を自動選択し、ステップ1-4をスキップする。`automation_mode=manual` の場合は従来どおりユーザーに確認する。
+**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、「いいえ」（変更なし）を自動選択し、ステップ2-5をスキップする。`automation_mode=manual` の場合は従来どおりユーザーに確認する。
 
 **確認メッセージ**（`automation_mode=manual` の場合）:
 ```text
 以下の項目で変更したい箇所はありますか？
 
-- ステップ1: デプロイ準備
-- ステップ2: CI/CD構築
-- ステップ3: 監視・ロギング戦略
-- ステップ4: 配布
+- ステップ2: デプロイ準備
+- ステップ3: CI/CD構築
+- ステップ4: 監視・ロギング戦略
+- ステップ5: 配布
 
 1. はい - 変更したい項目がある
-2. いいえ - 変更なし（ステップ1-4をスキップしてステップ5へ）
+2. いいえ - 変更なし（ステップ2-5をスキップしてステップ6へ）
 ```
 
 **選択に応じた処理**:
-- **「はい」選択時**: progress.mdでステップ0を「完了」に更新し、ステップ1から順に確認フローを実行（ステップ1-4 → ステップ5 → ステップ6）
+- **「はい」選択時**: progress.mdでステップ1を「完了」に更新し、ステップ2から順に確認フローを実行（ステップ2-5 → ステップ6 → ステップ7）
 - **「いいえ」選択時**: 以下を実行
-  1. progress.mdでステップ0を「完了」、ステップ1-4を「スキップ」に更新
-  2. 履歴に「ステップ1-4をスキップ（変更なしを選択）」と記録
-  3. ステップ5（バックログ整理と運用計画）に進む
+  1. progress.mdでステップ1を「完了」、ステップ2-5を「スキップ」に更新
+  2. 履歴に「ステップ2-5をスキップ（変更なしを選択）」と記録
+  3. ステップ6（バックログ整理と運用計画）に進む
 
 **注意**: `docs/cycles/rules.md`にカスタムワークフロー（例: アップグレード処理）が定義されている場合、それはスキップ対象外です。rules.mdの指示に従って実行してください。
 
-### ステップ1: デプロイ準備【対話形式】
-
-**タスク管理機能を活用してください。**
-
-- **ステップ開始時**: progress.mdでステップ1を「進行中」に更新
-- **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
-
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
-- **ステップ完了時**: progress.mdでステップ1を「完了」に更新、完了日を記録
-
-### ステップ2: CI/CD構築【対話形式】
+### ステップ2: デプロイ準備【対話形式】
 
 **タスク管理機能を活用してください。**
 
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
-- **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/cicd_setup.md`、CI/CD設定ファイル
+- **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
+
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
-### ステップ3: 監視・ロギング戦略【対話形式】
+### ステップ3: CI/CD構築【対話形式】
 
 **タスク管理機能を活用してください。**
 
 - **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/cicd_setup.md`、CI/CD設定ファイル
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
 
-### ステップ4: 配布【対話形式】
+### ステップ4: 監視・ロギング戦略【対話形式】
+
+**タスク管理機能を活用してください。**
+
+- **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
+- **対話形式**: 同様に**一問一答形式**で対話
+- **成果物**: `docs/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
+- **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
+
+### ステップ5: 配布【対話形式】
 
 **タスク管理機能を活用してください。**
 
 **スキップ判定**:
 
 `docs/aidlc.toml` の `project.type` を確認:
-- **スキップ対象** (`web`, `backend`, `general`, 未設定): progress.mdでステップ4を「スキップ」に更新し、ステップ5へ進む
+- **スキップ対象** (`web`, `backend`, `general`, 未設定): progress.mdでステップ5を「スキップ」に更新し、ステップ6へ進む
 - **実行対象** (`cli`, `desktop`, `ios`, `android`): 以下を実行
 
 **実行する場合**:
-- **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
-- **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
+- **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
-### ステップ5: バックログ整理と運用計画【対話形式】
+### ステップ6: バックログ整理と運用計画【対話形式】
 
 **タスク管理機能を活用してください。**
 
-- **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
 
-#### 5.0 Construction引き継ぎタスク再確認
+#### 6.1 Construction引き継ぎタスク再確認
 
-ステップ7で「後で実行する」を選択した引き継ぎタスクがある場合、ここで再確認・実行する。
+ステップ11で「後で実行する」を選択した引き継ぎタスクがある場合、ここで再確認・実行する。
 
 ```bash
 ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
@@ -421,9 +421,9 @@ ls docs/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
 
 **未実行タスクがある場合**: 各タスクの実行状態を確認し、未実行のものを実行する。
 
-#### 5.1 バックログ整理
+#### 6.2 バックログ整理
 
-ステップ2.5で確認した `backlog_mode` を参照する。
+ステップ3で確認した `backlog_mode` を参照する。
 
 **mode=git または mode=git-only の場合**:
 ```bash
@@ -474,7 +474,7 @@ gh pr view {PR番号} --json body --jq '.body'
 - **Closesに含まれるIssue**: 「PRマージ時に自動クローズされます」と表示し、手動クローズをスキップ
 - **Closesに含まれないIssue**: 対応済みか確認し、手動でクローズ
 
-**注意**: この判定は暫定であり、最終確定はステップ6.7（PRマージ）直前のCloses確認結果に従う。PRマージまでにClosesセクションが変更された場合は再判定が必要。
+**注意**: この判定は暫定であり、最終確定はステップ7.14（PRマージ）直前のCloses確認結果に従う。PRマージまでにClosesセクションが変更された場合は再判定が必要。
 
 対応済み項目の手動クローズ（自動クローズ対象外のみ）:
 ```bash
@@ -496,12 +496,12 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
-#### 5.2 リリース後運用計画
+#### 6.3 リリース後運用計画
 
 - **成果物**: `docs/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
-- **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
+- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
-### ステップ6: リリース準備
+### ステップ7: リリース準備
 
 **タスク管理機能を活用してください。**
 
@@ -509,27 +509,30 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 - `comprehensive`: 通常のリリース準備に加え、ロールバック手順を詳細化（手順書作成、ロールバック判定基準の明記）
 - `minimal` / `standard`: 変更なし（現行動作）
 
-- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ7を「進行中」に更新
 
 **サブステップ一覧**（順番に実行、詳細は operations-release.md が正本）:
-1. 6.0 バージョン確認
-2. 6.1 CHANGELOG更新（`changelog = true` の場合）
-3. 6.2 README更新
-4. 6.3 履歴記録
-5. 6.4 Markdownlint実行
-6. 6.4.5 progress.md更新 ← **PR準備完了**
-7. 6.5 Gitコミット
+1. 7.1 バージョン確認
+2. 7.2 CHANGELOG更新（`changelog = true` の場合）
+3. 7.3 README更新
+4. 7.4 履歴記録
+5. 7.5 Markdownlint実行
+6. 7.6 Bash Substitution Check実行
+7. 7.7 progress.md更新 ← **PR準備完了**
+8. 7.8 Gitコミット
 
-**注**: 6.4.5でprogress.mdを「PR準備完了」状態に更新し、6.5でコミットしてPRに反映します。以下はレビュー・マージ作業です。
+**注**: 7.7でprogress.mdを「PR準備完了」状態に更新し、7.8でコミットしてPRに反映します。以下はレビュー・マージ作業です。
 
-8. 6.6 ドラフトPR Ready化
-9. 6.6.5 コミット漏れ確認
-10. 6.6.6 リモート同期確認
-11. 6.7 PRマージ
+9. 7.9 ドラフトPR Ready化
+10. 7.10 コミット漏れ確認
+11. 7.11 リモート同期確認
+12. 7.12 mainブランチとの差分チェック
+13. 7.13 PRマージ前レビュー
+14. 7.14 PRマージ
 
 **【次のアクション】** 今すぐ `docs/aidlc/prompts/operations-release.md` を読み込んで、各サブステップの詳細手順に従ってください。
 
-- **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
+- **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 
 ---
 
@@ -557,13 +560,13 @@ docs/aidlc/bin/issue-ops.sh close {ISSUE_NUMBER}
 
 Operations Phaseの完了時には、以下を確認してください:
 
-1. **ステップ6（リリース準備）がPR準備完了している**こと
+1. **ステップ7（リリース準備）がPR準備完了している**こと
    - バージョン確認、バージョンファイル更新（AI-DLCスターターキットのみ）、CHANGELOG更新（`changelog = true`の場合）、README更新、履歴記録、Markdownlint実行、progress.md更新、Gitコミットが完了
-   - progress.mdでステップ6が「完了」（= PR準備完了）になっている
-   - **注**: 6.6-6.7はPR準備完了後のレビュー・マージ作業
+   - progress.mdでステップ7が「完了」（= PR準備完了）になっている
+   - **注**: 7.9-7.14はPR準備完了後のレビュー・マージ作業
 
 2. **全ステップが完了している**こと
-   - progress.mdで全ステップ（0-6、配布スキップの場合は4除く、変更なし選択時は1-4も「スキップ」）が「完了」または「スキップ」
+   - progress.mdで全ステップ（1-7、配布スキップの場合は5除く、変更なし選択時は2-5も「スキップ」）が「完了」または「スキップ」
 
 3. **コンテキストリセットの提示が完了している**こと（ユーザーが連続実行を明示指示した場合はスキップ可）
    - 「AI-DLCサイクル完了」セクションのStep 6でリセットメッセージをユーザーに提示済み
@@ -598,7 +601,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、バックログに記録（ステップ2.5で確認した `backlog_mode` を参照）：
+次サイクルに引き継ぐタスクがある場合、バックログに記録（ステップ3で確認した `backlog_mode` を参照）：
 
 **mode=git または mode=git-only の場合**:
 記録先: `docs/cycles/backlog/{種類}-{スラッグ}.md`
@@ -616,7 +619,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 PRがマージされたら、次サイクル開始前に以下を実行：
 
-0. **未コミット変更の確認**:
+1. **未コミット変更の確認**:
 
    ```bash
    git status --porcelain
@@ -626,7 +629,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
    ```text
    【注意】未コミットの変更があります。
-   通常、この時点で未コミット変更は存在しないはずです（6.6.5で確認済み）。
+   通常、この時点で未コミット変更は存在しないはずです（7.10で確認済み）。
 
    変更されているファイル:
    {git status --porcelain の実行結果をここに貼り付け}
@@ -637,7 +640,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
    3. 破棄する - 誤生成/一時ファイルのみ（progress.md, history, Unit定義は破棄NG）
    ```
 
-0.5. **worktree環境判定**:
+2. **worktree環境判定**:
 
    事前にBashで `git rev-parse --git-dir` を実行し、結果を確認する。
 

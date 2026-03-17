@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.23.0] - 2026-03-18
+
+### Changed
+
+- 共通プロンプト（review-flow.md, commit-flow.md）: アルファベット記法（5a）や枝番（2.5, 2.6等）を連番に整理、冗長な記述を削減
+- inception.md: Part 1/Part 2構造を統合し、枝番ステップ（5.5, 5.6, 6-1, 6-2等）を連番に整理
+- construction.md: 3種の番号体系（Setup 1-5, Flow I-VI, Completion 0-6）を統一的な連番に整理、枝番ステップ（1.5, 1.6, 2.5等）を解消
+- operations.md + operations-release.md: Setup 1-7とFlow 0-6の二重番号を統合、不規則な枝番（6.4.2, 6.4.5, 6.6.5等）を連番に整理
+- README.md: リリースノート（v1.0.1〜v1.22.0、約1000行）を分離し500行以下に簡潔化、クイックスタートガイドの明確化、リポジトリ構成を現在のレイアウトに更新
+
+### Removed
+
+- validate-remote-sync.sh, validate-uncommitted.sh: validate-git.shサブコマンドに統合済みの非推奨ラッパースクリプトを削除
+- README.mdからリリース履歴（v1.0.1〜v1.22.0）を分離、v0.1.0→v1.0.0移行セクションを削除
+
+---
+
 ## [1.22.3] - 2026-03-17
 
 ### Fixed
