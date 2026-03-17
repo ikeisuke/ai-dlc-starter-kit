@@ -4,17 +4,17 @@
 
 | ステップ | 状態 | 成果物 | 完了日 |
 |---------|------|--------|--------|
-| 0. 変更確認 | 未着手 | - | - |
-| 1. デプロイ準備 | 未着手 | operations/deployment_checklist.md | - |
-| 2. CI/CD構築 | 未着手 | operations/cicd_setup.md | - |
-| 3. 監視・ロギング戦略 | 未着手 | operations/monitoring_strategy.md | - |
-| 4. 配布 | 未着手 | operations/distribution_plan.md | - |
-| 5. バックログ整理と運用計画 | 未着手 | operations/post_release_operations.md | - |
-| 6. リリース準備 | 未着手 | README.md, history.md, PR | - |
+| 1. 変更確認 | 未着手 | - | - |
+| 2. デプロイ準備 | 未着手 | operations/deployment_checklist.md | - |
+| 3. CI/CD構築 | 未着手 | operations/cicd_setup.md | - |
+| 4. 監視・ロギング戦略 | 未着手 | operations/monitoring_strategy.md | - |
+| 5. 配布 | 未着手 | operations/distribution_plan.md | - |
+| 6. バックログ整理と運用計画 | 未着手 | operations/post_release_operations.md | - |
+| 7. リリース準備 | 未着手 | README.md, history.md, PR | - |
 
 ## 現在のステップ
 
-次回: 0. 変更確認
+次回: 1. 変更確認
 
 ## 完了済みステップ
 
@@ -22,13 +22,13 @@
 
 ## 次回実行時の指示
 
-変更確認（ステップ0）から開始してください。
+変更確認（ステップ1）から開始してください。
 
 ## プロジェクト種別による差異
 
 - モバイルアプリ（ios/android）: 全ステップ実施
 - デスクトップ/CLI（desktop/cli）: 全ステップ実施
-- Web/バックエンド（web/backend/general）: ステップ4（配布）をスキップ
+- Web/バックエンド（web/backend/general）: ステップ5（配布）をスキップ
 
 ## 再開時に読み込むファイル
 
