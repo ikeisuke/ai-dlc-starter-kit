@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.23.1] - 2026-03-18
+
+### Fixed
+
+- aidlc-setup.sh: cleanup関数がファイル不在時にエラーを返す問題を修正（`\rm -f` + `2>/dev/null || true` で堅牢化）（#351）
+
+### Changed
+
+- commit-flow.md: squashメッセージ用テンポラリファイルパスの表記を `<mktemp生成パス>` に改善（#356）
+- inception.md: セッション状態復元ステップ（旧Step 18）を削除し、後続ステップを繰り上げ。progress.mdベースの復元に簡素化
+
+### Added
+
+- README.md: サイクル識別子（バージョン番号/名前付きサイクル）の説明セクションを追加（#355）
+- セットアップ処理の責務分類・移管計画文書（setup-classification.md, setup-migration-plan.md）
+
+---
+
 ## [1.23.0] - 2026-03-18
 
 ### Changed
