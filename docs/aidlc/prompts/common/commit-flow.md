@@ -307,7 +307,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
-     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.XXXXXX
+     --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
    **Inception Phase完了squashのメッセージテンプレートとコマンド**:
@@ -318,7 +318,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 
    ```bash
    docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
-     --vcs git --base '<起点コミット>' --message-file /tmp/aidlc-squash-msg.XXXXXX
+     --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
    実行後、一時ファイルを削除。結果に応じた処理:

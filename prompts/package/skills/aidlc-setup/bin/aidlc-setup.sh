@@ -97,7 +97,7 @@ _sanitize() {
 _cleanup_files=()
 _cleanup() {
     for f in "${_cleanup_files[@]}"; do
-        [[ -f "$f" ]] && \rm -f "$f"
+        \rm -f "$f" 2>/dev/null || true
     done
 }
 trap _cleanup EXIT
