@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.24.2] - 2026-03-20
+
+### Changed
+
+- ai-agent-allowlist.md: rsync個別許可ルール3行をallow配列から削除し、スクリプト経由実行で代替される旨に説明を更新（#367）
+- rules.md: aidlc-setup失敗時フォールバックのrsync直接実行指示をsync-package.sh経由に変更（#367）
+
+### Added
+
+- rules.md: ローカルレビュー必須ルールを追加（外部レビューツール呼び出し前にgit diffで差分確認を義務化）
+
+---
+
 ## [1.24.1] - 2026-03-19
 
 ### Fixed
