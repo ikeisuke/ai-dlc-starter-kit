@@ -1109,6 +1109,46 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 
 **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
+### ステップ4b: エクスプレスモード判定
+
+**スキップ条件**: `depth_level` が `minimal` でない場合、このステップをスキップする。
+
+`depth_level=minimal` の場合、`common/rules.md` の「エクスプレスモード仕様」セクションに従い判定を実施する。
+
+**判定手順**:
+
+1. Unit定義ファイルの数をカウントする:
+
+```bash
+ls docs/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | wc -l
+```
+
+2. カウント結果に応じた分岐:
+
+- **ちょうど1**: エクスプレスモード有効。以下のメッセージを表示:
+
+  ```text
+  【エクスプレスモード有効】Unit数が1のため、Inception→Construction統合フローを適用します。
+  ```
+
+  → ステップ5（PRFAQ）をスキップし、「エクスプレスモード完了処理」セクションへ進む
+
+- **0**: フォールバック。`common/rules.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（Unit数0用）を表示し、通常の minimal フローを継続（ステップ5へ進む）
+
+- **2以上**: フォールバック。`common/rules.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（Unit数2以上用）を表示し、通常の minimal フローを継続（ステップ5へ進む）
+
+**フォールバック時の履歴記録**:
+
+フォールバック発生時、以下を履歴に記録する:
+
+```bash
+docs/aidlc/bin/write-history.sh \
+    --cycle {{CYCLE}} \
+    --phase inception \
+    --step "エクスプレスモード判定" \
+    --content "エクスプレスモードフォールバック: Unit数が条件を満たさないため通常フローを継続"
+```
+
 ### ステップ5: PRFAQ作成
 
 **タスク管理機能を活用してください。**
@@ -1135,6 +1175,65 @@ ls docs/cycles/{{CYCLE}}/requirements/ docs/cycles/{{CYCLE}}/story-artifacts/ do
 - すべての成果物作成（Intent、ユーザーストーリー、Unit定義）
 - 技術スタック決定（greenfieldの場合）
 - **コンテキストリセットの提示完了**（ユーザーが連続実行を明示指示した場合はスキップ可）
+
+---
+
+## エクスプレスモード完了処理【ステップ4bでエクスプレスモード有効時のみ】
+
+ステップ4b でエクスプレスモードが有効と判定された場合、以下の簡略完了処理を実行してから Construction Phase に自動遷移する。エクスプレスモードが無効の場合はこのセクションをスキップし、「完了時の必須作業」セクションへ進む。
+
+### 1. progress.md 更新
+
+ステップ5（PRFAQ）を「スキップ」に更新する（エクスプレスモードのため自動スキップ）。
+
+### 2. サイクルラベル作成・Issue紐付け
+
+「完了時の必須作業」のステップ1と同じ手順を実行する。
+
+### 3. 履歴記録
+
+```bash
+docs/aidlc/bin/write-history.sh \
+    --cycle {{CYCLE}} \
+    --phase inception \
+    --step "Inception Phase完了（エクスプレスモード）" \
+    --content "エクスプレスモードによるInception Phase完了。Construction Phaseに自動遷移。"
+```
+
+### 4. Squash（コミット統合）【オプション】
+
+「完了時の必須作業」のステップ5と同じ手順を実行する。
+
+- `squash:success` の場合: ステップ5をスキップ
+- `squash:skipped` の場合: ステップ5に進む
+- `squash:error` の場合: commit-flow.md のエラーリカバリ手順に従い、ステップ5に進む
+
+### 5. Gitコミット
+
+ステップ4で squash を実行した場合（`squash:success`）、コミットは既に完了しています。`git status` で確認のみ行ってください。
+
+squash を実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
+
+**コミット失敗時のエラーハンドリング**:
+
+コミットが失敗した場合、以下のメッセージを表示し、`commit-flow.md` の手順に沿った手動コミットを案内する。
+
+```text
+【エラー】コミットの作成に失敗しました。
+commit-flow.md の「Inception Phase完了コミット」手順に従い、手動でコミットを作成してください。
+```
+
+### 6. Construction Phase への自動遷移
+
+コンテキストリセット提示を**スキップ**し、Construction Phase に自動遷移する。
+
+```text
+【エクスプレスモード】Inception Phase 完了。Construction Phase に自動遷移します。
+```
+
+`docs/aidlc/prompts/construction.md` のフローに従い、対象Unit（唯一のUnit）の Construction Phase を開始する。`automation_mode` の設定はそのまま引き継がれる。
+
+**注意**: エクスプレスモードでの Construction Phase 遷移時、construction.md の「最初に必ず実行すること」は通常通り実行する（サイクル存在確認、進捗状況確認等）。ただし、`depth_level=minimal` のため Phase 1（設計）はスキップ可能（construction.md の既存仕様に従う）。
 
 ---
 
