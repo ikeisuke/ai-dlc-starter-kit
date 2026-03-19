@@ -379,10 +379,10 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 - **禁止**: `git commit -m "$(cat <<'EOF'...)"`, `SQUASH_MESSAGE="$(cat <<'EOF'...)"`, `--content "$(cat <<'CONTENT_EOF'...)"`, `` VAR=`command` `` 等
 - **代替方式**:
-  - コミット: `mktemp` でパス生成 → Writeツールで書き込み → `git commit -F <パス>` → 削除
-  - write-history.sh: `mktemp` でパス生成 → Writeツールで書き込み → `--content-file <パス>` → 削除
-  - squash-unit.sh: `mktemp` でパス生成 → Writeツールで書き込み → `--message-file <パス>` → 削除
-  - gh pr create/edit: `mktemp` でパス生成 → Writeツールで書き込み → `--body-file <パス>` → 削除
+  - コミット: `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み → `git commit -F <パス>` → 削除
+  - write-history.sh: `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み → `--content-file <パス>` → 削除
+  - squash-unit.sh: `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み → `--message-file <パス>` → 削除
+  - gh pr create/edit: `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み → `--body-file <パス>` → 削除
   - 変数取得: 事前にBashでコマンド実行し結果を変数に格納
 - **例外**: `.sh`スクリプト内部の`$()`は対象外（Claude Codeの許可対象外）
 - **例外**: 説明文中のインラインコード・リテラルテキスト内の`$()`およびバッククォートによるコマンド置換表記は対象外
@@ -391,7 +391,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 `write-history.sh`の`--content-file`方式を推奨。`--content`直接指定も後方互換として動作する。
 
-- **推奨**: `mktemp` でパス生成 → Writeツールで書き込み → `--content-file <パス>` → 削除
+- **推奨**: `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み → `--content-file <パス>` → 削除
 - **許可（後方互換）**: `--content "直接文字列"`（`$()`を含まないリテラル文字列のみ）
 - **禁止**: `--content "$(cmd)"`、`--content "$VAR"` 等のコマンド置換・変数展開を含む文字列
 
@@ -419,9 +419,10 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 #### 使用手順
 
 1. **パス生成**: Bashツールで上記 `mktemp` コマンドを実行し、出力されたパスを取得する
-2. **書き込み**: Writeツールで取得したパスにコンテンツを書き込む
-3. **使用**: 取得したパスをコマンド引数として使用する
-4. **削除**: コマンド実行直後に一時ファイルを削除する
+2. **読み取り**: 生成されたファイルをReadツールで読み取る（※ Writeツールは既存ファイルの事前読み取りを要求するため）
+3. **書き込み**: Writeツールで取得したパスにコンテンツを書き込む
+4. **使用**: 取得したパスをコマンド引数として使用する
+5. **削除**: コマンド実行直後に一時ファイルを削除する
 
 **コードブロック内のパス表記**: 本ドキュメント群のコードブロックに記載される `/tmp/aidlc-*` で始まるパスはパターン例示である。実行時は上記手順で `mktemp` により生成された実際のパスを使用すること。
 
@@ -443,7 +444,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
 
 ### 自動承認時の履歴記録フォーマット
 
-1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+1. `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み（内容: 履歴コンテンツ）:
 
 ```text
 【セミオート自動承認】
@@ -471,7 +472,7 @@ docs/aidlc/bin/write-history.sh \
 
 ### フォールバック時の履歴記録フォーマット
 
-1. Writeツールで一時ファイルを作成（内容: 履歴コンテンツ）:
+1. `mktemp` でパス生成 → Readツールで読み取り → Writeツールで書き込み（内容: 履歴コンテンツ）:
 
 ```text
 【セミオートフォールバック】
