@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.24.1] - 2026-03-19
+
+### Fixed
+
+- aidlc-setup.sh: バージョン一致時にファイル差分を無視して同期スキップするバグを修正（#362）
+
+### Changed
+
+- operations-release.md: PRマージ前レビュー（7.13）から具体的ツール指定を除去し汎用化（#361）
+- operations.md: リリース準備サブステップをoperations-release.mdに外部化しスリム化（#365）
+- rules.md: ブランチ切り替え後のrules.md再読み込み手順を追加（#363）
+- rules.md: テンポラリファイル規約にmktemp後のRead必須ステップを追加（#341）
+
+---
+
 ## [1.24.0] - 2026-03-19
 
 ### Added
