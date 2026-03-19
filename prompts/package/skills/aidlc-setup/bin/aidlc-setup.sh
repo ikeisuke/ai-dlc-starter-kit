@@ -32,6 +32,17 @@ NO_SYNC=false
 NO_MIGRATE=false
 FORCE=false
 
+# === 同期対象ディレクトリ（差分チェックと同期ループで共有） ===
+declare -a SYNC_DIRS=(
+    "prompts"
+    "templates"
+    "guides"
+    "bin"
+    "skills"
+    "kiro"
+    "lib"
+)
+
 # === ヘルプ ===
 show_help() {
     cat <<'HELP'
@@ -101,6 +112,43 @@ _cleanup() {
     done
 }
 trap _cleanup EXIT
+
+# === rsync dry-runによるファイル差分チェック ===
+# STARTER_KIT_ROOT が設定済みの前提で呼び出すこと
+# 出力: has_diff=差分あり, no_diff=差分なし, has_error=エラー（常にexit 0）
+_has_file_diff() {
+    local starter_root="$1"
+    local subdir source_dir dest_dir diff_output rsync_exit
+    for subdir in "${SYNC_DIRS[@]}"; do
+        source_dir="${starter_root}/prompts/package/${subdir}/"
+        dest_dir="docs/aidlc/${subdir}/"
+
+        # ソースが存在しない場合はスキップ
+        [[ ! -d "$source_dir" ]] && continue
+
+        # デストが存在しない場合は差分あり
+        if [[ ! -d "$dest_dir" ]]; then
+            echo "has_diff" && return 0
+        fi
+
+        # rsync dry-run + itemize-changesで差分を検出
+        diff_output=$(rsync -ani --delete "$source_dir" "$dest_dir" 2>/dev/null) && rsync_exit=0 || rsync_exit=$?
+        # ディレクトリのみの変更（.d で始まる行）を除外して実質的な差分を判定
+        diff_output=$(echo "$diff_output" | grep -v '^\.d' || true)
+
+        if [[ "$rsync_exit" -ne 0 ]]; then
+            echo "error:rsync-dry-run-failed:${subdir}" >&2
+            echo "detail:rsync-exit-code:${rsync_exit}" >&2
+            echo "has_error" && return 0
+        fi
+
+        # rsync dry-run出力が非空なら差分あり
+        if [[ -n "$diff_output" ]]; then
+            echo "has_diff" && return 0
+        fi
+    done
+    echo "no_diff" && return 0
+}
 
 # === mode出力 ===
 if [[ "$DRY_RUN" == "true" ]]; then
@@ -253,10 +301,25 @@ case "$SETUP_TYPE" in
         ;;
     cycle_start)
         if [[ "$FORCE" != "true" ]]; then
-            # バージョン同じ、強制なし → スキップ
-            _current_ver=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
-            echo "skip:already-current:${_current_ver}"
-            exit 0
+            # バージョン同じ、強制なし → ファイル差分をチェック
+            _diff_result=$(_has_file_diff "$STARTER_KIT_ROOT")
+
+            case "$_diff_result" in
+                has_diff)
+                    # 差分あり → 同期を続行
+                    echo "diff:detected"
+                    ;;
+                no_diff)
+                    # 差分なし → スキップ
+                    _current_ver=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
+                    echo "skip:already-current:${_current_ver}"
+                    exit 0
+                    ;;
+                has_error)
+                    # rsync dry-runエラー → 終了
+                    exit 1
+                    ;;
+            esac
         fi
         # --force: 強制実行
         ;;
@@ -344,17 +407,6 @@ else
         echo "detail:action:verify STARTER_KIT_ROOT is correct ($(_sanitize "${STARTER_KIT_ROOT}"))" >&2
         exit 1
     fi
-
-    # 7ディレクトリの同期
-    declare -a SYNC_DIRS=(
-        "prompts"
-        "templates"
-        "guides"
-        "bin"
-        "skills"
-        "kiro"
-        "lib"
-    )
 
     for subdir in "${SYNC_DIRS[@]}"; do
         local_source="${STARTER_KIT_ROOT}/prompts/package/${subdir}/"
