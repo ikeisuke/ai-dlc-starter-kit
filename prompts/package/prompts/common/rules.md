@@ -180,9 +180,11 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 
 | レベル | 用途 | 説明 |
 |--------|------|------|
-| `minimal` | シンプルなバグ修正・小規模変更 | 設計省略可、受け入れ基準簡略化 |
+| `minimal` | シンプルなバグ修正・小規模変更 | 設計省略可、受け入れ基準簡略化 ※1 |
 | `standard` | 通常の機能開発（デフォルト） | 現行の動作と同等 |
 | `comprehensive` | 複雑な機能開発・アーキテクチャ変更 | リスク分析・代替案検討等を追加 |
+
+※1: Unit数がちょうど1の場合、エクスプレスモード（後述「エクスプレスモード仕様」セクション参照）を適用可能
 
 ### レベル別成果物要件一覧
 
@@ -198,6 +200,8 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 | Construction | 論理設計 | スキップ可能（設計省略を明記） |
 | Construction | コード・テスト | 通常通り |
 | Operations | リリース準備 | 通常通り |
+
+**フロー制御（minimalのみ）**: エクスプレスモード適用時は Inception 完了後のコンテキストリセットをスキップし、Construction Phase に連続遷移する（詳細は「エクスプレスモード仕様」セクション参照）。
 
 #### standard（標準モード）
 
@@ -250,6 +254,67 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 3. 本セクションの「レベル別成果物要件一覧」を参照し、該当フェーズの要件を適用
 
 **仕様の参照ルール**: 判定ロジックの仕様（有効値、警告文言、フォールバック動作、成果物要件）は本セクション（`rules.md`）を唯一の定義源（Single Source of Truth）とする。各フェーズプロンプトに仕様を重複記述してはならない。
+
+### エクスプレスモード仕様【重要】
+
+`depth_level=minimal` 時に適用条件を満たす場合、Inception Phase と Construction Phase を1つの連続フローで実行する高速パス。
+
+#### 適用条件
+
+エクスプレスモードは以下の**すべて**を満たす場合に有効化される:
+
+1. `depth_level=minimal` であること
+2. Inception Phase で定義された Unit 数が **ちょうど1** であること
+
+**注意**: Unit 数が0の場合はエクスプレスモードの対象外（Construction Phase に遷移する前提が成立しないため）。
+
+#### 判定タイミング
+
+- Inception Phase の Unit 定義完了後に判定を実施する
+- `depth_level` が `standard` または `comprehensive` の場合、**判定自体をスキップ**する（既存フローに影響なし）
+
+#### エクスプレスモード有効時の動作
+
+- Inception Phase 完了後のコンテキストリセット提示を**スキップ**する
+- Construction Phase の実装ステップに**自動遷移**する
+- minimal の既存成果物要件（設計省略可、受け入れ基準簡略化等）はそのまま適用される
+- `automation_mode` の設定に従う（`semi_auto` / `manual` どちらでも動作する）
+
+#### フォールバック条件
+
+適用条件を満たさない場合、通常の minimal フローにフォールバックする。以下のフォールバック通知は `depth_level=minimal` の場合のみ表示される（`standard` / `comprehensive` では判定自体がスキップされるため表示されない）。
+
+**フォールバック通知メッセージ**（正本）:
+
+Unit 数が2以上の場合:
+
+```text
+エクスプレスモード適用不可: Unit数が2以上のため通常のminimalフローに切り替えます
+```
+
+Unit 数が0の場合:
+
+```text
+エクスプレスモード適用不可: Unit定義がないため通常のminimalフローに切り替えます
+```
+
+- フォールバック時は通常の minimal フローが適用される（Inception 完了→コンテキストリセット→Construction 開始）
+- フォールバックの理由は履歴に記録する
+
+#### 既存モードへの非影響保証
+
+- `standard` / `comprehensive` ではエクスプレスモード判定が実行されないため、既存の動作は一切変更されない
+- `minimal` でも Unit 数が2以上または0の場合は通常の minimal フローが維持される
+- エクスプレスモードは minimal の**拡張**であり、minimal の成果物要件を変更しない
+
+#### フェーズプロンプト実装手順
+
+各フェーズプロンプト（inception.md / construction.md）でのエクスプレスモード実装は、以下の手順に従う:
+
+1. Depth Level の取得・バリデーション（既存の「Unit 003向け契約仕様」に従う）
+2. `depth_level=minimal` の場合のみ、Unit 定義完了後にエクスプレスモード判定を実施
+3. 本セクションの適用条件・フォールバック条件を参照し、フロー分岐を実装
+4. フォールバック通知メッセージは本セクションの正本をそのまま使用する（各フェーズプロンプトに文言を重複記述しない）
 
 ## セミオートゲート仕様【重要】
 
