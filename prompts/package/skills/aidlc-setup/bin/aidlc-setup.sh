@@ -301,6 +301,12 @@ case "$SETUP_TYPE" in
         ;;
     cycle_start)
         if [[ "$FORCE" != "true" ]]; then
+            # --no-sync指定時はファイル差分チェックをスキップ
+            if [[ "$NO_SYNC" == "true" ]]; then
+                _current_ver=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
+                echo "skip:already-current:${_current_ver}"
+                exit 0
+            fi
             # バージョン同じ、強制なし → ファイル差分をチェック
             _diff_result=$(_has_file_diff "$STARTER_KIT_ROOT")
 
