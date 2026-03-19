@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.24.0] - 2026-03-19
+
+### Added
+
+- エクスプレスモード: 小規模変更向けの高速パス（Inception+Construction統合フロー）を追加（#359）
+  - rules.mdにエクスプレスモード仕様（適用条件、成果物要件、フォールバック条件）を定義
+  - inception.mdにエクスプレスモード判定分岐と簡略フローを実装
+  - construction.mdにエクスプレスモード用簡略フロー（設計省略→直接実装）を追加
+
+### Changed
+
+- inception.md: rules.md確認タイミングをPart 1に前倒し、Part 2の「追加ルール確認」ステップを統合（#357）
+- rules.md: アップグレードチェック（`rules.upgrade_check.enabled`）のデフォルト値を`true`から`false`に変更（#354）
+- docs/cycles/rules.md: aidlc-setup同期タイミングをCHANGELOG・バージョン更新完了後、PR Ready化直前に移動（#352）
+
+---
+
 ## [1.23.1] - 2026-03-18
 
 ### Fixed

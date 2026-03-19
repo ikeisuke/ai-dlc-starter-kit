@@ -30,19 +30,9 @@
 
 ## カスタムワークフロー
 
-### Operations Phase 完了時の必須作業【重要】
-
-このプロジェクトはメタ開発のため、Operations Phase のステップ6（リリース準備）の前に以下を実行すること：
-
-```
-/aidlc-setup
-```
-
-**理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映するため。
-
 ### バージョンファイル更新【重要】
 
-`/aidlc-setup` 実行後、CHANGELOG更新の前にリポジトリルートで以下を実行すること：
+Operations Phase ステップ7（リリース準備）の 7.1（バージョン確認）完了後、7.2（CHANGELOG更新）の前にリポジトリルートで以下を実行すること：
 
 ```bash
 bin/update-version.sh --version {{CYCLE}}
@@ -55,6 +45,31 @@ bin/update-version.sh --version {{CYCLE}} --dry-run
 ```
 
 **理由**: AI-DLCスターターキット自体のリリース時にバージョン番号を更新するため。
+
+### aidlc-setup同期【重要】
+
+Operations Phase ステップ7（リリース準備）の 7.8（Gitコミット）完了後、7.9（ドラフトPR Ready化）の前に以下を実行すること：
+
+```
+/aidlc-setup
+```
+
+**理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映するため。CHANGELOG・バージョン更新等の内容変更がすべて確定した後に同期することで、同期漏れを防止する。
+
+**実行手順**:
+
+1. `/aidlc-setup` を実行
+2. 同期結果をコミット
+3. 7.9（ドラフトPR Ready化）に進む
+
+**失敗時のエラーハンドリング**:
+
+```text
+【エラー】aidlc-setupの実行に失敗しました。
+手動で同期を実行してください:
+  rsync -av --delete prompts/package/ docs/aidlc/
+同期完了後、コミットしてから7.9に進んでください。
+```
 
 ---
 
