@@ -58,34 +58,7 @@ ls docs/aidlc.toml 2>/dev/null
   - 取得成功: 情報保持
   - 取得失敗（warn）: 「`[project].name` が未設定です。一部機能が制限される場合があります。」と警告表示して続行
 
-### 4. レビューツール確認（条件付き）
-
-**前提**: 手順5で `review_mode` を取得した後に実行する。ただし、チェック実行タイミングは手順5の後とする。
-
-以下の**両方**を満たす場合のみ実行:
-- `review_mode` が `disabled` でない
-- `review_tools` が空配列 `[]` でない
-
-**条件を満たさない場合**:
-- `review_mode == disabled`: スキップ（情報表示なし）
-- `review_tools == []`: 「外部CLIを使用しない設定です（tools = []）」と情報表示し、スキップ
-
-**条件を満たす場合**:
-
-`review_tools` リストの先頭ツールの存在を `which {先頭ツール名}` で確認:
-
-```bash
-which {先頭ツール名} >/dev/null 2>&1
-```
-
-（例: `review_tools = ["codex"]` なら `which codex`、`["claude"]` なら `which claude`）
-
-- 存在する場合: `ℹ レビューツール ({先頭ツール名}): available`
-- 存在しない場合: `ℹ レビューツール ({先頭ツール名}): not found（レビュー実行時にフォールバックします）`
-
-**severity**: info（フェーズ続行に影響しない）
-
-### 5. 設定値取得
+### 4. 設定値取得
 
 各設定キーを `read-config.sh` の単一キーモード + `--default` で個別に取得する。`--default` によりキー不在時もデフォルト値が確実に返される。
 
@@ -119,7 +92,30 @@ docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
 【警告】{設定キー} の読み取りに失敗しました。デフォルト値 "{デフォルト値}" を使用します。
 ```
 
-**注記**: 手順5完了後に手順4（レビューツール確認）を実行する（`review_mode` と `review_tools` が必要なため）。
+### 5. レビューツール確認（条件付き）
+
+以下の**両方**を満たす場合のみ実行:
+- `review_mode` が `disabled` でない
+- `review_tools` が空配列 `[]` でない
+
+**条件を満たさない場合**:
+- `review_mode == disabled`: スキップ（情報表示なし）
+- `review_tools == []`: 「外部CLIを使用しない設定です（tools = []）」と情報表示し、スキップ
+
+**条件を満たす場合**:
+
+`review_tools` リストの先頭ツールの存在を `which {先頭ツール名}` で確認:
+
+```bash
+which {先頭ツール名} >/dev/null 2>&1
+```
+
+（例: `review_tools = ["codex"]` なら `which codex`、`["claude"]` なら `which claude`）
+
+- 存在する場合: `ℹ レビューツール ({先頭ツール名}): available`
+- 存在しない場合: `ℹ レビューツール ({先頭ツール名}): not found（レビュー実行時にフォールバックします）`
+
+**severity**: info（フェーズ続行に影響しない）
 
 ### 6. 結果提示
 
