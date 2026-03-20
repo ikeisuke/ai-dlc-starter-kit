@@ -33,7 +33,8 @@ docs/aidlc/bin/check-backlog-mode.sh
 | チェック対象 | severity | 判定条件 | 失敗時の挙動 |
 |-------------|----------|---------|-------------|
 | git | blocker | `git:available` でない場合 | フェーズ中断 |
-| gh | warn | `gh:available` でない場合 | 警告表示、gh依存機能を無効化して続行 |
+
+**注**: `gh_status` は手順1で常時取得されコンテキスト変数に保持されるが、`gh` の warn 判定と結果表示は手順5のオプションチェック（`preflight_checks` に `gh` が含まれる場合）で行う。`preflight_checks` から `gh` が除外されている場合、`gh_status` は内部的に保持されるが結果表示には含めない。
 
 ### 3. aidlc.toml確認
 
@@ -71,6 +72,8 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 docs/aidlc/bin/read-config.sh rules.linting.markdown_lint --default "false"
 docs/aidlc/bin/read-config.sh rules.unit_branch.enabled --default "false"
 docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
+docs/aidlc/bin/read-config.sh rules.preflight.enabled --default "true"
+docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-tools', 'config-validation']"
 ```
 
 **コンテキスト変数への格納**:
@@ -85,6 +88,8 @@ docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
 | rules.linting.markdown_lint | `markdown_lint` | false |
 | rules.unit_branch.enabled | `unit_branch_enabled` | false |
 | rules.history.level | `history_level` | standard |
+| rules.preflight.enabled | `preflight_enabled` | true |
+| rules.preflight.checks | `preflight_checks` | ['gh', 'review-tools', 'config-validation'] |
 
 **エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
 
@@ -92,7 +97,37 @@ docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
 【警告】{設定キー} の読み取りに失敗しました。デフォルト値 "{デフォルト値}" を使用します。
 ```
 
-### 5. レビューツール確認（条件付き）
+### 5. オプションチェック実行（設定駆動）
+
+**前提判定**: `preflight_enabled` の値を確認する。
+
+- **`preflight_enabled` が `false` の場合**: 以下の警告を表示し、オプションチェック（手順5全体）をスキップする。blockerチェック（手順1-3）は既に実行済み。
+  ```text
+  ⚠ プリフライトチェック: enabled=false のため、オプションチェックをスキップします（blockerチェックは実行済み）
+  ```
+
+- **`preflight_enabled` が `true` の場合**: `preflight_checks` リストに基づいてオプションチェックを実行する。
+
+**チェック項目の実行**:
+
+`preflight_checks` リストを参照し、含まれる項目のみを実行する。
+
+| チェック項目 | 実行内容 |
+|-------------|---------|
+| `gh` | 手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn） |
+| `review-tools` | レビューツール確認（後述） |
+| `config-validation` | 設定値取得（手順4）の結果を結果提示に含める（追加実行なし） |
+
+**未知のチェック項目**: `preflight_checks` に上記有効値以外の項目が含まれる場合、以下の警告を表示してその項目を無視する:
+```text
+⚠ 未知のプリフライトチェック項目: "{項目名}" （無視します）
+```
+
+**空配列**: `preflight_checks` が空配列 `[]` の場合、全オプションチェックをスキップする（blockerチェックのみ実行される）。
+
+#### レビューツール確認（`review-tools` チェック項目）
+
+`preflight_checks` に `review-tools` が含まれる場合のみ実行する。
 
 以下の**両方**を満たす場合のみ実行:
 - `review_mode` が `disabled` でない
@@ -124,11 +159,17 @@ which {先頭ツール名} >/dev/null 2>&1
 ```text
 【プリフライトチェック結果】
 
-■ 環境チェック
+■ 環境チェック（blocker - 常時実行）
   ✓ git: available
   ✓ aidlc.toml: 存在
-  {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
-  ℹ レビューツール ({tool名}): {available | not found}
+
+■ オプションチェック（preflight_checks に基づく）
+  {preflight_enabled=false の場合: ⚠ enabled=false のためスキップ}
+  {checks に "gh" 含む場合: {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）}
+  {checks に "gh" 含まない場合: - gh: skipped}
+  {checks に "review-tools" 含む場合: ℹ レビューツール ({tool名}): {available | not found}}
+  {checks に "review-tools" 含まない場合: - レビューツール: skipped}
+  {checks に "config-validation" 含まない場合: - config-validation: skipped}
 
 ■ 主要設定値
   depth_level: {value}
@@ -140,6 +181,8 @@ which {先頭ツール名} >/dev/null 2>&1
   unit_branch_enabled: {value}
   history_level: {value}
   backlog_mode: {value}
+  preflight_enabled: {value}
+  preflight_checks: {value}
 
 ■ 判定: {続行可能 | 続行可能（警告N件）}
 ```
@@ -169,9 +212,9 @@ blocker項目が失敗した場合、ユーザーに対処を依頼する:
 
 ## 実行順序まとめ
 
-1. 環境チェック（手順1-2）
-2. aidlc.toml確認（手順3）
-3. 設定値取得（手順5）
-4. レビューツール確認（手順4 - `review_mode` と `review_tools` に依存するため手順5の後に実行）
+1. 環境チェック（手順1-2）— blockerチェック含む、常時実行
+2. aidlc.toml確認（手順3）— blockerチェック、常時実行
+3. 設定値取得（手順4）— `preflight_enabled` と `preflight_checks` を含む
+4. オプションチェック実行（手順5）— `preflight_enabled` と `preflight_checks` に基づく設定駆動
 5. 結果提示（手順6）
 6. 必要に応じて再チェック（手順7）

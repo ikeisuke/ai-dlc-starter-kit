@@ -165,6 +165,18 @@ enabled = true
 # - false: バージョン確認をスキップ（オフライン環境やCI利用時に有用）
 enabled = true
 
+[rules.preflight]
+# プリフライトチェック設定（v1.26.0で追加）
+# enabled: true | false - プリフライトチェックのオプション項目を実行するか（デフォルト: true）
+# - true: checks リストに基づいてオプションチェックを実行（デフォルト）
+# - false: オプションチェックをスキップ（blockerチェックは常時実行）
+enabled = true
+# checks: 実行するオプションチェック項目のリスト
+# - 有効値: "gh", "review-tools", "config-validation"
+# - 未設定時: 全項目チェック（後方互換性）
+# - 空配列: blockerチェックのみ実行
+checks = ["gh", "review-tools", "config-validation"]
+
 [rules.backlog]
 # バックログ管理モード設定（v1.7.0で追加、v1.16.2で[backlog]から移動）
 # mode: "git" | "issue" | "git-only" | "issue-only"
