@@ -118,7 +118,7 @@ docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-t
 |-------------|---------|
 | `gh` | 手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn） |
 | `review-tools` | レビューツール確認（後述） |
-| `config-validation` | 設定値のバリデーション結果（警告・フォールバック）を結果提示に含める。**注**: 「主要設定値」セクションは `config-validation` の有無に関わらず常時表示される（設定値の取得自体は手順4で常時実行されるため）。`config-validation` が制御するのはバリデーション警告の表示のみ |
+| `config-validation` | 設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。**注**: 「主要設定値」セクションおよび手順4の設定読み取りエラー警告は `config-validation` の有無に関わらず常時表示される（設定値の取得・エラーハンドリングは手順4で常時実行されるため）。`config-validation` が制御するのは結果提示内のバリデーション行のみ |
 
 **未知のチェック項目**: `preflight_checks` に上記有効値以外の項目が含まれる場合、以下の警告を表示してその項目を無視する:
 ```text

@@ -376,7 +376,7 @@ docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-t
 
 **有効値**: `gh`, `review-tools`, `config-validation` の任意の組み合わせ。未知の項目は警告を表示して無視する。空配列の場合は全オプションチェックをスキップする。
 
-**`config-validation` の責務**: バリデーション警告の表示を制御する。「主要設定値」セクションの表示自体は `config-validation` の有無に関わらず常時行われる（設定値の取得は手順4で常時実行されるため）。
+**`config-validation` の責務**: 結果提示内のバリデーション行の表示を制御する。「主要設定値」セクションおよび手順4の設定読み取りエラー警告は `config-validation` の有無に関わらず常時表示される（設定値の取得・エラーハンドリングは手順4で常時実行されるため）。
 
 **参照ルール**: 判定ロジックの仕様は本セクション（`rules.md`）を唯一の定義源とする。`preflight.md` には仕様を重複記述せず、本セクションへの参照のみ記載する。
 
