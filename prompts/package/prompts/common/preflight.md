@@ -118,7 +118,7 @@ docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-t
 |-------------|---------|
 | `gh` | 手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn） |
 | `review-tools` | レビューツール確認（後述） |
-| `config-validation` | 設定値取得（手順4）の結果を結果提示に含める（追加実行なし） |
+| `config-validation` | 設定値のバリデーション結果（警告・フォールバック）を結果提示に含める。**注**: 「主要設定値」セクションは `config-validation` の有無に関わらず常時表示される（設定値の取得自体は手順4で常時実行されるため）。`config-validation` が制御するのはバリデーション警告の表示のみ |
 
 **未知のチェック項目**: `preflight_checks` に上記有効値以外の項目が含まれる場合、以下の警告を表示してその項目を無視する:
 ```text
@@ -171,9 +171,9 @@ which {先頭ツール名} >/dev/null 2>&1
   {checks に "gh" 含まない場合: - gh: skipped}
   {checks に "review-tools" 含む場合: ℹ レビューツール ({tool名}): {available | not found}}
   {checks に "review-tools" 含まない場合: - レビューツール: skipped}
-  {checks に "config-validation" 含まない場合: - config-validation: skipped}
+  {checks に "config-validation" 含まない場合: - config-validation: skipped（バリデーション警告は非表示）}
 
-■ 主要設定値
+■ 主要設定値（常時表示）
   depth_level: {value}
   automation_mode: {value}
   review_mode: {value}

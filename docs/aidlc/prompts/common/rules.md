@@ -332,6 +332,54 @@ Unit 数が0の場合:
 3. 本セクションの適用条件・フォールバック条件を参照し、フロー分岐を実装
 4. フォールバック通知メッセージは本セクションの正本をそのまま使用する（各フェーズプロンプトに文言を重複記述しない）
 
+## Construction Phase設定仕様
+
+### Self-Healingリトライ回数（`rules.construction.max_retry`）
+
+Self-Healingループの最大リトライ回数を制御する。
+
+**設定読み込み**:
+
+```bash
+docs/aidlc/bin/read-config.sh rules.construction.max_retry --default "3"
+```
+
+**有効値**: 0以上の整数。`0` の場合はSelf-Healingループをスキップする。
+
+**バリデーション仕様**: 負の値または非数値の場合、警告を表示しデフォルト値 `3` を使用する。
+
+**参照ルール**: 判定ロジックの仕様は本セクション（`rules.md`）を唯一の定義源とする。`construction.md` には仕様を重複記述せず、本セクションへの参照のみ記載する。
+
+## プリフライトチェック設定仕様
+
+### プリフライト有効化（`rules.preflight.enabled`）
+
+プリフライトのオプションチェック（gh, review-tools, config-validation）の実行を制御する。blockerチェック（git, aidlc.toml）は常時実行される。
+
+**設定読み込み**:
+
+```bash
+docs/aidlc/bin/read-config.sh rules.preflight.enabled --default "true"
+```
+
+**有効値**: `true` / `false`
+
+### プリフライトチェック項目（`rules.preflight.checks`）
+
+実行するオプションチェック項目のリスト。
+
+**設定読み込み**:
+
+```bash
+docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-tools', 'config-validation']"
+```
+
+**有効値**: `gh`, `review-tools`, `config-validation` の任意の組み合わせ。未知の項目は警告を表示して無視する。空配列の場合は全オプションチェックをスキップする。
+
+**`config-validation` の責務**: バリデーション警告の表示を制御する。「主要設定値」セクションの表示自体は `config-validation` の有無に関わらず常時行われる（設定値の取得は手順4で常時実行されるため）。
+
+**参照ルール**: 判定ロジックの仕様は本セクション（`rules.md`）を唯一の定義源とする。`preflight.md` には仕様を重複記述せず、本セクションへの参照のみ記載する。
+
 ## セミオートゲート仕様【重要】
 
 セミオートモード（`rules.automation.mode = "semi_auto"`）が有効な場合、AIレビュー合格時にユーザー承認を省略して自動遷移する。

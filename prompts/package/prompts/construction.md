@@ -669,7 +669,7 @@ BDD/TDDに従ってテストコードを作成
       ```text
       【Self-Healingフォールバック】{手動修正継続 / バックログ記録 / 中断}
       【エラー種別】{ビルドエラー / テストエラー}
-      【エラー分類】{recoverable / non_recoverable / transient}
+      【エラー分類】{recoverable / non_recoverable / transient / skipped(max_retry=0)}
       【試行回数】{実施したattempt数}/{max_retry}
       【バックログ登録】{登録 / スキップ / なし}
       【バックログモード】{mode / -}
