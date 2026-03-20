@@ -7,6 +7,16 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.26.0] - 2026-03-21
+
+### Added
+
+- バックログモード別フォーマットバリデーション: バックログモード（git, issue, git-only, issue-only）に応じた成果物形式の排他的バリデーションルールを追加し、AIエージェントの誤動作を防止（#315）
+- プリフライトチェック項目の設定化: プリフライトチェックの項目（gh, review-tools等）のon/offを `aidlc.toml` の `[rules.preflight]` セクションで制御可能に（#323）
+- Self-Healingリトライ回数の設定化: Construction PhaseのSelf-Healingループの最大リトライ回数を `aidlc.toml` の `rules.construction.max_retry` で設定可能に（#322）
+
+---
+
 ## [1.25.1] - 2026-03-20
 
 ### Added
