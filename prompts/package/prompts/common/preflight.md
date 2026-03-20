@@ -72,6 +72,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
 docs/aidlc/bin/read-config.sh rules.linting.markdown_lint --default "false"
 docs/aidlc/bin/read-config.sh rules.unit_branch.enabled --default "false"
 docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
+docs/aidlc/bin/read-config.sh rules.construction.max_retry --default "3"
 docs/aidlc/bin/read-config.sh rules.preflight.enabled --default "true"
 docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-tools', 'config-validation']"
 ```
@@ -88,6 +89,7 @@ docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-t
 | rules.linting.markdown_lint | `markdown_lint` | false |
 | rules.unit_branch.enabled | `unit_branch_enabled` | false |
 | rules.history.level | `history_level` | standard |
+| rules.construction.max_retry | `max_retry` | 3 |
 | rules.preflight.enabled | `preflight_enabled` | true |
 | rules.preflight.checks | `preflight_checks` | ['gh', 'review-tools', 'config-validation'] |
 
@@ -181,6 +183,7 @@ which {先頭ツール名} >/dev/null 2>&1
   unit_branch_enabled: {value}
   history_level: {value}
   backlog_mode: {value}
+  max_retry: {value}
   preflight_enabled: {value}
   preflight_checks: {value}
 

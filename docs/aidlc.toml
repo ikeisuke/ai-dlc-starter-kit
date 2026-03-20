@@ -165,6 +165,13 @@ enabled = true
 # - false: バージョン確認をスキップ（オフライン環境やCI利用時に有用）
 enabled = true
 
+[rules.construction]
+# Construction Phase設定（v1.26.0で追加）
+# max_retry: Integer - Self-Healingループの最大リトライ回数（デフォルト: 3）
+# - 0: Self-Healingループをスキップし、即座にユーザー判断フォールバックに遷移
+# - 負の値・非数値: 警告を表示しデフォルト値3にフォールバック
+max_retry = 3
+
 [rules.preflight]
 # プリフライトチェック設定（v1.26.0で追加）
 # enabled: true | false - プリフライトチェックのオプション項目を実行するか（デフォルト: true）
