@@ -1059,7 +1059,7 @@ Claude CodeとKiroCLIの設定ファイルをセットアップします。
 このスクリプトは以下を行います:
 
 1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
-2. **KiroCLI スキル**: `.kiro/skills/` に各スキルへのシンボリックリンクを配置（Kiro標準スキル発見方式）
+2. **Agent スキル**: `.agent/skills/` に各スキルへのシンボリックリンクを配置（マルチエージェント共通スキル）
 3. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
 4. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
 5. **不正リンクの修復**: リンク先が異なるシンボリックリンクを自動修復
@@ -1074,7 +1074,7 @@ Claude CodeとKiroCLIの設定ファイルをセットアップします。
 ├── aidlc-setup/         → symlink → ../../docs/aidlc/skills/aidlc-setup/
 └── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
 
-.kiro/skills/                         ← 実ディレクトリ
+.agent/skills/                        ← 実ディレクトリ
 ├── reviewing-code/          → symlink → ../../docs/aidlc/skills/reviewing-code/
 ├── reviewing-architecture/  → symlink → ../../docs/aidlc/skills/reviewing-architecture/
 ├── reviewing-security/      → symlink → ../../docs/aidlc/skills/reviewing-security/
@@ -1087,7 +1087,7 @@ Claude CodeとKiroCLIの設定ファイルをセットアップします。
 **注意**:
 
 - `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
-- `.kiro/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
+- `.agent/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
 - KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
 - スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
 
@@ -1136,6 +1136,8 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
 # .claude/skills ディレクトリが作成されている場合のみ追加
 [ -d ".claude/skills" ] && git add .claude/
+# .agent/skills ディレクトリが作成されている場合のみ追加
+[ -d ".agent/skills" ] && git add .agent/
 # .kiro/agents/aidlc.json が作成されている場合のみ追加
 [ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
 ```
@@ -1176,7 +1178,7 @@ AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
 - CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
 - .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
-- .kiro/skills/ - KiroCLIスキルディレクトリ（各スキルへのシンボリックリンク）
+- .agent/skills/ - Agentスキルディレクトリ（各スキルへのシンボリックリンク）
 - .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
 
 GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
