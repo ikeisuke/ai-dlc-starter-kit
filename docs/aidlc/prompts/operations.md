@@ -126,22 +126,11 @@ ls -d docs/cycles/{{CYCLE}}/ 2>/dev/null
 ### 2. 追加ルール確認
 `docs/cycles/rules.md` が存在すれば読み込む
 
-### 3. 環境確認
+### 3. プリフライトチェック
 
-GitHub CLIとバックログモードの状態を確認し、以降のステップで参照する：
+**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/preflight.md` を読み込んで、手順に従ってください。
 
-```bash
-docs/aidlc/bin/check-gh-status.sh
-docs/aidlc/bin/check-backlog-mode.sh
-```
-
-**出力例**:
-```text
-gh:available
-backlog_mode:issue-only
-```
-
-**`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
+環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
 ### 4. セッション判別設定【オプション】
 
@@ -155,11 +144,7 @@ backlog_mode:issue-only
 
 `common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
 
-```bash
-docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
-```
-
-取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+プリフライトチェック（ステップ3）で取得済みのコンテキスト変数 `depth_level` を参照する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
 
 ### 6. セッション状態の復元
 
