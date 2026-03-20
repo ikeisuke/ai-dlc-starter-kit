@@ -1,7 +1,7 @@
 #!/bin/bash
 # AIツール設定のセットアップ
 # - Claude Code: .claude/skills/ に各スキルへのシンボリックリンクを配置
-# - Agent: .agent/skills/ に各スキルへのシンボリックリンクを配置
+# - Agent: .agents/skills/ に各スキルへのシンボリックリンクを配置
 # - KiroCLI: .kiro/agents/aidlc.json へのシンボリックリンクを配置
 
 set -euo pipefail
@@ -17,7 +17,7 @@ fi
 # ============================================
 # 共通関数: スキルシンボリックリンクのセットアップ
 # ============================================
-# $1: ターゲットディレクトリ（例: .claude/skills, .agent/skills）
+# $1: ターゲットディレクトリ（例: .claude/skills, .agents/skills）
 # $2: ソースディレクトリ（例: docs/aidlc/skills）
 setup_skill_symlinks() {
   local TARGET_DIR="$1"
@@ -103,7 +103,7 @@ setup_claude_skills() {
 # Agent スキルのセットアップ
 # ============================================
 setup_agent_skills() {
-  setup_skill_symlinks ".agent/skills" "$AIDLC_DIR/skills"
+  setup_skill_symlinks ".agents/skills" "$AIDLC_DIR/skills"
   echo "Done: Agent skills setup complete"
 }
 
