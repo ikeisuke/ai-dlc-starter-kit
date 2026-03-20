@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "1.25.1"
+starter_kit_version = "1.26.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -164,6 +164,25 @@ enabled = true
 # - true: curlでスターターキットの最新バージョンを確認（従来の動作）
 # - false: バージョン確認をスキップ（オフライン環境やCI利用時に有用）
 enabled = true
+
+[rules.construction]
+# Construction Phase設定（v1.26.0で追加）
+# max_retry: Integer - Self-Healingループの最大リトライ回数（デフォルト: 3）
+# - 0: Self-Healingループをスキップし、即座にユーザー判断フォールバックに遷移
+# - 負の値・非数値: 警告を表示しデフォルト値3にフォールバック
+max_retry = 3
+
+[rules.preflight]
+# プリフライトチェック設定（v1.26.0で追加）
+# enabled: true | false - プリフライトチェックのオプション項目を実行するか（デフォルト: true）
+# - true: checks リストに基づいてオプションチェックを実行（デフォルト）
+# - false: オプションチェックをスキップ（blockerチェックは常時実行）
+enabled = true
+# checks: 実行するオプションチェック項目のリスト
+# - 有効値: "gh", "review-tools", "config-validation"
+# - 未設定時: 全項目チェック（後方互換性）
+# - 空配列: blockerチェックのみ実行
+checks = ["gh", "review-tools", "config-validation"]
 
 [rules.backlog]
 # バックログ管理モード設定（v1.7.0で追加、v1.16.2で[backlog]から移動）
