@@ -759,7 +759,18 @@ backlog_mode:issue-only
 
 **`backlog_mode:` が空値の場合**（原則発生しない）: AIは `docs/aidlc.toml` を読み込み、`[rules.backlog]` セクションの `mode` 値を取得（デフォルト: `git`）。
 
+#### 14b. エクスプレスモードインスタント検出
+
+ユーザーの初回入力（セッション開始トリガー）が「start express」であるかを判定する。
+
+**判定方法**: 初回入力をtrim（前後の空白除去）し、「start express」と完全一致（case-insensitive）するかを確認する。
+
+- **一致した場合**: `depth_level=minimal`、`depth_level_source=command_override` をコンテキスト変数として保持する。`common/rules.md` の「エクスプレスモード仕様」セクションの「depth_level 解決優先順位」に従い、オーバーライドメッセージを表示する。ステップ15の `read-config.sh` 呼び出しをスキップし、ステップ16に進む。
+- **一致しない場合**: ステップ15に進む（通常フロー）。
+
 #### 15. Depth Level確認
+
+**スキップ条件**: ステップ14bでコマンドオーバーライドが適用された場合（`depth_level_source=command_override`）、このステップをスキップする。
 
 `common/rules.md` の「Depth Level仕様」セクションに従い、成果物詳細度を確認する。
 
@@ -767,7 +778,7 @@ backlog_mode:issue-only
 docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 ```
 
-取得した値をコンテキスト変数 `depth_level` として保持する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+取得した値をコンテキスト変数 `depth_level` として保持し、`depth_level_source=config` を設定する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
 
 #### 16. GitHub Issue確認
 
