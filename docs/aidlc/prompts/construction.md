@@ -552,7 +552,14 @@ BDD/TDDに従ってテストコードを作成
 2. テスト実行
 3. **Self-Healingループ**（ビルドまたはテストでエラーが発生した場合）:
 
-   エラー発生時、AIが自動修正を最大3回試行する。非回復系エラーは即時フォールバックとしリトライ対象外とする。
+   **max_retry=0 の場合**: Self-Healingループをスキップし、即座に項目3c（ユーザー判断フォールバック）に遷移する。以下の「非回復系エラー検出時」テンプレートを使用し、エラー分類は `skipped(max_retry=0)` と表示する。
+
+   **max_retry バリデーション**: プリフライトチェックで取得した `max_retry` の値が負の値または非数値の場合、以下の警告を表示しデフォルト値3を使用する:
+   ```text
+   ⚠ max_retry の値が不正です（"{value}"）。デフォルト値 3 を使用します。
+   ```
+
+   エラー発生時、AIが自動修正を最大 `max_retry` 回試行する。非回復系エラーは即時フォールバックとしリトライ対象外とする。
 
    **機密情報マスキング【必須】**: エラー要約・失敗要因・エラー内容の出力時、APIキー・トークン・認証ヘッダ・接続文字列・URI資格情報等の機密情報を必ずマスキングする（例: `sk-****`、`Bearer ****`、`postgresql://****@host/db`）。バックログ登録時のIssueタイトル・本文にも同様のマスキングを適用する。
 
@@ -566,7 +573,7 @@ BDD/TDDに従ってテストコードを作成
    | `transient` | ネットワーク系（connection refused, timeout, DNS resolution failed） | 1回再試行（attempt消費）→ 再失敗時フォールバック（項目3cへ） |
    | `recoverable` | 上記に該当しない（デフォルト） | Self-Healingループ対象（項目3bへ） |
 
-   **3b. Self-Healingループ本体**（最大3回、カテゴリ横断でattempt共有）:
+   **3b. Self-Healingループ本体**（最大 `max_retry` 回、カテゴリ横断でattempt共有）:
 
    各attemptで以下を実行し、結果を出力する:
 
@@ -574,7 +581,7 @@ BDD/TDDに従ってテストコードを作成
    2. attempt結果を出力（全フィールド必須）:
 
       ```text
-      【Self-Healing】attempt {N}/3
+      【Self-Healing】attempt {N}/{max_retry}
       【エラー種別】{ビルドエラー / テストエラー}
       【エラー分類】{recoverable / non_recoverable / transient}
       【失敗要因】{エラーの要約}
@@ -584,22 +591,22 @@ BDD/TDDに従ってテストコードを作成
    3. ビルド/テストを再実行
    4. 成功 → ループ終了、項目4（AIレビュー）へ進む
    5. 失敗 → エラー再分類（項目3aへ戻る）。non_recoverableまたはtransient再失敗の場合は項目3cへ
-   6. attempt 3回到達 → 項目3cへ
+   6. attempt `max_retry` 回到達 → 項目3cへ
 
    **3c. フォールバック（ユーザー判断フロー）**:
 
    エラー発生時はcommon/rules.mdのフォールバック条件（`reason_code=error`）に該当するため、`automation_mode` に関わらず常にユーザー確認を行う（`fallback(error)` として処理）。
 
-   **3回失敗時**:
+   **`max_retry` 回失敗時**:
 
    ```text
-   【Self-Healing失敗】3回の自動修正で解決できませんでした。
+   【Self-Healing失敗】{max_retry}回の自動修正で解決できませんでした。
    【エラー種別】{ビルドエラー / テストエラー}
    【最終エラー】{エラーの要約}
    【試行履歴】
      attempt 1: {失敗要因の要約}
-     attempt 2: {失敗要因の要約}
-     attempt 3: {失敗要因の要約}
+     ...
+     attempt {max_retry}: {失敗要因の要約}
 
    どのように対応しますか？
    1. 手動で修正を継続する
@@ -612,7 +619,7 @@ BDD/TDDに従ってテストコードを作成
    ```text
    【非回復系エラー検出】自動修正の対象外です。
    【エラー種別】{ビルドエラー / テストエラー}
-   【エラー分類】{non_recoverable / transient}
+   【エラー分類】{non_recoverable / transient / skipped(max_retry=0)}
    【エラー内容】{エラーの要約}
    【判定理由】{該当した判定基準}
 
@@ -663,7 +670,7 @@ BDD/TDDに従ってテストコードを作成
       【Self-Healingフォールバック】{手動修正継続 / バックログ記録 / 中断}
       【エラー種別】{ビルドエラー / テストエラー}
       【エラー分類】{recoverable / non_recoverable / transient}
-      【試行回数】{実施したattempt数}/3
+      【試行回数】{実施したattempt数}/{max_retry}
       【バックログ登録】{登録 / スキップ / なし}
       【バックログモード】{mode / -}
       【登録先】{Issue番号 / ファイルパス / なし}
