@@ -36,6 +36,7 @@ markdown_lint = false
 enabled = true
 max_bytes = 150000
 max_lines = 1000
+max_tokens = 40000
 target_pattern = "*.md"
 
 [rules.commit]
