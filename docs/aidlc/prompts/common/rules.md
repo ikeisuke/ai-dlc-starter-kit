@@ -259,11 +259,27 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
 
 `depth_level=minimal` 時に適用条件を満たす場合、Inception Phase と Construction Phase を1つの連続フローで実行する高速パス。
 
+#### depth_level 解決優先順位
+
+`depth_level` の値は以下の優先順位で解決する:
+
+1. **コマンドオーバーライド**: 「start express」コマンドによるセッション内限定の `minimal` 指定
+2. **設定ファイル**: `aidlc.toml` の `rules.depth_level.level`
+3. **デフォルト値**: `standard`
+
+コマンドオーバーライド適用時は `depth_level_source=command_override` をコンテキストに保持し、以下のメッセージを表示する:
+
+```text
+【エクスプレスモード】「start express」コマンドにより depth_level=minimal をセッション内オーバーライドしました（設定ファイルの値は無視されます）
+```
+
+設定ファイルまたはデフォルト値で解決した場合は `depth_level_source=config` を保持する（メッセージ表示なし）。
+
 #### 適用条件
 
 エクスプレスモードは以下の**すべて**を満たす場合に有効化される:
 
-1. `depth_level=minimal` であること
+1. `depth_level=minimal` であること（解決方法は問わない）
 2. Inception Phase で定義された Unit 数が **ちょうど1** であること
 
 **注意**: Unit 数が0の場合はエクスプレスモードの対象外（Construction Phase に遷移する前提が成立しないため）。
