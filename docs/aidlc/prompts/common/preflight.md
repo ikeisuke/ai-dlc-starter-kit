@@ -171,7 +171,7 @@ which {先頭ツール名} >/dev/null 2>&1
   {checks に "gh" 含まない場合: - gh: skipped}
   {checks に "review-tools" 含む場合: ℹ レビューツール ({tool名}): {available | not found}}
   {checks に "review-tools" 含まない場合: - レビューツール: skipped}
-  {checks に "config-validation" 含まない場合: - config-validation: skipped（バリデーション警告は非表示）}
+  {checks に "config-validation" 含まない場合: - config-validation: skipped（結果提示内のバリデーション行は非表示）}
 
 ■ 主要設定値（常時表示）
   depth_level: {value}
