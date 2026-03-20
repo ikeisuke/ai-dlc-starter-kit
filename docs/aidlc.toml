@@ -142,10 +142,13 @@ enabled = true
 # enabled: true | false - サイズチェックを有効にするか（デフォルト: true）
 # max_bytes: Integer - バイト数閾値（デフォルト: 150000）
 # max_lines: Integer - 行数閾値（デフォルト: 1000）
+# max_tokens: Integer - トークン数閾値（デフォルト: 40000）
+#   tiktoken利用可能時は正確な計測、未インストール時は近似計算
 # target_pattern: String - 対象ファイルパターン（デフォルト: "*.md"）
 enabled = true
 max_bytes = 150000
 max_lines = 1000
+max_tokens = 40000
 target_pattern = "*.md"
 
 [rules.feedback]
