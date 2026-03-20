@@ -86,10 +86,10 @@ docs/
 - **依存**: GitHub REST API (`gh api repos/{owner}/{repo}/pulls/{PR}/comments` のリアクション取得)
 - **現行状況**: REST APIでレビュー状態とコメント未返信を判定。リアクション検出なし
 
-#### #347 .kiro/skills → .agent/skills 移行
-- **直接変更**: `prompts/package/bin/setup-ai-tools.sh` (`.kiro/skills` → `.agent/skills`)
+#### #347 .kiro/skills → .agents/skills 移行
+- **直接変更**: `prompts/package/bin/setup-ai-tools.sh` (`.kiro/skills` → `.agents/skills`)
 - **直接変更**: `prompts/setup-prompt.md` (ドキュメント内の参照更新)
-- **直接変更**: `.kiro/skills/` → `.agent/skills/` (ディレクトリ移動)
+- **直接変更**: `.kiro/skills/` → `.agents/skills/` (ディレクトリ移動)
 - **影響**: `.kiro/agents/aidlc.json` のシンボリックリンクも移行対象か要確認
 - **現行状況**: 6スキルのシンボリックリンクが `.kiro/skills/` に存在。`setup-ai-tools.sh` L106で作成
 

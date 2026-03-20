@@ -72,14 +72,16 @@ ls docs/aidlc.toml 2>/dev/null
 
 **条件を満たす場合**:
 
-`review_tools` リストの先頭ツールの存在を確認:
+`review_tools` リストの先頭ツールの存在を `which {先頭ツール名}` で確認:
 
 ```bash
-which codex >/dev/null 2>&1
+which {先頭ツール名} >/dev/null 2>&1
 ```
 
-- 存在する場合: `ℹ レビューツール ({tool名}): available`
-- 存在しない場合: `ℹ レビューツール ({tool名}): not found（レビュー実行時にフォールバックします）`
+（例: `review_tools = ["codex"]` なら `which codex`、`["claude"]` なら `which claude`）
+
+- 存在する場合: `ℹ レビューツール ({先頭ツール名}): available`
+- 存在しない場合: `ℹ レビューツール ({先頭ツール名}): not found（レビュー実行時にフォールバックします）`
 
 **severity**: info（フェーズ続行に影響しない）
 

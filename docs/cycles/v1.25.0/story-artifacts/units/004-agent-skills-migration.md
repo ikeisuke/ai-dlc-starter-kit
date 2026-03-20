@@ -1,16 +1,16 @@
-# Unit: .kiro/skills → .agent/skills 移行
+# Unit: .kiro/skills → .agents/skills 移行
 
 ## 概要
-スキルディレクトリを `.kiro/skills` から `.agent/skills` に移行し、関連する全参照を更新する。エージェント定義ディレクトリ（`.kiro/agents` → `.agent/agents`）も同時に移行する。
+スキルディレクトリを `.kiro/skills` から `.agents/skills` に移行し、関連する全参照を更新する。エージェント定義ディレクトリ（`.kiro/agents` → `.agents/agents`）も同時に移行する。
 
 ## 含まれるユーザーストーリー
-- ストーリー 5: .kiro/skills → .agent/skills 移行
+- ストーリー 5: .kiro/skills → .agents/skills 移行
 
 ## 責務
 - `setup-ai-tools.sh` の `setup_kiro_skills()` → `setup_agent_skills()` リネームとターゲットディレクトリ変更
-- `setup-ai-tools.sh` の `setup_kiro_agent()` → `setup_agent_agents()` リネームとターゲットディレクトリ変更（`.kiro/agents/` → `.agent/agents/`）
-- `setup-prompt.md` 内の全 `.kiro/skills`, `.kiro/agents` 参照を `.agent/skills`, `.agent/agents` に更新
-- `.kiro/agents/aidlc-poc.json` を `.agent/agents/` にコピー
+- `setup-ai-tools.sh` の `setup_kiro_agent()` → `setup_agent_agents()` リネームとターゲットディレクトリ変更（`.kiro/agents/` → `.agents/agents/`）
+- `setup-prompt.md` 内の全 `.kiro/skills`, `.kiro/agents` 参照を `.agents/skills`, `.agents/agents` に更新
+- `.kiro/agents/aidlc-poc.json` を `.agents/agents/` にコピー
 - 既存ディレクトリのバックアップ機能
 - 破壊的変更のCHANGELOG記載とアップグレード手順提供
 - リポジトリ内の参照残存0件検証
@@ -35,7 +35,7 @@
 - **可用性**: 該当なし
 
 ## 技術的考慮事項
-- 変更対象: `prompts/package/bin/setup-ai-tools.sh`, `prompts/setup-prompt.md`, `.kiro/` → `.agent/` ディレクトリ
+- 変更対象: `prompts/package/bin/setup-ai-tools.sh`, `prompts/setup-prompt.md`, `.kiro/` → `.agents/` ディレクトリ
 - 自己修復機能（壊れたシンボリックリンク検出・修復）はそのまま引き継ぐ
 - 検証コマンド: `rg ".kiro/skills" --glob "!docs/cycles/v1.*/" --glob "!CHANGELOG.md"` および `rg ".kiro/agents" --glob "!docs/cycles/v1.*/" --glob "!CHANGELOG.md"`
 
