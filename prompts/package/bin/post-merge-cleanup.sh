@@ -226,7 +226,6 @@ step_0a() {
     BRANCH_NAME="cycle/${CYCLE}"
     if ! git show-ref --verify "refs/heads/${BRANCH_NAME}" >/dev/null 2>&1; then
         LOCAL_BRANCH_EXISTS=false
-        echo "step_result:0a:warning:branch-not-found"
         echo "message:ローカルブランチ ${BRANCH_NAME} が存在しません（削除済み）。リモートブランチ削除のみ実行します"
     fi
     echo "branch:${BRANCH_NAME}"
@@ -241,7 +240,12 @@ step_0a() {
         fi
     fi
 
-    echo "step_result:0a:ok"
+    if [ "$LOCAL_BRANCH_EXISTS" = true ]; then
+        echo "step_result:0a:ok"
+    else
+        echo "step_result:0a:warning:branch-not-found"
+        OVERALL="warning"
+    fi
 }
 
 step_0b() {
