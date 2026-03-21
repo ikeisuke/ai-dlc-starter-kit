@@ -194,14 +194,27 @@ _generate_template() {
 {
   "permissions": {
     "allow": [
+      "Bash(claude:*)",
       "Bash(docs/aidlc/bin/:*)",
+      "Bash(echo:*)",
+      "Bash(gh api:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh repo:*)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git pull:*)",
+      "Bash(git revert:*)",
+      "Bash(markdownlint:*)",
       "Bash(mktemp /tmp/aidlc-:*)",
+      "Bash(npx markdownlint-cli:*)",
+      "Skill(aidlc-setup)",
+      "Skill(codex-review)",
       "Skill(reviewing-architecture)",
       "Skill(reviewing-code)",
-      "Skill(reviewing-security)",
       "Skill(reviewing-inception)",
-      "Skill(squash-unit)",
-      "Skill(aidlc-setup)"
+      "Skill(reviewing-security)",
+      "Skill(squash-unit)"
     ]
   }
 }
