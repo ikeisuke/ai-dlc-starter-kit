@@ -293,12 +293,19 @@ _write_atomic() {
 _merge_permissions_jq() {
   local existing_file="$1"
   local template_defaults
-  template_defaults=$(_generate_template | jq '.permissions.allow') || return 2
+  local template_obj
+  template_obj=$(_generate_template) || return 2
+  template_defaults=$(echo "$template_obj" | jq '.permissions.allow') || return 2
+  local template_ask
+  template_ask=$(echo "$template_obj" | jq '.permissions.ask // []') || return 2
 
   local merged
-  merged=$(jq --argjson defaults "$template_defaults" '
+  merged=$(jq --argjson defaults "$template_defaults" --argjson ask_defaults "$template_ask" '
     .permissions //= {} |
     .permissions.allow //= [] |
+    .permissions.ask //= [] |
+
+    # --- allow マージ ---
     .permissions.allow as $existing |
     ($defaults - $existing) as $new_candidates |
 
@@ -328,12 +335,15 @@ _merge_permissions_jq() {
     ] as $new |
 
     ($new_candidates | length) - ($new | length) as $skipped |
-    if ($new | length) > 0 then
-      .permissions.allow += $new |
-      . + {"_new_count": ($new | length), "_skipped_count": $skipped}
-    else
-      . + {"_new_count": 0, "_skipped_count": $skipped}
-    end
+
+    # --- ask マージ（単純 set-difference、ワイルドカード判定不要）---
+    .permissions.ask as $existing_ask |
+    ($ask_defaults - $existing_ask) as $new_ask |
+
+    # --- 結果を適用 ---
+    (if ($new | length) > 0 then .permissions.allow += $new else . end) |
+    (if ($new_ask | length) > 0 then .permissions.ask += $new_ask else . end) |
+    . + {"_new_count": (($new | length) + ($new_ask | length)), "_skipped_count": $skipped}
   ' "$existing_file") || return 2
 
   local new_count
@@ -381,7 +391,9 @@ def is_covered_by_wildcard(rule, wildcards):
 try:
     with open(sys.argv[1]) as f:
         data = json.load(f)
-    defaults = json.loads(sys.argv[2])['permissions']['allow']
+    tpl = json.loads(sys.argv[2])
+    defaults = tpl['permissions']['allow']
+    ask_defaults = tpl.get('permissions', {}).get('ask', [])
     if not isinstance(defaults, list):
         sys.exit(2)
 
@@ -389,9 +401,12 @@ try:
         data['permissions'] = {}
     if 'allow' not in data['permissions']:
         data['permissions']['allow'] = []
+    if 'ask' not in data['permissions']:
+        data['permissions']['ask'] = []
     if not isinstance(data['permissions']['allow'], list):
         sys.exit(2)
 
+    # --- allow merge ---
     existing = data['permissions']['allow']
     existing_set = {x for x in existing if isinstance(x, str)}
     new_candidates = [p for p in defaults if p not in existing_set]
@@ -401,15 +416,23 @@ try:
     new_patterns = [p for p in new_candidates if not is_covered_by_wildcard(p, wildcards)]
     skipped_count = len(new_candidates) - len(new_patterns)
 
+    # --- ask merge (simple set-difference) ---
+    existing_ask = data['permissions'].get('ask', [])
+    existing_ask_set = {x for x in existing_ask if isinstance(x, str)}
+    new_ask = [p for p in ask_defaults if p not in existing_ask_set]
+
+    total_new = len(new_patterns) + len(new_ask)
+
     if new_patterns:
         data['permissions']['allow'].extend(new_patterns)
-        data['_skipped_count'] = skipped_count
-        print(json.dumps(data, indent=2, ensure_ascii=False))
-        print(len(new_patterns), file=sys.stderr)
+    if new_ask:
+        data['permissions']['ask'].extend(new_ask)
+    data['_skipped_count'] = skipped_count
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+    if total_new > 0:
+        print(total_new, file=sys.stderr)
         sys.exit(0)
     else:
-        data['_skipped_count'] = skipped_count
-        print(json.dumps(data, indent=2, ensure_ascii=False))
         sys.exit(1)
 except SystemExit:
     raise
