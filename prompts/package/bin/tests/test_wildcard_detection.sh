@@ -79,7 +79,7 @@ def is_covered_by_wildcard(rule, wildcards):
 settings = json.loads(sys.argv[1])
 defaults = json.loads(sys.argv[2])
 existing = settings.get('permissions', {}).get('allow', [])
-existing_set = set(existing)
+existing_set = {x for x in existing if isinstance(x, str)}
 new_candidates = [p for p in defaults if p not in existing_set]
 wildcards = [r for r in existing if isinstance(r, str) and r.endswith(':*)')]
 new_patterns = [p for p in new_candidates if not is_covered_by_wildcard(p, wildcards)]
@@ -185,6 +185,24 @@ run_test "partial wildcard - Bash only" \
 # Test 8: 不正形式のルールは非包含として扱う
 run_test "malformed rules treated as non-covered" \
   '{"permissions":{"allow":["not-a-valid-rule"]}}' \
+  "$DEFAULTS" \
+  4 0
+
+# Test 9: 非文字列要素が混在する場合（オブジェクト等）
+run_test "non-string elements in allow array" \
+  '{"permissions":{"allow":[{"x":1},"Bash(:*)"]}}' \
+  "$DEFAULTS" \
+  2 2
+
+# Test 10: permissions キーが存在しない場合
+run_test "missing permissions key" \
+  '{}' \
+  "$DEFAULTS" \
+  4 0
+
+# Test 11: allow キーが存在しない場合
+run_test "missing allow key" \
+  '{"permissions":{}}' \
   "$DEFAULTS" \
   4 0
 

@@ -337,7 +337,7 @@ try:
         sys.exit(2)
 
     existing = data['permissions']['allow']
-    existing_set = set(existing)
+    existing_set = {x for x in existing if isinstance(x, str)}
     new_candidates = [p for p in defaults if p not in existing_set]
 
     # Wildcard containment check
