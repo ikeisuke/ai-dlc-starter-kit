@@ -70,7 +70,7 @@
         "ghq *",
         "git add *",
         "git branch *",
-        "git checkout -b *",
+        "git checkout *",
         "git commit *",
         "git diff *",
         "git fetch *",
