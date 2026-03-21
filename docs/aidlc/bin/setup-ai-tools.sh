@@ -197,7 +197,6 @@ _generate_template() {
       "Bash(claude:*)",
       "Bash(docs/aidlc/bin/:*)",
       "Bash(echo:*)",
-      "Bash(gh api:*)",
       "Bash(gh issue:*)",
       "Bash(gh pr:*)",
       "Bash(gh repo:*)",
