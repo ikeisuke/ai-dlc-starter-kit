@@ -244,17 +244,45 @@ _merge_permissions_jq() {
     .permissions //= {} |
     .permissions.allow //= [] |
     .permissions.allow as $existing |
-    ($defaults - $existing) as $new |
+    ($defaults - $existing) as $new_candidates |
+
+    # ワイルドカード包含判定: 既存ルールから :*) で終わるものを抽出
+    ($existing | map(select(type == "string" and endswith(":*)")))) as $wildcards |
+
+    # 各候補について、既存ワイルドカードに包含されるかチェック
+    [
+      $new_candidates[] |
+      . as $candidate |
+      if ($candidate | type) != "string" then $candidate
+      elif ($candidate | test("^[^(]+\\(")) then
+        # Type部分とパス部分を抽出
+        ($candidate | split("(") | .[0]) as $cand_type |
+        ($candidate | split("(") | .[1:] | join("(") | rtrimstr(")")) as $cand_path |
+        if [
+          $wildcards[] |
+          select(type == "string" and test("^[^(]+\\(")) |
+          (split("(") | .[0]) as $wc_type |
+          (split("(") | .[1:] | join("(") | rtrimstr(":*)")) as $wc_prefix |
+          select($wc_type == $cand_type and ($cand_path | startswith($wc_prefix)))
+        ] | length > 0 then empty
+        else $candidate
+        end
+      else $candidate
+      end
+    ] as $new |
+
+    ($new_candidates | length) - ($new | length) as $skipped |
     if ($new | length) > 0 then
       .permissions.allow += $new |
-      . + {"_new_count": ($new | length)}
+      . + {"_new_count": ($new | length), "_skipped_count": $skipped}
     else
-      . + {"_new_count": 0}
+      . + {"_new_count": 0, "_skipped_count": $skipped}
     end
   ' "$existing_file") || return 2
 
   local new_count
   new_count=$(echo "$merged" | jq -r '._new_count') || return 2
+  # _skipped_count は caller が抽出するため、_new_count のみ削除
   merged=$(echo "$merged" | jq 'del(._new_count)') || return 2
 
   echo "$merged"
@@ -276,7 +304,23 @@ _merge_permissions_python() {
   template_json=$(_generate_template) || return 2
 
   python3 -c "
-import json, sys
+import json, sys, re
+
+def is_covered_by_wildcard(rule, wildcards):
+    if not isinstance(rule, str):
+        return False
+    m = re.match(r'^([^(]+)\((.+)\)$', rule)
+    if not m:
+        return False
+    cand_type, cand_path = m.group(1), m.group(2)
+    for wc in wildcards:
+        wm = re.match(r'^([^(]+)\((.*):\*\)$', wc)
+        if not wm:
+            continue
+        wc_type, wc_prefix = wm.group(1), wm.group(2)
+        if wc_type == cand_type and cand_path.startswith(wc_prefix):
+            return True
+    return False
 
 try:
     with open(sys.argv[1]) as f:
@@ -294,14 +338,21 @@ try:
 
     existing = data['permissions']['allow']
     existing_set = set(existing)
-    new_patterns = [p for p in defaults if p not in existing_set]
+    new_candidates = [p for p in defaults if p not in existing_set]
+
+    # Wildcard containment check
+    wildcards = [r for r in existing if isinstance(r, str) and r.endswith(':*)')]
+    new_patterns = [p for p in new_candidates if not is_covered_by_wildcard(p, wildcards)]
+    skipped_count = len(new_candidates) - len(new_patterns)
 
     if new_patterns:
         data['permissions']['allow'].extend(new_patterns)
+        data['_skipped_count'] = skipped_count
         print(json.dumps(data, indent=2, ensure_ascii=False))
         print(len(new_patterns), file=sys.stderr)
         sys.exit(0)
     else:
+        data['_skipped_count'] = skipped_count
         print(json.dumps(data, indent=2, ensure_ascii=False))
         sys.exit(1)
 except SystemExit:
@@ -366,8 +417,16 @@ setup_claude_permissions() {
           0)
             new_count=$(cat "$merge_count_file" 2>/dev/null)
             \rm -f "$merge_count_file" 2>/dev/null
+            # _skipped_count メタデータを抽出・削除
+            local skipped_count
+            skipped_count=$(echo "$merged_json" | jq -r '._skipped_count // 0') 2>/dev/null || skipped_count=0
+            merged_json=$(echo "$merged_json" | jq 'del(._skipped_count)') 2>/dev/null || true
             if echo "$merged_json" | _write_atomic "$SETTINGS_FILE"; then
-              echo "Updated: $SETTINGS_FILE ($new_count new permissions added)"
+              if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
+                echo "Updated: $SETTINGS_FILE ($new_count new permissions added, $skipped_count skipped by wildcard)"
+              else
+                echo "Updated: $SETTINGS_FILE ($new_count new permissions added)"
+              fi
               result="updated"
             else
               echo "Warning: Failed to write $SETTINGS_FILE, skipping"
@@ -376,7 +435,14 @@ setup_claude_permissions() {
             ;;
           1)
             \rm -f "$merge_count_file" 2>/dev/null
-            echo "Skipped: $SETTINGS_FILE (all permissions already present)"
+            # スキップ情報の表示（全パターン既存の場合でもワイルドカード包含があり得る）
+            local skipped_count
+            skipped_count=$(echo "$merged_json" | jq -r '._skipped_count // 0') 2>/dev/null || skipped_count=0
+            if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
+              echo "Skipped: $SETTINGS_FILE (all permissions already present, $skipped_count skipped by wildcard)"
+            else
+              echo "Skipped: $SETTINGS_FILE (all permissions already present)"
+            fi
             result="skipped"
             ;;
           *)
@@ -395,8 +461,16 @@ setup_claude_permissions() {
           0)
             new_count=$(cat "$merge_count_file" 2>/dev/null)
             \rm -f "$merge_count_file" 2>/dev/null
+            # _skipped_count メタデータを抽出・削除（python3で処理）
+            local skipped_count
+            skipped_count=$(echo "$merged_json" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('_skipped_count',0))") 2>/dev/null || skipped_count=0
+            merged_json=$(echo "$merged_json" | python3 -c "import json,sys; d=json.load(sys.stdin); d.pop('_skipped_count',None); print(json.dumps(d,indent=2,ensure_ascii=False))") 2>/dev/null || true
             if echo "$merged_json" | _write_atomic "$SETTINGS_FILE"; then
-              echo "Updated: $SETTINGS_FILE ($new_count new permissions added)"
+              if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
+                echo "Updated: $SETTINGS_FILE ($new_count new permissions added, $skipped_count skipped by wildcard)"
+              else
+                echo "Updated: $SETTINGS_FILE ($new_count new permissions added)"
+              fi
               result="updated"
             else
               echo "Warning: Failed to write $SETTINGS_FILE, skipping"
@@ -405,7 +479,14 @@ setup_claude_permissions() {
             ;;
           1)
             \rm -f "$merge_count_file" 2>/dev/null
-            echo "Skipped: $SETTINGS_FILE (all permissions already present)"
+            # スキップ情報の表示
+            local skipped_count
+            skipped_count=$(echo "$merged_json" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('_skipped_count',0))") 2>/dev/null || skipped_count=0
+            if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
+              echo "Skipped: $SETTINGS_FILE (all permissions already present, $skipped_count skipped by wildcard)"
+            else
+              echo "Skipped: $SETTINGS_FILE (all permissions already present)"
+            fi
             result="skipped"
             ;;
           *)
