@@ -17,6 +17,7 @@ AI-DLC Starter Kit の変更履歴です。
 ### Fixed
 
 - `post-merge-cleanup.sh`ブランチ不在耐性: ローカルブランチ削除済み状態でもクリーンアップを完走可能に（#381）
+- Kiro skill resourcesパス修正: `.agents/*/SKILL.md`を`.agents/skills/*/SKILL.md`に修正し、スキルが正しく検出されるように
 
 ---
 
