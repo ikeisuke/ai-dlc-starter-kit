@@ -224,7 +224,7 @@ Co-Authored-By: {AI_AUTHOR}
 **設定確認**:
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
+docs/aidlc/bin/read-config.sh rules.squash.enabled
 ```
 
 - `true` の場合: 以下の手順を実行
