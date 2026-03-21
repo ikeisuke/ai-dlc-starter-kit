@@ -121,9 +121,9 @@
   "resources": [
     "file://AGENTS.md",
     "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://.agents/*/SKILL.md",
-    "skill://~/.agents/*/SKILL.md",
-    "skill://.kiro/*/SKILL.md",
-    "skill://~/.kiro/*/SKILL.md"
+    "skill://.agents/skills/*/SKILL.md",
+    "skill://~/.agents/skills/*/SKILL.md",
+    "skill://.kiro/skills/*/SKILL.md",
+    "skill://~/.kiro/skills/*/SKILL.md"
   ]
 }
