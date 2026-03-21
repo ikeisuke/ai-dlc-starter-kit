@@ -273,7 +273,7 @@ AIが `docs/aidlc.toml` をReadツールで読み取り、`starter_kit_version` 
 `rules.cycle.mode` 設定を読み取り、コンテキスト変数 `cycle_mode` として保持する。
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.cycle.mode --default "default"
+docs/aidlc/bin/read-config.sh rules.cycle.mode
 ```
 
 **読み取り失敗時**（終了コード2）: 以下の警告を表示し、`"default"` として扱う:
@@ -530,7 +530,7 @@ git branch --show-current
   **11-1. ブランチ作成方式の読み取り**:
 
   ```bash
-  docs/aidlc/bin/read-config.sh rules.branch.mode --default "ask"
+  docs/aidlc/bin/read-config.sh rules.branch.mode
   ```
 
   **読み取り失敗時**（終了コード2: daselエラー等）: 以下の警告を表示し、`"ask"` として扱う:
@@ -557,7 +557,7 @@ git branch --show-current
   **mode = "worktree" の場合**:
   まず worktree 機能の有効性を確認:
   ```bash
-  docs/aidlc/bin/read-config.sh rules.worktree.enabled --default "false"
+  docs/aidlc/bin/read-config.sh rules.worktree.enabled
   ```
   読み取り失敗時（終了コード2）は `"false"` として扱う。
   - **`true` の場合**:

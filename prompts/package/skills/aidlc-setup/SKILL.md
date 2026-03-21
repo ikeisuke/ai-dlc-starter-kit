@@ -28,7 +28,7 @@ ghq root
 ```
 
 ```bash
-docs/aidlc/bin/read-config.sh project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit"
+docs/aidlc/bin/read-config.sh project.starter_kit_repo
 ```
 
 2. 取得した値を使ってパスを組み立て:

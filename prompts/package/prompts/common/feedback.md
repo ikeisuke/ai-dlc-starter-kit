@@ -7,7 +7,7 @@
 最初に `docs/aidlc.toml` の設定を確認する：
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.feedback.enabled --default "true"
+docs/aidlc/bin/read-config.sh rules.feedback.enabled
 ```
 
 **`false` の場合**:

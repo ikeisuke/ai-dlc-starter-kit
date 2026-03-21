@@ -3,17 +3,16 @@
 # read-config.sh - 設定値を読み込み（4階層マージ対応）
 #
 # 使用方法:
-#   ./read-config.sh <key> [--default <value>]
+#   ./read-config.sh <key>
 #   ./read-config.sh --keys <key1> [key2] ...
 #
 # パラメータ:
 #   key       - ドット区切りの設定キー（例: rules.reviewing.mode）
-#   --default - キーが存在しない場合のデフォルト値（文字列のみ、--keys と排他）
-#   --keys    - 複数キー一括指定（位置引数・--default と排他）
+#   --keys    - 複数キー一括指定（位置引数と排他）
 #
 # 終了コード:
-#   0 - 値あり（設定値またはデフォルト値を出力）
-#   1 - キー不在（デフォルトなし、何も出力しない）
+#   0 - 値あり（設定値を出力）
+#   1 - キー不在（何も出力しない）
 #   2 - エラー（dasel未インストール等）
 #
 # 設定ファイル階層（優先度: 低→高）:
@@ -30,7 +29,6 @@
 #
 # 使用例:
 #   ./read-config.sh rules.reviewing.mode
-#   ./read-config.sh rules.custom.foo --default "bar"
 #   ./read-config.sh --keys rules.reviewing.mode rules.reviewing.tools rules.history.level
 #
 
@@ -48,22 +46,11 @@ LOCAL_CONFIG_FILE_LEGACY="docs/aidlc.toml.local"
 
 # 引数パース
 KEY=""
-DEFAULT_VALUE=""
-HAS_DEFAULT=false
 MODE="single"  # single | batch
 KEYS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --default)
-            if [[ $# -lt 2 ]]; then
-                emit_error "missing-default-value" "--default requires a value"
-                exit 1
-            fi
-            DEFAULT_VALUE="$2"
-            HAS_DEFAULT=true
-            shift 2
-            ;;
         --keys)
             MODE="batch"
             shift
@@ -95,11 +82,6 @@ if [[ "$MODE" == "batch" && -n "$KEY" ]]; then
     exit 1
 fi
 
-if [[ "$MODE" == "batch" && "$HAS_DEFAULT" == "true" ]]; then
-    emit_error "keys-default-exclusive" "--keys and --default are mutually exclusive"
-    exit 1
-fi
-
 if [[ "$MODE" == "batch" && ${#KEYS[@]} -eq 0 ]]; then
     emit_error "keys-requires-keys" "--keys requires at least one key"
     exit 1
@@ -107,7 +89,7 @@ fi
 
 if [[ "$MODE" == "single" && -z "$KEY" ]]; then
     emit_error "missing-key" "Key is required"
-    echo "Usage: $0 <key> [--default <value>]" >&2
+    echo "Usage: $0 <key>" >&2
     echo "       $0 --keys <key1> [key2] ..." >&2
     exit 1
 fi
@@ -346,13 +328,8 @@ if [[ "$MODE" == "single" ]]; then
             exit 0
             ;;
         1)
-            # キー不在 → --default 確認
-            if [[ "$HAS_DEFAULT" == "true" ]]; then
-                printf '%s\n' "$DEFAULT_VALUE"
-                exit 0
-            else
-                exit 1
-            fi
+            # キー不在
+            exit 1
             ;;
         *)
             exit 2
