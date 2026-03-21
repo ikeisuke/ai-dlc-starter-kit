@@ -98,7 +98,7 @@ custom = false
 1つの設定値を取得します。
 
 ```bash
-docs/aidlc/bin/read-config.sh <key> [--default <value>]
+docs/aidlc/bin/read-config.sh <key>
 ```
 
 **使用例**:
@@ -106,11 +106,7 @@ docs/aidlc/bin/read-config.sh <key> [--default <value>]
 ```bash
 # 設定値を取得
 docs/aidlc/bin/read-config.sh rules.reviewing.mode
-# 出力: required
-
-# デフォルト値付き
-docs/aidlc/bin/read-config.sh rules.custom.foo --default "bar"
-# 出力: bar（キーが存在しない場合）
+# 出力: required（defaults.toml → プロジェクト設定の順でマージ）
 ```
 
 ### バッチモード（--keys）
@@ -135,7 +131,6 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled r
 
 **排他制約**:
 - `--keys` と位置引数 `<key>` は同時に使用できません
-- `--keys` と `--default` は同時に使用できません
 
 **バッチモードの挙動**:
 - 存在しないキーはスキップされます（エラーにならない）

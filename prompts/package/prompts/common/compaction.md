@@ -27,14 +27,14 @@
 事前にBashで以下を実行し、結果を確認する:
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
+docs/aidlc/bin/read-config.sh rules.automation.mode
 ```
 
 **終了コードに基づく処理**:
 
 | 終了コード | 意味 | 処理 |
 |-----------|------|------|
-| 0 | 値取得成功（キー不在時はデフォルト値 `manual` が適用） | 出力値（`semi_auto` または `manual`）を `automation_mode` として保持 |
+| 0 | 値取得成功（defaults.toml のデフォルト値 `manual` が適用される） | 出力値（`semi_auto` または `manual`）を `automation_mode` として保持 |
 | 0以外 | エラー（読取エラー、コマンド未検出等） | `automation_mode=manual` にフォールバックし、ユーザーに以下を通知 |
 
 **終了コード 0以外の通知**:

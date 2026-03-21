@@ -61,21 +61,22 @@ ls docs/aidlc.toml 2>/dev/null
 
 ### 4. 設定値取得
 
-各設定キーを `read-config.sh` の単一キーモード + `--default` で個別に取得する。`--default` によりキー不在時もデフォルト値が確実に返される。
+全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.depth_level.level --default "standard"
-docs/aidlc/bin/read-config.sh rules.automation.mode --default "manual"
-docs/aidlc/bin/read-config.sh rules.reviewing.mode --default "recommend"
-docs/aidlc/bin/read-config.sh rules.reviewing.tools --default "['codex']"
-docs/aidlc/bin/read-config.sh rules.squash.enabled --default "false"
-docs/aidlc/bin/read-config.sh rules.linting.markdown_lint --default "false"
-docs/aidlc/bin/read-config.sh rules.unit_branch.enabled --default "false"
-docs/aidlc/bin/read-config.sh rules.history.level --default "standard"
-docs/aidlc/bin/read-config.sh rules.construction.max_retry --default "3"
-docs/aidlc/bin/read-config.sh rules.preflight.enabled --default "true"
-docs/aidlc/bin/read-config.sh rules.preflight.checks --default "['gh', 'review-tools', 'config-validation']"
+docs/aidlc/bin/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
 ```
+
+**出力形式**（`key:value` 形式、1行1キー）:
+
+```text
+rules.depth_level.level:standard
+rules.automation.mode:manual
+rules.reviewing.mode:recommend
+...
+```
+
+各行を `key:value` でパースし、コンテキスト変数に格納する。
 
 **コンテキスト変数への格納**:
 

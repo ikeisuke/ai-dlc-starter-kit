@@ -217,7 +217,7 @@ resolve_starter_kit_root() {
         fi
 
         local raw_repo
-        raw_repo=$("$read_config" project.starter_kit_repo --default "ghq:github.com/ikeisuke/ai-dlc-starter-kit" 2>/dev/null || true)
+        raw_repo=$("$read_config" project.starter_kit_repo 2>/dev/null || true)
 
         if [[ -z "$raw_repo" ]]; then
             # read-config.shが設定値を取得できない場合、デフォルト値を使用
