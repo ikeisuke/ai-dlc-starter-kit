@@ -56,6 +56,12 @@ target_pattern = "*.md"
 ai_author_auto_detect = true
 ai_author = ""
 
+[rules.cycle]
+mode = "default"
+
+[rules.upgrade_check]
+enabled = false
+
 [rules.branch]
 mode = "ask"
 
