@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.26.3] - 2026-03-21
+
+### Fixed
+
+- `defaults.toml` デフォルト値補完: `rules.cycle.mode` と `rules.upgrade_check.enabled` のデフォルト値を追加し、`read-config.sh` のキー不在エラーを解消（#384）
+
+### Changed
+
+- mktemp 許可ルール統合: `.claude/settings.json` の mktemp 個別許可ルール5件をワイルドカード1件に統合し保守性を向上（#383）
+- `post-merge-cleanup.sh` DRY改善: step_0a と step_2 に重複していたリモート解決ロジックを `resolve_remote()` 共通関数に抽出（#382）
+
+---
+
 ## [1.26.2] - 2026-03-21
 
 ### Added
