@@ -29,6 +29,19 @@ version_tag = false
 [rules.unit_branch]
 enabled = false
 
+[rules.depth_level]
+level = "standard"
+
+[rules.automation]
+mode = "manual"
+
+[rules.construction]
+max_retry = 3
+
+[rules.preflight]
+enabled = true
+checks = ["gh", "review-tools", "config-validation"]
+
 [rules.linting]
 markdown_lint = false
 

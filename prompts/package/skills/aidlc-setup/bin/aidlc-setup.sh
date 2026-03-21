@@ -38,6 +38,7 @@ declare -a SYNC_DIRS=(
     "templates"
     "guides"
     "bin"
+    "config"
     "skills"
     "kiro"
     "lib"
