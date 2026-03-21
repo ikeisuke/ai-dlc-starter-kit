@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 #
-# post-merge-cleanup.sh - PRマージ後のworktreeクリーンアップ
+# post-merge-cleanup.sh - PRマージ後のクリーンアップ
+#
+# worktree環境と通常ブランチ環境の両方に対応。
+# 実行環境を自動判定し、適切なクリーンアップフローを実行する。
 #
 # 使用方法:
 #   ./post-merge-cleanup.sh --cycle <VERSION> [--dry-run]
@@ -11,11 +14,11 @@
 #   -h, --help          ヘルプを表示
 #
 # 処理ステップ:
-#   0a: 実行環境検証（worktree判定、メインリポジトリ特定）
+#   0a: 実行環境検証（worktree/通常ブランチ判定、リポジトリパス特定）
 #   0b: 作業状態検証（未コミット変更、未pushコミット）
-#   1:  メインリポジトリでpull
-#   2:  worktreeでfetch
-#   3:  detached HEADに切り替え
+#   1:  デフォルトブランチ更新
+#   2:  fetch
+#   3:  ブランチ状態整理（worktree: detached HEAD、通常ブランチ: スキップ）
 #   4:  ローカルブランチ削除
 #   5:  リモートブランチ削除
 #
@@ -45,6 +48,7 @@ MAIN_REMOTE=""
 DEFAULT_BRANCH=""
 WT_REMOTE=""
 WT_DEFAULT_BRANCH=""
+IS_WORKTREE=""
 OVERALL="success"
 
 # ヘルプメッセージを表示
@@ -52,7 +56,8 @@ show_help() {
     cat << 'EOF'
 Usage: post-merge-cleanup.sh --cycle <VERSION> [--dry-run]
 
-PRマージ後のworktreeクリーンアップを実行するスクリプト。
+PRマージ後のクリーンアップを実行するスクリプト。
+worktree環境と通常ブランチ環境の両方に対応。
 
 OPTIONS:
   --cycle <VERSION>   サイクルバージョン（必須、例: v1.5.3）
@@ -60,11 +65,11 @@ OPTIONS:
   -h, --help          このヘルプを表示
 
 STEPS:
-  0a: 実行環境検証
+  0a: 実行環境検証（worktree/通常ブランチ自動判定）
   0b: 作業状態検証
-  1:  メインリポジトリでpull
-  2:  worktreeでfetch
-  3:  detached HEADに切り替え
+  1:  デフォルトブランチ更新
+  2:  fetch
+  3:  ブランチ状態整理
   4:  ローカルブランチ削除
   5:  リモートブランチ削除
 
@@ -143,42 +148,48 @@ step_0a() {
     fi
 
     if [ "$abs_git_dir" = "${toplevel}/.git" ]; then
-        fatal_error "0a" "not-in-worktree" "このスクリプトはworktree環境でのみ実行できます"
-    fi
+        # 通常ブランチ環境
+        IS_WORKTREE=false
+        MAIN_REPO_PATH="$toplevel"
+    else
+        # worktree環境
+        IS_WORKTREE=true
 
-    # メインリポジトリパスを特定（git worktree list --porcelainから属性ベースで検出）
-    local worktree_output main_worktree_path=""
-    worktree_output=$(git worktree list --porcelain 2>/dev/null) || {
-        fatal_error "0a" "main-repo-detection-failed" "git worktree listの実行に失敗しました"
-    }
+        # メインリポジトリパスを特定（git worktree list --porcelainから属性ベースで検出）
+        local worktree_output main_worktree_path=""
+        worktree_output=$(git worktree list --porcelain 2>/dev/null) || {
+            fatal_error "0a" "main-repo-detection-failed" "git worktree listの実行に失敗しました"
+        }
 
-    # porcelain形式: 各worktreeはブランク行で区切られる
-    # 最初のworktreeエントリがメインリポジトリ（ルートworktree）
-    # ただし属性ベースで判定: "bare"行がなく、最初のworktreeブロックのパスを使用
-    local current_path="" is_first=true
-    while IFS= read -r line || [ -n "$line" ]; do
-        if [[ "$line" == worktree\ * ]]; then
-            current_path="${line#worktree }"
-        elif [ -z "$line" ] || [ -z "${line+x}" ]; then
-            if [ "$is_first" = true ] && [ -n "$current_path" ]; then
-                main_worktree_path="$current_path"
-                break
+        # porcelain形式: 各worktreeはブランク行で区切られる
+        # 最初のworktreeエントリがメインリポジトリ（ルートworktree）
+        # ただし属性ベースで判定: "bare"行がなく、最初のworktreeブロックのパスを使用
+        local current_path="" is_first=true
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [[ "$line" == worktree\ * ]]; then
+                current_path="${line#worktree }"
+            elif [ -z "$line" ] || [ -z "${line+x}" ]; then
+                if [ "$is_first" = true ] && [ -n "$current_path" ]; then
+                    main_worktree_path="$current_path"
+                    break
+                fi
+                is_first=false
+                current_path=""
             fi
-            is_first=false
-            current_path=""
+        done <<< "$worktree_output"
+
+        # 最後のブロック（改行なしで終わる場合）
+        if [ -z "$main_worktree_path" ] && [ "$is_first" = true ] && [ -n "$current_path" ]; then
+            main_worktree_path="$current_path"
         fi
-    done <<< "$worktree_output"
 
-    # 最後のブロック（改行なしで終わる場合）
-    if [ -z "$main_worktree_path" ] && [ "$is_first" = true ] && [ -n "$current_path" ]; then
-        main_worktree_path="$current_path"
+        if [ -z "$main_worktree_path" ]; then
+            fatal_error "0a" "main-repo-detection-failed" "メインリポジトリのパスを特定できませんでした"
+        fi
+
+        MAIN_REPO_PATH="$main_worktree_path"
     fi
 
-    if [ -z "$main_worktree_path" ]; then
-        fatal_error "0a" "main-repo-detection-failed" "メインリポジトリのパスを特定できませんでした"
-    fi
-
-    MAIN_REPO_PATH="$main_worktree_path"
     echo "main_repo_path:${MAIN_REPO_PATH}"
 
     # サイクルブランチの存在確認
@@ -187,6 +198,22 @@ step_0a() {
         fatal_error "0a" "branch-not-found" "ブランチ ${BRANCH_NAME} が存在しません"
     fi
     echo "branch:${BRANCH_NAME}"
+
+    # 通常ブランチ: step_1のcheckoutでcurrent_branchが変わる前にWT_REMOTEをプリフェッチ
+    if [ "$IS_WORKTREE" = false ]; then
+        local branch_remote
+        branch_remote=$(git config "branch.${BRANCH_NAME}.remote" 2>/dev/null || true)
+        if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
+            WT_REMOTE="$branch_remote"
+        elif git remote | grep -q "^origin$"; then
+            WT_REMOTE="origin"
+        else
+            WT_REMOTE=$(git remote | head -1)
+            if [ -z "$WT_REMOTE" ]; then
+                fatal_error "0a" "no-remote" "リモートが設定されていません"
+            fi
+        fi
+    fi
 
     echo "step_result:0a:ok"
 }
@@ -216,7 +243,7 @@ step_0b() {
 }
 
 step_1() {
-    echo "step:1:メインリポジトリpull"
+    echo "step:1:デフォルトブランチ更新"
 
     # メインリポジトリ用のリモート・デフォルトブランチ解決
     # 1. リモート決定: originが存在すればorigin、なければ最初のリモート
@@ -260,29 +287,32 @@ step_1() {
 }
 
 step_2() {
-    echo "step:2:worktreeでfetch"
+    echo "step:2:fetch"
 
-    # worktree用のリモート解決
-    local current_branch
-    current_branch=$(git branch --show-current 2>/dev/null || true)
-    WT_REMOTE=""
-    if [ -n "$current_branch" ]; then
-        local branch_remote
-        branch_remote=$(git config "branch.${current_branch}.remote" 2>/dev/null || true)
-        if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
-            WT_REMOTE="$branch_remote"
+    # リモート解決（worktree: current_branchベース、通常ブランチ: step_0aでプリフェッチ済み）
+    if [ "$IS_WORKTREE" = true ]; then
+        local current_branch
+        current_branch=$(git branch --show-current 2>/dev/null || true)
+        WT_REMOTE=""
+        if [ -n "$current_branch" ]; then
+            local branch_remote
+            branch_remote=$(git config "branch.${current_branch}.remote" 2>/dev/null || true)
+            if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
+                WT_REMOTE="$branch_remote"
+            fi
         fi
-    fi
-    if [ -z "$WT_REMOTE" ]; then
-        if git remote | grep -q "^origin$"; then
-            WT_REMOTE="origin"
-        else
-            WT_REMOTE=$(git remote | head -1)
-            if [ -z "$WT_REMOTE" ]; then
-                fatal_error "2" "fetch-failed" "リモートが設定されていません"
+        if [ -z "$WT_REMOTE" ]; then
+            if git remote | grep -q "^origin$"; then
+                WT_REMOTE="origin"
+            else
+                WT_REMOTE=$(git remote | head -1)
+                if [ -z "$WT_REMOTE" ]; then
+                    fatal_error "2" "fetch-failed" "リモートが設定されていません"
+                fi
             fi
         fi
     fi
+    # 通常ブランチ: WT_REMOTEはstep_0aでプリフェッチ済み
 
     if [ "$DRY_RUN" = true ]; then
         echo "step:dry-run:git fetch ${WT_REMOTE}"
@@ -298,9 +328,18 @@ step_2() {
 }
 
 step_3() {
-    echo "step:3:detached HEAD切り替え"
+    echo "step:3:ブランチ状態整理"
 
-    # WT_REMOTEのデフォルトブランチ解決
+    # 通常ブランチ: step_1でデフォルトブランチにcheckout済みのためスキップ
+    if [ "$IS_WORKTREE" = false ]; then
+        if [ "$DRY_RUN" = true ]; then
+            echo "step:dry-run:skip (already on default branch)"
+        fi
+        echo "step_result:3:ok"
+        return
+    fi
+
+    # worktree: detached HEADに切り替え
     WT_DEFAULT_BRANCH=$(resolve_default_branch "." "$WT_REMOTE")
 
     if [ "$DRY_RUN" = true ]; then
