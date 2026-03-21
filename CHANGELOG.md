@@ -7,6 +7,18 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.26.1] - 2026-03-21
+
+### Changed
+
+- Bash Substitution Checkをプロジェクト固有ルール（`rules.md`）に移動: `operations-release.md` から分離し、プロジェクトごとのカスタマイズを容易に（#374）
+- Operations Phaseにローカルレビュー手順を追加: 外部レビューツール呼び出し前のローカルdiff確認ステップをカスタムワークフロー化（#372）
+- Operations Phaseにパーミッション管理ワークフローを追加: リリース前にsuggest-permissionsによるセッション分析と設定監査を実施（#373, #375）
+- `defaults.toml` デフォルト値集約: `read-config.sh` の `--default` オプション引数を廃止し、デフォルト値を `defaults.toml` に一元管理（#376）
+- `read-config.sh` バッチモード化: プリフライトチェックの設定取得を `--keys` オプションで一括取得可能に（#376）
+
+---
+
 ## [1.26.0] - 2026-03-21
 
 ### Added
