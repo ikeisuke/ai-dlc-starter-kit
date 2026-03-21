@@ -49,6 +49,7 @@ DEFAULT_BRANCH=""
 WT_REMOTE=""
 WT_DEFAULT_BRANCH=""
 IS_WORKTREE=""
+LOCAL_BRANCH_EXISTS=true
 OVERALL="success"
 
 # ヘルプメッセージを表示
@@ -224,16 +225,27 @@ step_0a() {
     # サイクルブランチの存在確認
     BRANCH_NAME="cycle/${CYCLE}"
     if ! git show-ref --verify "refs/heads/${BRANCH_NAME}" >/dev/null 2>&1; then
-        fatal_error "0a" "branch-not-found" "ブランチ ${BRANCH_NAME} が存在しません"
+        LOCAL_BRANCH_EXISTS=false
+        echo "message:ローカルブランチ ${BRANCH_NAME} が存在しません（削除済み）。リモートブランチ削除のみ実行します"
     fi
     echo "branch:${BRANCH_NAME}"
 
     # 通常ブランチ: step_1のcheckoutでcurrent_branchが変わる前にWT_REMOTEをプリフェッチ
     if [ "$IS_WORKTREE" = false ]; then
-        resolve_remote "$BRANCH_NAME" "0a" "no-remote"
+        if [ "$LOCAL_BRANCH_EXISTS" = true ]; then
+            resolve_remote "$BRANCH_NAME" "0a" "no-remote"
+        else
+            # ブランチ不在時はブランチ設定を参照せずにリモート解決
+            resolve_remote "" "0a" "no-remote"
+        fi
     fi
 
-    echo "step_result:0a:ok"
+    if [ "$LOCAL_BRANCH_EXISTS" = true ]; then
+        echo "step_result:0a:ok"
+    else
+        echo "step_result:0a:warning:branch-not-found"
+        OVERALL="warning"
+    fi
 }
 
 step_0b() {
@@ -359,6 +371,16 @@ step_3() {
 
 step_4() {
     echo "step:4:ローカルブランチ削除"
+
+    # ブランチ不在時はスキップ
+    if [ "$LOCAL_BRANCH_EXISTS" = false ]; then
+        if [ "$DRY_RUN" = true ]; then
+            echo "step:dry-run:skip (local branch ${BRANCH_NAME} does not exist)"
+        fi
+        echo "step_result:4:ok:skipped-branch-not-found"
+        echo "message:ローカルブランチ ${BRANCH_NAME} は既に削除済みのためスキップ"
+        return
+    fi
 
     if [ "$DRY_RUN" = true ]; then
         echo "step:dry-run:git branch -d ${BRANCH_NAME}"
