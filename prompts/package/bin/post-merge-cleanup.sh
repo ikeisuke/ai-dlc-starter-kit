@@ -100,6 +100,35 @@ validate_remote() {
     git -C "$repo_path" remote | grep -Fqx -- "$remote"
 }
 
+# ブランチ名からリモートを解決し、WT_REMOTEに設定
+# 引数:
+#   $1 - ブランチ名（空の場合はブランチ設定の参照をスキップ）
+#   $2 - エラー時のステップ名（fatal_errorの第1引数）
+#   $3 - エラー時のエラーコード（fatal_errorの第2引数）
+resolve_remote() {
+    local branch_name="${1:-}"
+    local error_step="$2"
+    local error_code="$3"
+
+    if [ -n "$branch_name" ]; then
+        local branch_remote
+        branch_remote=$(git config "branch.${branch_name}.remote" 2>/dev/null || true)
+        if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
+            WT_REMOTE="$branch_remote"
+            return
+        fi
+    fi
+
+    if git remote | grep -q "^origin$"; then
+        WT_REMOTE="origin"
+    else
+        WT_REMOTE=$(git remote | head -1)
+        if [ -z "$WT_REMOTE" ]; then
+            fatal_error "$error_step" "$error_code" "リモートが設定されていません"
+        fi
+    fi
+}
+
 # リモートのデフォルトブランチを解決
 resolve_default_branch() {
     local repo_path="$1"
@@ -201,18 +230,7 @@ step_0a() {
 
     # 通常ブランチ: step_1のcheckoutでcurrent_branchが変わる前にWT_REMOTEをプリフェッチ
     if [ "$IS_WORKTREE" = false ]; then
-        local branch_remote
-        branch_remote=$(git config "branch.${BRANCH_NAME}.remote" 2>/dev/null || true)
-        if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
-            WT_REMOTE="$branch_remote"
-        elif git remote | grep -q "^origin$"; then
-            WT_REMOTE="origin"
-        else
-            WT_REMOTE=$(git remote | head -1)
-            if [ -z "$WT_REMOTE" ]; then
-                fatal_error "0a" "no-remote" "リモートが設定されていません"
-            fi
-        fi
+        resolve_remote "$BRANCH_NAME" "0a" "no-remote"
     fi
 
     echo "step_result:0a:ok"
@@ -294,23 +312,7 @@ step_2() {
         local current_branch
         current_branch=$(git branch --show-current 2>/dev/null || true)
         WT_REMOTE=""
-        if [ -n "$current_branch" ]; then
-            local branch_remote
-            branch_remote=$(git config "branch.${current_branch}.remote" 2>/dev/null || true)
-            if [ -n "$branch_remote" ] && validate_remote "." "$branch_remote"; then
-                WT_REMOTE="$branch_remote"
-            fi
-        fi
-        if [ -z "$WT_REMOTE" ]; then
-            if git remote | grep -q "^origin$"; then
-                WT_REMOTE="origin"
-            else
-                WT_REMOTE=$(git remote | head -1)
-                if [ -z "$WT_REMOTE" ]; then
-                    fatal_error "2" "fetch-failed" "リモートが設定されていません"
-                fi
-            fi
-        fi
+        resolve_remote "${current_branch:-}" "2" "fetch-failed"
     fi
     # 通常ブランチ: WT_REMOTEはstep_0aでプリフェッチ済み
 
