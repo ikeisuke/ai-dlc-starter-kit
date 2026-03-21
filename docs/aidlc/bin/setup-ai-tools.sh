@@ -195,11 +195,7 @@ _generate_template() {
   "permissions": {
     "allow": [
       "Bash(docs/aidlc/bin/:*)",
-      "Bash(mktemp /tmp/aidlc-commit-msg.XXXXXX)",
-      "Bash(mktemp /tmp/aidlc-squash-msg.XXXXXX)",
-      "Bash(mktemp /tmp/aidlc-history-content.XXXXXX)",
-      "Bash(mktemp /tmp/aidlc-pr-body.XXXXXX)",
-      "Bash(mktemp /tmp/aidlc-review-input.XXXXXX)",
+      "Bash(mktemp /tmp/aidlc-:*)",
       "Skill(reviewing-architecture)",
       "Skill(reviewing-code)",
       "Skill(reviewing-security)",
