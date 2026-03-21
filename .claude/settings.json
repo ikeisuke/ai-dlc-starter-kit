@@ -1,14 +1,36 @@
 {
   "permissions": {
     "allow": [
+      "Bash(bin/*)",
+      "Bash(chmod +x:*)",
+      "Bash(claude:*)",
+      "Bash(dasel:*)",
       "Bash(docs/aidlc/bin/:*)",
+      "Bash(echo:*)",
+      "Bash(gh api:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh repo:*)",
+      "Bash(jq:*)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git pull:*)",
+      "Bash(git revert:*)",
+      "Bash(markdownlint:*)",
       "Bash(mktemp /tmp/aidlc-:*)",
+      "Bash(npx markdownlint-cli:*)",
+      "Bash(prompts/bin/sync-package.sh:*)",
+      "Bash(prompts/package/bin/*)",
+      "Bash(prompts/package/skills/aidlc-setup/bin/aidlc-setup.sh:*)",
+      "Bash(prompts/setup/bin/*)",
+      "Bash(test:*)",
+      "Skill(aidlc-setup)",
+      "Skill(codex-review)",
       "Skill(reviewing-architecture)",
       "Skill(reviewing-code)",
-      "Skill(reviewing-security)",
       "Skill(reviewing-inception)",
-      "Skill(squash-unit)",
-      "Skill(aidlc-setup)"
+      "Skill(reviewing-security)",
+      "Skill(squash-unit)"
     ]
   }
 }

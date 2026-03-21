@@ -1,9 +1,129 @@
 {
   "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。Codex、Claude、Gemini CLIを呼び出してコードレビューや分析も実行できます。",
-  "tools": ["@builtin"],
+  "description": "AI-DLC開発支援エージェント",
+  "tools": [
+    "read",
+    "shell",
+    "write"
+  ],
+  "allowedTools": [],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "./**",
+        "/tmp/**"
+      ]
+    },
+    "read": {
+      "allowedPaths": [
+        "./**",
+        "/tmp/**"
+      ],
+      "deniedPaths": [
+        ".env",
+        ".env.*",
+        "~/.ssh/**",
+        "~/.aws/**"
+      ]
+    },
+    "shell": {
+      "deniedCommands": [
+        "git push *--force *",
+        "git push *--force-with-lease *",
+        "git branch *-D *",
+        "git branch *--force *",
+        "git tag *-d *",
+        "git checkout -- *",
+        "git checkout . *",
+        "find *-exec *",
+        "find *-execdir *",
+        "gh pr merge *"
+      ],
+      "allowedCommands": [
+        "[ *",
+        "rm /tmp/aidlc-*",
+        "bash -n *",
+        "bin/*",
+        "cat *",
+        "cat > /tmp/*",
+        "chmod +x *",
+        "codex *",
+        "claude *",
+        "command -v *",
+        "curl * https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/*",
+        "dasel *",
+        "date *",
+        "diff *",
+        "dig *",
+        "docs/aidlc/bin/*",
+        "docs/aidlc/skills/*/bin/*",
+        "echo *",
+        "file *",
+        "find *",
+        "gh api *",
+        "gh auth status",
+        "gh issue *",
+        "gh label *",
+        "gh pr *",
+        "gh repo *",
+        "gh run *",
+        "ghq *",
+        "git add *",
+        "git branch *",
+        "git checkout -b *",
+        "git commit *",
+        "git diff *",
+        "git fetch *",
+        "git log *",
+        "git merge *",
+        "git merge-base *",
+        "git mv *",
+        "git pull *",
+        "git push *",
+        "git remote *",
+        "git reset --soft *",
+        "git rev-parse *",
+        "git revert *",
+        "git show *",
+        "git status *",
+        "git switch *",
+        "git tag *",
+        "git worktree list",
+        "GIT_TERMINAL_PROMPT=0 git fetch *",
+        "grep *",
+        "head *",
+        "jq *",
+        "ls *",
+        "markdownlint *",
+        "mkdir *",
+        "mktemp *",
+        "npm view *",
+        "npx markdownlint-cli2 *",
+        "open *",
+        "printf *",
+        "prompts/bin/sync-package.sh *",
+        "prompts/package/bin/*",
+        "prompts/package/skills/aidlc-setup/bin/aidlc-setup.sh *",
+        "prompts/setup/bin/*",
+        "pwd *",
+        "rg *",
+        "sleep *",
+        "sort *",
+        "tail *",
+        "tee -a docs/cycles/*/history/*",
+        "test *",
+        "touch *",
+        "wc *",
+        "which *"
+      ]
+    }
+  },
   "resources": [
     "file://AGENTS.md",
-    "file://docs/aidlc/prompts/AGENTS.md"
+    "file://docs/aidlc/prompts/AGENTS.md",
+    "skill://.agents/*/SKILL.md",
+    "skill://~/.agents/*/SKILL.md",
+    "skill://.kiro/*/SKILL.md",
+    "skill://~/.kiro/*/SKILL.md"
   ]
 }
