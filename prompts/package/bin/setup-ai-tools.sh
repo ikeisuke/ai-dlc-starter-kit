@@ -248,6 +248,16 @@ _generate_template() {
       "Skill(reviewing-inception)",
       "Skill(reviewing-security)",
       "Skill(squash-unit)"
+    ],
+    "ask": [
+      "Bash(git push*--force *)",
+      "Bash(git push*--force-with-lease *)",
+      "Bash(git branch*-D *)",
+      "Bash(git branch*--force *)",
+      "Bash(git tag*-d *)",
+      "Bash(git checkout -- *)",
+      "Bash(git checkout . *)",
+      "Bash(gh pr merge *)"
     ]
   }
 }
