@@ -180,6 +180,12 @@ setup_kiro_agent() {
         result=$(echo "$merge_output" | tail -1)
         echo "$merge_output" | sed '$ d'
         ;;
+
+      *)
+        # absent等の想定外状態（ディレクトリ等の非通常ファイル）
+        echo "Warning: Unexpected state '$state' for $AGENT_PATH, skipping"
+        result="degraded"
+        ;;
     esac
   fi
 
