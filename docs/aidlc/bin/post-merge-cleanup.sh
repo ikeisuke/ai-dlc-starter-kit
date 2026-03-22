@@ -101,16 +101,99 @@ validate_remote() {
     git -C "$repo_path" remote | grep -Fqx -- "$remote"
 }
 
+# 共通タイブレーク規則: 候補リストからoriginを優先して1件選択
+# 引数:
+#   stdin - 候補リモート名（1行1件）
+# 出力: stdout にリモート名（1行）。候補なしの場合は空
+_select_remote_candidate() {
+    local candidates
+    candidates=$(cat)
+    if [ -z "$candidates" ]; then
+        return
+    fi
+    if printf '%s\n' "$candidates" | grep -Fqx "origin"; then
+        printf '%s\n' "origin"
+    else
+        printf '%s\n' "$candidates" | head -1
+    fi
+}
+
+# ブランチ名を探索キーとして、該当ブランチを持つリモートを探索する
+# 探索のみ行い、副作用（グローバル変数更新、警告出力）は持たない
+# 引数:
+#   $1 - effective_branch（ブランチ短縮名、例: cycle/v1.27.1）
+# 出力: stdout にリモート名（1行）。見つからない場合は空
+find_remote_by_branch() {
+    local effective_branch="$1"
+
+    # 戦略2: refs/remotes 探索（ローカル、ネットワーク不要）
+    local refs_result
+    refs_result=$(git for-each-ref --format='%(refname)' "refs/remotes/*/${effective_branch}" 2>/dev/null \
+        | sed "s|^refs/remotes/||; s|/${effective_branch}\$||" || true)
+    if [ -n "$refs_result" ]; then
+        local candidate
+        candidate=$(printf '%s\n' "$refs_result" | _select_remote_candidate)
+        if [ -n "$candidate" ] && validate_remote "." "$candidate"; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    fi
+
+    # 戦略3: git ls-remote 探索（ネットワーク必要）
+    # タイムアウト手段の検出（1回のみ）
+    local timeout_cmd=""
+    if command -v gtimeout >/dev/null 2>&1; then
+        timeout_cmd="gtimeout 5"
+    elif command -v timeout >/dev/null 2>&1; then
+        timeout_cmd="timeout 5"
+    fi
+
+    local ls_candidates="" remote_name ls_output
+    while IFS= read -r remote_name; do
+        [ -z "$remote_name" ] && continue
+        # セキュリティ: credential helper/askPass を無効化し、資格情報の意図しない利用を防止
+        local git_safe_opts=(-c credential.helper= -c core.askPass=)
+        if [ -n "$timeout_cmd" ]; then
+            ls_output=$(GIT_TERMINAL_PROMPT=0 $timeout_cmd git "${git_safe_opts[@]}" ls-remote --heads "$remote_name" "refs/heads/${effective_branch}" 2>/dev/null || true)
+        else
+            # フォールバック: HTTP(S)はGIT_HTTP_LOW_SPEED_*、SSHはConnectTimeout=5で制限
+            ls_output=$(GIT_TERMINAL_PROMPT=0 GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=5 GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=5 -o IdentityAgent=none -o IdentitiesOnly=yes -F /dev/null' git "${git_safe_opts[@]}" ls-remote --heads "$remote_name" "refs/heads/${effective_branch}" 2>/dev/null || true)
+        fi
+        if [ -n "$ls_output" ]; then
+            if [ -z "$ls_candidates" ]; then
+                ls_candidates="$remote_name"
+            else
+                ls_candidates="${ls_candidates}
+${remote_name}"
+            fi
+        fi
+    done <<< "$(git remote 2>/dev/null)"
+
+    if [ -n "$ls_candidates" ]; then
+        local candidate
+        candidate=$(printf '%s\n' "$ls_candidates" | _select_remote_candidate)
+        if [ -n "$candidate" ] && validate_remote "." "$candidate"; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    fi
+}
+
 # ブランチ名からリモートを解決し、WT_REMOTEに設定
 # 引数:
-#   $1 - ブランチ名（空の場合はブランチ設定の参照をスキップ）
+#   $1 - ブランチ名（空の場合はブランチ設定の参照をスキップし、BRANCH_NAMEを探索キーとして使用）
 #   $2 - エラー時のステップ名（fatal_errorの第1引数）
 #   $3 - エラー時のエラーコード（fatal_errorの第2引数）
+# API契約:
+#   入力優先順位: branch_name（引数） > BRANCH_NAME（グローバル）
+#   カレントディレクトリのリポジトリコンテキストで動作する
 resolve_remote() {
     local branch_name="${1:-}"
     local error_step="$2"
     local error_code="$3"
+    local searched=false
 
+    # 戦略1: ブランチ追跡設定から解決
     if [ -n "$branch_name" ]; then
         local branch_remote
         branch_remote=$(git config "branch.${branch_name}.remote" 2>/dev/null || true)
@@ -120,6 +203,21 @@ resolve_remote() {
         fi
     fi
 
+    # 探索キー決定: branch_name（引数） > BRANCH_NAME（グローバル）
+    local effective_branch="${branch_name:-$BRANCH_NAME}"
+
+    # 戦略2-3: refs/remotes および ls-remote 探索
+    if [ -n "$effective_branch" ]; then
+        searched=true
+        local candidate
+        candidate=$(find_remote_by_branch "$effective_branch")
+        if [ -n "$candidate" ]; then
+            WT_REMOTE="$candidate"
+            return
+        fi
+    fi
+
+    # 戦略4: フォールバック（既存ロジック + 警告）
     if git remote | grep -q "^origin$"; then
         WT_REMOTE="origin"
     else
@@ -127,6 +225,11 @@ resolve_remote() {
         if [ -z "$WT_REMOTE" ]; then
             fatal_error "$error_step" "$error_code" "リモートが設定されていません"
         fi
+    fi
+
+    # 探索を実行したにも関わらずフォールバックに到達した場合、警告出力
+    if [ "$searched" = true ]; then
+        echo "message:警告: ブランチ ${effective_branch} のリモートを特定できませんでした。${WT_REMOTE} にフォールバックします"
     fi
 }
 

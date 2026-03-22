@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.27.1] - 2026-03-23
+
+### Added
+
+- `setup_kiro_agent` 実ファイルマージ対応: ユーザーカスタマイズ済み `.kiro/agents/aidlc.json` の `allowedCommands` を差分マージする機能を追加（jq/Python3両対応）（#388）
+- `defaults.toml` 不在時の診断メッセージ: `read-config.sh` が `defaults.toml` 不在時に警告を stderr に出力するように改善
+- プリフライトチェックに `defaults.toml` 存在チェックを追加
+
+### Changed
+
+- `post-merge-cleanup.sh` マルチリモート対応: fork構成でのリモート解決ロジックを改善し、`resolve_remote()` がpush URLベースで正確なリモートを特定するように修正（#389, #390, #392）
+- `defaults.toml` のフルパスをドキュメントに明記（`docs/aidlc/config/defaults.toml`）
+
+---
+
 ## [1.27.0] - 2026-03-22
 
 ### Added

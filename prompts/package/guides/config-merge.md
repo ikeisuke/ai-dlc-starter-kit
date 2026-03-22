@@ -8,7 +8,7 @@ AI-DLCの設定ファイルは4階層でマージされます。
 
 | ファイル | 用途 | Git管理 | 優先度 |
 |----------|------|---------|--------|
-| `defaults.toml`（スクリプト内蔵） | デフォルト値定義 | Yes（スターターキット同梱） | 最低 |
+| `docs/aidlc/config/defaults.toml`（スクリプト内蔵） | デフォルト値定義 | Yes（スターターキット同梱） | 最低 |
 | `~/.aidlc/config.toml` | ユーザー共通設定 | No | 低 |
 | `docs/aidlc.toml` | プロジェクト共有設定 | Yes | 中 |
 | `docs/aidlc.local.toml` | 個人設定（上書き用） | No（.gitignore） | 高 |

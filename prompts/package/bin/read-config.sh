@@ -106,6 +106,11 @@ if [[ ! -f "$PROJECT_CONFIG_FILE" ]]; then
     exit 2
 fi
 
+# デフォルト設定ファイルの存在確認（オプション、診断メッセージ）
+if [[ ! -f "$DEFAULTS_CONFIG_FILE" ]]; then
+    echo "Warning: defaults.toml not found: $DEFAULTS_CONFIG_FILE (default values will not be applied)" >&2
+fi
+
 # dasel v2/v3 機能検出（2段階）
 # dasel v3 では 'branch' 等が予約語のため、ブラケット記法 key["prop"] を使用する必要がある
 # dasel v2 ではブラケット記法が非対応のため、ドット区切りをそのまま使用する
