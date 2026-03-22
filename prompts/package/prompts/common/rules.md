@@ -21,7 +21,7 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled
 ```
 
 **モードの使い分け**:
-- 単一キーモード: 1つの設定値を取得。defaults.toml のデフォルト値が自動的にフォールバックされる
+- 単一キーモード: 1つの設定値を取得。`docs/aidlc/config/defaults.toml` のデフォルト値が自動的にフォールバックされる
 - バッチモード: 複数の設定値を `key:value` 形式で一括取得。不在キーはスキップされる
 - **注意**: `--keys` と位置引数 `<key>` は同時に使用できません
 
