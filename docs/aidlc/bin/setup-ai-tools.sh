@@ -322,7 +322,7 @@ _merge_kiro_commands_jq() {
       end
     ] as $new |
 
-    ($new_candidates | length) - ($new | length) as $skipped |
+    (($new_candidates | length) - ($new | length)) as $skipped |
 
     (if ($new | length) > 0 then .toolsSettings.shell.allowedCommands += $new else . end) |
     . + {"_meta": {"new": ($new | length), "skipped": $skipped}}
@@ -592,7 +592,7 @@ _merge_permissions_jq() {
       end
     ] as $new |
 
-    ($new_candidates | length) - ($new | length) as $skipped |
+    (($new_candidates | length) - ($new | length)) as $skipped |
 
     # --- ask マージ（単純 set-difference、ワイルドカード判定不要）---
     .permissions.ask as $existing_ask |
