@@ -223,7 +223,7 @@ resolve_starter_kit_root() {
         if [[ -z "$raw_repo" ]]; then
             # read-config.shが設定値を取得できない場合、デフォルト値を使用
             raw_repo="ghq:github.com/ikeisuke/ai-dlc-starter-kit"
-            echo "warn:read-config-fallback:using default starter_kit_repo"
+            echo "warn:read-config-fallback:using default starter_kit_repo" >&2
         fi
 
         # ghq:プレフィックスを除去
