@@ -7,6 +7,14 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.27.2] - 2026-03-24
+
+### Fixed
+
+- `aidlc-setup.sh` の `resolve_starter_kit_root` 関数で warn メッセージが stdout に混入するバグを修正（stderr にリダイレクト）（#394, #391）
+
+---
+
 ## [1.27.1] - 2026-03-23
 
 ### Added
