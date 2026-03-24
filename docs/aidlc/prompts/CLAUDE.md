@@ -71,7 +71,7 @@ git commit -m "feat: add new feature"
 | 「コンストラクション進めて」「start construction」 | Construction Phase |
 | 「オペレーション進めて」「start operations」 | Operations Phase |
 | 「セットアップ」「start setup」 | Inception Phase（リダイレクト） |
-| 「start express」 | Inception Phase（エクスプレスモード、depth_level=minimalで起動） |
+| 「start express」 | Inception Phase（エクスプレスモード、フェーズ連続実行を有効化） |
 | 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
 
 **Lite版を使用する場合**:

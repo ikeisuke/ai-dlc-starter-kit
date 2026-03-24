@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --config)
             if [[ $# -lt 2 ]]; then
-                echo "error:missing-config-value"
+                echo "error:missing-config-value" >&2
                 exit 1
             fi
             CONFIG="$2"
@@ -67,7 +67,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --rules)
             if [[ $# -lt 2 ]]; then
-                echo "error:missing-rules-value"
+                echo "error:missing-rules-value" >&2
                 exit 1
             fi
             RULES="$2"
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            echo "error:unknown-option"
+            echo "error:unknown-option" >&2
             exit 1
             ;;
     esac
@@ -86,11 +86,11 @@ done
 
 # aidlc.toml 存在・シンボリックリンク確認
 if [[ -L "$CONFIG" ]]; then
-    echo "error:symlink-detected:config"
+    echo "error:symlink-detected:config" >&2
     exit 1
 fi
 if [[ ! -f "$CONFIG" ]]; then
-    echo "error:config-not-found"
+    echo "error:config-not-found" >&2
     exit 1
 fi
 
@@ -318,8 +318,5 @@ else
     echo "skip:not-found:rules.jj"
 fi
 
-# 終了コード判定
-if [[ "$_has_warnings" == "true" ]]; then
-    exit 2
-fi
+# 終了コード判定: 警告があっても処理完了なら exit 0
 exit 0
