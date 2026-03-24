@@ -54,7 +54,10 @@ Inception Phaseで決定済み、または既存スタックを使用
 
 - **気づき記録フロー【重要】**: Unit作業中に別Unitや新規課題に関する気づきがあった場合、以下の手順で記録する
   1. **現在の作業を中断しない**: 気づきの記録のみ行い、現在のUnit作業を継続
-  2. **バックログ項目を作成**（ステップ3で確認した `backlog_mode` を参照）:
+  2. **スコープチェック【必須】**: バックログに登録する前に、`docs/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
+     - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
+     - 該当しない場合: 手順3へ進みバックログに登録する
+  3. **バックログ項目を作成**（プリフライトチェックのステップ3で確認した `backlog_mode` を参照）:
 
      **mode=git または mode=git-only の場合**: `docs/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
@@ -81,7 +84,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
      **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
-  3. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
+  4. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
   **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `docs/aidlc/guides/subagent-usage.md` を参照。
 

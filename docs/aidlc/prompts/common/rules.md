@@ -590,12 +590,15 @@ docs/aidlc/bin/write-history.sh \
 
 **ルール**:
 
-1. 改善提案をする際は、同時にバックログ登録を実行する
-2. バックログ登録方法は `docs/aidlc.toml` の `[rules.backlog].mode` に従う
+1. **スコープチェック【必須】**: バックログに登録する前に、`docs/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
+   - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
+   - 該当しない場合: 従来通りバックログに登録する（ルール2へ進む）
+2. 改善提案をする際は、同時にバックログ登録を実行する
+3. バックログ登録方法は `docs/aidlc.toml` の `[rules.backlog].mode` に従う
    - `issue` / `issue-only`: GitHub Issueを作成（`gh issue create`）
    - `git` / `git-only`: `docs/cycles/backlog/` にファイルを作成
    - 詳細は `docs/aidlc/guides/backlog-management.md` を参照
-3. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
+4. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
 
 **禁止例**:
 - 「次のサイクルで改善を検討できます」（← issueやファイル未作成）
