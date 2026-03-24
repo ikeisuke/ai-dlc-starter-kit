@@ -70,16 +70,20 @@ AI-DLC シェルスクリプトの終了コード規約を定義する。
 - 2: エラー
 ```
 
-## ゴールドスタンダード
+## 参考実装
 
-`bin/migrate-config.sh` を規約準拠の参考実装とする。
+`bin/migrate-config.sh` を参考実装とする:
 
-**注意**: migrate-config.sh は警告時に `exit 2` を使用しているが、これは本規約の「処理完了したら exit 0」原則に反する。将来のサイクルで `exit 0` + `status:warning` パターンに修正を検討する。
+- `_has_warnings` フラグで警告状態を追跡
+- 処理中に警告が発生したら `_has_warnings=true` を設定
+- 警告があっても処理完了なら `exit 0`（警告内容は stdout の `warn:*` で通知）
+- エラーメッセージは `>&2` で標準エラー出力に出力
 
 ## 準拠状況
 
 | スクリプト | 準拠状態 | 備考 |
 |-----------|---------|------|
+| migrate-config.sh | 準拠 | 参考実装。v1.27.3 で警告時 exit 2→exit 0 修正 |
 | read-config.sh | 準拠 | 0=値あり, 1=キー不在, 2=エラー |
 | post-merge-sync.sh | 準拠 | |
 | update-version.sh | 準拠 | |
@@ -90,4 +94,3 @@ AI-DLC シェルスクリプトの終了コード規約を定義する。
 | aidlc-setup.sh | 準拠 | |
 | squash-unit.sh | 準拠 | v1.27.3 で exit 2→exit 1 修正 |
 | post-merge-cleanup.sh | 準拠 | 警告時 exit 0 + status:warning |
-| migrate-config.sh | 要修正 | 警告時 exit 2（本規約では exit 0 が正しい） |

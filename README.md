@@ -178,6 +178,7 @@ AIレビュー機能で使用されるスキル。未インストールでも開
 | `reviewing-architecture` | アーキテクチャレビュー（レイヤー分離、設計パターン） |
 | `reviewing-security` | セキュリティレビュー（OWASP Top 10、認証・認可） |
 | `reviewing-inception` | Inception成果物レビュー（Intent、ストーリー、Unit定義） |
+| `codex-review` | Codex CLI を使った第三者AIレビュー |
 
 ### オプション
 
