@@ -587,6 +587,11 @@ main() {
     elif [ "$OVERALL" = "success" ]; then
         echo "message:クリーンアップが完了しました"
     fi
+
+    # 警告付き完了は exit 2（終了コード規約: 0=成功, 1=バリデーションエラー, 2=システムエラー・警告）
+    if [ "$OVERALL" = "warning" ]; then
+        exit 2
+    fi
 }
 
 main "$@"

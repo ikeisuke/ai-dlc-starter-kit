@@ -69,7 +69,7 @@ parse_args() {
             --cycle)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --cycle requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 CYCLE="$2"
                 shift 2
@@ -77,7 +77,7 @@ parse_args() {
             --unit)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --unit requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 UNIT="$2"
                 shift 2
@@ -85,7 +85,7 @@ parse_args() {
             --message)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --message requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 MESSAGE="$2"
                 shift 2
@@ -93,7 +93,7 @@ parse_args() {
             --message-file)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --message-file requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 MESSAGE_FILE="$2"
                 shift 2
@@ -101,11 +101,11 @@ parse_args() {
             --vcs)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --vcs requires a value (git)" >&2
-                    exit 2
+                    exit 1
                 fi
                 if [[ "$2" != "git" ]]; then
                     echo "Error: --vcs must be 'git', got: $2" >&2
-                    exit 2
+                    exit 1
                 fi
                 VCS_TYPE="$2"
                 shift 2
@@ -113,7 +113,7 @@ parse_args() {
             --base)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --base requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 BASE_COMMIT="$2"
                 shift 2
@@ -121,7 +121,7 @@ parse_args() {
             --from)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --from requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 FROM_COMMIT="$2"
                 shift 2
@@ -129,7 +129,7 @@ parse_args() {
             --to)
                 if [[ -z "${2:-}" ]]; then
                     echo "Error: --to requires a value" >&2
-                    exit 2
+                    exit 1
                 fi
                 TO_COMMIT="$2"
                 shift 2
@@ -148,38 +148,38 @@ parse_args() {
                 ;;
             *)
                 echo "Error: unknown option: $1" >&2
-                exit 2
+                exit 1
                 ;;
         esac
     done
 
     if [[ -z "$CYCLE" ]]; then
         echo "Error: --cycle is required" >&2
-        exit 2
+        exit 1
     fi
     # --message と --message-file の排他チェック・ファイル読み込み
     if [[ -n "$MESSAGE_FILE" ]]; then
         if [[ -n "$MESSAGE" ]]; then
             echo "Error: --message and --message-file are mutually exclusive" >&2
-            exit 2
+            exit 1
         fi
         if [[ ! -f "$MESSAGE_FILE" ]]; then
             echo "Error: file not found: $MESSAGE_FILE" >&2
-            exit 2
+            exit 1
         fi
         if [[ ! -s "$MESSAGE_FILE" ]]; then
             echo "Error: file is empty: $MESSAGE_FILE" >&2
-            exit 2
+            exit 1
         fi
         MESSAGE="$(cat "$MESSAGE_FILE")"
     fi
     if [[ -z "$MESSAGE" ]]; then
         echo "Error: --message is required" >&2
-        exit 2
+        exit 1
     fi
     if [[ -z "$VCS_TYPE" ]]; then
         echo "Error: --vcs is required" >&2
-        exit 2
+        exit 1
     fi
 }
 
@@ -202,7 +202,7 @@ validate_from_to_args() {
     # --from/--to は両方同時に指定する必要がある
     if [[ -n "$FROM_COMMIT" && -z "$TO_COMMIT" ]] || [[ -z "$FROM_COMMIT" && -n "$TO_COMMIT" ]]; then
         echo "Error: --from and --to must be specified together" >&2
-        exit 2
+        exit 1
     fi
 
     # --from/--to 未指定時は何もしない
@@ -213,7 +213,7 @@ validate_from_to_args() {
     # --from/--to と --base は排他
     if [[ -n "$BASE_COMMIT" ]]; then
         echo "Error: --from/--to and --base are mutually exclusive in retroactive mode" >&2
-        exit 2
+        exit 1
     fi
 
     # 入力バリデーション（revset演算子混入防止）
@@ -248,15 +248,15 @@ validate_from_to_args() {
 validate_retroactive_args() {
     if [[ -z "$UNIT" ]]; then
         echo "Error: --unit is required when using --retroactive" >&2
-        exit 2
+        exit 1
     fi
     if [[ ! "$UNIT" =~ ^[0-9]{3}$ ]]; then
         echo "Error: --unit must be a 3-digit number (e.g., 003), got: ${UNIT}" >&2
-        exit 2
+        exit 1
     fi
     if [[ "$((10#$UNIT))" -lt 1 ]]; then
         echo "Error: --unit must be 001 or greater, got: ${UNIT}" >&2
-        exit 2
+        exit 1
     fi
 }
 
@@ -938,7 +938,7 @@ main() {
     # --from/--to は retroactive モードでのみ使用可能
     if [[ "$RETROACTIVE" != "true" ]] && [[ -n "$FROM_COMMIT" || -n "$TO_COMMIT" ]]; then
         echo "Error: --from/--to can only be used with --retroactive" >&2
-        exit 2
+        exit 1
     fi
 
     echo "vcs_type:${VCS_TYPE}"
