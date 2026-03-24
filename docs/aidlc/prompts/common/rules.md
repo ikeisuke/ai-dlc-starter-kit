@@ -430,6 +430,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode
 
 | 優先度 | reason_code | 条件 | ユーザーへのメッセージ方針 |
 |--------|-------------|------|------------------------|
+| 0 | `review_not_executed` | 該当承認ポイントに対応するAIレビューフロー（review-flow.md）が未実施 | AIレビューが未実施である旨を通知し、レビュー実行を促す |
 | 1 | `error` | ビルド/テスト失敗またはエラー発生 | エラー内容を提示し対応を求める |
 | 2 | `review_issues` | AIレビュー指摘が残っている | 指摘一覧を提示し判断を求める |
 | 3 | `incomplete_conditions` | 完了条件に未達成項目がある | 未達成項目を提示し判断を求める |
@@ -445,7 +446,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode
 **バリデーション規則**:
 
 - `auto_approved` 時: `reason_code=none`、`fallback_reason` は空
-- `fallback` 時: `reason_code` は `none` 以外、`fallback_reason` は空でない文字列
+- `fallback` 時: `reason_code` は有効値（`review_not_executed`, `error`, `review_issues`, `incomplete_conditions`, `decision_required`）のいずれか、`fallback_reason` は空でない文字列
 - `automation_mode=manual` 時: シグナルを生成しない
 
 ### Bashコードブロック内の`$()`・バッククォート使用禁止【重要】
