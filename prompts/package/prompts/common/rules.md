@@ -301,7 +301,7 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level
 #### エクスプレスモード有効時の動作
 
 - Inception Phase 完了後のコンテキストリセット提示を**スキップ**する
-- Construction Phase の実装ステップに**自動遷移**する
+- Construction Phase に**自動遷移**する（`depth_level=minimal` の場合は Phase 1 をスキップし Phase 2 へ、`standard/comprehensive` の場合は Phase 1 から通常実行。詳細は `construction.md` のエクスプレスモード検出セクションを参照）
 - depth_level に応じた成果物要件はそのまま適用される（エクスプレスモードは成果物要件を変更しない）
 - `automation_mode` の設定に従う（`semi_auto` / `manual` どちらでも動作する）
 
