@@ -180,11 +180,10 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level
 
 | レベル | 用途 | 説明 |
 |--------|------|------|
-| `minimal` | シンプルなバグ修正・小規模変更 | 設計省略可、受け入れ基準簡略化 ※1 |
+| `minimal` | シンプルなバグ修正・小規模変更 | 設計省略可、受け入れ基準簡略化 |
 | `standard` | 通常の機能開発（デフォルト） | 現行の動作と同等 |
 | `comprehensive` | 複雑な機能開発・アーキテクチャ変更 | リスク分析・代替案検討等を追加 |
 
-※1: Unit数がちょうど1の場合、エクスプレスモード（後述「エクスプレスモード仕様」セクション参照）を適用可能
 
 ### レベル別成果物要件一覧
 
@@ -200,8 +199,6 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level
 | Construction | 論理設計 | スキップ可能（設計省略を明記） |
 | Construction | コード・テスト | 通常通り |
 | Operations | リリース準備 | 通常通り |
-
-**フロー制御（minimalのみ）**: エクスプレスモード適用時は Inception 完了後のコンテキストリセットをスキップし、Construction Phase に連続遷移する（詳細は「エクスプレスモード仕様」セクション参照）。
 
 #### standard（標準モード）
 
@@ -257,78 +254,90 @@ docs/aidlc/bin/read-config.sh rules.depth_level.level
 
 ### エクスプレスモード仕様【重要】
 
-`depth_level=minimal` 時に適用条件を満たす場合、Inception Phase と Construction Phase を1つの連続フローで実行する高速パス。
+`start express` コマンドで有効化されるフェーズ連続実行モード。depth_level に依存せず、Unit の複雑度判定に基づいて適用可否を決定する。
 
-#### depth_level 解決優先順位
+#### `start express` コマンドの動作
 
-`depth_level` の値は以下の優先順位で解決する:
+「start express」コマンド検出時、以下をコンテキスト変数として保持する:
 
-1. **コマンドオーバーライド**: 「start express」コマンドによるセッション内限定の `minimal` 指定
-2. **設定ファイル**: `aidlc.toml` の `rules.depth_level.level`
-3. **デフォルト値**: `standard`
+- `express_enabled=true`
+- `express_source=command`
 
-コマンドオーバーライド適用時は `depth_level_source=command_override` をコンテキストに保持し、以下のメッセージを表示する:
+**depth_level は変更しない**。設定ファイルまたはデフォルト値で解決された depth_level がそのまま適用される。
+
+コマンド検出時に以下のメッセージを表示する:
 
 ```text
-【エクスプレスモード】「start express」コマンドにより depth_level=minimal をセッション内オーバーライドしました（設定ファイルの値は無視されます）
+【エクスプレスモード】「start express」コマンドによりフェーズ連続実行モードを有効化しました
+※ depth_level は変更されません。現在の depth_level={current_value} で成果物を生成します
 ```
 
-設定ファイルまたはデフォルト値で解決した場合は `depth_level_source=config` を保持する（メッセージ表示なし）。
+`start express` を使用しない場合は `express_enabled=false` を保持する（メッセージ表示なし）。
 
 #### 適用条件
 
 エクスプレスモードは以下の**すべて**を満たす場合に有効化される:
 
-1. `depth_level=minimal` であること（解決方法は問わない）
-2. Inception Phase で定義された Unit 数が **ちょうど1** であること
+1. `express_enabled=true` であること
+2. 全 Unit の複雑度判定が `eligible` であること
+3. Unit 数が1以上であること（0は対象外）
 
-**注意**: Unit 数が0の場合はエクスプレスモードの対象外（Construction Phase に遷移する前提が成立しないため）。
+#### 複雑度判定ルール
+
+| 評価項目 | eligible 条件 | ineligible 条件 |
+|----------|--------------|----------------|
+| 受け入れ基準の明確さ | 全基準が具体的で検証可能。曖昧な表現なし | 曖昧な基準が1つ以上、または基準が未定義 |
+| 依存関係の複雑さ | Unit間依存が線形。循環依存・多段分岐なし | 循環依存、3つ以上のUnitからの同時依存、外部システムとの双方向依存 |
+| 技術的リスク | 使用技術が既知。プロジェクト内に類似実装あり | 未使用技術導入、外部API新規連携、アーキテクチャ変更 |
+| 変更影響範囲 | 変更対象ファイルが特定可能で限定的 | 影響範囲が不明確、横断的変更（共通基盤改修等） |
+
+判定は AI が Unit 定義ファイルの内容に基づいて実施する。全項目が eligible なら `eligible`、1つでも ineligible なら `ineligible`。
 
 #### 判定タイミング
 
 - Inception Phase の Unit 定義完了後に判定を実施する
-- `depth_level` が `standard` または `comprehensive` の場合、**判定自体をスキップ**する（既存フローに影響なし）
+- `express_enabled` が `false` の場合、**判定自体をスキップ**する（既存フローに影響なし）
 
 #### エクスプレスモード有効時の動作
 
 - Inception Phase 完了後のコンテキストリセット提示を**スキップ**する
 - Construction Phase の実装ステップに**自動遷移**する
-- minimal の既存成果物要件（設計省略可、受け入れ基準簡略化等）はそのまま適用される
+- depth_level に応じた成果物要件はそのまま適用される（エクスプレスモードは成果物要件を変更しない）
 - `automation_mode` の設定に従う（`semi_auto` / `manual` どちらでも動作する）
 
 #### フォールバック条件
 
-適用条件を満たさない場合、通常の minimal フローにフォールバックする。以下のフォールバック通知は `depth_level=minimal` の場合のみ表示される（`standard` / `comprehensive` では判定自体がスキップされるため表示されない）。
+適用条件を満たさない場合、通常フローにフォールバックする。以下のフォールバック通知は `express_enabled=true` の場合のみ表示される（`express_enabled=false` では判定自体がスキップされるため表示されない）。
 
 **フォールバック通知メッセージ**（正本）:
-
-Unit 数が2以上の場合:
-
-```text
-エクスプレスモード適用不可: Unit数が2以上のため通常のminimalフローに切り替えます
-```
 
 Unit 数が0の場合:
 
 ```text
-エクスプレスモード適用不可: Unit定義がないため通常のminimalフローに切り替えます
+エクスプレスモード適用不可: Unit定義がないため通常フローに切り替えます
 ```
 
-- フォールバック時は通常の minimal フローが適用される（Inception 完了→コンテキストリセット→Construction 開始）
+複雑度不適格の場合:
+
+```text
+エクスプレスモード適用不可: [Unit名] が複雑度条件を満たしません（理由: [項目名]）。通常フローに切り替えます
+```
+
+- フォールバック時は通常フローが適用される（Inception 完了→コンテキストリセット→Construction 開始）
 - フォールバックの理由は履歴に記録する
 
 #### 既存モードへの非影響保証
 
-- `standard` / `comprehensive` ではエクスプレスモード判定が実行されないため、既存の動作は一切変更されない
-- `minimal` でも Unit 数が2以上または0の場合は通常の minimal フローが維持される
-- エクスプレスモードは minimal の**拡張**であり、minimal の成果物要件を変更しない
+- `express_enabled=false` ではエクスプレスモード判定が実行されないため、既存の動作は一切変更されない
+- `start express` を使用しない限り既存の動作は一切変更されない
+- エクスプレスモードはフェーズ連続実行の**フロー制御**であり、成果物要件を変更しない
 
 #### フェーズプロンプト実装手順
 
 各フェーズプロンプト（inception.md / construction.md）でのエクスプレスモード実装は、以下の手順に従う:
 
-1. Depth Level の取得・バリデーション（既存の「Unit 003向け契約仕様」に従う）
-2. `depth_level=minimal` の場合のみ、Unit 定義完了後にエクスプレスモード判定を実施
+1. `express_enabled` の状態を確認
+2. `express_enabled=true` の場合のみ、Unit 定義完了後にエクスプレスモード判定（複雑度判定）を実施
 3. 本セクションの適用条件・フォールバック条件を参照し、フロー分岐を実装
 4. フォールバック通知メッセージは本セクションの正本をそのまま使用する（各フェーズプロンプトに文言を重複記述しない）
 
