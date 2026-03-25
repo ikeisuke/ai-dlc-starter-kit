@@ -51,6 +51,11 @@ DOCS_ROOT = (あなたのDOCS_ROOT)
 - **使用タイミング**: Inception Phase開始時に自動作成
 - **生成コマンド**: `TEMPLATE_NAME = inception_progress_template`
 
+#### decision_record_template
+- **説明**: 意思決定記録（選択肢、選択理由、却下理由を構造的に記録）
+- **使用タイミング**: Inception Phase完了時、意思決定が発生した場合
+- **生成コマンド**: `TEMPLATE_NAME = decision_record_template`
+
 ### Construction Phase
 
 #### domain_model_template
