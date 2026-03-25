@@ -1192,7 +1192,7 @@ docs/aidlc/bin/write-history.sh \
 
 ### 4. Squash（コミット統合）【オプション】
 
-「完了時の必須作業」のステップ5と同じ手順を実行する。
+「完了時の必須作業」のステップ6と同じ手順を実行する。
 
 - `squash:success` の場合: ステップ5をスキップ
 - `squash:skipped` の場合: ステップ5に進む
@@ -1269,7 +1269,25 @@ issue:72:labeled:cycle:v1.8.0
 ### 3. 履歴記録
 `docs/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（write-history.sh使用）
 
-### 4. ドラフトPR作成【推奨】
+### 4. 意思決定記録【オプション】
+
+Inception Phase 中に重要な意思決定（AIが複数の選択肢を提示し、ユーザーが選択した場面）があった場合、`docs/cycles/{{CYCLE}}/inception/decisions.md` に記録する。
+
+**記録対象**:
+- 2つ以上の明確な選択肢からユーザーが選択した場面
+- 技術選定、設計方針、スコープ決定などの重要な判断
+
+**記録対象外**:
+- Yes/No の単純な承認確認
+- 手続き的な選択（ブランチ方式、ファイル名等）
+
+**手順**:
+1. セッション中に発生した意思決定を振り返る
+2. 記録対象に該当するものがあれば、テンプレート（`docs/aidlc/templates/decision_record_template.md`）に従い `decisions.md` を作成
+3. 記録IDは連番（DR-001, DR-002, ...）
+4. 記録対象がなければスキップ（ファイル未作成で問題なし）
+
+### 5. ドラフトPR作成【推奨】
 
 GitHub CLIが利用可能な場合、mainブランチへのドラフトPRを作成する（ステップ14で確認した `gh_status` を参照）。
 
@@ -1346,21 +1364,21 @@ gh pr create --draft \
 このPRはOperations Phase完了時にReady for Reviewに変更されます。
 ```
 
-### 5. Squash（コミット統合）【オプション】
+### 6. Squash（コミット統合）【オプション】
 
 **【次のアクション】** `docs/aidlc/prompts/common/commit-flow.md` の「Squash統合フロー」を読み込んで、Inception Phase完了squashの手順に従ってください。
 
-- `squash:success` の場合: ステップ6をスキップ
-- `squash:skipped:no-commits` の場合: ステップ6に進む
-- `squash:error` の場合: commit-flow.mdのエラーリカバリ手順に従う。リカバリ後、ステップ6（通常コミット）に進む
+- `squash:success` の場合: ステップ7をスキップ
+- `squash:skipped:no-commits` の場合: ステップ7に進む
+- `squash:error` の場合: commit-flow.mdのエラーリカバリ手順に従う。リカバリ後、ステップ7（通常コミット）に進む
 
-### 6. Gitコミット
+### 7. Gitコミット
 
-**注意**: ステップ5でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`で確認のみ行ってください。
+**注意**: ステップ6でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`で確認のみ行ってください。
 
 squashを実行していない場合は、`docs/aidlc/prompts/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
-### 7. コンテキストリセット提示【必須】
+### 8. コンテキストリセット提示【必須】
 
 **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
 

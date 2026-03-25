@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.28.0] - 2026-03-25
+
+### Added
+
+- 意思決定記録テンプレート: Inception Phaseで意思決定プロセスを構造的に記録する仕組みを追加（`decision_record_template.md`）
+- フェーズ別レビュー観点定義ガイド: Inception/Construction/Operations各フェーズのレビュー観点を定義（`phase-review-perspectives.md`）
+
+### Changed
+
+- reviewing-inception スキルにAIDLC固有観点を追加: Intent-Unit整合性チェックと意思決定記録の充足性確認を追加
+- Inception Phaseプロンプトに意思決定記録フローを統合
+
+---
+
 ## [1.27.4] - 2026-03-25
 
 ### Changed
