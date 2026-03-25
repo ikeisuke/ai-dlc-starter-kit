@@ -383,22 +383,19 @@ else
         fi
 
         set +e
-        "$MIGRATE_CONFIG" "${MIGRATE_ARGS[@]}"
+        MIGRATE_OUTPUT="$("$MIGRATE_CONFIG" "${MIGRATE_ARGS[@]}")"
         MIGRATE_EXIT=$?
         set -e
 
-        case $MIGRATE_EXIT in
-            0)
-                # 正常完了
-                ;;
-            2)
-                echo "warn:migrate-warnings"
-                ;;
-            *)
-                echo "error:migrate-failed" >&2
-                exit 1
-                ;;
-        esac
+        if [[ $MIGRATE_EXIT -ne 0 ]]; then
+            echo "error:migrate-failed" >&2
+            exit 1
+        fi
+
+        # stdout出力にwarn:行が含まれるか確認（内部判定のみ、再出力しない）
+        if printf '%s\n' "$MIGRATE_OUTPUT" | grep -q '^warn:'; then
+            echo "warn:migrate-warnings"
+        fi
     fi
 fi
 

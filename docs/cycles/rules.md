@@ -229,6 +229,8 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
 **Codexボットアカウント**: `chatgpt-codex-connector[bot]`（変更可能な定数。Codex GitHub AppのBot名が変更された場合はこの値を更新する）
 
+**初回レビュー**: PRがOpen（またはDraftからReady化）された時点でCodexの自動レビューが自動的にトリガーされる。`@codex review` コメントの手動投稿は不要。
+
 **再レビューのトリガー**: 修正をプッシュしただけでは再レビューは実行されない。修正プッシュ後に以下のコメントをPRに投稿すること：
 
 ```bash

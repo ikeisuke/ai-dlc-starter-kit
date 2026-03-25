@@ -430,6 +430,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode
 
 | 優先度 | reason_code | 条件 | ユーザーへのメッセージ方針 |
 |--------|-------------|------|------------------------|
+| 0 | `review_not_executed` | 該当承認ポイントに対応するAIレビューフロー（review-flow.md）が未実施 | AIレビューが未実施である旨を通知し、レビュー実行を促す |
 | 1 | `error` | ビルド/テスト失敗またはエラー発生 | エラー内容を提示し対応を求める |
 | 2 | `review_issues` | AIレビュー指摘が残っている | 指摘一覧を提示し判断を求める |
 | 3 | `incomplete_conditions` | 完了条件に未達成項目がある | 未達成項目を提示し判断を求める |
@@ -445,7 +446,7 @@ docs/aidlc/bin/read-config.sh rules.automation.mode
 **バリデーション規則**:
 
 - `auto_approved` 時: `reason_code=none`、`fallback_reason` は空
-- `fallback` 時: `reason_code` は `none` 以外、`fallback_reason` は空でない文字列
+- `fallback` 時: `reason_code` は有効値（`review_not_executed`, `error`, `review_issues`, `incomplete_conditions`, `decision_required`）のいずれか、`fallback_reason` は空でない文字列
 - `automation_mode=manual` 時: シグナルを生成しない
 
 ### Bashコードブロック内の`$()`・バッククォート使用禁止【重要】
@@ -590,12 +591,15 @@ docs/aidlc/bin/write-history.sh \
 
 **ルール**:
 
-1. 改善提案をする際は、同時にバックログ登録を実行する
-2. バックログ登録方法は `docs/aidlc.toml` の `[rules.backlog].mode` に従う
+1. **スコープチェック【必須】**: バックログに登録する前に、`docs/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
+   - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
+   - 該当しない場合: 従来通りバックログに登録する（ルール2へ進む）
+2. 改善提案をする際は、同時にバックログ登録を実行する
+3. バックログ登録方法は `docs/aidlc.toml` の `[rules.backlog].mode` に従う
    - `issue` / `issue-only`: GitHub Issueを作成（`gh issue create`）
    - `git` / `git-only`: `docs/cycles/backlog/` にファイルを作成
    - 詳細は `docs/aidlc/guides/backlog-management.md` を参照
-3. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
+4. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
 
 **禁止例**:
 - 「次のサイクルで改善を検討できます」（← issueやファイル未作成）
