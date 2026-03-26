@@ -60,12 +60,11 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 
 | フェーズ | 読み込み対象 |
 |---------|-------------|
-| inception | `steps/inception/` 配下（Unit 005で作成） |
+| inception | `steps/inception/01-setup.md` → `02-preparation.md` → `03-intent.md` → `04-stories-units.md` → `05-completion.md`（`06-backtrack.md` は必要時） |
 | construction | `steps/construction/` 配下（Unit 006で作成） |
 | operations | `steps/operations/` 配下（Unit 007で作成） |
 
 **暫定措置**: フェーズステップが未作成の場合、既存プロンプトにフォールバック:
-- inception → `docs/aidlc/prompts/inception.md` を読み込む
 - construction → `docs/aidlc/prompts/construction.md` を読み込む
 - operations → `docs/aidlc/prompts/operations.md` を読み込む
 
