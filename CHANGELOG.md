@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.28.1] - 2026-03-26
+
+### Added
+
+- Codex PRレビュー承認判定にIssue Commentパターンを追加: リアクション絵文字に加えて、Codexボットの承認コメント（「Didn't find any major issues」）を検出する c-4 ステップを追加（#408）
+- Unit実装状態に「取り下げ」（withdrawn）ステータスを追加: Construction Phase・Operations Phaseで完了扱いとして認識される新しい有効値（#406）
+
+### Changed
+
+- Codex PRレビュー状態判定セクションを拡張: c-1の出力に`created_at`を追加し、c-2失敗時の独立フォールバック（c-4へ進行）を導入
+- Unit定義テンプレートに有効値リスト（未着手 | 進行中 | 完了 | 取り下げ）を明記
+- Construction Phase・Operations Phaseのプロンプトを更新: 依存関係判定・進捗判定で「取り下げ」を完了扱いとして処理
+- フェーズ別レビュー観点定義を更新: Operations Phaseのリリース準備チェックに「取り下げ」ステータスを追加
+
+---
+
 ## [1.28.0] - 2026-03-25
 
 ### Added
