@@ -15,12 +15,12 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./prompts/package/skills/aidlc-setup",
-        "./prompts/package/skills/reviewing-architecture",
-        "./prompts/package/skills/reviewing-code",
-        "./prompts/package/skills/reviewing-inception",
-        "./prompts/package/skills/reviewing-security",
-        "./prompts/package/skills/squash-unit"
+        "./skills/aidlc-setup",
+        "./skills/reviewing-architecture",
+        "./skills/reviewing-code",
+        "./skills/reviewing-inception",
+        "./skills/reviewing-security",
+        "./skills/squash-unit"
       ]
     }
   ]
