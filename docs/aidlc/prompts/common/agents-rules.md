@@ -36,13 +36,13 @@
 
 ## バックログ管理
 
-バックログの保存先は `docs/aidlc.toml` の `[rules.backlog].mode` で設定する。
+バックログの保存先は `.aidlc/config.toml` の `[rules.backlog].mode` で設定する。
 
 | mode | 保存先 | 説明 |
 |------|--------|------|
-| git | `docs/cycles/backlog/*.md` | ローカルファイルがデフォルト（他の保存先も許容） |
+| git | `.aidlc/cycles/backlog/*.md` | ローカルファイルがデフォルト（他の保存先も許容） |
 | issue | GitHub Issues | GitHub Issueがデフォルト（他の保存先も許容） |
-| git-only | `docs/cycles/backlog/*.md` | ローカルファイルのみ（Issue作成禁止） |
+| git-only | `.aidlc/cycles/backlog/*.md` | ローカルファイルのみ（Issue作成禁止） |
 | issue-only | GitHub Issues | GitHub Issueのみ（ローカルファイル作成禁止） |
 
 **排他モード（`*-only`）の場合**: 指定された保存先のみを使用し、他の保存先への記録は行わない。

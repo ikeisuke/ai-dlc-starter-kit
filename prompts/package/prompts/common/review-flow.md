@@ -4,7 +4,7 @@
 
 ## 設定確認
 
-`docs/aidlc.toml` の `[rules.reviewing]` セクションを読み、`mode` の値を確認:
+`.aidlc/config.toml` の `[rules.reviewing]` セクションを読み、`mode` の値を確認:
 
 - `mode = "required"`: AIレビュー必須（外部AIレビューツールまたはセルフレビューによる実施を推奨。ユーザー判断により例外的にユーザーレビューへ移行可能。承認は履歴に記録する）
 - `mode = "recommend"`: AIレビュー推奨（スキップ可能、デフォルト）
@@ -12,7 +12,7 @@
 
 ## tools設定と優先ツールヒント
 
-`docs/aidlc.toml` の `[rules.reviewing]` セクションから `tools` を読み取る。
+`.aidlc/config.toml` の `[rules.reviewing]` セクションから `tools` を読み取る。
 
 **設定形式**:
 
@@ -106,7 +106,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
 ## 処理フロー
 
-1. **mode確認**: `docs/aidlc.toml` を読んでmodeを確認
+1. **mode確認**: `.aidlc/config.toml` を読んでmodeを確認
    - 空または取得失敗時は「recommend」として扱う
    - `disabled` の場合: ステップ8（ユーザーレビューフロー）へ
    - `required` または `recommend` の場合: 次のステップへ
@@ -178,7 +178,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
      | `credentials.*` | 認証情報ファイル |
      | `*secret*` | シークレット関連ファイル |
 
-     **カスタムパターン**: `docs/aidlc.toml` の `[rules.reviewing].exclude_patterns` を読み取る。
+     **カスタムパターン**: `.aidlc/config.toml` の `[rules.reviewing].exclude_patterns` を読み取る。
 
      ```toml
      [rules.reviewing]
@@ -220,7 +220,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
      - .env.local（パターン: .env*）
      - config/credentials.json（パターン: credentials.*）
 
-     除外パターンは docs/aidlc.toml の [rules.reviewing].exclude_patterns でカスタマイズできます。
+     除外パターンは .aidlc/config.toml の [rules.reviewing].exclude_patterns でカスタマイズできます。
      ```
 
      除外ファイルがない場合: 通知なし（無言で続行）。
@@ -391,7 +391,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        2. 以下を実行:
 
        ```bash
-       docs/aidlc/bin/write-history.sh \
+       skills/aidlc/scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase "{{PHASE}}" \
            --unit "{N}" \
@@ -485,7 +485,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       2. 以下を実行:
 
       ```bash
-      docs/aidlc/bin/write-history.sh \
+      skills/aidlc/scripts/write-history.sh \
           --cycle "{{CYCLE}}" \
           --phase "{{PHASE}}" \
           --unit "{N}" \
@@ -523,7 +523,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
        - `mode = git` または `mode = git-only` の場合:
 
-         `docs/cycles/backlog/{type}-{slug}.md` にファイルを作成する。
+         `.aidlc/cycles/backlog/{type}-{slug}.md` にファイルを作成する。
          `{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
          slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイルが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
 
@@ -635,7 +635,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        2. 以下を実行（constructionフェーズの場合）:
 
        ```bash
-       docs/aidlc/bin/write-history.sh \
+       skills/aidlc/scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase construction \
            --unit "{N}" \
@@ -648,7 +648,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        inceptionフェーズの場合（`--unit*` 引数を省略）:
 
        ```bash
-       docs/aidlc/bin/write-history.sh \
+       skills/aidlc/scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase inception \
            --step "バックログ自動登録" \
@@ -672,7 +672,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       2. 以下を実行:
 
       ```bash
-      docs/aidlc/bin/write-history.sh \
+      skills/aidlc/scripts/write-history.sh \
           --cycle "{{CYCLE}}" \
           --phase "{{PHASE}}" \
           --unit "{N}" \
@@ -856,7 +856,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           2. 以下を実行:
 
           ```bash
-          docs/aidlc/bin/write-history.sh \
+          skills/aidlc/scripts/write-history.sh \
               --cycle "{{CYCLE}}" \
               --phase "{{PHASE}}" \
               --unit "{N}" \
@@ -920,7 +920,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 2. 以下を実行:
 
 ```bash
-docs/aidlc/bin/write-history.sh \
+skills/aidlc/scripts/write-history.sh \
     --cycle "{{CYCLE}}" \
     --phase "{{PHASE}}" \
     --unit "{N}" \
@@ -968,12 +968,12 @@ AIレビュー完了時にレビューサマリファイルを生成・追記す
 
 | フェーズ | 呼び出し元ステップ | ファイルパス |
 |---------|------------------|------------|
-| Construction | Phase 1 ステップ3（設計レビュー） | `docs/cycles/{{CYCLE}}/construction/units/{NNN}-review-summary.md` |
+| Construction | Phase 1 ステップ3（設計レビュー） | `.aidlc/cycles/{{CYCLE}}/construction/units/{NNN}-review-summary.md` |
 | Construction | Phase 2 ステップ4（コード生成後） | 同上（追記） |
 | Construction | Phase 2 ステップ6（統合とレビュー） | 同上（追記） |
-| Inception | Intent承認前 | `docs/cycles/{{CYCLE}}/inception/intent-review-summary.md` |
-| Inception | ユーザーストーリー承認前 | `docs/cycles/{{CYCLE}}/inception/user-stories-review-summary.md` |
-| Inception | Unit定義承認前 | `docs/cycles/{{CYCLE}}/inception/unit-definition-review-summary.md` |
+| Inception | Intent承認前 | `.aidlc/cycles/{{CYCLE}}/inception/intent-review-summary.md` |
+| Inception | ユーザーストーリー承認前 | `.aidlc/cycles/{{CYCLE}}/inception/user-stories-review-summary.md` |
+| Inception | Unit定義承認前 | `.aidlc/cycles/{{CYCLE}}/inception/unit-definition-review-summary.md` |
 
 - `{NNN}`: Unit番号（3桁ゼロパディング、例: `004`）
 

@@ -2,7 +2,7 @@
 
 ## session-state.md の生成
 
-セッション中断時に、現在の作業状態を `docs/cycles/{{CYCLE}}/{{PHASE_DIR}}/session-state.md` に保存する。
+セッション中断時に、現在の作業状態を `.aidlc/cycles/{{CYCLE}}/{{PHASE_DIR}}/session-state.md` に保存する。
 
 `{{PHASE_DIR}}` は現在のフェーズに対応するディレクトリ名: `inception` | `construction` | `operations`
 
@@ -38,7 +38,7 @@
 
 ## session-state.md の復元
 
-フェーズ再開時に `docs/cycles/{{CYCLE}}/{{PHASE_DIR}}/session-state.md` の存在を確認する。
+フェーズ再開時に `.aidlc/cycles/{{CYCLE}}/{{PHASE_DIR}}/session-state.md` の存在を確認する。
 
 - **存在する場合**: 読み込み、以下のバリデーションを実施する:
   - `schema_version` が `1` であること

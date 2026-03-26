@@ -9,7 +9,7 @@
 以下のコマンドを実行し、ツール状態を取得する:
 
 ```bash
-docs/aidlc/bin/env-info.sh
+skills/aidlc/scripts/env-info.sh
 ```
 
 出力から以下を抽出し、コンテキスト変数に保持する:
@@ -23,7 +23,7 @@ docs/aidlc/bin/env-info.sh
 **互換エイリアス**: 既存フェーズプロンプトで `gh:available` 形式で参照している箇所は `gh_status` で読み替える。
 
 ```bash
-docs/aidlc/bin/check-backlog-mode.sh
+skills/aidlc/scripts/check-backlog-mode.sh
 ```
 
 出力: `backlog_mode:{mode}` → `backlog_mode` コンテキスト変数
@@ -39,21 +39,21 @@ docs/aidlc/bin/check-backlog-mode.sh
 ### 3. aidlc.toml確認
 
 ```bash
-ls docs/aidlc.toml 2>/dev/null
+ls .aidlc/config.toml 2>/dev/null
 ```
 
 - **存在しない場合（blocker）**: 以下を表示しフェーズ中断
 
   ```text
   【プリフライトチェック失敗】
-  docs/aidlc.toml が見つかりません。
+  .aidlc/config.toml が見つかりません。
   AI-DLCのセットアップが必要です。prompts/setup-prompt.md を参照してください。
   ```
 
 - **存在する場合**: `[project].name` を確認
 
   ```bash
-  docs/aidlc/bin/read-config.sh project.name
+  skills/aidlc/scripts/read-config.sh project.name
   ```
 
   - 取得成功: 情報保持
@@ -64,7 +64,7 @@ ls docs/aidlc.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-docs/aidlc/bin/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
+skills/aidlc/scripts/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:

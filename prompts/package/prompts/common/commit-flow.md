@@ -34,7 +34,7 @@
 
 #### 自動検出の有効化/無効化
 
-`docs/aidlc.toml` の `[rules.commit]` セクションで制御:
+`.aidlc/config.toml` の `[rules.commit]` セクションで制御:
 
 ```toml
 [rules.commit]
@@ -224,7 +224,7 @@ Co-Authored-By: {AI_AUTHOR}
 **設定確認**:
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.squash.enabled
+skills/aidlc/scripts/read-config.sh rules.squash.enabled
 ```
 
 - `true` の場合: 以下の手順を実行
@@ -306,7 +306,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled
    ```
 
    ```bash
-   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
@@ -317,7 +317,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled
    ```
 
    ```bash
-   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' \
+   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' \
      --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
@@ -356,7 +356,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled
    2. 以下を実行:
 
    ```bash
-   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --retroactive --dry-run --message-file /tmp/aidlc-squash-msg.txt
    ```
 
@@ -367,7 +367,7 @@ docs/aidlc/bin/read-config.sh rules.squash.enabled
    前のステップと同じ一時ファイルを再利用（または新たに作成）:
 
    ```bash
-   docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --retroactive --message-file /tmp/aidlc-squash-msg.txt
    ```
 
@@ -399,7 +399,7 @@ Unit-Number: {NNN}
 3. 対象範囲を --from/--to で指定（--base は不要）:
 
 ```bash
-docs/aidlc/bin/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive \
   --from '<Unit開始コミット>' --to '<Unit終了コミット>' \
   --message-file /tmp/aidlc-squash-msg.txt
@@ -430,9 +430,9 @@ git status
 
 **重要ファイルの確認**（以下が含まれているか確認）:
 
-- [ ] Unit定義ファイル: `docs/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
-- [ ] 履歴ファイル: `docs/cycles/{{CYCLE}}/history/construction_unit{NN}.md`
-- [ ] 設計ファイル（作成した場合）: `docs/cycles/{{CYCLE}}/design-artifacts/`
+- [ ] Unit定義ファイル: `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/[unit_name].md`
+- [ ] 履歴ファイル: `.aidlc/cycles/{{CYCLE}}/history/construction_unit{NN}.md`
+- [ ] 設計ファイル（作成した場合）: `.aidlc/cycles/{{CYCLE}}/design-artifacts/`
 - [ ] 実装ファイル（作成した場合）
 
 各Unitで作成・変更したすべてのファイル（**Unit定義ファイルと履歴ファイルを含む**）をコミットに含めること。

@@ -10,9 +10,9 @@
 
 | フェーズ | プロンプトパス | 進捗確認先 |
 |---------|-------------|-----------|
-| Inception | `docs/aidlc/prompts/inception.md` | `docs/cycles/{{CYCLE}}/inception/progress.md` |
-| Construction | `docs/aidlc/prompts/construction.md` | Unit定義ファイル（`docs/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
-| Operations | `docs/aidlc/prompts/operations.md` | `docs/cycles/{{CYCLE}}/operations/progress.md` |
+| Inception | `docs/aidlc/prompts/inception.md` | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
+| Construction | `docs/aidlc/prompts/construction.md` | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
+| Operations | `docs/aidlc/prompts/operations.md` | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
 
 ## session-state.md の生成【コンパクション前】
 
@@ -27,7 +27,7 @@
 事前にBashで以下を実行し、結果を確認する:
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.automation.mode
+skills/aidlc/scripts/read-config.sh rules.automation.mode
 ```
 
 **終了コードに基づく処理**:

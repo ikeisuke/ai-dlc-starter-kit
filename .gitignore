@@ -16,5 +16,5 @@
 .worktree/
 
 # AI-DLC local config (personal settings)
-docs/aidlc.local.toml
-docs/aidlc.toml.local
+.aidlc/config.local.toml
+.aidlc/config.toml.local

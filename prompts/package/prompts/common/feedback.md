@@ -4,10 +4,10 @@
 
 ## 設定確認
 
-最初に `docs/aidlc.toml` の設定を確認する：
+最初に `.aidlc/config.toml` の設定を確認する：
 
 ```bash
-docs/aidlc/bin/read-config.sh rules.feedback.enabled
+skills/aidlc/scripts/read-config.sh rules.feedback.enabled
 ```
 
 **`false` の場合**:
@@ -17,7 +17,7 @@ docs/aidlc/bin/read-config.sh rules.feedback.enabled
 ```text
 【フィードバック送信機能 無効】
 この機能は無効化されています。
-`docs/aidlc.toml` の `[rules.feedback].enabled` を `true` に設定することで有効化できます。
+`.aidlc/config.toml` の `[rules.feedback].enabled` を `true` に設定することで有効化できます。
 ```
 
 **`false` 以外の場合（デフォルト: `true`）**:
