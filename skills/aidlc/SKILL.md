@@ -62,10 +62,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 |---------|-------------|
 | inception | `steps/inception/01-setup.md` → `02-preparation.md` → `03-intent.md` → `04-stories-units.md` → `05-completion.md`（`06-backtrack.md` は必要時） |
 | construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md` |
-| operations | `steps/operations/` 配下（Unit 007で作成） |
-
-**暫定措置**: フェーズステップが未作成の場合、既存プロンプトにフォールバック:
-- operations → `docs/aidlc/prompts/operations.md` を読み込む
+| operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
 
 Lite版の場合は対応するLiteプロンプトを読み込む。
 
