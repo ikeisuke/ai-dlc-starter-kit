@@ -15,6 +15,7 @@
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/aidlc",
         "./skills/aidlc-setup",
         "./skills/reviewing-architecture",
         "./skills/reviewing-code",
