@@ -1,6 +1,6 @@
 # Operations Phase - ステップ7: リリース準備
 
-> このファイルは `operations.md` のステップ7の詳細です。全体フローは `docs/aidlc/prompts/operations.md` を参照してください。
+> このファイルは Operations Phase のステップ7の詳細です。全体フローは `steps/operations/02-deploy.md` を参照してください。
 
 **前提条件**: このステップを開始する前に、以下が完了していること:
 

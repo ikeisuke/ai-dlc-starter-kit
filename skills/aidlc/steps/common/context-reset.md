@@ -34,17 +34,17 @@
 
 **作業を継続するプロンプト**:
 ```
-以下のファイルを読み込んで、サイクル vX.X.X の {{PHASE}} Phase を継続してください：
-docs/aidlc/prompts/{{PHASE_FILE}}
+サイクル vX.X.X の {{PHASE}} Phase を継続してください：
+/aidlc {{PHASE_COMMAND}}
 ```
 ---
 ````
 
-**注意**: `{{PHASE}}` と `{{PHASE_FILE}}` は呼び出し元のフェーズに応じて置換してください。
+**注意**: `{{PHASE}}` と `{{PHASE_COMMAND}}` は呼び出し元のフェーズに応じて置換してください。
 
-| フェーズ | {{PHASE}} | {{PHASE_FILE}} |
-|---------|-----------|----------------|
-| Construction | Construction | construction.md |
-| Operations | Operations | operations.md |
+| フェーズ | {{PHASE}} | {{PHASE_COMMAND}} |
+|---------|-----------|-------------------|
+| Construction | Construction | construction |
+| Operations | Operations | operations |
 
 **再開時の復元**: フェーズプロンプトの初期チェックで `session-state.md` が自動的に読み込まれ、中断時点のステップから作業が再開される。復元フローの詳細は `common/session-continuity.md` の「session-state.md の復元」セクションを参照。

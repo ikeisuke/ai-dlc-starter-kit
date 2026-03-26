@@ -47,7 +47,7 @@ ls .aidlc/config.toml 2>/dev/null
   ```text
   【プリフライトチェック失敗】
   .aidlc/config.toml が見つかりません。
-  AI-DLCのセットアップが必要です。prompts/setup-prompt.md を参照してください。
+  AI-DLCのセットアップが必要です。`/aidlc setup` を実行してください。
   ```
 
 - **存在する場合**: `[project].name` を確認

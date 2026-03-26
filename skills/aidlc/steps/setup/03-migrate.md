@@ -80,7 +80,7 @@ AI-DLCではファイル操作やGitコマンドを多用します。
 AI-DLCのアップグレードが完了しました！
 
 更新されたファイル:
-- docs/aidlc/prompts/ - フェーズプロンプト
+- skills/aidlc/ - AI-DLCスキル（フェーズステップファイル）
 - docs/aidlc/templates/ - ドキュメントテンプレート
 
 ※ docs/aidlc.toml は保持されています（変更なし）

@@ -107,10 +107,10 @@ docs/
 | 「コンストラクション進めて」 | Construction Phase |
 | 「オペレーション進めて」 | Operations Phase |
 
-または、プロンプトファイルを直接指定：
+または、スキルコマンドを直接実行：
 
-```markdown
-docs/aidlc/prompts/inception.md を読み込んでください
+```
+/aidlc inception
 ```
 
 #### Inception Phase（要件定義）

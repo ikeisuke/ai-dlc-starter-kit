@@ -69,7 +69,7 @@ Setup PhaseとInception Phaseが統合され、1回の実行で
 | 「start lite construction」 | `/aidlc lite construction` |
 | 「start lite operations」 | `/aidlc lite operations` |
 
-**後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）も引き続き有効です。
+**後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）は `/aidlc` コマンドにリダイレクトされます。
 
 ### サイクル判定
 

@@ -69,8 +69,8 @@
 
   **作業を継続するプロンプト**:
   ```
-  以下のファイルを読み込んで、サイクル {{CYCLE}} の Inception Phase を継続してください：
-  docs/aidlc/prompts/inception.md
+  サイクル {{CYCLE}} の Inception Phase を継続してください：
+  /aidlc inception
   ```
   ---
   ````
@@ -159,7 +159,7 @@ mode = "disabled"
 #### 3. デプロイ済みファイル確認
 
 ```bash
-ls docs/aidlc/prompts/inception.md 2>/dev/null
+ls skills/aidlc/SKILL.md 2>/dev/null
 ```
 
 出力があれば `DEPLOYED_EXISTS`、エラーなら `DEPLOYED_NOT_EXISTS` と判断。
@@ -168,13 +168,11 @@ ls docs/aidlc/prompts/inception.md 2>/dev/null
 - **DEPLOYED_EXISTS**: ステップ4（スターターキット開発リポジトリ判定）へ進む
 - **DEPLOYED_NOT_EXISTS**: 以下のお知らせを表示し、ステップ4へ進む
   ```text
-  【お知らせ】docs/aidlc/prompts/inception.md が見つかりません。
+  【お知らせ】skills/aidlc/SKILL.md が見つかりません。
 
-  アップグレードせずにサイクルを開始する場合は、以下のファイルを参照してください：
-  prompts/package/prompts/inception.md
-
-  このファイルには最新版が含まれています。
-  現在このファイルを使用しているため、処理を続行します。
+  AI-DLCスキルが未セットアップの可能性があります。
+  `/aidlc setup` でセットアップを実行してください。
+  現在のスキルファイルを使用しているため、処理を続行します。
   ```
 
 #### 4. スターターキット開発リポジトリ判定
