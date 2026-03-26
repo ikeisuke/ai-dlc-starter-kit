@@ -281,7 +281,7 @@ gh api --paginate repos/{owner}/{repo}/pulls/{PR番号}/comments
 
    **注**: `--paginate` はページ単位で `--jq` を評価するため、`jq -s` で全ページを集約してから最新を選ぶ。出力の `id` はc-2のリアクション取得で、`created_at` はc-4のレビューラウンド紐付けで使用する。
 
-   **注**: c-1のpaginate結果（Issue Comments全件データ）はc-4（Issue Comment承認判定）のフィルタリングでも参照する。AIエージェントはこのデータを内部的に保持すること。
+   **注**: c-1のpaginate結果（`--jq` 適用前のIssue Comments全件データ）はc-4（Issue Comment承認判定）のフィルタリングでも参照する。AIエージェントはpaginate応答の全件データ（`user.login`, `created_at`, `body` 等の全フィールドを含む）を内部的に保持すること。上記jqコマンドの出力 `{id, created_at}` はc-2/c-3用の抽出結果であり、c-4はこの抽出結果ではなく全件データを使用する。
 
    - API失敗時: 下記「API失敗時のエラーハンドリング」テーブルに従い手動確認を誘導
    - コメントIDが取得できない場合（`null` / 空）: c判定全体をスキップ（a/b判定のみで続行）
