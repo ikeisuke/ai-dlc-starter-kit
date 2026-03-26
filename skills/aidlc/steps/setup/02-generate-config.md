@@ -597,7 +597,7 @@ fi
 **AGENTS.md / CLAUDE.md の処理（参照行追記）**:
 
 AGENTS.mdとCLAUDE.mdは、AI-DLC設定ファイルへの参照を追記します。
-参照先ファイル（`docs/aidlc/prompts/AGENTS.md`, `docs/aidlc/prompts/CLAUDE.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
+参照先ファイル（`skills/aidlc/AGENTS.md`, `skills/aidlc/CLAUDE.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
 
 **AGENTS.md の処理（全AIツール共通）**:
 
@@ -608,7 +608,7 @@ if [ ! -f AGENTS.md ]; then
   cat > AGENTS.md << 'EOF'
 # AGENTS.md
 
-@docs/aidlc/prompts/AGENTS.md を参照してください。
+@skills/aidlc/AGENTS.md を参照してください。
 EOF
   echo "Created: AGENTS.md"
 fi
@@ -616,12 +616,12 @@ fi
 
 AGENTS.mdが既に存在し、参照行がない場合は先頭に追記する:
 
-1. Bashツールで追記が必要か確認する: `grep -q "@docs/aidlc/prompts/AGENTS.md" AGENTS.md || echo "NEEDS_UPDATE"`
+1. Bashツールで追記が必要か確認する: `grep -q "@skills/aidlc/AGENTS.md" AGENTS.md || echo "NEEDS_UPDATE"`
 2. 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
 3. 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
 
 ```bash
-echo "@docs/aidlc/prompts/AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat AGENTS.md >> "<パス>" && \mv "<パス>" AGENTS.md && echo "Added reference to AGENTS.md"
+echo "@skills/aidlc/AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat AGENTS.md >> "<パス>" && \mv "<パス>" AGENTS.md && echo "Added reference to AGENTS.md"
 ```
 
 **CLAUDE.md の処理（Claude Code専用）**:
@@ -634,7 +634,7 @@ if [ ! -f CLAUDE.md ]; then
 # CLAUDE.md
 
 @AGENTS.md を参照してください。
-@docs/aidlc/prompts/CLAUDE.md を参照してください。
+@skills/aidlc/CLAUDE.md を参照してください。
 EOF
   echo "Created: CLAUDE.md"
 fi
@@ -642,13 +642,13 @@ fi
 
 CLAUDE.mdが既に存在する場合、以下の参照行を逆順で先頭に追記する（最終的に `@AGENTS.md` → `@CLAUDE.md` の順になる）:
 
-1. `@docs/aidlc/prompts/CLAUDE.md` 参照の追記:
-   - Bashツールで追記が必要か確認する: `grep -q "@docs/aidlc/prompts/CLAUDE.md" CLAUDE.md || echo "NEEDS_UPDATE"`
+1. `@skills/aidlc/CLAUDE.md` 参照の追記:
+   - Bashツールで追記が必要か確認する: `grep -q "@skills/aidlc/CLAUDE.md" CLAUDE.md || echo "NEEDS_UPDATE"`
    - 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
    - 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
 
    ```bash
-   echo "@docs/aidlc/prompts/CLAUDE.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @docs/aidlc/prompts/CLAUDE.md"
+   echo "@skills/aidlc/CLAUDE.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @skills/aidlc/CLAUDE.md"
    ```
 
 2. `@AGENTS.md` 参照の追記（これが最上段になる）:

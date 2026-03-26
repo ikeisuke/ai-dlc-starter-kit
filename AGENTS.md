@@ -1,3 +1,3 @@
 # AGENTS.md
 
-@docs/aidlc/prompts/AGENTS.md を参照してください。
+@skills/aidlc/AGENTS.md を参照してください。
