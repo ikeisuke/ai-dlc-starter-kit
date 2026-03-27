@@ -7,6 +7,34 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.0] - 2026-03-27
+
+### Added
+
+- Claude Codeスキルプラグイン化: AI-DLCフェーズプロンプト（Inception/Construction/Operations/Setup）をClaude Codeスキルとして再構成し、プラグインとして配布可能に
+- ステップ分割アーキテクチャ: 各フェーズを複数のステップファイル（`skills/aidlc/steps/`）に分割し、コンテキスト効率を改善
+- プラグインレベルAGENTS.md/CLAUDE.md: マルチツール対応のエントリポイントをスキルプラグイン内に配置
+- v1→v2マイグレーションガイド: `docs/aidlc/guides/migration-v1-to-v2.md` を新規作成
+- `aidlc-setup` スキル: アップグレード専用スキルとして独立化
+
+### Changed
+
+- ディレクトリ構造の大幅変更: `docs/aidlc/prompts/` → `skills/aidlc/steps/`、`docs/aidlc/templates/` → `skills/aidlc/templates/`、`docs/aidlc/bin/` → `skills/aidlc/scripts/` に移行
+- フェーズ起動方式: ファイル読み込み指示（`docs/aidlc/prompts/*.md を読み込んで`）から `/aidlc {phase}` コマンドに統一
+- SKILL.mdオーケストレーター: 引数ルーティングによるフェーズ遷移パターンを採用
+- プロジェクト側フットプリント最小化: `.aidlc/config.toml` + `.aidlc/cycles/` のみに削減
+
+### Removed
+
+- `docs/aidlc/prompts/` ディレクトリ（24ファイル）: `skills/aidlc/steps/` に移行
+- `docs/aidlc/templates/` ディレクトリ（23ファイル）: `skills/aidlc/templates/` に移行
+- `docs/aidlc/bin/` ディレクトリ（29+ファイル）: `skills/aidlc/scripts/` に移行
+- `docs/aidlc/config/` ディレクトリ: `skills/aidlc/config/` に統合
+- `docs/aidlc/skills/` ディレクトリ: `skills/` トップレベルに統合
+- `docs/aidlc/tests/` ディレクトリ: `skills/aidlc/scripts/tests/` に移行
+
+---
+
 ## [1.28.1] - 2026-03-26
 
 ### Added
