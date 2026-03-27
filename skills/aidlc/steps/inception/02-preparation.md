@@ -61,7 +61,7 @@ skills/aidlc/scripts/check-open-issues.sh
 skills/aidlc/scripts/label-cycle-issues.sh {{CYCLE}}
 ```
 
-詳細は `docs/aidlc/guides/issue-management.md` を参照。
+詳細は `{{aidlc_dir}}/guides/issue-management.md` を参照。
 
 #### 17. バックログ確認
 
@@ -86,7 +86,7 @@ gh issue list --label backlog --state open
 
 **排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
-**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
+**詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
 
 - **存在しない/空の場合**: スキップ
 - **項目が存在する場合**: 内容を確認し、ユーザーに質問

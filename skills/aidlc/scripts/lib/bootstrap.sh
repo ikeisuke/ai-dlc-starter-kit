@@ -13,6 +13,7 @@
 #   AIDLC_LOCAL_CONFIG_LEGACY - レガシーローカル設定ファイルパス
 #   AIDLC_CYCLES            - サイクルデータディレクトリ
 #   AIDLC_DEFAULTS          - デフォルト設定ファイルパス
+#   AIDLC_DOCS_DIR          - ドキュメントディレクトリ（絶対パス）
 
 # --- AIDLC_PROJECT_ROOT ---
 # 外部指定（依存注入）があればそちらを使用、なければ自動解決
@@ -39,6 +40,61 @@ AIDLC_DEFAULTS="${AIDLC_PLUGIN_ROOT}/config/defaults.toml"
 export AIDLC_PROJECT_ROOT AIDLC_PLUGIN_ROOT
 export AIDLC_CONFIG AIDLC_LOCAL_CONFIG AIDLC_LOCAL_CONFIG_LEGACY
 export AIDLC_CYCLES AIDLC_DEFAULTS
+
+# --- AIDLC_DOCS_DIR ---
+# toml-reader.sh を使って4階層カスケードで paths.aidlc_dir を解決する
+# read-config.sh は呼ばない（循環依存防止）
+_AIDLC_BOOTSTRAP_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${_AIDLC_BOOTSTRAP_LIB_DIR}/toml-reader.sh"
+
+_aidlc_resolve_docs_dir() {
+    local val=""
+    # read-config.sh と同一の4階層カスケード（local > project > home > defaults）
+    # レガシーローカル設定（config.toml.local）も含める
+    local local_file="${AIDLC_LOCAL_CONFIG}"
+    if [[ ! -f "$local_file" && -f "${AIDLC_LOCAL_CONFIG_LEGACY}" ]]; then
+        local_file="${AIDLC_LOCAL_CONFIG_LEGACY}"
+    fi
+    local files=(
+        "${local_file}"
+        "${AIDLC_CONFIG}"
+        "${HOME:+$HOME/.aidlc/config.toml}"
+        "${AIDLC_DEFAULTS}"
+    )
+    for f in "${files[@]}"; do
+        if [[ -n "$f" && -f "$f" ]]; then
+            set +e
+            val=$(aidlc_read_toml "$f" "paths.aidlc_dir")
+            local rc=$?
+            set -e
+            if [[ $rc -eq 0 && -n "$val" ]]; then
+                echo "$val"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+_aidlc_docs_rel=""
+set +e
+_aidlc_docs_rel=$(_aidlc_resolve_docs_dir)
+_aidlc_docs_rc=$?
+set -e
+if [[ $_aidlc_docs_rc -ne 0 || -z "$_aidlc_docs_rel" ]]; then
+    _aidlc_docs_rel="docs/aidlc"
+    echo "warn:aidlc-docs-dir-fallback:docs/aidlc" >&2
+fi
+# paths.aidlc_dir は相対パスを想定（プロジェクトルート基準）
+# 絶対パス（/始まり）の場合はそのまま使用
+if [[ "${_aidlc_docs_rel}" == /* ]]; then
+    AIDLC_DOCS_DIR="${_aidlc_docs_rel}"
+else
+    AIDLC_DOCS_DIR="${AIDLC_PROJECT_ROOT}/${_aidlc_docs_rel}"
+fi
+unset _aidlc_docs_rel _aidlc_docs_rc _AIDLC_BOOTSTRAP_LIB_DIR
+
+export AIDLC_DOCS_DIR
 
 # --- 共通ユーティリティ関数 ---
 

@@ -517,7 +517,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
        **mode判定**:
 
-       バックログ管理ガイド（`docs/aidlc/guides/backlog-management.md`）のモード解決手順に従い、`[rules.backlog].mode` を取得する。取得失敗時や想定外の値の場合は `git` として扱う。
+       バックログ管理ガイド（`{{aidlc_dir}}/guides/backlog-management.md`）のモード解決手順に従い、`[rules.backlog].mode` を取得する。取得失敗時や想定外の値の場合は `git` として扱う。
 
        **登録方法の決定と実行**:
 

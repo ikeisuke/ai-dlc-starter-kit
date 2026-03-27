@@ -59,7 +59,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - 該当しない場合: 手順3へ進みバックログに登録する
   3. **バックログ項目を作成**（プリフライトチェックのステップ3で確認した `backlog_mode` を参照）:
 
-     **mode=git または mode=git-only の場合**: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
+     **mode=git または mode=git-only の場合**: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
 
      **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
@@ -82,17 +82,17 @@ Inception Phaseで決定済み、または既存スタックを使用
      [推奨される対応方法]
      ```
 
-     **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
+     **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
 
   4. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
-  **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `docs/aidlc/guides/subagent-usage.md` を参照。
+  **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `{{aidlc_dir}}/guides/subagent-usage.md` を参照。
 
 - **Workaround（その場しのぎ対応）実施時のルール【重要】**: 本質的な解決ではなく、暫定的な対応（workaround）を行う場合、以下を必ず実施する
 
   **必須手順**:
   1. **workaroundの実装**: 暫定的な対応を実装
-  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
+  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
@@ -323,7 +323,7 @@ skills/aidlc/scripts/issue-ops.sh set-status <issue_number> blocked
 
 ブロック解除時は `in-progress` に戻します。
 
-詳細は `docs/aidlc/guides/issue-management.md` を参照。
+詳細は `{{aidlc_dir}}/guides/issue-management.md` を参照。
 
 ### 12. 実行前確認と完了条件の提示【重要】
 

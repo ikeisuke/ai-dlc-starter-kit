@@ -398,7 +398,7 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 
 ### 2. Operations Phaseからバグ修正で戻ってきた場合
 
-**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+**詳細な手順は `{{aidlc_dir}}/bug-response-flow.md` を参照**
 
 - 修正対象のUnit定義ファイルを読み込み、「実装状態」を「進行中」に変更
 - バグ種類に応じて修正:
