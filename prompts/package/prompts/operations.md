@@ -1,8 +1,8 @@
 # Operations Phase プロンプト
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/intro.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/rules.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/project-info.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/intro.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/rules.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/project-info.md` を読み込んで、内容を確認してください。
 
 **アップグレード**: `/aidlc-setup` スキルを使用してください。
 
@@ -18,7 +18,7 @@ Inception/Construction Phaseで決定済み
 
 ### 開発ルール
 
-**共通ルールは `docs/aidlc/prompts/common/rules.md` を参照**
+**共通ルールは `skills/aidlc/steps/common/rules.md` を参照**
 
 - **プロンプト履歴管理【重要】**: 履歴は `.aidlc/cycles/{{CYCLE}}/history/operations.md` に記録。
 
@@ -48,13 +48,13 @@ Inception/Construction Phaseで決定済み
   - **変更点**: [修正前 → 修正後の要点]
   ```
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/review-flow.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/review-flow.md` を読み込んで、内容を確認してください。
 
   **AIレビュー対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/context-reset.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/context-reset.md` を読み込んで、内容を確認してください。
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/compaction.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/compaction.md` を読み込んで、内容を確認してください。
 
 ### フェーズの責務【重要】
 
@@ -81,11 +81,11 @@ Inception/Construction Phaseで決定済み
 2. 最小限の修正のみ実施
 3. 修正後、Construction Phaseへのバックトラックを提案
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/progress-management.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ### テスト記録とバグ対応【重要】
-- **テスト記録テンプレート**: `docs/aidlc/templates/test_record_template.md`
+- **テスト記録テンプレート**: `skills/aidlc/templates/test_record_template.md`
   - 受け入れテスト/E2Eテスト実施時に使用
   - テスト結果を統一形式で記録
 - **バグ対応フロー**: `docs/aidlc/bug-response-flow.md`
@@ -119,7 +119,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
   [ls .aidlc/cycles/ の結果]
 
   サイクルを作成するには、以下のプロンプトを読み込んでください：
-  docs/aidlc/prompts/inception.md
+  `/aidlc inception` を実行してください。
   ```
 - **存在する場合**: 処理を継続
 
@@ -128,7 +128,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 
 ### 3. プリフライトチェック
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/common/preflight.md` を読み込んで、手順に従ってください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/common/preflight.md` を読み込んで、手順に従ってください。
 
 環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
@@ -187,7 +187,7 @@ ls .aidlc/cycles/{{CYCLE}}/operations/
 `.aidlc/cycles/operations.md` が存在すれば読み込み、前回サイクルで決定した運用設定・方針を確認する。
 
 - **存在する場合**: 前回の設定を再利用できるか確認し、変更がなければステップをスキップ可能
-- **存在しない場合**: テンプレート（`docs/aidlc/templates/operations_handover_template.md`）から作成
+- **存在しない場合**: テンプレート（`skills/aidlc/templates/operations_handover_template.md`）から作成
 
 **効果**: 毎回同じ質問を繰り返さずに済む
 
@@ -251,7 +251,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - **選択1の場合**: Construction Phaseプロンプトを案内
   ```text
   以下のファイルを読み込んで、Construction Phase を継続してください：
-  docs/aidlc/prompts/construction.md
+  `/aidlc construction` を実行してください。
   ```
 - **選択2の場合**: 警告を記録し、Operations Phaseを継続
 
@@ -354,7 +354,7 @@ Construction Phaseからの引き継ぎタスクはありません。
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
 
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `docs/aidlc/templates/deployment_checklist_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `skills/aidlc/templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: CI/CD構築【対話形式】
@@ -372,7 +372,7 @@ Construction Phaseからの引き継ぎタスクはありません。
 
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `docs/aidlc/templates/monitoring_strategy_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `skills/aidlc/templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: 配布【対話形式】
@@ -388,7 +388,7 @@ Construction Phaseからの引き継ぎタスクはありません。
 **実行する場合**:
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `docs/aidlc/templates/distribution_feedback_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `skills/aidlc/templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
 ### ステップ6: バックログ整理と運用計画【対話形式】
@@ -485,7 +485,7 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 #### 6.3 リリース後運用計画
 
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `docs/aidlc/templates/post_release_operations_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `skills/aidlc/templates/post_release_operations_template.md`）
 - **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ### ステップ7: リリース準備
@@ -516,7 +516,7 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 12. 7.12 PRマージ前レビュー
 13. 7.13 PRマージ
 
-**【次のアクション】** 今すぐ `docs/aidlc/prompts/operations-release.md` を読み込んで、各サブステップの詳細手順に従ってください。
+**【次のアクション】** 今すぐ `skills/aidlc/steps/operations-release.md` を読み込んで、各サブステップの詳細手順に従ってください。
 
 - **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 
@@ -571,9 +571,9 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
    - 実装バグ → Construction Phase（実装）に戻る
    - 環境バグ → Operations Phaseで修正
 3. **Construction Phaseに戻る場合**:
-   - `docs/aidlc/prompts/construction.md` を読み込み
+   - `/aidlc construction` を実行
    - Construction Phaseの「このフェーズに戻る場合 - Operations Phaseからバグ修正で戻ってきた場合」セクションの手順に従う
-4. **修正完了後**: `docs/aidlc/prompts/operations.md` を読み込んで再開
+4. **修正完了後**: `/aidlc operations` を実行して再開
 5. **再テスト実施**: テスト記録テンプレートを使用して再テストを記録
 
 ---
@@ -594,7 +594,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
-**ファイル内容**: テンプレート `docs/aidlc/templates/backlog_item_template.md` を参照
+**ファイル内容**: テンプレート `skills/aidlc/templates/backlog_item_template.md` を参照
 
 **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `docs/aidlc/guides/backlog-management.md`）
 

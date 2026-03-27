@@ -27,4 +27,4 @@ Intent明確化から開始してください。
 
 コンパクション後やセッション再開時は、以下のファイルを読み込んでください：
 
-- `docs/aidlc/prompts/inception.md`
+- `/aidlc inception`

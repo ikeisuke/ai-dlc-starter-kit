@@ -56,23 +56,23 @@ RESULT=$("$SCRIPT_DIR/../bin/resolve-starter-kit-path.sh")
 EXPECTED_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 assert_eq "meta-dev mode resolves correctly" "$EXPECTED_ROOT" "$RESULT"
 
-# --- テスト2: 利用プロジェクトモード（docs/aidlc/bin/ を模擬） ---
+# --- テスト2: 利用プロジェクトモード（skills/aidlc/scripts/ を模擬） ---
 echo ""
 echo "--- 利用プロジェクトモード ---"
 
 TMPDIR_BASE=$(mktemp -d)
 
 # 模擬ディレクトリ構造を作成
-mkdir -p "$TMPDIR_BASE/project/docs/aidlc/bin"
-\cp "$SCRIPT_DIR/../bin/resolve-starter-kit-path.sh" "$TMPDIR_BASE/project/docs/aidlc/bin/"
-chmod +x "$TMPDIR_BASE/project/docs/aidlc/bin/resolve-starter-kit-path.sh"
+mkdir -p "$TMPDIR_BASE/project/skills/aidlc/scripts"
+\cp "$SCRIPT_DIR/../bin/resolve-starter-kit-path.sh" "$TMPDIR_BASE/project/skills/aidlc/scripts/"
+chmod +x "$TMPDIR_BASE/project/skills/aidlc/scripts/resolve-starter-kit-path.sh"
 
 # 模擬スターターキットルート
 mkdir -p "$TMPDIR_BASE/starter-kit"
 
 # テスト2a: AIDLC_STARTER_KIT_PATH 設定済み
 AIDLC_STARTER_KIT_PATH="$TMPDIR_BASE/starter-kit" \
-    "$TMPDIR_BASE/project/docs/aidlc/bin/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
+    "$TMPDIR_BASE/project/skills/aidlc/scripts/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
 assert_exit_code "user-project mode with valid env" 0 "$rc"
 RESULT=$(cat "$TMPDIR_BASE/output.txt")
 EXPECTED="$(cd "$TMPDIR_BASE/starter-kit" && pwd)"
@@ -80,18 +80,18 @@ assert_eq "user-project mode resolves to env path" "$EXPECTED" "$RESULT"
 
 # テスト2b: AIDLC_STARTER_KIT_PATH 未設定
 unset AIDLC_STARTER_KIT_PATH 2>/dev/null || true
-"$TMPDIR_BASE/project/docs/aidlc/bin/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
+"$TMPDIR_BASE/project/skills/aidlc/scripts/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
 assert_exit_code "user-project mode without env fails" 1 "$rc"
 
 # テスト2c: AIDLC_STARTER_KIT_PATH が存在しないディレクトリ
 AIDLC_STARTER_KIT_PATH="$TMPDIR_BASE/nonexistent" \
-    "$TMPDIR_BASE/project/docs/aidlc/bin/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
+    "$TMPDIR_BASE/project/skills/aidlc/scripts/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
 assert_exit_code "user-project mode with nonexistent dir fails" 1 "$rc"
 
 # テスト2d: AIDLC_STARTER_KIT_PATH が相対パスの場合でも絶対パスを返す
 cd "$TMPDIR_BASE"
 AIDLC_STARTER_KIT_PATH="starter-kit" \
-    "$TMPDIR_BASE/project/docs/aidlc/bin/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
+    "$TMPDIR_BASE/project/skills/aidlc/scripts/resolve-starter-kit-path.sh" > "$TMPDIR_BASE/output.txt" 2>&1 && rc=0 || rc=$?
 assert_exit_code "user-project mode with relative path succeeds" 0 "$rc"
 RESULT=$(cat "$TMPDIR_BASE/output.txt")
 # 結果は絶対パスであること（/ で始まる）

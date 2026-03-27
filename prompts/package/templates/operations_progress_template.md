@@ -34,4 +34,4 @@
 
 コンパクション後やセッション再開時は、以下のファイルを読み込んでください：
 
-- `docs/aidlc/prompts/operations.md`
+- `/aidlc operations`

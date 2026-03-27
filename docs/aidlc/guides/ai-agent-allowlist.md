@@ -262,10 +262,10 @@ deny（最優先）→ ask → allow（最低優先）
 
 ```text
 # NG - 絶対パス（環境依存）
-"Bash(/Users/alice/repos/my-project/docs/aidlc/bin/write-history.sh:*)"
+"Bash(/Users/alice/repos/my-project/skills/aidlc/scripts/write-history.sh:*)"
 
 # OK - 相対パス（環境非依存）
-"Bash(docs/aidlc/bin/write-history.sh:*)"
+"Bash(skills/aidlc/scripts/write-history.sh:*)"
 ```
 
 ##### ミニマル推奨セット
@@ -276,7 +276,7 @@ deny（最優先）→ ask → allow（最低優先）
 
 | パターン | 対象 |
 |---------|------|
-| `Bash(docs/aidlc/bin/:*)` | write-history.sh, read-config.sh, issue-ops.sh, pr-ops.sh, squash-unit.sh 等すべて |
+| `Bash(skills/aidlc/scripts/:*)` | write-history.sh, read-config.sh, issue-ops.sh, pr-ops.sh, squash-unit.sh 等すべて |
 
 **Git操作**:
 
@@ -362,7 +362,7 @@ deny（最優先）→ ask → allow（最低優先）
 
 1. **絶対パスの特定**: `/Users/` や `/home/` で始まるエントリを検索
 2. **相対パスに置換**: プロジェクトルートからの相対パスに変更
-3. **統合パターンで置換**: 個別スクリプトエントリを `Bash(docs/aidlc/bin/:*)` に統合
+3. **統合パターンで置換**: 個別スクリプトエントリを `Bash(skills/aidlc/scripts/:*)` に統合
 4. **不要エントリの削除**: Claude Code専用ツール（Read/Grep/Glob/Write）でカバーされる `ls`/`cat`/`grep` 等のBashエントリは削除可能
 
 ### 4.2 Kiro CLI

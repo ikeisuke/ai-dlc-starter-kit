@@ -38,7 +38,7 @@ git worktree add -b cycle/v1.5.3 .worktree/cycle-v1.5.3
 `setup-branch.sh` を使用すると、worktree作成を自動化できます:
 
 ```bash
-docs/aidlc/bin/setup-branch.sh v1.5.3 worktree
+skills/aidlc/scripts/setup-branch.sh v1.5.3 worktree
 ```
 
 出力例:
@@ -80,15 +80,15 @@ cd .worktree/cycle-{{CYCLE}}
 
 PRマージ後の定型作業（pull、fetch、detach、ブランチ削除）を自動化できます。
 
-> **注**: `docs/aidlc/bin/` のパスは `sync-package.sh` 実行後に利用可能です。
+> **注**: `skills/aidlc/scripts/` のパスは `sync-package.sh` 実行後に利用可能です。
 > 開発時は `prompts/package/bin/post-merge-cleanup.sh` を使用してください。
 
 ```bash
 # 基本的な使い方（worktree内で実行）
-docs/aidlc/bin/post-merge-cleanup.sh --cycle v1.5.3
+skills/aidlc/scripts/post-merge-cleanup.sh --cycle v1.5.3
 
 # 事前確認（dry-run）
-docs/aidlc/bin/post-merge-cleanup.sh --cycle v1.5.3 --dry-run
+skills/aidlc/scripts/post-merge-cleanup.sh --cycle v1.5.3 --dry-run
 ```
 
 出力例（dry-run）:

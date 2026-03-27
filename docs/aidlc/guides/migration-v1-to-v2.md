@@ -63,11 +63,11 @@ skills/aidlc/steps/common/       → 共通ステップファイル
 
 | ディレクトリ | 説明 |
 |------------|------|
-| `docs/aidlc/templates/` | ドキュメントテンプレート |
+| `skills/aidlc/templates/` | ドキュメントテンプレート |
 | `docs/aidlc/guides/` | ガイドドキュメント |
-| `docs/aidlc/config/` | デフォルト設定（defaults.toml） |
-| `docs/aidlc/bin/` | ユーティリティスクリプト |
-| `docs/aidlc/skills/` | レビュースキル等の個別スキル |
+| `skills/aidlc/config/` | デフォルト設定（defaults.toml） |
+| `skills/aidlc/scripts/` | ユーティリティスクリプト |
+| `skills/` | レビュースキル等の個別スキル |
 
 ## 移行手順
 
@@ -87,4 +87,4 @@ skills/aidlc/steps/common/       → 共通ステップファイル
 
 - 既存サイクルの成果物（`.aidlc/cycles/` 配下）は影響を受けません
 - `.aidlc/config.toml` の設定は変更不要です
-- `docs/aidlc/templates/` のテンプレートは引き続き同じパスで参照されます
+- `skills/aidlc/templates/` のテンプレートは引き続き同じパスで参照されます

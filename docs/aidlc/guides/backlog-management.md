@@ -146,7 +146,7 @@ fi
 
 `docs/cycles/backlog/{type}-{slug}.md` にファイルを作成します。
 
-テンプレート: `docs/aidlc/templates/backlog_item_template.md`
+テンプレート: `skills/aidlc/templates/backlog_item_template.md`
 
 ### バックログ完了時
 

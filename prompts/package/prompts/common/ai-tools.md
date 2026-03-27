@@ -19,12 +19,12 @@ AI-DLCは複数のAIツールで利用できます。
 
 | 名前空間キー | 呼び出し名 | カタログ表示名 | 読むファイル | 状態 | MP掲載 |
 |------------|-----------|-------------|-------------|------|--------|
-| `aidlc` | `reviewing-code` | `aidlc:reviewing-code` | `docs/aidlc/skills/reviewing-code/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-architecture` | `aidlc:reviewing-architecture` | `docs/aidlc/skills/reviewing-architecture/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-security` | `aidlc:reviewing-security` | `docs/aidlc/skills/reviewing-security/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-inception` | `aidlc:reviewing-inception` | `docs/aidlc/skills/reviewing-inception/SKILL.md` | active | Yes |
-| `aidlc` | `aidlc-setup` | `aidlc:aidlc-setup` | `docs/aidlc/skills/aidlc-setup/SKILL.md` | active | Yes |
-| `aidlc` | `squash-unit` | `aidlc:squash-unit` | `docs/aidlc/skills/squash-unit/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-code` | `aidlc:reviewing-code` | `skills/reviewing-code/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-architecture` | `aidlc:reviewing-architecture` | `skills/reviewing-architecture/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-security` | `aidlc:reviewing-security` | `skills/reviewing-security/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-inception` | `aidlc:reviewing-inception` | `skills/reviewing-inception/SKILL.md` | active | Yes |
+| `aidlc` | `aidlc-setup` | `aidlc:aidlc-setup` | `skills/aidlc-setup/SKILL.md` | active | Yes |
+| `aidlc` | `squash-unit` | `aidlc:squash-unit` | `skills/squash-unit/SKILL.md` | active | Yes |
 
 - **MP掲載**: marketplace.json に掲載されているか。deprecated スキルはマーケットプレイスに非掲載
 - **呼び出し名**: `/skill` コマンドで使用するディレクトリ名ベースの識別子
@@ -77,8 +77,8 @@ kiro-cli --agent aidlc
   "tools": ["@builtin"],
   "resources": [
     "file://AGENTS.md",
-    "file://docs/aidlc/prompts/AGENTS.md",
-    "skill://docs/aidlc/skills/*/SKILL.md"
+    "file://skills/aidlc/AGENTS.md",
+    "skill://skills/*/SKILL.md"
   ]
 }
 ```

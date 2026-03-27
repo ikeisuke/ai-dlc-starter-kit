@@ -95,7 +95,7 @@ check_file() {
 
 # project.name を取得（取得できない場合は空文字を返す）
 _get_project_name() {
-    local config_script="$REPO_ROOT/docs/aidlc/bin/read-config.sh"
+    local config_script="$REPO_ROOT/skills/aidlc/scripts/read-config.sh"
     local config_file="$REPO_ROOT/docs/aidlc.toml"
 
     # read-config.sh で取得を試みる

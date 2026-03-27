@@ -35,7 +35,7 @@
 **作業を継続するプロンプト**:
 ```
 以下のファイルを読み込んで、サイクル vX.X.X の {{PHASE}} Phase を継続してください：
-docs/aidlc/prompts/{{PHASE_FILE}}
+skills/aidlc/steps/{{PHASE_FILE}}
 ```
 ---
 ````

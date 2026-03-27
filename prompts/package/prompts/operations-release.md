@@ -1,11 +1,11 @@
 # Operations Phase - ステップ7: リリース準備
 
-> このファイルは `operations.md` のステップ7の詳細です。全体フローは `docs/aidlc/prompts/operations.md` を参照してください。
+> このファイルは `operations.md` のステップ7の詳細です。全体フローは `prompts/package/prompts/operations.md`（またはスキル環境では `/aidlc operations`）を参照してください。
 
 **前提条件**: このステップを開始する前に、以下が完了していること:
 
 - ステップ1〜6が完了済み（progress.mdで確認）
-- 共通ルール（`docs/aidlc/prompts/common/rules.md`）読み込み済み
+- 共通ルール（`skills/aidlc/steps/common/rules.md`）読み込み済み
 - `.aidlc/config.toml` の設定確認済み
 - 環境情報（gh/backlog_mode）確認済み（ステップ3）
 
@@ -172,7 +172,7 @@ skills/aidlc/scripts/run-markdownlint.sh {{CYCLE}}
 
 Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット。
 
-`docs/aidlc/prompts/common/commit-flow.md` の「Operations Phase完了コミット」手順に従ってください。
+`skills/aidlc/steps/common/commit-flow.md` の「Operations Phase完了コミット」手順に従ってください。
 
 ## 7.8 ドラフトPR Ready化【重要】
 

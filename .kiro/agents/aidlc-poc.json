@@ -14,7 +14,7 @@
   "toolsSettings": {
     "execute_bash": {
       "allowedCommands": [
-        "docs/aidlc/bin/.*",
+        "skills/aidlc/scripts/.*",
         "ls .*",
         "cat .*",
         "head .*",
@@ -47,5 +47,5 @@
       "autoAllowReadonly": true
     }
   },
-  "resources": ["file://AGENTS.md", "file://docs/aidlc/prompts/AGENTS.md"]
+  "resources": ["file://AGENTS.md", "file://skills/aidlc/AGENTS.md"]
 }

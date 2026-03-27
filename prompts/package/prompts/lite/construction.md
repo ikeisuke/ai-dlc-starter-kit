@@ -3,13 +3,13 @@
 ## Full版プロンプトの参照【必須】
 
 **まず以下のFull版プロンプトを読み込んでください**:
-`docs/aidlc/prompts/construction.md`
+`prompts/package/prompts/construction.md`（またはスキル環境では `/aidlc construction`）
 
 Full版の内容を理解した上で、以下の変更点を適用してください。
 
 **注意**: 全てのパスはプロジェクトルートからの絶対パスです。
-- プロンプト: `docs/aidlc/prompts/`
-- テンプレート: `docs/aidlc/templates/`
+- プロンプト: `skills/aidlc/steps/`
+- テンプレート: `skills/aidlc/templates/`
 - サイクル成果物: `.aidlc/cycles/{{CYCLE}}/`
 
 ---

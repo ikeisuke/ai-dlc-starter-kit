@@ -527,7 +527,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
          `{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
          slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイルが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
 
-         ファイル内容は `docs/aidlc/templates/backlog_item_template.md` に準拠:
+         ファイル内容は `skills/aidlc/templates/backlog_item_template.md` に準拠:
 
          ```markdown
          # [指摘内容の要約]
@@ -981,7 +981,7 @@ AIレビュー完了時にレビューサマリファイルを生成・追記す
 
 1. フェーズと呼び出し元ステップからファイルパスを決定（上記テーブル参照）
 2. ファイルの存在を確認:
-   - **存在しない場合**: テンプレート（`docs/aidlc/templates/review_summary_template.md`）から新規作成し、基本情報セクションを埋める
+   - **存在しない場合**: テンプレート（`skills/aidlc/templates/review_summary_template.md`）から新規作成し、基本情報セクションを埋める
    - **存在する場合**: ファイル末尾にセパレータ（`---`）を追記
 3. 新しいセットを追記（以下のフォーマット）:
 

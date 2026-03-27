@@ -10,9 +10,9 @@
 
 | フェーズ | プロンプトパス | 進捗確認先 |
 |---------|-------------|-----------|
-| Inception | `docs/aidlc/prompts/inception.md` | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
-| Construction | `docs/aidlc/prompts/construction.md` | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
-| Operations | `docs/aidlc/prompts/operations.md` | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+| Inception | `/aidlc inception`（`skills/aidlc/steps/inception/`） | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
+| Construction | `/aidlc construction`（`skills/aidlc/steps/construction/`） | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
+| Operations | `/aidlc operations`（`skills/aidlc/steps/operations/`） | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
 
 ## session-state.md の生成【コンパクション前】
 

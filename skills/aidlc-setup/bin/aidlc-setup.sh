@@ -281,13 +281,13 @@ resolve_starter_kit_root() {
         return 0
     fi
 
-    # 3. v1互換: */prompts/package/skills/*/bin or */docs/aidlc/skills/*/bin
+    # 3. v1互換: */prompts/package/skills/*/bin or */skills/*/bin
     if [[ "$SCRIPT_DIR" == */prompts/package/skills/*/bin ]]; then
         cd "$SCRIPT_DIR/../../../../.." && pwd
         return 0
     fi
 
-    if [[ "$SCRIPT_DIR" == */docs/aidlc/skills/*/bin ]]; then
+    if [[ "$SCRIPT_DIR" == */skills/*/bin ]]; then
         local project_root
         project_root="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
 
@@ -298,9 +298,10 @@ resolve_starter_kit_root() {
             return 0
         fi
 
-        # 外部プロジェクト: v1パスでread-configを探す
+        # 外部プロジェクト: v2パスでread-configを探す
         local read_config="${project_root}/skills/aidlc/scripts/read-config.sh"
         if [[ ! -x "$read_config" ]]; then
+            # v1フォールバック
             read_config="${project_root}/docs/aidlc/bin/read-config.sh"
         fi
 

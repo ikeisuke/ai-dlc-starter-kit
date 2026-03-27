@@ -138,5 +138,5 @@ Phase 2: 実装
 
 - Claude Code EnterPlanMode（Claude Code内蔵ツール仕様）
   - **注**: EnterPlanModeの仕様はClaude Code内蔵ツールとして提供されており、公式ドキュメントとしては公開されていません。バージョンや設定により動作が異なる可能性があります。
-- AI-DLC Construction Phase プロンプト (`docs/aidlc/prompts/construction.md`)
+- AI-DLC Construction Phase プロンプト (`/aidlc construction`)
 - v1.7.2 プランモード活用検討 (`docs/cycles/v1.7.2/requirements/plan-mode-research.md`)

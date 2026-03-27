@@ -82,8 +82,8 @@ git commit -m "feat: add new feature"
 | 「start lite construction」 | Construction Phase (Lite) |
 | 「start lite operations」 | Operations Phase (Lite) |
 
-**後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）も引き続き有効です。
+**後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）は `/aidlc` コマンドにリダイレクトされます。
 
 ## Compact Instructions
 
-@docs/aidlc/prompts/common/compaction.md
+@skills/aidlc/steps/common/compaction.md
