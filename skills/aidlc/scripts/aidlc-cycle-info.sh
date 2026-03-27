@@ -18,15 +18,6 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/bootstrap.sh"
 
-# 現在ブランチ取得
-get_current_branch() {
-    local branch=""
-
-    branch=$(git branch --show-current 2>/dev/null) || branch=""
-
-    echo "$branch"
-}
-
 # ブランチ名からバージョン抽出
 # 入力: cycle/v1.11.1 → 出力: v1.11.1
 # 入力: cycle/waf/v1.0.0 → 出力: waf/v1.0.0
@@ -73,10 +64,10 @@ detect_phase() {
         return
     fi
 
-    # フェーズ判定（ディレクトリ存在で判定）
-    if [[ -d "$cycle_dir/operations" ]]; then
+    # フェーズ判定（成果物ファイルの存在で判定）
+    if [[ -f "$cycle_dir/operations/progress.md" ]]; then
         echo "operations"
-    elif [[ -d "$cycle_dir/construction" ]]; then
+    elif [[ -d "$cycle_dir/story-artifacts/units" ]] && compgen -G "$cycle_dir/story-artifacts/units/*.md" >/dev/null 2>&1; then
         echo "construction"
     else
         echo "inception"
@@ -86,7 +77,7 @@ detect_phase() {
 # メイン処理
 main() {
     local branch
-    branch=$(get_current_branch)
+    branch=$(aidlc_get_current_branch)
 
     local version
     version=$(extract_version "$branch")
@@ -136,4 +127,7 @@ main() {
     fi
 }
 
-main
+# mainガード: source時は実行しない
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main
+fi

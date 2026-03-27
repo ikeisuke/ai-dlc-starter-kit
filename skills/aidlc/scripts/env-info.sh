@@ -102,37 +102,16 @@ get_project_name() {
     fi
     local result
     result=$(dasel -i toml 'project.name' < "${AIDLC_CONFIG}" 2>/dev/null) || { echo ""; return; }
-    # daselの出力からクォートを除去
-    echo "$result" | tr -d "'"
+    # daselの出力からクォートを除去（共通ユーティリティ使用）
+    aidlc_strip_quotes "$result"
 }
 
 # バックログモードを取得（resolve-backlog-mode.sh の共通ロジックを使用）
 # resolve-backlog-mode.sh を source
 source "${SCRIPT_DIR}/resolve-backlog-mode.sh"
 
-get_backlog_mode() {
-    resolve_backlog_mode
-}
-
-# 現在のブランチを取得
-get_current_branch() {
-    local result=""
-
-    # 1. git branch --show-current を試行
-    result=$(git branch --show-current 2>/dev/null) || result=""
-
-    # 2. detached HEAD の場合、git rev-parse --abbrev-ref HEAD を試行
-    if [[ -z "$result" ]]; then
-        local abbrev_ref
-        abbrev_ref=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || abbrev_ref=""
-        # "HEAD" の場合は空値として扱う
-        if [[ "$abbrev_ref" != "HEAD" ]]; then
-            result="$abbrev_ref"
-        fi
-    fi
-
-    echo "$result"
-}
+# get_backlog_mode: resolve_backlog_mode を直接使用（ラッパー廃止）
+# get_current_branch: aidlc_get_current_branch (lib/bootstrap.sh) を使用
 
 # .aidlc/cycles/ 配下の最新サイクルバージョンを取得
 # ディレクトリがない場合は空値を返す
@@ -160,9 +139,7 @@ get_starter_kit_version() {
     # daselが利用可能な場合
     if command -v dasel >/dev/null 2>&1; then
         version=$(dasel -i toml 'starter_kit_version' < "$toml_file" 2>/dev/null) || version=""
-        # 両端の空白をトリム → 両端の引用符を除去
-        version=$(echo "$version" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        version=$(echo "$version" | sed "s/^[\"']//;s/[\"']$//")
+        version=$(aidlc_strip_quotes "$version")
     else
         # dasel未インストール時のフォールバック（grep+sed）
         # 行頭の空白を許容、コメント行は無視、最初の定義のみ採用
@@ -170,13 +147,10 @@ get_starter_kit_version() {
         line=$(grep -E '^[[:space:]]*starter_kit_version[[:space:]]*=' "$toml_file" 2>/dev/null | grep -v '^[[:space:]]*#' | head -1) || line=""
 
         if [[ -n "$line" ]]; then
-            # = の後の値部分を抽出
-            version=$(echo "$line" | sed 's/^[^=]*=[[:space:]]*//')
-            # インラインコメント（# 以降）を除去（引用符内の # は考慮しない簡易実装）
-            version=$(echo "$version" | sed 's/[[:space:]]*#.*//')
-            # 両端の空白と引用符を除去
-            version=$(echo "$version" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-            version=$(echo "$version" | sed "s/^[\"']//;s/[\"']$//")
+            # = の後の値部分を抽出し、インラインコメントを除去
+            version="${line#*=}"
+            version="${version%%#*}"
+            version=$(aidlc_strip_quotes "$version")
         fi
     fi
 
@@ -214,8 +188,8 @@ main() {
     # --setup オプション時のみ追加出力
     if [[ "$setup_mode" == true ]]; then
         echo "project.name:$(get_project_name)"
-        echo "backlog.mode:$(get_backlog_mode)"
-        echo "current_branch:$(get_current_branch)"
+        echo "backlog.mode:$(resolve_backlog_mode)"
+        echo "current_branch:$(aidlc_get_current_branch)"
         echo "latest_cycle:$(get_latest_cycle)"
     fi
 }

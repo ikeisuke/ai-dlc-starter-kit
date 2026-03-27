@@ -153,9 +153,7 @@ create_directory() {
 # resolve-backlog-mode.sh を source
 source "${SCRIPT_DIR}/resolve-backlog-mode.sh"
 
-get_backlog_mode() {
-    resolve_backlog_mode
-}
+# get_backlog_mode: resolve_backlog_mode を直接使用（ラッパー廃止）
 
 # 共通バックログディレクトリを作成
 # 引数: $1=dry_run (true/false)
@@ -165,7 +163,7 @@ create_common_backlog_dirs() {
     local backlog_mode
     local error_count=0
 
-    backlog_mode=$(get_backlog_mode)
+    backlog_mode=$(resolve_backlog_mode)
 
     # Issue駆動モード（issue/issue-only）の場合はスキップ
     if [[ "$backlog_mode" == "issue" || "$backlog_mode" == "issue-only" ]]; then
