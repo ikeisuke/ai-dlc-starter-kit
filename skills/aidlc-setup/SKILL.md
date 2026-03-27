@@ -15,7 +15,7 @@ AI-DLC環境を最新バージョンにアップグレードするスキル。
 1. アップグレードスクリプトの存在を確認:
 
 ```bash
-ls docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh
+ls skills/aidlc-setup/bin/aidlc-setup.sh
 ```
 
 スクリプトが存在しない場合、AI-DLCのバージョンが古い可能性があります。
@@ -28,7 +28,7 @@ ghq root
 ```
 
 ```bash
-docs/aidlc/bin/read-config.sh project.starter_kit_repo
+skills/aidlc/scripts/read-config.sh project.starter_kit_repo
 ```
 
 2. 取得した値を使ってパスを組み立て:
@@ -44,7 +44,7 @@ docs/aidlc/bin/read-config.sh project.starter_kit_repo
 1. dry-runで変更内容を確認:
 
 ```bash
-docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh --dry-run
+skills/aidlc-setup/bin/aidlc-setup.sh --dry-run
 ```
 
 2. 結果をユーザーに提示し、続行の承認を得る
@@ -78,13 +78,13 @@ docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh --dry-run
 4. アップグレードを実行:
 
 ```bash
-docs/aidlc/skills/aidlc-setup/bin/aidlc-setup.sh
+skills/aidlc-setup/bin/aidlc-setup.sh
 ```
 
 5. 変更をコミット:
 
 ```bash
-git add docs/aidlc/ docs/aidlc.toml .claude/ .kiro/
+git add skills/ docs/aidlc/ docs/aidlc.toml .claude/ .kiro/
 ```
 
 ```bash
@@ -132,11 +132,11 @@ AI-DLCのアップグレードが完了しました！
 
 | ディレクトリ | 内容 |
 |-------------|------|
-| `docs/aidlc/prompts/` | フェーズプロンプト |
-| `docs/aidlc/templates/` | ドキュメントテンプレート |
+| `skills/aidlc/steps/` | フェーズステップファイル |
+| `skills/aidlc/templates/` | ドキュメントテンプレート |
+| `skills/aidlc/scripts/` | ユーティリティスクリプト |
+| `skills/aidlc/config/` | デフォルト設定 |
 | `docs/aidlc/guides/` | ガイドドキュメント |
-| `docs/aidlc/bin/` | ユーティリティスクリプト |
-| `docs/aidlc/skills/` | スキルファイル |
 | `docs/aidlc/kiro/` | KiroCLIエージェント設定 |
 
 ## 注意事項

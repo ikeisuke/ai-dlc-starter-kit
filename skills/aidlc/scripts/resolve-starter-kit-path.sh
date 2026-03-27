@@ -51,7 +51,7 @@ main() {
         echo "$starter_kit_root"
         return 0
 
-    elif [[ "$script_dir" == */docs/aidlc/bin ]]; then
+    elif [[ "$script_dir" == */skills/aidlc/scripts ]]; then
         # 利用プロジェクトモード: 環境変数からスターターキットパスを取得
         if [[ -z "${AIDLC_STARTER_KIT_PATH:-}" ]]; then
             echo "Error: AIDLC_STARTER_KIT_PATH is not set" >&2

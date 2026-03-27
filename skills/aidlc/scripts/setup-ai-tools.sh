@@ -7,10 +7,11 @@
 set -euo pipefail
 
 AIDLC_DIR="docs/aidlc"
+SKILLS_DIR="skills"
 
-# docs/aidlc/ の存在確認
-if [ ! -d "$AIDLC_DIR" ]; then
-  echo "Error: $AIDLC_DIR not found"
+# skills/ ディレクトリの存在確認
+if [ ! -d "$SKILLS_DIR" ]; then
+  echo "Error: $SKILLS_DIR not found"
   exit 1
 fi
 
@@ -95,7 +96,7 @@ setup_skill_symlinks() {
 # Claude Code スキルのセットアップ
 # ============================================
 setup_claude_skills() {
-  setup_skill_symlinks ".claude/skills" "$AIDLC_DIR/skills"
+  setup_skill_symlinks ".claude/skills" "$SKILLS_DIR"
   echo "Done: Claude skills setup complete"
 }
 
@@ -103,7 +104,7 @@ setup_claude_skills() {
 # Agent スキルのセットアップ
 # ============================================
 setup_agent_skills() {
-  setup_skill_symlinks ".agents/skills" "$AIDLC_DIR/skills"
+  setup_skill_symlinks ".agents/skills" "$SKILLS_DIR"
   echo "Done: Agent skills setup complete"
 }
 
