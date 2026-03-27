@@ -106,21 +106,13 @@ pwd
 
 セットアップ種類判定スクリプトを実行してください。
 
-**スクリプトのパス判定**:
-- このファイル（setup-prompt.md）と同じディレクトリの `setup/bin/check-setup-type.sh` を使用
-- メタ開発モード（`prompts/package/` が存在）: `prompts/setup/bin/check-setup-type.sh`
-- 通常利用: スターターキットの `prompts/setup/bin/check-setup-type.sh`
+**スクリプトのパス**:
 
 ```bash
-# メタ開発モードの場合
-prompts/setup/bin/check-setup-type.sh
-
-# 通常利用の場合
-# setup-prompt.mdを読み込んだスターターキットの基底パスから実行
-# 例: [スターターキットパス]/prompts/setup/bin/check-setup-type.sh
+skills/aidlc/scripts/check-setup-type.sh
 ```
 
-**注意**: 通常利用では、AIがsetup-prompt.mdを読み込んだパスからスターターキットの基底パスを推定してください。
+**フォールバック**（スクリプトが存在しない場合）: AIが `.aidlc/config.toml`（v2）または `docs/aidlc.toml`（v1）の存在を直接確認し、セットアップ種類を判定してください。
 
 **出力例**:
 

@@ -84,7 +84,7 @@ skills/aidlc-setup/bin/aidlc-setup.sh
 5. 変更をコミット:
 
 ```bash
-git add skills/ docs/aidlc/ docs/aidlc.toml .claude/ .kiro/
+git add skills/ docs/aidlc/ .aidlc/config.toml .claude/ .kiro/ .agents/
 ```
 
 ```bash
@@ -141,7 +141,7 @@ AI-DLCのアップグレードが完了しました！
 
 ## 注意事項
 
-- `docs/aidlc.toml` の既存設定は保持されます
-- `docs/cycles/rules.md` はプロジェクト固有のため上書きされません
+- `.aidlc/config.toml` の既存設定は保持されます
+- `.aidlc/cycles/rules.md` はプロジェクト固有のため上書きされません
 - アップグレード完了後は新しいセッションで作業を開始してください
 - `--force` オプションで同バージョンでも強制アップグレードが可能です
