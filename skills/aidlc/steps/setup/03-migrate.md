@@ -81,7 +81,7 @@ AI-DLCのアップグレードが完了しました！
 
 更新されたファイル:
 - skills/aidlc/ - AI-DLCスキル（フェーズステップファイル）
-- docs/aidlc/templates/ - ドキュメントテンプレート
+- skills/aidlc/templates/ - ドキュメントテンプレート
 
 ※ docs/aidlc.toml は保持されています（変更なし）
 

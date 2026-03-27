@@ -2,7 +2,7 @@
 # get-default-branch.sh - リモートのデフォルトブランチを取得
 #
 # 使用方法:
-#   docs/aidlc/bin/get-default-branch.sh
+#   skills/aidlc/scripts/get-default-branch.sh
 #
 # 出力形式:
 #   branch:main

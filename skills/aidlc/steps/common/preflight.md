@@ -119,7 +119,7 @@ rules.reviewing.mode:recommend
 |-------------|---------|
 | `gh` | 手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn） |
 | `review-tools` | レビューツール確認（後述） |
-| `config-validation` | 設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。`docs/aidlc/config/defaults.toml` の存在チェックも実施し、不在の場合は警告を表示する（severity: warn）。**注**: 「主要設定値」セクションおよび手順4の設定読み取りエラー警告は `config-validation` の有無に関わらず常時表示される（設定値の取得・エラーハンドリングは手順4で常時実行されるため）。`config-validation` が制御するのは結果提示内のバリデーション行のみ |
+| `config-validation` | 設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。`skills/aidlc/config/defaults.toml` の存在チェックも実施し、不在の場合は警告を表示する（severity: warn）。**注**: 「主要設定値」セクションおよび手順4の設定読み取りエラー警告は `config-validation` の有無に関わらず常時表示される（設定値の取得・エラーハンドリングは手順4で常時実行されるため）。`config-validation` が制御するのは結果提示内のバリデーション行のみ |
 
 **未知のチェック項目**: `preflight_checks` に上記有効値以外の項目が含まれる場合、以下の警告を表示してその項目を無視する:
 ```text
@@ -172,7 +172,7 @@ which {先頭ツール名} >/dev/null 2>&1
   {checks に "gh" 含まない場合: - gh: skipped}
   {checks に "review-tools" 含む場合: ℹ レビューツール ({tool名}): {available | not found}}
   {checks に "review-tools" 含まない場合: - レビューツール: skipped}
-  {checks に "config-validation" 含む場合: {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。docs/aidlc/config/defaults.toml を確認してください）}}
+  {checks に "config-validation" 含む場合: {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。skills/aidlc/config/defaults.toml を確認してください）}}
   {checks に "config-validation" 含まない場合: - config-validation: skipped（結果提示内のバリデーション行は非表示）}
 
 ■ 主要設定値（常時表示）

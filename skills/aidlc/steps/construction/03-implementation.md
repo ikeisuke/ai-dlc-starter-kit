@@ -125,7 +125,7 @@ BDD/TDDに従ってテストコードを作成
       **d. 登録方法の選択と実行**:
 
       - `mode = git` または `mode = git-only`:
-        `.aidlc/cycles/backlog/bugfix-{slug}.md` にファイルを作成。テンプレートは `docs/aidlc/templates/backlog_item_template.md` に準拠。
+        `.aidlc/cycles/backlog/bugfix-{slug}.md` にファイルを作成。テンプレートは `skills/aidlc/templates/backlog_item_template.md` に準拠。
         ファイル作成失敗時は警告表示し、手動でのバックログ登録を依頼。
 
       - `mode = issue` または `mode = issue-only`:
@@ -153,7 +153,7 @@ BDD/TDDに従ってテストコードを作成
 4. **AIレビュー実施**（`steps/common/review-flow.md` に従う）
 5. レビュー結果を反映
 6. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外はコードをユーザーに提示し、承認を得る
-7. `.aidlc/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `docs/aidlc/templates/implementation_record_template.md`）
+7. `.aidlc/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `skills/aidlc/templates/implementation_record_template.md`）
 
 ---
 

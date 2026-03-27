@@ -3,7 +3,7 @@
 # sync-package.sh は prompts/bin/ に移動しました
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # prompts/package/bin/ からの場合: ../../bin/sync-package.sh
-# docs/aidlc/bin/ からの場合（sync経由）: ../../../prompts/bin/sync-package.sh
+# skills/aidlc/scripts/ からの場合（sync経由）: ../../../prompts/bin/sync-package.sh
 if [[ -x "${SCRIPT_DIR}/../../bin/sync-package.sh" ]]; then
     exec "${SCRIPT_DIR}/../../bin/sync-package.sh" "$@"
 elif [[ -x "${SCRIPT_DIR}/../../../prompts/bin/sync-package.sh" ]]; then

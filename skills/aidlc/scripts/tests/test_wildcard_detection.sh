@@ -135,14 +135,14 @@ run_test() {
 # テストケース定義
 # ============================================
 
-DEFAULTS='["Bash(docs/aidlc/bin/:*)", "Bash(mktemp /tmp/aidlc-:*)", "Skill(reviewing-architecture)", "Skill(reviewing-code)"]'
+DEFAULTS='["Bash(skills/aidlc/scripts/:*)", "Bash(mktemp /tmp/aidlc-:*)", "Skill(reviewing-architecture)", "Skill(reviewing-code)"]'
 
 echo "=== Wildcard Rule Detection Tests ==="
 echo ""
 
 # Test 1: 既存に完全一致のルールがある場合（ワイルドカードスキップなし）
 run_test "exact match - no wildcard skip" \
-  '{"permissions":{"allow":["Bash(docs/aidlc/bin/:*)","Bash(mktemp /tmp/aidlc-:*)"]}}' \
+  '{"permissions":{"allow":["Bash(skills/aidlc/scripts/:*)","Bash(mktemp /tmp/aidlc-:*)"]}}' \
   "$DEFAULTS" \
   2 0
 
@@ -160,7 +160,7 @@ run_test "Skill(:*) covers all Skills" \
 
 # Test 4: 異なるType間でワイルドカード判定が適用されないこと
 run_test "different type - no cross-type matching" \
-  '{"permissions":{"allow":["Skill(docs/aidlc/bin/:*)"]}}' \
+  '{"permissions":{"allow":["Skill(skills/aidlc/scripts/:*)"]}}' \
   "$DEFAULTS" \
   4 0
 

@@ -33,7 +33,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
-**ファイル内容**: テンプレート `docs/aidlc/templates/backlog_item_template.md` を参照
+**ファイル内容**: テンプレート `skills/aidlc/templates/backlog_item_template.md` を参照
 
 **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `docs/aidlc/guides/backlog-management.md`）
 

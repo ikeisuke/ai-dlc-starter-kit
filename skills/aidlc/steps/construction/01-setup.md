@@ -63,7 +63,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
      **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
 
-     **ファイル内容**（テンプレート: `docs/aidlc/templates/backlog_item_template.md`）:
+     **ファイル内容**（テンプレート: `skills/aidlc/templates/backlog_item_template.md`）:
      ```markdown
      # [タイトル]
 
@@ -251,7 +251,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - 「実装状態」セクションがないファイルは、まず `.aidlc/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
 - **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
 - **progress.mdが存在しない場合**: 「未着手」として扱い、Unit定義ファイルに「実装状態」セクションを追加
-- テンプレート: `docs/aidlc/templates/unit_definition_template.md` の末尾を参照
+- テンプレート: `skills/aidlc/templates/unit_definition_template.md` の末尾を参照
 
 ### 8. バックログ確認
 

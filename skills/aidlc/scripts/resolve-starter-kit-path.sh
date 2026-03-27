@@ -4,7 +4,7 @@
 #
 # スクリプトの実行位置からAI-DLCスターターキットのルートパスを解決する。
 # メタ開発モード（prompts/package/bin/ から実行）と
-# 利用プロジェクトモード（docs/aidlc/bin/ から実行）の両方に対応。
+# 利用プロジェクトモード（skills/aidlc/scripts/ から実行）の両方に対応。
 #
 # 使用方法:
 #   STARTER_KIT_ROOT=$(resolve-starter-kit-path.sh)
@@ -72,7 +72,7 @@ main() {
 
     else
         echo "Error: cannot resolve starter kit path from $script_dir" >&2
-        echo "Error: script must be located in prompts/package/bin/ or docs/aidlc/bin/" >&2
+        echo "Error: script must be located in prompts/package/bin/ or skills/aidlc/scripts/" >&2
         return 1
     fi
 }

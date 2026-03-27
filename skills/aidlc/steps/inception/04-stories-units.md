@@ -39,7 +39,7 @@
 | 完全性 | 正常系・異常系の両方が網羅されているか |
 | 独立性 | 他の条件と重複や矛盾がないか |
 
-- `.aidlc/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `docs/aidlc/templates/user_stories_template.md`）
+- `.aidlc/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `skills/aidlc/templates/user_stories_template.md`）
 
 **Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
 - `minimal`: 受け入れ基準を主要ケースのみに簡略化（主要エラーケースは維持）
@@ -63,7 +63,7 @@
 - **各Unitの依存関係を明確に記載**（どのUnitが先に完了している必要があるか）
 - 依存関係がない場合は「なし」と明記
 - 依存関係は Construction Phase での実行順判断に使用される
-- 各Unitは `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `docs/aidlc/templates/unit_definition_template.md`）
+- 各Unitは `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `skills/aidlc/templates/unit_definition_template.md`）
 
 **Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
 - `minimal`: 最小限の責務・境界記述。依存関係と優先度のみ記載
@@ -152,6 +152,6 @@ skills/aidlc/scripts/write-history.sh \
 - `comprehensive` / `standard`: 通常通り実行
 
 - プレスリリース形式でプロジェクトを説明
-- `.aidlc/cycles/{{CYCLE}}/requirements/prfaq.md` を作成（テンプレート: `docs/aidlc/templates/prfaq_template.md`）
+- `.aidlc/cycles/{{CYCLE}}/requirements/prfaq.md` を作成（テンプレート: `skills/aidlc/templates/prfaq_template.md`）
 
 ---

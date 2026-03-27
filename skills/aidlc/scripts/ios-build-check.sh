@@ -2,7 +2,7 @@
 # ios-build-check.sh - iOSプロジェクトのビルド番号を確認
 #
 # 使用方法:
-#   docs/aidlc/bin/ios-build-check.sh [project.pbxproj path]
+#   skills/aidlc/scripts/ios-build-check.sh [project.pbxproj path]
 #
 # 引数なしの場合、project.pbxprojを自動検索（Pods/DerivedData除外）
 #

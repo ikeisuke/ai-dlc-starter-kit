@@ -16,7 +16,7 @@
 
 | # | 重要度 | 内容 | 対応 |
 |---|--------|------|------|
-| 1 | 高 | inception.md のUnit定義テンプレート参照パス - `templates/` と `docs/aidlc/templates/` で不一致 | 修正済み（inception.md L245: パスを `docs/aidlc/templates/` に統一） |
+| 1 | 高 | inception.md のUnit定義テンプレート参照パス - `templates/` と `skills/aidlc/templates/` で不一致 | 修正済み（inception.md L245: パスを `skills/aidlc/templates/` に統一） |
 | 2 | 中 | review-flow.md のセルフレビュー手順 - 反復回数上限が未定義で無限ループリスク | 修正済み（review-flow.md L470: 最大3回の反復制限を追記） |
 | 3 | 低 | commit-flow.md のsquashコマンド例 - `--no-edit` オプションが非推奨 | OUT_OF_SCOPE（理由: squash機能の全面改修はUnit 004のスコープ） |
 
