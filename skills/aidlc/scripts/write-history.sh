@@ -88,7 +88,7 @@ OPTIONS:
       --step "Unit完了" \
       --content "履歴記録スクリプトの設計・実装を完了" \
       --artifacts "prompts/package/bin/write-history.sh"
-  history:docs/cycles/v1.8.0/history/construction_unit06.md:appended
+  history:.aidlc/cycles/v1.8.0/history/construction_unit06.md:appended
 EOF
 }
 

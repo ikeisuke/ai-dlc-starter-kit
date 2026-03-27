@@ -8,7 +8,7 @@ AI-DLCの設定ファイルは4階層でマージされます。
 
 | ファイル | 用途 | Git管理 | 優先度 |
 |----------|------|---------|--------|
-| `docs/aidlc/config/defaults.toml`（スクリプト内蔵） | デフォルト値定義 | Yes（スターターキット同梱） | 最低 |
+| `skills/aidlc/config/defaults.toml`（スクリプト内蔵） | デフォルト値定義 | Yes（スターターキット同梱） | 最低 |
 | `~/.aidlc/config.toml` | ユーザー共通設定 | No | 低 |
 | `docs/aidlc.toml` | プロジェクト共有設定 | Yes | 中 |
 | `docs/aidlc.local.toml` | 個人設定（上書き用） | No（.gitignore） | 高 |
@@ -98,14 +98,14 @@ custom = false
 1つの設定値を取得します。
 
 ```bash
-docs/aidlc/bin/read-config.sh <key>
+skills/aidlc/scripts/read-config.sh <key>
 ```
 
 **使用例**:
 
 ```bash
 # 設定値を取得
-docs/aidlc/bin/read-config.sh rules.reviewing.mode
+skills/aidlc/scripts/read-config.sh rules.reviewing.mode
 # 出力: required（defaults.toml → プロジェクト設定の順でマージ）
 ```
 
@@ -114,7 +114,7 @@ docs/aidlc/bin/read-config.sh rules.reviewing.mode
 複数の設定値を一括で取得します。
 
 ```bash
-docs/aidlc/bin/read-config.sh --keys <key1> [key2] ...
+skills/aidlc/scripts/read-config.sh --keys <key1> [key2] ...
 ```
 
 **出力フォーマット**: `key:value` 形式で1行1キー。
@@ -122,7 +122,7 @@ docs/aidlc/bin/read-config.sh --keys <key1> [key2] ...
 **使用例**:
 
 ```bash
-docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled rules.worktree.enabled
+skills/aidlc/scripts/read-config.sh --keys rules.reviewing.mode rules.squash.enabled rules.worktree.enabled
 # 出力:
 # rules.reviewing.mode:required
 # rules.squash.enabled:true
@@ -148,7 +148,7 @@ docs/aidlc/bin/read-config.sh --keys rules.reviewing.mode rules.squash.enabled r
 ### 終了コードを使った条件分岐
 
 ```bash
-if docs/aidlc/bin/read-config.sh rules.custom.feature; then
+if skills/aidlc/scripts/read-config.sh rules.custom.feature; then
     echo "Feature is configured"
 else
     echo "Feature is not configured"

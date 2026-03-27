@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "2.0.0"
+starter_kit_version = "2.0.1"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -16,7 +16,7 @@ tools = ["Claude Code"]
 [paths]
 setup_prompt = "prompts/setup-prompt.md"
 aidlc_dir = "docs/aidlc"
-cycles_dir = "docs/cycles"
+cycles_dir = ".aidlc/cycles"
 
 [rules]
 # 開発ルール
@@ -125,8 +125,8 @@ level = "standard"
 [rules.cycle]
 # サイクルモード設定（v1.20.0で追加）
 # mode: "default" | "named" | "ask"
-# - default: 従来形式（docs/cycles/vX.X.X/）で動作（デフォルト）
-# - named: 名前付きサイクル（docs/cycles/[name]/vX.X.X/）で動作
+# - default: 従来形式（.aidlc/cycles/vX.X.X/）で動作（デフォルト）
+# - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作
 # - ask: Inception Phase開始時に名前付き/名前なしを選択
 # mode = "default"
 

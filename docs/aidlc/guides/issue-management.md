@@ -52,10 +52,10 @@ gh label create "status:blocked" --color "D93F0B" --description "他の作業に
 2. **サイクルラベル付与**
    ```bash
    # 一括付与（label-cycle-issues.sh使用）
-   docs/aidlc/bin/label-cycle-issues.sh v1.13.0
+   skills/aidlc/scripts/label-cycle-issues.sh v1.13.0
 
    # または個別付与
-   docs/aidlc/bin/issue-ops.sh label <issue_number> "cycle:v1.13.0"
+   skills/aidlc/scripts/issue-ops.sh label <issue_number> "cycle:v1.13.0"
    ```
 
 3. **サイクルPR作成**
@@ -67,16 +67,16 @@ gh label create "status:blocked" --color "D93F0B" --description "他の作業に
 1. **Unit開始時**
    ```bash
    # ステータスを in-progress に更新
-   docs/aidlc/bin/issue-ops.sh set-status <issue_number> in-progress
+   skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
    ```
 
 2. **ブロック発生時**
    ```bash
    # ステータスを blocked に更新
-   docs/aidlc/bin/issue-ops.sh set-status <issue_number> blocked
+   skills/aidlc/scripts/issue-ops.sh set-status <issue_number> blocked
 
    # 解除時は in-progress に戻す
-   docs/aidlc/bin/issue-ops.sh set-status <issue_number> in-progress
+   skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
    ```
 
 3. **Unit PR作成**
@@ -153,7 +153,7 @@ GitHubでは、PRをマージする際にPR本文に以下のキーワード + I
 
 ```bash
 # 正しいステータスに更新（古いラベルは自動削除）
-docs/aidlc/bin/issue-ops.sh set-status <issue_number> in-progress
+skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
 ```
 
 ### Issueが自動クローズされなかった場合
@@ -162,7 +162,7 @@ docs/aidlc/bin/issue-ops.sh set-status <issue_number> in-progress
 2. 記載漏れがあれば追加
 3. 手動でクローズする場合：
    ```bash
-   docs/aidlc/bin/issue-ops.sh close <issue_number>
+   skills/aidlc/scripts/issue-ops.sh close <issue_number>
    ```
 
 ### ステータスラベルが存在しない場合
@@ -173,6 +173,6 @@ docs/aidlc/bin/issue-ops.sh set-status <issue_number> in-progress
 
 ## 関連ファイル
 
-- `docs/aidlc/bin/issue-ops.sh` - Issue操作スクリプト
-- `docs/aidlc/bin/label-cycle-issues.sh` - サイクルラベル一括付与スクリプト
+- `skills/aidlc/scripts/issue-ops.sh` - Issue操作スクリプト
+- `skills/aidlc/scripts/label-cycle-issues.sh` - サイクルラベル一括付与スクリプト
 - `docs/aidlc/guides/backlog-management.md` - バックログ管理ガイド

@@ -19,7 +19,7 @@ fi
 # 共通関数: スキルシンボリックリンクのセットアップ
 # ============================================
 # $1: ターゲットディレクトリ（例: .claude/skills, .agents/skills）
-# $2: ソースディレクトリ（例: docs/aidlc/skills）
+# $2: ソースディレクトリ（例: skills/）
 setup_skill_symlinks() {
   local TARGET_DIR="$1"
   local SOURCE_DIR="$2"

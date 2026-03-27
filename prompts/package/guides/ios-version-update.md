@@ -46,7 +46,7 @@ echo "更新後のバージョン: ${CYCLE_VERSION}"
 ### 3. 履歴への記録（重要）
 
 ```bash
-docs/aidlc/bin/write-history.sh \
+skills/aidlc/scripts/write-history.sh \
     --cycle {{CYCLE}} \
     --phase inception \
     --step "iOSバージョン更新実施" \

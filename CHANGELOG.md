@@ -7,6 +7,34 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.1] - 2026-03-27
+
+### Changed
+
+- サイクルデータディレクトリを `docs/cycles/` から `.aidlc/cycles/` に移行し、スクリプト・テンプレート内の参照パスを一括更新
+- 旧ディレクトリ（`docs/aidlc/bin/`, `docs/aidlc/templates/`, `docs/aidlc/config/` 等）のパス参照をv2構造（`skills/aidlc/`）に更新（53ファイル）
+- `@steps/...` 参照をバッククォートスタイル（`` @`steps/...` ``）に統一
+- `prompts/setup-prompt.md` 内のマイグレーション対象パスを `.aidlc/cycles/` に修正、v1互換コード追加
+
+### Fixed
+
+- `detect_phase()` をディレクトリ存在判定からアーティファクトベース判定（`compgen -G`使用）に改善
+- `get_current_branch()` を3ファイルから `lib/bootstrap.sh` に共通化
+- `get_backlog_mode()` ラッパー重複を解消（`resolve_backlog_mode` 直接呼び出しに変更）
+- クォート除去ロジックを `aidlc_strip_quotes()` に統一
+- UUOC（Useless Use of Cat）パターンを修正
+- `test_resolve_starter_kit_path.sh` のテスト用mkdirパスをv2構造に修正
+- `aidlc-setup.sh` のv1フォールバックパスを復元
+
+### Added
+
+- `skills/aidlc/scripts/lib/bootstrap.sh` に共通ユーティリティ関数（`aidlc_get_current_branch`, `aidlc_strip_quotes`）を追加
+- `aidlc-cycle-info.sh` にmainガードを追加（sourceでの関数定義読み込みに対応）
+- 新規テスト17件追加（`test_bootstrap_utils.sh`: 10件、`test_detect_phase.sh`: 7件）
+- コンテキスト変数一覧を `bootstrap.sh` ヘッダーに文書化
+
+---
+
 ## [2.0.0] - 2026-03-27
 
 ### Added
