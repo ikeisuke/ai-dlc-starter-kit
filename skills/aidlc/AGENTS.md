@@ -58,7 +58,7 @@ Setup PhaseとInception Phaseが統合され、1回の実行で
 | 「インセプション進めて」「start inception」 | `/aidlc inception` |
 | 「コンストラクション進めて」「start construction」 | `/aidlc construction` |
 | 「オペレーション進めて」「start operations」 | `/aidlc operations` |
-| 「セットアップ」「start setup」 | `/aidlc setup`（Inception Phaseにリダイレクト） |
+| 「セットアップ」「start setup」 | `/aidlc setup`（Setup Phase） |
 | 「start express」 | `/aidlc express`（エクスプレスモード、フェーズ連続実行を有効化） |
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback`（フィードバック送信） |
 

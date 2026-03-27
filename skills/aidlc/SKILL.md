@@ -22,7 +22,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | `inception` / なし（cycleブランチ外） | Inception Phase |
 | `construction` / なし（cycleブランチ上） | Construction Phase |
 | `operations` | Operations Phase |
-| `setup` | Inception Phase にリダイレクト |
+| `setup` | Setup Phase（独立フロー） |
 | `express` | Inception Phase（エクスプレスモード有効） |
 | `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
 | `lite inception` | Inception Phase (Lite版) |
@@ -33,7 +33,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 
 ## 共通初期化フロー
 
-全フェーズ共通で以下を実行する。**フィードバック送信の場合はスキップ**。
+全フェーズ共通で以下を実行する。**フィードバック送信の場合はスキップ**。**Setup Phaseの場合はステップ1〜3をスキップし、直接ステップ4へ進む**（セットアップは `.aidlc/config.toml` が未存在の状態で実行されるため）。
 
 ### ステップ1: 共通ステップ読み込み
 
@@ -63,6 +63,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | inception | `steps/inception/01-setup.md` → `02-preparation.md` → `03-intent.md` → `04-stories-units.md` → `05-completion.md`（`06-backtrack.md` は必要時） |
 | construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md` |
 | operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
+| setup | `steps/setup/01-detect.md` → `02-generate-config.md` → `03-migrate.md` |
 
 Lite版の場合は対応するLiteプロンプトを読み込む。
 
