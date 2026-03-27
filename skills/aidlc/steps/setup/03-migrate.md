@@ -3,7 +3,7 @@
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
+git add .aidlc/config.toml .aidlc/cycles/ skills/aidlc/ AGENTS.md CLAUDE.md .github/
 # .claude/skills ディレクトリが作成されている場合のみ追加
 [ -d ".claude/skills" ] && git add .claude/
 # .agents/skills ディレクトリが作成されている場合のみ追加
@@ -29,20 +29,16 @@ AI-DLC環境のセットアップが完了しました！
 作成されたファイル:
 
 プロジェクト設定:
-- docs/aidlc.toml - プロジェクト設定
+- .aidlc/config.toml - プロジェクト設定
 
-共通ファイル（docs/aidlc/）:
-- prompts/inception.md - Inception Phase プロンプト
-- prompts/construction.md - Construction Phase プロンプト
-- prompts/operations.md - Operations Phase プロンプト
-- prompts/setup.md - サイクルセットアップ プロンプト
+AI-DLCスキル（skills/aidlc/）:
+- steps/ - フェーズステップファイル
 - templates/ - ドキュメントテンプレート
-- skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, aidlc-setup）
-- kiro/agents/ - KiroCLIエージェント設定
+- scripts/ - ユーティリティスクリプト
+- config/ - デフォルト設定
 
-プロジェクト固有ファイル（docs/cycles/）:
+プロジェクト固有ファイル（.aidlc/cycles/）:
 - rules.md - プロジェクト固有ルール
-- operations.md - 運用引き継ぎ情報
 
 AIツール設定ファイル（プロジェクトルート）:
 - AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
@@ -83,7 +79,7 @@ AI-DLCのアップグレードが完了しました！
 - skills/aidlc/ - AI-DLCスキル（フェーズステップファイル）
 - skills/aidlc/templates/ - ドキュメントテンプレート
 
-※ docs/aidlc.toml は保持されています（変更なし）
+※ .aidlc/config.toml は保持されています（変更なし）
 
 ---
 **セットアップは完了です。このセッションはここで終了してください。**
@@ -101,11 +97,11 @@ AI-DLCの新ファイル構成への移行が完了しました！
 移行されたファイル:
 | 移行元 | 移行先 |
 |--------|--------|
-| docs/aidlc/project.toml | docs/aidlc.toml |
-| docs/aidlc/prompts/additional-rules.md | docs/cycles/rules.md |
-| docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
+| docs/aidlc/project.toml | .aidlc/config.toml |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
+| docs/aidlc/version.txt | （削除: config.toml に統合） |
 
-これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
+これにより、skills/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
 ```
 
 ---

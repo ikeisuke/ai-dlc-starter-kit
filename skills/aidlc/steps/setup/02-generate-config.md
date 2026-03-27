@@ -13,7 +13,7 @@ fi
 
 # 2. additional-rules.md → rules.md に移行
 if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/cycles/rules.md ]; then
-  mkdir -p docs/cycles
+  mkdir -p .aidlc/cycles
   mv docs/aidlc/prompts/additional-rules.md .aidlc/cycles/rules.md
   echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/cycles/rules.md"
 fi

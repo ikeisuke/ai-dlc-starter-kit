@@ -496,7 +496,7 @@ _generate_template() {
       "Bash(mktemp /tmp/aidlc-:*)",
       "Bash(npx markdownlint-cli:*)",
       "Bash(tail *)",
-      "Bash(tee -a docs/cycles/*/history/*)",
+      "Bash(tee -a .aidlc/cycles/*/history/*)",
       "Bash(touch *)",
       "Bash(wc *)",
       "Bash(which *)",
