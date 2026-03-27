@@ -13,7 +13,7 @@ description: >
 
 以下の固定応答をそのまま出力してください:
 
-```
+```text
 【検証結果: スキル間呼び出し（callee）】
 [POC-CALLEE-RESPONSE-67890]
 ```

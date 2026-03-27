@@ -20,7 +20,7 @@ allowed-tools: Read
 
 読み込み結果を以下のフォーマットで出力してください:
 
-```
+```text
 【検証結果: オンデマンドRead】
 - ファイル: steps/sample-step.md
 - 読み込み: {成功 / 失敗}
