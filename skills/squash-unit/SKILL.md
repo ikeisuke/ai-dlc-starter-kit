@@ -1,7 +1,7 @@
 ---
 name: squash-unit
 description: "squash-unit.shを実行してUnit完了時またはInception Phase完了時の中間コミットをスカッシュする。commit-flow.mdのスカッシュフロー内で使用。ユーザーが「squash-unit」「squash unit」「スカッシュ」と指示した場合にも使用。"
-argument-hint: <cycle> [unit_number] [retroactive]
+argument-hint: "cycle [unit_number] [retroactive]"
 ---
 
 # squash-unit スキル
