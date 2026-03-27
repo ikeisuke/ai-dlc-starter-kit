@@ -17,7 +17,7 @@
 - **`docs/aidlc/` を直接編集してしまい、Operations Phase の rsync で変更が消える**
 
 **常に確認すべきこと**:
-- 今触っているファイルは「ツール側（`prompts/`）」か「成果物側（`docs/aidlc/`, `docs/cycles/`）」か
+- 今触っているファイルは「ツール側（`prompts/`, `skills/`）」か「成果物側（`docs/aidlc/`, `.aidlc/cycles/`）」か
 - **`docs/aidlc/` は `prompts/package/` の rsync コピーである（直接編集禁止）**
 - プロンプト・テンプレートの修正は必ず `prompts/package/` を編集すること
 - 変更が即時反映されるか、次回セットアップ時に反映されるか

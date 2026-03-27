@@ -237,12 +237,14 @@ if [ -f docs/aidlc/project.toml ] && [ ! -f docs/aidlc.toml ]; then
   echo "MIGRATED: docs/aidlc/project.toml → docs/aidlc.toml"
 fi
 
-# 2. additional-rules.md → rules.md に移行
-if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f docs/cycles/rules.md ]; then
-  mkdir -p docs/cycles
-  mv docs/aidlc/prompts/additional-rules.md docs/cycles/rules.md
-  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → docs/cycles/rules.md"
+# ==== v1互換コード（v2移行完了後に削除可能） ====
+# 2. additional-rules.md → rules.md に移行（v1互換）
+if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/cycles/rules.md ]; then
+  mkdir -p .aidlc/cycles
+  mv docs/aidlc/prompts/additional-rules.md .aidlc/cycles/rules.md
+  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/cycles/rules.md"
 fi
+# ==== v1互換コード終了 ====
 
 # 3. version.txt を削除（バージョン情報は aidlc.toml に統合）
 if [ -f docs/aidlc/version.txt ]; then
@@ -261,7 +263,7 @@ fi
 | 移行元 | 移行先 |
 |--------|--------|
 | docs/aidlc/project.toml | docs/aidlc.toml |
-| docs/aidlc/prompts/additional-rules.md | docs/cycles/rules.md |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
 | docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
 
 これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
@@ -1232,7 +1234,7 @@ AI-DLCの新ファイル構成への移行が完了しました！
 | 移行元 | 移行先 |
 |--------|--------|
 | docs/aidlc/project.toml | docs/aidlc.toml |
-| docs/aidlc/prompts/additional-rules.md | docs/cycles/rules.md |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
 | docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
 
 これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。

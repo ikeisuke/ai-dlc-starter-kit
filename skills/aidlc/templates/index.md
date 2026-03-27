@@ -13,8 +13,7 @@
 テンプレートを事前に生成したい場合：
 
 ```text
-以下のファイルを読み込んでテンプレートを生成してください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+/aidlc setup を実行してからテンプレートを生成してください。
 
 変数設定：
 MODE = template

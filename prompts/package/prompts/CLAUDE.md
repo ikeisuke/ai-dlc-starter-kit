@@ -86,4 +86,4 @@ git commit -m "feat: add new feature"
 
 ## Compact Instructions
 
-@skills/aidlc/steps/common/compaction.md
+@`skills/aidlc/steps/common/compaction.md`
