@@ -235,8 +235,6 @@ mkdir -p .aidlc/cycles
 
 テンプレートファイルを使用して `.aidlc/config.toml` を生成します。
 
-**重要**: `[setup_prompt パス]` の値はセクション7.2.1で判定します。プレースホルダー置換の前に7.2.1を先に実施してください。
-
 **テンプレートファイルの取得**:
 
 テンプレートファイルのパスはセクション8.1.1で判定した `[スターターキットパス]` を使用:
@@ -266,53 +264,9 @@ fi
 | `[[言語リスト]]` | 使用言語の配列 | セクション5で収集（例: `["TypeScript", "JavaScript"]`） |
 | `[[フレームワークリスト]]` | フレームワークの配列 | セクション5で収集（例: `["React", "Next.js"]`） |
 | `[命名規則]` | 命名規則 | セクション5で収集（デフォルト: `lowerCamelCase`） |
-| `[setup_prompt パス]` | セットアッププロンプトのパス | セクション7.2.1で判定 |
-
 **生成手順**:
 
-1. テンプレートファイルを読み込む
-2. 各プレースホルダーを収集した情報で置換
-3. `.aidlc/config.toml` として保存
-
-```bash
-# 例: テンプレートから生成（AIが置換処理を実行）
-cat "$TEMPLATE_FILE" | \
-  sed "s/\[現在日時\]/$(date +%Y-%m-%d)/g" | \
-  sed "s/\[version.txt の内容\]/$(cat [スターターキットパス]/version.txt)/g" | \
-  # ... 他のプレースホルダーも同様に置換 ...
-  > .aidlc/config.toml
-```
-
-**注意**: 上記のsedコマンドは参考例です。AIが直接ファイルを読み込み、プレースホルダーを置換して `.aidlc/config.toml` を生成してください。
-
-### 7.2.1 setup_prompt パスの設定【初回・移行のみ】
-
-`[paths].setup_prompt` には、このセットアッププロンプトファイルのパスを設定します。
-
-**パス形式の判定**（優先順位順）:
-
-1. **同一リポジトリ内の場合**: 相対パスを使用
-   - このファイル（setup-prompt.md）がプロジェクトルート配下にある場合
-   - **基準**: `.aidlc/config.toml` が配置されるディレクトリ（プロジェクトルート）
-   - 例: `prompts/setup-prompt.md`
-
-2. **外部リポジトリの場合**: ghq形式を使用
-   - このファイルが別のリポジトリにある場合（ghq管理下）
-   - 形式: `ghq:{host}/{owner}/{repo}/{path}`
-   - 例: `ghq:github.com/ikeisuke/ai-dlc-starter-kit/prompts/setup-prompt.md`
-
-3. **上記以外の場合**: 絶対パスを使用（フォールバック、非推奨）
-   - ghq未使用環境でのフォールバック
-
-**判定補助**:
-- プロジェクトルートは `.aidlc/config.toml` が作成されるディレクトリ
-- 外部リポジトリの場合、`resolve-starter-kit-path.sh` でスターターキットパスを自動解決可能:
-  ```bash
-  skills/aidlc/scripts/resolve-starter-kit-path.sh
-  ```
-  `mode:GHQ` の場合のみ、`path:` 値からghq形式パスを構築（完成形: `ghq:github.com/[owner]/[repo]/prompts/setup-prompt.md`）。`mode:META_DEV` の場合はghq形式不要（同一リポジトリ内）。
-
-**アップグレードモードの場合**: 既存の `[paths].setup_prompt` を保持（変更しない）
+**手順**: AIがテンプレートファイルを読み込み、各プレースホルダーを収集した情報（現在日時、version.txt の内容等）で置換して `.aidlc/config.toml` を生成してください。sedやシェルコマンド置換は使用せず、AIが直接ファイルを書き出してください。
 
 ### 7.3 starter_kit_versionの更新【アップグレードモードのみ】
 

@@ -70,26 +70,11 @@ bin/check-size.sh
 - 以下の対応を検討:
   1. ファイルを分割する（共通部分を別ファイルに外部化）
   2. 冗長な記述を削減する
-  3. 閾値を調整する（`docs/aidlc.toml`の`[rules.size_check]`セクション）
+  3. 閾値を調整する（`.aidlc/config.toml`の`[rules.size_check]`セクション）
 - 対応後、再度チェックを実行して警告が解消されていることを確認
 
-### Operations Phaseステップ5と6の間で実行する処理
+### aidlc-setup同期（v2プラグイン構造）
 
-**タイミング**: Operations Phaseのステップ5（バックログ整理）完了後、ステップ6（リリース準備）開始前（詳細は `docs/aidlc/prompts/operations.md` を参照）
+**タイミング**: `.aidlc/cycles/rules.md` の「aidlc-setup同期」カスタムワークフローに従う
 
-1. **setup-prompt.mdを読み込んでアップグレード処理を実行**
-
-   ```text
-   prompts/setup-prompt.md を読み込んで、AI-DLC 環境をアップグレードしてください
-   ```
-
-2. **アップグレード処理の内容**
-   - rsyncによる `prompts/package/` → `docs/aidlc/` 同期
-   - aidlc.tomlのマイグレーション（新設定セクション追加）
-   - starter_kit_versionの更新
-
-3. **確認事項**
-   - 削除対象ファイルがあれば確認・承認
-   - 新設定セクションが追加されたことを確認
-
-**理由**: `prompts/package/` で変更したプロンプト・テンプレートを `docs/aidlc/` に反映し、aidlc.tomlのマイグレーションも確実に実行するため。
+v2ではプラグイン構造に移行したため、v1のrsync同期は廃止。`/aidlc-setup` スキルによる同期に置き換え済み。詳細は `.aidlc/cycles/rules.md` を参照。

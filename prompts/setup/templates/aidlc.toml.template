@@ -106,7 +106,3 @@ mode = "manual"
 
 [inception]
 # Inception Phase設定
-
-# [rules.backlog]
-# DEPRECATED: バックログモード設定は廃止されました。
-# バックログは常にGitHub Issueに記録されます。
