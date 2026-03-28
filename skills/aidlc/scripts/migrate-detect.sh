@@ -116,26 +116,28 @@ if [ -d ".aidlc/cycles/backlog" ]; then
     '{resource_type: $rt, path: $p, action: $a, condition: $cond, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
 fi
 
-# 6. .github/ISSUE_TEMPLATE/backlog.yml（v2.0.3で機能廃止）
+# 6. .github/ISSUE_TEMPLATE/ のスターターキット由来テンプレート（v2で管理廃止）
 # スターターキットの原本と比較し、一致すればスターターキット由来と判定して削除対象にする
-if [ -f ".github/ISSUE_TEMPLATE/backlog.yml" ]; then
-  _starter_kit_root="$(cd "$AIDLC_PLUGIN_ROOT/../.." && pwd)"
-  _backlog_origin="${_starter_kit_root}/.github/ISSUE_TEMPLATE/backlog.yml"
-  if [ -f "$_backlog_origin" ]; then
-    _origin_hash=$(_sha256 "$_backlog_origin")
-    _actual_hash=$(_sha256 ".github/ISSUE_TEMPLATE/backlog.yml")
+_starter_kit_root="$(cd "$AIDLC_PLUGIN_ROOT/../.." && pwd)"
+for _tmpl_name in backlog.yml bug.yml feature.yml feedback.yml; do
+  _tmpl_path=".github/ISSUE_TEMPLATE/${_tmpl_name}"
+  [ -f "$_tmpl_path" ] || continue
+  _tmpl_origin="${_starter_kit_root}/.github/ISSUE_TEMPLATE/${_tmpl_name}"
+  if [ -f "$_tmpl_origin" ]; then
+    _origin_hash=$(_sha256 "$_tmpl_origin")
+    _actual_hash=$(_sha256 "$_tmpl_path")
     if [ "$_origin_hash" = "$_actual_hash" ]; then
-      echo "  Found deprecated template: .github/ISSUE_TEMPLATE/backlog.yml (matches starter kit origin, backlog feature removed in v2.0.3)" >&2
+      echo "  Found starter kit template: $_tmpl_path (hash match, v2 no longer manages)" >&2
       _add_resource "$(jq -n \
-        --arg eh "$_origin_hash" --arg ah "$_actual_hash" \
-        '{resource_type: "deprecated_template", path: ".github/ISSUE_TEMPLATE/backlog.yml", action: "delete", ownership_evidence: {method: "starter_kit_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
+        --arg p "$_tmpl_path" --arg eh "$_origin_hash" --arg ah "$_actual_hash" \
+        '{resource_type: "starter_kit_template", path: $p, action: "delete", ownership_evidence: {method: "starter_kit_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
     else
-      echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (modified by user, hash mismatch with starter kit)" >&2
+      echo "  Skipping: $_tmpl_path (modified by user)" >&2
     fi
   else
-    echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (starter kit origin not found)" >&2
+    echo "  Skipping: $_tmpl_path (no starter kit origin to compare)" >&2
   fi
-fi
+done
 
 # 7. .claude/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）
 if [ -d ".claude/skills" ]; then
