@@ -187,9 +187,6 @@ AIが探索結果のパスを使用して以下を実行する:
 - Claude Code: `/aidlc inception` と指示
 - その他: `steps/inception/01-setup.md` からステップファイルを順に読み込み
 
-**AI-DLCスターターキットをアップグレードする場合**:
-- Claude Code: `/aidlc setup` と指示
-- その他: `steps/setup/01-detect.md` からステップファイルを順に読み込み
 ---
 ````
 
