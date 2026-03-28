@@ -213,7 +213,7 @@ if [ -f "${AIDLC_CONFIG}" ]; then
   fi
 fi
 
-# 8. cycles配下のデータ移行（テンプレート変数 {{aidlc_dir}} への置換が必要なファイル）
+# 12. cycles配下のデータ移行（テンプレート変数 {{aidlc_dir}} への置換が必要なファイル）
 if [ -d "${AIDLC_CYCLES}" ]; then
   while IFS= read -r -d '' file; do
     rel_path="${file#"${AIDLC_PROJECT_ROOT}/"}"
