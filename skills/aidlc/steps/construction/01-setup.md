@@ -231,16 +231,31 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ### 8. バックログ確認
 
-対象Unitに関連する気づきがあれば確認する。
+対象Unitに関連するIssueとバックログを確認する。
 
-`gh_status` が `available` の場合:
-```bash
-gh issue list --label backlog --state open
-```
+**`gh_status` が `available` の場合**:
 
-`gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示する。
+1. **関連Issueの詳細確認**: Unit定義ファイルの「関連Issue」セクションからIssue番号を抽出し、各Issueの詳細を確認する
 
-Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
+   ```bash
+   # Unit定義ファイルから関連Issue番号を抽出（例: #424）
+   gh issue view <issue_number> --json title,body,comments --jq '.title, .body'
+   ```
+
+   - Issue本文に受け入れ基準や詳細な要件が記載されている場合、計画に反映する
+   - Issueにコメントがある場合、最新の議論内容を確認する
+
+2. **バックログIssueの確認**: 対象Unitに関連するバックログIssueがないか確認する
+
+   ```bash
+   gh issue list --label backlog --state open --json number,title --jq '.[] | "#\(.number) \(.title)"'
+   ```
+
+   - Unit定義の責務やスコープに関連するバックログIssueがあれば、計画時に考慮する
+
+**`gh_status` が `available` 以外の場合**: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示する。
+
+**Unit定義ファイルに「実装時の注意」セクションがある場合**: そこに記載された関連気づきを優先的に確認する。
 
 ### 9. 対象Unit決定（Unit定義ファイルの実装状態に基づく）
 
