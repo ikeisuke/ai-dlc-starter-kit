@@ -59,11 +59,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 ## 共通初期化フロー
 
-全フェーズ共通で以下を実行する。**フィードバック送信の場合は共通初期化フロー全体をスキップ**。
-
-**適用対象の分岐**:
-- `inception` / `construction` / `operations` / `express`: ステップ1〜4をすべて実行
-- `setup` / `migrate`: **ステップ4（フェーズステップ読み込み）のみ実行**。ステップ1〜3は `.aidlc/config.toml` が未存在、または移行スクリプトが自律的に環境検出を行うため不要
+`inception` / `construction` / `operations` / `express` で実行する。**`setup`・`migrate`・`feedback` には適用しない**（直接ステップ4のフェーズステップ読み込みに進む）。
 
 ### ステップ1: 共通ステップ読み込み
 
