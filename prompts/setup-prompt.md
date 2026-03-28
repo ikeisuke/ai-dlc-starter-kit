@@ -237,15 +237,6 @@ if [ -f docs/aidlc/project.toml ] && [ ! -f docs/aidlc.toml ]; then
   echo "MIGRATED: docs/aidlc/project.toml → docs/aidlc.toml"
 fi
 
-# ==== v1互換コード（v2移行完了後に削除可能） ====
-# 2. additional-rules.md → rules.md に移行（v1互換）
-if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/cycles/rules.md ]; then
-  mkdir -p .aidlc/cycles
-  mv docs/aidlc/prompts/additional-rules.md .aidlc/cycles/rules.md
-  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/cycles/rules.md"
-fi
-# ==== v1互換コード終了 ====
-
 # 3. version.txt を削除（バージョン情報は aidlc.toml に統合）
 if [ -f docs/aidlc/version.txt ]; then
   rm docs/aidlc/version.txt

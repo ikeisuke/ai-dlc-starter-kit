@@ -1,6 +1,6 @@
 ---
 name: aidlc-setup
-description: Upgrades the AI-DLC environment to the latest version. Syncs prompts and templates from the starter kit. Use when the user says "AIDLCアップデート", "update aidlc", "aidlc setup", "start setup", or "/aidlc-setup".
+description: Upgrades the AI-DLC environment to the latest version. Runs version update and config migration. Use when the user says "AIDLCアップデート", "update aidlc", "aidlc setup", "start setup", or "/aidlc-setup".
 argument-hint: (引数なし)
 ---
 
@@ -19,25 +19,7 @@ ls skills/aidlc-setup/bin/aidlc-setup.sh
 ```
 
 スクリプトが存在しない場合、AI-DLCのバージョンが古い可能性があります。
-以下の手順で `setup-prompt.md` を特定し、読み込んで手動アップグレードしてください:
-
-1. 事前にBashで以下を順に実行し、結果を変数に格納:
-
-```bash
-ghq root
-```
-
-```bash
-skills/aidlc/scripts/read-config.sh project.starter_kit_repo
-```
-
-2. 取得した値を使ってパスを組み立て:
-   - `GHQ_ROOT`: 手順1の出力
-   - `RAW_REPO`: 手順2の出力
-   - `REPO`: RAW_REPOから `ghq:` プレフィックスを除去
-   - `SETUP_PATH`: `{GHQ_ROOT}/{REPO}/prompts/setup-prompt.md`
-
-3. 解決したパスのファイルを読み込む
+`/aidlc setup` でセットアップを開始してください。
 
 ### アップグレード実行
 
@@ -55,9 +37,8 @@ skills/aidlc-setup/bin/aidlc-setup.sh --dry-run
    |------|------|
    | `setup_type:upgrade:X:Y` | バージョンXからYへのアップグレード |
    | `skip:already-current:X` | バージョンXで最新、アップグレード不要 |
-   | `sync_added:<file>` | 新規追加されるファイル |
-   | `sync_updated:<file>` | 更新されるファイル |
-   | `sync_deleted:<file>` | 削除されるファイル |
+   | `version_from:X` | 現在のバージョン |
+   | `version_to:Y` | 更新先バージョン |
 
    `skip:already-current` の場合はアップグレード不要。ユーザーに伝えて終了。
    `error:` の場合はエラー内容を表示して終了。
@@ -105,7 +86,7 @@ git commit -m "chore: AI-DLCをバージョンX.X.Xにアップグレード"
    バージョン X.X.X → Y.Y.Y へのアップグレード
 
    ### 変更内容
-   - [dry-run出力のsync_added/sync_updated/sync_deleted行を要約]
+   - バージョン更新・設定マイグレーション実施
    ```
 
    ```bash
@@ -127,17 +108,6 @@ AI-DLCのアップグレードが完了しました！
 1. PRをレビュー・マージしてください
 2. マージ後、新しいセッションで「start inception」と指示してください
 ```
-
-## 更新対象
-
-| ディレクトリ | 内容 |
-|-------------|------|
-| `skills/aidlc/steps/` | フェーズステップファイル |
-| `skills/aidlc/templates/` | ドキュメントテンプレート |
-| `skills/aidlc/scripts/` | ユーティリティスクリプト |
-| `skills/aidlc/config/` | デフォルト設定 |
-| `docs/aidlc/guides/` | ガイドドキュメント |
-| `docs/aidlc/kiro/` | KiroCLIエージェント設定 |
 
 ## 注意事項
 

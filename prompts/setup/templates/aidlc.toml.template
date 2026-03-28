@@ -18,8 +18,6 @@ frameworks = [[フレームワークリスト]]
 tools = ["Claude Code"]
 
 [paths]
-# セットアッププロンプトのパス（詳細は 7.2.1 参照）
-setup_prompt = "[setup_prompt パス]"
 aidlc_dir = "docs/aidlc"
 cycles_dir = "docs/cycles"
 
