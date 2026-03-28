@@ -36,7 +36,7 @@
 
 ## バックログ管理
 
-バックログは常にGitHub Issueに記録する。詳細は `docs/aidlc/guides/backlog-management.md` を参照。
+バックログはGitHub Issueに記録する（`gh issue create`）。
 
 ## 禁止事項
 
