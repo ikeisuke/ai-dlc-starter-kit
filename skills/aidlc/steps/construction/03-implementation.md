@@ -120,23 +120,13 @@ BDD/TDDに従ってテストコードを作成
 
       **b. slug生成**: エラー内容から短い識別子を生成（英数字・ハイフン）。空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイル/Issue存在時はサフィックス（`-2`, `-3`...）を付与。
 
-      **c. mode判定**: ステップ3で取得済みの `backlog_mode` を参照する。未保持の場合は `git` として扱う。
+      **c. 登録実行**:
 
-      **d. 登録方法の選択と実行**:
+      ステップ3の `gh_status` 判定結果を参照し、GitHub Issue作成を試みる。
+      タイトルは `[Backlog] bugfix: {エラー要約}`、ラベルは `"backlog,type:bugfix,priority:medium"`。
+      Issue本文はWriteツールで一時ファイルに書き出し、`gh issue create --body-file` で作成後、一時ファイルを削除。
 
-      - `mode = git` または `mode = git-only`:
-        `.aidlc/cycles/backlog/bugfix-{slug}.md` にファイルを作成。テンプレートは `skills/aidlc/templates/backlog_item_template.md` に準拠。
-        ファイル作成失敗時は警告表示し、手動でのバックログ登録を依頼。
-
-      - `mode = issue` または `mode = issue-only`:
-        ステップ3の `gh_status` 判定結果を参照し、GitHub Issue作成を試みる。
-        タイトルは `[Backlog] bugfix: {エラー要約}`、ラベルは `"backlog,type:bugfix,priority:medium"`。
-        Issue本文はWriteツールで一時ファイルに書き出し、`gh issue create --body-file` で作成後、一時ファイルを削除。
-
-        **e. 失敗時フォールバック**:
-        - `mode = issue`: ファイルベース（git方式）にフォールバック
-        - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
-        - gh CLI不可用時も同様のフォールバック/警告を行う。
+      Issue作成失敗時またはgh CLI不可用時は警告メッセージを表示し、手動対応を依頼。
 
    2. 選択結果を履歴に記録:
 
@@ -146,8 +136,7 @@ BDD/TDDに従ってテストコードを作成
       【エラー分類】{recoverable / non_recoverable / transient / skipped(max_retry=0)}
       【試行回数】{実施したattempt数}/{max_retry}
       【バックログ登録】{登録 / スキップ / なし}
-      【バックログモード】{mode / -}
-      【登録先】{Issue番号 / ファイルパス / なし}
+      【登録先】{Issue番号 / なし}
       ```
 
 4. **AIレビュー実施**（`steps/common/review-flow.md` に従う）

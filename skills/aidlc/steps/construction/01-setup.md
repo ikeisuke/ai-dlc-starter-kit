@@ -57,32 +57,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   2. **スコープチェック【必須】**: バックログに登録する前に、`.aidlc/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
      - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
      - 該当しない場合: 手順3へ進みバックログに登録する
-  3. **バックログ項目を作成**（プリフライトチェックのステップ3で確認した `backlog_mode` を参照）:
-
-     **mode=git または mode=git-only の場合**: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
-
-     **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
-
-     **ファイル内容**（テンプレート: `skills/aidlc/templates/backlog_item_template.md`）:
-     ```markdown
-     # [タイトル]
-
-     - **発見日**: YYYY-MM-DD
-     - **発見フェーズ**: Construction
-     - **発見サイクル**: {{CYCLE}}（名前付きサイクルの場合は name/vX.X.X 形式をそのまま使用）
-     - **優先度**: [高 / 中 / 低]
-
-     ## 概要
-     [簡潔な説明]
-
-     ## 詳細
-     [詳細な説明]
-
-     ## 対応案
-     [推奨される対応方法]
-     ```
-
-     **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
+  3. **バックログ項目を作成**: GitHub Issueを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
 
   4. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
@@ -97,7 +72,7 @@ Inception Phaseで決定済み、または既存スタックを使用
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
      ```text
-     // TODO: workaround - see backlog (mode に応じた保存先を参照)
+     // TODO: workaround - see backlog (GitHub Issue を参照)
      ```
 
   **workaroundの例**:
@@ -195,7 +170,7 @@ AIが出力を確認し、パス名が表示されれば存在、エラーなら
 
 **【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
-環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
+環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
 ### 4. セッション判別設定【オプション】
 
@@ -256,26 +231,14 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ### 8. バックログ確認
 
-ステップ3で確認した `backlog_mode` を参照し、対象Unitに関連する気づきがあれば確認する。
+対象Unitに関連する気づきがあれば確認する。
 
-**mode=git または mode=git-only の場合**:
+`gh_status` が `available` の場合:
 ```bash
-ls .aidlc/cycles/backlog/ 2>/dev/null
+gh issue list --label backlog --state open
 ```
 
-**mode=issue または mode=issue-only の場合**:
-
-- `gh_status` が `available` の場合:
-  ```bash
-  gh issue list --label backlog --state open
-  ```
-- `gh_status` が `available` 以外の場合:
-  - `mode=issue`: 「警告: GitHub CLIが利用できません。ローカルバックログを確認します。」と表示し、`ls .aidlc/cycles/backlog/ 2>/dev/null` にフォールバック
-  - `mode=issue-only`: 「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示し、ユーザーに続行可否を確認
-
-**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認
-
-**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+`gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示する。
 
 Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
 

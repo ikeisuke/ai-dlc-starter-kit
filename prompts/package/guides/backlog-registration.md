@@ -62,12 +62,9 @@
 [期待する結果の回答]
 ```
 
-### 保存先別の対応
+### 保存先
 
-| モード | 保存方法 |
-|--------|----------|
-| Issue（issue / issue-only） | タイトル: `[Backlog] [概要]`、本文: 上記フォーマット |
-| Git（git / git-only） | `docs/cycles/backlog/{type}-{slug}.md` に上記フォーマットで保存 |
+GitHub Issueに保存します。タイトル: `[Backlog] [概要]`、本文: 上記フォーマット。
 
 ## フロー例
 

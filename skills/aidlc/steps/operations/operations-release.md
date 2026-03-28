@@ -7,7 +7,7 @@
 - ステップ1〜6が完了済み（progress.mdで確認）
 - 共通ルール（`steps/common/rules.md`）読み込み済み
 - `.aidlc/config.toml` の設定確認済み
-- 環境情報（gh/backlog_mode）確認済み（ステップ3）
+- 環境情報（gh）確認済み（ステップ3）
 
 ---
 

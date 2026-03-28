@@ -124,29 +124,16 @@ if [ -f ".kiro/agents/aidlc-poc.json" ] && [ ! -L ".kiro/agents/aidlc-poc.json" 
   fi
 fi
 
-# 5. .aidlc/cycles/backlog/ ディレクトリ（backlog_mode判定）
+# 5. .aidlc/cycles/backlog/ ディレクトリ（v2.0.3以降: 常に削除候補）
+# バックログはGitHub Issue固定のため、ローカルディレクトリは不要
 if [ -d ".aidlc/cycles/backlog" ]; then
-  # backlog_mode を読み取り
-  backlog_mode=""
-  if command -v dasel >/dev/null 2>&1 && [ -f "${AIDLC_CONFIG}" ]; then
-    backlog_mode=$(dasel -f "${AIDLC_CONFIG}" -r toml 'rules.backlog.mode' 2>/dev/null | tr -d '"' || true)
-  fi
-  backlog_mode="${backlog_mode:-issue-only}"
-
-  case "$backlog_mode" in
-    issue|issue-only)
-      echo "  Found backlog_dir: .aidlc/cycles/backlog/ (mode=$backlog_mode, will delete)" >&2
-      _add_resource "$(jq -n \
-        --arg rt "backlog_dir" \
-        --arg p ".aidlc/cycles/backlog/" \
-        --arg a "delete" \
-        --arg cond "backlog_mode in [issue, issue-only]" \
-        '{resource_type: $rt, path: $p, action: $a, condition: $cond, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
-      ;;
-    *)
-      echo "  Skipping backlog_dir: .aidlc/cycles/backlog/ (mode=$backlog_mode, keeping)" >&2
-      ;;
-  esac
+  echo "  Found backlog_dir: .aidlc/cycles/backlog/ (deprecated, will delete)" >&2
+  _add_resource "$(jq -n \
+    --arg rt "backlog_dir" \
+    --arg p ".aidlc/cycles/backlog/" \
+    --arg a "delete" \
+    --arg cond "backlog_mode deprecated (v2.0.3)" \
+    '{resource_type: $rt, path: $p, action: $a, condition: $cond, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
 fi
 
 # 6. .github/ISSUE_TEMPLATE/ 内のスターターキット由来テンプレート
@@ -210,13 +197,6 @@ else
   echo "No v1 artifacts detected. Already v2." >&2
 fi
 
-# backlog_mode を取得（manifest に含める）
-manifest_backlog_mode=""
-if command -v dasel >/dev/null 2>&1 && [ -f "${AIDLC_CONFIG}" ]; then
-  manifest_backlog_mode=$(dasel -f "${AIDLC_CONFIG}" -r toml 'rules.backlog.mode' 2>/dev/null | tr -d '"' || true)
-fi
-manifest_backlog_mode="${manifest_backlog_mode:-issue-only}"
-
 detected_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 jq -n \
@@ -225,7 +205,6 @@ jq -n \
   --arg detected_at "$detected_at" \
   --arg source_version "v1" \
   --arg target_version "v2" \
-  --arg backlog_mode "$manifest_backlog_mode" \
   --argjson resources "$RESOURCES" \
   '{
     version: $version,
@@ -233,6 +212,5 @@ jq -n \
     detected_at: $detected_at,
     source_version: $source_version,
     target_version: $target_version,
-    backlog_mode: $backlog_mode,
     resources: $resources
   }'

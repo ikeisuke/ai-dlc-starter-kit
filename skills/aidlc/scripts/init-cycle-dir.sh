@@ -64,12 +64,11 @@ OPTIONS:
   created            - 新規作成
   exists             - 既存（スキップ）
   would-create       - 作成予定（--dry-runモード）
-  skipped-issue-mode - Issue駆動モード（issue/issue-only）のためスキップ
+  skipped-issue-only - バックログはGitHub Issue固定のためスキップ
   error              - 作成失敗（詳細はstderrへ）
 
 共通バックログディレクトリ:
-  .aidlc/cycles/backlog/ と .aidlc/cycles/backlog-completed/ も作成します。
-  ただし、backlog mode が issue または issue-only の場合はスキップします。
+  v2.0.3以降、バックログはGitHub Issue固定のためディレクトリは作成しません。
 
 例:
   $ init-cycle-dir.sh v1.8.0
@@ -148,41 +147,13 @@ create_directory() {
     fi
 }
 
-# backlog modeを取得（resolve-backlog-mode.sh の共通ロジックを使用）
-# 戻り値（stdout）: git, git-only, issue, issue-only のいずれか（デフォルト: git）
-# resolve-backlog-mode.sh を source
-source "${SCRIPT_DIR}/resolve-backlog-mode.sh"
-
-# get_backlog_mode: resolve_backlog_mode を直接使用（ラッパー廃止）
-
-# 共通バックログディレクトリを作成
+# 共通バックログディレクトリを作成（v2.0.3以降: 常にスキップ）
+# バックログはGitHub Issue固定のため、ローカルディレクトリは作成しない
 # 引数: $1=dry_run (true/false)
-# 戻り値: 0=成功, 1=失敗
+# 戻り値: 0=成功
 create_common_backlog_dirs() {
-    local dry_run="$1"
-    local backlog_mode
-    local error_count=0
-
-    backlog_mode=$(resolve_backlog_mode)
-
-    # Issue駆動モード（issue/issue-only）の場合はスキップ
-    if [[ "$backlog_mode" == "issue" || "$backlog_mode" == "issue-only" ]]; then
-        echo "dir:${AIDLC_CYCLES}/backlog:skipped-issue-mode"
-        echo "dir:${AIDLC_CYCLES}/backlog-completed:skipped-issue-mode"
-        return 0
-    fi
-
-    # バックログディレクトリを作成
-    local dirs=("${AIDLC_CYCLES}/backlog" "${AIDLC_CYCLES}/backlog-completed")
-    for dir in "${dirs[@]}"; do
-        if ! create_directory "$dir" "$dry_run"; then
-            ((error_count++)) || true
-        fi
-    done
-
-    if [[ $error_count -gt 0 ]]; then
-        return 1
-    fi
+    echo "dir:${AIDLC_CYCLES}/backlog:skipped-issue-only"
+    echo "dir:${AIDLC_CYCLES}/backlog-completed:skipped-issue-only"
     return 0
 }
 

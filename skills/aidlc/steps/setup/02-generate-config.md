@@ -794,13 +794,12 @@ GitHub Issueテンプレートの配置が完了しました：
 
 **注意**: Issue Formsはパブリック・プライベート両方のリポジトリで利用可能です。
 
-#### 8.2.6 Issue用基本ラベルの作成【mode=issueまたはissue-onlyの場合のみ】
+#### 8.2.6 Issue用基本ラベルの作成
 
-GitHub CLIが利用可能で、バックログモードがIssue駆動の場合、バックログ管理用の共通ラベルを作成します。
+GitHub CLIが利用可能な場合、バックログ管理用の共通ラベルを作成します。
 
 **前提条件**:
 - `gh:available` であること
-- `.aidlc/config.toml` の `[rules.backlog].mode` が `issue` または `issue-only` であること
 
 **前提条件を満たさない場合**: このステップをスキップ。
 

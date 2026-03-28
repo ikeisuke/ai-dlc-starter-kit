@@ -95,24 +95,6 @@ ls .aidlc/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
 
 #### 6.2 バックログ整理
 
-ステップ3で確認した `backlog_mode` を参照する。
-
-**mode=git または mode=git-only の場合**:
-```bash
-ls .aidlc/cycles/backlog/
-```
-
-対応済み項目の移動先: `.aidlc/cycles/backlog-completed/{{CYCLE}}/`
-
-```bash
-# 対応済みディレクトリを作成
-mkdir -p .aidlc/cycles/backlog-completed/{{CYCLE}}
-
-# 対応済みの項目を移動
-mv .aidlc/cycles/backlog/{対応済みファイル}.md .aidlc/cycles/backlog-completed/{{CYCLE}}/
-```
-
-**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
@@ -159,10 +141,6 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 ```text
 全対応済みIssueはPRマージ時に自動クローズされます。手動クローズは不要です。
 ```
-
-**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
-
-**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
 **詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
 

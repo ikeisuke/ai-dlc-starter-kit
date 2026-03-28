@@ -515,111 +515,55 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        - その他（code / architecture / inception）の場合: `type:chore`
        - 上記以外の種別が検出された場合: `type:chore` にフォールバック
 
-       **mode判定**:
+       **登録実行**:
 
-       バックログ管理ガイド（`{{aidlc_dir}}/guides/backlog-management.md`）のモード解決手順に従い、`[rules.backlog].mode` を取得する。取得失敗時や想定外の値の場合は `git` として扱う。
+       GitHub Issueを作成する。
 
-       **登録方法の決定と実行**:
+       **タイトルのサニタイズ**: タイトルにシェル展開文字（`$`, `` ` ``, `"`, `\`）を含めないこと。改行は除去し、80文字以内に切り詰める。
 
-       - `mode = git` または `mode = git-only` の場合:
+       ラベルは種別に基づき1つの文字列に解決してから渡す:
+       - securityレビュー指摘の場合: `"backlog,type:security,priority:medium"`
+       - その他のレビュー指摘の場合: `"backlog,type:chore,priority:medium"`
 
-         `.aidlc/cycles/backlog/{type}-{slug}.md` にファイルを作成する。
-         `{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
-         slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイルが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
+       1. Writeツールで一時ファイルを作成（内容: Issue本文）:
 
-         ファイル内容は `skills/aidlc/templates/backlog_item_template.md` に準拠:
+       ```text
+       ## スラッグ
 
-         ```markdown
-         # [指摘内容の要約]
+       {slug}
 
-         - **発見日**: {YYYY-MM-DD}
-         - **発見フェーズ**: {Construction / Inception}
-         - **発見サイクル**: {現在のサイクル（{{CYCLE}}をそのまま使用。名前付きサイクルの場合は name/vX.X.X 形式）}
-         - **優先度**: 中
+       ## 概要
 
-         ## 概要
+       AIレビュー指摘（{レビュー種別}）でスコープ外と判断された項目。
 
-         AIレビュー指摘（{レビュー種別}）でスコープ外と判断された項目。
+       ## 詳細
 
-         ## 詳細
+       {指摘内容}
 
-         {指摘内容}
+       ## 検出元
 
-         ## 対応案
+       - **発見サイクル**: {現在のサイクル（{{CYCLE}}をそのまま使用。名前付きサイクルの場合は name/vX.X.X 形式）}
+       - **発見フェーズ**: {Construction / Inception}
+       - **先送り理由**: {ユーザーが入力した理由}
 
-         次サイクル以降で対応を検討。
-         先送り理由: {ユーザーが入力した理由}
-         ```
+       ## 対応案
 
-         ファイル作成に失敗した場合（ディレクトリ不在、権限不足等）:
-         警告メッセージを表示し、手動でのバックログ登録を依頼する。
+       次サイクル以降で対応を検討。
+       ```
 
-       - `mode = issue` または `mode = issue-only` の場合:
+       2. 以下を実行:
 
-         **gh CLI可用性の確認**:
-         1. `gh` コマンドの存在確認
-         2. `gh auth status` による認証状態確認
+       ```bash
+       gh issue create \
+           --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
+           --label "backlog,type:{決定済みの種別},priority:medium" \
+           --body-file /tmp/aidlc-pr-body.txt
+       ```
 
-         - **可用な場合**: Issue作成を実行
+       3. 一時ファイルを削除
 
-           **タイトルのサニタイズ**: タイトルにシェル展開文字（`$`, `` ` ``, `"`, `\`）を含めないこと。改行は除去し、80文字以内に切り詰める。
-
-           ラベルは種別に基づき1つの文字列に解決してから渡す:
-           - securityレビュー指摘の場合: `"backlog,type:security,priority:medium"`
-           - その他のレビュー指摘の場合: `"backlog,type:chore,priority:medium"`
-
-           1. Writeツールで一時ファイルを作成（内容: Issue本文）:
-
-           ```text
-           ## スラッグ
-
-           {slug}
-
-           ## 概要
-
-           AIレビュー指摘（{レビュー種別}）でスコープ外と判断された項目。
-
-           ## 詳細
-
-           {指摘内容}
-
-           ## 検出元
-
-           - **発見サイクル**: {現在のサイクル（{{CYCLE}}をそのまま使用。名前付きサイクルの場合は name/vX.X.X 形式）}
-           - **発見フェーズ**: {Construction / Inception}
-           - **先送り理由**: {ユーザーが入力した理由}
-
-           ## 対応案
-
-           次サイクル以降で対応を検討。
-           ```
-
-           2. 以下を実行:
-
-           ```bash
-           gh issue create \
-               --title "[Backlog] {サニタイズ済みの指摘内容の要約}" \
-               --label "backlog,type:{決定済みの種別},priority:medium" \
-               --body-file /tmp/aidlc-pr-body.txt
-           ```
-
-           3. 一時ファイルを削除
-
-           Issue作成に失敗した場合:
-           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
-           - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
-
-         - **不可用な場合**:
-           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
-           - `mode = issue-only`: 以下の警告を表示し、手動対応を依頼
-
-             ```text
-             【警告】GitHub CLIが利用できないため、バックログIssueを自動作成できません。
-             issue-only モードのため、ファイルベースのフォールバックも使用できません。
-             以下の指摘を手動でバックログに登録してください:
-             - 指摘内容: {指摘内容}
-             - 先送り理由: {理由}
-             ```
+       Issue作成に失敗した場合またはgh CLI不可用の場合:
+       警告メッセージを表示し、手動でのバックログ登録を依頼する。
 
        **バックログ登録完了の履歴記録**（各OUT_OF_SCOPE指摘ごとに1件記録）:
 

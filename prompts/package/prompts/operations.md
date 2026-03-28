@@ -130,7 +130,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 
 **【次のアクション】** 今すぐ `skills/aidlc/steps/common/preflight.md` を読み込んで、手順に従ってください。
 
-環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
+環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
 ### 4. セッション判別設定【オプション】
 
@@ -410,24 +410,8 @@ ls .aidlc/cycles/{{CYCLE}}/operations/tasks/ 2>/dev/null
 
 #### 6.2 バックログ整理
 
-ステップ3で確認した `backlog_mode` を参照する。
+オープンなバックログIssueを確認する:
 
-**mode=git または mode=git-only の場合**:
-```bash
-ls .aidlc/cycles/backlog/
-```
-
-対応済み項目の移動先: `.aidlc/cycles/backlog-completed/{{CYCLE}}/`
-
-```bash
-# 対応済みディレクトリを作成
-mkdir -p .aidlc/cycles/backlog-completed/{{CYCLE}}
-
-# 対応済みの項目を移動
-mv .aidlc/cycles/backlog/{対応済みファイル}.md .aidlc/cycles/backlog-completed/{{CYCLE}}/
-```
-
-**mode=issue または mode=issue-only の場合**:
 ```bash
 gh issue list --label backlog --state open
 ```
@@ -474,10 +458,6 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 ```text
 全対応済みIssueはPRマージ時に自動クローズされます。手動クローズは不要です。
 ```
-
-**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
-
-**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
 **詳細**: `docs/aidlc/guides/backlog-management.md` を参照
 
@@ -587,16 +567,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、バックログに記録（ステップ3で確認した `backlog_mode` を参照）：
-
-**mode=git または mode=git-only の場合**:
-記録先: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md`
-
-**種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
-
-**ファイル内容**: テンプレート `skills/aidlc/templates/backlog_item_template.md` を参照
-
-**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `docs/aidlc/guides/backlog-management.md`）
+次サイクルに引き継ぐタスクがある場合、GitHub Issueとしてバックログに記録する（ガイド: `docs/aidlc/guides/backlog-management.md`）
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

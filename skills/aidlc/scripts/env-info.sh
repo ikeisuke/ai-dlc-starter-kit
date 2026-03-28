@@ -55,7 +55,6 @@ OPTIONS:
   git:available
   starter_kit_version:1.9.2
   project.name:my-project
-  backlog.mode:issue-only
   current_branch:main
   latest_cycle:v1.0.0
 EOF
@@ -106,11 +105,6 @@ get_project_name() {
     aidlc_strip_quotes "$result"
 }
 
-# バックログモードを取得（resolve-backlog-mode.sh の共通ロジックを使用）
-# resolve-backlog-mode.sh を source
-source "${SCRIPT_DIR}/resolve-backlog-mode.sh"
-
-# get_backlog_mode: resolve_backlog_mode を直接使用（ラッパー廃止）
 # get_current_branch: aidlc_get_current_branch (lib/bootstrap.sh) を使用
 
 # .aidlc/cycles/ 配下の最新サイクルバージョンを取得
@@ -188,7 +182,6 @@ main() {
     # --setup オプション時のみ追加出力
     if [[ "$setup_mode" == true ]]; then
         echo "project.name:$(get_project_name)"
-        echo "backlog.mode:$(resolve_backlog_mode)"
         echo "current_branch:$(aidlc_get_current_branch)"
         echo "latest_cycle:$(get_latest_cycle)"
     fi
