@@ -117,22 +117,23 @@ if [ -d ".aidlc/cycles/backlog" ]; then
 fi
 
 # 6. .github/ISSUE_TEMPLATE/backlog.yml（v2.0.3で機能廃止）
-# docs/aidlc/ 内の原本と比較し、一致すればスターターキット由来と判定して削除対象にする
+# スターターキットの原本と比較し、一致すればスターターキット由来と判定して削除対象にする
 if [ -f ".github/ISSUE_TEMPLATE/backlog.yml" ]; then
-  _backlog_origin="docs/aidlc/.github/ISSUE_TEMPLATE/backlog.yml"
+  _starter_kit_root="$(cd "$AIDLC_PLUGIN_ROOT/../.." && pwd)"
+  _backlog_origin="${_starter_kit_root}/.github/ISSUE_TEMPLATE/backlog.yml"
   if [ -f "$_backlog_origin" ]; then
     _origin_hash=$(_sha256 "$_backlog_origin")
     _actual_hash=$(_sha256 ".github/ISSUE_TEMPLATE/backlog.yml")
     if [ "$_origin_hash" = "$_actual_hash" ]; then
-      echo "  Found deprecated template: .github/ISSUE_TEMPLATE/backlog.yml (matches origin, backlog feature removed in v2.0.3)" >&2
+      echo "  Found deprecated template: .github/ISSUE_TEMPLATE/backlog.yml (matches starter kit origin, backlog feature removed in v2.0.3)" >&2
       _add_resource "$(jq -n \
         --arg eh "$_origin_hash" --arg ah "$_actual_hash" \
-        '{resource_type: "deprecated_template", path: ".github/ISSUE_TEMPLATE/backlog.yml", action: "delete", ownership_evidence: {method: "origin_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
+        '{resource_type: "deprecated_template", path: ".github/ISSUE_TEMPLATE/backlog.yml", action: "delete", ownership_evidence: {method: "starter_kit_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
     else
-      echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (modified by user, hash mismatch with origin)" >&2
+      echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (modified by user, hash mismatch with starter kit)" >&2
     fi
   else
-    echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (no origin file to compare at $_backlog_origin)" >&2
+    echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (starter kit origin not found)" >&2
   fi
 fi
 
