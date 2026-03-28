@@ -81,19 +81,38 @@ for i in $(seq 0 $((resource_count - 1))); do
 
   if [[ -L "$path" ]]; then
     # symlinkの実体を取得してコピーで差し替え
-    real_path=$(readlink "$path" 2>/dev/null || true)
-    if [[ -f "$real_path" ]]; then
+    # readlinkの結果は相対パスの場合があるため、symlinkのディレクトリを基準に解決する
+    link_target=$(readlink "$path" 2>/dev/null || true)
+    link_dir=$(dirname "$path")
+    if [[ "$link_target" == /* ]]; then
+      resolved_path="$link_target"
+    else
+      resolved_path="${link_dir}/${link_target}"
+    fi
+    if [[ -f "$resolved_path" ]]; then
       tmp=$(mktemp)
-      cp "$real_path" "$tmp"
+      cp "$resolved_path" "$tmp"
       rm -f "$path"
       mv "$tmp" "$path"
-      echo "  Materialized: $path (was symlink to $real_path)" >&2
+      echo "  Materialized: $path (was symlink to $link_target)" >&2
       _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
         '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with file"}')"
     else
-      echo "  WARN: symlink target not found: $real_path (keeping symlink)" >&2
-      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-        '{resource_type: $rt, path: $p, status: "skipped", detail: "symlink target not found"}')"
+      # ターゲットが見つからない場合、v2テンプレートからコピー
+      template_path="${AIDLC_PLUGIN_ROOT}/templates/${path}"
+      if [[ -f "$template_path" ]]; then
+        rm -f "$path"
+        mkdir -p "$(dirname "$path")"
+        cp "$template_path" "$path"
+        echo "  Materialized: $path (from v2 template, symlink target not found: $link_target)" >&2
+        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+          '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with v2 template"}')"
+      else
+        echo "  WARN: symlink target not found: $link_target (removing broken symlink)" >&2
+        rm -f "$path"
+        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+          '{resource_type: $rt, path: $p, status: "success", detail: "removed broken symlink"}')"
+      fi
     fi
   else
     echo "  Skipped (not a symlink): $path" >&2

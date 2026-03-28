@@ -66,6 +66,7 @@ for i in $(seq 0 $((resource_count - 1))); do
 
   mkdir -p "$(dirname "$dest")"
   cp "$path" "$dest"
+  rm -f "$path"
   echo "  Moved: $path → $dest" >&2
   _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
     '{resource_type: $rt, path: $p, status: "success", detail: ("moved to " + $d)}')"
@@ -130,6 +131,16 @@ if [[ -f "$config_dest" ]]; then
     _add_applied "$(jq -n --arg detail "$migrate_output" '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: ("migrate-config.sh: " + $detail)}')"
   fi
 fi
+
+# AGENTS.md / CLAUDE.md の v1参照を v2形式に更新
+for ref_file in AGENTS.md CLAUDE.md; do
+  if [[ -f "$ref_file" ]] && grep -q '@docs/aidlc/prompts/' "$ref_file"; then
+    tmp=$(mktemp)
+    sed 's|@docs/aidlc/prompts/AGENTS\.md|@skills/aidlc/AGENTS.md|g; s|@docs/aidlc/prompts/CLAUDE\.md|@skills/aidlc/CLAUDE.md|g' "$ref_file" > "$tmp" && mv "$tmp" "$ref_file"
+    echo "  Updated: $ref_file (v1 references → v2)" >&2
+    _add_applied "$(jq -n --arg p "$ref_file" '{resource_type: "ref_update", path: $p, status: "success", detail: "updated docs/aidlc/prompts/ references to skills/aidlc/"}')"
+  fi
+done
 
 # journal JSON 出力
 jq -n --arg phase "config" --argjson applied "$APPLIED" \
