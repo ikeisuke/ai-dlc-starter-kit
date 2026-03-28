@@ -794,7 +794,6 @@ sync-package.sh --source [ソース] --dest [宛先] --delete
 ```text
 [prompts] 更新されたファイル:
   - construction.md（更新）
-  - lite/operations.md（更新）
   - new-prompt.md（新規）
 ```
 
@@ -1110,7 +1109,6 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 **prompts/** → `skills/aidlc/steps/`:
 - inception.md, construction.md, operations.md, setup.md
 - AGENTS.md, CLAUDE.md（AIツール設定）
-- lite/inception.md, lite/construction.md, lite/operations.md
 
 **templates/** → `skills/aidlc/templates/`:
 - 各種テンプレートファイル（index.md含む）

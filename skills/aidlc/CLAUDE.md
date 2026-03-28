@@ -75,14 +75,6 @@ git commit -m "feat: add new feature"
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback`（フィードバック送信） |
 | 「start migrate」「aidlc migrate」 | `/aidlc migrate`（v1→v2移行） |
 
-**Lite版を使用する場合**:
-
-| 指示 | 対応処理 |
-|------|----------|
-| 「start lite inception」 | `/aidlc lite inception` |
-| 「start lite construction」 | `/aidlc lite construction` |
-| 「start lite operations」 | `/aidlc lite operations` |
-
 **後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）は `/aidlc` コマンドにリダイレクトされます。
 
 ## Compact Instructions

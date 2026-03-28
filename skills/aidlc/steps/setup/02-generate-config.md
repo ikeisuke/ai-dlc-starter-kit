@@ -569,7 +569,6 @@ sync-package.sh --source [ソース] --dest [宛先] --delete
 ```text
 [prompts] 更新されたファイル:
   - construction.md（更新）
-  - lite/operations.md（更新）
   - new-prompt.md（新規）
 ```
 
