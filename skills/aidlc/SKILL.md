@@ -34,8 +34,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 2. ARGUMENTSが指定されている場合:
    - 先頭の空白区切りトークンを action として取得
+   - action が短縮形（`i` / `c` / `o` / `e`）の場合、フル名に展開する: `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`
    - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate のいずれかを指定してください」を表示して処理を中断
+     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate（短縮形: i/c/o/e）のいずれかを指定してください」を表示して処理を中断
    - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
 
 パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
@@ -44,11 +45,11 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 | 引数 | 対応処理 |
 |------|----------|
-| `inception` / なし（cycleブランチ外） | Inception Phase |
-| `construction` / なし（cycleブランチ上） | Construction Phase |
-| `operations` | Operations Phase |
+| `inception` (`i`) / なし（cycleブランチ外） | Inception Phase |
+| `construction` (`c`) / なし（cycleブランチ上） | Construction Phase |
+| `operations` (`o`) | Operations Phase |
 | `setup` | Setup Phase（独立フロー） |
-| `express` | Inception Phase（エクスプレスモード有効） |
+| `express` (`e`) | Inception Phase（エクスプレスモード有効） |
 | `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
 | `migrate` | v1→v2移行（独立フロー） |
 
