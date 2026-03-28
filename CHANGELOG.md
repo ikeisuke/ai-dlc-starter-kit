@@ -7,6 +7,26 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.2] - 2026-03-28
+
+### Added
+
+- v1→v2移行スキル（`/aidlc migrate`）: v1環境からv2への自動移行をサポート
+- タスク管理ガイド（`steps/common/task-management.md`）: フェーズ別タスクテンプレートで手順漏れを防止
+- `.claude/settings.json` テンプレート外部化（`settings-template.json`）: パーミッション管理の保守性向上
+
+### Changed
+
+- パス参照の抽象化: `docs/aidlc/` 直接参照を `{{aidlc_dir}}` テンプレート変数に置換（16ファイル）
+- フェーズ完了メッセージをツール非依存形式に統一（Claude Code / その他の両方に対応）
+- コンパクション復帰手順を改善: フェーズ検出ロジックを `aidlc-cycle-info.sh` と整合化
+
+### Fixed
+
+- `Skill(codex-review)` staleエントリを削除（対応スキル不在）
+- `Bash(skills/aidlc/scripts/:*)` の不正コロンを修正
+- `setup-ai-tools.sh` のテンプレート生成にJSON妥当性検証を追加
+
 ## [2.0.1] - 2026-03-27
 
 ### Changed
