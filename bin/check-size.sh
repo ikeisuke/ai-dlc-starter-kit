@@ -10,7 +10,7 @@ DEFAULT_MAX_BYTES=150000
 DEFAULT_MAX_LINES=1000
 DEFAULT_MAX_TOKENS=40000
 DEFAULT_TARGET_PATTERN="*.md"
-DEFAULT_TARGET_DIR="prompts/package/prompts/"
+DEFAULT_TARGET_DIR="skills/aidlc/steps/"
 
 # グローバル変数
 REPO_ROOT=""
@@ -39,7 +39,7 @@ Usage: $(basename "$0") [target_dir] [options]
 プロンプトファイルのサイズが閾値を超えていないかをチェックします。
 
 Arguments:
-  target_dir    チェック対象ディレクトリ (デフォルト: prompts/package/prompts/)
+  target_dir    チェック対象ディレクトリ (デフォルト: skills/aidlc/steps/)
 
 Options:
   -v, --verbose           詳細出力モード
@@ -54,7 +54,7 @@ Exit codes:
   2  スクリプトエラー
 
 Configuration:
-  docs/aidlc.toml の [rules.size_check] セクションで設定可能:
+  .aidlc/config.toml の [rules.size_check] セクションで設定可能:
     enabled        = true/false (デフォルト: true)
     max_bytes      = 150000 (デフォルト)
     max_lines      = 1000 (デフォルト)
@@ -154,7 +154,7 @@ count_tokens_estimate() {
 
 # 設定ファイルから値を読み込む
 load_config() {
-    local config_file="${REPO_ROOT}/docs/aidlc.toml"
+    local config_file="${REPO_ROOT}/.aidlc/config.toml"
 
     if [ ! -f "$config_file" ]; then
         # 設定ファイルがない場合はデフォルト値を使用

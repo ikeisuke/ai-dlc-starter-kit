@@ -89,22 +89,18 @@ git branch --show-current
 
 ```bash
 # 1. README.md の確認
-README_EXISTS=$(ls README.md 2>/dev/null && echo "yes" || echo "no")
+ls README.md 2>/dev/null
+# → 存在すれば README_EXISTS=yes、なければ README_EXISTS=no
 
 # 2. 設定ファイルの確認（優先順位順）
-CONFIG_FILE=""
-for f in package.json go.mod Cargo.toml pyproject.toml composer.json Gemfile; do
-  if [ -f "$f" ]; then
-    CONFIG_FILE="$f"
-    break
-  fi
-done
+# package.json, go.mod, Cargo.toml, pyproject.toml, composer.json, Gemfile の順にチェック
+ls package.json go.mod Cargo.toml pyproject.toml composer.json Gemfile 2>/dev/null | head -1
+# → 最初に見つかったものを CONFIG_FILE として記録
 
 # 3. docs/ ディレクトリの確認（aidlc/, cycles/ を除外）
 # これらはセットアップで作成されるため探索対象外
-DOCS_FILES=$(find docs -maxdepth 2 -name "*.md" -not -path "docs/aidlc/*" -not -path ".aidlc/cycles/*" 2>/dev/null | head -5)
-# AIDLC-PATH: physical-path-required (reason: rsync-target)
-DOCS_COUNT=$(echo "$DOCS_FILES" | grep -c . 2>/dev/null || echo "0")
+find docs -maxdepth 2 -name "*.md" -not -path "docs/aidlc/*" -not -path ".aidlc/cycles/*" 2>/dev/null | head -5
+# → 結果をAIが DOCS_FILES / DOCS_COUNT として記録
 
 # 4. ソースコードディレクトリの確認
 SRC_DIR=""
@@ -271,16 +267,7 @@ fi
 2. 各プレースホルダーを収集した情報で置換
 3. `.aidlc/config.toml` として保存
 
-```bash
-# 例: テンプレートから生成（AIが置換処理を実行）
-cat "$TEMPLATE_FILE" | \
-  sed "s/\[現在日時\]/$(date +%Y-%m-%d)/g" | \
-  sed "s/\[version.txt の内容\]/$(cat [スターターキットパス]/version.txt)/g" | \
-  # ... 他のプレースホルダーも同様に置換 ...
-  > .aidlc/config.toml
-```
-
-**注意**: 上記のsedコマンドは参考例です。AIが直接ファイルを読み込み、プレースホルダーを置換して `.aidlc/config.toml` を生成してください。
+**手順**: AIがテンプレートファイルを読み込み、各プレースホルダーを収集した情報で置換して `.aidlc/config.toml` として保存してください。sedコマンドではなく、AIのWriteツールで直接生成します。
 
 ### 7.3 starter_kit_versionの更新【アップグレードモードのみ】
 

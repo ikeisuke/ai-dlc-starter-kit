@@ -7,6 +7,29 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.5] - 2026-03-28
+
+### Changed
+
+- `skills/aidlc/` をプラグインの唯一の正（Single Source of Truth）として確立: `docs/aidlc/` から全リソースを移設し、重複ファイル・ディレクトリを削除（#447, #448）
+- `{{aidlc_dir}}` テンプレート変数を廃止し、スキル内相対パス `guides/...` に一括更新。`paths.aidlc_dir` 設定キーおよび関連処理を除去（#444）
+- ステップファイル内のスクリプトパス `skills/aidlc/scripts/` をプラグインモデル対応の `scripts/` に変更。SKILL.md にパス解決ルールを追加
+
+### Removed
+
+- `prompts/package/` ディレクトリ（`docs/aidlc/` のコピー元、v1残存インフラ）を削除
+- `prompts/bin/sync-package.sh` を削除（rsync同期インフラの廃止）（#449）
+- `check-setup-type.sh`、`check-version.sh` を削除（v1セットアップインフラの廃止）
+- `setup-prompt.md` のv1設定を廃止し誘導文付きに簡略化（#450）
+
+### Fixed
+
+- `aidlc-setup.sh` のスターターキットパス解決をプラグインモデルで動作するよう修正（#447）
+- `update-version.sh` の `docs/aidlc.toml` 参照を除去しv2構造に対応
+- v1→v2移行スクリプトを強化: `.claude/skills/` シンボリックリンク検出、`docs/aidlc.toml` 移動、`docs/cycles/` → `.aidlc/cycles/` 移動、シンボリックリンク実体化に対応
+- `bootstrap.sh` の `toml-reader.sh` ソース行が欠落していた問題を修正
+- `agents-rules.md` にバックログ即時実装優先ルールを追加（#439）
+
 ## [2.0.4] - 2026-03-28
 
 ### Changed
