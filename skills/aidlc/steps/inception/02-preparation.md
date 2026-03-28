@@ -61,7 +61,7 @@ skills/aidlc/scripts/check-open-issues.sh
 skills/aidlc/scripts/label-cycle-issues.sh {{CYCLE}}
 ```
 
-詳細は `docs/aidlc/guides/issue-management.md` を参照。
+詳細は `{{aidlc_dir}}/guides/issue-management.md` を参照。
 
 #### 17. バックログ確認
 
@@ -86,7 +86,7 @@ gh issue list --label backlog --state open
 
 **排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
-**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
+**詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
 
 - **存在しない/空の場合**: スキップ
 - **項目が存在する場合**: 内容を確認し、ユーザーに質問
@@ -127,6 +127,10 @@ cat .aidlc/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「はい」の場合: 該当項目の詳細を表示し、重複かどうかを確認
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
+
+#### 17-3. タスクリスト作成【必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
 
 #### 18. 進捗管理ファイル確認【重要】
 

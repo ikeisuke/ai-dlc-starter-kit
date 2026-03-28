@@ -1,0 +1,110 @@
+{
+  "name": "aidlc",
+  "description": "AI-DLC開発支援エージェント",
+  "tools": [
+    "read",
+    "shell",
+    "write"
+  ],
+  "allowedTools": [],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "./**",
+        "/tmp/**"
+      ]
+    },
+    "read": {
+      "allowedPaths": [
+        "./**",
+        "/tmp/**"
+      ],
+      "deniedPaths": [
+        ".env",
+        ".env.*",
+        "~/.ssh/**",
+        "~/.aws/**"
+      ]
+    },
+    "shell": {
+      "deniedCommands": [
+        "git push *--force *",
+        "git push *--force-with-lease *",
+        "git branch *-D *",
+        "git branch *--force *",
+        "git tag *-d *",
+        "git checkout -- *",
+        "git checkout . *",
+        "find *-exec *",
+        "find *-execdir *",
+        "gh pr merge *"
+      ],
+      "allowedCommands": [
+        "[ *",
+        "rm /tmp/aidlc-*",
+        "bash -n *",
+        "cat *",
+        "chmod +x *",
+        "command -v *",
+        "dasel *",
+        "date *",
+        "diff *",
+        "skills/aidlc/scripts/*",
+        "skills/*/bin/*",
+        "echo *",
+        "find *",
+        "gh api *",
+        "gh auth status",
+        "gh issue *",
+        "gh label *",
+        "gh pr *",
+        "gh repo *",
+        "gh run *",
+        "git add *",
+        "git branch *",
+        "git checkout *",
+        "git commit *",
+        "git diff *",
+        "git fetch *",
+        "git log *",
+        "git merge *",
+        "git merge-base *",
+        "git mv *",
+        "git pull *",
+        "git push *",
+        "git remote *",
+        "git reset --soft *",
+        "git rev-parse *",
+        "git revert *",
+        "git show *",
+        "git status *",
+        "git switch *",
+        "git tag *",
+        "git worktree list",
+        "grep *",
+        "head *",
+        "jq *",
+        "ls *",
+        "mkdir *",
+        "mktemp *",
+        "printf *",
+        "pwd *",
+        "rg *",
+        "sort *",
+        "tail *",
+        "test *",
+        "touch *",
+        "wc *",
+        "which *"
+      ]
+    }
+  },
+  "resources": [
+    "file://AGENTS.md",
+    "file://skills/aidlc/AGENTS.md",
+    "skill://.agents/skills/*/SKILL.md",
+    "skill://~/.agents/skills/*/SKILL.md",
+    "skill://.kiro/skills/*/SKILL.md",
+    "skill://~/.kiro/skills/*/SKILL.md"
+  ]
+}

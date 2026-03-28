@@ -25,6 +25,8 @@ if [ -f docs/aidlc/version.txt ]; then
 fi
 ```
 
+<!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->
+
 ### 3.2 移行通知
 
 移行が実行された場合、以下のメッセージを表示：
@@ -37,8 +39,10 @@ fi
 | docs/aidlc/project.toml | .aidlc/config.toml |
 | docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
 | docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
+<!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->
 
 これにより、docs/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 ```
 
 ### 3.3 aidlc.toml のバージョン情報更新
@@ -99,6 +103,7 @@ done
 # 3. docs/ ディレクトリの確認（aidlc/, cycles/ を除外）
 # これらはセットアップで作成されるため探索対象外
 DOCS_FILES=$(find docs -maxdepth 2 -name "*.md" -not -path "docs/aidlc/*" -not -path ".aidlc/cycles/*" 2>/dev/null | head -5)
+# AIDLC-PATH: physical-path-required (reason: rsync-target)
 DOCS_COUNT=$(echo "$DOCS_FILES" | grep -c . 2>/dev/null || echo "0")
 
 # 4. ソースコードディレクトリの確認
@@ -460,11 +465,14 @@ mode:META_DEV
 
 - rsync元とrsync先が同一リポジトリ内になる
 - `prompts/package/` → `docs/aidlc/` への同期
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 - 変更は `prompts/package/` で行い、rsyncで `docs/aidlc/` に反映する
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 ### 8.2 パッケージファイルの同期【重要: 削除確認必須】
 
 スターターキットの `prompts/package/` ディレクトリから `docs/aidlc/` に同期。
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 **注意**: 以下のコマンド例で使用する `[スターターキットパス]` は、セクション8.1.1で判定したパスに置き換えてください。メタ開発環境の場合は `.`（カレントディレクトリ）になります。
 
@@ -493,6 +501,7 @@ skills/aidlc/scripts/sync-package.sh
 | 5 | `[スターターキットパス]/prompts/package/skills/` | `skills/` | スキルファイル |
 | 6 | `[スターターキットパス]/prompts/package/kiro/` | `docs/aidlc/kiro/` | KiroCLIエージェント設定 |
 | 7 | `[スターターキットパス]/prompts/package/lib/` | `docs/aidlc/lib/` | 共有ライブラリ |
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 **各ディレクトリの同期手順**（全ディレクトリ共通）:
 
@@ -849,11 +858,14 @@ skills/aidlc/scripts/setup-ai-tools.sh
 └── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
 ```
 
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
+
 **注意**:
 
-- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `docs/aidlc/guides/skill-usage-guide.md` を参照してください。
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `{{aidlc_dir}}/guides/skill-usage-guide.md` を参照してください。
 - `.agents/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
 - KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 - スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
 
 **KiroCLI利用方法**:
@@ -869,6 +881,7 @@ kiro-cli --agent aidlc
 ### 8.3 同期対象のファイル一覧
 
 rsync により以下のファイルが `docs/aidlc/` に同期されます:
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 **注**: フェーズプロンプト（`prompts/`）は v2 で `skills/aidlc/steps/` に移行済みのため、同期対象外です。
 
@@ -876,6 +889,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 - 各種テンプレートファイル（index.md含む）
 
 **guides/** → `docs/aidlc/guides/`:
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 - ai-agent-allowlist.md（AIエージェント許可リストガイド）
 - backlog-management.md（バックログ管理ガイド）
 
@@ -884,6 +898,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 - aidlc-setup/SKILL.md（アップグレードスキル）
 
 **lib/** → `docs/aidlc/lib/`:
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 - validate.sh（共有バリデーションライブラリ）
 
 **注意**: バージョン情報は `.aidlc/config.toml` の `starter_kit_version` フィールドで管理します。`version.txt` は作成しません。

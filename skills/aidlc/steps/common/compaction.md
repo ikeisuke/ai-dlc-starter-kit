@@ -8,11 +8,43 @@
 
 **フェーズごとの再読み込みパス**:
 
-| フェーズ | プロンプトパス | 進捗確認先 |
-|---------|-------------|-----------|
-| Inception | `/aidlc inception` | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
-| Construction | `/aidlc construction` | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
-| Operations | `/aidlc operations` | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+| フェーズ | Claude Code | その他（ステップファイル手動読み込み） | 進捗確認先 |
+|---------|------------|-----------------------------------|-----------|
+| Inception | `/aidlc inception` | `steps/inception/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
+| Construction | `/aidlc construction` | `steps/construction/01-setup.md` から順に読み込み | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
+| Operations | `/aidlc operations` | `steps/operations/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+
+## スキル再読み込み手順【コンパクション復帰時】
+
+コンパクション後はスキルのコンテキストが失われるため、以下の手順でスキルを再読み込みする。
+
+### 対象スキルと読み込み順序
+
+| 順序 | スキル | 役割 | 再読み込み方法 |
+|------|--------|------|--------------|
+| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、ステップファイルを `01-setup.md` から順に読み込み |
+| 2 | `reviewing-*` | AIレビュー | レビュー実行時に自動呼び出しされるため、事前の再読み込みは不要 |
+| 3 | `squash-unit` | コミットスカッシュ | squash実行時に自動呼び出しされるため、事前の再読み込みは不要 |
+
+### 復帰フローの確認手順
+
+1. **サイクルの特定**: ブランチ名（`git branch --show-current`）から `cycle/vX.X.X` 形式でサイクルを特定
+2. **フェーズの特定**: 進行度の高い順に `session-state.md` の存在を確認する（`aidlc-cycle-info.sh` のフェーズ判定ロジックと同じ優先順位）
+   - `.aidlc/cycles/{{CYCLE}}/operations/session-state.md` が存在 → Operations Phase
+   - `.aidlc/cycles/{{CYCLE}}/construction/session-state.md` が存在 → Construction Phase
+   - `.aidlc/cycles/{{CYCLE}}/inception/session-state.md` が存在 → Inception Phase
+   - いずれも存在しない場合 → 成果物ベースのフォールバック判定（下記参照）
+3. **session-state.md がない場合のフォールバック**: 成果物の存在で進行度の高い順にフェーズを判定する（`aidlc-cycle-info.sh` と同一ロジック）
+
+   | 判定順 | 条件 | 判定フェーズ | 進捗確認先 |
+   |-------|------|-----------|-----------|
+   | 1 | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` が存在 | Operations | `operations/progress.md` |
+   | 2 | `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md` が存在 | Construction | Unit定義ファイルの「実装状態」セクション |
+   | 3 | 上記いずれも該当しない | Inception | `inception/progress.md`（存在しない場合は新規開始） |
+
+4. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
+5. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
+6. **作業の継続**: session-state.md またはフォールバック進捗源から中断ポイントを特定し、作業を再開
 
 ## session-state.md の生成【コンパクション前】
 

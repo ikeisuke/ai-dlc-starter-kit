@@ -33,7 +33,7 @@ skills/aidlc/scripts/read-config.sh --keys rules.reviewing.mode rules.squash.ena
 **マージルール**:
 - `.local` の値が存在するキーはベースを上書き
 - 配列は完全置換（マージしない）
-- 詳細は `docs/aidlc/guides/config-merge.md` を参照
+- 詳細は `{{aidlc_dir}}/guides/config-merge.md` を参照
 
 **注意**: `.aidlc/config.local.toml` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
 
@@ -598,7 +598,7 @@ skills/aidlc/scripts/write-history.sh \
 3. バックログ登録方法は `.aidlc/config.toml` の `[rules.backlog].mode` に従う
    - `issue` / `issue-only`: GitHub Issueを作成（`gh issue create`）
    - `git` / `git-only`: `.aidlc/cycles/backlog/` にファイルを作成
-   - 詳細は `docs/aidlc/guides/backlog-management.md` を参照
+   - 詳細は `{{aidlc_dir}}/guides/backlog-management.md` を参照
 4. バックログ登録が技術的に不可能な場合（gh CLI不可用 + issue-onlyモード等）は、ユーザーに手動登録を依頼する
 
 **禁止例**:

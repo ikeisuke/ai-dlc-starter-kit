@@ -197,6 +197,7 @@ Inception Phaseを開始する（`/aidlc inception` を実行）
 #### ケース E: `setup_type:migration`（旧形式からの移行）
 
 `.aidlc/config.toml` も `docs/aidlc.toml` も存在しないが `docs/aidlc/project.toml` が存在する場合:
+<!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->
 - これは旧バージョンの AI-DLC でセットアップされたプロジェクトです
 - セクション3（ファイル移行）へ進んでください（移行モード）
 
@@ -205,6 +206,7 @@ Inception Phaseを開始する（`/aidlc inception` を実行）
 #### さらに古い形式（version.txt のみ）が存在する場合
 
 `docs/aidlc/project.toml` も `.aidlc/config.toml` も `docs/aidlc.toml` も存在しないが `docs/aidlc/version.txt` が存在する場合:
+<!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->
 - これはさらに旧バージョンの AI-DLC でセットアップされたプロジェクトです
 - ケース A（初回セットアップ）として扱い、移行を案内してください
 

@@ -64,7 +64,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-skills/aidlc/scripts/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
+skills/aidlc/scripts/read-config.sh --keys paths.aidlc_dir rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -82,6 +82,7 @@ rules.reviewing.mode:recommend
 
 | 設定キー | コンテキスト変数名 | デフォルト値 |
 |---------|-------------------|------------|
+| paths.aidlc_dir | `aidlc_dir` | docs/aidlc |
 | rules.depth_level.level | `depth_level` | standard |
 | rules.automation.mode | `automation_mode` | manual |
 | rules.reviewing.mode | `review_mode` | recommend |
@@ -176,6 +177,7 @@ which {先頭ツール名} >/dev/null 2>&1
   {checks に "config-validation" 含まない場合: - config-validation: skipped（結果提示内のバリデーション行は非表示）}
 
 ■ 主要設定値（常時表示）
+  aidlc_dir: {value}
   depth_level: {value}
   automation_mode: {value}
   review_mode: {value}

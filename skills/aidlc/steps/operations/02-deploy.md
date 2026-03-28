@@ -164,7 +164,7 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 **排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
 
-**詳細**: `docs/aidlc/guides/backlog-management.md` を参照
+**詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 

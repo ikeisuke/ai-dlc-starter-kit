@@ -88,7 +88,7 @@ Inception/Construction Phaseで決定済み
 - **テスト記録テンプレート**: `skills/aidlc/templates/test_record_template.md`
   - 受け入れテスト/E2Eテスト実施時に使用
   - テスト結果を統一形式で記録
-- **バグ対応フロー**: `docs/aidlc/bug-response-flow.md`
+- **バグ対応フロー**: `{{aidlc_dir}}/bug-response-flow.md`
   - バグ発見時の分類基準と対応手順
   - どのフェーズに戻るかの判断基準
 
@@ -254,6 +254,10 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
   SKILL.md の引数ルーティングに従い遷移（`/aidlc construction` を実行）
   ```
 - **選択2の場合**: 警告を記録し、Operations Phaseを継続
+
+### 10b. タスクリスト作成【必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Operations Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
 
 ### 11. Construction引き継ぎタスク確認【重要】
 

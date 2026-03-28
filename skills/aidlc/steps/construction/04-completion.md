@@ -361,9 +361,11 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 **セッションサマリ**:
 - **完了**: {{CYCLE}} / Unit [NNN] [Unit名]
 - **リポジトリ**: [ブランチ名]、[コミット済み/PR作成済み等の状態]
-- **次のアクション**: `/aidlc construction` で次のUnitを開始
+- **次のアクション**: 次のUnitを開始
 
-**次のステップ**: `/aidlc construction` と指示してください。
+**次のステップ**:
+- Claude Code: `/aidlc construction` と指示
+- その他: `steps/construction/01-setup.md` からステップファイルを順に読み込み
 ---
 ````
 
@@ -380,9 +382,11 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 **セッションサマリ**:
 - **完了**: {{CYCLE}} / Construction Phase（全Unit完了）
 - **リポジトリ**: [ブランチ名]、[コミット済み/PR作成済み等の状態]
-- **次のアクション**: `/aidlc operations` でOperations Phaseを開始
+- **次のアクション**: Operations Phaseを開始
 
-**次のステップ**: `/aidlc operations` と指示してください。
+**次のステップ**:
+- Claude Code: `/aidlc operations` と指示
+- その他: `steps/operations/01-setup.md` からステップファイルを順に読み込み
 ---
 ````
 
@@ -398,7 +402,7 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 
 ### 2. Operations Phaseからバグ修正で戻ってきた場合
 
-**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+**詳細な手順は `{{aidlc_dir}}/bug-response-flow.md` を参照**
 
 - 修正対象のUnit定義ファイルを読み込み、「実装状態」を「進行中」に変更
 - バグ種類に応じて修正:

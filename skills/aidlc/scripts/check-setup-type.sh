@@ -29,7 +29,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 設定ファイルパス（v2優先、v1フォールバック）
 AIDLC_TOML=".aidlc/config.toml"
 AIDLC_TOML_V1="docs/aidlc.toml"
-PROJECT_TOML="docs/aidlc/project.toml"
+# AIDLC_DOCS_DIR が設定済み（bootstrap.sh経由）ならそれを使用、未設定ならフォールバック
+PROJECT_TOML="${AIDLC_DOCS_DIR:-docs/aidlc}/project.toml"
 
 # daselの存在確認
 if ! command -v dasel >/dev/null 2>&1; then

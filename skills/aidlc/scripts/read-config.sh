@@ -113,89 +113,29 @@ if [[ ! -f "$DEFAULTS_CONFIG_FILE" ]]; then
     echo "Warning: defaults.toml not found: $DEFAULTS_CONFIG_FILE (default values will not be applied)" >&2
 fi
 
-# dasel v2/v3 機能検出（2段階）
-# dasel v3 では 'branch' 等が予約語のため、ブラケット記法 key["prop"] を使用する必要がある
-# dasel v2 ではブラケット記法が非対応のため、ドット区切りをそのまま使用する
-# 段階1: ドット記法の基本動作を確認（dasel自体の正常性チェック）
-# 段階2: ブラケット記法の動作を確認（v3機能の検出）
-_DASEL_USE_BRACKET="false"
-_DASEL_TEST_DATA=$(printf '[t]\nv = 1')
-if printf '%s' "$_DASEL_TEST_DATA" | dasel -i toml 't.v' >/dev/null 2>&1; then
-    if printf '%s' "$_DASEL_TEST_DATA" | dasel -i toml 't["v"]' >/dev/null 2>&1; then
-        _DASEL_USE_BRACKET="true"
-    fi
-fi
+# toml-reader.sh の共有ライブラリを利用（bootstrap.sh 経由で既にロード済み）
+# dasel v2/v3 互換ロジックは toml-reader.sh の aidlc_detect_dasel_version / aidlc_read_toml に委譲
+# bootstrap.sh が toml-reader.sh を source し、_AIDLC_DASEL_BRACKET を設定済み
 
-# 設定値を取得（存在チェック付き）
+# 設定値を取得（存在チェック付き）— toml-reader.sh の aidlc_read_toml に委譲
 # 戻り値: 0=存在, 1=不在, 2=エラー
 # 標準出力: 値（存在する場合）
-# 注意: この関数は set -e 環境下でも安全に呼び出せる
 get_value() {
     local file="$1"
     local key="$2"
-    local result
-    local dasel_exit_code
 
-    # キー入力バリデーション: 英字またはアンダースコアで始まり、許可文字のみ
-    # mktemp より前に実行し、一時ファイルのクリーンアップ漏れを防ぐ
+    # キー入力バリデーション
     if [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; then
         emit_error "invalid-key-format" "Invalid key format: $key"
         return 2
     fi
 
-    local err_file
-    err_file=$(mktemp) || { emit_error "temp-file-creation-failed" "Failed to create temp file"; return 2; }
-
-    # dasel v3 予約語回避: ブラケット記法が使用可能な場合のみ変換
-    # 例: rules.branch.mode → rules["branch"]["mode"]
-    # 最初のセグメントはそのまま、以降をブラケット記法にすることで
-    # dasel v3 の予約語（branch等）を安全にアクセスできる
-    # 制約: 先頭セグメントはブラケット化できない（dasel v3 の制約: ["key"] は配列アクセスと解釈される）
-    #        AI-DLC設定のトップレベルキー（starter_kit_version, project, paths, rules）には予約語が含まれないため実害なし
-    local escaped_key
-    if [[ "${_DASEL_USE_BRACKET:-false}" == "true" ]]; then
-        escaped_key=$(printf '%s' "$key" | sed 's/\.\([^.]*\)/["\1"]/g')
-    else
-        escaped_key="$key"
-    fi
-
-    # daselを実行（エラーはファイルにリダイレクト）
-    result=$(cat "$file" 2>"$err_file" | dasel -i toml "$escaped_key" 2>>"$err_file") || dasel_exit_code=$?
-    dasel_exit_code=${dasel_exit_code:-0}
-
-    # エラー内容を確認
-    local err_content=""
-    if [[ -f "$err_file" ]]; then
-        err_content=$(cat "$err_file" 2>/dev/null) || true
-        \rm -f "$err_file" 2>/dev/null || true
-    fi
-
-    if [[ $dasel_exit_code -eq 0 ]]; then
-        printf '%s\n' "$result"
-        return 0
-    else
-        # daselの終了コード非0は「キー不在」または「エラー」
-        # エラー内容に "not found" が含まれていればキー不在
-        if [[ "$err_content" == *"not found"* ]]; then
-            return 1  # キー不在
-        else
-            return 2  # その他のエラー（パースエラー等）
-        fi
-    fi
+    aidlc_read_toml "$file" "$key"
 }
 
-# daselの出力からクォートを除去（先頭・末尾のシングル/ダブルクォート）
+# クォート除去 — toml-reader.sh の aidlc_strip_quotes に委譲
 strip_quotes() {
-    local value="$1"
-    # 先頭と末尾がシングルクォートの場合
-    if [[ "$value" =~ ^\'.*\'$ ]]; then
-        printf '%s\n' "${value:1:${#value}-2}"
-    # 先頭と末尾がダブルクォートの場合
-    elif [[ "$value" =~ ^\".*\"$ ]]; then
-        printf '%s\n' "${value:1:${#value}-2}"
-    else
-        printf '%s\n' "$value"
-    fi
+    aidlc_strip_quotes "$1"
 }
 
 # ============================================================
@@ -284,7 +224,7 @@ resolve_key() {
         local_file="$LOCAL_CONFIG_FILE"
     elif [[ -f "$LOCAL_CONFIG_FILE_LEGACY" ]]; then
         local_file="$LOCAL_CONFIG_FILE_LEGACY"
-        echo "Warning: docs/aidlc.toml.local is deprecated. Please rename to docs/aidlc.local.toml" >&2
+        echo "Warning: ${LOCAL_CONFIG_FILE_LEGACY} is deprecated. Please rename to ${LOCAL_CONFIG_FILE}" >&2
     fi
 
     if [[ -n "$local_file" ]]; then

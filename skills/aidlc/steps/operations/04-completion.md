@@ -2,7 +2,7 @@
 
 Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
-**詳細な手順は `docs/aidlc/bug-response-flow.md` を参照**
+**詳細な手順は `{{aidlc_dir}}/bug-response-flow.md` を参照**
 
 1. **バグを記録**: テスト記録ファイルにバグ詳細を記載
 2. **バグ種類を判定**: バグ対応フローの分類ガイドに従って判定
@@ -35,7 +35,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 **ファイル内容**: テンプレート `skills/aidlc/templates/backlog_item_template.md` を参照
 
-**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `docs/aidlc/guides/backlog-management.md`）
+**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `{{aidlc_dir}}/guides/backlog-management.md`）
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
@@ -195,11 +195,15 @@ AIが探索結果のパスを使用して以下を実行する:
 **セッションサマリ**:
 - **完了**: サイクル {{CYCLE}}
 - **リポジトリ**: [ブランチ名]、[PRマージ済み/タグ作成済み等の状態]
-- **次のアクション**: `/aidlc inception` で次のサイクルを開始
+- **次のアクション**: 次のサイクルを開始
 
-**次のステップ**: `/aidlc inception` と指示してください。
+**次のステップ**:
+- Claude Code: `/aidlc inception` と指示
+- その他: `steps/inception/01-setup.md` からステップファイルを順に読み込み
 
-**AI-DLCスターターキットをアップグレードする場合**: `/aidlc-setup` スキルを実行してください。
+**AI-DLCスターターキットをアップグレードする場合**:
+- Claude Code: `/aidlc setup` と指示
+- その他: `steps/setup/01-detect.md` からステップファイルを順に読み込み
 ---
 ````
 
