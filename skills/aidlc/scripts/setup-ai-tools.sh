@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AIDLC_DIR="docs/aidlc"
 SKILLS_DIR="skills"
 
@@ -447,8 +448,37 @@ _detect_json_state() {
 }
 
 # テンプレートJSON生成
+# 外部ファイル（settings-template.json）から読み込み、不在時はインラインフォールバック
 # stdout: JSON文字列
 _generate_template() {
+  local template_file="${SCRIPT_DIR}/../config/settings-template.json"
+  if [ -f "$template_file" ]; then
+    local content
+    content=$(cat "$template_file") || { echo "Warning: Failed to read $template_file" >&2; }
+    if [ -n "$content" ]; then
+      # JSON妥当性検証（jq or python3 利用可能時のみ）
+      if command -v jq >/dev/null 2>&1; then
+        if echo "$content" | jq empty 2>/dev/null; then
+          echo "$content"
+          return 0
+        fi
+        echo "Warning: $template_file is invalid JSON, using fallback" >&2
+      elif command -v python3 >/dev/null 2>&1; then
+        if echo "$content" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
+          echo "$content"
+          return 0
+        fi
+        echo "Warning: $template_file is invalid JSON, using fallback" >&2
+      else
+        # 検証ツールなし: そのまま使用
+        echo "$content"
+        return 0
+      fi
+    fi
+  fi
+
+  # フォールバック: 外部ファイルが不在・無効の場合のインラインテンプレート
+  # NOTE: このフォールバックは settings-template.json と同期を保つ必要がある
   cat <<'TEMPLATE_EOF'
 {
   "permissions": {
@@ -458,7 +488,7 @@ _generate_template() {
       "Bash(command -v:*)",
       "Bash(date *)",
       "Bash(diff *)",
-      "Bash(skills/aidlc/scripts/:*)",
+      "Bash(skills/aidlc/scripts/*)",
       "Bash(skills/*/bin/*)",
       "Bash(echo:*)",
       "Bash(GIT_TERMINAL_PROMPT=0 git fetch:*)",
@@ -501,7 +531,6 @@ _generate_template() {
       "Bash(wc *)",
       "Bash(which *)",
       "Skill(aidlc-setup)",
-      "Skill(codex-review)",
       "Skill(reviewing-architecture)",
       "Skill(reviewing-code)",
       "Skill(reviewing-inception)",
