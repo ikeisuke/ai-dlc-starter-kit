@@ -170,6 +170,8 @@ scripts/run-markdownlint.sh {{CYCLE}}
 
 ## 7.7 Gitコミット
 
+> **順序制約**: `steps/common/commit-flow.md` の「操作順序ルール」を確認すること。コミットが存在しない状態で7.8（PR Ready化）に進んではいけない。
+
 Operations Phaseで作成したすべてのファイル（**operations/progress.md、履歴ファイルを含む**）をコミット。
 
 `steps/common/commit-flow.md` の「Operations Phase完了コミット」手順に従ってください。
@@ -476,6 +478,8 @@ git merge-base --is-ancestor origin/main HEAD
   - 「2」選択時: 次のステップ（7.12 PRマージ前レビュー）へ進む
 
 ## 7.12 PRマージ前レビュー【推奨】
+
+> **順序制約**: レビュー実行前に `steps/common/review-flow.md` の手順を確認すること。レビューをスキップしてPRマージに進むことは `review_mode=required` の場合禁止。
 
 PRマージ前にAIレビューを実行し、品質を確認します。サブステップ0（ローカルレビュー）は常に実行します。サブステップ1以降はプロジェクト固有ルール（`.aidlc/rules.md`）にPRマージ前レビューのルールが定義されている場合に実行します。
 

@@ -153,6 +153,8 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 ### ステップ7: リリース準備
 
+> **順序制約**: リリース準備のコミット・PR操作は `steps/common/commit-flow.md` の「操作順序ルール」に従うこと。コミットが存在しない状態でPR Ready化やPRマージに進んではいけない。
+
 **タスク管理機能を活用してください。**
 
 **Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
