@@ -68,8 +68,8 @@ if [[ ! -f "version.txt" ]]; then
     exit 1
 fi
 
-if [[ ! -f "docs/aidlc.toml" ]]; then
-    echo "error:aidlc-toml-not-found"
+if [[ ! -f ".aidlc/config.toml" ]]; then
+    echo "error:config-toml-not-found"
     exit 1
 fi
 
@@ -79,13 +79,13 @@ _current_version_txt=$(cat version.txt) || {
     exit 1
 }
 
-_current_aidlc_toml=$(sed -n 's/^[[:space:]]*starter_kit_version[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' docs/aidlc.toml) || {
-    echo "error:aidlc-toml-read-failed"
+_current_aidlc_toml=$(sed -n 's/^[[:space:]]*starter_kit_version[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' .aidlc/config.toml) || {
+    echo "error:config-toml-read-failed"
     exit 1
 }
-_match_count=$(grep -c '^[[:space:]]*starter_kit_version[[:space:]]*=' docs/aidlc.toml || true)
+_match_count=$(grep -c '^[[:space:]]*starter_kit_version[[:space:]]*=' .aidlc/config.toml || true)
 if [[ "$_match_count" -ne 1 ]] || [[ -z "$_current_aidlc_toml" ]]; then
-    echo "error:invalid-aidlc-toml-format"
+    echo "error:invalid-config-toml-format"
     exit 1
 fi
 
@@ -100,7 +100,7 @@ fi
 
 # アトミック更新: 同一ディレクトリに一時ファイルを作成（mvの同一FS前提を満たす）
 _tmp_version=$(mktemp ./version.txt.XXXXXX) || { echo "error:mktemp-failed"; exit 1; }
-_tmp_toml=$(mktemp ./docs/aidlc.toml.XXXXXX) || { \rm -f "$_tmp_version"; echo "error:mktemp-failed"; exit 1; }
+_tmp_toml=$(mktemp ./.aidlc/config.toml.XXXXXX) || { \rm -f "$_tmp_version"; echo "error:mktemp-failed"; exit 1; }
 trap '\rm -f "$_tmp_version" "$_tmp_toml" "${_bak_version:-}" "${_bak_toml:-}"' EXIT
 
 # version.txt一時ファイル作成
@@ -109,9 +109,9 @@ printf '%s\n' "$VERSION" > "$_tmp_version" || {
     exit 1
 }
 
-# docs/aidlc.toml一時ファイル作成（OS非依存: mktemp + sedリダイレクト）
-sed "s/^[[:space:]]*starter_kit_version[[:space:]]*=.*/starter_kit_version = \"${VERSION}\"/" docs/aidlc.toml > "$_tmp_toml" || {
-    echo "error:aidlc-toml-write-failed"
+# .aidlc/config.toml一時ファイル作成（OS非依存: mktemp + sedリダイレクト）
+sed "s/^[[:space:]]*starter_kit_version[[:space:]]*=.*/starter_kit_version = \"${VERSION}\"/" .aidlc/config.toml > "$_tmp_toml" || {
+    echo "error:config-toml-write-failed"
     exit 1
 }
 
@@ -119,7 +119,7 @@ sed "s/^[[:space:]]*starter_kit_version[[:space:]]*=.*/starter_kit_version = \"$
 _bak_version=$(mktemp) || { echo "error:mktemp-failed"; exit 1; }
 _bak_toml=$(mktemp) || { \rm -f "$_bak_version"; echo "error:mktemp-failed"; exit 1; }
 \cp version.txt "$_bak_version" || { echo "error:backup-failed"; exit 1; }
-\cp docs/aidlc.toml "$_bak_toml" || { echo "error:backup-failed"; exit 1; }
+\cp .aidlc/config.toml "$_bak_toml" || { echo "error:backup-failed"; exit 1; }
 
 # 両方成功した場合のみ置換（同一FS上のmvでアトミック）
 \mv "$_tmp_version" version.txt || {
@@ -128,12 +128,12 @@ _bak_toml=$(mktemp) || { \rm -f "$_bak_version"; echo "error:mktemp-failed"; exi
     \rm -f "$_bak_version" "$_bak_toml"
     exit 1
 }
-\mv "$_tmp_toml" docs/aidlc.toml || {
+\mv "$_tmp_toml" .aidlc/config.toml || {
     # version.txtとaidlc.toml両方をロールバック
     \cp "$_bak_version" version.txt 2>/dev/null || true
-    \cp "$_bak_toml" docs/aidlc.toml 2>/dev/null || true
+    \cp "$_bak_toml" .aidlc/config.toml 2>/dev/null || true
     \rm -f "$_bak_version" "$_bak_toml"
-    echo "error:aidlc-toml-write-failed"
+    echo "error:config-toml-write-failed"
     exit 1
 }
 \rm -f "$_bak_version" "$_bak_toml"

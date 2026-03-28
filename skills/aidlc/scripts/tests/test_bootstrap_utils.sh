@@ -20,7 +20,7 @@ assert_eq() {
 }
 
 # bootstrap.sh を source（プロジェクトルートが必要）
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 AIDLC_PROJECT_ROOT="$PROJECT_ROOT" source "$PROJECT_ROOT/skills/aidlc/scripts/lib/bootstrap.sh"
 
 echo "=== aidlc_strip_quotes() tests ==="

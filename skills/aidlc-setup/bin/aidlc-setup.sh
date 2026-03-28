@@ -135,8 +135,22 @@ resolve_starter_kit_root() {
     if [[ "$SCRIPT_DIR" == */skills/aidlc-setup/bin ]]; then
         local candidate_root
         candidate_root="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-        echo "$candidate_root"
-        return 0
+        # 算出したルートにスターターキットの既知ファイルが存在するか検証
+        if [[ -f "$candidate_root/skills/aidlc/config/defaults.toml" ]]; then
+            echo "$candidate_root"
+            return 0
+        fi
+        # フォールバック: git リポジトリルートを試行
+        local git_root
+        git_root="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null)" || git_root=""
+        if [[ -n "$git_root" && -f "$git_root/skills/aidlc/config/defaults.toml" ]]; then
+            echo "$git_root"
+            return 0
+        fi
+        echo "error:starter-kit-not-found:candidate root does not contain expected files" >&2
+        echo "detail:candidate-root:$(_sanitize "$candidate_root")" >&2
+        echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
+        return 1
     fi
 
     # 3. 上記以外
@@ -150,57 +164,22 @@ STARTER_KIT_ROOT=$(resolve_starter_kit_root) || exit 1
 echo "starter_kit_path:${STARTER_KIT_ROOT}"
 
 # === Step 2: 設定ファイル存在確認 ===
-if [[ ! -f "$CONFIG_PATH" ]]; then
+# v2プラグインモデルでは、config.toml が存在すればセットアップ済み。
+# アップグレードは `claude update` で行う。
+if [[ -f "$CONFIG_PATH" ]]; then
+    if [[ "$FORCE" != "true" ]]; then
+        echo "setup_type:already_configured"
+        echo "config_path:${CONFIG_PATH}"
+        echo "status:success"
+        exit 0
+    fi
+    echo "config_path:${CONFIG_PATH}"
+    echo "info:force-mode:continuing despite existing config"
+else
     echo "error:config-not-found:${CONFIG_PATH}" >&2
+    echo "detail:action:run /aidlc setup to initialize" >&2
     exit 1
 fi
-echo "config_path:${CONFIG_PATH}"
-
-# === Step 3: セットアップ種別判定 ===
-# プロジェクトローカルのスクリプトを優先、なければスターターキットから探す
-CHECK_SETUP_TYPE="skills/aidlc/scripts/check-setup-type.sh"
-if [[ ! -x "$CHECK_SETUP_TYPE" ]]; then
-    CHECK_SETUP_TYPE="${STARTER_KIT_ROOT}/skills/aidlc/scripts/check-setup-type.sh"
-fi
-
-if [[ ! -x "$CHECK_SETUP_TYPE" ]]; then
-    echo "warn:check-setup-type-not-found"
-    echo "info:searched-path:skills/aidlc/scripts/check-setup-type.sh"
-    SETUP_TYPE=""
-else
-    SETUP_TYPE_RAW=$("$CHECK_SETUP_TYPE" 2>/dev/null || true)
-    SETUP_TYPE="${SETUP_TYPE_RAW#setup_type:}"
-fi
-
-echo "setup_type:${SETUP_TYPE}"
-
-# セットアップ種別に基づく分岐
-case "$SETUP_TYPE" in
-    upgrade:*)
-        # 正常系: アップグレード実行を続行
-        ;;
-    cycle_start)
-        if [[ "$FORCE" != "true" ]]; then
-            # バージョン同じ → スキップ（プラグインモデルでは claude update で同期）
-            _current_ver=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
-            echo "skip:already-current:${_current_ver}"
-            exit 0
-        fi
-        ;;
-    warning_newer:*)
-        echo "warn:project-newer:${SETUP_TYPE#warning_newer:}"
-        ;;
-    initial|migration)
-        echo "error:not-upgrade-target:${SETUP_TYPE}" >&2
-        exit 1
-        ;;
-    "")
-        echo "warn:setup-type-empty"
-        ;;
-    *)
-        echo "warn:unknown-setup-type:${SETUP_TYPE}"
-        ;;
-esac
 
 # === Step 4: バージョン情報取得 ===
 VERSION_FILE="${STARTER_KIT_ROOT}/version.txt"

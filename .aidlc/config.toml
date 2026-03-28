@@ -14,7 +14,6 @@ frameworks = []
 tools = ["Claude Code"]
 
 [paths]
-aidlc_dir = "docs/aidlc"
 cycles_dir = ".aidlc/cycles"
 
 [rules]
