@@ -48,12 +48,6 @@ AIツール設定ファイル（プロジェクトルート）:
 - .agents/skills/ - Agentスキルディレクトリ（各スキルへのシンボリックリンク）
 - .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
 
-GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
-- backlog.yml - バックログ用テンプレート
-- bug.yml - バグ報告用テンプレート
-- feature.yml - 機能要望用テンプレート
-- feedback.yml - フィードバック用テンプレート
-
 ### AIエージェント許可リストの設定（オプション）
 
 AI-DLCではファイル操作やGitコマンドを多用します。
