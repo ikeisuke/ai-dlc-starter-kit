@@ -33,7 +33,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  skills/aidlc/scripts/write-history.sh \
+  scripts/write-history.sh \
       --cycle {{CYCLE}} \
       --phase construction \
       --unit {N} \
@@ -227,7 +227,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - 「実装状態」セクションがないファイルは、まず `.aidlc/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
 - **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
 - **progress.mdが存在しない場合**: 「未着手」として扱い、Unit定義ファイルに「実装状態」セクションを追加
-- テンプレート: `skills/aidlc/templates/unit_definition_template.md` の末尾を参照
+- テンプレート: `templates/unit_definition_template.md` の末尾を参照
 
 ### 8. バックログ確認
 
@@ -290,14 +290,14 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ```bash
 # Unit定義ファイルから関連Issue番号を取得し、ステータスを更新
-skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
+scripts/issue-ops.sh set-status <issue_number> in-progress
 ```
 
 **ブロック発生時**:
 作業がブロックされた場合は、ステータスを `blocked` に更新します。
 
 ```bash
-skills/aidlc/scripts/issue-ops.sh set-status <issue_number> blocked
+scripts/issue-ops.sh set-status <issue_number> blocked
 ```
 
 ブロック解除時は `in-progress` に戻します。

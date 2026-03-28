@@ -70,8 +70,8 @@ worktree環境では `post-merge-cleanup.sh` がmain pull、fetch、detached HEA
 事前にBashで以下の順にスクリプトの存在を確認する:
 
 ```bash
-if [ -x "skills/aidlc/scripts/post-merge-cleanup.sh" ]; then
-    echo "found:skills/aidlc/scripts/post-merge-cleanup.sh"
+if [ -x "scripts/post-merge-cleanup.sh" ]; then
+    echo "found:scripts/post-merge-cleanup.sh"
 else
     echo "not_found"
 fi
@@ -93,7 +93,7 @@ AIが探索結果のパスを使用して以下を実行する:
 <探索結果のパス> --cycle {{CYCLE}} --dry-run
 ```
 
-**注意**: 探索結果が `skills/aidlc/scripts/` の場合はそのパスを使用する。スクリプトに実行権限がない場合は `bash <探索結果のパス>` で実行する。
+**注意**: 探索結果が `scripts/` の場合はそのパスを使用する。スクリプトに実行権限がない場合は `bash <探索結果のパス>` で実行する。
 
 実行予定を確認し、問題がないことを確認する。
 

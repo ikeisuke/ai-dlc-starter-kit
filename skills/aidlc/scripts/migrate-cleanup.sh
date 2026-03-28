@@ -68,8 +68,45 @@ _validate_path() {
   return 0
 }
 
-# 削除対象リソースを処理（action=delete のもののみ）
+# symlink実体化（action=materialize）
 resource_count=$(jq '.resources | length' "$MANIFEST")
+for i in $(seq 0 $((resource_count - 1))); do
+  action=$(jq -r ".resources[$i].action" "$MANIFEST")
+  [[ "$action" != "materialize" ]] && continue
+
+  resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
+  path=$(jq -r ".resources[$i].path" "$MANIFEST")
+
+  if ! _validate_path "$path"; then
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "error", detail: "path validation failed"}')"
+    continue
+  fi
+
+  if [[ -L "$path" ]]; then
+    # symlinkの実体を取得してコピーで差し替え
+    real_path=$(readlink "$path" 2>/dev/null || true)
+    if [[ -f "$real_path" ]]; then
+      tmp=$(mktemp)
+      cp "$real_path" "$tmp"
+      rm -f "$path"
+      mv "$tmp" "$path"
+      echo "  Materialized: $path (was symlink to $real_path)" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+        '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with file"}')"
+    else
+      echo "  WARN: symlink target not found: $real_path (keeping symlink)" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+        '{resource_type: $rt, path: $p, status: "skipped", detail: "symlink target not found"}')"
+    fi
+  else
+    echo "  Skipped (not a symlink): $path" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "skipped", detail: "not a symlink"}')"
+  fi
+done
+
+# 削除対象リソースを処理（action=delete のもののみ）
 for i in $(seq 0 $((resource_count - 1))); do
   action=$(jq -r ".resources[$i].action" "$MANIFEST")
   [[ "$action" != "delete" ]] && continue
@@ -106,12 +143,13 @@ for i in $(seq 0 $((resource_count - 1))); do
     _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
       '{resource_type: $rt, path: $p, status: "success", detail: "file deleted"}')"
 
-    # 親ディレクトリが空になった場合は削除
+    # 親ディレクトリが空になった場合は再帰的に削除（プロジェクトルートまで）
     parent_dir=$(dirname "$path")
-    if [[ -d "$parent_dir" ]] && [[ -z "$(ls -A "$parent_dir" 2>/dev/null)" ]]; then
-      rmdir "$parent_dir" 2>/dev/null || true
+    while [[ -d "$parent_dir" ]] && [[ "$parent_dir" != "." ]] && [[ -z "$(ls -A "$parent_dir" 2>/dev/null)" ]]; do
+      rmdir "$parent_dir" 2>/dev/null || break
       echo "  Removed empty directory: $parent_dir" >&2
-    fi
+      parent_dir=$(dirname "$parent_dir")
+    done
   else
     echo "  Skipped (not found): $path" >&2
     _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \

@@ -1,11 +1,45 @@
 # ステップ1: 検出とバックアップ
 
+## 0. マイグレーションブランチの作成
+
+### ワーキングツリーのクリーンチェック
+
+まず、未コミットの変更がないことを確認する:
+
+```bash
+git status --porcelain
+```
+
+- **出力が空**: クリーン。続行する
+- **出力がある場合**: 以下を表示して **中断** する:
+
+```text
+未コミットの変更が検出されました。
+マイグレーション前に変更をコミットまたはstashしてください。
+
+変更をstashするには:
+  git stash
+
+マイグレーション完了後に復元:
+  git stash pop
+```
+
+### ブランチ作成
+
+ワーキングツリーがクリーンであることを確認後、ブランチを作成して切り替える:
+
+```bash
+git checkout -b migrate/v2
+```
+
+ブランチ名は `migrate/v2` 固定。既に存在する場合はユーザーに確認する。
+
 ## 1. v1環境検出
 
 `migrate-detect.sh` を実行し、manifest JSON を取得する。
 
 ```bash
-skills/aidlc/scripts/migrate-detect.sh
+scripts/migrate-detect.sh
 ```
 
 ### 分岐判定
@@ -43,7 +77,7 @@ mktemp /tmp/aidlc-manifest.XXXXXX
 ユーザーの承認後、`migrate-backup.sh` を実行:
 
 ```bash
-skills/aidlc/scripts/migrate-backup.sh --manifest <manifest_path>
+scripts/migrate-backup.sh --manifest <manifest_path>
 ```
 
 stdout の `backup_dir` を記録する。後続ステップの `--backup-dir` 引数に渡す。

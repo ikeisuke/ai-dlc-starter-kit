@@ -45,13 +45,13 @@ git branch --show-current
 
 **Unit完了squashの場合**:
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --base '<起点コミット>' --dry-run
 ```
 
 **Inception Phase完了squashの場合**（`--unit` 省略）:
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' \
   --vcs git --base '<起点コミット>' --dry-run
 ```
 
@@ -85,13 +85,13 @@ feat: [{{CYCLE}}] Inception Phase完了 - {DESCRIPTION}
 
 **Unit完了squashの場合**:
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
 **Inception Phase完了squashの場合**（`--unit` 省略）:
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' \
   --vcs git --base '<起点コミット>' --message-file <生成されたパス>
 ```
 
@@ -108,14 +108,14 @@ skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' \
 過去のUnitを事後squashする場合:
 
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive --message-file <生成されたパス>
 ```
 
 `--from` / `--to` でUnit開始・終了コミットを明示的に指定することも可能:
 
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive --from '<開始コミット>' --to '<終了コミット>' \
   --message-file <生成されたパス>
 ```

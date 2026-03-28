@@ -39,7 +39,7 @@
 - **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
 
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `skills/aidlc/templates/deployment_checklist_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `templates/deployment_checklist_template.md`）
 - **ステップ完了時**: progress.mdでステップ2を「完了」に更新、完了日を記録
 
 ### ステップ3: CI/CD構築【対話形式】
@@ -57,7 +57,7 @@
 
 - **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `skills/aidlc/templates/monitoring_strategy_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
 
 ### ステップ5: 配布【対話形式】
@@ -73,7 +73,7 @@
 **実行する場合**:
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `skills/aidlc/templates/distribution_feedback_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
 ### ステップ6: バックログ整理と運用計画【対話形式】
@@ -132,7 +132,7 @@ gh pr view {PR番号} --json body --jq '.body'
 
 対応済み項目の手動クローズ（自動クローズ対象外のみ）:
 ```bash
-skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
+scripts/issue-ops.sh close {ISSUE_NUMBER}
 ```
 
 **出力例**: `issue:123:closed`
@@ -148,7 +148,7 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 #### 6.3 リリース後運用計画
 
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `skills/aidlc/templates/post_release_operations_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/post_release_operations.md`（テンプレート: `templates/post_release_operations_template.md`）
 - **ステップ完了時**: progress.mdでステップ6を「完了」に更新、完了日を記録
 
 ### ステップ7: リリース準備

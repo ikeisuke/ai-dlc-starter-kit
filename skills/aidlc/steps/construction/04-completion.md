@@ -188,7 +188,7 @@ AIレビューの実施状態を確認できません。
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-skills/aidlc/scripts/run-markdownlint.sh {{CYCLE}}
+scripts/run-markdownlint.sh {{CYCLE}}
 ```
 
 **注意**: `.aidlc/config.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。

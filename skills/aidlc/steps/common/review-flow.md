@@ -391,7 +391,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        2. 以下を実行:
 
        ```bash
-       skills/aidlc/scripts/write-history.sh \
+       scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase "{{PHASE}}" \
            --unit "{N}" \
@@ -485,7 +485,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       2. 以下を実行:
 
       ```bash
-      skills/aidlc/scripts/write-history.sh \
+      scripts/write-history.sh \
           --cycle "{{CYCLE}}" \
           --phase "{{PHASE}}" \
           --unit "{N}" \
@@ -579,7 +579,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        2. 以下を実行（constructionフェーズの場合）:
 
        ```bash
-       skills/aidlc/scripts/write-history.sh \
+       scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase construction \
            --unit "{N}" \
@@ -592,7 +592,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        inceptionフェーズの場合（`--unit*` 引数を省略）:
 
        ```bash
-       skills/aidlc/scripts/write-history.sh \
+       scripts/write-history.sh \
            --cycle "{{CYCLE}}" \
            --phase inception \
            --step "バックログ自動登録" \
@@ -616,7 +616,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
       2. 以下を実行:
 
       ```bash
-      skills/aidlc/scripts/write-history.sh \
+      scripts/write-history.sh \
           --cycle "{{CYCLE}}" \
           --phase "{{PHASE}}" \
           --unit "{N}" \
@@ -800,7 +800,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
           2. 以下を実行:
 
           ```bash
-          skills/aidlc/scripts/write-history.sh \
+          scripts/write-history.sh \
               --cycle "{{CYCLE}}" \
               --phase "{{PHASE}}" \
               --unit "{N}" \
@@ -864,7 +864,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 2. 以下を実行:
 
 ```bash
-skills/aidlc/scripts/write-history.sh \
+scripts/write-history.sh \
     --cycle "{{CYCLE}}" \
     --phase "{{PHASE}}" \
     --unit "{N}" \
@@ -925,7 +925,7 @@ AIレビュー完了時にレビューサマリファイルを生成・追記す
 
 1. フェーズと呼び出し元ステップからファイルパスを決定（上記テーブル参照）
 2. ファイルの存在を確認:
-   - **存在しない場合**: テンプレート（`skills/aidlc/templates/review_summary_template.md`）から新規作成し、基本情報セクションを埋める
+   - **存在しない場合**: テンプレート（`templates/review_summary_template.md`）から新規作成し、基本情報セクションを埋める
    - **存在する場合**: ファイル末尾にセパレータ（`---`）を追記
 3. 新しいセットを追記（以下のフォーマット）:
 

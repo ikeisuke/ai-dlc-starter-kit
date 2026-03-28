@@ -40,6 +40,9 @@ export AIDLC_PROJECT_ROOT AIDLC_PLUGIN_ROOT
 export AIDLC_CONFIG AIDLC_LOCAL_CONFIG AIDLC_LOCAL_CONFIG_LEGACY
 export AIDLC_CYCLES AIDLC_DEFAULTS
 
+# --- toml-reader ライブラリ読み込み ---
+source "$(dirname "${BASH_SOURCE[0]}")/toml-reader.sh"
+
 # --- 共通ユーティリティ関数 ---
 
 # 現在のgitブランチを取得

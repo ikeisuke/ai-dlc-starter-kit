@@ -224,7 +224,7 @@ Co-Authored-By: {AI_AUTHOR}
 **設定確認**:
 
 ```bash
-skills/aidlc/scripts/read-config.sh rules.squash.enabled
+scripts/read-config.sh rules.squash.enabled
 ```
 
 - `true` の場合: 以下の手順を実行
@@ -306,7 +306,7 @@ skills/aidlc/scripts/read-config.sh rules.squash.enabled
    ```
 
    ```bash
-   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
@@ -317,7 +317,7 @@ skills/aidlc/scripts/read-config.sh rules.squash.enabled
    ```
 
    ```bash
-   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' \
+   scripts/squash-unit.sh --cycle '{{CYCLE}}' \
      --vcs git --base '<起点コミット>' --message-file <mktemp生成パス>
    ```
 
@@ -356,7 +356,7 @@ skills/aidlc/scripts/read-config.sh rules.squash.enabled
    2. 以下を実行:
 
    ```bash
-   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --retroactive --dry-run --message-file /tmp/aidlc-squash-msg.txt
    ```
 
@@ -367,7 +367,7 @@ skills/aidlc/scripts/read-config.sh rules.squash.enabled
    前のステップと同じ一時ファイルを再利用（または新たに作成）:
 
    ```bash
-   skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+   scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
      --vcs git --retroactive --message-file /tmp/aidlc-squash-msg.txt
    ```
 
@@ -399,7 +399,7 @@ Unit-Number: {NNN}
 3. 対象範囲を --from/--to で指定（--base は不要）:
 
 ```bash
-skills/aidlc/scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
+scripts/squash-unit.sh --cycle '{{CYCLE}}' --unit '{NNN}' \
   --vcs git --retroactive \
   --from '<Unit開始コミット>' --to '<Unit終了コミット>' \
   --message-file /tmp/aidlc-squash-msg.txt

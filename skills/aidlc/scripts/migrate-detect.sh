@@ -76,7 +76,7 @@ if [ -d ".agents/skills" ]; then
   done
 fi
 
-# 2. .kiro/skills/ 内のシンボリックリンク
+# 2. .kiro/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）
 if [ -d ".kiro/skills" ]; then
   for link in .kiro/skills/*/; do
     link="${link%/}"
@@ -93,36 +93,21 @@ if [ -d ".kiro/skills" ]; then
   done
 fi
 
-# 3. .kiro/agents/aidlc.json シンボリックリンク
+# 3. .kiro/agents/aidlc.json シンボリックリンク → 実体ファイルに差し替え（削除しない）
 if [ -L ".kiro/agents/aidlc.json" ]; then
   target=$(readlink ".kiro/agents/aidlc.json" 2>/dev/null || true)
   if echo "$target" | grep -q "docs/aidlc/"; then
-    echo "  Found symlink_kiro: .kiro/agents/aidlc.json -> $target" >&2
+    echo "  Found symlink_kiro_agents: .kiro/agents/aidlc.json -> $target (will materialize)" >&2
     _add_resource "$(jq -n \
-      --arg rt "symlink_kiro" \
+      --arg rt "symlink_materialize" \
       --arg p ".kiro/agents/aidlc.json" \
-      --arg a "delete" \
-      '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "symlink_target", is_owned: true, expected_hash: null, actual_hash: null}}')"
+      --arg a "materialize" \
+      --arg lt "$target" \
+      '{resource_type: $rt, path: $p, action: $a, link_target: $lt, ownership_evidence: {method: "symlink_target", is_owned: true, expected_hash: null, actual_hash: null}}')"
   fi
 fi
 
-# 4. .kiro/agents/aidlc-poc.json 実体ファイル（ハッシュ検証）
-if [ -f ".kiro/agents/aidlc-poc.json" ] && [ ! -L ".kiro/agents/aidlc-poc.json" ]; then
-  actual_hash=$(_sha256 ".kiro/agents/aidlc-poc.json")
-  expected_hash="${KNOWN_HASHES[".kiro/agents/aidlc-poc.json"]}"
-  if [ "$actual_hash" = "$expected_hash" ]; then
-    echo "  Found file_kiro: .kiro/agents/aidlc-poc.json (hash match)" >&2
-    _add_resource "$(jq -n \
-      --arg rt "file_kiro" \
-      --arg p ".kiro/agents/aidlc-poc.json" \
-      --arg a "delete" \
-      --arg eh "$expected_hash" \
-      --arg ah "$actual_hash" \
-      '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "content_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
-  else
-    echo "  Skipping file_kiro: .kiro/agents/aidlc-poc.json (hash mismatch, user-edited)" >&2
-  fi
-fi
+# 4. .kiro/agents/aidlc-poc.json 実体ファイル（保持、削除しない）
 
 # 5. .aidlc/cycles/backlog/ ディレクトリ（v2.0.3以降: 常に削除候補）
 # バックログはGitHub Issue固定のため、ローカルディレクトリは不要
@@ -159,7 +144,64 @@ if [ -d ".github/ISSUE_TEMPLATE" ]; then
   done
 fi
 
-# 7. config.toml パス更新チェック（docs/aidlc → skills/aidlc のパス参照）
+# 7. .claude/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）
+if [ -d ".claude/skills" ]; then
+  for link in .claude/skills/*/; do
+    link="${link%/}"
+    [ -L "$link" ] || continue
+    target=$(readlink "$link" 2>/dev/null || true)
+    if echo "$target" | grep -q "docs/aidlc/"; then
+      echo "  Found symlink_claude: $link -> $target" >&2
+      _add_resource "$(jq -n \
+        --arg rt "symlink_claude" \
+        --arg p "$link" \
+        --arg a "delete" \
+        --arg lt "$target" \
+        '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "symlink_target", is_owned: true, expected_hash: null, actual_hash: null}}')"
+    fi
+  done
+fi
+
+# 8. docs/aidlc.toml → .aidlc/config.toml 移動（v1設定ファイル）
+if [ -f "docs/aidlc.toml" ] && [ ! -f ".aidlc/config.toml" ]; then
+  echo "  Found v1_config_move: docs/aidlc.toml (needs move to .aidlc/config.toml)" >&2
+  _add_resource "$(jq -n \
+    --arg rt "v1_config_move" \
+    --arg p "docs/aidlc.toml" \
+    --arg a "move" \
+    --arg dest ".aidlc/config.toml" \
+    '{resource_type: $rt, path: $p, action: $a, destination: $dest, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
+elif [ -f "docs/aidlc.toml" ]; then
+  echo "  Found v1_config: docs/aidlc.toml (config.toml already exists, will delete)" >&2
+  _add_resource "$(jq -n \
+    --arg rt "v1_config" \
+    --arg p "docs/aidlc.toml" \
+    --arg a "delete" \
+    '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
+fi
+
+# 9. docs/aidlc/ ディレクトリ（v1 AIDLCリソース）
+if [ -d "docs/aidlc" ]; then
+  echo "  Found v1_dir: docs/aidlc/ (v1 AIDLC directory)" >&2
+  _add_resource "$(jq -n \
+    --arg rt "v1_dir" \
+    --arg p "docs/aidlc/" \
+    --arg a "delete" \
+    '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
+fi
+
+# 10. docs/cycles/ → .aidlc/cycles/ 移動
+if [ -d "docs/cycles" ]; then
+  echo "  Found v1_cycles_move: docs/cycles/ (needs move to .aidlc/cycles/)" >&2
+  _add_resource "$(jq -n \
+    --arg rt "v1_cycles_move" \
+    --arg p "docs/cycles/" \
+    --arg a "move_dir" \
+    --arg dest ".aidlc/cycles/" \
+    '{resource_type: $rt, path: $p, action: $a, destination: $dest, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
+fi
+
+# 11. config.toml パス更新チェック（docs/aidlc → skills/aidlc のパス参照）
 if [ -f "${AIDLC_CONFIG}" ]; then
   if grep -q 'docs/aidlc' "${AIDLC_CONFIG}" 2>/dev/null; then
     echo "  Found config_update: .aidlc/config.toml (contains docs/aidlc references)" >&2
