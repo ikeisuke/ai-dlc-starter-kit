@@ -39,11 +39,6 @@ _sha256() {
   fi
 }
 
-# 既知ファイルのSHA256ハッシュ（スターターキット原本）
-declare -A KNOWN_HASHES=(
-  [".kiro/agents/aidlc-poc.json"]="96eb617a9cb67269894fcc59c91fecca5e759e2cd6f14b3cd973dbe33c1df5a9"
-  [".github/ISSUE_TEMPLATE/backlog.yml"]="be2cec6babb3ec3b43106ddc22cef6e268d7e5c21a947bc4c191b8507910935f"
-)
 
 # --- 検出対象の収集 ---
 
@@ -121,27 +116,24 @@ if [ -d ".aidlc/cycles/backlog" ]; then
     '{resource_type: $rt, path: $p, action: $a, condition: $cond, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
 fi
 
-# 6. .github/ISSUE_TEMPLATE/ 内のスターターキット由来テンプレート
-if [ -d ".github/ISSUE_TEMPLATE" ]; then
-  for tmpl_name in backlog.yml; do
-    tmpl_path=".github/ISSUE_TEMPLATE/$tmpl_name"
-    [ -f "$tmpl_path" ] || continue
-    [ -L "$tmpl_path" ] && continue  # シンボリックリンクはスキップ
-    actual_hash=$(_sha256 "$tmpl_path")
-    expected_hash="${KNOWN_HASHES["$tmpl_path"]:-}"
-    if [ -n "$expected_hash" ] && [ "$actual_hash" = "$expected_hash" ]; then
-      echo "  Found github_template: $tmpl_path (hash match)" >&2
+# 6. .github/ISSUE_TEMPLATE/backlog.yml（v2.0.3で機能廃止）
+# docs/aidlc/ 内の原本と比較し、一致すればスターターキット由来と判定して削除対象にする
+if [ -f ".github/ISSUE_TEMPLATE/backlog.yml" ]; then
+  _backlog_origin="docs/aidlc/.github/ISSUE_TEMPLATE/backlog.yml"
+  if [ -f "$_backlog_origin" ]; then
+    _origin_hash=$(_sha256 "$_backlog_origin")
+    _actual_hash=$(_sha256 ".github/ISSUE_TEMPLATE/backlog.yml")
+    if [ "$_origin_hash" = "$_actual_hash" ]; then
+      echo "  Found deprecated template: .github/ISSUE_TEMPLATE/backlog.yml (matches origin, backlog feature removed in v2.0.3)" >&2
       _add_resource "$(jq -n \
-        --arg rt "github_template" \
-        --arg p "$tmpl_path" \
-        --arg a "delete" \
-        --arg eh "$expected_hash" \
-        --arg ah "$actual_hash" \
-        '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "content_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
+        --arg eh "$_origin_hash" --arg ah "$_actual_hash" \
+        '{resource_type: "deprecated_template", path: ".github/ISSUE_TEMPLATE/backlog.yml", action: "delete", ownership_evidence: {method: "origin_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
     else
-      echo "  Skipping github_template: $tmpl_path (hash mismatch or unknown, user-edited)" >&2
+      echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (modified by user, hash mismatch with origin)" >&2
     fi
-  done
+  else
+    echo "  Skipping: .github/ISSUE_TEMPLATE/backlog.yml (no origin file to compare at $_backlog_origin)" >&2
+  fi
 fi
 
 # 7. .claude/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）

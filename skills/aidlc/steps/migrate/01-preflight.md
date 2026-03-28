@@ -36,11 +36,13 @@ git checkout -b migrate/v2
 
 ## 1. v1環境検出
 
-`migrate-detect.sh` を実行し、manifest JSON を取得する。
+`migrate-detect.sh` を実行し、manifest JSON を取得する。**stdout が JSON、stderr が診断メッセージ**なので、必ず分離して扱うこと。
 
 ```bash
-scripts/migrate-detect.sh
+scripts/migrate-detect.sh 2>/dev/null
 ```
+
+**注意**: stderr の診断メッセージは表示用であり、manifest には含めない。
 
 ### 分岐判定
 
@@ -64,10 +66,14 @@ stdout の JSON を解析し、`status` フィールドで分岐する:
 
 ## 2. manifest 保存
 
-manifest JSON を一時ファイルに保存する:
+ステップ1で取得した JSON を一時ファイルに保存する:
 
 ```bash
+# 一時ファイルを作成
 mktemp /tmp/aidlc-manifest.XXXXXX
+
+# stdout のみをファイルに保存（stderr は捨てる）
+scripts/migrate-detect.sh 2>/dev/null > <manifest_path>
 ```
 
 保存したパスを後続ステップで使用する。
