@@ -11,11 +11,12 @@
 ## 責務
 - `docs/aidlc/guides/` → `skills/aidlc/guides/` への移動
 - `docs/aidlc/tests/` → `skills/aidlc/scripts/tests/` への移動
-- `docs/aidlc/kiro/` → `kiro/` への移動
+- `docs/aidlc/kiro/` → `skills/aidlc/templates/kiro/` への移動
 - `docs/aidlc/prompts/`, `docs/aidlc/templates/`, `docs/aidlc/lib/` の削除（重複）
-- `docs/aidlc/AGENTS.md`, `docs/aidlc/CLAUDE.md` の削除（重複）
+- `docs/aidlc/AGENTS.md`, `docs/aidlc/CLAUDE.md` の削除（重複）※現リポジトリでは既に削除済みのためno-op
 - `prompts/package/` の削除（docs/aidlc/ のコピー元、重複）
 - `docs/aidlc/` ディレクトリ自体の削除
+- 移設に伴う周辺ツールリンクの正規化（`.kiro/agents/`、`.agents/skills/`、`.kiro/skills/` のシンボリックリンク更新）
 
 ## 境界
 - パス参照の更新は行わない（Unit 002の責務）
@@ -54,9 +55,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-03-28
+- **完了日**: 2026-03-28
+- **担当**: Claude
 - **エクスプレス適格性**: -
 - **適格性理由**: -
