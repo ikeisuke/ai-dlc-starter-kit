@@ -69,6 +69,7 @@ kiro-cli --agent aidlc
 **設定ファイル**:
 
 `.kiro/agents/aidlc.json` → `docs/aidlc/kiro/agents/aidlc.json` へのシンボリックリンク
+<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 ```json
 {

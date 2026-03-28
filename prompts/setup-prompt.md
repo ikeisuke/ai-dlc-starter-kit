@@ -154,8 +154,8 @@ AI-DLC は最新です。新しいサイクルを開始します。
 
 **次のアクション**:
 1. `skills/aidlc/steps/inception/` ディレクトリの存在を確認
-2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception.md` を読み込む）
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
+2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む）
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む
 
 ユーザーの操作を待たずに自動で読み込むこと。
 
@@ -182,8 +182,8 @@ AI-DLC のアップグレードが利用可能です。
 - **1 を選択**: セクション3（ファイル移行）をスキップし、セクション4（Git環境の確認）へ進む（アップグレードモード）。なお、アップグレード用ブランチは `upgrade/vX.X.X` プレフィックスで作成されます（aidlc-setupスキルが自動で案内）。`cycle/` プレフィックスはサイクル開発用であり、アップグレードには使用しません。
 - **2 を選択**:
   1. `skills/aidlc/steps/inception/` ディレクトリの存在を確認
-  2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception.md` を読み込む）
-  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
+  2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む）
+  3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む
 
 ---
 
@@ -203,8 +203,8 @@ AI-DLC のアップグレードが利用可能です。
 
 **次のアクション**: ユーザーが続行を承認した場合:
 1. `skills/aidlc/steps/inception/` ディレクトリの存在を確認
-2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception.md` を読み込む）
-3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception.md` を読み込む
+2. 存在する場合: `/aidlc inception` スキルを実行する（スキル非対応環境では `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む）
+3. 存在しない場合: このファイル（setup-prompt.md）と同じディレクトリにある `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む
 
 ---
 
@@ -236,15 +236,6 @@ if [ -f docs/aidlc/project.toml ] && [ ! -f docs/aidlc.toml ]; then
   mv docs/aidlc/project.toml docs/aidlc.toml
   echo "MIGRATED: docs/aidlc/project.toml → docs/aidlc.toml"
 fi
-
-# ==== v1互換コード（v2移行完了後に削除可能） ====
-# 2. additional-rules.md → rules.md に移行（v1互換）
-if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/cycles/rules.md ]; then
-  mkdir -p .aidlc/cycles
-  mv docs/aidlc/prompts/additional-rules.md .aidlc/cycles/rules.md
-  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/cycles/rules.md"
-fi
-# ==== v1互換コード終了 ====
 
 # 3. version.txt を削除（バージョン情報は aidlc.toml に統合）
 if [ -f docs/aidlc/version.txt ]; then
@@ -761,27 +752,20 @@ sync_added:new-feature.md
 4. `sync_deleted:` 行がある場合、削除対象をユーザーに表示し確認:
 
 ```text
-警告: 以下のファイルが削除されます：
+以下のファイルが削除されます：
 
 [sync_deleted: のファイル一覧]
 
 これらはスターターキットに存在しないファイルです。
-プロジェクト固有のカスタマイズが含まれている可能性があります。
-
-選択してください:
-1. 削除して同期する（スターターキットと完全同期）
-2. 削除せずに同期する（--deleteオプションなし）
-3. 同期をキャンセルする
-
-どれを選択しますか？
+--delete付きで同期を実行します。
 ```
 
-5. 選択に応じた実行:
-- 1: `sync-package.sh --source [ソース] --dest [宛先] --delete`
-- 2: `sync-package.sh --source [ソース] --dest [宛先]`
-- 3: 同期をスキップし、手動対応を案内
+5. 同期を実行（`--delete` は常に必須。ミラー整合性を維持するため省略不可）:
+```bash
+sync-package.sh --source [ソース] --dest [宛先] --delete
+```
 
-6. `sync_deleted:` 行がない場合は削除なしで直接実行:
+6. `sync_deleted:` 行がない場合も同様に `--delete` 付きで実行:
 ```bash
 sync-package.sh --source [ソース] --dest [宛先] --delete
 ```
@@ -1103,10 +1087,15 @@ kiro-cli --agent aidlc
 
 ### 8.3 同期対象のファイル一覧
 
-rsync により以下のファイルが `docs/aidlc/` に同期されます:
+rsync により以下のファイルがプロジェクトに同期されます（同期先はディレクトリごとに異なります）:
 
 **prompts/** → `skills/aidlc/steps/`:
-- inception.md, construction.md, operations.md, setup.md
+- inception/ - Inception Phase ステップファイル群
+- construction/ - Construction Phase ステップファイル群
+- operations/ - Operations Phase ステップファイル群
+- setup/ - Setup Phase ステップファイル群
+- migrate/ - Migration ステップファイル群
+- common/ - 共通ステップファイル群
 - AGENTS.md, CLAUDE.md（AIツール設定）
 
 **templates/** → `skills/aidlc/templates/`:
@@ -1132,7 +1121,7 @@ rsync により以下のファイルが `docs/aidlc/` に同期されます:
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md AGENTS.md CLAUDE.md .github/
+git add docs/aidlc.toml docs/aidlc/ docs/cycles/rules.md docs/cycles/operations.md skills/ AGENTS.md CLAUDE.md .github/
 # .claude/skills ディレクトリが作成されている場合のみ追加
 [ -d ".claude/skills" ] && git add .claude/
 # .agents/skills ディレクトリが作成されている場合のみ追加
@@ -1161,10 +1150,12 @@ AI-DLC環境のセットアップが完了しました！
 - docs/aidlc.toml - プロジェクト設定
 
 共通ファイル（docs/aidlc/）:
-- prompts/inception.md - Inception Phase プロンプト
-- prompts/construction.md - Construction Phase プロンプト
-- prompts/operations.md - Operations Phase プロンプト
-- prompts/setup.md - サイクルセットアップ プロンプト
+- prompts/inception/ - Inception Phase ステップファイル群
+- prompts/construction/ - Construction Phase ステップファイル群
+- prompts/operations/ - Operations Phase ステップファイル群
+- prompts/setup/ - Setup Phase ステップファイル群
+- prompts/migrate/ - Migration ステップファイル群
+- prompts/common/ - 共通ステップファイル群
 - templates/ - ドキュメントテンプレート
 - skills/ - AIスキルファイル（reviewing-code, reviewing-architecture, reviewing-security, aidlc-setup）
 - kiro/agents/ - KiroCLIエージェント設定
@@ -1220,7 +1211,7 @@ AI-DLCのアップグレードが完了しました！
 新しいセッションで「start inception」と指示し、サイクルを開始してください。
 ```
 
-**重要**: アップグレード完了後は、自動で `inception.md` を読み込まないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
+**重要**: アップグレード完了後は、自動で Inception Phase を開始しないでください。ユーザーが新しいセッションで明示的に開始するまで待機してください。
 
 ### 移行の場合
 
@@ -1242,7 +1233,7 @@ AI-DLCの新ファイル構成への移行が完了しました！
 ## 次のステップ: サイクル開始
 
 **注意**: このセクションは初回セットアップ・移行の場合のみ表示してください。
-- **ケースB（バージョン同じ）**: このセクションは表示せず、自動で `inception.md` を読み込む
+- **ケースB（バージョン同じ）**: このセクションは表示せず、`/aidlc inception` を実行する（スキル非対応環境では `package/prompts/inception/01-setup.md` から順にステップファイルを読み込む）
 - **ケースC（アップグレード完了後）**: 上記「アップグレードの場合」のメッセージを表示し、セッションを終了する
 
 ### 初回セットアップ・移行の場合

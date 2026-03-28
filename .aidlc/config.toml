@@ -14,7 +14,6 @@ frameworks = []
 tools = ["Claude Code"]
 
 [paths]
-setup_prompt = "prompts/setup-prompt.md"
 aidlc_dir = "docs/aidlc"
 cycles_dir = ".aidlc/cycles"
 
