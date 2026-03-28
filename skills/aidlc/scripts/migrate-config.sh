@@ -17,9 +17,8 @@
 #   - error:<type>             : エラー
 #
 # 終了コード:
-#   0: 正常終了（全マイグレーション完了）
+#   0: 正常終了（警告があっても処理完了なら exit 0。警告は stdout の warn:* で通知）
 #   1: エラー（ファイル不在等）
-#   2: 正常終了だがユーザー対応が必要な警告あり
 #
 
 set -euo pipefail
@@ -215,11 +214,12 @@ in_section && /^mode = /{
 }
 /^\[/{if(in_section && !/^\[rules\.reviewing\]/) in_section=0}
 {print}
-' "$_target" > "$_tmp_tools" && \mv "$_tmp_tools" "$_target" || {
+' "$_target" > "$_tmp_tools" && \mv "$_tmp_tools" "$_target" && {
+            echo "migrate:add-key:rules.reviewing.tools"
+        } || {
             echo "warn:awk-failed:tools-addition"
             _has_warnings=true
         }
-        echo "migrate:add-key:rules.reviewing.tools"
     else
         echo "skip:already-exists:rules.reviewing.tools"
     fi
@@ -297,5 +297,10 @@ else
     echo "skip:not-found:rules.jj"
 fi
 
-# 終了コード判定: 警告があっても処理完了なら exit 0
+# 終了サマリ: 警告の有無を通知
+if [[ "$_has_warnings" == "true" ]]; then
+    echo "result:completed-with-warnings"
+else
+    echo "result:completed"
+fi
 exit 0
