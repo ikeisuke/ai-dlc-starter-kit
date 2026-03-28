@@ -32,7 +32,7 @@ Inception/Construction Phaseで決定済み
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  skills/aidlc/scripts/write-history.sh \
+  scripts/write-history.sh \
       --cycle {{CYCLE}} \
       --phase operations \
       --step "[ステップ名]" \
@@ -85,12 +85,10 @@ Inception/Construction Phaseで決定済み
 **【次のアクション】** 今すぐ `steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ### テスト記録とバグ対応【重要】
-- **テスト記録テンプレート**: `skills/aidlc/templates/test_record_template.md`
+- **テスト記録テンプレート**: `templates/test_record_template.md`
   - 受け入れテスト/E2Eテスト実施時に使用
   - テスト結果を統一形式で記録
-- **バグ対応フロー**: `{{aidlc_dir}}/bug-response-flow.md`
-  - バグ発見時の分類基準と対応手順
-  - どのフェーズに戻るかの判断基準
+- **バグ対応フロー**: バグ発見時はConstruction Phaseの「バックトラック」セクションに従い対応
 
 ---
 
@@ -187,7 +185,7 @@ ls .aidlc/cycles/{{CYCLE}}/operations/
 `.aidlc/cycles/operations.md` が存在すれば読み込み、前回サイクルで決定した運用設定・方針を確認する。
 
 - **存在する場合**: 前回の設定を再利用できるか確認し、変更がなければステップをスキップ可能
-- **存在しない場合**: テンプレート（`skills/aidlc/templates/operations_handover_template.md`）から作成
+- **存在しない場合**: テンプレート（`templates/operations_handover_template.md`）から作成
 
 **効果**: 毎回同じ質問を繰り返さずに済む
 

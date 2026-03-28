@@ -24,7 +24,7 @@
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  skills/aidlc/scripts/write-history.sh \
+  scripts/write-history.sh \
       --cycle {{CYCLE}} \
       --phase inception \
       --step "[ステップ名]" \
@@ -120,7 +120,7 @@
 mode = "disabled"
 ```
 
-詳細は `{{aidlc_dir}}/guides/config-merge.md` を参照。
+詳細は `guides/config-merge.md` を参照。
 
 ---
 
@@ -250,7 +250,7 @@ AIが `.aidlc/config.toml` をReadツールで読み取り、`starter_kit_versio
 `rules.cycle.mode` 設定を読み取り、コンテキスト変数 `cycle_mode` として保持する。
 
 ```bash
-skills/aidlc/scripts/read-config.sh rules.cycle.mode
+scripts/read-config.sh rules.cycle.mode
 ```
 
 **読み取り失敗時**（終了コード2）: 以下の警告を表示し、`"default"` として扱う:
@@ -398,7 +398,7 @@ AskUserQuestion機能で確認を提示する:
 **バックログ表示**:
 
 ```bash
-skills/aidlc/scripts/check-open-issues.sh --limit 5
+scripts/check-open-issues.sh --limit 5
 ```
 
 - エラー出力（`error:*`）の場合は「バックログ取得失敗」と警告を表示し、バックログ表示をスキップする
@@ -447,7 +447,7 @@ ls -d .aidlc/cycles/v*/ 2>/dev/null | sort -V | tail -3
 **10-2. バージョン提案**:
 
 ```bash
-skills/aidlc/scripts/suggest-version.sh
+scripts/suggest-version.sh
 ```
 
 **出力例**:
@@ -494,7 +494,7 @@ git branch --show-current
   **11-1. ブランチ作成方式の読み取り**:
 
   ```bash
-  skills/aidlc/scripts/read-config.sh rules.branch.mode
+  scripts/read-config.sh rules.branch.mode
   ```
 
   **読み取り失敗時**（終了コード2: daselエラー等）: 以下の警告を表示し、`"ask"` として扱う:
@@ -516,25 +516,25 @@ git branch --show-current
   ```text
   設定に基づき、ブランチ方式で自動作成します（rules.branch.mode = "branch"）。
   ```
-  → `skills/aidlc/scripts/setup-branch.sh {{CYCLE}} branch` を実行
+  → `scripts/setup-branch.sh {{CYCLE}} branch` を実行
 
   **mode = "worktree" の場合**:
   まず worktree 機能の有効性を確認:
   ```bash
-  skills/aidlc/scripts/read-config.sh rules.worktree.enabled
+  scripts/read-config.sh rules.worktree.enabled
   ```
   読み取り失敗時（終了コード2）は `"false"` として扱う。
   - **`true` の場合**:
     ```text
     設定に基づき、worktree方式で自動作成します（rules.branch.mode = "worktree"）。
     ```
-    → `skills/aidlc/scripts/setup-branch.sh {{CYCLE}} worktree` を実行
+    → `scripts/setup-branch.sh {{CYCLE}} worktree` を実行
   - **`true` 以外の場合**:
     ```text
     【警告】rules.branch.mode = "worktree" ですが、rules.worktree.enabled が true ではありません。
     ブランチ方式にフォールバックします。
     ```
-    → `skills/aidlc/scripts/setup-branch.sh {{CYCLE}} branch` を実行
+    → `scripts/setup-branch.sh {{CYCLE}} branch` を実行
 
   **mode = "ask" の場合**（デフォルト）:
   現行通りユーザーに質問:
@@ -552,10 +552,10 @@ git branch --show-current
   選択に応じてスクリプトを実行:
   ```bash
   # ブランチ作成の場合
-  skills/aidlc/scripts/setup-branch.sh {{CYCLE}} branch
+  scripts/setup-branch.sh {{CYCLE}} branch
 
   # worktree作成の場合
-  skills/aidlc/scripts/setup-branch.sh {{CYCLE}} worktree
+  scripts/setup-branch.sh {{CYCLE}} worktree
   ```
 
   **出力例（成功時）**:
@@ -578,7 +578,7 @@ git branch --show-current
 
   エラー時は `status:error` でエラーを検出し、`error_code:<code>` でエラー種別を判定する。
 
-  worktree作成の詳細は `{{aidlc_dir}}/guides/worktree-usage.md` を参照。
+  worktree作成の詳細は `guides/worktree-usage.md` を参照。
 
   **11-4. main最新化チェック結果の表示**（setup-branch.sh実行する全経路 — branch/worktree/ask — に共通で適用）:
 
@@ -668,7 +668,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 
 **ディレクトリ構造・履歴ファイル作成**:
 ```bash
-skills/aidlc/scripts/init-cycle-dir.sh {{CYCLE}}
+scripts/init-cycle-dir.sh {{CYCLE}}
 ```
 
 このスクリプトは以下を一括で作成します:

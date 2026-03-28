@@ -3,7 +3,7 @@
 ## 1. 移行後検証
 
 ```bash
-skills/aidlc/scripts/migrate-verify.sh --manifest <manifest_path>
+scripts/migrate-verify.sh --manifest <manifest_path>
 ```
 
 ### 分岐判定
@@ -44,6 +44,34 @@ v1→v2 移行が完了しました。
 
 バックアップ: <backup_dir>
   ※ 動作確認後、不要であれば手動で削除してください。
+```
 
-Kiroエージェント設定のサンプルは examples/kiro/ を参照してください。
+## 4. コミットとPR作成
+
+移行結果をコミットし、PRを作成する:
+
+1. 変更差分を確認:
+   ```bash
+   git diff --stat
+   ```
+
+2. 全変更をステージしてコミット:
+   ```bash
+   git add -A
+   git commit -m "chore: v1→v2 マイグレーション"
+   ```
+
+3. リモートにプッシュしてPRを作成:
+   ```bash
+   git push -u origin migrate/v2
+   ```
+   `gh pr create` でPRを作成する。タイトル例: `chore: v1→v2 マイグレーション`
+
+4. PRマージ後、新しいサイクルを開始するには `/aidlc inception` を実行する旨を案内:
+
+```text
+マイグレーションPRを作成しました。
+
+PRをマージ後、新しいサイクルを開始するには:
+  /aidlc inception
 ```

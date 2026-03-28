@@ -32,7 +32,7 @@
    - 既存機能への影響はあるか？
    - 依存関係や前提条件は何か？
 
-- **Intent作成**: 回答を得てから `.aidlc/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `skills/aidlc/templates/intent_template.md`）
+- **Intent作成**: 回答を得てから `.aidlc/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `templates/intent_template.md`）
 
 **Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
 - `minimal`: 1-2文の簡潔な記述。質問観点も最小限に絞る

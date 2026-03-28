@@ -2,8 +2,6 @@
 
 Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
-**詳細な手順は `{{aidlc_dir}}/bug-response-flow.md` を参照**
-
 1. **バグを記録**: テスト記録ファイルにバグ詳細を記載
 2. **バグ種類を判定**: バグ対応フローの分類ガイドに従って判定
    - 設計バグ → Construction Phase（設計）に戻る
@@ -26,7 +24,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `{{aidlc_dir}}/guides/backlog-management.md`）。
+次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `guides/backlog-management.md`）。
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
@@ -72,8 +70,8 @@ worktree環境では `post-merge-cleanup.sh` がmain pull、fetch、detached HEA
 事前にBashで以下の順にスクリプトの存在を確認する:
 
 ```bash
-if [ -x "skills/aidlc/scripts/post-merge-cleanup.sh" ]; then
-    echo "found:skills/aidlc/scripts/post-merge-cleanup.sh"
+if [ -x "scripts/post-merge-cleanup.sh" ]; then
+    echo "found:scripts/post-merge-cleanup.sh"
 else
     echo "not_found"
 fi
@@ -95,7 +93,7 @@ AIが探索結果のパスを使用して以下を実行する:
 <探索結果のパス> --cycle {{CYCLE}} --dry-run
 ```
 
-**注意**: 探索結果が `skills/aidlc/scripts/` の場合はそのパスを使用する。スクリプトに実行権限がない場合は `bash <探索結果のパス>` で実行する。
+**注意**: 探索結果が `scripts/` の場合はそのパスを使用する。スクリプトに実行権限がない場合は `bash <探索結果のパス>` で実行する。
 
 実行予定を確認し、問題がないことを確認する。
 
@@ -189,9 +187,6 @@ AIが探索結果のパスを使用して以下を実行する:
 - Claude Code: `/aidlc inception` と指示
 - その他: `steps/inception/01-setup.md` からステップファイルを順に読み込み
 
-**AI-DLCスターターキットをアップグレードする場合**:
-- Claude Code: `/aidlc setup` と指示
-- その他: `steps/setup/01-detect.md` からステップファイルを順に読み込み
 ---
 ````
 

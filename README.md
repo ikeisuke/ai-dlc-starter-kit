@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-2.0.4-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-2.0.5-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -39,10 +39,7 @@ ai-dlc-starter-kit/
 │       └── {{CYCLE}}/         # サイクル識別子で管理
 │
 ├── docs/
-│   ├── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
-│   └── aidlc/                 # ガイド・ライブラリ
-│       ├── guides/            # 各種ガイドドキュメント
-│       └── lib/               # 共通ライブラリ
+│   └── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
 │
 └── prompts/
     └── setup-prompt.md        # セットアッププロンプト（エントリーポイント）

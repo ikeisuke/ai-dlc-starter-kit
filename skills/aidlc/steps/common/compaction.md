@@ -59,7 +59,7 @@
 事前にBashで以下を実行し、結果を確認する:
 
 ```bash
-skills/aidlc/scripts/read-config.sh rules.automation.mode
+scripts/read-config.sh rules.automation.mode
 ```
 
 **終了コードに基づく処理**:

@@ -5,7 +5,7 @@
 ## 1. config.toml パス更新
 
 ```bash
-skills/aidlc/scripts/migrate-apply-config.sh --manifest <manifest_path> --backup-dir <backup_dir>
+scripts/migrate-apply-config.sh --manifest <manifest_path> --backup-dir <backup_dir>
 ```
 
 ### エラー処理
@@ -16,7 +16,7 @@ skills/aidlc/scripts/migrate-apply-config.sh --manifest <manifest_path> --backup
 ## 2. データ移行
 
 ```bash
-skills/aidlc/scripts/migrate-apply-data.sh --manifest <manifest_path> --backup-dir <backup_dir>
+scripts/migrate-apply-data.sh --manifest <manifest_path> --backup-dir <backup_dir>
 ```
 
 ### エラー処理
@@ -26,7 +26,7 @@ skills/aidlc/scripts/migrate-apply-data.sh --manifest <manifest_path> --backup-d
 ## 3. v1痕跡クリーンアップ
 
 ```bash
-skills/aidlc/scripts/migrate-cleanup.sh --manifest <manifest_path> --backup-dir <backup_dir>
+scripts/migrate-cleanup.sh --manifest <manifest_path> --backup-dir <backup_dir>
 ```
 
 ### エラー処理

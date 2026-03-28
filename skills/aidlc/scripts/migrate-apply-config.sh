@@ -52,8 +52,30 @@ _add_applied() {
   APPLIED=$(echo "$APPLIED" | jq --argjson e "$1" '. + [$e]')
 }
 
-# config_update リソースを処理
+# v1_config_move リソースを処理（docs/aidlc.toml → .aidlc/config.toml）
 resource_count=$(jq '.resources | length' "$MANIFEST")
+for i in $(seq 0 $((resource_count - 1))); do
+  resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
+  [[ "$resource_type" != "v1_config_move" ]] && continue
+
+  path=$(jq -r ".resources[$i].path" "$MANIFEST")
+  dest=$(jq -r ".resources[$i].destination" "$MANIFEST")
+
+  if [[ ! -f "$path" ]]; then
+    echo "  Source config not found: $path" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "error", detail: "source file not found"}')"
+    continue
+  fi
+
+  mkdir -p "$(dirname "$dest")"
+  cp "$path" "$dest"
+  echo "  Moved: $path → $dest" >&2
+  _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
+    '{resource_type: $rt, path: $p, status: "success", detail: ("moved to " + $d)}')"
+done
+
+# config_update リソースを処理
 for i in $(seq 0 $((resource_count - 1))); do
   resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
   [[ "$resource_type" != "config_update" ]] && continue

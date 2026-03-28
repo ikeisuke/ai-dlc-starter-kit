@@ -188,7 +188,7 @@ AIレビューの実施状態を確認できません。
 コミット前にMarkdownlintを実行し、エラーがあれば修正する。
 
 ```bash
-skills/aidlc/scripts/run-markdownlint.sh {{CYCLE}}
+scripts/run-markdownlint.sh {{CYCLE}}
 ```
 
 **注意**: `.aidlc/config.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
@@ -401,8 +401,6 @@ gh pr create --base "cycle/{{CYCLE}}" --title "[Unit {NNN}] {Unit名}"
 - Inception Phaseの「このフェーズに戻る場合」セクションの手順に従う
 
 ### 2. Operations Phaseからバグ修正で戻ってきた場合
-
-**詳細な手順は `{{aidlc_dir}}/bug-response-flow.md` を参照**
 
 - 修正対象のUnit定義ファイルを読み込み、「実装状態」を「進行中」に変更
 - バグ種類に応じて修正:

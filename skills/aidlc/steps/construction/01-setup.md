@@ -33,7 +33,7 @@ Inception Phaseで決定済み、または既存スタックを使用
 
   **履歴記録フォーマット**（detailed/standard共通）:
   ```bash
-  skills/aidlc/scripts/write-history.sh \
+  scripts/write-history.sh \
       --cycle {{CYCLE}} \
       --phase construction \
       --unit {N} \
@@ -57,17 +57,17 @@ Inception Phaseで決定済み、または既存スタックを使用
   2. **スコープチェック【必須】**: バックログに登録する前に、`.aidlc/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
      - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
      - 該当しない場合: 手順3へ進みバックログに登録する
-  3. **バックログ項目を作成**: GitHub Issueを作成（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
+  3. **バックログ項目を作成**: GitHub Issueを作成（ガイド参照: `guides/backlog-management.md`）
 
   4. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
-  **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `{{aidlc_dir}}/guides/subagent-usage.md` を参照。
+  **サブエージェント活用（オプション）**: バックログ追加処理は、サブエージェントに委任することで効率化できます。詳細は `guides/subagent-usage.md` を参照。
 
 - **Workaround（その場しのぎ対応）実施時のルール【重要】**: 本質的な解決ではなく、暫定的な対応（workaround）を行う場合、以下を必ず実施する
 
   **必須手順**:
   1. **workaroundの実装**: 暫定的な対応を実装
-  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `{{aidlc_dir}}/guides/backlog-management.md`）
+  2. **バックログへの記録**: 本質的な対応をバックログに記録（ガイド参照: `guides/backlog-management.md`）
      - prefix: `chore-` または `refactor-`
      - 内容: 本質的な解決策と、なぜworkaroundを選択したかの理由
   3. **コード内TODOコメント**: workaroundを実装したコード箇所に以下形式でコメント
@@ -227,7 +227,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - 「実装状態」セクションがないファイルは、まず `.aidlc/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
 - **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
 - **progress.mdが存在しない場合**: 「未着手」として扱い、Unit定義ファイルに「実装状態」セクションを追加
-- テンプレート: `skills/aidlc/templates/unit_definition_template.md` の末尾を参照
+- テンプレート: `templates/unit_definition_template.md` の末尾を参照
 
 ### 8. バックログ確認
 
@@ -290,19 +290,19 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ```bash
 # Unit定義ファイルから関連Issue番号を取得し、ステータスを更新
-skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
+scripts/issue-ops.sh set-status <issue_number> in-progress
 ```
 
 **ブロック発生時**:
 作業がブロックされた場合は、ステータスを `blocked` に更新します。
 
 ```bash
-skills/aidlc/scripts/issue-ops.sh set-status <issue_number> blocked
+scripts/issue-ops.sh set-status <issue_number> blocked
 ```
 
 ブロック解除時は `in-progress` に戻します。
 
-詳細は `{{aidlc_dir}}/guides/issue-management.md` を参照。
+詳細は `guides/issue-management.md` を参照。
 
 ### 12. 実行前確認と完了条件の提示【重要】
 

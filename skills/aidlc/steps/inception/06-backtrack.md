@@ -27,4 +27,4 @@ Construction PhaseやOperations Phaseから戻ってきた場合の手順：
 
 ## 補足: git worktree の使用
 
-詳細は `{{aidlc_dir}}/guides/worktree-usage.md` を参照してください。
+詳細は `guides/worktree-usage.md` を参照してください。

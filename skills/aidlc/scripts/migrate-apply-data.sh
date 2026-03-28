@@ -52,8 +52,33 @@ _add_applied() {
   APPLIED=$(echo "$APPLIED" | jq --argjson e "$1" '. + [$e]')
 }
 
-# data_migration リソースを処理
+# move_dir リソースを処理（docs/cycles/ → .aidlc/cycles/ 等）
 resource_count=$(jq '.resources | length' "$MANIFEST")
+for i in $(seq 0 $((resource_count - 1))); do
+  action=$(jq -r ".resources[$i].action" "$MANIFEST")
+  [[ "$action" != "move_dir" ]] && continue
+
+  resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
+  path=$(jq -r ".resources[$i].path" "$MANIFEST")
+  dest=$(jq -r ".resources[$i].destination" "$MANIFEST")
+
+  if [[ ! -d "$path" ]]; then
+    echo "  Source directory not found: $path" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "error", detail: "source directory not found"}')"
+    continue
+  fi
+
+  mkdir -p "$dest"
+  # 既存ファイルは上書きしない（-n）でコピー
+  cp -Rn "$path"/* "$dest"/ 2>/dev/null || true
+  rm -rf "$path"
+  echo "  Moved: $path → $dest" >&2
+  _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
+    '{resource_type: $rt, path: $p, status: "success", detail: ("moved to " + $d)}')"
+done
+
+# data_migration リソースを処理
 for i in $(seq 0 $((resource_count - 1))); do
   resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
   [[ "$resource_type" != "data_migration" ]] && continue
