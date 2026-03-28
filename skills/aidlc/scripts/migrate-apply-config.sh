@@ -106,6 +106,35 @@ for i in $(seq 0 $((resource_count - 1))); do
   fi
 done
 
+# v1→v2 コンテンツマイグレーション: 廃止セクション削除
+config_dest=".aidlc/config.toml"
+if [[ -f "$config_dest" ]]; then
+  # [paths] セクション削除（v2ではプラグインモデルのため不要）
+  if grep -q '^\[paths\]' "$config_dest"; then
+    tmp=$(mktemp)
+    awk '/^\[paths\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip' "$config_dest" > "$tmp" && mv "$tmp" "$config_dest"
+    echo "  Removed: [paths] section (deprecated in v2)" >&2
+    _add_applied "$(jq -n '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: "removed deprecated [paths] section"}')"
+  fi
+
+  # [inception.dependabot] セクション削除（v1.13.0で廃止）
+  if grep -q '^\[inception\.dependabot\]' "$config_dest"; then
+    tmp=$(mktemp)
+    awk '/^\[inception\.dependabot\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip' "$config_dest" > "$tmp" && mv "$tmp" "$config_dest"
+    echo "  Removed: [inception.dependabot] section (deprecated in v1.13.0)" >&2
+    _add_applied "$(jq -n '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: "removed deprecated [inception.dependabot] section"}')"
+  fi
+
+  # migrate-config.sh を実行して不足セクション補完・リネーム移行
+  migrate_script="${SCRIPT_DIR}/migrate-config.sh"
+  if [[ -x "$migrate_script" ]]; then
+    echo "  Running migrate-config.sh for content migration..." >&2
+    migrate_output=$("$migrate_script" --config "$config_dest" 2>&1) || true
+    echo "  migrate-config.sh completed" >&2
+    _add_applied "$(jq -n --arg detail "$migrate_output" '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: ("migrate-config.sh: " + $detail)}')"
+  fi
+fi
+
 # journal JSON 出力
 jq -n --arg phase "config" --argjson applied "$APPLIED" \
   '{phase: $phase, applied: $applied}'
