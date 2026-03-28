@@ -249,8 +249,10 @@ squashを実行していない場合は、`steps/common/commit-flow.md` の「In
 **セッションサマリ**:
 - **完了**: {{CYCLE}} / Inception Phase
 - **リポジトリ**: [ブランチ名]、[コミット済み/ドラフトPR作成済み等の状態]
-- **次のアクション**: 「コンストラクション進めて」でConstruction Phaseを開始
+- **次のアクション**: Construction Phaseを開始
 
-**次のステップ**: 「コンストラクション進めて」と指示してください。
+**次のステップ**:
+- Claude Code: `/aidlc construction` と指示
+- その他: `steps/construction/01-setup.md` からステップファイルを順に読み込み
 ---
 ````
