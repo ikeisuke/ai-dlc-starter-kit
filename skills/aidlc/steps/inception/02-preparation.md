@@ -7,8 +7,6 @@
 Part 1 ステップ1のプリフライトチェックで取得済みのコンテキスト変数を参照する:
 
 - `gh_status`: GitHub CLI状態（`available` / `not-installed` / `not-authenticated`）
-- `backlog_mode`: バックログモード（`git` / `issue` / `git-only` / `issue-only`）
-
 **注記**: 環境チェックはプリフライトで完了済みのため、個別スクリプトの再実行は不要。
 
 #### 14b. エクスプレスモードインスタント検出
@@ -65,26 +63,14 @@ skills/aidlc/scripts/label-cycle-issues.sh {{CYCLE}}
 
 #### 17. バックログ確認
 
-ステップ14で確認した `backlog_mode` を参照する。
-
-**排他モード時の注意**: `issue-only` の場合、ローカルファイル操作（`.aidlc/cycles/backlog/`, `.aidlc/cycles/backlog-completed/` の探索・照合）はスキップする。`git-only` の場合、GitHub Issue操作はスキップする。
-
 ##### 17-1. 共通バックログ
 
-**mode=git または mode=git-only の場合**:
-```bash
-ls .aidlc/cycles/backlog/ 2>/dev/null
-```
-
-**mode=issue または mode=issue-only の場合**（`gh_status` が `available` の場合のみ）:
+`gh_status` が `available` の場合のみ:
 ```bash
 gh issue list --label backlog --state open
 ```
-`gh_status` が `available` 以外の場合: `mode=issue` はローカルファイルにフォールバック、`mode=issue-only` は「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示しユーザーに続行可否を確認
 
-**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認し、片方にしかない項目がないか確認
-
-**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+`gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示する。
 
 **詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
 
@@ -100,9 +86,7 @@ gh issue list --label backlog --state open
 
 ##### 17-2. 対応済みバックログとの照合
 
-**排他モード（`issue-only`）の場合**: ローカルファイルが存在しないため、このサブステップをスキップし次のステップへ進む。
-
-**上記以外の場合**: 対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
+対応済みバックログを確認（新形式: サイクル別ディレクトリ、旧形式: 単一ファイル）：
 
 ```bash
 # 新形式（サイクル別ディレクトリ）

@@ -7,9 +7,8 @@ description: >
   "コンストラクション進めて", "start construction",
   "オペレーション進めて", "start operations",
   "start express", "start setup", "AIDLCフィードバック", "aidlc feedback",
-  "start migrate", "aidlc migrate",
-  "start lite inception", "start lite construction", "start lite operations".
-argument-hint: "[inception|construction|operations|setup|express|feedback|migrate|lite inception|lite construction|lite operations]"
+  "start migrate", "aidlc migrate".
+argument-hint: "[inception|construction|operations|setup|express|feedback|migrate]"
 ---
 
 # AI-DLC オーケストレーター
@@ -36,9 +35,6 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | `express` | Inception Phase（エクスプレスモード有効） |
 | `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
 | `migrate` | v1→v2移行（独立フロー） |
-| `lite inception` | Inception Phase (Lite版) |
-| `lite construction` | Construction Phase (Lite版) |
-| `lite operations` | Operations Phase (Lite版) |
 
 引数なしの場合: ブランチ名が `cycle/*` なら construction、そうでなければ inception。
 
@@ -76,8 +72,6 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
 | setup | `steps/setup/01-detect.md` → `02-generate-config.md` → `03-migrate.md` |
 | migrate | `steps/migrate/01-preflight.md` → `02-execute.md` → `03-verify.md` |
-
-Lite版の場合は対応するLiteプロンプトを読み込む。
 
 ## ワークフロー共通ステップ
 

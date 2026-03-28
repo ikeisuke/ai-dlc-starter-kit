@@ -6,16 +6,11 @@
 #   ./check-backlog-mode.sh
 #
 # 出力形式:
-#   backlog_mode:{モード値}
-#   - git: ローカルファイル駆動（デフォルト）
-#   - issue: GitHub Issue駆動
-#   - git-only: ローカルファイルのみ
-#   - issue-only: GitHub Issueのみ
+#   backlog_mode:issue（固定）
 #
-# 解決ロジック:
-#   resolve-backlog-mode.sh の resolve_backlog_mode 関数で一元解決。
-#   新キー（rules.backlog.mode）優先、旧キー（backlog.mode）フォールバック。
-#   dasel未インストール時もgrep/sedで解決し、常に有効値を返す。
+# v2.0.3以降、バックログは常にGitHub Issueに記録されます。
+# このスクリプトは後方互換性のために残されていますが、
+# 常に "issue" を返します。
 #
 
 set -euo pipefail

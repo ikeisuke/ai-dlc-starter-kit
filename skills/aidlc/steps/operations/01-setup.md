@@ -130,7 +130,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 
 **【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
-環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
+環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
 ### 4. セッション判別設定【オプション】
 

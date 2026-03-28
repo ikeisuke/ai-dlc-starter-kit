@@ -57,32 +57,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   2. **スコープチェック【必須】**: バックログに登録する前に、`.aidlc/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」セクションを確認する
      - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
      - 該当しない場合: 手順3へ進みバックログに登録する
-  3. **バックログ項目を作成**（プリフライトチェックのステップ3で確認した `backlog_mode` を参照）:
-
-     **mode=git または mode=git-only の場合**: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md` にファイルを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
-
-     **種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
-
-     **ファイル内容**（テンプレート: `skills/aidlc/templates/backlog_item_template.md`）:
-     ```markdown
-     # [タイトル]
-
-     - **発見日**: YYYY-MM-DD
-     - **発見フェーズ**: Construction
-     - **発見サイクル**: {{CYCLE}}（名前付きサイクルの場合は name/vX.X.X 形式をそのまま使用）
-     - **優先度**: [高 / 中 / 低]
-
-     ## 概要
-     [簡潔な説明]
-
-     ## 詳細
-     [詳細な説明]
-
-     ## 対応案
-     [推奨される対応方法]
-     ```
-
-     **mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
+  3. **バックログ項目をGitHub Issueとして作成**（ガイド参照: `docs/aidlc/guides/backlog-management.md`）
 
   4. **後続での確認**: 次のUnit開始時または次サイクルのInception Phaseでバックログを確認し、対応を検討
 
@@ -194,7 +169,7 @@ AIが出力を確認し、パス名が表示されれば存在、エラーなら
 
 **【次のアクション】** 今すぐ `skills/aidlc/steps/common/preflight.md` を読み込んで、手順に従ってください。
 
-環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `backlog_mode`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
+環境チェック・設定値取得の結果がコンテキスト変数として保持されます（`gh_status`, `depth_level`, `automation_mode` 等）。以降のステップではこれらの変数を参照してください。
 
 ### 4. セッション判別設定【オプション】
 
@@ -255,28 +230,31 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 
 ### 8. バックログ確認
 
-ステップ3で確認した `backlog_mode` を参照し、対象Unitに関連する気づきがあれば確認する。
+対象Unitに関連するIssueとバックログを確認する。
 
-**mode=git または mode=git-only の場合**:
-```bash
-ls .aidlc/cycles/backlog/ 2>/dev/null
-```
+**`gh_status` が `available` の場合**:
 
-**mode=issue または mode=issue-only の場合**:
+1. **関連Issueの詳細確認**: Unit定義ファイルの「関連Issue」セクションからIssue番号を抽出し、各Issueの詳細を確認する
 
-- `gh_status` が `available` の場合:
-  ```bash
-  gh issue list --label backlog --state open
-  ```
-- `gh_status` が `available` 以外の場合:
-  - `mode=issue`: 「警告: GitHub CLIが利用できません。ローカルバックログを確認します。」と表示し、`ls .aidlc/cycles/backlog/ 2>/dev/null` にフォールバック
-  - `mode=issue-only`: 「【警告】GitHub CLIが利用できません。issue-onlyモードではIssueが唯一の正本のため、バックログ確認ができません。」と表示し、ユーザーに続行可否を確認
+   ```bash
+   # Unit定義ファイルから関連Issue番号を抽出（例: #424）
+   gh issue view <issue_number> --json title,body,comments --jq '.title, .body'
+   ```
 
-**非排他モード（git / issue）の場合のみ**: ローカルファイルとIssue両方を確認
+   - Issue本文に受け入れ基準や詳細な要件が記載されている場合、計画に反映する
+   - Issueにコメントがある場合、最新の議論内容を確認する
 
-**排他モード（git-only / issue-only）の場合**: 指定された保存先のみを確認
+2. **バックログIssueの確認**: 対象Unitに関連するバックログIssueがないか確認する
 
-Unit定義ファイルに「実装時の注意」セクションがある場合は、そこに記載された関連気づきを優先的に確認する。
+   ```bash
+   gh issue list --label backlog --state open --json number,title --jq '.[] | "#\(.number) \(.title)"'
+   ```
+
+   - Unit定義の責務やスコープに関連するバックログIssueがあれば、計画時に考慮する
+
+**`gh_status` が `available` 以外の場合**: 「警告: GitHub CLIが利用できないため、バックログ確認をスキップします。」と表示する。
+
+**Unit定義ファイルに「実装時の注意」セクションがある場合**: そこに記載された関連気づきを優先的に確認する。
 
 ### 9. 対象Unit決定（Unit定義ファイルの実装状態に基づく）
 
@@ -665,23 +643,14 @@ BDD/TDDに従ってテストコードを作成
 
       **b. slug生成**: エラー内容から短い識別子を生成（英数字・ハイフン）。空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイル/Issue存在時はサフィックス（`-2`, `-3`...）を付与。
 
-      **c. mode判定**: ステップ3で取得済みの `backlog_mode` を参照する。未保持の場合は `git` として扱う。
+      **c. バックログ登録の実行**:
 
-      **d. 登録方法の選択と実行**:
+      ステップ3の `gh_status` 判定結果を参照し、GitHub Issue作成を試みる。
+      タイトルは `[Backlog] bugfix: {エラー要約}`、ラベルは `"backlog,type:bugfix,priority:medium"`。
+      Issue本文はWriteツールで一時ファイルに書き出し、`gh issue create --body-file` で作成後、一時ファイルを削除。
 
-      - `mode = git` または `mode = git-only`:
-        `.aidlc/cycles/backlog/bugfix-{slug}.md` にファイルを作成。テンプレートは `skills/aidlc/templates/backlog_item_template.md` に準拠。
-        ファイル作成失敗時は警告表示し、手動でのバックログ登録を依頼。
-
-      - `mode = issue` または `mode = issue-only`:
-        ステップ3の `gh_status` 判定結果を参照し、GitHub Issue作成を試みる。
-        タイトルは `[Backlog] bugfix: {エラー要約}`、ラベルは `"backlog,type:bugfix,priority:medium"`。
-        Issue本文はWriteツールで一時ファイルに書き出し、`gh issue create --body-file` で作成後、一時ファイルを削除。
-
-        **e. 失敗時フォールバック**:
-        - `mode = issue`: ファイルベース（git方式）にフォールバック
-        - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
-        - gh CLI不可用時も同様のフォールバック/警告を行う。
+      **d. 失敗時フォールバック**:
+      Issue作成に失敗した場合、またはgh CLI不可用時は警告メッセージを表示し、手動対応を依頼する。
 
    2. 選択結果を履歴に記録:
 
@@ -691,8 +660,7 @@ BDD/TDDに従ってテストコードを作成
       【エラー分類】{recoverable / non_recoverable / transient / skipped(max_retry=0)}
       【試行回数】{実施したattempt数}/{max_retry}
       【バックログ登録】{登録 / スキップ / なし}
-      【バックログモード】{mode / -}
-      【登録先】{Issue番号 / ファイルパス / なし}
+      【登録先】{Issue番号 / なし}
       ```
 
 4. **AIレビュー実施**（`skills/aidlc/steps/common/review-flow.md` に従う）

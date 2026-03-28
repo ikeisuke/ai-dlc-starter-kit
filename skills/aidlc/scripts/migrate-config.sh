@@ -174,36 +174,12 @@ _add_section "rules\\.history" '[rules.history]
 # - minimal: Unit完了時にまとめて記録
 level = "standard"'
 
-# [rules.backlog] は旧[backlog]からの値引き継ぎロジック付き
-if ! grep -q "^\[rules\.backlog\]" "$_target"; then
-    _old_backlog_mode=""
-    if grep -q "^\[backlog\]" "$_target" 2>/dev/null; then
-        _old_backlog_mode=$(sed -n '/^\[backlog\]/,/^\[/p' "$_target" | grep -E '^[[:space:]]*mode[[:space:]]*=' | head -1 | sed "s/^[^=]*=[[:space:]]*//;s/[[:space:]]*#.*//;s/^[\"']//;s/[\"']$//" || echo "")
-    fi
-    # 有効値バリデーション
-    case "$_old_backlog_mode" in
-        git|issue|git-only|issue-only) ;;
-        *) _old_backlog_mode="" ;;
-    esac
-    _backlog_mode="${_old_backlog_mode:-issue-only}"
-    cat >> "$_target" << EOF
-
-[rules.backlog]
-# バックログ管理モード設定（v1.7.0で追加、v1.10.0でデフォルト変更、v1.16.2で[backlog]から移動）
-# mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
-# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
-# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
-mode = "${_backlog_mode}"
-EOF
-    if [[ -n "$_old_backlog_mode" ]]; then
-        echo "migrate:add-section:rules.backlog(inherited:${_old_backlog_mode})"
-    else
-        echo "migrate:add-section:rules.backlog(default:issue-only)"
-    fi
+# [rules.backlog] は v2.0.3 で廃止。新規追加しない。
+# 既存の設定が残っている場合は警告のみ出力。
+if grep -q "^\[rules\.backlog\]" "$_target" 2>/dev/null || grep -q "^\[backlog\]" "$_target" 2>/dev/null; then
+    echo "skip:deprecated:rules.backlog(v2.0.3: backlog is now always GitHub Issues)"
 else
-    echo "skip:already-exists:rules.backlog"
+    echo "skip:not-found:rules.backlog"
 fi
 
 _add_section "rules\\.linting" '[rules.linting]

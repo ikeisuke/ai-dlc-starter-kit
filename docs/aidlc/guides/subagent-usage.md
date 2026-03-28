@@ -21,7 +21,6 @@
 
 ### バックログ関連
 
-- バックログファイルの作成（`docs/cycles/backlog/`）
 - GitHub Issueの作成
 - 詳細は `docs/aidlc/guides/backlog-management.md` を参照
 

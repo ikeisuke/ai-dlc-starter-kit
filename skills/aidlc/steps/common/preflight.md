@@ -22,12 +22,6 @@ skills/aidlc/scripts/env-info.sh
 
 **互換エイリアス**: 既存フェーズプロンプトで `gh:available` 形式で参照している箇所は `gh_status` で読み替える。
 
-```bash
-skills/aidlc/scripts/check-backlog-mode.sh
-```
-
-出力: `backlog_mode:{mode}` → `backlog_mode` コンテキスト変数
-
 ### 2. 重大度判定（環境チェック）
 
 | チェック対象 | severity | 判定条件 | 失敗時の挙動 |
@@ -186,7 +180,6 @@ which {先頭ツール名} >/dev/null 2>&1
   markdown_lint: {value}
   unit_branch_enabled: {value}
   history_level: {value}
-  backlog_mode: {value}
   max_retry: {value}
   preflight_enabled: {value}
   preflight_checks: {value}

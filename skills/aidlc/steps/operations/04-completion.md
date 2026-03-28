@@ -26,16 +26,7 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 次期バージョンで対応すべき改善点をリストアップ
 
 ### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、バックログに記録（ステップ3で確認した `backlog_mode` を参照）：
-
-**mode=git または mode=git-only の場合**:
-記録先: `.aidlc/cycles/backlog/{種類}-{スラッグ}.md`
-
-**種類（prefix）**: `feature-`, `bugfix-`, `chore-`, `refactor-`, `docs-`, `perf-`, `security-`
-
-**ファイル内容**: テンプレート `skills/aidlc/templates/backlog_item_template.md` を参照
-
-**mode=issue または mode=issue-only の場合**: GitHub Issueを作成（ガイド: `{{aidlc_dir}}/guides/backlog-management.md`）
+次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `{{aidlc_dir}}/guides/backlog-management.md`）。
 
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）

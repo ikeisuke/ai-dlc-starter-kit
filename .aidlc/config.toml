@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "2.0.2"
+starter_kit_version = "2.0.3"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -185,10 +185,7 @@ enabled = true
 checks = ["gh", "review-tools", "config-validation"]
 
 [rules.backlog]
-# バックログ管理モード設定（v1.7.0で追加、v1.16.2で[backlog]から移動）
-# mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルに保存（従来方式、デフォルト）
-# - issue: GitHub Issueに保存
-# - git-only: ローカルファイルのみ（Issue作成禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイル作成禁止）
-mode = "issue-only"
+# DEPRECATED: バックログモード設定は廃止されました。
+# バックログは常にGitHub Issueに記録されます。
+# このセクションは後方互換性のために残されていますが、設定値は無視されます。
+# mode = "issue-only"

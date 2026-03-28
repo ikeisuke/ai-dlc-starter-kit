@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.3] - 2026-03-28
+
+### Added
+
+- v1→v2移行スクリプトE2Eテスト（bats-core、43テストケース）: detect/backup/apply-config/apply-data/cleanup/verify全ステージ + E2Eフルフローテスト
+- 移行テスト専用CIワークフロー（`.github/workflows/migration-tests.yml`）
+- v1構造fixtureディレクトリ（`tests/fixtures/v1-structure/`���
+
+### Changed
+
+- Lite版ルーティングエントリを完全削除（SKILL.md引数テーブル・ステップファイルのLite分岐を除去）
+- ローカルバックログ（`.aidlc/cycles/backlog/`）を廃止し、GitHub Issue一本化に移行
+- Construction Phaseバックログチェック（ステップ8）をGitHub Issue連携に改善
+
+### Fixed
+
+- Kiro設定ドキュメント（`kiro-settings.md`）の矛盾解消: 実装と一致しないドキュメント記述を修正
+
 ## [2.0.2] - 2026-03-28
 
 ### Added

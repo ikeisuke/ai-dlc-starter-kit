@@ -109,11 +109,6 @@ mode = "manual"
 [inception]
 # Inception Phase設定
 
-[rules.backlog]
-# バックログ管理モード設定
-# mode: "git" | "issue" | "git-only" | "issue-only"
-# - git: ローカルファイルがデフォルト、状況に応じてIssueも許容
-# - issue: GitHub Issueがデフォルト、状況に応じてローカルも許容
-# - git-only: ローカルファイルのみ（Issueへの記録を禁止）
-# - issue-only: GitHub Issueのみ（ローカルファイルへの記録を禁止）（デフォルト）
-mode = "issue-only"
+# [rules.backlog]
+# DEPRECATED: バックログモード設定は廃止されました。
+# バックログは常にGitHub Issueに記録されます。

@@ -515,19 +515,12 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
        - その他（code / architecture / inception）の場合: `type:chore`
        - 上記以外の種別が検出された場合: `type:chore` にフォールバック
 
-       **mode判定**:
+       **登録方法**:
 
-       バックログ管理ガイド（`docs/aidlc/guides/backlog-management.md`）のモード解決手順に従い、`[rules.backlog].mode` を取得する。取得失敗時や想定外の値の場合は `git` として扱う。
+       GitHub Issueとして登録する。`{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
+       slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名Issueが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
 
-       **登録方法の決定と実行**:
-
-       - `mode = git` または `mode = git-only` の場合:
-
-         `.aidlc/cycles/backlog/{type}-{slug}.md` にファイルを作成する。
-         `{type}` は上記種別（chore / security）、`{slug}` は指摘内容から生成した短い識別子（英数字・ハイフン）。
-         slug生成ルール: 空値時は `unspecified-{YYYYMMDD}` を使用。同名ファイルが既に存在する場合はサフィックス（`-2`, `-3`...）を付与する。
-
-         ファイル内容は `skills/aidlc/templates/backlog_item_template.md` に準拠:
+       Issue本文は `skills/aidlc/templates/backlog_item_template.md` に準拠:
 
          ```markdown
          # [指摘内容の要約]
@@ -551,20 +544,15 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
          先送り理由: {ユーザーが入力した理由}
          ```
 
-         ファイル作成に失敗した場合（ディレクトリ不在、権限不足等）:
-         警告メッセージを表示し、手動でのバックログ登録を依頼する。
+       **gh CLI可用性の確認**:
+       1. `gh` コマンドの存在確認
+       2. `gh auth status` による認証状態確認
 
-       - `mode = issue` または `mode = issue-only` の場合:
+       - **可用な場合**: Issue作成を実行
 
-         **gh CLI可用性の確認**:
-         1. `gh` コマンドの存在確認
-         2. `gh auth status` による認証状態確認
+         **タイトルのサニタイズ**: タイトルにシェル展開文字（`$`, `` ` ``, `"`, `\`）を含めないこと。改行は除去し、80文字以内に切り詰める。
 
-         - **可用な場合**: Issue作成を実行
-
-           **タイトルのサニタイズ**: タイトルにシェル展開文字（`$`, `` ` ``, `"`, `\`）を含めないこと。改行は除去し、80文字以内に切り詰める。
-
-           ラベルは種別に基づき1つの文字列に解決してから渡す:
+         ラベルは種別に基づき1つの文字列に解決してから渡す:
            - securityレビュー指摘の場合: `"backlog,type:security,priority:medium"`
            - その他のレビュー指摘の場合: `"backlog,type:chore,priority:medium"`
 
@@ -605,21 +593,16 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
            3. 一時ファイルを削除
 
-           Issue作成に失敗した場合:
-           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
-           - `mode = issue-only`: 警告メッセージを表示し、手動対応を依頼
+           Issue作成に失敗した場合: 警告メッセージを表示し、手動対応を依頼
 
-         - **不可用な場合**:
-           - `mode = issue`: ファイルベース（上記git方式）にフォールバック
-           - `mode = issue-only`: 以下の警告を表示し、手動対応を依頼
+       - **不可用な場合**: 以下の警告を表示し、手動対応を依頼
 
-             ```text
-             【警告】GitHub CLIが利用できないため、バックログIssueを自動作成できません。
-             issue-only モードのため、ファイルベースのフォールバックも使用できません。
-             以下の指摘を手動でバックログに登録してください:
-             - 指摘内容: {指摘内容}
-             - 先送り理由: {理由}
-             ```
+         ```text
+         【警告】GitHub CLIが利用できないため、バックログIssueを自動作成できません。
+         以下の指摘を手動でバックログに登録してください:
+         - 指摘内容: {指摘内容}
+         - 先送り理由: {理由}
+         ```
 
        **バックログ登録完了の履歴記録**（各OUT_OF_SCOPE指摘ごとに1件記録）:
 

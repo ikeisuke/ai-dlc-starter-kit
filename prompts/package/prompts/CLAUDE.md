@@ -74,14 +74,6 @@ git commit -m "feat: add new feature"
 | 「start express」 | Inception Phase（エクスプレスモード、フェーズ連続実行を有効化） |
 | 「AIDLCフィードバック」「aidlc feedback」 | フィードバック送信 |
 
-**Lite版を使用する場合**:
-
-| 指示 | 対応処理 |
-|------|----------|
-| 「start lite inception」 | Inception Phase (Lite) |
-| 「start lite construction」 | Construction Phase (Lite) |
-| 「start lite operations」 | Operations Phase (Lite) |
-
 **後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）は `/aidlc` コマンドにリダイレクトされます。
 
 ## Compact Instructions

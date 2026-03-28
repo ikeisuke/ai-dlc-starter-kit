@@ -11,9 +11,6 @@ enabled = false
 [rules.feedback]
 enabled = true
 
-[rules.backlog]
-mode = "git"
-
 [rules.reviewing]
 mode = "recommend"
 tools = ["codex"]
