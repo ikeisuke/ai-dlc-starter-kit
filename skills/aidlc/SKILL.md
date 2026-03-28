@@ -7,8 +7,9 @@ description: >
   "コンストラクション進めて", "start construction",
   "オペレーション進めて", "start operations",
   "start express", "start setup", "AIDLCフィードバック", "aidlc feedback",
+  "start migrate", "aidlc migrate",
   "start lite inception", "start lite construction", "start lite operations".
-argument-hint: "[inception|construction|operations|setup|express|feedback|lite inception|lite construction|lite operations]"
+argument-hint: "[inception|construction|operations|setup|express|feedback|migrate|lite inception|lite construction|lite operations]"
 ---
 
 # AI-DLC オーケストレーター
@@ -34,6 +35,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | `setup` | Setup Phase（独立フロー） |
 | `express` | Inception Phase（エクスプレスモード有効） |
 | `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
+| `migrate` | v1→v2移行（独立フロー） |
 | `lite inception` | Inception Phase (Lite版) |
 | `lite construction` | Construction Phase (Lite版) |
 | `lite operations` | Operations Phase (Lite版) |
@@ -42,7 +44,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 
 ## 共通初期化フロー
 
-全フェーズ共通で以下を実行する。**フィードバック送信の場合はスキップ**。**Setup Phaseの場合はステップ1〜3をスキップし、直接ステップ4へ進む**（セットアップは `.aidlc/config.toml` が未存在の状態で実行されるため）。
+全フェーズ共通で以下を実行する。**フィードバック送信の場合はスキップ**。**Setup Phaseの場合はステップ1〜3をスキップし、直接ステップ4へ進む**（セットアップは `.aidlc/config.toml` が未存在の状態で実行されるため）。**migrate の場合もステップ1〜3をスキップし、直接ステップ4へ進む**（移行スクリプトが自律的に環境検出を行うため）。
 
 ### ステップ1: 共通ステップ読み込み
 
@@ -73,6 +75,7 @@ AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定
 | construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md` |
 | operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
 | setup | `steps/setup/01-detect.md` → `02-generate-config.md` → `03-migrate.md` |
+| migrate | `steps/migrate/01-preflight.md` → `02-execute.md` → `03-verify.md` |
 
 Lite版の場合は対応するLiteプロンプトを読み込む。
 

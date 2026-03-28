@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# migrate-apply-data.sh - cycles配下のデータ移行
+#
+# 使用方法:
+#   ./migrate-apply-data.sh --manifest <path> --backup-dir <path>
+#
+# 出力:
+#   stdout: journal JSON（phase: "data"）
+#   stderr: 移行処理の診断メッセージ
+#
+# 終了コード:
+#   0: 成功
+#   2: エラー
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/bootstrap.sh"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq is not installed." >&2
+  exit 2
+fi
+
+# 引数パース
+MANIFEST=""
+BACKUP_DIR=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --manifest)
+      [[ $# -lt 2 ]] && { echo "Missing value for --manifest" >&2; exit 2; }
+      MANIFEST="$2"; shift 2 ;;
+    --backup-dir)
+      [[ $# -lt 2 ]] && { echo "Missing value for --backup-dir" >&2; exit 2; }
+      BACKUP_DIR="$2"; shift 2 ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+if [[ -z "$MANIFEST" || -z "$BACKUP_DIR" ]]; then
+  echo "Usage: $0 --manifest <path> --backup-dir <path>" >&2
+  exit 2
+fi
+
+cd "${AIDLC_PROJECT_ROOT}"
+
+APPLIED="[]"
+
+_add_applied() {
+  APPLIED=$(echo "$APPLIED" | jq --argjson e "$1" '. + [$e]')
+}
+
+# data_migration リソースを処理
+resource_count=$(jq '.resources | length' "$MANIFEST")
+for i in $(seq 0 $((resource_count - 1))); do
+  resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
+  [[ "$resource_type" != "data_migration" ]] && continue
+
+  path=$(jq -r ".resources[$i].path" "$MANIFEST")
+
+  if [[ ! -f "$path" ]]; then
+    echo "  Data file not found: $path" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "error", detail: "file not found"}')"
+    continue
+  fi
+
+  echo "  Migrating data: $path ..." >&2
+
+  # docs/aidlc パス参照を {{aidlc_dir}} テンプレート変数に置換
+  if grep -q 'docs/aidlc' "$path"; then
+    tmp=$(mktemp)
+    sed 's|docs/aidlc|{{aidlc_dir}}|g' "$path" > "$tmp" && mv "$tmp" "$path"
+    echo "  Migrated: $path (docs/aidlc → {{aidlc_dir}})" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "success", detail: "Replaced docs/aidlc with {{aidlc_dir}}"}')"
+  else
+    echo "  Skipped: $path (no docs/aidlc references)" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+      '{resource_type: $rt, path: $p, status: "skipped", detail: "no docs/aidlc references found"}')"
+  fi
+done
+
+# journal JSON 出力
+jq -n --arg phase "data" --argjson applied "$APPLIED" \
+  '{phase: $phase, applied: $applied}'

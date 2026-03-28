@@ -73,6 +73,7 @@ git commit -m "feat: add new feature"
 | 「セットアップ」「start setup」 | `/aidlc setup`（Setup Phase） |
 | 「start express」 | `/aidlc express`（エクスプレスモード、フェーズ連続実行を有効化） |
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback`（フィードバック送信） |
+| 「start migrate」「aidlc migrate」 | `/aidlc migrate`（v1→v2移行） |
 
 **Lite版を使用する場合**:
 
