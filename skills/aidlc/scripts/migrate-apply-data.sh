@@ -104,6 +104,18 @@ for i in $(seq 0 $((resource_count - 1))); do
   fi
 done
 
+# .aidlc/cycles/ 配下のプロジェクト共通ファイルを .aidlc/ 直下に移動
+for shared_file in rules.md operations.md; do
+  old_path=".aidlc/cycles/${shared_file}"
+  new_path=".aidlc/${shared_file}"
+  if [[ -f "$old_path" ]] && [[ ! -f "$new_path" ]]; then
+    mv "$old_path" "$new_path"
+    echo "  Moved: $old_path → $new_path" >&2
+    _add_applied "$(jq -n --arg p "$old_path" --arg d "$new_path" \
+      '{resource_type: "file_relocation", path: $p, status: "success", detail: ("moved to " + $d)}')"
+  fi
+done
+
 # journal JSON 出力
 jq -n --arg phase "data" --argjson applied "$APPLIED" \
   '{phase: $phase, applied: $applied}'
