@@ -33,7 +33,7 @@ skills/aidlc/scripts/read-config.sh --keys rules.reviewing.mode rules.squash.ena
 **マージルール**:
 - `.local` の値が存在するキーはベースを上書き
 - 配列は完全置換（マージしない）
-- 詳細は `{{aidlc_dir}}/guides/config-merge.md` を参照
+- 詳細は `guides/config-merge.md` を参照
 
 **注意**: `.aidlc/config.local.toml` は `.gitignore` に追加されるため、個人の設定を安全に上書きできます。
 
@@ -595,7 +595,7 @@ skills/aidlc/scripts/write-history.sh \
    - 登録しようとしている項目が「含まれるもの」に列挙済みのIssue番号・作業項目に該当する場合: **バックログに登録せず、現サイクルの計画内で処理する**（スコープ内の作業をバックログに外出ししない）
    - 該当しない場合: 従来通りバックログに登録する（ルール2へ進む）
 2. 改善提案をする際は、同時にバックログ登録を実行する
-3. バックログはGitHub Issueに記録する（`gh issue create`）。詳細は `{{aidlc_dir}}/guides/backlog-management.md` を参照
+3. バックログはGitHub Issueに記録する（`gh issue create`）。詳細は `guides/backlog-management.md` を参照
 4. バックログ登録が技術的に不可能な場合（gh CLI不可用等）は、ユーザーに手動登録を依頼する
 
 **禁止例**:

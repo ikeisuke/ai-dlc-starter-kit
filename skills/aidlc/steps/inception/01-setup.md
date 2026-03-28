@@ -120,7 +120,7 @@
 mode = "disabled"
 ```
 
-詳細は `{{aidlc_dir}}/guides/config-merge.md` を参照。
+詳細は `guides/config-merge.md` を参照。
 
 ---
 
@@ -578,7 +578,7 @@ git branch --show-current
 
   エラー時は `status:error` でエラーを検出し、`error_code:<code>` でエラー種別を判定する。
 
-  worktree作成の詳細は `{{aidlc_dir}}/guides/worktree-usage.md` を参照。
+  worktree作成の詳細は `guides/worktree-usage.md` を参照。
 
   **11-4. main最新化チェック結果の表示**（setup-branch.sh実行する全経路 — branch/worktree/ask — に共通で適用）:
 

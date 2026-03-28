@@ -110,7 +110,7 @@ issue:72:labeled:cycle:v1.8.0
 
 ### 2. iOSバージョン更新【project.type=iosの場合のみ】
 
-`.aidlc/config.toml` の `[project].type` が `ios` の場合のみ実行。詳細手順は `{{aidlc_dir}}/guides/ios-version-update.md` を参照。
+`.aidlc/config.toml` の `[project].type` が `ios` の場合のみ実行。詳細手順は `guides/ios-version-update.md` を参照。
 
 ### 3. 履歴記録
 `.aidlc/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（write-history.sh使用）

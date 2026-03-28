@@ -59,7 +59,7 @@ GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
 AI-DLCではファイル操作やGitコマンドを多用します。
 毎回の確認を減らすため、許可リストまたはsandbox環境の設定を推奨します。
 
-詳細は {{aidlc_dir}}/guides/ai-agent-allowlist.md を参照してください。
+詳細は guides/ai-agent-allowlist.md を参照してください。
 
 ### ユーザー共通設定（オプション）
 
@@ -68,7 +68,7 @@ AI-DLCではファイル操作やGitコマンドを多用します。
 2. 設定ファイル作成: touch ~/.aidlc/config.toml
 3. 共通設定を記述
 
-詳細は {{aidlc_dir}}/guides/config-merge.md を参照してください。
+詳細は guides/config-merge.md を参照してください。
 ```
 
 ### アップグレードの場合

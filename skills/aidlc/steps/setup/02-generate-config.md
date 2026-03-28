@@ -828,7 +828,7 @@ skills/aidlc/scripts/setup-ai-tools.sh
 
 **注意**:
 
-- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `{{aidlc_dir}}/guides/skill-usage-guide.md` を参照してください。
+- `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `guides/skill-usage-guide.md` を参照してください。
 - `.agents/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
 - KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
 <!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->

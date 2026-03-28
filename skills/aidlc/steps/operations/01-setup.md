@@ -88,9 +88,7 @@ Inception/Construction Phaseで決定済み
 - **テスト記録テンプレート**: `skills/aidlc/templates/test_record_template.md`
   - 受け入れテスト/E2Eテスト実施時に使用
   - テスト結果を統一形式で記録
-- **バグ対応フロー**: `{{aidlc_dir}}/bug-response-flow.md`
-  - バグ発見時の分類基準と対応手順
-  - どのフェーズに戻るかの判断基準
+- **バグ対応フロー**: バグ発見時はConstruction Phaseの「バックトラック」セクションに従い対応
 
 ---
 

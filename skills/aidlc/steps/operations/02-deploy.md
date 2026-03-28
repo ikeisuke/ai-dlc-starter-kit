@@ -142,7 +142,7 @@ skills/aidlc/scripts/issue-ops.sh close {ISSUE_NUMBER}
 全対応済みIssueはPRマージ時に自動クローズされます。手動クローズは不要です。
 ```
 
-**詳細**: `{{aidlc_dir}}/guides/backlog-management.md` を参照
+**詳細**: `guides/backlog-management.md` を参照
 
 **未対応の項目**: 共通バックログにそのまま残す（次サイクル以降で対応）
 
