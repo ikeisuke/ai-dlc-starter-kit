@@ -72,7 +72,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 ### ステップ2: プロジェクト情報確認
 
 - `.aidlc/config.toml` の存在を確認
-- `.aidlc/cycles/rules.md` が存在すれば読み込む
+- `.aidlc/rules.md` が存在すれば読み込む
 - セッションタイトルを設定（`tools:session-title` スキル使用）
 
 ### ステップ3: セッション継続判定

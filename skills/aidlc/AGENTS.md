@@ -45,7 +45,7 @@ Setup PhaseとInception Phaseが統合され、1回の実行で
 ## ドキュメント
 
 - 設定: `.aidlc/config.toml`
-- 追加ルール: `.aidlc/cycles/rules.md`
+- 追加ルール: `.aidlc/rules.md`
 
 ---
 

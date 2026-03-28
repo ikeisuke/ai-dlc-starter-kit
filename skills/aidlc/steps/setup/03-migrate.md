@@ -99,7 +99,9 @@ AI-DLCの新ファイル構成への移行が完了しました！
 | 移行元 | 移行先 |
 |--------|--------|
 | docs/aidlc/project.toml | .aidlc/config.toml |
-| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/rules.md |
+| .aidlc/cycles/rules.md | .aidlc/rules.md |
+| .aidlc/cycles/operations.md | .aidlc/operations.md |
 | docs/aidlc/version.txt | （削除: config.toml に統合） |
 
 これにより、skills/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。

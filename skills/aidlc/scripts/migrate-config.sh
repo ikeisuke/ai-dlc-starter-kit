@@ -7,7 +7,7 @@
 #
 # パラメータ:
 #   --config <path>: config.toml のパス（デフォルト: .aidlc/config.toml）
-#   --rules <path>: rules.md のパス（デフォルト: .aidlc/cycles/rules.md）
+#   --rules <path>: rules.md のパス（デフォルト: .aidlc/rules.md）
 #   --dry-run: 実際の変更を行わず、実行予定の操作を表示
 #
 # 出力形式:
@@ -27,7 +27,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/bootstrap.sh"
 
 CONFIG="${AIDLC_CONFIG}"
-RULES="${AIDLC_CYCLES}/rules.md"
+RULES="${AIDLC_PROJECT_ROOT}/.aidlc/rules.md"
 DRY_RUN=false
 _has_warnings=false
 _cleanup_files=()

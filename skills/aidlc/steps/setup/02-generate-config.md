@@ -12,13 +12,23 @@ if [ -f docs/aidlc/project.toml ] && [ ! -f .aidlc/config.toml ]; then
 fi
 
 # 2. additional-rules.md → rules.md に移行
-if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/cycles/rules.md ]; then
+if [ -f docs/aidlc/prompts/additional-rules.md ] && [ ! -f .aidlc/rules.md ]; then
   mkdir -p .aidlc/cycles
-  mv docs/aidlc/prompts/additional-rules.md .aidlc/cycles/rules.md
-  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/cycles/rules.md"
+  mv docs/aidlc/prompts/additional-rules.md .aidlc/rules.md
+  echo "MIGRATED: docs/aidlc/prompts/additional-rules.md → .aidlc/rules.md"
 fi
 
-# 3. version.txt を削除（バージョン情報は aidlc.toml に統合）
+# 3. cycles配下のファイルを .aidlc/ 直下に移行
+if [ -f .aidlc/cycles/rules.md ] && [ ! -f .aidlc/rules.md ]; then
+  mv .aidlc/cycles/rules.md .aidlc/rules.md
+  echo "MIGRATED: .aidlc/cycles/rules.md → .aidlc/rules.md"
+fi
+if [ -f .aidlc/cycles/operations.md ] && [ ! -f .aidlc/operations.md ]; then
+  mv .aidlc/cycles/operations.md .aidlc/operations.md
+  echo "MIGRATED: .aidlc/cycles/operations.md → .aidlc/operations.md"
+fi
+
+# 4. version.txt を削除（バージョン情報は aidlc.toml に統合）
 if [ -f docs/aidlc/version.txt ]; then
   rm docs/aidlc/version.txt
   echo "REMOVED: docs/aidlc/version.txt (バージョン情報は aidlc.toml に統合)"
@@ -37,7 +47,9 @@ fi
 | 移行元 | 移行先 |
 |--------|--------|
 | docs/aidlc/project.toml | .aidlc/config.toml |
-| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/rules.md |
+| .aidlc/cycles/rules.md | .aidlc/rules.md |
+| .aidlc/cycles/operations.md | .aidlc/operations.md |
 | docs/aidlc/version.txt | （削除: aidlc.toml に統合） |
 <!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->
 
@@ -534,21 +546,21 @@ sync-package.sh --source [ソース] --dest [宛先] --delete
 
 | ファイル | 説明 |
 |--------|------|
-| `.aidlc/cycles/rules.md` | プロジェクト固有の追加ルール |
-| `.aidlc/cycles/operations.md` | サイクル横断の運用引き継ぎ情報 |
+| `.aidlc/rules.md` | プロジェクト固有の追加ルール |
+| `.aidlc/operations.md` | サイクル横断の運用引き継ぎ情報 |
 | `AGENTS.md` | AIツール共通設定（参照行を追記） |
 | `CLAUDE.md` | Claude Code専用設定（参照行を追記） |
 
 **存在確認後にコピー**:
 ```bash
 # rules.md が存在しない場合のみコピー
-if [ ! -f .aidlc/cycles/rules.md ]; then
-  \cp -f [スターターキットパス]/prompts/setup/templates/rules_template.md .aidlc/cycles/rules.md
+if [ ! -f .aidlc/rules.md ]; then
+  \cp -f [スターターキットパス]/prompts/setup/templates/rules_template.md .aidlc/rules.md
 fi
 
 # operations.md が存在しない場合のみコピー
-if [ ! -f .aidlc/cycles/operations.md ]; then
-  \cp -f [スターターキットパス]/prompts/setup/templates/operations_handover_template.md .aidlc/cycles/operations.md
+if [ ! -f .aidlc/operations.md ]; then
+  \cp -f [スターターキットパス]/prompts/setup/templates/operations_handover_template.md .aidlc/operations.md
 fi
 ```
 
