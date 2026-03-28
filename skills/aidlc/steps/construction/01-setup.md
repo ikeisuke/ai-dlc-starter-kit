@@ -120,6 +120,7 @@ Inception Phaseで決定済み、または既存スタックを使用
   4. 設計レビューでユーザー承認を得る
   5. 実装を継続
 
+**【次のアクション】** 今すぐ `steps/common/task-management.md` を読み込んで、内容を確認してください。
 **【次のアクション】** 今すぐ `steps/common/review-flow.md` を読み込んで、内容を確認してください。
 
   **AIレビュー対象タイミング**: 計画ファイル承認前、設計レビュー前、コード生成後の確認前、テスト完了後の確認前
@@ -371,6 +372,8 @@ skills/aidlc/scripts/issue-ops.sh set-status <issue_number> blocked
 **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
 **承認なしで次のステップを開始してはいけない**（`automation_mode=semi_auto` での自動承認を除く）
+
+**【タスク作成】計画承認後、`steps/common/task-management.md` の「Construction Phase: Unit開始時タスクテンプレート」に従い、Unitのタスクリストを作成してください。** 各ステップの着手・完了時にタスクステータスを更新すること。
 
 ### 13. Unitブランチ作成【推奨】
 

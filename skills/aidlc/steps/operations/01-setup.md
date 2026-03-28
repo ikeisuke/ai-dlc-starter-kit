@@ -255,6 +255,10 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
   ```
 - **選択2の場合**: 警告を記録し、Operations Phaseを継続
 
+### 10b. タスクリスト作成【必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Operations Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
+
 ### 11. Construction引き継ぎタスク確認【重要】
 
 Construction Phaseで発生した手動作業タスクを確認し、実行します。
