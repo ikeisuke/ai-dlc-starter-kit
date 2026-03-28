@@ -21,6 +21,16 @@
 
 set -euo pipefail
 
+# 共通ライブラリ読み込み
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_SCRIPT_DIR}/../skills/aidlc/scripts/lib"
+if [[ -f "${_LIB_DIR}/version.sh" ]]; then
+    source "${_LIB_DIR}/version.sh"
+else
+    echo "error:version-lib-not-found"
+    exit 1
+fi
+
 # デフォルト値
 VERSION=""
 DRY_RUN=false
@@ -54,10 +64,10 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 # vプレフィックス除去
-VERSION="${VERSION#v}"
+VERSION="$(strip_v_prefix "$VERSION")"
 
-# SemVerフォーマット検証（X.Y.Z または X.Y.Z-prerelease 形式）
-if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[a-zA-Z0-9.]+)?$ ]]; then
+# SemVerフォーマット検証（共通関数使用）
+if ! validate_semver "$VERSION"; then
     echo "error:invalid-version-format"
     exit 1
 fi

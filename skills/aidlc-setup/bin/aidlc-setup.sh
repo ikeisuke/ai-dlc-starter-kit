@@ -24,6 +24,16 @@
 
 set -euo pipefail
 
+# === 共通ライブラリ読み込み ===
+_SETUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_SETUP_SCRIPT_DIR}/../../aidlc/scripts/lib"
+if [[ -f "${_LIB_DIR}/version.sh" ]]; then
+    source "${_LIB_DIR}/version.sh"
+else
+    echo "error:version-lib-not-found" >&2
+    exit 1
+fi
+
 # === デフォルト値 ===
 DRY_RUN=false
 NO_MIGRATE=false
@@ -185,18 +195,18 @@ fi
 VERSION_FILE="${STARTER_KIT_ROOT}/version.txt"
 if [[ -f "$VERSION_FILE" ]]; then
     KIT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
-    KIT_VERSION="${KIT_VERSION#v}"
+    KIT_VERSION="$(strip_v_prefix "$KIT_VERSION")"
 else
     KIT_VERSION="unknown"
 fi
 
-# バージョン形式バリデーション
-if [[ "$KIT_VERSION" != "unknown" ]] && ! echo "$KIT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
+# バージョン形式バリデーション（共通関数使用）
+if [[ "$KIT_VERSION" != "unknown" ]] && ! validate_semver "$KIT_VERSION"; then
     echo "warn:invalid-kit-version:${KIT_VERSION}"
     KIT_VERSION="unknown"
 fi
 
-PROJECT_VERSION=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
+PROJECT_VERSION="$(read_starter_kit_version "$CONFIG_PATH" 2>/dev/null)" || PROJECT_VERSION="unknown"
 
 echo "version_from:${PROJECT_VERSION}"
 echo "version_to:${KIT_VERSION}"
