@@ -4,8 +4,8 @@
 
 ## 非AIDLCプロジェクトガード
 
-`.aidlc/config.toml` が存在しない場合、AI-DLCのフェーズ実行は行わない。
-ユーザーにセットアップを案内する:
+`.aidlc/config.toml` が存在しない場合、通常フェーズ（inception/construction/operations）の実行は行わない。
+`/aidlc setup` のみ許可し、ユーザーにセットアップを案内する:
 
 ```text
 AI-DLC環境が未セットアップです。
@@ -63,11 +63,16 @@ Setup PhaseとInception Phaseが統合され、1回の実行で
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback`（フィードバック送信） |
 | 「start migrate」「aidlc migrate」 | `/aidlc migrate`（v1→v2移行） |
 
+**追加コンテキスト**: `/aidlc <action> <テキスト>` の形式で、actionの後に任意のテキストを追加できます。追加テキストはフェーズ実行中にコンテキスト変数 `additional_context` として参照されます。ARGUMENTSパーシングの詳細仕様（有効action一覧、エラー条件、引数なし時の既定動作）は `SKILL.md` の「ARGUMENTSパーシング」セクションが正本です。
+
+例: `/aidlc construction 前回のセッションで設計レビューまで完了`
+
 **後方互換性**: 従来の詳細な指示（`docs/aidlc/prompts/xxx.md を読み込んで`）は `/aidlc` コマンドにリダイレクトされます。
 
 ### サイクル判定
 
-- ブランチ名 `cycle/vX.X.X` からサイクルを自動判定
+- ブランチ名が `cycle/*` の場合: サイクルブランチと判定し、引数なしで `construction` をデフォルト実行
+- ブランチ名が `cycle/*` でない場合（main、feature/* 等）: 引数なしで `inception` をデフォルト実行
 - mainブランチの場合:
   - 初期セットアップ: `/aidlc setup`
   - 新規サイクル開始: `/aidlc inception`
