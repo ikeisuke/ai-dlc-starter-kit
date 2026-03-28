@@ -72,16 +72,8 @@ mktemp /tmp/aidlc-manifest.XXXXXX
 
 保存したパスを後続ステップで使用する。
 
-## 3. バックアップ作成
+**注意**: バックアップは不要です。マイグレーションは専用ブランチ（`migrate/v2`）で実行されるため、git自体がバックアップとして機能します。問題が発生した場合は `git checkout .` で復元できます。
 
-ユーザーの承認後、`migrate-backup.sh` を実行:
+## 3. 次のステップへ
 
-```bash
-scripts/migrate-backup.sh --manifest <manifest_path>
-```
-
-stdout の `backup_dir` を記録する。後続ステップの `--backup-dir` 引数に渡す。
-
-## 4. 次のステップへ
-
-バックアップ完了後、ステップ2（02-execute.md）の指示に従う。
+ステップ2（02-execute.md）の指示に従う。

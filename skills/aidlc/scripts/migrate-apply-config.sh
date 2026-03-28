@@ -3,7 +3,7 @@
 # migrate-apply-config.sh - config.toml パス参照の更新
 #
 # 使用方法:
-#   ./migrate-apply-config.sh --manifest <path> --backup-dir <path>
+#   ./migrate-apply-config.sh --manifest <path>
 #
 # 出力:
 #   stdout: journal JSON（phase: "config"）
@@ -26,21 +26,17 @@ fi
 
 # 引数パース
 MANIFEST=""
-BACKUP_DIR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --manifest)
       [[ $# -lt 2 ]] && { echo "Missing value for --manifest" >&2; exit 2; }
       MANIFEST="$2"; shift 2 ;;
-    --backup-dir)
-      [[ $# -lt 2 ]] && { echo "Missing value for --backup-dir" >&2; exit 2; }
-      BACKUP_DIR="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
-if [[ -z "$MANIFEST" || -z "$BACKUP_DIR" ]]; then
-  echo "Usage: $0 --manifest <path> --backup-dir <path>" >&2
+if [[ -z "$MANIFEST" ]]; then
+  echo "Usage: $0 --manifest <path>" >&2
   exit 2
 fi
 
