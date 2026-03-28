@@ -56,7 +56,6 @@
       "Bash(ls *)",
       "Bash(mkdir *)",
       "Bash(tail *)",
-      "Bash(tee -a .aidlc/cycles/*/history/*)",
       "Bash(touch *)",
       "Bash(wc *)",
       "Bash(which *)"
