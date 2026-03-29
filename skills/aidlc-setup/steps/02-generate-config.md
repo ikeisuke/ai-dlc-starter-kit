@@ -421,7 +421,7 @@ scripts/init-labels.sh
 
 ### 8.4 AIツール設定のセットアップ【初回・アップグレード共通】
 
-Claude CodeとKiroCLIの設定ファイルをセットアップします。
+Claude Codeの設定ファイルをセットアップします。
 
 ```bash
 scripts/setup-ai-tools.sh
@@ -429,10 +429,9 @@ scripts/setup-ai-tools.sh
 
 このスクリプトは以下を行います:
 
-1. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` を実ファイルとして配置（既存シンボリックリンクは実ファイルに置換）
-2. **Claude Code 許可設定**: `.claude/settings.json` に許可ルールを設定
+1. **Claude Code 許可設定**: `.claude/settings.json` に許可ルールを設定
 
-**注意**: KiroCLI設定はテンプレートからコピーされ、アップグレード時に自動更新されます
+**注意**: KiroCLIエージェント設定は `/install-kiro-agent` スキルで別途インストールしてください
 
 ---
 
