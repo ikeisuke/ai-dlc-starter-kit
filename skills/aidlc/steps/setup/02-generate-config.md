@@ -429,37 +429,10 @@ scripts/setup-ai-tools.sh
 
 このスクリプトは以下を行います:
 
-1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
-2. **Agent スキル**: `.agents/skills/` に各スキルへのシンボリックリンクを配置（マルチエージェント共通スキル）
-3. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` を実ファイルとして配置（既存シンボリックリンクは実ファイルに置換）
-4. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
-5. **不正リンクの修復**: リンク先が異なるシンボリックリンクを自動修復
+1. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` を実ファイルとして配置（既存シンボリックリンクは実ファイルに置換）
+2. **Claude Code 許可設定**: `.claude/settings.json` に許可ルールを設定
 
-**ディレクトリ構成**:
-
-```text
-.claude/skills/                       ← 実ディレクトリ
-├── reviewing-code/          → symlink → ../../skills/reviewing-code/
-├── reviewing-architecture/  → symlink → ../../skills/reviewing-architecture/
-├── reviewing-security/      → symlink → ../../skills/reviewing-security/
-├── aidlc-setup/             → symlink → ../../skills/aidlc-setup/
-└── my-custom/  ← プロジェクト独自スキル（実ディレクトリ）
-
-.agents/skills/                        ← 実ディレクトリ
-├── reviewing-code/          → symlink → ../../skills/reviewing-code/
-├── reviewing-architecture/  → symlink → ../../skills/reviewing-architecture/
-├── reviewing-security/      → symlink → ../../skills/reviewing-security/
-└── aidlc-setup/             → symlink → ../../skills/aidlc-setup/
-
-.kiro/agents/
-└── aidlc.json  ← 実ファイル（テンプレートからコピー）
-```
-
-**注意**:
-
-- `.claude/skills/` 内にプロジェクト独自スキルを追加できます
-- KiroCLI設定はテンプレートからコピーされ、アップグレード時に自動更新されます
-- スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます
+**注意**: KiroCLI設定はテンプレートからコピーされ、アップグレード時に自動更新されます
 
 ---
 

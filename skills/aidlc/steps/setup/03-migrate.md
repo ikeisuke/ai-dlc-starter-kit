@@ -4,10 +4,9 @@
 
 ```bash
 git add .aidlc/
-# 各AIツール設定ディレクトリが作成されている場合のみ追加
-[ -d ".claude/skills" ] && git add .claude/
-[ -d ".agents/skills" ] && git add .agents/
+# 各AIツール設定が作成されている場合のみ追加
 [ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
+[ -f ".claude/settings.json" ] && git add .claude/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -31,9 +30,8 @@ AI-DLC環境のセットアップが完了しました！
 - .aidlc/rules.md - プロジェクト固有ルール
 
 AIツール設定:
-- .claude/skills/ - Claude Codeスキル（シンボリックリンク）
-- .agents/skills/ - マルチエージェントスキル（シンボリックリンク）
 - .kiro/agents/aidlc.json - KiroCLIエージェント設定
+- .claude/settings.json - Claude Code許可設定
 ```
 
 ### アップグレードの場合

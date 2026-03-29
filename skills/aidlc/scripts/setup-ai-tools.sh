@@ -1,114 +1,14 @@
 #!/bin/bash
 # AIツール設定のセットアップ
-# - Claude Code: .claude/skills/ に各スキルへのシンボリックリンクを配置
-# - Agent: .agents/skills/ に各スキルへのシンボリックリンクを配置
 # - KiroCLI: .kiro/agents/aidlc.json を実ファイルとして配置
+# - Claude Code: permissions 設定
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AIDLC_TEMPLATES_DIR="${SCRIPT_DIR}/../templates"
-SKILLS_DIR="skills"
-
-# skills/ ディレクトリの存在確認（存在しない場合はスキルリンク作成をスキップ）
-if [ ! -d "$SKILLS_DIR" ]; then
-  echo "Info: $SKILLS_DIR not found, skipping skill symlink setup"
-  SKILLS_DIR=""
-fi
 
 # ============================================
-# 共通関数: スキルシンボリックリンクのセットアップ
-# ============================================
-# $1: ターゲットディレクトリ（例: .claude/skills, .agents/skills）
-# $2: ソースディレクトリ（例: skills/）
-setup_skill_symlinks() {
-  local TARGET_DIR="$1"
-  local SOURCE_DIR="$2"
-
-  if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Warning: $SOURCE_DIR not found, skipping"
-    return
-  fi
-
-  # 空ディレクトリでのglob展開失敗を防止
-  local _prev_nullglob
-  _prev_nullglob=$(shopt -p nullglob || true)
-  shopt -s nullglob
-
-  # ターゲットディレクトリの親を作成
-  mkdir -p "$(dirname "$TARGET_DIR")"
-
-  # ターゲットがシンボリックリンクの場合は削除してディレクトリ化（旧形式からの移行）
-  if [ -L "$TARGET_DIR" ]; then
-    echo "Removed: $TARGET_DIR (symlink → converting to directory)"
-    rm "$TARGET_DIR"
-  fi
-
-  # ターゲットディレクトリ作成
-  mkdir -p "$TARGET_DIR"
-
-  # 壊れたシンボリックリンクを削除（リンク先が存在しないもの）
-  for link in "$TARGET_DIR"/*; do
-    if [ -L "$link" ] && [ ! -e "$link" ]; then
-      echo "Removed: $link (broken symlink)"
-      rm "$link"
-    fi
-  done
-
-  # ソースディレクトリ内の各スキルへのシンボリックリンクを作成
-  for skill_path in "$SOURCE_DIR"/*/; do
-    local skill
-    skill=$(basename "$skill_path")
-    local SKILL_PATH="$TARGET_DIR/$skill"
-    local LINK_TARGET="../../$SOURCE_DIR/$skill"
-
-    # SKILL.md 存在チェック
-    if [ ! -f "$skill_path/SKILL.md" ]; then
-      echo "Warning: $skill_path has no SKILL.md, skipping"
-      continue
-    fi
-
-    if [ ! -e "$SKILL_PATH" ]; then
-      ln -s "$LINK_TARGET" "$SKILL_PATH"
-      echo "Created: $SKILL_PATH → $LINK_TARGET"
-
-    elif [ -L "$SKILL_PATH" ]; then
-      local CURRENT_TARGET
-      CURRENT_TARGET=$(readlink "$SKILL_PATH")
-      if [ "$CURRENT_TARGET" = "$LINK_TARGET" ]; then
-        echo "Skipped: $SKILL_PATH (already correct)"
-      else
-        # 不正なリンク先 → 自己修復
-        rm "$SKILL_PATH"
-        ln -s "$LINK_TARGET" "$SKILL_PATH"
-        echo "Fixed: $SKILL_PATH (target corrected)"
-      fi
-
-    else
-      echo "Warning: $SKILL_PATH (exists as directory/file, cannot replace)"
-    fi
-  done
-
-  # nullglob を元に戻す
-  eval "$_prev_nullglob"
-}
-
-# ============================================
-# Claude Code スキルのセットアップ
-# ============================================
-setup_claude_skills() {
-  setup_skill_symlinks ".claude/skills" "$SKILLS_DIR"
-  echo "Done: Claude skills setup complete"
-}
-
-# ============================================
-# Agent スキルのセットアップ
-# ============================================
-setup_agent_skills() {
-  setup_skill_symlinks ".agents/skills" "$SKILLS_DIR"
-  echo "Done: Agent skills setup complete"
-}
-
 # ============================================
 # KiroCLI エージェントのセットアップ
 # ============================================
@@ -880,27 +780,11 @@ setup_claude_permissions() {
 echo "=== AI Tools Setup ==="
 echo ""
 
-STEP=1
-
-# スキルシンボリックリンクは skills/ ディレクトリが存在する場合のみ（メタ開発環境）
-if [ -n "$SKILLS_DIR" ]; then
-  echo "[$STEP] Setting up Claude Code skills..."
-  setup_claude_skills
-  echo ""
-  STEP=$((STEP + 1))
-
-  echo "[$STEP] Setting up Agent skills..."
-  setup_agent_skills
-  echo ""
-  STEP=$((STEP + 1))
-fi
-
-echo "[$STEP] Setting up KiroCLI agent..."
+echo "[1/2] Setting up KiroCLI agent..."
 setup_kiro_agent
 echo ""
-STEP=$((STEP + 1))
 
-echo "[$STEP] Setting up Claude Code permissions..."
+echo "[2/2] Setting up Claude Code permissions..."
 setup_claude_permissions
 echo ""
 

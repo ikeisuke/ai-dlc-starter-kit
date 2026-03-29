@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-2.0.5-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-2.0.6-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -34,8 +34,9 @@ ai-dlc-starter-kit/
 │
 ├── .aidlc/                    # プロジェクト設定・サイクル成果物
 │   ├── config.toml            # プロジェクト設定
+│   ├── rules.md               # プロジェクト固有ルール
+│   ├── operations.md          # 運用引き継ぎ情報
 │   └── cycles/                # サイクル固有成果物
-│       ├── rules.md           # プロジェクト固有ルール
 │       └── {{CYCLE}}/         # サイクル識別子で管理
 │
 ├── docs/
