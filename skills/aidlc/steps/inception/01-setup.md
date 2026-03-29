@@ -466,9 +466,9 @@ all_cycles:v1.12.0,v1.11.0,feature-auth,waf/v1.0.0,waf/v1.1.0
 
 **`cycle_name` が設定されている場合（名前付きサイクルモード）**:
 
-1. `suggest-version.sh` を実行して `all_cycles` を取得
+1. `suggest-version.sh` を実行して `all_cycles` と `suggested_*` を取得
 2. `all_cycles` をカンマで分割し、各トークンをtrimしてから `${cycle_name}/v*` にマッチするものを抽出
-3. マッチしたバージョンがある場合: 最新バージョンを基準にpatch/minor/majorを再計算して選択肢を提示
+3. マッチしたバージョンがある場合: スクリプトの `suggested_patch`/`suggested_minor`/`suggested_major` が名前付きサイクルに対応していない場合のみ、抽出した最新バージョンを基準にpatch/minor/majorを再計算して選択肢を提示。スクリプト出力が利用可能な場合はそれを優先する
 4. マッチしたバージョンがない場合（名前付きサイクルの初回）: `v1.0.0` を提案
 5. ユーザーが選択または入力したバージョンで `{{CYCLE}}` を `${cycle_name}/${version}` 形式で組み立て
 6. 組み立てた `{{CYCLE}}` が `all_cycles` のカンマ分割・trim済みトークンに完全一致する場合: 「このサイクルは既に使用されています」エラーを表示して再選択

@@ -67,13 +67,14 @@ git commit -m "feat: add new feature"
 
 | 指示 | 対応処理 |
 |------|----------|
-| 「インセプション進めて」「start inception」 | `/aidlc inception`（短縮形: `/aidlc i`） |
-| 「コンストラクション進めて」「start construction」 | `/aidlc construction`（短縮形: `/aidlc c`） |
-| 「オペレーション進めて」「start operations」 | `/aidlc operations`（短縮形: `/aidlc o`） |
+| 「インセプション進めて」「start inception」 | `/aidlc inception`（短縮形: `/aidlc inc` `/aidlc i`） |
+| 「コンストラクション進めて」「start construction」 | `/aidlc construction`（短縮形: `/aidlc con` `/aidlc c`） |
+| 「オペレーション進めて」「start operations」 | `/aidlc operations`（短縮形: `/aidlc ops` `/aidlc o`） |
 | 「セットアップ」「start setup」 | `/aidlc setup` → `/aidlc-setup` に委譲 |
-| 「start express」 | `/aidlc express`（短縮形: `/aidlc e`、エクスプレスモード） |
+| 「start express」 | `/aidlc express`（短縮形: `/aidlc exp` `/aidlc e`、エクスプレスモード） |
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback` → `/aidlc-feedback` に委譲 |
 | 「start migrate」「aidlc migrate」 | `/aidlc migrate` → `/aidlc-migrate` に委譲 |
+| 「ヘルプ」「help」 | `/aidlc help`（短縮形: `/aidlc h`、アクション一覧表示） |
 
 **追加コンテキスト**: `/aidlc <action> <テキスト>` の形式で、actionの後に任意のテキストを追加できます。追加テキストはフェーズ実行中にコンテキスト変数 `additional_context` として参照されます。ARGUMENTSパーシングの詳細仕様（有効action一覧、エラー条件、引数なし時の既定動作）は `SKILL.md` の「ARGUMENTSパーシング」セクションが正本です。
 

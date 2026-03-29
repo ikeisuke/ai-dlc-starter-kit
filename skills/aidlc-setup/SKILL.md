@@ -13,9 +13,9 @@ argument-hint: "[追加コンテキスト]"
 
 ## ステップ実行
 
-1. `steps/01-detect.md` を読み込んで実行 — 環境検出（config.toml存在チェック、v1環境検出）
-2. `steps/02-generate-config.md` を読み込んで実行 — 設定生成（プロジェクト情報推論、config.toml生成）
-3. `steps/03-migrate.md` を読み込んで実行 — AIツールセットアップ・データ移行
+1. `steps/01-detect.md` を読み込んで実行 — 環境検出・初回セットアップ開始判定（config.toml存在チェック、v1環境検出）
+2. `steps/02-generate-config.md` を読み込んで実行 — ファイル移行（移行モード時）・プロジェクト情報推論・config.toml生成・共通ファイル配置
+3. `steps/03-migrate.md` を読み込んで実行 — Gitコミット・完了メッセージ表示
 
 ## パス解決
 
