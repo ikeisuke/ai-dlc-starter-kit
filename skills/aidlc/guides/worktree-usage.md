@@ -80,8 +80,7 @@ cd .worktree/cycle-{{CYCLE}}
 
 PRマージ後の定型作業（pull、fetch、detach、ブランチ削除）を自動化できます。
 
-> **注**: `skills/aidlc/scripts/` のパスは `sync-package.sh` 実行後に利用可能です。
-> 開発時は `prompts/package/bin/post-merge-cleanup.sh` を使用してください。
+> **注**: `skills/aidlc/scripts/` のパスはスキルディレクトリから利用可能です。
 
 ```bash
 # 基本的な使い方（worktree内で実行）

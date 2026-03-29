@@ -101,7 +101,6 @@
         "npx markdownlint-cli2 *",
         "open *",
         "printf *",
-        "prompts/setup/bin/*",
         "skills/aidlc-setup/bin/aidlc-setup.sh *",
         "pwd *",
         "rg *",
