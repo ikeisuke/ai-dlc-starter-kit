@@ -67,11 +67,11 @@ git commit -m "feat: add new feature"
 
 | 指示 | 対応処理 |
 |------|----------|
-| 「インセプション進めて」「start inception」 | `/aidlc inception` |
-| 「コンストラクション進めて」「start construction」 | `/aidlc construction` |
-| 「オペレーション進めて」「start operations」 | `/aidlc operations` |
+| 「インセプション進めて」「start inception」 | `/aidlc inception`（短縮形: `/aidlc i`） |
+| 「コンストラクション進めて」「start construction」 | `/aidlc construction`（短縮形: `/aidlc c`） |
+| 「オペレーション進めて」「start operations」 | `/aidlc operations`（短縮形: `/aidlc o`） |
 | 「セットアップ」「start setup」 | `/aidlc setup`（Setup Phase） |
-| 「start express」 | `/aidlc express`（エクスプレスモード、フェーズ連続実行を有効化） |
+| 「start express」 | `/aidlc express`（短縮形: `/aidlc e`、エクスプレスモード） |
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback`（フィードバック送信） |
 | 「start migrate」「aidlc migrate」 | `/aidlc migrate`（v1→v2移行） |
 

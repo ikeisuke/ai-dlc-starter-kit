@@ -3,14 +3,10 @@
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add .aidlc/config.toml .aidlc/cycles/ skills/ docs/aidlc/ AGENTS.md CLAUDE.md .github/
-# AIDLC-PATH: physical-path-required (reason: git-add)
-# .claude/skills ディレクトリが作成されている場合のみ追加
-[ -d ".claude/skills" ] && git add .claude/
-# .agents/skills ディレクトリが作成されている場合のみ追加
-[ -d ".agents/skills" ] && git add .agents/
-# .kiro/agents/aidlc.json が作成されている場合のみ追加
+git add .aidlc/
+# 各AIツール設定が作成されている場合のみ追加
 [ -f ".kiro/agents/aidlc.json" ] && git add .kiro/
+[ -f ".claude/settings.json" ] && git add .claude/
 ```
 
 **コミットメッセージ**（モードに応じて選択）:
@@ -31,44 +27,11 @@ AI-DLC環境のセットアップが完了しました！
 
 プロジェクト設定:
 - .aidlc/config.toml - プロジェクト設定
+- .aidlc/rules.md - プロジェクト固有ルール
 
-AI-DLCスキル（skills/aidlc/）:
-- steps/ - フェーズステップファイル
-- templates/ - ドキュメントテンプレート
-- scripts/ - ユーティリティスクリプト
-- config/ - デフォルト設定
-
-プロジェクト固有ファイル（.aidlc/cycles/）:
-- rules.md - プロジェクト固有ルール
-
-AIツール設定ファイル（プロジェクトルート）:
-- AGENTS.md - 全AIツール共通（AI-DLC設定を参照）
-- CLAUDE.md - Claude Code専用（AI-DLC設定を参照）
-- .claude/skills/ - スキルディレクトリ（各スキルへのシンボリックリンク + 独自スキル用）
-- .agents/skills/ - Agentスキルディレクトリ（各スキルへのシンボリックリンク）
-- .kiro/agents/aidlc.json - KiroCLIエージェント設定（シンボリックリンク）
-
-GitHub Issueテンプレート（.github/ISSUE_TEMPLATE/）:
-- backlog.yml - バックログ用テンプレート
-- bug.yml - バグ報告用テンプレート
-- feature.yml - 機能要望用テンプレート
-- feedback.yml - フィードバック用テンプレート
-
-### AIエージェント許可リストの設定（オプション）
-
-AI-DLCではファイル操作やGitコマンドを多用します。
-毎回の確認を減らすため、許可リストまたはsandbox環境の設定を推奨します。
-
-詳細は guides/ai-agent-allowlist.md を参照してください。
-
-### ユーザー共通設定（オプション）
-
-複数のAI-DLCプロジェクトで共通設定を使用したい場合:
-1. ディレクトリ作成: mkdir -p ~/.aidlc
-2. 設定ファイル作成: touch ~/.aidlc/config.toml
-3. 共通設定を記述
-
-詳細は guides/config-merge.md を参照してください。
+AIツール設定:
+- .kiro/agents/aidlc.json - KiroCLIエージェント設定
+- .claude/settings.json - Claude Code許可設定
 ```
 
 ### アップグレードの場合
@@ -77,8 +40,8 @@ AI-DLCではファイル操作やGitコマンドを多用します。
 AI-DLCのアップグレードが完了しました！
 
 更新されたファイル:
-- skills/aidlc/ - AI-DLCスキル（フェーズステップファイル）
-- templates/ - ドキュメントテンプレート
+- .aidlc/config.toml - バージョン情報更新
+- AIツール設定 - 最新テンプレートに更新
 
 ※ .aidlc/config.toml は保持されています（変更なし）
 
@@ -99,10 +62,12 @@ AI-DLCの新ファイル構成への移行が完了しました！
 | 移行元 | 移行先 |
 |--------|--------|
 | docs/aidlc/project.toml | .aidlc/config.toml |
-| docs/aidlc/prompts/additional-rules.md | .aidlc/cycles/rules.md |
+| docs/aidlc/prompts/additional-rules.md | .aidlc/rules.md |
+| .aidlc/cycles/rules.md | .aidlc/rules.md |
+| .aidlc/cycles/operations.md | .aidlc/operations.md |
 | docs/aidlc/version.txt | （削除: config.toml に統合） |
 
-これにより、skills/aidlc/ ディレクトリはスターターキットと完全同期可能になりました。
+これにより、v2のプラグインモデルに移行されました。
 ```
 
 <!-- AIDLC-PATH: physical-path-required (reason: v1-migration) -->

@@ -39,11 +39,6 @@ _sha256() {
   fi
 }
 
-# 既知ファイルのSHA256ハッシュ（スターターキット原本）
-declare -A KNOWN_HASHES=(
-  [".kiro/agents/aidlc-poc.json"]="96eb617a9cb67269894fcc59c91fecca5e759e2cd6f14b3cd973dbe33c1df5a9"
-  [".github/ISSUE_TEMPLATE/backlog.yml"]="be2cec6babb3ec3b43106ddc22cef6e268d7e5c21a947bc4c191b8507910935f"
-)
 
 # --- 検出対象の収集 ---
 
@@ -121,28 +116,28 @@ if [ -d ".aidlc/cycles/backlog" ]; then
     '{resource_type: $rt, path: $p, action: $a, condition: $cond, ownership_evidence: {method: "known_filename", is_owned: true, expected_hash: null, actual_hash: null}}')"
 fi
 
-# 6. .github/ISSUE_TEMPLATE/ 内のスターターキット由来テンプレート
-if [ -d ".github/ISSUE_TEMPLATE" ]; then
-  for tmpl_name in backlog.yml; do
-    tmpl_path=".github/ISSUE_TEMPLATE/$tmpl_name"
-    [ -f "$tmpl_path" ] || continue
-    [ -L "$tmpl_path" ] && continue  # シンボリックリンクはスキップ
-    actual_hash=$(_sha256 "$tmpl_path")
-    expected_hash="${KNOWN_HASHES["$tmpl_path"]:-}"
-    if [ -n "$expected_hash" ] && [ "$actual_hash" = "$expected_hash" ]; then
-      echo "  Found github_template: $tmpl_path (hash match)" >&2
+# 6. .github/ISSUE_TEMPLATE/ のスターターキット由来テンプレート（v2で管理廃止）
+# スターターキットの原本と比較し、一致すればスターターキット由来と判定して削除対象にする
+_starter_kit_root="$(cd "$AIDLC_PLUGIN_ROOT/../.." && pwd)"
+for _tmpl_name in backlog.yml bug.yml feature.yml feedback.yml; do
+  _tmpl_path=".github/ISSUE_TEMPLATE/${_tmpl_name}"
+  [ -f "$_tmpl_path" ] || continue
+  _tmpl_origin="${_starter_kit_root}/.github/ISSUE_TEMPLATE/${_tmpl_name}"
+  if [ -f "$_tmpl_origin" ]; then
+    _origin_hash=$(_sha256 "$_tmpl_origin")
+    _actual_hash=$(_sha256 "$_tmpl_path")
+    if [ "$_origin_hash" = "$_actual_hash" ]; then
+      echo "  Found starter kit template: $_tmpl_path (hash match, v2 no longer manages)" >&2
       _add_resource "$(jq -n \
-        --arg rt "github_template" \
-        --arg p "$tmpl_path" \
-        --arg a "delete" \
-        --arg eh "$expected_hash" \
-        --arg ah "$actual_hash" \
-        '{resource_type: $rt, path: $p, action: $a, ownership_evidence: {method: "content_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
+        --arg p "$_tmpl_path" --arg eh "$_origin_hash" --arg ah "$_actual_hash" \
+        '{resource_type: "starter_kit_template", path: $p, action: "delete", ownership_evidence: {method: "starter_kit_hash", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
     else
-      echo "  Skipping github_template: $tmpl_path (hash mismatch or unknown, user-edited)" >&2
+      echo "  Skipping: $_tmpl_path (modified by user)" >&2
     fi
-  done
-fi
+  else
+    echo "  Skipping: $_tmpl_path (no starter kit origin to compare)" >&2
+  fi
+done
 
 # 7. .claude/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）
 if [ -d ".claude/skills" ]; then

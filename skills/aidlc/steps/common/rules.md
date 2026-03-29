@@ -608,4 +608,4 @@ scripts/write-history.sh \
 
 ## コード品質基準
 
-コード品質基準、Git運用の原則は `.aidlc/cycles/rules.md` を参照
+コード品質基準、Git運用の原則は `.aidlc/rules.md` を参照

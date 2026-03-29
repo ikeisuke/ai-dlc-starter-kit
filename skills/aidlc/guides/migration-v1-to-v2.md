@@ -32,12 +32,14 @@ skills/aidlc/steps/setup/        → Setup Phase ステップファイル（3フ
 skills/aidlc/steps/common/       → 共通ステップファイル
 ```
 
-### 3. CLAUDE.md / AGENTS.md の参照先変更
+### 3. CLAUDE.md / AGENTS.md のAI-DLC参照廃止
+
+v2ではスキル機構（`.claude/skills/`、`.agents/skills/`、`.kiro/agents/`）で自動発見されるため、AGENTS.md / CLAUDE.md への `@` 参照は不要になりました。
 
 | v1 | v2 |
 |-----|-----|
-| `@docs/aidlc/prompts/CLAUDE.md` | `@skills/aidlc/CLAUDE.md` |
-| `@docs/aidlc/prompts/AGENTS.md` | `@skills/aidlc/AGENTS.md` |
+| `@docs/aidlc/prompts/CLAUDE.md` | （削除：スキル機構で自動発見） |
+| `@docs/aidlc/prompts/AGENTS.md` | （削除：スキル機構で自動発見） |
 
 ### 4. フェーズ開始方法の変更
 
@@ -74,9 +76,8 @@ skills/aidlc/steps/common/       → 共通ステップファイル
 ### 既存プロジェクトの移行
 
 1. **スターターキットの更新**: `/aidlc setup` を実行して最新版に更新
-2. **CLAUDE.md の更新**: 参照先を `@skills/aidlc/CLAUDE.md` に変更
-3. **AGENTS.md の更新**: 参照先を `@skills/aidlc/AGENTS.md` に変更
-4. **旧ファイルの削除**: `docs/aidlc/prompts/` ディレクトリを削除
+2. **CLAUDE.md / AGENTS.md のクリーンアップ**: `@docs/aidlc/prompts/` 参照行を削除（スキル機構で自動発見されるため不要）
+3. **旧ファイルの削除**: `docs/aidlc/prompts/` ディレクトリを削除
 
 ### フェーズ指示の移行
 

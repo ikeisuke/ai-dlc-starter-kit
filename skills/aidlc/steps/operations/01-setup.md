@@ -122,7 +122,7 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 - **存在する場合**: 処理を継続
 
 ### 2. 追加ルール確認
-`.aidlc/cycles/rules.md` が存在すれば読み込む
+`.aidlc/rules.md` が存在すれば読み込む
 
 ### 3. プリフライトチェック
 
@@ -182,7 +182,7 @@ ls .aidlc/cycles/{{CYCLE}}/operations/
 
 ### 9. 運用引き継ぎ情報の確認【重要】
 
-`.aidlc/cycles/operations.md` が存在すれば読み込み、前回サイクルで決定した運用設定・方針を確認する。
+`.aidlc/operations.md` が存在すれば読み込み、前回サイクルで決定した運用設定・方針を確認する。
 
 - **存在する場合**: 前回の設定を再利用できるか確認し、変更がなければステップをスキップ可能
 - **存在しない場合**: テンプレート（`templates/operations_handover_template.md`）から作成

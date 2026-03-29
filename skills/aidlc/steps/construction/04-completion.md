@@ -197,6 +197,8 @@ scripts/run-markdownlint.sh {{CYCLE}}
 
 ### 7. Squash（コミット統合）【オプション】
 
+> **順序制約**: コミット前に `steps/common/commit-flow.md` の「操作順序ルール」を確認すること。コミットが存在しない状態でPR作成��進んではいけない。
+
 **【次のアクション】** `steps/common/commit-flow.md` の「Squash統合フロー」を読み込んで、手順に従ってください。
 
 - `squash:success` の場合: ステップ8をスキップ
@@ -210,6 +212,8 @@ scripts/run-markdownlint.sh {{CYCLE}}
 squashを実行していない場合は、`steps/common/commit-flow.md` の「Unit完了コミット」手順に従ってください。
 
 ### 9. Unit PR作成・マージ【推奨】
+
+> **順序制約**: PR作成前にコミットが存在することを `git log` で確認すること。コミットなしのPR作成は禁止。
 
 Unitブランチで作業した場合、サイクルブランチへのPRを作成（または既存ドラフトPRを更新）してマージする。
 

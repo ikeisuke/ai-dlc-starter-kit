@@ -139,7 +139,7 @@ BDD/TDDに従ってテストコードを作成
       【登録先】{Issue番号 / なし}
       ```
 
-4. **AIレビュー実施**（`steps/common/review-flow.md` に従う）
+4. **AIレビュー実施**（`steps/common/review-flow.md` に従う。**レビュ���手順を必ず確認してから実行すること**）
 5. レビュー結果を反映
 6. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外はコードをユーザーに提示し、承認を得る
 7. `.aidlc/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `templates/implementation_record_template.md`）

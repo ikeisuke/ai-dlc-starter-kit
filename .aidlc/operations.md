@@ -75,6 +75,6 @@ bin/check-size.sh
 
 ### aidlc-setup同期（v2プラグイン構造）
 
-**タイミング**: `.aidlc/cycles/rules.md` の「aidlc-setup同期」カスタムワークフローに従う
+**タイミング**: `.aidlc/rules.md` の「aidlc-setup同期」カスタムワークフローに従う
 
-v2ではプラグイン構造に移行したため、v1のrsync同期は廃止。`/aidlc-setup` スキルによる同期に置き換え済み。詳細は `.aidlc/cycles/rules.md` を参照。
+v2ではプラグイン構造に移行したため、v1のrsync同期は廃止。`/aidlc-setup` スキルによる同期に置き換え済み。詳細は `.aidlc/rules.md` を参照。

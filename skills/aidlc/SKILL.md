@@ -34,8 +34,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 2. ARGUMENTSが指定されている場合:
    - 先頭の空白区切りトークンを action として取得
+   - action が短縮形（`i` / `c` / `o` / `e`）の場合、フル名に展開する: `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`
    - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate のいずれかを指定してください」を表示して処理を中断
+     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate（短縮形: i/c/o/e）のいずれかを指定してください」を表示して処理を中断
    - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
 
 パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
@@ -44,11 +45,11 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 | 引数 | 対応処理 |
 |------|----------|
-| `inception` / なし（cycleブランチ外） | Inception Phase |
-| `construction` / なし（cycleブランチ上） | Construction Phase |
-| `operations` | Operations Phase |
+| `inception` (`i`) / なし（cycleブランチ外） | Inception Phase |
+| `construction` (`c`) / なし（cycleブランチ上） | Construction Phase |
+| `operations` (`o`) | Operations Phase |
 | `setup` | Setup Phase（独立フロー） |
-| `express` | Inception Phase（エクスプレスモード有効） |
+| `express` (`e`) | Inception Phase（エクスプレスモード有効） |
 | `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
 | `migrate` | v1→v2移行（独立フロー） |
 
@@ -58,7 +59,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 ## 共通初期化フロー
 
-全フェーズ共通で以下を実行する。**フィードバック送信の場合はスキップ**。**Setup Phaseの場合はステップ1〜3をスキップし、直接ステップ4へ進む**（セットアップは `.aidlc/config.toml` が未存在の状態で実行されるため）。**migrate の場合もステップ1〜3をスキップし、直接ステップ4へ進む**（移行スクリプトが自律的に環境検出を行うため）。
+`inception` / `construction` / `operations` / `express` で実行する。**`setup`・`migrate`・`feedback` には適用しない**（直接ステップ4のフェーズステップ読み込みに進む）。
 
 ### ステップ1: 共通ステップ読み込み
 
@@ -71,7 +72,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 ### ステップ2: プロジェクト情報確認
 
 - `.aidlc/config.toml` の存在を確認
-- `.aidlc/cycles/rules.md` が存在すれば読み込む
+- `.aidlc/rules.md` が存在すれば読み込む
 - セッションタイトルを設定（`tools:session-title` スキル使用）
 
 ### ステップ3: セッション継続判定

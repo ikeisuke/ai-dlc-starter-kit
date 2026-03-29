@@ -54,7 +54,7 @@ AI-DLCのワークフローを実行するスキル（`aidlc` 名前空間）:
 
 ## KiroCLI対応
 
-AI-DLCセットアップ時に `.kiro/agents/aidlc.json` がシンボリックリンクとして作成されます。
+AI-DLCセットアップ時に `.kiro/agents/aidlc.json` が実ファイルとして配置されます。
 
 **利用方法**:
 
@@ -68,18 +68,18 @@ kiro-cli --agent aidlc
 
 **設定ファイル**:
 
-`.kiro/agents/aidlc.json` → `docs/aidlc/kiro/agents/aidlc.json` へのシンボリックリンク
-<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
+`.kiro/agents/aidlc.json` — テンプレートからコピーされた実ファイル
 
 ```json
 {
   "name": "aidlc",
-  "description": "AI-DLC開発支援エージェント。AGENTS.mdの指示に従い開発を進めます。コード・アーキテクチャ・セキュリティのAIレビューも実行できます。",
-  "tools": ["@builtin"],
+  "description": "AI-DLC開発支援エージェント",
+  "tools": ["read", "shell", "write"],
   "resources": [
-    "file://AGENTS.md",
-    "file://skills/aidlc/AGENTS.md",
-    "skill://skills/*/SKILL.md"
+    "skill://.agents/skills/*/SKILL.md",
+    "skill://~/.agents/skills/*/SKILL.md",
+    "skill://.kiro/skills/*/SKILL.md",
+    "skill://~/.kiro/skills/*/SKILL.md"
   ]
 }
 ```

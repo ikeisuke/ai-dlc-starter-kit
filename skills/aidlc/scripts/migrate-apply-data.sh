@@ -3,7 +3,7 @@
 # migrate-apply-data.sh - cycles配下のデータ移行
 #
 # 使用方法:
-#   ./migrate-apply-data.sh --manifest <path> --backup-dir <path>
+#   ./migrate-apply-data.sh --manifest <path>
 #
 # 出力:
 #   stdout: journal JSON（phase: "data"）
@@ -26,21 +26,17 @@ fi
 
 # 引数パース
 MANIFEST=""
-BACKUP_DIR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --manifest)
       [[ $# -lt 2 ]] && { echo "Missing value for --manifest" >&2; exit 2; }
       MANIFEST="$2"; shift 2 ;;
-    --backup-dir)
-      [[ $# -lt 2 ]] && { echo "Missing value for --backup-dir" >&2; exit 2; }
-      BACKUP_DIR="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
-if [[ -z "$MANIFEST" || -z "$BACKUP_DIR" ]]; then
-  echo "Usage: $0 --manifest <path> --backup-dir <path>" >&2
+if [[ -z "$MANIFEST" ]]; then
+  echo "Usage: $0 --manifest <path>" >&2
   exit 2
 fi
 
@@ -105,6 +101,18 @@ for i in $(seq 0 $((resource_count - 1))); do
     echo "  Skipped: $path (no docs/aidlc references)" >&2
     _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
       '{resource_type: $rt, path: $p, status: "skipped", detail: "no docs/aidlc references found"}')"
+  fi
+done
+
+# .aidlc/cycles/ 配下のプロジェクト共通ファイルを .aidlc/ 直下に移動
+for shared_file in rules.md operations.md; do
+  old_path=".aidlc/cycles/${shared_file}"
+  new_path=".aidlc/${shared_file}"
+  if [[ -f "$old_path" ]] && [[ ! -f "$new_path" ]]; then
+    mv "$old_path" "$new_path"
+    echo "  Moved: $old_path → $new_path" >&2
+    _add_applied "$(jq -n --arg p "$old_path" --arg d "$new_path" \
+      '{resource_type: "file_relocation", path: $p, status: "success", detail: ("moved to " + $d)}')"
   fi
 done
 

@@ -3,7 +3,7 @@
 # migrate-cleanup.sh - manifest宣言済みリソースの削除
 #
 # 使用方法:
-#   ./migrate-cleanup.sh --manifest <path> --backup-dir <path>
+#   ./migrate-cleanup.sh --manifest <path>
 #
 # 出力:
 #   stdout: journal JSON（phase: "cleanup"）
@@ -26,21 +26,17 @@ fi
 
 # 引数パース
 MANIFEST=""
-BACKUP_DIR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --manifest)
       [[ $# -lt 2 ]] && { echo "Missing value for --manifest" >&2; exit 2; }
       MANIFEST="$2"; shift 2 ;;
-    --backup-dir)
-      [[ $# -lt 2 ]] && { echo "Missing value for --backup-dir" >&2; exit 2; }
-      BACKUP_DIR="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
-if [[ -z "$MANIFEST" || -z "$BACKUP_DIR" ]]; then
-  echo "Usage: $0 --manifest <path> --backup-dir <path>" >&2
+if [[ -z "$MANIFEST" ]]; then
+  echo "Usage: $0 --manifest <path>" >&2
   exit 2
 fi
 
@@ -85,19 +81,38 @@ for i in $(seq 0 $((resource_count - 1))); do
 
   if [[ -L "$path" ]]; then
     # symlinkの実体を取得してコピーで差し替え
-    real_path=$(readlink "$path" 2>/dev/null || true)
-    if [[ -f "$real_path" ]]; then
+    # readlinkの結果は相対パスの場合があるため、symlinkのディレクトリを基準に解決する
+    link_target=$(readlink "$path" 2>/dev/null || true)
+    link_dir=$(dirname "$path")
+    if [[ "$link_target" == /* ]]; then
+      resolved_path="$link_target"
+    else
+      resolved_path="${link_dir}/${link_target}"
+    fi
+    if [[ -f "$resolved_path" ]]; then
       tmp=$(mktemp)
-      cp "$real_path" "$tmp"
+      cp "$resolved_path" "$tmp"
       rm -f "$path"
       mv "$tmp" "$path"
-      echo "  Materialized: $path (was symlink to $real_path)" >&2
+      echo "  Materialized: $path (was symlink to $link_target)" >&2
       _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
         '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with file"}')"
     else
-      echo "  WARN: symlink target not found: $real_path (keeping symlink)" >&2
-      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-        '{resource_type: $rt, path: $p, status: "skipped", detail: "symlink target not found"}')"
+      # ターゲットが見つからない場合、v2テンプレートからコピー
+      template_path="${AIDLC_PLUGIN_ROOT}/templates/${path}"
+      if [[ -f "$template_path" ]]; then
+        rm -f "$path"
+        mkdir -p "$(dirname "$path")"
+        cp "$template_path" "$path"
+        echo "  Materialized: $path (from v2 template, symlink target not found: $link_target)" >&2
+        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+          '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with v2 template"}')"
+      else
+        echo "  WARN: symlink target not found: $link_target (removing broken symlink)" >&2
+        rm -f "$path"
+        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+          '{resource_type: $rt, path: $p, status: "success", detail: "removed broken symlink"}')"
+      fi
     fi
   else
     echo "  Skipped (not a symlink): $path" >&2

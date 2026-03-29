@@ -24,6 +24,16 @@
 
 set -euo pipefail
 
+# === 共通ライブラリ読み込み ===
+_SETUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_SETUP_SCRIPT_DIR}/../../aidlc/scripts/lib"
+if [[ -f "${_LIB_DIR}/version.sh" ]]; then
+    source "${_LIB_DIR}/version.sh"
+else
+    echo "error:version-lib-not-found" >&2
+    exit 1
+fi
+
 # === デフォルト値 ===
 DRY_RUN=false
 NO_MIGRATE=false
@@ -118,50 +128,14 @@ resolve_script_dir() {
 
 SCRIPT_DIR=$(resolve_script_dir)
 
-# === Step 1: スターターキットパス解決 ===
-resolve_starter_kit_root() {
-    # 1. 環境変数が設定されていればそれを使用
-    if [[ -n "${AIDLC_STARTER_KIT_PATH:-}" ]]; then
-        if [[ ! -d "$AIDLC_STARTER_KIT_PATH" ]]; then
-            echo "error:starter-kit-path-not-directory:$AIDLC_STARTER_KIT_PATH" >&2
-            echo "detail:action:verify the path exists and is a directory" >&2
-            return 1
-        fi
-        cd "$AIDLC_STARTER_KIT_PATH" && pwd
-        return 0
-    fi
-
-    # 2. SCRIPT_DIR ベース解決: */skills/aidlc-setup/bin → 3階層上がルート
-    if [[ "$SCRIPT_DIR" == */skills/aidlc-setup/bin ]]; then
-        local candidate_root
-        candidate_root="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-        # 算出したルートにスターターキットの既知ファイルが存在するか検証
-        if [[ -f "$candidate_root/skills/aidlc/config/defaults.toml" ]]; then
-            echo "$candidate_root"
-            return 0
-        fi
-        # フォールバック: git リポジトリルートを試行
-        local git_root
-        git_root="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null)" || git_root=""
-        if [[ -n "$git_root" && -f "$git_root/skills/aidlc/config/defaults.toml" ]]; then
-            echo "$git_root"
-            return 0
-        fi
-        echo "error:starter-kit-not-found:candidate root does not contain expected files" >&2
-        echo "detail:candidate-root:$(_sanitize "$candidate_root")" >&2
-        echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
-        return 1
-    fi
-
-    # 3. 上記以外
-    echo "error:starter-kit-not-found:unknown script location" >&2
-    echo "detail:script-dir:$(_sanitize "${SCRIPT_DIR}")" >&2
-    echo "detail:action:export AIDLC_STARTER_KIT_PATH=/path/to/ai-dlc-starter-kit" >&2
-    return 1
+# === Step 1: aidlcスキルディレクトリ解決 ===
+# skills/aidlc-setup/bin/ → ../../aidlc/ で解決
+AIDLC_SKILL_DIR="$(cd "$SCRIPT_DIR/../../aidlc" && pwd 2>/dev/null)" || {
+    echo "error:aidlc-skill-not-found" >&2
+    echo "detail:expected:skills/aidlc/ relative to $SCRIPT_DIR" >&2
+    exit 1
 }
-
-STARTER_KIT_ROOT=$(resolve_starter_kit_root) || exit 1
-echo "starter_kit_path:${STARTER_KIT_ROOT}"
+echo "aidlc_skill_dir:${AIDLC_SKILL_DIR}"
 
 # === Step 2: 設定ファイル存在確認 ===
 # v2プラグインモデルでは、config.toml が存在すればセットアップ済み。
@@ -182,21 +156,21 @@ else
 fi
 
 # === Step 4: バージョン情報取得 ===
-VERSION_FILE="${STARTER_KIT_ROOT}/version.txt"
+VERSION_FILE="${AIDLC_SKILL_DIR}/version.txt"
 if [[ -f "$VERSION_FILE" ]]; then
     KIT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
-    KIT_VERSION="${KIT_VERSION#v}"
+    KIT_VERSION="$(strip_v_prefix "$KIT_VERSION")"
 else
     KIT_VERSION="unknown"
 fi
 
-# バージョン形式バリデーション
-if [[ "$KIT_VERSION" != "unknown" ]] && ! echo "$KIT_VERSION" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
+# バージョン形式バリデーション（共通関数使用）
+if [[ "$KIT_VERSION" != "unknown" ]] && ! validate_semver "$KIT_VERSION"; then
     echo "warn:invalid-kit-version:${KIT_VERSION}"
     KIT_VERSION="unknown"
 fi
 
-PROJECT_VERSION=$(grep "^starter_kit_version" "$CONFIG_PATH" 2>/dev/null | sed 's/.*= *"\([^"]*\)".*/\1/' || echo "unknown")
+PROJECT_VERSION="$(read_starter_kit_version "$CONFIG_PATH" 2>/dev/null)" || PROJECT_VERSION="unknown"
 
 echo "version_from:${PROJECT_VERSION}"
 echo "version_to:${KIT_VERSION}"
@@ -205,7 +179,7 @@ echo "version_to:${KIT_VERSION}"
 if [[ "$NO_MIGRATE" == "true" ]]; then
     echo "migrate:skipped"
 else
-    MIGRATE_CONFIG="${STARTER_KIT_ROOT}/skills/aidlc/scripts/migrate-config.sh"
+    MIGRATE_CONFIG="${AIDLC_SKILL_DIR}/scripts/migrate-config.sh"
 
     if [[ ! -x "$MIGRATE_CONFIG" ]]; then
         echo "warn:migrate-config-not-found"
@@ -245,16 +219,12 @@ _run_setup_ai_tools() {
     echo "setup_ai_tools:success"
 }
 
-SETUP_AI_TOOLS="skills/aidlc/scripts/setup-ai-tools.sh"
-SETUP_AI_TOOLS_FALLBACK="${STARTER_KIT_ROOT}/skills/aidlc/scripts/setup-ai-tools.sh"
+SETUP_AI_TOOLS="${AIDLC_SKILL_DIR}/scripts/setup-ai-tools.sh"
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo "setup_ai_tools:skipped(dry-run)"
 elif [[ -x "$SETUP_AI_TOOLS" ]]; then
     _run_setup_ai_tools "$SETUP_AI_TOOLS"
-elif [[ -x "$SETUP_AI_TOOLS_FALLBACK" ]]; then
-    echo "info:setup-ai-tools-fallback:${SETUP_AI_TOOLS_FALLBACK}"
-    _run_setup_ai_tools "$SETUP_AI_TOOLS_FALLBACK"
 else
     echo "warn:setup-ai-tools-not-found"
 fi
