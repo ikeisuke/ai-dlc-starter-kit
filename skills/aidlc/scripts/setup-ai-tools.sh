@@ -10,10 +10,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AIDLC_TEMPLATES_DIR="${SCRIPT_DIR}/../templates"
 SKILLS_DIR="skills"
 
-# skills/ ディレクトリの存在確認
+# skills/ ディレクトリの存在確認（存在しない場合はスキルリンク作成をスキップ）
 if [ ! -d "$SKILLS_DIR" ]; then
-  echo "Error: $SKILLS_DIR not found"
-  exit 1
+  echo "Info: $SKILLS_DIR not found, skipping skill symlink setup"
+  SKILLS_DIR=""
 fi
 
 # ============================================
@@ -880,19 +880,27 @@ setup_claude_permissions() {
 echo "=== AI Tools Setup ==="
 echo ""
 
-echo "[1/4] Setting up Claude Code skills..."
-setup_claude_skills
-echo ""
+STEP=1
 
-echo "[2/4] Setting up Agent skills..."
-setup_agent_skills
-echo ""
+# スキルシンボリックリンクは skills/ ディレクトリが存在する場合のみ（メタ開発環境）
+if [ -n "$SKILLS_DIR" ]; then
+  echo "[$STEP] Setting up Claude Code skills..."
+  setup_claude_skills
+  echo ""
+  STEP=$((STEP + 1))
 
-echo "[3/4] Setting up KiroCLI agent..."
+  echo "[$STEP] Setting up Agent skills..."
+  setup_agent_skills
+  echo ""
+  STEP=$((STEP + 1))
+fi
+
+echo "[$STEP] Setting up KiroCLI agent..."
 setup_kiro_agent
 echo ""
+STEP=$((STEP + 1))
 
-echo "[4/4] Setting up Claude Code permissions..."
+echo "[$STEP] Setting up Claude Code permissions..."
 setup_claude_permissions
 echo ""
 

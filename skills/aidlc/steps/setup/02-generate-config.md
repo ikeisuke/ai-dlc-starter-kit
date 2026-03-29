@@ -381,7 +381,7 @@ message:旧形式バックログが存在しません
 
 ```bash
 mkdir -p .aidlc
-mkdir -p skills/aidlc/templates
+mkdir -p .aidlc/cycles
 ```
 
 ### 8.2 プロジェクト固有ファイルの配置【初回のみ】
