@@ -117,8 +117,6 @@
     }
   },
   "resources": [
-    "file://AGENTS.md",
-    "file://skills/aidlc/AGENTS.md",
     "skill://.agents/skills/*/SKILL.md",
     "skill://~/.agents/skills/*/SKILL.md",
     "skill://.kiro/skills/*/SKILL.md",

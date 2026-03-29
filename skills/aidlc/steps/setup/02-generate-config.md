@@ -548,8 +548,6 @@ sync-package.sh --source [ソース] --dest [宛先] --delete
 |--------|------|
 | `.aidlc/rules.md` | プロジェクト固有の追加ルール |
 | `.aidlc/operations.md` | サイクル横断の運用引き継ぎ情報 |
-| `AGENTS.md` | AIツール共通設定（参照行を追記） |
-| `CLAUDE.md` | Claude Code専用設定（参照行を追記） |
 
 **存在確認後にコピー**:
 ```bash
@@ -564,71 +562,7 @@ if [ ! -f .aidlc/operations.md ]; then
 fi
 ```
 
-**AGENTS.md / CLAUDE.md の処理（参照行追記）**:
-
-AGENTS.mdとCLAUDE.mdは、AI-DLC設定ファイルへの参照を追記します。
-参照先ファイル（`skills/aidlc/AGENTS.md`, `skills/aidlc/CLAUDE.md`）はrsyncで同期されるため、常に最新の設定が適用されます。
-
-**AGENTS.md の処理（全AIツール共通）**:
-
-AGENTS.mdが存在しない場合は新規作成する:
-
-```bash
-if [ ! -f AGENTS.md ]; then
-  cat > AGENTS.md << 'EOF'
-# AGENTS.md
-
-@skills/aidlc/AGENTS.md を参照してください。
-EOF
-  echo "Created: AGENTS.md"
-fi
-```
-
-AGENTS.mdが既に存在し、参照行がない場合は先頭に追記する:
-
-1. Bashツールで追記が必要か確認する: `grep -q "@skills/aidlc/AGENTS.md" AGENTS.md || echo "NEEDS_UPDATE"`
-2. 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
-3. 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
-
-```bash
-echo "@skills/aidlc/AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat AGENTS.md >> "<パス>" && \mv "<パス>" AGENTS.md && echo "Added reference to AGENTS.md"
-```
-
-**CLAUDE.md の処理（Claude Code専用）**:
-
-CLAUDE.mdが存在しない場合は新規作成する:
-
-```bash
-if [ ! -f CLAUDE.md ]; then
-  cat > CLAUDE.md << 'EOF'
-# CLAUDE.md
-
-@AGENTS.md を参照してください。
-@skills/aidlc/CLAUDE.md を参照してください。
-EOF
-  echo "Created: CLAUDE.md"
-fi
-```
-
-CLAUDE.mdが既に存在する場合、以下の参照行を逆順で先頭に追記する（最終的に `@AGENTS.md` → `@CLAUDE.md` の順になる）:
-
-1. `@skills/aidlc/CLAUDE.md` 参照の追記:
-   - Bashツールで追記が必要か確認する: `grep -q "@skills/aidlc/CLAUDE.md" CLAUDE.md || echo "NEEDS_UPDATE"`
-   - 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
-   - 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
-
-   ```bash
-   echo "@skills/aidlc/CLAUDE.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @skills/aidlc/CLAUDE.md"
-   ```
-
-2. `@AGENTS.md` 参照の追記（これが最上段になる）:
-   - Bashツールで追記が必要か確認する: `grep -q "@AGENTS.md" CLAUDE.md || echo "NEEDS_UPDATE"`
-   - 追記が必要な場合、Bashツールで `mktemp` を実行してパスを取得する
-   - 以下のコマンドで先頭に追記する（`<パス>` は取得したパスに置換）:
-
-   ```bash
-   echo "@AGENTS.md を参照してください。" > "<パス>" && echo "" >> "<パス>" && cat CLAUDE.md >> "<パス>" && \mv "<パス>" CLAUDE.md && echo "Added reference to CLAUDE.md: @AGENTS.md"
-   ```
+**注意**: AGENTS.md / CLAUDE.md にAI-DLC固有の参照行を追記する必要はありません。AI-DLCの設定はスキル機構（`.claude/skills/`、`.agents/skills/`、`.kiro/agents/`）を通じて自動的に読み込まれます。v1からの移行時に残っている旧形式の参照行（`@docs/aidlc/prompts/...`）は、マイグレーションスクリプトで自動削除されます。
 
 #### 8.2.4 rsync出力例
 
@@ -680,7 +614,7 @@ scripts/setup-ai-tools.sh
 
 1. **Claude Code スキル**: `.claude/skills/` に各スキルへのシンボリックリンクを配置
 2. **Agent スキル**: `.agents/skills/` に各スキルへのシンボリックリンクを配置（マルチエージェント共通スキル）
-3. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` へのシンボリックリンクを配置
+3. **KiroCLI エージェント**: `.kiro/agents/aidlc.json` を実ファイルとして配置（既存シンボリックリンクは実ファイルに置換）
 4. **壊れたリンクの削除**: リンク先が存在しないシンボリックリンクを自動削除
 5. **不正リンクの修復**: リンク先が異なるシンボリックリンクを自動修復
 
@@ -701,17 +635,14 @@ scripts/setup-ai-tools.sh
 └── aidlc-setup/             → symlink → ../../skills/aidlc-setup/
 
 .kiro/agents/
-└── aidlc.json → symlink → ../../docs/aidlc/kiro/agents/aidlc.json
+└── aidlc.json  ← 実ファイル（テンプレートからコピー）
 ```
-
-<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
 
 **注意**:
 
 - `.claude/skills/` 内にプロジェクト独自スキルを追加できます。詳細は `guides/skill-usage-guide.md` を参照してください。
 - `.agents/skills/` にはKiroネイティブのスキル発見機能でスキルが自動認識されます。
-- KiroCLI設定は `docs/aidlc/kiro/agents/aidlc.json` で管理され、アップグレード時に自動更新されます。
-<!-- AIDLC-PATH: physical-path-required (reason: rsync-target) -->
+- KiroCLI設定はテンプレートからコピーされ、アップグレード時に自動更新されます。
 - スキル名が変更された場合、古いシンボリックリンクは自動的に削除されます。
 
 **KiroCLI利用方法**:

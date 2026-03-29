@@ -2,12 +2,12 @@
 # AIツール設定のセットアップ
 # - Claude Code: .claude/skills/ に各スキルへのシンボリックリンクを配置
 # - Agent: .agents/skills/ に各スキルへのシンボリックリンクを配置
-# - KiroCLI: .kiro/agents/aidlc.json へのシンボリックリンクを配置
+# - KiroCLI: .kiro/agents/aidlc.json を実ファイルとして配置
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AIDLC_DIR="docs/aidlc"
+AIDLC_TEMPLATES_DIR="${SCRIPT_DIR}/../templates"
 SKILLS_DIR="skills"
 
 # skills/ ディレクトリの存在確認
@@ -114,7 +114,7 @@ setup_agent_skills() {
 # ============================================
 setup_kiro_agent() {
   local KIRO_AGENTS_DIR=".kiro/agents"
-  local AIDLC_KIRO_AGENT="$AIDLC_DIR/kiro/agents/aidlc.json"
+  local AIDLC_KIRO_AGENT="$AIDLC_TEMPLATES_DIR/kiro/agents/aidlc.json"
   local result=""
 
   if [ ! -f "$AIDLC_KIRO_AGENT" ]; then
@@ -126,25 +126,18 @@ setup_kiro_agent() {
   mkdir -p "$KIRO_AGENTS_DIR"
 
   local AGENT_PATH="$KIRO_AGENTS_DIR/aidlc.json"
-  local TARGET_PATH="../../$AIDLC_KIRO_AGENT"
 
-  if [ ! -e "$AGENT_PATH" ]; then
-    ln -s "$TARGET_PATH" "$AGENT_PATH"
-    echo "Created: $AGENT_PATH → $TARGET_PATH"
+  if [ ! -e "$AGENT_PATH" ] && [ ! -L "$AGENT_PATH" ]; then
+    \cp "$AIDLC_KIRO_AGENT" "$AGENT_PATH"
+    echo "Created: $AGENT_PATH (copied from template)"
     result="created"
 
   elif [ -L "$AGENT_PATH" ]; then
-    local CURRENT_TARGET
-    CURRENT_TARGET=$(readlink "$AGENT_PATH")
-    if [ "$CURRENT_TARGET" = "$TARGET_PATH" ]; then
-      echo "Skipped: $AGENT_PATH (already correct)"
-      result="skipped"
-    else
-      \rm "$AGENT_PATH"
-      ln -s "$TARGET_PATH" "$AGENT_PATH"
-      echo "Fixed: $AGENT_PATH (target corrected)"
-      result="updated"
-    fi
+    # シンボリックリンクを実ファイルに置き換え
+    \rm "$AGENT_PATH"
+    \cp "$AIDLC_KIRO_AGENT" "$AGENT_PATH"
+    echo "Replaced: $AGENT_PATH (symlink → real file)"
+    result="updated"
 
   else
     # 実ファイル（symlinkでない）: マージロジック
@@ -269,7 +262,7 @@ _apply_kiro_merge() {
 # ============================================
 # stdout: JSON文字列（テンプレートファイルの内容そのまま）
 _generate_kiro_template() {
-  local template_path="$AIDLC_DIR/kiro/agents/aidlc.json"
+  local template_path="$AIDLC_TEMPLATES_DIR/kiro/agents/aidlc.json"
   if [ ! -f "$template_path" ]; then
     return 2
   fi

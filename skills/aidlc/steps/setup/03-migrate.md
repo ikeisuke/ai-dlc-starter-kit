@@ -3,7 +3,7 @@
 セットアップで作成・更新したすべてのファイルをコミット:
 
 ```bash
-git add .aidlc/config.toml .aidlc/cycles/ skills/ docs/aidlc/ AGENTS.md CLAUDE.md .github/
+git add .aidlc/config.toml .aidlc/cycles/ skills/ docs/aidlc/ .github/
 # AIDLC-PATH: physical-path-required (reason: git-add)
 # .claude/skills ディレクトリが作成されている場合のみ追加
 [ -d ".claude/skills" ] && git add .claude/

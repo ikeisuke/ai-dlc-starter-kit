@@ -132,13 +132,14 @@ if [[ -f "$config_dest" ]]; then
   fi
 fi
 
-# AGENTS.md / CLAUDE.md の v1参照を v2形式に更新
+# AGENTS.md / CLAUDE.md からv1/旧v2のAI-DLC参照行を削除
+# スキル機構で自動発見されるため、AGENTS.md/CLAUDE.mdへの参照は不要
 for ref_file in AGENTS.md CLAUDE.md; do
-  if [[ -f "$ref_file" ]] && grep -q '@docs/aidlc/prompts/' "$ref_file"; then
+  if [[ -f "$ref_file" ]] && grep -q '@docs/aidlc/prompts/\|@skills/aidlc/\|@\.aidlc/' "$ref_file"; then
     tmp=$(mktemp)
-    sed 's|@docs/aidlc/prompts/AGENTS\.md|@skills/aidlc/AGENTS.md|g; s|@docs/aidlc/prompts/CLAUDE\.md|@skills/aidlc/CLAUDE.md|g' "$ref_file" > "$tmp" && mv "$tmp" "$ref_file"
-    echo "  Updated: $ref_file (v1 references → v2)" >&2
-    _add_applied "$(jq -n --arg p "$ref_file" '{resource_type: "ref_update", path: $p, status: "success", detail: "updated docs/aidlc/prompts/ references to skills/aidlc/"}')"
+    grep -v '@docs/aidlc/prompts/\|@skills/aidlc/AGENTS\|@skills/aidlc/CLAUDE\|@\.aidlc/AGENTS\|@\.aidlc/CLAUDE' "$ref_file" > "$tmp" && mv "$tmp" "$ref_file"
+    echo "  Cleaned: $ref_file (removed AI-DLC references, handled by skill mechanism)" >&2
+    _add_applied "$(jq -n --arg p "$ref_file" '{resource_type: "ref_cleanup", path: $p, status: "success", detail: "removed AI-DLC references (skill mechanism handles discovery)"}')"
   fi
 done
 
