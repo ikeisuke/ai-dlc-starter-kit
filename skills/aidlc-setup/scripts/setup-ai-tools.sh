@@ -1,6 +1,5 @@
 #!/bin/bash
 # AIツール設定のセットアップ
-# - KiroCLI: .kiro/agents/aidlc.json を実ファイルとして配置
 # - Claude Code: permissions 設定
 
 set -euo pipefail
@@ -9,298 +8,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AIDLC_TEMPLATES_DIR="${SCRIPT_DIR}/../templates"
 
 # ============================================
-# ============================================
-# KiroCLI エージェントのセットアップ
-# ============================================
-setup_kiro_agent() {
-  local KIRO_AGENTS_DIR=".kiro/agents"
-  local AIDLC_KIRO_AGENT="$AIDLC_TEMPLATES_DIR/kiro/agents/aidlc.json"
-  local result=""
-
-  if [ ! -f "$AIDLC_KIRO_AGENT" ]; then
-    echo "Warning: $AIDLC_KIRO_AGENT not found, skipping KiroCLI setup"
-    return
-  fi
-
-  # .kiro/agents ディレクトリ作成
-  mkdir -p "$KIRO_AGENTS_DIR"
-
-  local AGENT_PATH="$KIRO_AGENTS_DIR/aidlc.json"
-
-  if [ ! -e "$AGENT_PATH" ] && [ ! -L "$AGENT_PATH" ]; then
-    \cp "$AIDLC_KIRO_AGENT" "$AGENT_PATH"
-    echo "Created: $AGENT_PATH (copied from template)"
-    result="created"
-
-  elif [ -L "$AGENT_PATH" ]; then
-    # シンボリックリンクを実ファイルに置き換え
-    \rm "$AGENT_PATH"
-    \cp "$AIDLC_KIRO_AGENT" "$AGENT_PATH"
-    echo "Replaced: $AGENT_PATH (symlink → real file)"
-    result="updated"
-
-  else
-    # 実ファイル（symlinkでない）: マージロジック
-    # 注意: ここに到達する時点でファイルは存在する（! -e が false）ため
-    # _detect_json_state() は valid/invalid/unknown のいずれかを返す
-    local state
-    state=$(_detect_json_state "$AGENT_PATH")
-
-    case "$state" in
-      invalid)
-        if ! \cp "$AGENT_PATH" "${AGENT_PATH}.bak" 2>/dev/null; then
-          echo "Warning: Failed to backup $AGENT_PATH, skipping"
-          result="failed"
-        else
-          echo "Backup: $AGENT_PATH → ${AGENT_PATH}.bak (invalid JSON)"
-          if _generate_kiro_template | _write_atomic "$AGENT_PATH"; then
-            echo "Created: $AGENT_PATH (default template)"
-            result="created"
-          else
-            echo "Warning: Failed to write $AGENT_PATH, skipping"
-            result="failed"
-          fi
-        fi
-        ;;
-
-      unknown)
-        echo "Warning: jq/python3 not found, cannot validate/update existing $AGENT_PATH"
-        result="degraded"
-        ;;
-
-      valid)
-        local merge_output
-        merge_output=$(_apply_kiro_merge "$AGENT_PATH")
-        # 最後の行が result 種別、それ以前がメッセージ出力
-        result=$(echo "$merge_output" | tail -1)
-        echo "$merge_output" | sed '$ d'
-        ;;
-
-      *)
-        # absent等の想定外状態（ディレクトリ等の非通常ファイル）
-        echo "Warning: Unexpected state '$state' for $AGENT_PATH, skipping"
-        result="degraded"
-        ;;
-    esac
-  fi
-
-  echo "Done: KiroCLI agent setup complete"
-  echo "result:$result"
-
-  case "$result" in
-    created|updated|skipped|degraded) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-# ============================================
-# KiroCLI マージ結果処理（共通）
-# ============================================
-# $1: ターゲットファイルパス
-# マージ関数（jq/python3）を選択・実行し、結果を処理する
-# stdout: result種別（updated/skipped/failed/degraded）
-_apply_kiro_merge() {
-  local target_file="$1"
-  local merge_func=""
-
-  if command -v jq >/dev/null 2>&1; then
-    merge_func="_merge_kiro_commands_jq"
-  elif command -v python3 >/dev/null 2>&1; then
-    merge_func="_merge_kiro_commands_python"
-  else
-    echo "Warning: jq/python3 not found, cannot update existing $target_file"
-    echo "degraded"
-    return
-  fi
-
-  local merge_count_file
-  merge_count_file=$(mktemp /tmp/aidlc-merge-count.XXXXXX)
-  local merged_json merge_rc
-  merged_json=$("$merge_func" "$target_file" 2>"$merge_count_file") && merge_rc=0 || merge_rc=$?
-
-  case $merge_rc in
-    0)
-      local counts new_count skipped_count
-      counts=$(cat "$merge_count_file" 2>/dev/null)
-      \rm -f "$merge_count_file" 2>/dev/null
-      new_count=$(echo "$counts" | awk '{print $1}')
-      skipped_count=$(echo "$counts" | awk '{print $2}')
-      if echo "$merged_json" | _write_atomic "$target_file"; then
-        if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
-          echo "Updated: $target_file ($new_count new commands added, $skipped_count skipped by wildcard)"
-        else
-          echo "Updated: $target_file ($new_count new commands added)"
-        fi
-        echo "updated"
-      else
-        echo "Warning: Failed to write $target_file, skipping"
-        echo "failed"
-      fi
-      ;;
-    1)
-      local counts skipped_count
-      counts=$(cat "$merge_count_file" 2>/dev/null)
-      \rm -f "$merge_count_file" 2>/dev/null
-      skipped_count=$(echo "$counts" | awk '{print $2}')
-      if [ "$skipped_count" -gt 0 ] 2>/dev/null; then
-        echo "Skipped: $target_file (all commands already present, $skipped_count skipped by wildcard)"
-      else
-        echo "Skipped: $target_file (all commands already present)"
-      fi
-      echo "skipped"
-      ;;
-    *)
-      \rm -f "$merge_count_file" 2>/dev/null
-      echo "Warning: Failed to merge commands for $target_file, skipping"
-      echo "failed"
-      ;;
-  esac
-}
-
-# ============================================
-# KiroCLI テンプレート生成
-# ============================================
-# stdout: JSON文字列（テンプレートファイルの内容そのまま）
-_generate_kiro_template() {
-  local template_path="$AIDLC_TEMPLATES_DIR/kiro/agents/aidlc.json"
-  if [ ! -f "$template_path" ]; then
-    return 2
-  fi
-  cat "$template_path"
-}
-
-# KiroCLI allowedCommands マージ（jq版）
-# $1: 既存ファイルパス
-# stdout: マージ済みJSON（メタデータなし）
-# stderr: "new_count skipped_count"（スペース区切り）
-# 戻り値: 0=新規追加あり, 1=全パターン既存, 2=エラー
-_merge_kiro_commands_jq() {
-  local existing_file="$1"
-  local template_json
-  template_json=$(_generate_kiro_template) || return 2
-  local template_commands
-  template_commands=$(echo "$template_json" | jq '.toolsSettings.shell.allowedCommands') || return 2
-
-  # スキーマ検証: allowedCommands が配列かチェック
-  local ac_type
-  ac_type=$(jq -r '.toolsSettings.shell.allowedCommands | type' "$existing_file" 2>/dev/null) || ac_type="null"
-  case "$ac_type" in
-    array|null) ;; # OK: 配列またはnull/未定義
-    *) return 2 ;; # 不正型
-  esac
-
-  local merged
-  merged=$(jq --argjson defaults "$template_commands" '
-    .toolsSettings //= {} |
-    .toolsSettings.shell //= {} |
-    .toolsSettings.shell.allowedCommands //= [] |
-
-    .toolsSettings.shell.allowedCommands as $existing |
-    ($defaults - $existing) as $new_candidates |
-
-    # ワイルドカード: 末尾が "*" のパターン
-    ($existing | map(select(type == "string" and endswith("*")))) as $wildcards |
-
-    # 包含チェック
-    [
-      $new_candidates[] |
-      . as $candidate |
-      if ($candidate | type) != "string" then $candidate
-      else
-        if [
-          $wildcards[] |
-          rtrimstr("*") as $prefix |
-          select($candidate | startswith($prefix))
-        ] | length > 0 then empty
-        else $candidate
-        end
-      end
-    ] as $new |
-
-    (($new_candidates | length) - ($new | length)) as $skipped |
-
-    (if ($new | length) > 0 then .toolsSettings.shell.allowedCommands += $new else . end) |
-    . + {"_meta": {"new": ($new | length), "skipped": $skipped}}
-  ' "$existing_file") || return 2
-
-  local new_count skipped_count
-  new_count=$(echo "$merged" | jq -r '._meta.new') || return 2
-  skipped_count=$(echo "$merged" | jq -r '._meta.skipped') || return 2
-  merged=$(echo "$merged" | jq 'del(._meta)') || return 2
-
-  echo "$merged"
-  echo "$new_count $skipped_count" >&2
-  if [ "$new_count" -gt 0 ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-# KiroCLI allowedCommands マージ（Python3版）
-# インターフェースは _merge_kiro_commands_jq と同一
-_merge_kiro_commands_python() {
-  local existing_file="$1"
-  local template_json
-  template_json=$(_generate_kiro_template) || return 2
-
-  python3 -c "
-import json, sys
-
-def is_covered_by_wildcard(candidate, wildcards):
-    if not isinstance(candidate, str):
-        return False
-    for wc in wildcards:
-        if not isinstance(wc, str) or not wc.endswith('*'):
-            continue
-        prefix = wc[:-1]
-        if candidate.startswith(prefix):
-            return True
-    return False
-
-try:
-    with open(sys.argv[1]) as f:
-        data = json.load(f)
-    tpl = json.loads(sys.argv[2])
-    defaults = tpl.get('toolsSettings', {}).get('shell', {}).get('allowedCommands', [])
-    if not isinstance(defaults, list):
-        sys.exit(2)
-
-    ts = data.setdefault('toolsSettings', {})
-    sh = ts.setdefault('shell', {})
-    ac = sh.get('allowedCommands')
-
-    # スキーマ検証: null/未定義は空配列、それ以外の非配列は不正型
-    if ac is None:
-        sh['allowedCommands'] = []
-    elif not isinstance(ac, list):
-        sys.exit(2)
-
-    existing = sh['allowedCommands']
-    existing_set = {x for x in existing if isinstance(x, str)}
-    new_candidates = [p for p in defaults if p not in existing_set]
-
-    wildcards = [r for r in existing if isinstance(r, str) and r.endswith('*')]
-    new_patterns = [p for p in new_candidates if not is_covered_by_wildcard(p, wildcards)]
-    skipped_count = len(new_candidates) - len(new_patterns)
-
-    if new_patterns:
-        sh['allowedCommands'].extend(new_patterns)
-
-    total_new = len(new_patterns)
-    print(json.dumps(data, indent=2, ensure_ascii=False))
-    print(f'{total_new} {skipped_count}', file=sys.stderr)
-    if total_new > 0:
-        sys.exit(0)
-    else:
-        sys.exit(1)
-except SystemExit:
-    raise
-except Exception:
-    sys.exit(2)
-" "$existing_file" "$template_json"
-}
-
 # ============================================
 # Claude Code 許可パターンのセットアップ
 # ============================================
@@ -381,7 +88,7 @@ _generate_template() {
       "Bash(command -v:*)",
       "Bash(date *)",
       "Bash(diff *)",
-      "Bash(skills/aidlc/scripts/*)",
+      "Bash(skills/*/scripts/*)",
       "Bash(skills/*/bin/*)",
       "Bash(echo:*)",
       "Bash(GIT_TERMINAL_PROMPT=0 git fetch:*)",
@@ -423,6 +130,8 @@ _generate_template() {
       "Bash(touch *)",
       "Bash(wc *)",
       "Bash(which *)",
+      "Skill(aidlc-feedback)",
+      "Skill(aidlc-migrate)",
       "Skill(aidlc-setup)",
       "Skill(reviewing-architecture)",
       "Skill(reviewing-code)",
@@ -780,11 +489,7 @@ setup_claude_permissions() {
 echo "=== AI Tools Setup ==="
 echo ""
 
-echo "[1/2] Setting up KiroCLI agent..."
-setup_kiro_agent
-echo ""
-
-echo "[2/2] Setting up Claude Code permissions..."
+echo "[1/1] Setting up Claude Code permissions..."
 setup_claude_permissions
 echo ""
 

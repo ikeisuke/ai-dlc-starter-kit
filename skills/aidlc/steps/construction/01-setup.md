@@ -220,15 +220,6 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 - **担当**: @username または -
 ```
 
-> **DEPRECATED (v1.9.0)**: この後方互換性セクションは v2.0.0 で削除予定です。
-> 新規プロジェクトでは影響ありません。
-
-**後方互換性**:
-- 「実装状態」セクションがないファイルは、まず `.aidlc/cycles/{{CYCLE}}/construction/progress.md` が存在するか確認
-- **progress.mdが存在する場合**: そのファイルから該当Unitの状態を読み取り、Unit定義ファイルに「実装状態」セクションを追加（状態を移行）
-- **progress.mdが存在しない場合**: 「未着手」として扱い、Unit定義ファイルに「実装状態」セクションを追加
-- テンプレート: `templates/unit_definition_template.md` の末尾を参照
-
 ### 8. バックログ確認
 
 対象Unitに関連するIssueとバックログを確認する。

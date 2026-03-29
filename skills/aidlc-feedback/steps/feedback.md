@@ -7,8 +7,12 @@
 最初に `.aidlc/config.toml` の設定を確認する：
 
 ```bash
-scripts/read-config.sh rules.feedback.enabled
+dasel -f .aidlc/config.toml -r toml 'rules.feedback.enabled'
 ```
+
+**エラーハンドリング**:
+- `.aidlc/config.toml` 不在: `true`（デフォルト有効）として続行。初回セットアップ前の正常ケース
+- `dasel` 未インストール / TOML破損・キー不在: ユーザーに送信可否を対話確認（自動判定しない）
 
 **`false` の場合**:
 

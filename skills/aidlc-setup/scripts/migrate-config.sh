@@ -1,34 +1,67 @@
 #!/usr/bin/env bash
 #
-# migrate-config.sh - aidlc.toml 設定マイグレーション
+# migrate-config.sh - config.toml 設定マイグレーション（自己完結版）
 #
 # 使用方法:
 #   ./migrate-config.sh [--config <path>] [--rules <path>] [--dry-run]
 #
 # パラメータ:
 #   --config <path>: config.toml のパス（デフォルト: .aidlc/config.toml）
-#   --rules <path>: rules.md のパス（デフォルト: .aidlc/rules.md）
+#   --rules <path>: rules.md のパス（廃止設定の移行先参照用。config.toml の変更のみ行い、rules.md 自体は更新しない）
 #   --dry-run: 実際の変更を行わず、実行予定の操作を表示
 #
-# 出力形式:
-#   - migrate:<action>:<target> : 実行された移行操作
-#   - skip:<reason>:<target>   : スキップされた操作
-#   - warn:<type>:<detail>     : 警告（ユーザー対応が必要）
-#   - error:<type>             : エラー
+# 出力形式（stdout - 構造化メッセージ）:
+#   - mode:{execute|dry-run}     : 実行モード
+#   - config:{path}              : 対象ファイルパス
+#   - migrate:<action>:<target>  : 実行された移行操作
+#   - skip:<reason>:<target>     : スキップされた操作
+#   - warn:<type>:<detail>       : 警告（ユーザー対応が必要）
+#   - result:{status}:migrated={N},skipped={N},warnings={N} : 最終サマリ
+#
+# 出力（stderr）:
+#   - 人間向け診断メッセージ（廃止設定の案内等）
 #
 # 終了コード:
-#   0: 正常終了（警告があっても処理完了なら exit 0。警告は stdout の warn:* で通知）
+#   0: 正常終了（警告があっても処理完了なら exit 0）
 #   1: エラー（ファイル不在等）
 #
 
 set -euo pipefail
 
+# --- パス解決（bootstrap.sh 非依存・自己完結） ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/lib/bootstrap.sh"
+SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-CONFIG="${AIDLC_CONFIG}"
-RULES="${AIDLC_PROJECT_ROOT}/.aidlc/rules.md"
+# プロジェクトルート解決（優先順位: 引数推定 → pwd → git rev-parse → エラー）
+_resolve_project_root() {
+    # 1. --config 引数からの推定（後で引数解析後に再評価）
+    # 2. pwd に .aidlc/ が存在する場合
+    if [[ -d "${PWD}/.aidlc" ]]; then
+        echo "$PWD"
+        return
+    fi
+    # 3. git rev-parse
+    local git_root
+    git_root="$(git rev-parse --show-toplevel 2>/dev/null)" || true
+    if [[ -n "$git_root" ]]; then
+        echo "$git_root"
+        return
+    fi
+    # 4. 解決不可
+    echo ""
+}
+
+PROJECT_ROOT="$(_resolve_project_root)"
+
+# デフォルト値（引数解析で上書き可能）
+CONFIG=""
+RULES=""
 DRY_RUN=false
+
+# カウンタ
+_migrate_count=0
+_skip_count=0
+_warn_count=0
 _has_warnings=false
 _cleanup_files=()
 
@@ -54,6 +87,23 @@ _safe_transform() {
     local tmp
     tmp=$(_mktmp)
     "$@" "$target" > "$tmp" && \mv "$tmp" "$target"
+}
+
+# カウント付き出力ヘルパー
+_emit_migrate() {
+    echo "migrate:$1"
+    _migrate_count=$((_migrate_count + 1))
+}
+
+_emit_skip() {
+    echo "skip:$1"
+    _skip_count=$((_skip_count + 1))
+}
+
+_emit_warn() {
+    echo "warn:$1"
+    _warn_count=$((_warn_count + 1))
+    _has_warnings=true
 }
 
 # 引数解析
@@ -86,7 +136,33 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# aidlc.toml 存在・シンボリックリンク確認
+# --config からプロジェクトルートを再推定（--config は常に最優先）
+if [[ -n "$CONFIG" ]]; then
+    _config_dirname="$(dirname "$CONFIG")"
+    if [[ -d "$_config_dirname" ]]; then
+        _config_dir="$(cd "$_config_dirname" && pwd)"
+        # .aidlc/config.toml → .aidlc/ の親がプロジェクトルート
+        if [[ "$(basename "$_config_dir")" == ".aidlc" ]]; then
+            PROJECT_ROOT="$(cd "${_config_dir}/.." && pwd)"
+        fi
+    fi
+fi
+
+# プロジェクトルート必須チェック
+if [[ -z "$PROJECT_ROOT" ]]; then
+    echo "error:project-root-not-found" >&2
+    exit 1
+fi
+
+# デフォルトパス設定
+[[ -z "$CONFIG" ]] && CONFIG="${PROJECT_ROOT}/.aidlc/config.toml"
+[[ -z "$RULES" ]] && RULES="${PROJECT_ROOT}/.aidlc/rules.md"
+
+# ローカル設定ファイルパス
+LOCAL_CONFIG="${PROJECT_ROOT}/.aidlc/config.local.toml"
+LOCAL_CONFIG_LEGACY="${PROJECT_ROOT}/.aidlc/config.toml.local"
+
+# config.toml 存在・シンボリックリンク確認
 if [[ -L "$CONFIG" ]]; then
     echo "error:symlink-detected:config" >&2
     exit 1
@@ -116,7 +192,7 @@ if grep -q "^\[rules\.mcp_review\]" "$_target"; then
     if grep -q "^\[rules\.reviewing\]" "$_target"; then
         # 両方存在: 旧セクションを削除
         _safe_transform "$_target" awk '/^\[rules\.mcp_review\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
-        echo "migrate:remove-duplicate:rules.mcp_review"
+        _emit_migrate "remove-duplicate:rules.mcp_review"
     else
         # リネーム
         _safe_transform "$_target" sed 's/^\[rules\.mcp_review\]/[rules.reviewing]/'
@@ -124,17 +200,16 @@ if grep -q "^\[rules\.mcp_review\]" "$_target"; then
         _safe_transform "$_target" sed '/^\[rules\.reviewing\]/,/^\[/ {
           s/^ai_tools/tools/
         }'
-        echo "migrate:rename:rules.mcp_review->rules.reviewing"
+        _emit_migrate "rename:rules.mcp_review->rules.reviewing"
     fi
     # オーバーライドファイルの旧キー警告
-    for _override_file in "$HOME/.aidlc/config.toml" "${AIDLC_LOCAL_CONFIG}" "${AIDLC_LOCAL_CONFIG_LEGACY}"; do
+    for _override_file in "$HOME/.aidlc/config.toml" "${LOCAL_CONFIG}" "${LOCAL_CONFIG_LEGACY}"; do
         if [[ -f "$_override_file" ]] && grep -qE "mcp_review|ai_tools" "$_override_file"; then
-            echo "warn:override-old-keys:${_override_file}"
-            _has_warnings=true
+            _emit_warn "override-old-keys:${_override_file}"
         fi
     done
 else
-    echo "skip:not-found:rules.mcp_review"
+    _emit_skip "not-found:rules.mcp_review"
 fi
 
 # 2. 不足セクション追加
@@ -144,9 +219,9 @@ _add_section() {
 
     if ! grep -q "^\\[${section_pattern}\\]" "$_target"; then
         printf '\n%s\n' "$section_content" >> "$_target"
-        echo "migrate:add-section:${section_pattern}"
+        _emit_migrate "add-section:${section_pattern}"
     else
-        echo "skip:already-exists:${section_pattern}"
+        _emit_skip "already-exists:${section_pattern}"
     fi
 }
 
@@ -174,11 +249,10 @@ _add_section "rules\\.history" '[rules.history]
 level = "standard"'
 
 # [rules.backlog] は v2.0.3 で廃止。新規追加しない。
-# 既存の設定が残っている場合は警告のみ出力。
 if grep -q "^\[rules\.backlog\]" "$_target" 2>/dev/null || grep -q "^\[backlog\]" "$_target" 2>/dev/null; then
-    echo "skip:deprecated:rules.backlog(v2.0.3: backlog is now always GitHub Issues)"
+    _emit_skip "deprecated:rules.backlog(v2.0.3: backlog is now always GitHub Issues)"
 else
-    echo "skip:not-found:rules.backlog"
+    _emit_skip "not-found:rules.backlog"
 fi
 
 _add_section "rules\\.linting" '[rules.linting]
@@ -201,9 +275,9 @@ if grep -q "^\[rules\.reviewing\]" "$_target"; then
     _tools_count=$(sed -n '/^\[rules\.reviewing\]/,/^\[/p' "$_target" | { grep -c "^tools" || true; })
     if [[ "$_tools_count" == "0" ]]; then
         _tmp_tools=$(_mktmp)
-        awk '
+        if awk '
 /^\[rules\.reviewing\]/{in_section=1}
-in_section && /^mode = /{
+in_section && /^mode[[:space:]]*=/{
     print
     print "# tools: AIレビューに使用するツールの優先順位リスト（v1.8.2で追加、v1.14.0でリネーム）"
     print "# - デフォルト: [\"codex\"]"
@@ -214,17 +288,21 @@ in_section && /^mode = /{
 }
 /^\[/{if(in_section && !/^\[rules\.reviewing\]/) in_section=0}
 {print}
-' "$_target" > "$_tmp_tools" && \mv "$_tmp_tools" "$_target" && {
-            echo "migrate:add-key:rules.reviewing.tools"
-        } || {
-            echo "warn:awk-failed:tools-addition"
-            _has_warnings=true
-        }
+' "$_target" > "$_tmp_tools" && \mv "$_tmp_tools" "$_target"; then
+            # 挿入後の再確認: tools が実際に追加されたか検証
+            if sed -n '/^\[rules\.reviewing\]/,/^\[/p' "$_target" | grep -q "^tools[[:space:]]*="; then
+                _emit_migrate "add-key:rules.reviewing.tools"
+            else
+                _emit_warn "tools-insertion-unverified:rules.reviewing.tools"
+            fi
+        else
+            _emit_warn "awk-failed:tools-addition"
+        fi
     else
-        echo "skip:already-exists:rules.reviewing.tools"
+        _emit_skip "already-exists:rules.reviewing.tools"
     fi
 else
-    echo "skip:section-not-found:rules.reviewing"
+    _emit_skip "section-not-found:rules.reviewing"
 fi
 
 _add_section "rules\\.commit" '[rules.commit]
@@ -234,73 +312,78 @@ _add_section "rules\\.commit" '[rules.commit]
 # - デフォルト: "Claude <noreply@anthropic.com>"
 ai_author = "Claude <noreply@anthropic.com>"'
 
-# --- セクション 7.5: 廃止設定の移行 ---
+# --- v2.0.0 追加セクション ---
 
+_add_section "rules\\.automation" '[rules.automation]
+# セミオート設定（v2.0.0で追加）
+# mode: "manual" | "semi_auto"
+# - manual: すべての承認ポイントでユーザー確認（デフォルト）
+# - semi_auto: AIレビュー合格時にユーザー承認を省略して自動遷移
+mode = "manual"'
+
+_add_section "rules\\.construction" '[rules.construction]
+# Construction Phase設定（v2.0.0で追加）
+# max_retry: Self-Healingループの最大リトライ回数（0以上の整数、デフォルト: 3）
+max_retry = 3'
+
+_add_section "rules\\.preflight" '[rules.preflight]
+# プリフライトチェック設定（v2.0.0で追加）
+# enabled: true | false（デフォルト: true）
+# checks: 実行するオプションチェック項目のリスト
+enabled = true
+checks = ["gh", "review-tools", "config-validation"]'
+
+_add_section "rules\\.squash" '[rules.squash]
+# Squash統合設定（v2.0.0で追加）
+# enabled: true | false（デフォルト: false）
+enabled = false'
+
+_add_section "rules\\.unit_branch" '[rules.unit_branch]
+# Unitブランチ設定（v2.0.0で追加）
+# enabled: true | false（デフォルト: false）
+enabled = false'
+
+_add_section "rules\\.upgrade_check" '[rules.upgrade_check]
+# アップグレードチェック設定（v2.0.0で追加）
+# enabled: true | false（デフォルト: false）
+enabled = false'
+
+# --- セクション 7.5: 廃止設定の検出 ---
+
+# [inception.dependabot] 廃止設定検出
 if grep -q "^\[inception\.dependabot\]" "$_target"; then
     _dep_enabled=$(sed -n '/^\[inception\.dependabot\]/,/^\[/p' "$_target" | grep "^enabled" | head -1 | sed 's/.*= *//' | tr -d ' "')
     if [[ "$_dep_enabled" == "true" ]]; then
         if [[ -f "$RULES" ]] && grep -q "## Dependabot PR確認" "$RULES" 2>/dev/null; then
-            echo "skip:already-migrated:inception.dependabot"
+            _emit_skip "already-migrated:inception.dependabot"
         else
-            if [[ "$DRY_RUN" == "true" ]]; then
-                echo "migrate:deprecate:inception.dependabot->rules.md"
-            else
-                if [[ -L "$RULES" ]]; then
-                    echo "warn:symlink-detected:rules"
-                    _has_warnings=true
-                elif [[ -f "$RULES" ]]; then
-                    cat >> "$RULES" << 'RULES_EOF'
-
----
-
-## Dependabot PR確認（v1.13.0で廃止された機能）
-
-このプロジェクトでは以前 Dependabot PR 確認機能を使用していました。
-v1.13.0 以降、この機能はスターターキットから削除されましたが、
-必要に応じて以下のワークフローを手動で実行できます。
-
-### 手動確認手順
-
-```bash
-# オープンな Dependabot PR を一覧表示
-gh pr list --author "app/dependabot" --state open
-```
-
-### 推奨対応
-
-1. Inception Phase 開始時に上記コマンドで Dependabot PR を確認
-2. 対応が必要な PR がある場合、ユーザーストーリーと Unit 定義に追加
-RULES_EOF
-                    echo "migrate:deprecate:inception.dependabot->rules.md"
-                else
-                    echo "warn:rules-not-found"
-                    _has_warnings=true
-                fi
-            fi
+            _emit_warn "deprecated-needs-manual:inception.dependabot"
+            echo "[inception.dependabot の廃止] enabled=true が検出されました。" >&2
+            echo "v1.13.0 以降、この機能はスターターキットから削除されました。" >&2
+            echo "必要に応じて ${RULES} に手動で Dependabot PR 確認手順を追加してください。" >&2
         fi
     else
-        echo "skip:disabled:inception.dependabot"
+        _emit_skip "disabled:inception.dependabot"
     fi
 else
-    echo "skip:not-found:inception.dependabot"
+    _emit_skip "not-found:inception.dependabot"
 fi
 
 # [rules.jj] 廃止設定検出
 if grep -q "^\[rules\.jj\]" "$_target"; then
-    echo "warn:deprecated-config:rules.jj"
-    echo "[jj設定の廃止] aidlc.toml に [rules.jj] セクションが検出されました。" >&2
+    _emit_warn "deprecated-config:rules.jj"
+    echo "[jj設定の廃止] config.toml に [rules.jj] セクションが検出されました。" >&2
     echo "jjサポートは v1.21.0 でスターターキット本体から削除されました。" >&2
-    echo "移行手順: ${AIDLC_PLUGIN_ROOT}/guides/jj-migration.md" >&2
+    echo "移行手順: ${SKILL_ROOT}/guides/jj-migration.md" >&2
     echo "[rules.jj] セクションは手動で削除してください。" >&2
-    _has_warnings=true
 else
-    echo "skip:not-found:rules.jj"
+    _emit_skip "not-found:rules.jj"
 fi
 
-# 終了サマリ: 警告の有無を通知
+# --- 終了サマリ ---
 if [[ "$_has_warnings" == "true" ]]; then
-    echo "result:completed-with-warnings"
+    echo "result:completed-with-warnings:migrated=${_migrate_count},skipped=${_skip_count},warnings=${_warn_count}"
 else
-    echo "result:completed"
+    echo "result:completed:migrated=${_migrate_count},skipped=${_skip_count},warnings=${_warn_count}"
 fi
 exit 0

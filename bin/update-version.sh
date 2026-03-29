@@ -89,13 +89,14 @@ _current_version_txt=$(cat version.txt) || {
     exit 1
 }
 
-_current_aidlc_toml=$(sed -n 's/^[[:space:]]*starter_kit_version[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' .aidlc/config.toml) || {
-    echo "error:config-toml-read-failed"
-    exit 1
-}
-_match_count=$(grep -c '^[[:space:]]*starter_kit_version[[:space:]]*=' .aidlc/config.toml || true)
-if [[ "$_match_count" -ne 1 ]] || [[ -z "$_current_aidlc_toml" ]]; then
-    echo "error:invalid-config-toml-format"
+_rc=0
+_current_aidlc_toml=$(read_starter_kit_version ".aidlc/config.toml") || _rc=$?
+if [[ "$_rc" -ne 0 ]]; then
+    if [[ "$_rc" -eq 2 ]]; then
+        echo "error:config-toml-read-failed"
+    else
+        echo "error:invalid-config-toml-format"
+    fi
     exit 1
 fi
 
