@@ -176,7 +176,7 @@ parse_args() {
         fi
         MESSAGE="$(cat "$MESSAGE_FILE")"
     fi
-    if [[ -z "$MESSAGE" ]]; then
+    if [[ "$DRY_RUN" != "true" ]] && [[ -z "$MESSAGE" ]]; then
         echo "Error: --message is required" >&2
         exit 1
     fi

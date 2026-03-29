@@ -19,7 +19,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/lib/bootstrap.sh"
+AIDLC_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+  echo "error:project-root-not-found" >&2; exit 2
+}
+AIDLC_PLUGIN_ROOT="${AIDLC_PROJECT_ROOT}/skills/aidlc"
+AIDLC_CONFIG="${AIDLC_PROJECT_ROOT}/.aidlc/config.toml"
+AIDLC_CYCLES="${AIDLC_PROJECT_ROOT}/.aidlc/cycles"
 
 # jq の存在確認
 if ! command -v jq >/dev/null 2>&1; then

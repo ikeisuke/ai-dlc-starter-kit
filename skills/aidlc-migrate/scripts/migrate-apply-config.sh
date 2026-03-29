@@ -17,7 +17,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/lib/bootstrap.sh"
+AIDLC_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+  echo "error:project-root-not-found" >&2; exit 2
+}
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is not installed." >&2
