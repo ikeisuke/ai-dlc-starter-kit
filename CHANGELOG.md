@@ -7,6 +7,30 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.8] - 2026-03-29
+
+### Added
+
+- `/aidlc help` (`h`) アクションを追加: 利用可能なアクション一覧をヘルプ表示（#464）
+- 3文字短縮形（`inc`/`con`/`ops`/`exp`）を追加し、ヘルプ表示で優先表示
+- スキルスクリプト設計ガイドライン（`guides/script-design-guideline.md`）を整備
+
+### Changed
+
+- 主要4フェーズ（Inception/Construction/Operations/Setup）の総点検を実施し、プロンプトとスクリプトの乖離を修正
+- Setup Phase総点検で重大1件修正、軽微4件をIssue化（#478）
+- Operations Phase総点検で重大1件修正、軽微7件をIssue化（#477）
+- Construction Phase総点検で重大0件、軽微3件をIssue化（#474-#476）
+- Inception Phase総点検で重大1件修正、軽微4件をIssue化（#470-#473）
+
+### Fixed
+
+- `squash-unit.sh` のバグ修正（#463）
+- `squash-unit.sh` の `--dry-run` 時に `--message` 必須チェックをスキップするよう修正（#466）
+- `aidlc-setup`/`aidlc-migrate` スクリプトの `bootstrap.sh` 依存を脱却（#465）
+
+---
+
 ## [2.0.7] - 2026-03-29
 
 ### Added
