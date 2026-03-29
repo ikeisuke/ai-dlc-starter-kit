@@ -34,9 +34,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 2. ARGUMENTSが指定されている場合:
    - 先頭の空白区切りトークンを action として取得
-   - action が短縮形（`i` / `c` / `o` / `e` / `h`）の場合、フル名に展開する: `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`
+   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`
    - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `help`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/help（短縮形: i/c/o/e/h）のいずれかを指定してください」を表示して処理を中断
+     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/help（短縮形: inc/con/ops/exp または i/c/o/e/h）のいずれかを指定してください」を表示して処理を中断
    - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
 
 パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
@@ -45,11 +45,11 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 | 引数 | 対応処理 |
 |------|----------|
-| `inception` (`i`) / なし（cycleブランチ外） | Inception Phase |
-| `construction` (`c`) / なし（cycleブランチ上） | Construction Phase |
-| `operations` (`o`) | Operations Phase |
+| `inception` (`inc` / `i`) / なし（cycleブランチ外） | Inception Phase |
+| `construction` (`con` / `c`) / なし（cycleブランチ上） | Construction Phase |
+| `operations` (`ops` / `o`) | Operations Phase |
 | `setup` | `/aidlc-setup` スキルに委譲 |
-| `express` (`e`) | Inception Phase（エクスプレスモード有効） |
+| `express` (`exp` / `e`) | Inception Phase（エクスプレスモード有効） |
 | `feedback` | `/aidlc-feedback` スキルに委譲 |
 | `migrate` | `/aidlc-migrate` スキルに委譲 |
 | `help` (`h`) | ヘルプ表示（アクション一覧） |
@@ -134,17 +134,18 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 
 | アクション | 短縮形 | 説明 |
 |-----------|--------|------|
-| inception | i | 要件定義（Intent・ストーリー・Unit定義） |
-| construction | c | 実装（設計・コーディング・テスト） |
-| operations | o | 運用（デプロイ・リリース・PR管理） |
+| inception | inc, i | 要件定義（Intent・ストーリー・Unit定義） |
+| construction | con, c | 実装（設計・コーディング・テスト） |
+| operations | ops, o | 運用（デプロイ・リリース・PR管理） |
 | setup | - | AI-DLC環境の初期セットアップ |
-| express | e | エクスプレスモード（Inception→Construction自動遷移） |
+| express | exp, e | エクスプレスモード（Inception→Construction自動遷移） |
 | feedback | - | AI-DLCへのフィードバック送信 |
 | migrate | - | v1→v2マイグレーション |
 | help | h | このヘルプを表示 |
 
 使い方: /aidlc <action> [追加コンテキスト]
-例: /aidlc c 前回のセッションで設計レビューまで完了
+例: /aidlc ops   （Operations Phase開始）
+例: /aidlc con 前回のセッションで設計レビューまで完了
 ```
 
 ## 制約事項
