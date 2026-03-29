@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.7] - 2026-03-29
+
+### Added
+
+- `install-kiro-agent` スキルを新設: KiroCLIエージェント設定ファイルを `~/.kiro/agents/` に配置するインストーラー（#458）
+- メタ開発時のファイル参照境界ルールを `.aidlc/rules.md` に明文化（#461）
+- setup/migrate/feedback を独立スキルに分離し、保守性・拡張性を向上（#457）
+
+### Changed
+
+- ステップファイルを圧縮・分割し、AIエージェントの初期化オーバーヘッドを削減（#460）
+- `setup-ai-tools.sh` からKiroCLI関連コード（約300行）を削除し、`install-kiro-agent` スキルに移行
+- `read_starter_kit_version` に `match_count` 検証を統合し、バージョン検証を一元化（#452）
+- マイグレーション処理を `bootstrap.sh` 非依存化し、v2セクション補完・エラー表示を改善（#456）
+
+### Fixed
+
+- プロンプト・ステップファイル内の不適切なパス参照を修正（#461）
+- フェーズプロンプトからrules.mdへの参照を正しく記載（#438）
+
+---
+
 ## [2.0.6] - 2026-03-29
 
 ### Added
