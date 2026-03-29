@@ -44,7 +44,9 @@ strip_v_prefix() {
     echo "${1#v}"
 }
 
-# config.toml から starter_kit_version を読み取る
+# config.toml から starter_kit_version を読み取る（検証付き読み取り）
+#
+# キーの一意性（正確に1件存在すること）と値の存在を検証して返す。
 #
 # 引数:
 #   $1 - config.toml のパス
@@ -52,13 +54,29 @@ strip_v_prefix() {
 #   stdout: バージョン文字列（取得成功時）
 # 戻り値:
 #   0: 取得成功
-#   1: キー不在またはフォーマット不正
+#   1: キー不在、複数キー存在、または値が空（バリデーションエラー）
 #   2: ファイル読取エラー
 read_starter_kit_version() {
     local config_path="$1"
 
     if [[ ! -f "$config_path" ]]; then
         return 2
+    fi
+
+    if [[ ! -r "$config_path" ]]; then
+        return 2
+    fi
+
+    # キー一意性検証: starter_kit_version が正確に1件存在することを確認
+    local match_count
+    match_count=$(grep -c '^[[:space:]]*starter_kit_version[[:space:]]*=' "$config_path" || true)
+
+    if [[ "$match_count" -eq 0 ]]; then
+        return 1
+    fi
+
+    if [[ "$match_count" -ne 1 ]]; then
+        return 1
     fi
 
     local version

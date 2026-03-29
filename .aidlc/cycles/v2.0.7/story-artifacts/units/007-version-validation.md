@@ -7,9 +7,11 @@
 - ストーリー 9: バージョン検証の一元化 (#452)
 
 ## 責務
-- バージョン検証の共通ロジック作成
-- aidlc-setup.sh、check-version.sh、update-version.shから共通ロジックの呼び出し
+- バージョン検証の共通ロジック作成（version.shのread_starter_kit_version()にmatch_count検証を統合）
+- bin/update-version.shから共通ロジック（read_starter_kit_version()）の呼び出し
 - 既存動作（正常系・異常系）の維持
+
+**注**: 当初の責務記載（aidlc-setup.sh、check-version.sh）はUnit 001（スキル分離）後に実在しないファイルを参照していたため、実在ファイルに基づき更新。aidlc-setup/scripts/read-version.shはスキル境界制約により変更対象外。
 
 ## 境界
 - バージョン文字列のフォーマット変更は含まない
@@ -45,9 +47,9 @@ Low
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-03-29
+- **完了日**: 2026-03-29
+- **担当**: AI
 - **エクスプレス適格性**: -
 - **適格性理由**: -
