@@ -248,7 +248,7 @@ mkdir -p .aidlc/cycles
 テンプレートファイルはスキルディレクトリ内に配置されています:
 
 ```
-config/aidlc.toml.template
+templates/config.toml.template
 ```
 
 **プレースホルダーの置換**:

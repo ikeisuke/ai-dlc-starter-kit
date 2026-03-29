@@ -48,10 +48,10 @@ ARGUMENTS文字列を以下のルールでパースする:
 | `inception` (`i`) / なし（cycleブランチ外） | Inception Phase |
 | `construction` (`c`) / なし（cycleブランチ上） | Construction Phase |
 | `operations` (`o`) | Operations Phase |
-| `setup` | Setup Phase（独立フロー） |
+| `setup` | `/aidlc-setup` スキルに委譲 |
 | `express` (`e`) | Inception Phase（エクスプレスモード有効） |
-| `feedback` | フィードバック送信 → 「フィードバック送信」セクション参照 |
-| `migrate` | v1→v2移行（独立フロー） |
+| `feedback` | `/aidlc-feedback` スキルに委譲 |
+| `migrate` | `/aidlc-migrate` スキルに委譲 |
 
 引数なしの場合: ブランチ名が `cycle/*` なら construction、そうでなければ inception。
 
@@ -59,7 +59,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 ## 共通初期化フロー
 
-`inception` / `construction` / `operations` / `express` で実行する。**`setup`・`migrate`・`feedback` には適用しない**（直接ステップ4のフェーズステップ読み込みに進む）。
+`inception` / `construction` / `operations` / `express` で実行する。
 
 ### ステップ1: 共通ステップ読み込み
 
@@ -89,8 +89,6 @@ ARGUMENTS文字列を以下のルールでパースする:
 | inception | `steps/inception/01-setup.md` → `02-preparation.md` → `03-intent.md` → `04-stories-units.md` → `05-completion.md`（`06-backtrack.md` は必要時） |
 | construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md` |
 | operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
-| setup | `steps/setup/01-detect.md` → `02-generate-config.md` → `03-migrate.md` |
-| migrate | `steps/migrate/01-preflight.md` → `02-execute.md` → `03-verify.md` |
 
 ## ワークフロー共通ステップ
 
@@ -112,15 +110,19 @@ ARGUMENTS文字列を以下のルールでパースする:
 Inception完了後 → Construction Phase → Operations Phase と自動遷移。
 各フェーズ完了時に次のフェーズステップを読み込んで継続する。
 
-## フィードバック送信
+## 独立フロー委譲
 
-引数 `feedback` の場合、共通初期化をスキップして以下を実行:
+`setup` / `migrate` / `feedback` は独立スキルに委譲する。親スキルは委譲指示の出力のみを行い、成功/失敗の検出はAIエージェント層の責務。
 
-1. `.aidlc/config.toml` の `rules.feedback.enabled` を確認
-2. `false` なら無効メッセージを表示して終了
-3. フィードバック内容をヒアリング
-4. GitHub CLI利用可能なら `gh issue create --web` でブラウザを開く
-5. 利用不可なら `https://github.com/ikeisuke/ai-dlc-starter-kit/issues/new?template=feedback.yml` を案内
+委譲手順:
+1. `additional_context` がある場合は引数として付加（単一の生文字列をそのまま透過）
+2. 「`/aidlc-{action} {additional_context}` を実行してください。」と出力して処理を終了
+
+| action | 委譲先スキル |
+|--------|------------|
+| `setup` | `/aidlc-setup` |
+| `migrate` | `/aidlc-migrate` |
+| `feedback` | `/aidlc-feedback` |
 
 ## 制約事項
 
