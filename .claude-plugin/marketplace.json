@@ -17,6 +17,8 @@
       "skills": [
         "./skills/aidlc",
         "./skills/aidlc-setup",
+        "./skills/aidlc-migrate",
+        "./skills/aidlc-feedback",
         "./skills/reviewing-architecture",
         "./skills/reviewing-code",
         "./skills/reviewing-inception",
