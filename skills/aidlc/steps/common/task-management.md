@@ -12,7 +12,7 @@
 
 ## Construction Phase: Unit開始時タスクテンプレート
 
-Unit選択・計画承認後（`01-setup.md` ステップ12完了後）に以下のタスクを作成する。
+Unit選択・計画承認後（`01-setup.md` ステップ11完了後）に以下のタスクを作成する。
 `depth_level=minimal` でスキップするステップは作成不要。
 
 ### Phase 1: 設計
