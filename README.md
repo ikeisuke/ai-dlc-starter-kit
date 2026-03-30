@@ -11,6 +11,47 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 - **AI-DLC とは**: AI を「支援ツール」ではなく、開発プロセスの「中心的な協働者」として位置づける新しいソフトウェア開発方法論
 - **3つのフェーズ**: Inception（起動）→ Construction（構築）→ Operations（運用）
 
+## インストール
+
+### 前提条件
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) がインストール済みであること
+- Git がインストール済みであること
+- （推奨）[dasel](https://github.com/TomWright/dasel) がインストール済みであること（設定ファイル操作に使用）
+
+### インストール手順
+
+1. このリポジトリをクローン:
+
+```bash
+git clone https://github.com/ikeisuke/ai-dlc-starter-kit.git
+```
+
+2. 対象プロジェクトのルートディレクトリで `/aidlc setup` を実行:
+
+```text
+/aidlc setup
+```
+
+セットアップウィザードがプロジェクト情報の入力を案内し、`.aidlc/config.toml` と必要なディレクトリ構造を自動生成します。
+
+### アップグレード（v1 → v2）
+
+v1 から v2 へのアップグレードは、マイグレーションスキルで自動化されています:
+
+```text
+/aidlc migrate
+```
+
+マイグレーションでは以下が実行されます:
+- v1 の `docs/aidlc/` → v2 の `skills/aidlc/` への構成移行
+- `.aidlc/config.toml` の設定移行
+- 既存サイクルデータの保持
+
+### v1 ブランチについて
+
+v1 系を引き続き使用したい場合は、[v1 ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v1)を参照してください。v1 ブランチはメンテナンスモードであり、新機能の追加は行われません。
+
 ## リポジトリ構成
 
 ```text
@@ -57,34 +98,22 @@ ai-dlc-starter-kit/
 
 ### 2. プロジェクトをセットアップ
 
-別プロジェクトのルートディレクトリで、このスターターキットの `prompts/setup-prompt.md` を利用中のAIエージェントに読み込ませます：
+対象プロジェクトのルートディレクトリで `/aidlc setup` を実行します:
 
-```markdown
-以下のファイルを読み込んで、AI-DLC 開発環境をセットアップしてください：
-/path/to/ai-dlc-starter-kit/prompts/setup-prompt.md
+```text
+/aidlc setup
 ```
 
-セットアップ時に以下の変数を確認されます：
-
-| 変数 | 説明 | 例 |
-|------|------|-----|
-| `PROJECT_NAME` | プロジェクト名 | `my-app` |
-| `CYCLE` | サイクル識別子 | `v1.0.0`, `2024-12`, `feature-x` |
-| `PROJECT_TYPE` | プロジェクト種別 | `ios` / `android` / `web` / `backend` / `general` |
-| `DEVELOPMENT_TYPE` | 開発種別 | `greenfield`（新規）/ `brownfield`（既存） |
-| `DOCS_ROOT` | ドキュメントルート | `docs` |
-
-セットアップ完了後、以下のディレクトリ構造が作成されます：
+セットアップウィザードがプロジェクト情報を対話形式で案内します。完了後、以下のディレクトリ構造が作成されます:
 
 ```text
 .aidlc/
 ├── config.toml               # プロジェクト設定
-└── cycles/
-    ├── rules.md              # プロジェクト固有ルール
-    └── {{CYCLE}}/            # サイクル固有成果物
+├── rules.md                  # プロジェクト固有ルール
+└── cycles/                   # サイクル固有成果物
 
 skills/
-├── aidlc/                    # メインスキル（プラグインからシンボリックリンク）
+├── aidlc/                    # メインスキル
 ├── aidlc-setup/              # アップグレードスキル
 └── squash-unit/              # コミットスカッシュスキル
 ```
