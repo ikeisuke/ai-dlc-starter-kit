@@ -9,6 +9,12 @@
 #   --version <version>: バージョン番号（必須。vプレフィックス付き可: v1.16.2 → 1.16.2）
 #   --dry-run: 実際の書き込みを行わず、変更内容を表示
 #
+# 更新対象:
+#   - version.txt（プロジェクトルート）
+#   - .aidlc/config.toml の starter_kit_version
+#   - skills/aidlc/version.txt
+#   - skills/aidlc-setup/version.txt
+#
 # 出力形式:
 #   - 成功: "version_update:success" + 詳細行
 #   - dry-run: "version_update:dry-run" + 詳細行
@@ -83,6 +89,16 @@ if [[ ! -f ".aidlc/config.toml" ]]; then
     exit 1
 fi
 
+# スキル内version.txtの存在確認（存在する場合のみ更新対象に含める）
+_skill_aidlc_version=""
+_skill_setup_version=""
+if [[ -f "skills/aidlc/version.txt" ]]; then
+    _skill_aidlc_version="skills/aidlc/version.txt"
+fi
+if [[ -f "skills/aidlc-setup/version.txt" ]]; then
+    _skill_setup_version="skills/aidlc-setup/version.txt"
+fi
+
 # 現在の値を取得
 _current_version_txt=$(cat version.txt) || {
     echo "error:version-txt-read-failed"
@@ -106,6 +122,14 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "version_txt_new:${VERSION}"
     echo "aidlc_toml_current:${_current_aidlc_toml}"
     echo "aidlc_toml_new:${VERSION}"
+    if [[ -n "$_skill_aidlc_version" ]]; then
+        echo "skill_aidlc_version_current:$(cat "$_skill_aidlc_version")"
+        echo "skill_aidlc_version_new:${VERSION}"
+    fi
+    if [[ -n "$_skill_setup_version" ]]; then
+        echo "skill_setup_version_current:$(cat "$_skill_setup_version")"
+        echo "skill_setup_version_new:${VERSION}"
+    fi
     exit 0
 fi
 
@@ -149,7 +173,23 @@ _bak_toml=$(mktemp) || { \rm -f "$_bak_version"; echo "error:mktemp-failed"; exi
 }
 \rm -f "$_bak_version" "$_bak_toml"
 
+# スキル内version.txt更新（存在するもののみ）
+if [[ -n "$_skill_aidlc_version" ]]; then
+    printf '%s\n' "$VERSION" > "$_skill_aidlc_version" || {
+        echo "error:skill-aidlc-version-write-failed"
+        exit 1
+    }
+fi
+if [[ -n "$_skill_setup_version" ]]; then
+    printf '%s\n' "$VERSION" > "$_skill_setup_version" || {
+        echo "error:skill-setup-version-write-failed"
+        exit 1
+    }
+fi
+
 # 結果出力
 echo "version_update:success"
 echo "version_txt:${VERSION}"
 echo "aidlc_toml:${VERSION}"
+[[ -n "$_skill_aidlc_version" ]] && echo "skill_aidlc_version:${VERSION}"
+[[ -n "$_skill_setup_version" ]] && echo "skill_setup_version:${VERSION}"
