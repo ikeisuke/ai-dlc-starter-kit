@@ -144,6 +144,18 @@ bin/check-bash-substitution.sh
 
 **理由**: Bashコードブロック内のコマンド置換（`$()` やバッククォート）はAIエージェントが意図せず展開する可能性があるため、リリース前に検出・修正する。このチェックはGitHub Actions CIでも実行される。
 
+### aidlc-setup同期【重要】
+
+Operations Phase ステップ7（リリース準備）の最終段階で実行する。上記カスタムワークフロー（バージョンファイル更新、パーミッション管理、Bash Substitution Check）の完了後に実施。
+
+v2.0.5以降のプラグイン構成では、v1のrsync同期（`prompts/package/` → `docs/aidlc/`）は廃止済み。代わりに `/aidlc-setup` スキルを実行して `.aidlc/config.toml` の設定整合性を確認する。
+
+**手順**:
+1. `/aidlc-setup` スキルを実行（設定の整合性確認・更新）
+2. 変更があった場合はコミット
+
+**注意**: スキルプラグインのファイル自体（`skills/aidlc/` 配下）はGitで管理されているため、同期は不要。ここで確認するのは `.aidlc/config.toml` 等の設定ファイルとスキルのデフォルト設定との整合性のみ。
+
 ---
 
 ## コーディング規約
@@ -214,6 +226,7 @@ AI-DLCプロンプトで「AIレビュー」を実行する際は、以下のル
 | code | `skill="reviewing-code"` |
 | architecture | `skill="reviewing-architecture"` |
 | security | `skill="reviewing-security"` |
+| inception | `skill="reviewing-inception"` |
 
 ### 呼び出し方法
 
