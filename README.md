@@ -39,6 +39,8 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 |--------|------|
 | `aidlc` | AI-DLCオーケストレーター（メインスキル） |
 | `aidlc-setup` | 環境セットアップ・アップグレード |
+| `aidlc-migrate` | v1→v2マイグレーション |
+| `aidlc-feedback` | AI-DLCへのフィードバック送信 |
 | `reviewing-code` | コード品質レビュー |
 | `reviewing-architecture` | アーキテクチャレビュー |
 | `reviewing-security` | セキュリティレビュー |
@@ -55,10 +57,10 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 ### アップグレード（v1 → v2）
 
-v1 環境が検出された場合、`/aidlc setup` が自動的にv2への移行を案内します:
+v1 から v2 へのアップグレードは、マイグレーションスキルで自動化されています:
 
 ```text
-/aidlc setup
+/aidlc migrate
 ```
 
 移行では以下が実行されます:
