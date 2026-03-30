@@ -1,0 +1,28 @@
+name: Migration Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/aidlc/scripts/migrate-*.sh'
+      - 'skills/aidlc/scripts/lib/**'
+      - 'tests/migration/**'
+      - 'tests/fixtures/**'
+      - '.github/workflows/migration-tests.yml'
+
+jobs:
+  migration-tests:
+    name: Migration Script Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: npm install -g bats@1.11.1
+
+      - name: Verify jq is available
+        run: jq --version
+
+      - name: Run migration tests
+        run: bats tests/migration/

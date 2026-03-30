@@ -7,6 +7,264 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.10] - 2026-03-30
+
+### Added
+
+- README.md にインストール手順（Claude Codeプラグイン形式）、v1→v2アップグレード手順、v1ブランチ案内を追加 (#482)
+- `.aidlc/rules.md` の許可パス一覧に `docs/development/**` を追加（境界ルールとの整合性修正） (#484)
+
+### Changed
+
+- `review-flow.md` のCLI失敗時フォールバック処理を `mode` 別に分岐: `required` 時は自動フォールバックを禁止し、エラー種別に応じた選択肢をユーザーに提示 (#468)
+- `inception/01-setup.md` のステップ番号欠番（ステップ6不在）を修正し、7→6〜13→12にリナンバリング (#470)
+- `suggest-version.sh` の初回バージョン提案を `v0.0.1` / `v0.1.0` / `v1.0.0` の3択に変更 (#432)
+- クイックスタートセクションをv2対応に更新（`/aidlc setup` コマンドベース）
+
+---
+
+## [2.0.9] - 2026-03-30
+
+### Changed
+
+- Construction/Operations Phase のステップファイルとスクリプトの記述乖離を一括修正（#474, #477）
+- `issue-ops.sh set-status` 出力形式、`pr-ops.sh get-related-issues` 出力形式、`ios-build-check.sh` ヘッダをドキュメントに追記
+- `distribution_plan` → `distribution_feedback` に名称統一（テンプレートファイルと整合）
+- `04-completion.md` worktreeフロー説明を正確化
+- `implementation_record_template.md` のプレースホルダを `{{PLACEHOLDER}}` 形式に統一（#475）
+- `run-markdownlint.sh` の出力を `markdownlint:success/skipped/error` 形式に標準化（#476）
+- `02-generate-config.md` にモード分岐ガイドテーブルを追加、TOML配列フォーマットを明記（#478）
+- `setup-ai-tools.sh` と `migrate-config.sh` のコメントを詳細化（#478）
+- `agents-rules.md` からMCPレビュー推奨を削除し、レビューフローを `review-flow.md` に統一
+- `review-flow.md` にAIレビュー指摘却下禁止ルールを追加、検証をサブエージェント委譲方式に変更
+- セミオートゲート判定の `auto_approved` 条件を `unresolved_count==0` に修正（#474の一部）
+- レビュー結果シグナル（`review_detected`/`deferred_count`/`resolved_count`/`unresolved_count`）を導入
+
+### Fixed
+
+- `update-version.sh` が `skills/aidlc/version.txt` と `skills/aidlc-setup/version.txt` を更新しない問題を修正（#479）
+- `update-version.sh` のスキル内version.txt更新をトランザクションに統合（全対象のバックアップ・ロールバック対応）
+- `migrate-*.sh` 6ファイルで `AIDLC_PROJECT_ROOT` 環境変数の注入を尊重するよう修正（#480）
+- `migrate-*.sh` に環境変数override時のgitリポジトリ検証ガードを追加
+- `post-merge-cleanup.sh` の `git pull`/`git fetch` から不要な `--` を除去
+- `post-merge-cleanup.sh` ヘッダに `step_result:<N>:ok:<qualifier>` 拡張形式を追記
+
+---
+
+## [2.0.8] - 2026-03-29
+
+### Added
+
+- `/aidlc help` (`h`) アクションを追加: 利用可能なアクション一覧をヘルプ表示（#464）
+- 3文字短縮形（`inc`/`con`/`ops`/`exp`）を追加し、ヘルプ表示で優先表示
+- スキルスクリプト設計ガイドライン（`guides/script-design-guideline.md`）を整備
+
+### Changed
+
+- 主要4フェーズ（Inception/Construction/Operations/Setup）の総点検を実施し、プロンプトとスクリプトの乖離を修正
+- Setup Phase総点検で重大1件修正、軽微4件をIssue化（#478）
+- Operations Phase総点検で重大1件修正、軽微7件をIssue化（#477）
+- Construction Phase総点検で重大0件、軽微3件をIssue化（#474-#476）
+- Inception Phase総点検で重大1件修正、軽微4件をIssue化（#470-#473）
+
+### Fixed
+
+- `squash-unit.sh` のバグ修正（#463）
+- `squash-unit.sh` の `--dry-run` 時に `--message` 必須チェックをスキップするよう修正（#466）
+- `aidlc-setup`/`aidlc-migrate` スクリプトの `bootstrap.sh` 依存を脱却（#465）
+
+---
+
+## [2.0.7] - 2026-03-29
+
+### Added
+
+- `install-kiro-agent` スキルを新設: KiroCLIエージェント設定ファイルを `~/.kiro/agents/` に配置するインストーラー（#458）
+- メタ開発時のファイル参照境界ルールを `.aidlc/rules.md` に明文化（#461）
+- setup/migrate/feedback を独立スキルに分離し、保守性・拡張性を向上（#457）
+
+### Changed
+
+- ステップファイルを圧縮・分割し、AIエージェントの初期化オーバーヘッドを削減（#460）
+- `setup-ai-tools.sh` からKiroCLI関連コード（約300行）を削除し、`install-kiro-agent` スキルに移行
+- `read_starter_kit_version` に `match_count` 検証を統合し、バージョン検証を一元化（#452）
+- マイグレーション処理を `bootstrap.sh` 非依存化し、v2セクション補完・エラー表示を改善（#456）
+
+### Fixed
+
+- プロンプト・ステップファイル内の不適切なパス参照を修正（#461）
+- フェーズプロンプトからrules.mdへの参照を正しく記載（#438）
+
+---
+
+## [2.0.6] - 2026-03-29
+
+### Added
+
+- `/aidlc` コマンドの短縮形（`i`/`c`/`o`/`e`）でフェーズ開始可能に（#455）
+- `migrate-config.sh` にコンテンツマイグレーション機能を追加: v1→v2設定キー変換を自動実行（#456）
+- フェーズプロンプトの重要ステップにルール再参照指示を追加し、AIエージェントのルール遵守率を改善（#438）
+
+### Changed
+
+- `rules.md` と `operations.md` を `.aidlc/cycles/` 配下から `.aidlc/` 直下に移行し、サイクル横断で共有可能に（#454）
+- バージョン検証ロジックを `lib/version-utils.sh` に共通関数として統一（#452）
+- スターターキットパス依存を除去し、プラグインモデルでの自己完結性を強化
+- マイグレーションバックアップ機能を廃止（git管理で代替）
+- セットアップスクリプトからスキルシンボリックリンク作成を分離
+
+### Removed
+
+- `resolve-starter-kit-path.sh` を削除（スターターキットパス解決の廃止）
+- `prompts/setup/` ディレクトリを削除（v1セットアップインフラの残存）
+- `AGENTS.md`/`CLAUDE.md` テンプレート参照を廃止（Kiroエージェント実ファイル化）
+- GitHub Issueテンプレート配置機能を廃止（v2プラグインモデルでは不要）
+
+### Fixed
+
+- `migrate-config.sh` の部分失敗時メッセージとコメントの乖離を修正（#453）
+- マイグレーション検出スクリプトの `backlog.yml` 比較元をスターターキット原本に変更
+- `ISSUE_TEMPLATE` 全4ファイルをスターターキット原本比較で削除対象に修正
+- マイグレーション適用スクリプトに `cycles/` 配下ファイルの `.aidlc/` 直下移動を追加
+- 通常プロジェクトで `skills/` ディレクトリ不要時のセットアップ処理を修正
+
+---
+
+## [2.0.5] - 2026-03-28
+
+### Changed
+
+- `skills/aidlc/` をプラグインの唯一の正（Single Source of Truth）として確立: `docs/aidlc/` から全リソースを移設し、重複ファイル・ディレクトリを削除（#447, #448）
+- `{{aidlc_dir}}` テンプレート変数を廃止し、スキル内相対パス `guides/...` に一括更新。`paths.aidlc_dir` 設定キーおよび関連処理を除去（#444）
+- ステップファイル内のスクリプトパス `skills/aidlc/scripts/` をプラグインモデル対応の `scripts/` に変更。SKILL.md にパス解決ルールを追加
+
+### Removed
+
+- `prompts/package/` ディレクトリ（`docs/aidlc/` のコピー元、v1残存インフラ）を削除
+- `prompts/bin/sync-package.sh` を削除（rsync同期インフラの廃止）（#449）
+- `check-setup-type.sh`、`check-version.sh` を削除（v1セットアップインフラの廃止）
+- `setup-prompt.md` のv1設定を廃止し誘導文付きに簡略化（#450）
+
+### Fixed
+
+- `aidlc-setup.sh` のスターターキットパス解決をプラグインモデルで動作するよう修正（#447）
+- `update-version.sh` の `docs/aidlc.toml` 参照を除去しv2構造に対応
+- v1→v2移行スクリプトを強化: `.claude/skills/` シンボリックリンク検出、`docs/aidlc.toml` 移動、`docs/cycles/` → `.aidlc/cycles/` 移動、シンボリックリンク実体化に対応
+- `bootstrap.sh` の `toml-reader.sh` ソース行が欠落していた問題を修正
+- `agents-rules.md` にバックログ即時実装優先ルールを追加（#439）
+
+## [2.0.4] - 2026-03-28
+
+### Changed
+
+- AI-DLCスターターキットをClaude Codeプラグインリポジトリ構造に変換: `skills/` ディレクトリに全スキルを配置し、`claude install` でインストール可能に
+- SKILL.md の `steps/` パス参照をプラグインベースディレクトリからの相対パスに修正
+- `/aidlc <action> <追加コンテキスト>` で追加テキストをオーケストレーターに渡せるよう ARGUMENTS パーシングを更新
+
+### Removed
+
+- aidlc-setup の rsync コピー処理を廃止（#431）
+- 同期マニフェスト関連のv1コードを削除（#433）
+
+### Fixed
+
+- セットアップ時のスターターキットパス判定をプラグイン構造に合わせて更新（#429）
+- defaults.toml のパス設定を v2 構造に修正（#430）
+
+## [2.0.3] - 2026-03-28
+
+### Added
+
+- v1→v2移行スクリプトE2Eテスト（bats-core、43テストケース）: detect/backup/apply-config/apply-data/cleanup/verify全ステージ + E2Eフルフローテスト
+- 移行テスト専用CIワークフロー（`.github/workflows/migration-tests.yml`）
+- v1構造fixtureディレクトリ（`tests/fixtures/v1-structure/`���
+
+### Changed
+
+- Lite版ルーティングエントリを完全削除（SKILL.md引数テーブル・ステップファイルのLite分岐を除去）
+- ローカルバックログ（`.aidlc/cycles/backlog/`）を廃止し、GitHub Issue一本化に移行
+- Construction Phaseバックログチェック（ステップ8）をGitHub Issue連携に改善
+
+### Fixed
+
+- Kiro設定ドキュメント（`kiro-settings.md`）の矛盾解消: 実装と一致しないドキュメント記述を修正
+
+## [2.0.2] - 2026-03-28
+
+### Added
+
+- v1→v2移行スキル（`/aidlc migrate`）: v1環境からv2への自動移行をサポート
+- タスク管理ガイド（`steps/common/task-management.md`）: フェーズ別タスクテンプレートで手順漏れを防止
+- `.claude/settings.json` テンプレート外部化（`settings-template.json`）: パーミッション管理の保守性向上
+
+### Changed
+
+- パス参照の抽象化: `docs/aidlc/` 直接参照を `{{aidlc_dir}}` テンプレート変数に置換（16ファイル）
+- フェーズ完了メッセージをツール非依存形式に統一（Claude Code / その他の両方に対応）
+- コンパクション復帰手順を改善: フェーズ検出ロジックを `aidlc-cycle-info.sh` と整合化
+
+### Fixed
+
+- `Skill(codex-review)` staleエントリを削除（対応スキル不在）
+- `Bash(skills/aidlc/scripts/:*)` の不正コロンを修正
+- `setup-ai-tools.sh` のテンプレート生成にJSON妥当性検証を追加
+
+## [2.0.1] - 2026-03-27
+
+### Changed
+
+- サイクルデータディレクトリを `docs/cycles/` から `.aidlc/cycles/` に移行し、スクリプト・テンプレート内の参照パスを一括更新
+- 旧ディレクトリ（`docs/aidlc/bin/`, `docs/aidlc/templates/`, `docs/aidlc/config/` 等）のパス参照をv2構造（`skills/aidlc/`）に更新（53ファイル）
+- `@steps/...` 参照をバッククォートスタイル（`` @`steps/...` ``）に統一
+- `prompts/setup-prompt.md` 内のマイグレーション対象パスを `.aidlc/cycles/` に修正、v1互換コード追加
+
+### Fixed
+
+- `detect_phase()` をディレクトリ存在判定からアーティファクトベース判定（`compgen -G`使用）に改善
+- `get_current_branch()` を3ファイルから `lib/bootstrap.sh` に共通化
+- `get_backlog_mode()` ラッパー重複を解消（`resolve_backlog_mode` 直接呼び出しに変更）
+- クォート除去ロジックを `aidlc_strip_quotes()` に統一
+- UUOC（Useless Use of Cat）パターンを修正
+- `test_resolve_starter_kit_path.sh` のテスト用mkdirパスをv2構造に修正
+- `aidlc-setup.sh` のv1フォールバックパスを復元
+
+### Added
+
+- `skills/aidlc/scripts/lib/bootstrap.sh` に共通ユーティリティ関数（`aidlc_get_current_branch`, `aidlc_strip_quotes`）を追加
+- `aidlc-cycle-info.sh` にmainガードを追加（sourceでの関数定義読み込みに対応）
+- 新規テスト17件追加（`test_bootstrap_utils.sh`: 10件、`test_detect_phase.sh`: 7件）
+- コンテキスト変数一覧を `bootstrap.sh` ヘッダーに文書化
+
+---
+
+## [2.0.0] - 2026-03-27
+
+### Added
+
+- Claude Codeスキルプラグイン化: AI-DLCフェーズプロンプト（Inception/Construction/Operations/Setup）をClaude Codeスキルとして再構成し、プラグインとして配布可能に
+- ステップ分割アーキテクチャ: 各フェーズを複数のステップファイル（`skills/aidlc/steps/`）に分割し、コンテキスト効率を改善
+- プラグインレベルAGENTS.md/CLAUDE.md: マルチツール対応のエントリポイントをスキルプラグイン内に配置
+- v1→v2マイグレーションガイド: `docs/aidlc/guides/migration-v1-to-v2.md` を新規作成
+- `aidlc-setup` スキル: アップグレード専用スキルとして独立化
+
+### Changed
+
+- ディレクトリ構造の大幅変更: `docs/aidlc/prompts/` → `skills/aidlc/steps/`、`docs/aidlc/templates/` → `skills/aidlc/templates/`、`docs/aidlc/bin/` → `skills/aidlc/scripts/` に移行
+- フェーズ起動方式: ファイル読み込み指示（`docs/aidlc/prompts/*.md を読み込んで`）から `/aidlc {phase}` コマンドに統一
+- SKILL.mdオーケストレーター: 引数ルーティングによるフェーズ遷移パターンを採用
+- プロジェクト側フットプリント最小化: `.aidlc/config.toml` + `.aidlc/cycles/` のみに削減
+
+### Removed
+
+- `docs/aidlc/prompts/` ディレクトリ（24ファイル）: `skills/aidlc/steps/` に移行
+- `docs/aidlc/templates/` ディレクトリ（23ファイル）: `skills/aidlc/templates/` に移行
+- `docs/aidlc/bin/` ディレクトリ（29+ファイル）: `skills/aidlc/scripts/` に移行
+- `docs/aidlc/config/` ディレクトリ: `skills/aidlc/config/` に統合
+- `docs/aidlc/skills/` ディレクトリ: `skills/` トップレベルに統合
+- `docs/aidlc/tests/` ディレクトリ: `skills/aidlc/scripts/tests/` に移行
+
+---
+
 ## [1.28.1] - 2026-03-26
 
 ### Added

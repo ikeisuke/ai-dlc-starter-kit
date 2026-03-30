@@ -7,7 +7,7 @@
 set -euo pipefail
 
 # デフォルト値
-DEFAULT_TARGET_DIR="prompts/package/prompts/"
+DEFAULT_TARGET_DIR="skills/aidlc/steps/"
 DEFAULT_TARGET_PATTERN="*.md"
 
 # グローバル変数
@@ -29,7 +29,7 @@ Usage: $(basename "$0") [target_dir] [options]
   - バッククォート(\`) によるコマンド置換
 
 Arguments:
-  target_dir    チェック対象ディレクトリ (デフォルト: prompts/package/prompts/)
+  target_dir    チェック対象ディレクトリ (デフォルト: skills/aidlc/steps/)
 
 Options:
   -v, --verbose    詳細出力モード
@@ -95,8 +95,8 @@ check_file() {
 
 # project.name を取得（取得できない場合は空文字を返す）
 _get_project_name() {
-    local config_script="$REPO_ROOT/docs/aidlc/bin/read-config.sh"
-    local config_file="$REPO_ROOT/docs/aidlc.toml"
+    local config_script="$REPO_ROOT/skills/aidlc/scripts/read-config.sh"
+    local config_file="$REPO_ROOT/.aidlc/config.toml"
 
     # read-config.sh で取得を試みる
     if [[ -x "$config_script" ]]; then

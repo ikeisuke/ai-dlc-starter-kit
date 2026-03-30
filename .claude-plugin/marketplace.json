@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "AI-DLC (AI-Driven Development Lifecycle) skills for Claude Code",
-    "version": "1.22.1"
+    "version": "2.0.4"
   },
   "plugins": [
     {
@@ -15,12 +15,15 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./prompts/package/skills/aidlc-setup",
-        "./prompts/package/skills/reviewing-architecture",
-        "./prompts/package/skills/reviewing-code",
-        "./prompts/package/skills/reviewing-inception",
-        "./prompts/package/skills/reviewing-security",
-        "./prompts/package/skills/squash-unit"
+        "./skills/aidlc",
+        "./skills/aidlc-setup",
+        "./skills/aidlc-migrate",
+        "./skills/aidlc-feedback",
+        "./skills/reviewing-architecture",
+        "./skills/reviewing-code",
+        "./skills/reviewing-inception",
+        "./skills/reviewing-security",
+        "./skills/squash-unit"
       ]
     }
   ]
