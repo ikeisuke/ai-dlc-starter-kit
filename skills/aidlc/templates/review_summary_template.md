@@ -20,6 +20,8 @@
 | 2 | 中 | review-flow.md のセルフレビュー手順 - 反復回数上限が未定義で無限ループリスク | 修正済み（review-flow.md L470: 最大3回の反復制限を追記） | - |
 | 3 | 低 | commit-flow.md のsquashコマンド例 - `--no-edit` オプションが非推奨 | OUT_OF_SCOPE（理由: squash機能の全面改修はUnit 004のスコープ） | #123 |
 | 4 | 中 | rules.md の境界ルール - 認証トークンのバリデーション不足 | TECHNICAL_BLOCKER（理由: 外部API仕様が未確定で対応不可） | - |
+| 5 | 高 | auth-service.js - SQLインジェクション脆弱性 | OUT_OF_SCOPE（理由: 認証基盤の全面改修が必要） | SECURITY_PRIVATE |
+| 6 | 中 | config-loader.js - 設定ファイルパス検証不足 | OUT_OF_SCOPE（理由: 次サイクルで対応） | PENDING_MANUAL |
 
 ### 悪い例（NG）
 
