@@ -22,7 +22,7 @@ fi
 [ -z "$MARKDOWN_LINT" ] && MARKDOWN_LINT="false"
 
 if [ "$MARKDOWN_LINT" = "true" ]; then
-    echo "markdownlintを実行中..."
+    echo "markdownlintを実行中..." >&2
     if npx markdownlint-cli2 "${AIDLC_CYCLES}/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"; then
         echo "markdownlint:success"
     else
