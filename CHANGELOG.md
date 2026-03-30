@@ -7,6 +7,34 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.0.9] - 2026-03-30
+
+### Changed
+
+- Construction/Operations Phase のステップファイルとスクリプトの記述乖離を一括修正（#474, #477）
+- `issue-ops.sh set-status` 出力形式、`pr-ops.sh get-related-issues` 出力形式、`ios-build-check.sh` ヘッダをドキュメントに追記
+- `distribution_plan` → `distribution_feedback` に名称統一（テンプレートファイルと整合）
+- `04-completion.md` worktreeフロー説明を正確化
+- `implementation_record_template.md` のプレースホルダを `{{PLACEHOLDER}}` 形式に統一（#475）
+- `run-markdownlint.sh` の出力を `markdownlint:success/skipped/error` 形式に標準化（#476）
+- `02-generate-config.md` にモード分岐ガイドテーブルを追加、TOML配列フォーマットを明記（#478）
+- `setup-ai-tools.sh` と `migrate-config.sh` のコメントを詳細化（#478）
+- `agents-rules.md` からMCPレビュー推奨を削除し、レビューフローを `review-flow.md` に統一
+- `review-flow.md` にAIレビュー指摘却下禁止ルールを追加、検証をサブエージェント委譲方式に変更
+- セミオートゲート判定の `auto_approved` 条件を `unresolved_count==0` に修正（#474の一部）
+- レビュー結果シグナル（`review_detected`/`deferred_count`/`resolved_count`/`unresolved_count`）を導入
+
+### Fixed
+
+- `update-version.sh` が `skills/aidlc/version.txt` と `skills/aidlc-setup/version.txt` を更新しない問題を修正（#479）
+- `update-version.sh` のスキル内version.txt更新をトランザクションに統合（全対象のバックアップ・ロールバック対応）
+- `migrate-*.sh` 6ファイルで `AIDLC_PROJECT_ROOT` 環境変数の注入を尊重するよう修正（#480）
+- `migrate-*.sh` に環境変数override時のgitリポジトリ検証ガードを追加
+- `post-merge-cleanup.sh` の `git pull`/`git fetch` から不要な `--` を除去
+- `post-merge-cleanup.sh` ヘッダに `step_result:<N>:ok:<qualifier>` 拡張形式を追記
+
+---
+
 ## [2.0.8] - 2026-03-29
 
 ### Added
