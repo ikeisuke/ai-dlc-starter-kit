@@ -155,7 +155,11 @@ README.mdに今回のサイクルの変更内容を追記
 scripts/run-markdownlint.sh {{CYCLE}}
 ```
 
-**注意**: `.aidlc/config.toml` の `[rules.linting].markdown_lint` が `false`（デフォルト）の場合はスキップされます。
+**出力形式**:
+
+- `markdownlint:success` — lint実行成功（エラーなし）
+- `markdownlint:skipped` — 設定により実行スキップ（`markdown_lint=false`）
+- `markdownlint:error` — lintエラー検出（終了コード1）
 
 **エラーがある場合**: 修正してから次のステップへ進む。
 

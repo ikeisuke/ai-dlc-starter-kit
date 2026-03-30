@@ -23,7 +23,12 @@ fi
 
 if [ "$MARKDOWN_LINT" = "true" ]; then
     echo "markdownlintを実行中..."
-    npx markdownlint-cli2 "${AIDLC_CYCLES}/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"
+    if npx markdownlint-cli2 "${AIDLC_CYCLES}/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"; then
+        echo "markdownlint:success"
+    else
+        echo "markdownlint:error"
+        exit 1
+    fi
 else
-    echo "markdownlintはスキップされました（設定: markdown_lint=false）"
+    echo "markdownlint:skipped"
 fi
