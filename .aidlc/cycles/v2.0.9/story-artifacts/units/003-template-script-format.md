@@ -26,7 +26,7 @@
 - 該当なし
 
 ## 技術的考慮事項
-- メタ開発のため、prompts/package/ 配下のテンプレートを編集する
+- メタ開発のため、skills/aidlc/ 配下のテンプレートを編集する
 - run-markdownlint.sh の出力変更後、operations/03-release.md の記述と整合性を確認
 
 ## 関連Issue
