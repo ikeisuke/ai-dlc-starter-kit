@@ -403,7 +403,7 @@ scripts/check-open-issues.sh --limit 5
 
 - エラー出力（`error:*`）の場合は「バックログ取得失敗」と警告を表示し、バックログ表示をスキップする
 - このスクリプトはバックログ専用ではなくオープンIssue全件を返す。表示時に「オープンIssue」として案内する
-- 取得結果が0件の場合は「バックログ項目なし」と表示する
+- 取得結果が0件の場合（`open_issues:none` 出力）は「オープンIssueなし」と表示する
 
 以下の形式で表示する:
 
@@ -567,6 +567,17 @@ git branch --show-current
   main_status:up-to-date
   ```
 
+  **出力例（名前付きサイクル時）**:
+  ```text
+  status:success
+  branch:cycle/waf/v1.0.0
+  worktree_path:.worktree/cycle-waf-v1.0.0
+  message:新しいブランチ cycle/waf/v1.0.0 でworktreeを作成しました
+  main_status:up-to-date
+  ```
+
+  **注**: 名前付きサイクル（スラッシュ含む）の場合、`worktree_path` ではスラッシュがハイフンに置換される（例: `waf/v1.0.0` → `cycle-waf-v1.0.0`）。
+
   **出力例（エラー時）**:
   ```text
   status:error
@@ -671,13 +682,11 @@ ls -d .aidlc/cycles/{{CYCLE}}/ 2>/dev/null
 scripts/init-cycle-dir.sh {{CYCLE}}
 ```
 
-このスクリプトは以下を一括で作成します:
-- 10個のサイクル固有ディレクトリ（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
-- history/inception.md（初期履歴ファイル）
-- 共通バックログディレクトリ（.aidlc/cycles/backlog/, .aidlc/cycles/backlog-completed/）
+このスクリプトは以下を一括で処理します:
+- 10個のサイクル固有ディレクトリを作成（plans, requirements, story-artifacts/units, design-artifacts/domain-models, design-artifacts/logical-designs, design-artifacts/architecture, inception, construction/units, operations, history）
+- history/inception.md（初期履歴ファイル）を作成
+- 共通バックログディレクトリはスキップ（出力: `dir:.aidlc/cycles/backlog:skipped-issue-only` / `dir:.aidlc/cycles/backlog-completed:skipped-issue-only`）。バックログはGitHub Issue固定のためローカルディレクトリは作成しない
 
-**注**: `--dry-run` オプションで作成予定を確認できます。
-
-**注意**: サイクル固有バックログは廃止されました。気づきは共通バックログに直接記録します（GitHub Issue）。
+**注**: `--dry-run` オプションで処理予定を確認できます。
 
 ---
