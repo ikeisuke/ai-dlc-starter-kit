@@ -25,6 +25,7 @@
 # 出力形式（stdout）:
 #   step:<N>:<名前>                    ステップ開始
 #   step_result:<N>:ok                 ステップ成功
+#   step_result:<N>:ok:<qualifier>     ステップ成功（条件付き、例: skipped-branch-not-found）
 #   step_result:<N>:warning:<code>     非致命的エラー
 #   step_result:<N>:error:<code>       致命的エラー
 #   step:dry-run:<コマンド>            dry-runモード
@@ -415,7 +416,7 @@ step_1() {
         fatal_error "1" "pull-failed" "メインリポジトリのデフォルトブランチへのチェックアウトに失敗しました: git -C ${MAIN_REPO_PATH} checkout ${DEFAULT_BRANCH}"
     fi
 
-    if ! GIT_TERMINAL_PROMPT=0 git -C "$MAIN_REPO_PATH" pull -- "$MAIN_REMOTE" "$DEFAULT_BRANCH" >/dev/null 2>&1; then
+    if ! GIT_TERMINAL_PROMPT=0 git -C "$MAIN_REPO_PATH" pull "$MAIN_REMOTE" "$DEFAULT_BRANCH" >/dev/null 2>&1; then
         fatal_error "1" "pull-failed" "メインリポジトリのpullに失敗しました: git -C ${MAIN_REPO_PATH} pull ${MAIN_REMOTE} ${DEFAULT_BRANCH}"
     fi
 
@@ -440,7 +441,7 @@ step_2() {
         return
     fi
 
-    if ! GIT_TERMINAL_PROMPT=0 git fetch -- "$WT_REMOTE" >/dev/null 2>&1; then
+    if ! GIT_TERMINAL_PROMPT=0 git fetch "$WT_REMOTE" >/dev/null 2>&1; then
         fatal_error "2" "fetch-failed" "fetchに失敗しました: git fetch ${WT_REMOTE}"
     fi
 

@@ -73,7 +73,7 @@
 **実行する場合**:
 - **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
 - **対話形式**: 同様に**一問一答形式**で対話
-- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_plan.md`（テンプレート: `templates/distribution_feedback_template.md`）
+- **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_feedback.md`（テンプレート: `templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
 
 ### ステップ6: バックログ整理と運用計画【対話形式】

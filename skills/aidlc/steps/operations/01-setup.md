@@ -37,8 +37,11 @@ Inception/Construction Phaseで決定済み
       --phase operations \
       --step "[ステップ名]" \
       --content "[作業概要]" \
-      --artifacts "[作成・更新したファイル]"
+      --artifacts "[作成・更新したファイル1]" \
+      --artifacts "[作成・更新したファイル2]"
   ```
+
+  **注**: `--artifacts` は複数回指定可能です。成果物が複数ある場合は `--artifacts` を繰り返してください。
 
   **修正差分の記録**（level = "detailed" の場合のみ）:
   ユーザーからの修正依頼があった場合、以下を履歴に追記:

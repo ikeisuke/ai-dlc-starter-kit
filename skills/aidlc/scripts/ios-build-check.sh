@@ -8,6 +8,7 @@
 #
 # 出力形式:
 #   status:found|not-found|multiple
+#   file:<path>              # status=foundの場合、検出されたファイルパス
 #   current_build:123        # status=foundの場合
 #   previous_build:122       # status=foundの場合
 #   comparison:updated|same|unknown  # status=foundの場合
