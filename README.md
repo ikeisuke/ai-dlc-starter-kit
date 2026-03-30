@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-2.0.9-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-2.0.10-blue.svg)](./version.txt)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -21,13 +21,19 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 ### インストール手順
 
-1. このリポジトリをクローン:
+1. Claude Codeでマーケットプレイスを追加:
 
-```bash
-git clone https://github.com/ikeisuke/ai-dlc-starter-kit.git
+```text
+/plugin marketplace add ikeisuke/ai-dlc-starter-kit
 ```
 
-2. 対象プロジェクトのルートディレクトリで `/aidlc setup` を実行:
+2. プラグインをインストール:
+
+```text
+/plugin install aidlc@ikeisuke-ai-dlc-starter-kit
+```
+
+3. 対象プロジェクトのルートディレクトリで `/aidlc setup` を実行:
 
 ```text
 /aidlc setup
