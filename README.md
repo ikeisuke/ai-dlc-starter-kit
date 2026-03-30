@@ -55,13 +55,13 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 ### アップグレード（v1 → v2）
 
-v1 から v2 へのアップグレードは、マイグレーションスキルで自動化されています:
+v1 環境が検出された場合、`/aidlc setup` が自動的にv2への移行を案内します:
 
 ```text
-/aidlc migrate
+/aidlc setup
 ```
 
-マイグレーションでは以下が実行されます:
+移行では以下が実行されます:
 - v1 の `docs/aidlc/` → v2 の `skills/aidlc/` への構成移行
 - `.aidlc/config.toml` の設定移行
 - 既存サイクルデータの保持
