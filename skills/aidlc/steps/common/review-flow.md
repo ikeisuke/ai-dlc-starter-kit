@@ -309,7 +309,7 @@ scripts/write-history.sh \
    ※ シグナルは同一承認ポイント内でのみ有効。ゲート判定後に破棄する
 1. **レビュー後コミット**: `common/commit-flow.md` の「レビュー反映コミット」手順に従う
 2. **レビューサマリ更新**【必須】: 「レビューサマリファイル更新手順」に従う（計画承認前除く）。千日手パスで更新済みならスキップ。
-3. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様参照）: レビュー結果シグナルに基づき判定。`review_detected=false` かつ他のフォールバック条件非該当の場合のみ `auto_approved`。`review_detected=true` の場合は `fallback(review_issues)` としてユーザーに提示・承認要求
+3. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様参照）: レビュー結果シグナルに基づき判定。`deferred_count == 0` かつ他のフォールバック条件非該当の場合のみ `auto_approved`。`deferred_count > 0`（先送り判断あり）の場合は `fallback(review_issues)` としてユーザーに提示・承認要求
 
 ## レビューサマリファイル更新手順
 
