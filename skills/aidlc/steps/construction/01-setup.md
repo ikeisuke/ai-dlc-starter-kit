@@ -284,6 +284,14 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/ | sort
 scripts/issue-ops.sh set-status <issue_number> in-progress
 ```
 
+**出力形式**:
+
+```text
+issue:<number>:status-updated:<status>
+```
+
+例: `issue:123:status-updated:in-progress`
+
 **ブロック発生時**:
 作業がブロックされた場合は、ステータスを `blocked` に更新します。
 

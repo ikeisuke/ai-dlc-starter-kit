@@ -14,8 +14,8 @@
 - [...]
 
 ### 設計ドキュメント
-- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/<unit>_domain_model.md
-- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/<unit>_logical_design.md
+- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/domain-models/{{UNIT_SLUG}}_domain_model.md
+- {{CYCLES_ROOT}}/{{CYCLE}}/design-artifacts/logical-designs/{{UNIT_SLUG}}_logical_design.md
 
 ## ビルド結果
 [成功 / 失敗]

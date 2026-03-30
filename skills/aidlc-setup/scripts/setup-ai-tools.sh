@@ -48,7 +48,9 @@ _detect_json_state() {
 }
 
 # テンプレートJSON生成
-# 外部ファイル（settings-template.json）から読み込み、不在時はインラインフォールバック
+# 外部ファイル（config/settings-template.json）から読み込み、不在時はインラインフォールバック
+# 注: settings-template.json は現在リポジトリに含まれていないため、常にフォールバックが使用される
+# 将来的にテンプレート外部化する場合は config/ ディレクトリに配置すること
 # stdout: JSON文字列
 _generate_template() {
   local template_file="${SCRIPT_DIR}/../config/settings-template.json"

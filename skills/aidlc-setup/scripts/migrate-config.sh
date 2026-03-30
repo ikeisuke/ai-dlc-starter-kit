@@ -29,6 +29,9 @@
 set -euo pipefail
 
 # --- パス解決（bootstrap.sh 非依存・自己完結） ---
+# bootstrap.sh はスキル共通の初期化ライブラリ（AIDLC_PROJECT_ROOT等の環境変数を設定）だが、
+# migrate-config.sh はセットアップ/マイグレーション用途で bootstrap.sh の初期化前に
+# 実行される可能性があるため、パス解決を独自に行い自己完結させている。
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 

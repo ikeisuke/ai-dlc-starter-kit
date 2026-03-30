@@ -63,7 +63,7 @@ PRがマージされたら、次サイクル開始前に以下を実行：
 
 #### worktreeフロー（ステップW）
 
-worktree環境では `post-merge-cleanup.sh` がmain pull、fetch、detached HEAD切り替え、ブランチ削除をすべて実行するため、**ステップ1・2・4をスキップ**してステップ3（タグ付け）へ合流する。
+worktree環境では `post-merge-cleanup.sh` がmain pull（親リポジトリ側）、fetch、detached HEAD切り替え、ブランチ削除をすべて実行する。そのため通常環境フローのステップ1（mainへcheckout）・ステップ2（git pull）・ステップ4（ブランチ削除）はスクリプトが代行するためスキップし、ステップ3（タグ付け）のみ手動で実行する。
 
 **スクリプトパス探索と実行**:
 
