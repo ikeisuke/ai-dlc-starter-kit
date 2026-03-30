@@ -162,8 +162,9 @@ main() {
         suggested_minor=$(calculate_next_version "$latest_cycle" "minor")
         suggested_major=$(calculate_next_version "$latest_cycle" "major")
     else
-        suggested_patch="v1.0.0"
-        suggested_minor="v1.0.0"
+        # 初回（既存サイクルなし）: 3つの異なる初期バージョンを提案
+        suggested_patch="v0.0.1"
+        suggested_minor="v0.1.0"
         suggested_major="v1.0.0"
     fi
 
