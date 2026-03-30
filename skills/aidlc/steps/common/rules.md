@@ -388,21 +388,40 @@ scripts/read-config.sh rules.automation.mode
 - 実行エラー（前提となる処理がエラーで終了した場合）
 - 前提不成立（ゲート判定に必要なコンテキスト情報が欠落している場合）
 
+### レビュー結果シグナル（review-flow.md が生成）
+
+レビューステップ完了時に `review-flow.md` が生成し、セミオートゲート判定で参照するシグナル。
+
+| シグナル名 | 型 | 説明 |
+|-----------|-----|------|
+| `review_detected` | boolean | 当該承認ポイントの全レビュー種別を通じて1件以上の指摘が検出されたか |
+| `deferred_count` | integer | OUT_OF_SCOPE + TECHNICAL_BLOCKER の件数（全種別合算） |
+| `resolved_count` | integer | 修正済みの件数（全種別合算） |
+| `unresolved_count` | integer | 未対応の件数（全種別合算） |
+
+**スコープとライフサイクル**:
+- **生成タイミング**: レビューステップ完了時の共通処理で、当該承認ポイントの全レビュー種別の結果を集約して生成
+- **有効範囲**: 同一承認ポイント内でのみ有効。ゲート判定後に破棄（次の承認ポイントに持ち越さない）
+- **初期化**: 各承認ポイントのレビュー開始前に未設定状態。レビュー未実施の場合は未設定のままとし、`review_not_executed` フォールバックで処理
+- **集計単位**: 当該承認ポイントで実施した全レビュー種別（code, architecture, security等）の集約結果。1種別でも指摘があれば `review_detected=true`
+
 ### フォールバック条件テーブル（承認ポイント固有）
 
 | 優先度 | reason_code | 条件 | ユーザーへのメッセージ方針 |
 |--------|-------------|------|------------------------|
 | 0 | `review_not_executed` | 該当承認ポイントに対応するAIレビューフロー（review-flow.md）が未実施 | AIレビューが未実施である旨を通知し、レビュー実行を促す |
 | 1 | `error` | ビルド/テスト失敗またはエラー発生 | エラー内容を提示し対応を求める |
-| 2 | `review_issues` | AIレビュー指摘が残っている | 指摘一覧を提示し判断を求める |
+| 2 | `review_issues` | `review_detected=true`（指摘対応判断の結果に関わらず、指摘が検出された時点でフォールバック） | 指摘一覧と対応判断（修正済み/OUT_OF_SCOPE/TECHNICAL_BLOCKER）を提示し、ユーザーに承認を求める |
 | 3 | `incomplete_conditions` | 完了条件に未達成項目がある | 未達成項目を提示し判断を求める |
 | 4 | `decision_required` | 技術的判断・選択が必要 | 選択肢を提示し判断を求める |
+
+**`auto_approved` の条件**: `review_detected=false`（指摘0件）の場合のみ `auto_approved` を許可。指摘が1件でも検出された場合は、全件が修正済み・OUT_OF_SCOPE・TECHNICAL_BLOCKERであっても `fallback(review_issues)` としてユーザー承認を必須とする。
 
 ### 構造化シグナルスキーマ
 
 | semi_auto_result | reason_code | fallback_reason | 条件 |
 |------------------|-------------|-----------------|------|
-| `auto_approved` | `none`（必須） | 空（使用しない） | フォールバック条件に該当しない |
+| `auto_approved` | `none`（必須） | 空（使用しない） | フォールバック条件に該当しない（`review_detected=false` を含む） |
 | `fallback` | 有効値（必須） | 説明文字列（必須） | フォールバック条件に該当 |
 
 **バリデーション規則**:
