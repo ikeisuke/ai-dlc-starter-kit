@@ -156,32 +156,40 @@ if [[ -n "$_tmp_skill_setup" ]]; then
     printf '%s\n' "$VERSION" > "$_tmp_skill_setup" || { echo "error:skill-setup-version-write-failed"; exit 1; }
 fi
 
-# バックアップ作成（ロールバック用）
+# バックアップ作成（全対象を反映前に取得）
 _bak_version=$(mktemp) || { echo "error:mktemp-failed"; exit 1; }
 _bak_toml=$(mktemp) || { \rm -f "$_bak_version"; echo "error:mktemp-failed"; exit 1; }
 \cp version.txt "$_bak_version" || { echo "error:backup-failed"; exit 1; }
 \cp .aidlc/config.toml "$_bak_toml" || { echo "error:backup-failed"; exit 1; }
+_bak_skill_aidlc=""
+_bak_skill_setup=""
+if [[ -n "$_skill_aidlc_version" ]]; then
+    _bak_skill_aidlc=$(mktemp) || { echo "error:mktemp-failed"; exit 1; }
+    \cp "$_skill_aidlc_version" "$_bak_skill_aidlc" || { echo "error:backup-failed"; exit 1; }
+fi
+if [[ -n "$_skill_setup_version" ]]; then
+    _bak_skill_setup=$(mktemp) || { echo "error:mktemp-failed"; exit 1; }
+    \cp "$_skill_setup_version" "$_bak_skill_setup" || { echo "error:backup-failed"; exit 1; }
+fi
 
 # 全対象を一括反映（同一FS上のmvでアトミック）
 _rollback() {
     \cp "$_bak_version" version.txt 2>/dev/null || true
     \cp "$_bak_toml" .aidlc/config.toml 2>/dev/null || true
-    [[ -n "${_bak_skill_aidlc:-}" ]] && \cp "$_bak_skill_aidlc" "$_skill_aidlc_version" 2>/dev/null || true
-    [[ -n "${_bak_skill_setup:-}" ]] && \cp "$_bak_skill_setup" "$_skill_setup_version" 2>/dev/null || true
-    \rm -f "$_bak_version" "$_bak_toml" "${_bak_skill_aidlc:-}" "${_bak_skill_setup:-}"
+    [[ -n "$_bak_skill_aidlc" ]] && \cp "$_bak_skill_aidlc" "$_skill_aidlc_version" 2>/dev/null || true
+    [[ -n "$_bak_skill_setup" ]] && \cp "$_bak_skill_setup" "$_skill_setup_version" 2>/dev/null || true
+    \rm -f "$_bak_version" "$_bak_toml" "$_bak_skill_aidlc" "$_bak_skill_setup"
 }
 
 \mv "$_tmp_version" version.txt || { echo "error:version-txt-write-failed"; _rollback; exit 1; }
 \mv "$_tmp_toml" .aidlc/config.toml || { echo "error:config-toml-write-failed"; _rollback; exit 1; }
 if [[ -n "$_tmp_skill_aidlc" ]]; then
-    _bak_skill_aidlc=$(mktemp) && \cp "$_skill_aidlc_version" "$_bak_skill_aidlc"
     \mv "$_tmp_skill_aidlc" "$_skill_aidlc_version" || { echo "error:skill-aidlc-version-write-failed"; _rollback; exit 1; }
 fi
 if [[ -n "$_tmp_skill_setup" ]]; then
-    _bak_skill_setup=$(mktemp) && \cp "$_skill_setup_version" "$_bak_skill_setup"
     \mv "$_tmp_skill_setup" "$_skill_setup_version" || { echo "error:skill-setup-version-write-failed"; _rollback; exit 1; }
 fi
-\rm -f "$_bak_version" "$_bak_toml" "${_bak_skill_aidlc:-}" "${_bak_skill_setup:-}"
+\rm -f "$_bak_version" "$_bak_toml" "$_bak_skill_aidlc" "$_bak_skill_setup"
 
 # 結果出力
 echo "version_update:success"
