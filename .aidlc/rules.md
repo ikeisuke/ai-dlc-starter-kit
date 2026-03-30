@@ -49,6 +49,7 @@ AIエージェントが参照・作成してよいパスをホワイトリスト
 | AIDLC追加ルール | `.aidlc/rules.md` | 直接参照 | read, write | プロジェクト固有ルール |
 | スキル内リソース | `templates/**`, `scripts/**`, `steps/**`, `guides/**`, `config/**`, `references/**` | スキルベースディレクトリ相対 | read, execute | SKILL.mdの「パス解決」ルールに従う |
 | エージェント設定 | `CLAUDE.md`, `AGENTS.md` | 直接参照 | read | エージェント設定ファイル |
+| 開発者ドキュメント | `docs/development/**` | 直接参照 | read | メタ開発向け開発者ドキュメント |
 
 **注意**:
 - スキル内リソースは必ずスキルベースディレクトリからの相対パスで参照すること（SKILL.mdの「パス解決」ルール参照）。`skills/aidlc/templates/xxx.md` のようなプロジェクトルート相対パスでの参照は禁止
