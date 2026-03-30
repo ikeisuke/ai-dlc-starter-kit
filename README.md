@@ -47,10 +47,10 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 | `reviewing-inception` | Inception成果物レビュー |
 | `squash-unit` | Unit完了時のコミットスカッシュ |
 
-3. 対象プロジェクトのルートディレクトリで `/aidlc setup` を実行:
+3. 対象プロジェクトのルートディレクトリで `/aidlc-setup` を実行:
 
 ```text
-/aidlc setup
+/aidlc-setup
 ```
 
 セットアップウィザードがプロジェクト情報の入力を案内し、`.aidlc/config.toml` と必要なディレクトリ構造を自動生成します。
@@ -60,7 +60,7 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 v1 から v2 へのアップグレードは、マイグレーションスキルで自動化されています:
 
 ```text
-/aidlc migrate
+/aidlc-migrate
 ```
 
 移行では以下が実行されます:
@@ -118,10 +118,10 @@ ai-dlc-starter-kit/
 
 ### 2. プロジェクトをセットアップ
 
-対象プロジェクトのルートディレクトリで `/aidlc setup` を実行します:
+対象プロジェクトのルートディレクトリで `/aidlc-setup` を実行します:
 
 ```text
-/aidlc setup
+/aidlc-setup
 ```
 
 セットアップウィザードがプロジェクト情報を対話形式で案内します。完了後、以下のディレクトリ構造が作成されます:
