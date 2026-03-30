@@ -1,46 +1,34 @@
 ---
-name: reviewing-architecture
-description: Reviews architecture for structural issues including layer separation, design patterns, API design, and dependency management. Use when performing architecture reviews, checking system design, or when the user mentions architecture review, design review, or structural analysis.
+name: reviewing-construction-integration
+description: Reviews integration completeness including design-implementation consistency, review/test coverage, and completion criteria. Use when performing integration review in Construction Phase.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
-# Reviewing Architecture
+# Reviewing Construction Integration
 
-アーキテクチャ・設計に特化したレビューを実行するスキル。
+統合レビューを実行するスキル。設計との乖離確認とレビュー/テスト実施状況を検証する。
 
 ## レビュー観点
 
-以下の観点でアーキテクチャをレビューする。
+### 設計乖離確認
 
-### 構造（Structure）
+- ドメインモデルで定義したエンティティが実装に存在するか
+- 論理設計で定義したインターフェースが実装されているか
+- 設計で定義した依存関係が実装で守られているか
+- 実装中に設計変更があった場合、設計ドキュメントが更新されているか
 
-- レイヤー間の責務が明確に分離されているか
-- モジュール/パッケージの凝集度は適切か
-- コンポーネント間のインターフェースが明確に定義されているか
-- ビジネスロジックがプレゼンテーション層やインフラ層に漏れ出していないか
+### レビュー・テスト実施確認
 
-### パターン（Patterns）
+- コードレビューが実施済みか（履歴記録を確認）
+- テストが実施済みでパスしているか
+- ビルドが成功しているか
 
-- 採用されたデザインパターンが問題に対して適切か
-- アンチパターン（God Class、Spaghetti Code等）が含まれていないか
-- パターンの過剰適用（Over-engineering）がないか
-- プロジェクト内でパターンの適用が一貫しているか
+### 完了条件チェック
 
-### API設計（API Design）
-
-- エンドポイント/インターフェースの命名が一貫しているか
-- 入出力の型定義が明確か
-- エラーハンドリングの方針が統一されているか
-- バージョニング・後方互換性が考慮されているか
-
-### 依存関係（Dependencies）
-
-- 依存方向が適切か（上位レイヤーが下位に依存しない等）
-- 循環依存が存在しないか
-- コンポーネント間の境界（コンテキスト境界）が明確に定義されているか
-- 障害の伝播が適切に分離されているか（障害分離）
+- 計画ファイルの完了条件チェックリストの達成状況
+- Unit定義の責務が全て実装されているか
 
 ## 実行コマンド
 
@@ -125,6 +113,7 @@ gemini -p "<レビュー指示>" --sandbox
 
 指摘 #1
 - 重要度: {高 | 中 | 低}
+- focus: {code | security | architecture | inception}
 - 内容: {指摘内容の要約}
 - 推奨修正: {修正方法の提案}
 

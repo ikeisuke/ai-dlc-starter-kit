@@ -33,7 +33,7 @@
 ### スキル間依存ルール
 
 - **禁止**: 他スキルの内部実装（`scripts/`, `steps/`, `templates/` 等の内部ファイルパス）への依存
-- **許可**: スキルの呼び出し名（`/aidlc`, `/reviewing-code` 等）とSKILL.mdで定義された入出力引数への依存
+- **許可**: スキルの呼び出し名（`/aidlc`, `/reviewing-construction-code` 等）とSKILL.mdで定義された入出力引数への依存
 - 内部ファイルパス参照はAPIと見なさない。スキル更新時の波及範囲を限定するため、公開された呼び出しインターフェイスのみに依存すること
 
 ### ファイル参照境界ルール【重要】
@@ -222,17 +222,22 @@ AI-DLCプロンプトで「AIレビュー」を実行する際は、以下のル
 
 **レビュー種別に対応するSkillを使用する**:
 
-| レビュー種別 | Skills呼び出し |
+| 呼び出し元 | Skills呼び出し |
 |-------------|----------------|
-| code | `skill="reviewing-code"` |
-| architecture | `skill="reviewing-architecture"` |
-| security | `skill="reviewing-security"` |
-| inception | `skill="reviewing-inception"` |
+| 計画承認前 | `skill="reviewing-construction-plan"` |
+| 設計レビュー | `skill="reviewing-construction-design"` |
+| コード生成後 | `skill="reviewing-construction-code"` |
+| 統合とレビュー | `skill="reviewing-construction-integration"` |
+| Intent承認前 | `skill="reviewing-inception-intent"` |
+| ストーリー承認前 | `skill="reviewing-inception-stories"` |
+| Unit定義承認前 | `skill="reviewing-inception-units"` |
+| デプロイ計画承認前 | `skill="reviewing-operations-deploy"` |
+| PRマージ前 | `skill="reviewing-operations-premerge"` |
 
 ### 呼び出し方法
 
 ```text
-skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|claude|gemini]"
+skill="reviewing-[stage]", args="[レビュー対象] 優先ツール: [codex|claude|gemini]"
 ```
 
 - レビュー種別はreview-flow.mdの「レビュー種別の決定」に従い選択する

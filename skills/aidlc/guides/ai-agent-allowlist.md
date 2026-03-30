@@ -307,10 +307,15 @@ deny（最優先）→ ask → allow（最低優先）
 
 | パターン | 用途 |
 |---------|------|
-| `Skill(reviewing-code)` | コードレビュー |
-| `Skill(reviewing-architecture)` | アーキテクチャレビュー |
-| `Skill(reviewing-security)` | セキュリティレビュー |
-| `Skill(reviewing-inception)` | Inceptionレビュー |
+| `Skill(reviewing-inception-intent)` | Intent承認前レビュー |
+| `Skill(reviewing-inception-stories)` | ストーリー承認前レビュー |
+| `Skill(reviewing-inception-units)` | Unit定義承認前レビュー |
+| `Skill(reviewing-construction-plan)` | 計画承認前レビュー |
+| `Skill(reviewing-construction-design)` | 設計レビュー |
+| `Skill(reviewing-construction-code)` | コード+セキュリティレビュー |
+| `Skill(reviewing-construction-integration)` | 統合レビュー |
+| `Skill(reviewing-operations-deploy)` | デプロイ計画レビュー |
+| `Skill(reviewing-operations-premerge)` | PRマージ前レビュー |
 
 ##### オプション追加
 

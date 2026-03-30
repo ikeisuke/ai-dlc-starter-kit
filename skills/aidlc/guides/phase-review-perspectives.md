@@ -4,13 +4,13 @@
 
 ## 概要
 
-AI-DLC のレビュースキル（reviewing-inception, reviewing-architecture, reviewing-code, reviewing-security）は汎用的なソフトウェア品質の観点を提供する。本ドキュメントでは、それに加えてAI-DLC手法固有の観点を各フェーズごとに定義する。
+AI-DLC のレビュースキルはタイミングベースの9スキル（reviewing-inception-intent, reviewing-inception-stories, reviewing-inception-units, reviewing-construction-plan, reviewing-construction-design, reviewing-construction-code, reviewing-construction-integration, reviewing-operations-deploy, reviewing-operations-premerge）で構成される。本ドキュメントでは、AI-DLC手法固有の観点を各フェーズごとに定義する。
 
 ## Inception Phase
 
 ### 実装済み観点（v1.28.0）
 
-以下の観点は `reviewing-inception` スキルの SKILL.md に追加済み。
+以下の観点は `reviewing-inception-units` スキルの SKILL.md に追加済み。
 
 | チェック対象 | チェック項目 | 重要度 |
 |-------------|------------|--------|
@@ -63,9 +63,9 @@ AI-DLC のレビュースキル（reviewing-inception, reviewing-architecture, r
 
 | フェーズ | 対応スキル | 実装状態 |
 |---------|-----------|---------|
-| Inception | reviewing-inception | v1.28.0 で AIDLC 固有観点追加済み |
-| Construction | reviewing-code / reviewing-architecture | 汎用観点のみ（AIDLC固有観点は未実装） |
-| Operations | （専用スキルなし） | 未実装 |
+| Inception | reviewing-inception-intent, reviewing-inception-stories, reviewing-inception-units | v2.1.0 でタイミングベース化。AIDLC 固有観点は reviewing-inception-units に実装済み |
+| Construction | reviewing-construction-plan, reviewing-construction-design, reviewing-construction-code, reviewing-construction-integration | v2.1.0 でタイミングベース化。code に security 統合、integration は設計乖離確認に変更 |
+| Operations | reviewing-operations-deploy, reviewing-operations-premerge | v2.1.0 で新規追加 |
 
 ## 更新履歴
 

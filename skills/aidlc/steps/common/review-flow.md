@@ -19,44 +19,38 @@
 - `tools` リストの先頭を「優先ツール」としてスキル呼び出し時の引数に含める
 - **ツール選択の最終決定はスキル内部の責務**。ここで提供するのは最善努力のヒントのみ
 
-**有効なレビュー種別とスキル名**:
+**有効なスキルとCallerContextマッピング**:
 
-| レビュー種別 | Skills呼び出し |
-|-------------|----------------|
-| code | `skill="reviewing-code"` |
-| architecture | `skill="reviewing-architecture"` |
-| security | `skill="reviewing-security"` |
-| inception | `skill="reviewing-inception"` |
+| 呼び出し元ステップ | スキル名 | focusメタデータ |
+|---|---|---|
+| 計画承認前 | `reviewing-construction-plan` | architecture |
+| Phase 1 ステップ3（設計レビュー） | `reviewing-construction-design` | architecture |
+| Phase 2 ステップ4（コード生成後） | `reviewing-construction-code` | code, security |
+| Phase 2 ステップ6（統合とレビュー） | `reviewing-construction-integration` | code |
+| Intent承認前 | `reviewing-inception-intent` | inception |
+| ユーザーストーリー承認前 | `reviewing-inception-stories` | inception |
+| Unit定義承認前 | `reviewing-inception-units` | inception |
+| デプロイ計画承認前 | `reviewing-operations-deploy` | architecture |
+| PRマージ前レビュー | `reviewing-operations-premerge` | code, security |
 
 **スキル呼び出し引数フォーマット**:
 
 ```text
-skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|claude|gemini]"
+skill="reviewing-[stage]", args="[レビュー対象] 優先ツール: [codex|claude|gemini]"
 ```
 
 **エラー処理**: 未設定→デフォルト使用、空配列→`cli_available=false`、未知ツール名→警告しスキップ、非配列型→警告しデフォルト使用
 
 ## レビュー種別の決定
 
-呼び出し元のコンテキストに基づき、実行するレビュー種別を決定する。
+呼び出し元のコンテキストに基づき、CallerContextマッピングテーブルから実行するスキルを決定する。各スキルはタイミング（stage）固有のレビュー観点を持ち、指摘にはfocusメタデータを付与する。
 
-**CallerContextマッピングテーブル**:
-
-| 呼び出し元ステップ | デフォルトのレビュー種別 |
-|---|---|
-| 計画承認前 | architecture |
-| Phase 1 ステップ3（設計レビュー） | architecture |
-| Phase 2 ステップ4（コード生成後） | code |
-| Phase 2 ステップ6（統合とレビュー） | code, security |
-| Intent承認前 | inception |
-| ユーザーストーリー承認前 | inception |
-| Unit定義承認前 | inception |
+**focusメタデータ**: レビュー指摘の性質を示すタグ。`code` / `security` / `architecture` / `inception` のいずれか。review-flow.md の分岐（security指摘の非公開扱い等）はスキル名ではなくfocusメタデータを参照する。
 
 **決定ルール**:
 
-1. 呼び出し元ステップを確認し、上記テーブルからデフォルト種別を取得
+1. 呼び出し元ステップを確認し、上記テーブルからスキル名を取得
 2. 呼び出し元が不明な場合はユーザーに選択を求める
-3. ユーザーが追加の種別を指定した場合はマージする
 
 **複数種別実行時**: 直列実行、各種別ごとに反復レビュー（最大3回）を独立実施。全種別で指摘0件で「AIレビュー完了」。
 
@@ -64,7 +58,7 @@ skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [codex|cla
 
 **Skills確認**:
 
-1. 全種別について `skill="reviewing-[type]"` の利用可否を個別確認
+1. 全種別について `skill="reviewing-[stage]"` の利用可否を個別確認
 2. 全種別利用可能 → 外部CLI可用性チェックへ
 3. 一部のみ利用可能: `required`→利用不可種別のスキップ承認要求、`recommend`→警告表示して利用可能種別のみで続行
 4. すべて利用不可: AIレビュー不可として処理
@@ -109,7 +103,7 @@ scripts/write-history.sh \
 3. **優先ツール決定・利用可否チェック**:
    - `tools`リスト先頭を優先ツールとする（デフォルト: `codex`）
    - **空配列チェック**: `tools = []` → `cli_available=false`としてwhichチェックスキップ
-   - 全種別について`skill="reviewing-[type]"`の利用可否を個別確認
+   - 全種別について`skill="reviewing-[stage]"`の利用可否を個別確認
    - **外部CLI可用性チェック**（空配列でない場合のみ）: `tools`リスト先頭から`which`で確認。**ツール名バリデーション**: 固定ホワイトリスト（`codex`/`claude`/`gemini`）と照合、未知値は警告しスキップ（シェルインジェクション防止）
 
    - **遷移判定**（Skill可用性 × CLI可用性）:
@@ -146,7 +140,7 @@ scripts/write-history.sh \
 
      各種別で以下を実行:
 
-     1. AIレビューを実行: `skill="reviewing-[type]", args="[レビュー対象] 優先ツール: [tool]"`
+     1. AIレビューを実行: `skill="reviewing-[stage]", args="[レビュー対象] 優先ツール: [tool]"`
 
      - **種別単位のフォールバック処理**:
 
@@ -232,9 +226,9 @@ scripts/write-history.sh \
 
        **安全規則**: heredoc終端トークン含む入力は拒否、`{slug}`は`^[a-z0-9][a-z0-9-]{0,63}$`のみ許可、引数・パスは二重引用符で囲む
 
-       **バックログ種別**: securityレビュー指摘→`type:security`、その他→`type:chore`
+       **バックログ種別**: `focus: security`の指摘→`type:security`、その他→`type:chore`
 
-       **security指摘の分岐**: securityレビュー種別の指摘は、脆弱性詳細の漏洩を防ぐため公開Issueへの詳細記載を禁止する。以下の分岐に従う:
+       **security指摘の分岐**: `focus: security`タグを持つ指摘は、脆弱性詳細の漏洩を防ぐため公開Issueへの詳細記載を禁止する。以下の分岐に従う:
        - **非公開対応**: 公開Issue自動作成を行わず、バックログ列に `SECURITY_PRIVATE` と記載する。対応は非公開トラッカーまたは手動で管理する
        - **マスク済みIssue**: 通常の本文テンプレート（スラッグ・概要・詳細・検出元）を使わず、以下のマスク済み本文のみでIssueを作成する。この場合バックログ列に `#NNN` を記載する
          - 本文: `## 概要\n[脆弱性の種類のみ。再現手順・影響範囲の詳細は記載禁止]\n\n## 検出元\n[サイクル・Unit・レビュー種別]`
@@ -261,7 +255,7 @@ scripts/write-history.sh \
 
    - **レビュー実行方式の判定**（優先順位順）:
 
-     - **A) スキル呼び出し方式（推奨）**: `skill="reviewing-{種別}"`, `args="self-review {target_files}"`。スキル側がサブエージェント起動・インラインフォールバックを管理
+     - **A) スキル呼び出し方式（推奨）**: ステップ2で解決した具体的スキル名を使用（例: `skill="reviewing-construction-code"`, `args="self-review {target_files}"`）。スキル側がサブエージェント起動・インラインフォールバックを管理
      - **B) インライン方式（フォールバック）**: スキル呼び出し失敗時、SKILL.mdの「レビュー観点」を読み取りメインエージェントがレビュー
      - **C) 簡易インライン方式（最終フォールバック）**: SKILL.md未発見時、以下の簡易観点でレビュー: code→コード品質・命名・エラーハンドリング、architecture→構造・責務分離・依存方向、security→入力検証・認証・機密情報、inception→要件明確性・整合性・網羅性
 

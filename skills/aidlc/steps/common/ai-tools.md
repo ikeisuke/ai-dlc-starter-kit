@@ -19,10 +19,15 @@ AI-DLCは複数のAIツールで利用できます。
 
 | 名前空間キー | 呼び出し名 | カタログ表示名 | 読むファイル | 状態 | MP掲載 |
 |------------|-----------|-------------|-------------|------|--------|
-| `aidlc` | `reviewing-code` | `aidlc:reviewing-code` | `skills/reviewing-code/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-architecture` | `aidlc:reviewing-architecture` | `skills/reviewing-architecture/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-security` | `aidlc:reviewing-security` | `skills/reviewing-security/SKILL.md` | active | Yes |
-| `aidlc` | `reviewing-inception` | `aidlc:reviewing-inception` | `skills/reviewing-inception/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-inception-intent` | `aidlc:reviewing-inception-intent` | `skills/reviewing-inception-intent/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-inception-stories` | `aidlc:reviewing-inception-stories` | `skills/reviewing-inception-stories/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-inception-units` | `aidlc:reviewing-inception-units` | `skills/reviewing-inception-units/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-construction-plan` | `aidlc:reviewing-construction-plan` | `skills/reviewing-construction-plan/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-construction-design` | `aidlc:reviewing-construction-design` | `skills/reviewing-construction-design/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-construction-code` | `aidlc:reviewing-construction-code` | `skills/reviewing-construction-code/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-construction-integration` | `aidlc:reviewing-construction-integration` | `skills/reviewing-construction-integration/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-operations-deploy` | `aidlc:reviewing-operations-deploy` | `skills/reviewing-operations-deploy/SKILL.md` | active | Yes |
+| `aidlc` | `reviewing-operations-premerge` | `aidlc:reviewing-operations-premerge` | `skills/reviewing-operations-premerge/SKILL.md` | active | Yes |
 | `aidlc` | `aidlc-setup` | `aidlc:aidlc-setup` | `skills/aidlc-setup/SKILL.md` | active | Yes |
 | `aidlc` | `squash-unit` | `aidlc:squash-unit` | `skills/squash-unit/SKILL.md` | active | Yes |
 
@@ -38,10 +43,15 @@ AIレビューを実行するスキル（`aidlc` 名前空間）:
 
 | 呼び出し名 | レビュー種別 |
 |-----------|------------|
-| `reviewing-code` | コードレビュー |
-| `reviewing-architecture` | アーキテクチャレビュー |
-| `reviewing-security` | セキュリティレビュー |
-| `reviewing-inception` | Inceptionレビュー |
+| `reviewing-inception-intent` | Intent承認前レビュー |
+| `reviewing-inception-stories` | ストーリー承認前レビュー |
+| `reviewing-inception-units` | Unit定義承認前レビュー |
+| `reviewing-construction-plan` | 計画承認前レビュー |
+| `reviewing-construction-design` | 設計レビュー |
+| `reviewing-construction-code` | コード+セキュリティレビュー |
+| `reviewing-construction-integration` | 統合レビュー |
+| `reviewing-operations-deploy` | デプロイ計画レビュー |
+| `reviewing-operations-premerge` | PRマージ前レビュー |
 
 #### ワークフロースキル
 
