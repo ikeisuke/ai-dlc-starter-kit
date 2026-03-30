@@ -216,7 +216,11 @@ scripts/write-history.sh \
 
        **バックログ種別**: securityレビュー指摘→`type:security`、その他→`type:chore`
 
-       **登録実行**: Writeツールで一時ファイルにIssue本文（スラッグ・概要・詳細・検出元）を書き出し、`gh issue create --title "[Backlog] {要約}" --label "backlog,type:{種別},priority:medium" --body-file <パス>` で作成。タイトルはシェル展開文字除去・80文字以内。失敗/gh CLI不可時は手動登録を依頼。
+       **security指摘の分岐**: securityレビュー種別の指摘は、脆弱性詳細の漏洩を防ぐため公開Issueへの詳細記載を禁止する。以下の分岐に従う:
+       - **非公開対応**: 公開Issue自動作成を行わず、バックログ列に `SECURITY_PRIVATE` と記載する。対応は非公開トラッカーまたは手動で管理する
+       - **マスク済みIssue**: 要約のみ（脆弱性の具体的な再現手順・影響範囲の詳細を含まない）のIssueを作成する。この場合バックログ列に `#NNN` を記載する
+
+       **登録実行**（security指摘以外、またはマスク済みIssueを選択した場合）: Writeツールで一時ファイルにIssue本文（スラッグ・概要・詳細・検出元）を書き出し、`gh issue create --title "[Backlog] {要約}" --label "backlog,type:{種別},priority:medium" --body-file <パス>` で作成。タイトルはシェル展開文字除去・80文字以内。失敗/gh CLI不可時は手動登録を依頼。
 
        **バックログ登録の履歴記録**: 「共通履歴記録パターン」に従い、ステップ名=「バックログ自動登録」、コンテンツに指摘内容・登録方法・登録先を記録
 
@@ -337,14 +341,18 @@ AIレビュー完了時にレビューサマリファイルを生成・追記す
 
 | # | 重要度 | 内容 | 対応 | バックログ |
 |---|--------|------|------|-----------|
-| 1 | 高/中/低 | [対象箇所] - [問題事象] | 修正済み（[変更箇所]: [変更内容]） / TECHNICAL_BLOCKER（理由: [理由]） / OUT_OF_SCOPE（理由: [理由]） | - / #NNN |
+| 1 | 高/中/低 | [対象箇所] - [問題事象] | 修正済み（[変更箇所]: [変更内容]） / TECHNICAL_BLOCKER（理由: [理由]） / OUT_OF_SCOPE（理由: [理由]） | - / #NNN / PENDING_MANUAL / SECURITY_PRIVATE |
 ```
 
 **列の記述ガイダンス**:
 
 - **「内容」列**: `[対象箇所] - [問題事象]` 形式。対象箇所（位置情報）と問題事象（具体的記述）は必須。
 - **「対応」列**: 修正済み→変更箇所・内容必須、TECHNICAL_BLOCKER→技術的理由必須、OUT_OF_SCOPE→根拠必須。機密情報は記載禁止（マスク要）。
-- **「バックログ」列**: OUT_OF_SCOPE時はバックログ参照を必須記載。有効値は `#NNN`（Issue作成済み）/ `PENDING_MANUAL`（gh CLI失敗等で手動登録待ち）。TECHNICAL_BLOCKER時は空可（`-`）。修正済み時は`-`。**security指摘の例外**: security種別の指摘は脆弱性詳細の漏洩を防ぐため、公開Issueへの詳細記載を禁止する。要約のみのマスク済みIssueを作成するか、`SECURITY_PRIVATE`（非公開対応）と記載すること。
+- **「バックログ」列**: 有効値は `#NNN` / `PENDING_MANUAL` / `SECURITY_PRIVATE` / `-` の4種。OUT_OF_SCOPE時は必須（`-` 以外）、TECHNICAL_BLOCKER時は `-`（空可）、修正済み時は `-`。
+  - `#NNN`: Issue作成済み（番号を記載）
+  - `PENDING_MANUAL`: gh CLI失敗等で手動登録待ち
+  - `SECURITY_PRIVATE`: security種別の指摘で非公開対応（公開Issueへの詳細記載禁止。要約のみのマスク済みIssueまたは非公開トラッカーで管理）
+  - `-`: バックログ登録不要（修正済み・TECHNICAL_BLOCKER時）
 
 ## 外部入力検証ルール【重要】
 
