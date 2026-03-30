@@ -2,7 +2,7 @@
 
 AI-DLCは複数のAIツールで利用できます。
 
-**スキル利用ガイド**: [詳細はこちら](../../guides/skill-usage-guide.md)
+**スキル利用ガイド**: `guides/skill-usage-guide.md` を参照
 
 ## スキルカタログ
 

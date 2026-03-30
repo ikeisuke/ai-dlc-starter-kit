@@ -26,7 +26,7 @@ AIDLC_PROJECT_ROOT="${AIDLC_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev
 if ! git -C "$AIDLC_PROJECT_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "error:invalid-project-root:$AIDLC_PROJECT_ROOT" >&2; exit 2
 fi
-AIDLC_PLUGIN_ROOT="${AIDLC_PROJECT_ROOT}/skills/aidlc"
+AIDLC_PLUGIN_ROOT="${AIDLC_PLUGIN_ROOT:-${AIDLC_PROJECT_ROOT}/skills/aidlc}"
 AIDLC_CONFIG="${AIDLC_PROJECT_ROOT}/.aidlc/config.toml"
 AIDLC_CYCLES="${AIDLC_PROJECT_ROOT}/.aidlc/cycles"
 
@@ -127,7 +127,9 @@ fi
 
 # 6. .github/ISSUE_TEMPLATE/ のスターターキット由来テンプレート（v2で管理廃止）
 # スターターキットの原本と比較し、一致すればスターターキット由来と判定して削除対象にする
-_starter_kit_root="$(cd "$AIDLC_PLUGIN_ROOT/../.." && pwd)"
+# STARTER_KIT_ROOT: スターターキットリポジトリのルート（AIDLC_PLUGIN_ROOT の2階層上）
+# 環境変数で注入可能、未設定時はAIDLC_PLUGIN_ROOTから算出
+_starter_kit_root="${AIDLC_STARTER_KIT_ROOT:-$(cd "$AIDLC_PLUGIN_ROOT/../.." 2>/dev/null && pwd || echo "")}"
 for _tmpl_name in backlog.yml bug.yml feature.yml feedback.yml; do
   _tmpl_path=".github/ISSUE_TEMPLATE/${_tmpl_name}"
   [ -f "$_tmpl_path" ] || continue

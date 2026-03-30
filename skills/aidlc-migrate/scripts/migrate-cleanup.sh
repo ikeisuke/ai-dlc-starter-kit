@@ -23,7 +23,11 @@ AIDLC_PROJECT_ROOT="${AIDLC_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev
 if ! git -C "$AIDLC_PROJECT_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "error:invalid-project-root:$AIDLC_PROJECT_ROOT" >&2; exit 2
 fi
-AIDLC_PLUGIN_ROOT="${AIDLC_PROJECT_ROOT}/skills/aidlc"
+AIDLC_PLUGIN_ROOT="${AIDLC_PLUGIN_ROOT:-${AIDLC_PROJECT_ROOT}/skills/aidlc}"
+# AIDLC_PLUGIN_ROOT の妥当性検証: templates/ ディレクトリの存在を確認
+if [ ! -d "${AIDLC_PLUGIN_ROOT}/templates" ]; then
+  echo "error:invalid-plugin-root:${AIDLC_PLUGIN_ROOT} (templates/ not found)" >&2; exit 2
+fi
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is not installed." >&2
