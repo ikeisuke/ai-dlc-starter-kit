@@ -411,11 +411,11 @@ scripts/read-config.sh rules.automation.mode
 |--------|-------------|------|------------------------|
 | 0 | `review_not_executed` | 該当承認ポイントに対応するAIレビューフロー（review-flow.md）が未実施 | AIレビューが未実施である旨を通知し、レビュー実行を促す |
 | 1 | `error` | ビルド/テスト失敗またはエラー発生 | エラー内容を提示し対応を求める |
-| 2 | `review_issues` | `deferred_count > 0`（OUT_OF_SCOPE/TECHNICAL_BLOCKERの先送り判断が1件以上存在する） | 指摘一覧と対応判断を提示し、先送り判断についてユーザーに承認を求める |
+| 2 | `review_issues` | `unresolved_count > 0`（指摘対応判断フローを経ていない未処理の指摘が存在する） | 未処理の指摘一覧を提示し、対応判断を求める |
 | 3 | `incomplete_conditions` | 完了条件に未達成項目がある | 未達成項目を提示し判断を求める |
 | 4 | `decision_required` | 技術的判断・選択が必要 | 選択肢を提示し判断を求める |
 
-**`auto_approved` の条件**: `deferred_count == 0` の場合のみ `auto_approved` を許可。指摘が検出されても全件修正済み（RESOLVE）なら自動承認可。先送り判断（OUT_OF_SCOPE/TECHNICAL_BLOCKER）が1件でもある場合は `fallback(review_issues)` としてユーザー承認を必須とする。
+**`auto_approved` の条件**: `unresolved_count == 0` の場合のみ `auto_approved` を許可。全件が修正済み（RESOLVE）または指摘対応判断フロー完了（OUT_OF_SCOPE/TECHNICAL_BLOCKER、理由バリデーション・バックログ登録・履歴記録を経た先送り）であれば自動承認可。判断フローを経ていない未処理の指摘がある場合のみ `fallback(review_issues)` とする。
 
 ### 構造化シグナルスキーマ
 
