@@ -135,11 +135,17 @@ _generate_template() {
       "Skill(aidlc-feedback)",
       "Skill(aidlc-migrate)",
       "Skill(aidlc-setup)",
-      "Skill(reviewing-architecture)",
-      "Skill(reviewing-code)",
-      "Skill(reviewing-inception)",
-      "Skill(reviewing-security)",
-      "Skill(squash-unit)"
+      "Skill(reviewing-inception-intent)",
+      "Skill(reviewing-inception-stories)",
+      "Skill(reviewing-inception-units)",
+      "Skill(reviewing-construction-plan)",
+      "Skill(reviewing-construction-design)",
+      "Skill(reviewing-construction-code)",
+      "Skill(reviewing-construction-integration)",
+      "Skill(reviewing-operations-deploy)",
+      "Skill(reviewing-operations-premerge)",
+      "Skill(squash-unit)",
+      "Skill(write-history)"
     ],
     "ask": [
       "Bash(git push*--force *)",

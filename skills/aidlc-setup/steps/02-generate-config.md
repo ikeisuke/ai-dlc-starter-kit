@@ -269,7 +269,7 @@ mkdir -p .aidlc/cycles
 
 テンプレートファイルはスキルディレクトリ内に配置されています:
 
-```
+```text
 templates/config.toml.template
 ```
 

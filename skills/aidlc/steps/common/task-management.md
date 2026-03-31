@@ -43,7 +43,7 @@ Unit選択・計画承認後（`01-setup.md` ステップ12完了後）に以下
 | 設計・実装整合性チェック | 設計ドキュメントが存在する場合 |
 | AIレビュー実施確認 | 常に |
 | Unit定義ファイル状態更新（→完了） | 常に |
-| 履歴記録（write-history.sh） | 常に |
+| 履歴記録（`/write-history` スキル） | 常に |
 | Markdownlint実行 | `markdown_lint=true` の場合 |
 | Squash | `squash_enabled=true` の場合 |
 | Gitコミット | 常に |

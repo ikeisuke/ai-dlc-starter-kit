@@ -19,11 +19,17 @@
         "./skills/aidlc-setup",
         "./skills/aidlc-migrate",
         "./skills/aidlc-feedback",
-        "./skills/reviewing-architecture",
-        "./skills/reviewing-code",
-        "./skills/reviewing-inception",
-        "./skills/reviewing-security",
-        "./skills/squash-unit"
+        "./skills/reviewing-inception-intent",
+        "./skills/reviewing-inception-stories",
+        "./skills/reviewing-inception-units",
+        "./skills/reviewing-construction-plan",
+        "./skills/reviewing-construction-design",
+        "./skills/reviewing-construction-code",
+        "./skills/reviewing-construction-integration",
+        "./skills/reviewing-operations-deploy",
+        "./skills/reviewing-operations-premerge",
+        "./skills/squash-unit",
+        "./skills/write-history"
       ]
     }
   ]

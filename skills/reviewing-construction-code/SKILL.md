@@ -1,92 +1,49 @@
 ---
-name: reviewing-code
-description: Reviews code for quality issues including readability, maintainability, performance, and test quality. Use when performing code reviews, checking code quality, or when the user mentions code review, code quality, or refactoring suggestions.
+name: reviewing-construction-code
+description: Reviews code for quality and security issues. Combines code quality review with security vulnerability detection. Use when reviewing code after generation in Construction Phase.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
-# Reviewing Code
+# Reviewing Construction Code
 
-コード品質に特化したレビューを実行するスキル。
+コード生成後のコード品質+セキュリティレビューを実行するスキル。
+
+**focusメタデータ**: このスキルは `code` と `security` の2つのfocusを持つ。セキュリティ関連の指摘には `focus: security` を付与すること。
 
 ## レビュー観点
 
-以下の観点でコードをレビューする。
+### コード品質（focus: code）
 
-### 可読性
+- **可読性**: 命名規則の一貫性、関数の長さ、ネストの深さ、コメントの適切さ
+- **保守性**: 単一責任の原則、DRY原則、疎結合・高凝集、拡張性
+- **パフォーマンス**: アルゴリズムの計算量、不要な再計算、メモリリーク、I/O効率
+- **テスト品質**: カバレッジ、境界値テスト、テスト名の明確さ、テストの独立性
+- **ASCII図バリデーション**: ASCII図が含まれる場合、罫線のずれ・文字化け・構造の不整合がないか検証する
+- **Mermaid図バリデーション**: Mermaid記法の図が含まれる場合、構文エラー・ノード/エッジの不整合がないか検証する
 
-- 命名規則が一貫しているか（変数名、関数名、クラス名）
-- 関数/メソッドが適切な長さか（単一責任）
-- ネストが深すぎないか
-- コメントが適切か（なぜを説明、何をは自明にする）
-- コードの意図が読み手に明確か
+### セキュリティ（focus: security）
 
-### 保守性
+以下の観点はAmazon AIDLC SECURITY-01〜15に対応している。
 
-- 単一責任原則を遵守しているか
-- DRY原則に従っているか（重複コードがないか）
-- 疎結合・高凝集か
-- 将来の変更に対して拡張しやすいか
-- 依存関係が明確で管理されているか
+- **OWASP Top 10（SECURITY-01,04,05,09,15）**: インジェクション対策（SQL、OS コマンド、XSS、LDAP）、アクセス制御（認可バイパス、IDOR防止）、暗号化（平文回避、TLS）、保存時暗号化、HTTPセキュリティヘッダー、セキュリティ設定（デフォルト変更、不要機能無効化）、SSRF対策、例外処理での情報漏洩防止、フェイルセーフデフォルト
+- **認証・認可（SECURITY-06,08,12）**: 認証メカニズム（MFA、ブルートフォース対策）、セッション管理、最小権限の原則、権限昇格防止、トークン・クレデンシャル管理
+- **依存脆弱性（SECURITY-10,13）**: 既知脆弱性チェック、バージョン管理（ロックファイル）、サプライチェーンリスク、ソフトウェア成果物の整合性検証
+- **ログ・監視（SECURITY-02,03,14）**: アクセスログ有効化、アプリケーションログ（認証・権限変更）、ログへの機密情報混入防止、セキュリティイベントアラート
+- **ネットワーク（SECURITY-07）**: NW最小権限、通信分離、パブリックアクセス制限、通信暗号化
+- **セキュアデザイン（SECURITY-11）**: 脅威モデリング（STRIDE等）、攻撃面最小化、防御多層化
 
-### パフォーマンス
+### N/A判定ガイダンス
 
-- アルゴリズムの計算量は適切か
-- 不要な再計算やループがないか
-- メモリリークの可能性はないか
-- I/O操作が効率的か
-- N+1問題などのデータアクセスパターンの問題がないか
+プロジェクトの特性により一部の観点が該当しない場合がある。N/A判定時はレビュー記録に「N/A: 理由」を明記すること。
 
-### テスト品質
-
-- テストカバレッジが十分か
-- 境界値テストが含まれているか
-- テスト名が何をテストしているか明確か
-- 各テストが独立しているか
-- アサーションが適切で意味のあるエラーメッセージを含むか
-
-### ASCII図バリデーション
-
-対象ファイルにASCII図（罫線で描画された図）が含まれる場合にのみ適用する。
-
-- 罫線接続: ボックス間の接続線（`─`, `│`, `┌`, `┐`, `└`, `┘`, `├`, `┤`, `┬`, `┴`, `┼`, `|`, `-`, `+`等）が途切れず接続されているか
-- ラベル対応: 図中のラベル（ボックス内テキスト、矢印ラベル）が本文の用語・定義と一致しているか
-- 交差線ゼロ原則: 接続線の交差を避けるレイアウトになっているか。交差が不可避な場合は交差理由がコメントまたは本文で説明されているか
-- 整列・余白: ボックスやラベルの水平・垂直方向の整列が一貫しているか
-
-### Mermaid図バリデーション
-
-対象ファイルにMermaidコードブロック（` ```mermaid `）が含まれる場合にのみ適用する。
-
-#### 共通観点
-
-- 構文準拠: Mermaid公式構文に準拠しているか（宣言キーワード、ノード定義、エッジ記法）
-- ノードID/ラベル重複: 同一図内でノードIDが重複していないか（ID重複は原則NG）。ラベルの重複は、文脈上の曖昧性がある場合のみ指摘する
-
-#### 対象6種別と種別固有観点
-
-| 種別 | 宣言キーワード |
-|------|-------------|
-| flowchart | `flowchart` / `graph` |
-| sequenceDiagram | `sequenceDiagram` |
-| classDiagram | `classDiagram` |
-| stateDiagram | `stateDiagram-v2` / `stateDiagram` |
-| erDiagram | `erDiagram` |
-| gantt | `gantt` |
-
-- flowchart: 方向（`TB`, `TD`, `LR`, `RL`, `BT`）が明示されているか
-- sequenceDiagram: `participant`/`actor`の明示定義が望ましい（暗黙定義でも構文上妥当であれば許容）
-- classDiagram: 継承（`<|--`）、実装（`<|..`）、関連（`-->`）等の関係記法が正しいか
-- stateDiagram: 遷移（`-->`）、開始状態（`[*]`）、終了状態（`[*]`）が適切に定義されているか
-- erDiagram: カーディナリティ記法（`||--o{`等）が正しいか
-- gantt: `dateFormat`が指定されているか
-
-#### 構文検証対象外の種別
-
-上記対象6種別以外のMermaid図種別はすべて構文検証の対象外とする。対象外種別については構文の検証は行わないが、図としての可読性（ラベルの明確さ、本文との整合性）は可読性カテゴリの一般ルールで確認する。
-
-既知の対象外種別: `pie`, `mindmap`, `timeline`, `journey`, `quadrantChart`, `gitGraph`, `c4Context`/`c4Container`/`c4Component`/`c4Deployment`, `block-beta`, `sankey-beta`, `xychart-beta`, `packet-beta`, `kanban`, `architecture-beta`
+| カテゴリ | N/A条件の例 |
+|---------|-----------|
+| ログ・監視 | ネットワーク中間点を使用しないローカルアプリケーション |
+| ネットワーク | ネットワーク通信を行わないCLIツール・ライブラリ |
+| セキュアデザイン | 設計フェーズが対象外のバグ修正・パッチ変更 |
+| OWASP Top 10（HTTP関連） | HTTPを使用しないバッチ処理・データパイプライン |
 
 ## 実行コマンド
 
@@ -171,6 +128,7 @@ gemini -p "<レビュー指示>" --sandbox
 
 指摘 #1
 - 重要度: {高 | 中 | 低}
+- focus: {code | security | architecture | inception}
 - 内容: {指摘内容の要約}
 - 推奨修正: {修正方法の提案}
 

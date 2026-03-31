@@ -135,13 +135,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | wc -l
 
 フォールバック発生時、以下を履歴に記録する:
 
-```bash
-scripts/write-history.sh \
-    --cycle {{CYCLE}} \
-    --phase inception \
-    --step "エクスプレスモード判定" \
-    --content "エクスプレスモードフォールバック: [理由]"
-```
+`/write-history` スキルで記録（`--step "エクスプレスモード判定"` `--content "エクスプレスモードフォールバック: [理由]"`）。
 
 ### ステップ5: PRFAQ作成
 

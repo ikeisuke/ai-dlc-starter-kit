@@ -1,61 +1,31 @@
 ---
-name: reviewing-inception
-description: Reviews Inception Phase artifacts including Intent clarity, user story quality (INVEST), and Unit definition completeness. Use when reviewing inception artifacts, checking requirements quality, or when the user mentions inception review, requirements review, or unit definition review.
+name: reviewing-operations-premerge
+description: Reviews pull requests for overall quality before merging. Combines code quality and security checks at PR level. Use when performing pre-merge review in Operations Phase.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
-# Reviewing Inception
+# Reviewing Operations Premerge
 
-Inception Phase成果物に特化したレビューを実行するスキル。
+PRマージ前の品質確認レビューを実行するスキル。
+
+**focusメタデータ**: このスキルは `code` と `security` の2つのfocusを持つ。セキュリティ関連の指摘には `focus: security` を付与すること。
 
 ## レビュー観点
 
-以下の観点でInception Phase成果物をレビューする。
+### PR品質（focus: code）
 
-### Intent品質
+- PR全体の変更が一貫しているか
+- コミットメッセージが適切か
+- 不要な変更（デバッグコード、コメントアウト等）が含まれていないか
+- ドキュメント更新が必要な変更にドキュメントが含まれているか
 
-- 目的・狙いが明確で妥当か
-- スコープが明確に定義されているか（含まれるもの・除外されるもの）
-- 曖昧な表現や解釈の余地がないか
-- 期待する成果が具体的か
-- 既存機能への影響が考慮されているか
+### セキュリティ最終チェック（focus: security）
 
-### ユーザーストーリー品質
-
-- INVEST原則（Independent, Negotiable, Valuable, Estimable, Small, Testable）への準拠
-- 受け入れ基準が具体的で検証可能か
-- ユーザー視点で価値が明確か
-- 正常系・異常系が網羅されているか
-- ストーリー間の重複・矛盾がないか
-
-### Unit定義品質
-
-- Unit分割が適切か（独立性、凝集性）
-- 依存関係が正しく定義されているか
-- 見積もりが妥当か
-- 実装順序に矛盾がないか
-- 責務と境界が明確に定義されているか
-
-### Intent-Unit整合性（AIDLC固有）
-
-Intentで定義されたスコープとUnit定義の責務・境界が整合しているかを確認する。
-
-- Intentの「含まれるもの」に対応するUnitが存在するか
-- Unitの責務がIntentのスコープを逸脱していないか
-- Intentの「除外されるもの」に該当する作業がUnitに含まれていないか
-- 全Unitの責務の合計がIntentのスコープをカバーしているか（漏れがないか）
-
-### 意思決定記録の充足性（AIDLC固有）
-
-Inception Phaseで発生した重要な意思決定が適切に記録されているかを確認する。`.aidlc/cycles/{{CYCLE}}/inception/decisions.md` を参照する。
-
-- 意思決定記録ファイル（`decisions.md`）が存在するか（意思決定があった場合）
-- 各記録に必須項目（背景、選択肢、決定、トレードオフと判断根拠）が含まれているか
-- 選択肢のメリット・デメリットが記載されているか
-- トレードオフ（得たもの・犠牲にしたもの）と判断根拠が具体的に記載されているか
-- 意思決定記録がない場合でも、セッション中に記録対象となる意思決定が本当になかったか確認する（記録漏れの検出）
+- 機密情報（APIキー、トークン等）がコミットされていないか
+- セキュリティに影響する変更にセキュリティレビューが実施されているか
+- 依存パッケージの脆弱性チェックが実施されているか
 
 ## 実行コマンド
 
@@ -140,6 +110,7 @@ gemini -p "<レビュー指示>" --sandbox
 
 指摘 #1
 - 重要度: {高 | 中 | 低}
+- focus: {code | security | architecture | inception}
 - 内容: {指摘内容の要約}
 - 推奨修正: {修正方法の提案}
 

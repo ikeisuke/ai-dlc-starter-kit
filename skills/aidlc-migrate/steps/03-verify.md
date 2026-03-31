@@ -60,7 +60,7 @@ v1→v2 移行が完了しました。
 
 3. リモートにプッシュしてPRを作成:
    ```bash
-   git push -u origin migrate/v2
+   git push -u origin aidlc-migrate/v2
    ```
    `gh pr create` でPRを作成する。タイトル例: `chore: v1→v2 マイグレーション`
 

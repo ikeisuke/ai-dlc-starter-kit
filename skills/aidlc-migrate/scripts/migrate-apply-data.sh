@@ -64,9 +64,15 @@ for i in $(seq 0 $((resource_count - 1))); do
   dest=$(jq -r ".resources[$i].destination" "$MANIFEST")
 
   if [[ ! -d "$path" ]]; then
-    echo "  Source directory not found: $path" >&2
-    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-      '{resource_type: $rt, path: $p, status: "error", detail: "source directory not found"}')"
+    if [[ -d "$dest" ]]; then
+      echo "  WARN: source missing but destination exists: $dest (possible partial migration)" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
+        '{resource_type: $rt, path: $p, status: "warning", detail: ("source missing, destination exists: " + $d + " (verify completeness)")}')"
+    else
+      echo "  Source directory not found: $path" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+        '{resource_type: $rt, path: $p, status: "error", detail: "source directory not found"}')"
+    fi
     continue
   fi
 

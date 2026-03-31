@@ -135,7 +135,7 @@ run_test() {
 # テストケース定義
 # ============================================
 
-DEFAULTS='["Bash(skills/aidlc/scripts/:*)", "Bash(mktemp /tmp/aidlc-:*)", "Skill(reviewing-architecture)", "Skill(reviewing-code)"]'
+DEFAULTS='["Bash(skills/aidlc/scripts/:*)", "Bash(mktemp /tmp/aidlc-:*)", "Skill(reviewing-construction-design)", "Skill(reviewing-construction-code)"]'
 
 echo "=== Wildcard Rule Detection Tests ==="
 echo ""

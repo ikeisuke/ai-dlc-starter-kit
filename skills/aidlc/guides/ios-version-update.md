@@ -45,14 +45,7 @@ echo "更新後のバージョン: ${CYCLE_VERSION}"
 
 ### 3. 履歴への記録（重要）
 
-```bash
-skills/aidlc/scripts/write-history.sh \
-    --cycle {{CYCLE}} \
-    --phase inception \
-    --step "iOSバージョン更新実施" \
-    --content "CFBundleShortVersionString を ${CYCLE_VERSION} に更新" \
-    --artifacts "[更新したファイル]"
-```
+`/write-history` スキルで記録（`--step "iOSバージョン更新実施"`）。
 
 **注意**: 「iOSバージョン更新実施」の文言は履歴に必ず含めてください。Operations Phaseでこの記録を確認し、重複更新を防ぎます。
 
