@@ -29,10 +29,10 @@ git status --porcelain
 ワーキングツリーがクリーンであることを確認後、ブランチを作成して切り替える:
 
 ```bash
-git checkout -b migrate/v2
+git checkout -b aidlc-migrate/v2
 ```
 
-ブランチ名は `migrate/v2` 固定。既に存在する場合はユーザーに確認する。
+ブランチ名は `aidlc-migrate/v2` 固定。既に存在する場合はユーザーに確認する。
 
 ## 1. v1環境検出
 
@@ -78,7 +78,7 @@ scripts/migrate-detect.sh 2>/dev/null > <manifest_path>
 
 保存したパスを後続ステップで使用する。
 
-**注意**: バックアップは不要です。マイグレーションは専用ブランチ（`migrate/v2`）で実行されるため、git自体がバックアップとして機能します。問題が発生した場合は `git checkout .` で復元できます。
+**注意**: バックアップは不要です。マイグレーションは専用ブランチ（`aidlc-migrate/v2`）で実行されるため、git自体がバックアップとして機能します。問題が発生した場合は `git checkout .` で復元できます。
 
 ## 3. 次のステップへ
 

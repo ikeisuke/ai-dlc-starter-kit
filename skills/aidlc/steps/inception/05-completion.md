@@ -31,13 +31,7 @@
 
 ### 3. 履歴記録
 
-```bash
-scripts/write-history.sh \
-    --cycle {{CYCLE}} \
-    --phase inception \
-    --step "Inception Phase完了（エクスプレスモード）" \
-    --content "エクスプレスモードによるInception Phase完了。Construction Phaseに自動遷移。"
-```
+`/write-history` スキルで記録（`--step "Inception Phase完了（エクスプレスモード）"`）。
 
 ### 4. Squash（コミット統合）【オプション】
 
@@ -113,7 +107,7 @@ issue:72:labeled:cycle:v1.8.0
 `.aidlc/config.toml` の `[project].type` が `ios` の場合のみ実行。詳細手順は `guides/ios-version-update.md` を参照。
 
 ### 3. 履歴記録
-`.aidlc/cycles/{{CYCLE}}/history/inception.md` に履歴を追記（write-history.sh使用）
+`/write-history` スキルで `.aidlc/cycles/{{CYCLE}}/history/inception.md` に追記。
 
 ### 4. 意思決定記録【オプション】
 

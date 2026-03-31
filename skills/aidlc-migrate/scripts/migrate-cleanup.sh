@@ -23,11 +23,7 @@ AIDLC_PROJECT_ROOT="${AIDLC_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev
 if ! git -C "$AIDLC_PROJECT_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "error:invalid-project-root:$AIDLC_PROJECT_ROOT" >&2; exit 2
 fi
-AIDLC_PLUGIN_ROOT="${AIDLC_PLUGIN_ROOT:-${AIDLC_PROJECT_ROOT}/skills/aidlc}"
-# AIDLC_PLUGIN_ROOT の妥当性検証: templates/ ディレクトリの存在を確認
-if [ ! -d "${AIDLC_PLUGIN_ROOT}/templates" ]; then
-  echo "error:invalid-plugin-root:${AIDLC_PLUGIN_ROOT} (templates/ not found)" >&2; exit 2
-fi
+
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is not installed." >&2
@@ -108,21 +104,10 @@ for i in $(seq 0 $((resource_count - 1))); do
       _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
         '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with file"}')"
     else
-      # ターゲットが見つからない場合、v2テンプレートからコピー
-      template_path="${AIDLC_PLUGIN_ROOT}/templates/${path}"
-      if [[ -f "$template_path" ]]; then
-        rm -f "$path"
-        mkdir -p "$(dirname "$path")"
-        cp "$template_path" "$path"
-        echo "  Materialized: $path (from v2 template, symlink target not found: $link_target)" >&2
-        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-          '{resource_type: $rt, path: $p, status: "success", detail: "symlink replaced with v2 template"}')"
-      else
-        echo "  WARN: symlink target not found: $link_target (removing broken symlink)" >&2
-        rm -f "$path"
-        _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-          '{resource_type: $rt, path: $p, status: "success", detail: "removed broken symlink"}')"
-      fi
+      echo "  WARN: symlink target not found: $link_target (removing broken symlink)" >&2
+      rm -f "$path"
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
+        '{resource_type: $rt, path: $p, status: "success", detail: "removed broken symlink"}')"
     fi
   else
     echo "  Skipped (not a symlink): $path" >&2
