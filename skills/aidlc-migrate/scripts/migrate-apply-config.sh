@@ -62,6 +62,21 @@ for i in $(seq 0 $((resource_count - 1))); do
   path=$(jq -r ".resources[$i].path" "$MANIFEST")
   dest=$(jq -r ".resources[$i].destination" "$MANIFEST")
 
+  if [[ -f "$dest" ]]; then
+    # 宛先が存在する場合、ソースが残っていれば削除（中断リカバリ）
+    if [[ -f "$path" ]]; then
+      rm -f "$path"
+      echo "  Already migrated: $dest (removed stale source: $path)" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
+        '{resource_type: $rt, path: $p, status: "skipped", detail: ("already exists: " + $d + " (removed stale source)")}')"
+    else
+      echo "  Already migrated: $dest (skipping)" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" --arg d "$dest" \
+        '{resource_type: $rt, path: $p, status: "skipped", detail: ("already exists: " + $d)}')"
+    fi
+    continue
+  fi
+
   if [[ ! -f "$path" ]]; then
     echo "  Source config not found: $path" >&2
     _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
