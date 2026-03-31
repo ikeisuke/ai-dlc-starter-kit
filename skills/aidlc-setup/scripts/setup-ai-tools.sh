@@ -144,7 +144,8 @@ _generate_template() {
       "Skill(reviewing-construction-integration)",
       "Skill(reviewing-operations-deploy)",
       "Skill(reviewing-operations-premerge)",
-      "Skill(squash-unit)"
+      "Skill(squash-unit)",
+      "Skill(write-history)"
     ],
     "ask": [
       "Bash(git push*--force *)",
