@@ -31,7 +31,7 @@ _has_warnings=false
 _cleanup_files=()
 
 _cleanup() {
-    for f in "${_cleanup_files[@]}"; do
+    for f in ${_cleanup_files[@]+"${_cleanup_files[@]}"}; do
         [[ -f "$f" ]] && \rm -f "$f"
     done
 }
