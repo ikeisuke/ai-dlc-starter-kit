@@ -7,6 +7,14 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [1.28.2] - 2026-03-31
+
+### Fixed
+
+- `migrate-config.sh --dry-run` の cleanup trap で `_cleanup_files[@]: unbound variable` エラーが発生する問題を修正: `set -u` 下で空配列を安全に展開するパターンに変更（#463）
+
+---
+
 ## [1.28.1] - 2026-03-26
 
 ### Added
