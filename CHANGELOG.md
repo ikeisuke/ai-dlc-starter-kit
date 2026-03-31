@@ -7,6 +7,31 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.0] - 2026-04-01
+
+### Added
+
+- レビュースキルをタイミングベースに再構成: 旧4スキル（code/architecture/security/inception）を9スキル（inception-intent/stories/units, construction-plan/design/code/integration, operations-deploy/premerge）に分割
+- `migrate-detect.sh` にIssueテンプレート確認フロー追加: v1由来の同名ファイルが存在する場合、ユーザーに削除確認を提示（`confirm_delete` アクション）
+
+### Changed
+
+- マイグレーションブランチ名を `migrate/v2` → `aidlc-migrate/v2` に変更（識別性向上）
+- `migrate-apply-config.sh`: 宛先ファイル存在チェック追加（再実行時の冪等性保証、中断リカバリでstaleソース削除）
+- `migrate-apply-data.sh`: `move_dir` でソース消失+宛先存在時にwarningを出力（部分移行の不整合検知）
+
+### Removed
+
+- `AIDLC_PLUGIN_ROOT` のメタ開発前提デフォルト（`${PROJECT_ROOT}/skills/aidlc`）を全スクリプトから削除: 利用プロジェクトでは存在しないパスであり、テンプレートフォールバックも不要
+- `migrate-cleanup.sh` の起動時 `templates/` 必須チェックを削除（#463関連）
+
+### Fixed
+
+- `migrate-cleanup.sh` が `AIDLC_PLUGIN_ROOT` の `templates/` 不在で exit 2 になる問題を修正
+- 400行超えMarkdownファイル9件の分割完了を確認
+
+---
+
 ## [2.0.10] - 2026-03-30
 
 ### Added
