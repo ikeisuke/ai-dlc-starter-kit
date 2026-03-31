@@ -31,9 +31,11 @@ _has_warnings=false
 _cleanup_files=()
 
 _cleanup() {
-    for f in ${_cleanup_files[@]+"${_cleanup_files[@]}"}; do
-        [[ -f "$f" ]] && \rm -f "$f"
-    done
+    if (( ${#_cleanup_files[@]} > 0 )); then
+        for f in "${_cleanup_files[@]}"; do
+            [[ -f "$f" ]] && \rm -f "$f"
+        done
+    fi
 }
 trap _cleanup EXIT
 
