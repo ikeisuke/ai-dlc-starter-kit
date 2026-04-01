@@ -81,20 +81,66 @@
 
 `.aidlc/rules.md` が存在すれば読み込む。
 
-### 6. スターターキットバージョン確認
+### 6. スターターキットバージョン確認（三角モデル）
 
-**スキップ**: `STARTER_KIT_DEV` の場合。
+**スキップ条件**: `STARTER_KIT_DEV` の場合、または `rules.upgrade_check.enabled` が `true` でない場合（デフォルト `false`）。
 
-`rules.upgrade_check.enabled` が `true` の場合のみ実行（デフォルト `false`）。
+#### 6a. バージョン情報取得（3点）+ 正規化
 
-| 判定 | 動作 |
-|------|------|
-| 最新バージョン取得失敗 / CURRENT_VERSION空 | 続行 |
-| LATEST > CURRENT | アップグレード推奨表示（アップグレード/続行 の2択） |
-| LATEST = CURRENT | 「最新バージョンです」表示 |
+| ソース | 取得方法 | エラー時 |
+|--------|---------|---------|
+| リモート | `curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt` | available=false |
+| スキル | `skills/aidlc/SKILL.md` の親ディレクトリ直下の `version.txt` をReadツールで読み込み | available=false |
+| ローカル設定 | `scripts/read-config.sh starter_kit_version` | available=false |
 
-最新バージョン取得: `curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt`
-現在バージョン: `.aidlc/config.toml` の `starter_kit_version`
+**正規化**: `v`プレフィックス除去、空白トリム、semverパース検証。パース不可は取得失敗扱い。
+
+**注意**: スキルバージョンは `skills/aidlc/version.txt`（SKILL.mdの親ディレクトリ）であり、リポジトリルートの `version.txt` ではない。
+
+#### 6b. ComparisonMode決定
+
+| モード | 条件 | 比較対象 |
+|--------|------|---------|
+| THREE_WAY | 3点全available | 3点比較 |
+| REMOTE_LOCAL | skillのみunavailable | remote vs local（従来フォールバック） |
+| SKILL_LOCAL | remoteのみunavailable | skill vs local |
+| REMOTE_SKILL | localのみunavailable | remote vs skill |
+| SINGLE_OR_NONE | 2点以上unavailable | 比較スキップ（警告のみ表示して続行） |
+
+#### 6c. 比較実行
+
+**THREE_WAYモード**:
+
+| パターン | 条件 | アクション |
+|---------|------|-----------|
+| 全一致 | remote = skill = local | 「最新バージョンです」表示 |
+| リモートのみ新しい | remote > skill = local | スキル更新を促す（プラグイン再インストール） |
+| スキルのみ古い | remote = local > skill | スキル更新を促す |
+| ローカルのみ古い | remote = skill > local | `/aidlc setup`の実行を促す + starter_kit_version確認手順 |
+| ローカルのみ進んでいる | local > remote = skill | 警告表示（設定が先行） |
+| 複数不一致 | 上記以外 | 各差分を表示、スキル更新→ローカル設定更新の順にアクション提示 |
+
+**REMOTE_LOCALモード（スキル取得失敗時のフォールバック）**:
+
+| パターン | 条件 | アクション |
+|---------|------|-----------|
+| 一致 | remote = local | 「取得可能分は一致」+ スキル取得失敗警告 |
+| remote > local | - | `/aidlc setup`の実行を促す + starter_kit_version確認手順 |
+| local > remote | - | 警告表示（設定が先行） |
+
+**SKILL_LOCAL / REMOTE_SKILLモード**:
+- 一致 → 「取得可能分は一致」+ unavailableソースの警告
+- 不一致 → 差分表示 + 比較方向に応じたアクション（remote > skill → スキル更新案内、skill > remote → 「スキルが先行」警告） + unavailableソースの警告
+
+**SINGLE_OR_NONEモード**: 比較スキップ、unavailableソースの警告のみ表示して続行。
+
+#### 6d. starter_kit_version確認手順（ローカルのみ古い場合に追加表示）
+
+```text
+アップグレード後、以下を確認してください:
+1. `/aidlc setup` を実行してアップグレードモードを完了
+2. `.aidlc/config.toml` の `starter_kit_version` がスキルバージョンと一致するか確認
+```
 
 ### 7. サイクルモード確認
 

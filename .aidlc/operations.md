@@ -73,8 +73,3 @@ bin/check-size.sh
   3. 閾値を調整する（`.aidlc/config.toml`の`[rules.size_check]`セクション）
 - 対応後、再度チェックを実行して警告が解消されていることを確認
 
-### aidlc-setup同期（v2プラグイン構造）
-
-**タイミング**: `.aidlc/rules.md` の「aidlc-setup同期」カスタムワークフローに従う
-
-v2ではプラグイン構造に移行したため、v1のrsync同期は廃止。`/aidlc-setup` スキルによる同期に置き換え済み。詳細は `.aidlc/rules.md` を参照。
