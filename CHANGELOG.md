@@ -20,10 +20,12 @@ AI-DLC Starter Kit の変更履歴です。
 - `migrate-detect.sh` のIssueテンプレート自動削除判定を既知ハッシュ値ベースに修正（#490）
 - `write-history` スキルのスクリプトパス不正・パーミッション未設定を修正（#494）
 - `post-merge-sync.sh` のリモートブランチ存在確認を `git ls-remote --exit-code` で改善（#500）
+- `migrate-apply-config.sh` / `migrate-verify.sh` の version.txt 参照先をプラグインディレクトリに修正（Consumer リポジトリでの動作不良を解消）
+- `reviewing-*` スキルの Codex 実行コマンドに `-s read-only -C .` フラグを復元（read-only 保証の明示化）
 
 ### Changed
 
-- 全9つの `reviewing` スキルのCodex呼び出しを `codex` スキル経由に統一（#491）
+- 全9つの `reviewing` スキルのCodex呼び出しを `codex` スキル経由に統一し、read-only モードを明示指定（#491）
 
 ---
 

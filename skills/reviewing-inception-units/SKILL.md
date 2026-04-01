@@ -2,7 +2,7 @@
 name: reviewing-inception-units
 description: Reviews Unit definitions for appropriate decomposition, dependency clarity, and estimation quality. Use when reviewing Unit definitions before approval.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
-compatibility: Requires codex CLI, claude CLI, or gemini CLI. Read-only/sandbox mode is enforced by each CLI default.
+compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
@@ -40,7 +40,7 @@ Unit定義承認前のレビューを実行するスキル。
 ### Codex
 
 ```bash
-codex exec "<レビュー指示>"
+codex exec -s read-only -C . "<レビュー指示>"
 ```
 
 ### Claude Code

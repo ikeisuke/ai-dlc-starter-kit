@@ -189,8 +189,8 @@ else
   # Determine expected version
   _expected_version="$_vu_expected"
   if [[ -z "$_expected_version" ]]; then
-    # Fallback to version.txt
-    _version_txt="${AIDLC_PROJECT_ROOT}/version.txt"
+    # Fallback to plugin's version.txt (not AIDLC_PROJECT_ROOT which points to the target repo)
+    _version_txt="${SCRIPT_DIR}/../../aidlc/version.txt"
     if [[ -f "$_version_txt" ]]; then
       _expected_version=$(cat "$_version_txt" | tr -d '[:space:]')
     fi

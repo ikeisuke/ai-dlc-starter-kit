@@ -2,7 +2,7 @@
 name: reviewing-construction-plan
 description: Reviews construction plans for architecture consistency and implementation feasibility. Use when reviewing implementation plans before approval.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
-compatibility: Requires codex CLI, claude CLI, or gemini CLI. Read-only/sandbox mode is enforced by each CLI default.
+compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
@@ -35,7 +35,7 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ### Codex
 
 ```bash
-codex exec "<レビュー指示>"
+codex exec -s read-only -C . "<レビュー指示>"
 ```
 
 ### Claude Code

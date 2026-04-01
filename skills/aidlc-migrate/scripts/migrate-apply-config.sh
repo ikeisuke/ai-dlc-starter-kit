@@ -157,7 +157,8 @@ if [[ -f "$config_dest" ]]; then
   fi
 
   # starter_kit_version 更新（migrate-config.sh 成功時のみ）
-  _version_txt="${AIDLC_PROJECT_ROOT}/version.txt"
+  # プラグインの version.txt を参照（AIDLC_PROJECT_ROOT は対象リポジトリを指すため使用しない）
+  _version_txt="${SCRIPT_DIR}/../../aidlc/version.txt"
   if [[ "$migrate_script_exit_code" -ne 0 ]]; then
     echo "  Skipped: starter_kit_version update (config migration failed)" >&2
     _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "config migration failed, version update skipped", reason_code: "config_migration_failed"}')"
