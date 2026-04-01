@@ -7,6 +7,30 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.1] - 2026-04-01
+
+### Fixed
+
+- `review-flow.md` のレビュー完了時共通処理で `review-summary.md` 作成指示を強化（#495）
+- 全フェーズのステップファイルにタスクリスト駆動指示を追加し、レビュー工程漏れを防止（#493）
+- Inception Phase完了時の意思決定記録ステップがスキップされる問題を修正（#496）
+- レビュー指摘対応でのスコープ縮小がユーザー確認なしに行われる問題を修正（#497）
+- Unit完了時にスコープ除外した残課題が提示されない問題を修正（#498）
+- `/aidlc migrate` で `starter_kit_version` が更新されない問題を修正（#499）
+- `migrate-detect.sh` のIssueテンプレート自動削除判定を既知ハッシュ値ベースに修正（#490）
+- `write-history` スキルのスクリプトパス不正・パーミッション未設定を修正（#494）
+- `post-merge-sync.sh` のリモートブランチ存在確認を `git ls-remote --exit-code` で改善（#500）
+- `migrate-apply-config.sh` / `migrate-verify.sh` の version.txt 参照先をプラグインディレクトリに修正（Consumer リポジトリでの動作不良を解消）
+- `reviewing-*` スキルの Codex 実行コマンドに `-s read-only -C .` フラグを復元（read-only 保証の明示化）
+- `migrate-apply-config.sh`: `starter_kit_version` キー不在時にファイル先頭へ挿入する処理を追加（v1からの移行で置換がno-opになる問題を解消）
+- `migrate-apply-config.sh`: `migrate-config.sh` 失敗時のjournal statusを `warning` から `error` に昇格（部分的に壊れたconfigでの後続処理を防止）
+
+### Changed
+
+- 全9つの `reviewing` スキルのCodex呼び出しを `codex` スキル経由に統一し、read-only モードを明示指定（#491）
+
+---
+
 ## [2.1.0] - 2026-04-01
 
 ### Added

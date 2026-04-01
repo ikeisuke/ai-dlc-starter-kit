@@ -120,7 +120,7 @@ scripts/issue-ops.sh set-status <issue_number> in-progress
 **AIレビュー**: 計画承認前に `review-flow.md` に従って実施。
 **セミオート**: フォールバック条件非該当なら自動承認。
 
-**【タスク作成】承認後、`steps/common/task-management.md` の「Construction Phase: Unit開始時タスクテンプレート」に従いタスクリスト作成。**
+**【タスク作成】承認後、`steps/common/task-management.md` の「Construction Phase: Unit開始時タスクテンプレート」に従いタスクリスト作成。** **タスクリスト未作成のまま Phase 1/Phase 2 に進んではいけない。**
 
 ### 13. Unitブランチ作成【推奨】
 

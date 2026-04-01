@@ -144,11 +144,58 @@ if [[ -f "$config_dest" ]]; then
 
   # migrate-config.sh を実行して不足セクション補完・リネーム移行
   migrate_script="${SCRIPT_DIR}/migrate-config.sh"
+  migrate_script_exit_code=0
   if [[ -x "$migrate_script" ]]; then
     echo "  Running migrate-config.sh for content migration..." >&2
-    migrate_output=$("$migrate_script" --config "$config_dest" 2>&1) || true
-    echo "  migrate-config.sh completed" >&2
-    _add_applied "$(jq -n --arg detail "$migrate_output" '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: ("migrate-config.sh: " + $detail)}')"
+    migrate_output=$("$migrate_script" --config "$config_dest" 2>&1) || migrate_script_exit_code=$?
+    echo "  migrate-config.sh completed (exit: $migrate_script_exit_code)" >&2
+    if [[ "$migrate_script_exit_code" -eq 0 ]]; then
+      _add_applied "$(jq -n --arg detail "$migrate_output" '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "success", detail: ("migrate-config.sh: " + $detail)}')"
+    else
+      _add_applied "$(jq -n --arg detail "$migrate_output" --arg rc "$migrate_script_exit_code" '{resource_type: "config_content_migrate", path: ".aidlc/config.toml", status: "error", detail: ("migrate-config.sh failed (exit " + $rc + "): " + $detail)}')"
+    fi
+  fi
+
+  # starter_kit_version 更新（migrate-config.sh 成功時のみ）
+  # プラグインの version.txt を参照（AIDLC_PROJECT_ROOT は対象リポジトリを指すため使用しない）
+  _version_txt="${SCRIPT_DIR}/../../aidlc/version.txt"
+  if [[ "$migrate_script_exit_code" -ne 0 ]]; then
+    echo "  Skipped: starter_kit_version update (config migration failed)" >&2
+    _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "config migration failed, version update skipped", reason_code: "config_migration_failed"}')"
+  elif [[ ! -f "$_version_txt" ]]; then
+    echo "  Skipped: starter_kit_version update (version.txt not found)" >&2
+    _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "version.txt not found", reason_code: "canonical_version_unavailable"}')"
+  else
+    _canonical_version=$(cat "$_version_txt" | tr -d '[:space:]')
+    if [[ -z "$_canonical_version" ]]; then
+      echo "  Skipped: starter_kit_version update (version.txt is empty)" >&2
+      _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "version.txt is empty", reason_code: "canonical_version_unavailable"}')"
+    else
+      # sed で starter_kit_version を更新（dasel v2 互換性のため）
+      if grep -q '^[[:space:]]*starter_kit_version[[:space:]]*=' "$config_dest"; then
+        # キーが存在する場合: 値を置換
+        _tmp_config=$(mktemp)
+        if sed 's/^\([[:space:]]*starter_kit_version[[:space:]]*=[[:space:]]*\)"[^"]*"/\1"'"$_canonical_version"'"/' "$config_dest" > "$_tmp_config" && mv "$_tmp_config" "$config_dest"; then
+          echo "  Updated: starter_kit_version = $_canonical_version" >&2
+          _add_applied "$(jq -n --arg v "$_canonical_version" '{resource_type: "version_update", path: ".aidlc/config.toml", status: "success", detail: ("starter_kit_version updated to " + $v), expected_version: $v}')"
+        else
+          rm -f "$_tmp_config"
+          echo "  Error: starter_kit_version update (sed write failed)" >&2
+          _add_applied "$(jq -n --arg v "$_canonical_version" '{resource_type: "version_update", path: ".aidlc/config.toml", status: "error", detail: "sed write failed", expected_version: $v, reason_code: "sed_write_failed"}')"
+        fi
+      else
+        # キーが存在しない場合（v1からの移行等）: ファイル先頭に挿入
+        _tmp_config=$(mktemp)
+        if { echo "starter_kit_version = \"$_canonical_version\""; cat "$config_dest"; } > "$_tmp_config" && mv "$_tmp_config" "$config_dest"; then
+          echo "  Inserted: starter_kit_version = $_canonical_version (key was absent)" >&2
+          _add_applied "$(jq -n --arg v "$_canonical_version" '{resource_type: "version_update", path: ".aidlc/config.toml", status: "success", detail: ("starter_kit_version inserted as " + $v), expected_version: $v}')"
+        else
+          rm -f "$_tmp_config"
+          echo "  Error: starter_kit_version insert (write failed)" >&2
+          _add_applied "$(jq -n --arg v "$_canonical_version" '{resource_type: "version_update", path: ".aidlc/config.toml", status: "error", detail: "insert write failed", expected_version: $v, reason_code: "insert_write_failed"}')"
+        fi
+      fi
+    fi
   fi
 fi
 
