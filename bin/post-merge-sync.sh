@@ -203,7 +203,14 @@ else
         elif [[ "$YES" == "true" ]]; then
             while read -r branch; do
                 [[ -z "$branch" ]] && continue
-                if (cd "$PARENT_REPO" && git push origin --delete "$branch" 2>/dev/null); then
+                ls_remote_exit=0
+                (cd "$PARENT_REPO" && git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null 2>&1) || ls_remote_exit=$?
+                if [[ "$ls_remote_exit" -eq 2 ]]; then
+                    echo "skipped:already-deleted:$branch"
+                elif [[ "$ls_remote_exit" -ne 0 ]]; then
+                    echo "warn:remote-check-failed:$branch"
+                    DELETE_FAILED=true
+                elif (cd "$PARENT_REPO" && git push origin --delete "$branch" 2>/dev/null); then
                     echo "deleted:remote:$branch"
                 else
                     echo "warn:remote-delete-failed:$branch"
@@ -216,7 +223,14 @@ else
             if [[ "$answer" =~ ^[yY] ]]; then
                 while read -r branch; do
                     [[ -z "$branch" ]] && continue
-                    if (cd "$PARENT_REPO" && git push origin --delete "$branch" 2>/dev/null); then
+                    ls_remote_exit=0
+                    (cd "$PARENT_REPO" && git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null 2>&1) || ls_remote_exit=$?
+                    if [[ "$ls_remote_exit" -eq 2 ]]; then
+                        echo "skipped:already-deleted:$branch"
+                    elif [[ "$ls_remote_exit" -ne 0 ]]; then
+                        echo "warn:remote-check-failed:$branch"
+                        DELETE_FAILED=true
+                    elif (cd "$PARENT_REPO" && git push origin --delete "$branch" 2>/dev/null); then
                         echo "deleted:remote:$branch"
                     else
                         echo "warn:remote-delete-failed:$branch"

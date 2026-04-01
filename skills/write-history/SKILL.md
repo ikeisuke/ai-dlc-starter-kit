@@ -6,7 +6,9 @@ argument-hint: "--phase <phase> --step <step> --content <content>"
 
 # write-history スキル
 
-`scripts/write-history.sh` を実行して、AI-DLCの履歴ファイルに記録を追記する。
+aidlcスキルの `scripts/write-history.sh` を実行して、AI-DLCの履歴ファイルに記録を追記する。
+
+> **注**: このスキルはaidlcスキルに依存する委譲スキルです。スクリプト実体は `skills/aidlc/scripts/write-history.sh` にあり、以下の使用例はaidlcフロー（呼び出し元）のコンテキストでのパス表記です。
 
 ## 基本情報
 

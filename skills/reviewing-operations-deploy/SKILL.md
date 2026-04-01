@@ -2,7 +2,7 @@
 name: reviewing-operations-deploy
 description: Reviews deployment plans for completeness, rollback procedures, and monitoring setup. Use when reviewing deployment plans before approval in Operations Phase.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
-compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
+compatibility: Requires codex CLI, claude CLI, or gemini CLI. Read-only/sandbox mode is enforced by each CLI default.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
@@ -35,7 +35,7 @@ allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ### Codex
 
 ```bash
-codex exec -s read-only -C . "<レビュー指示>"
+codex exec "<レビュー指示>"
 ```
 
 ### Claude Code

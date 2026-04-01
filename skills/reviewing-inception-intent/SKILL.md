@@ -2,7 +2,7 @@
 name: reviewing-inception-intent
 description: Reviews Intent artifacts for clarity, scope definition, and feasibility. Use when reviewing Intent documents before approval.
 argument-hint: [レビュー対象ファイルまたはディレクトリ]
-compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
+compatibility: Requires codex CLI, claude CLI, or gemini CLI. Read-only/sandbox mode is enforced by each CLI default.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
 
@@ -25,7 +25,7 @@ Intent承認前のレビューを実行するスキル。
 ### Codex
 
 ```bash
-codex exec -s read-only -C . "<レビュー指示>"
+codex exec "<レビュー指示>"
 ```
 
 ### Claude Code
