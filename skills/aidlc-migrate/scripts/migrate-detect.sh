@@ -126,24 +126,34 @@ if [ -d ".aidlc/cycles/backlog" ]; then
 fi
 
 # 6. .github/ISSUE_TEMPLATE/ のスターターキット由来テンプレート（v2で管理廃止）
-# v2ではIssueテンプレートを管理しないため、存在する場合はユーザーに案内する
-# NOTE: 自動削除判定にはスターターキット原本とのハッシュ比較が必要だが、
-#   利用プロジェクトからスターターキットリポジトリを参照する信頼できる手段がないため未実装。
-#   see: https://github.com/ikeisuke/ai-dlc-starter-kit/issues/490
-_found_templates=()
+# v2ではIssueテンプレートを管理しないため、ハッシュ比較で所有権を判定する
+# ハッシュ一致 → 自動削除対象、不一致 → ユーザー確認対象
+_known_hashes_file="${SCRIPT_DIR}/../config/known-hashes.json"
 for _tmpl_name in backlog.yml bug.yml feature.yml feedback.yml; do
   _tmpl_path=".github/ISSUE_TEMPLATE/${_tmpl_name}"
   [ -f "$_tmpl_path" ] || continue
-  _found_templates+=("$_tmpl_path")
-done
-if (( ${#_found_templates[@]} > 0 )); then
-  echo "  NOTE: v1で管理していたIssueテンプレートと同名のファイルが見つかりました。v2では管理対象外です。" >&2
-  for _t in "${_found_templates[@]}"; do
-    echo "    - $_t" >&2
-    _add_resource "$(jq -n --arg p "$_t" \
+
+  _expected_hash=""
+  if [[ -f "$_known_hashes_file" ]]; then
+    _expected_hash=$(jq -r --arg k "$_tmpl_name" '.[$k] // empty' "$_known_hashes_file" 2>/dev/null) || _expected_hash=""
+  fi
+  if [[ -n "$_expected_hash" ]]; then
+    _actual_hash=$(_sha256 "$_tmpl_path")
+    if [[ "$_actual_hash" == "$_expected_hash" ]]; then
+      echo "  AUTO-DELETE: $_tmpl_path (hash match, starter-kit original)" >&2
+      _add_resource "$(jq -n --arg p "$_tmpl_path" --arg eh "$_expected_hash" --arg ah "$_actual_hash" \
+        '{resource_type: "issue_template", path: $p, action: "delete", ownership_evidence: {method: "hash_comparison", is_owned: true, expected_hash: $eh, actual_hash: $ah}}')"
+    else
+      echo "  CONFIRM: $_tmpl_path (hash mismatch, user-modified)" >&2
+      _add_resource "$(jq -n --arg p "$_tmpl_path" --arg eh "$_expected_hash" --arg ah "$_actual_hash" \
+        '{resource_type: "issue_template", path: $p, action: "confirm_delete", ownership_evidence: {method: "hash_comparison", is_owned: false, expected_hash: $eh, actual_hash: $ah}}')"
+    fi
+  else
+    echo "  CONFIRM: $_tmpl_path (no known hash)" >&2
+    _add_resource "$(jq -n --arg p "$_tmpl_path" \
       '{resource_type: "issue_template", path: $p, action: "confirm_delete", ownership_evidence: {method: "known_filename", is_owned: null, expected_hash: null, actual_hash: null}}')"
-  done
-fi
+  fi
+done
 
 # 7. .claude/skills/ 内のシンボリックリンク（docs/aidlc/ を参照）
 if [ -d ".claude/skills" ]; then

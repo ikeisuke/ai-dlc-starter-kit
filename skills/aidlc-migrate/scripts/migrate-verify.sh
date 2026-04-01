@@ -31,17 +31,21 @@ fi
 
 # 引数パース
 MANIFEST=""
+JOURNAL=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --manifest)
       [[ $# -lt 2 ]] && { echo "Missing value for --manifest" >&2; exit 2; }
       MANIFEST="$2"; shift 2 ;;
+    --journal)
+      [[ $# -lt 2 ]] && { echo "Missing value for --journal" >&2; exit 2; }
+      JOURNAL="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
 if [[ -z "$MANIFEST" ]]; then
-  echo "Usage: $0 --manifest <path>" >&2
+  echo "Usage: $0 --manifest <path> [--journal <path>]" >&2
   exit 2
 fi
 
@@ -141,6 +145,79 @@ if [[ "$data_ok" == "true" ]]; then
   echo "  OK: data_migrated" >&2
 else
   _add_check "$(jq -n --arg d "$data_detail" '{name: "data_migrated", status: "fail", detail: $d}')"
+  has_fail=true
+fi
+
+# 4. starter_kit_version 検証
+_version_lib="${SCRIPT_DIR}/../../aidlc/scripts/lib/version.sh"
+if [[ -f "$_version_lib" ]]; then
+  source "$_version_lib"
+fi
+
+_ver_status="ok"
+_ver_detail=""
+
+# journal から version_update エントリの情報を取得
+_vu_status=""
+_vu_expected=""
+_vu_reason=""
+if [[ -n "$JOURNAL" ]] && [[ -f "$JOURNAL" ]]; then
+  _vu_status=$(jq -r '.applied[] | select(.resource_type == "version_update") | .status // empty' "$JOURNAL" 2>/dev/null | head -1)
+  _vu_expected=$(jq -r '.applied[] | select(.resource_type == "version_update") | .expected_version // empty' "$JOURNAL" 2>/dev/null | head -1)
+  _vu_reason=$(jq -r '.applied[] | select(.resource_type == "version_update") | .reason_code // empty' "$JOURNAL" 2>/dev/null | head -1)
+fi
+
+if [[ "$_vu_status" == "skipped" ]] && [[ "$_vu_reason" == "config_migration_failed" ]]; then
+  _ver_status="fail"
+  _ver_detail="version update skipped due to config migration failure"
+  echo "  FAIL: starter_kit_version_updated (config migration failed)" >&2
+elif [[ "$_vu_status" == "skipped" ]]; then
+  _ver_detail="version update was intentionally skipped: ${_vu_reason:-unknown}"
+  echo "  OK: starter_kit_version_updated (skipped: $_vu_reason)" >&2
+elif [[ "$_vu_status" == "error" ]]; then
+  _ver_status="fail"
+  _ver_detail="version update failed during apply: ${_vu_reason:-unknown}"
+  echo "  FAIL: starter_kit_version_updated (error: $_vu_reason)" >&2
+else
+  # success or no journal: verify actual value
+  _config_path=".aidlc/config.toml"
+  _current_version=""
+  if type read_starter_kit_version >/dev/null 2>&1 && [[ -f "$_config_path" ]]; then
+    _current_version=$(read_starter_kit_version "$_config_path") || _current_version=""
+  fi
+
+  # Determine expected version
+  _expected_version="$_vu_expected"
+  if [[ -z "$_expected_version" ]]; then
+    # Fallback to version.txt
+    _version_txt="${AIDLC_PROJECT_ROOT}/version.txt"
+    if [[ -f "$_version_txt" ]]; then
+      _expected_version=$(cat "$_version_txt" | tr -d '[:space:]')
+    fi
+  fi
+
+  if [[ -z "$_current_version" ]]; then
+    _ver_status="fail"
+    _ver_detail="Could not read starter_kit_version from config.toml"
+    echo "  FAIL: starter_kit_version_updated (read failed)" >&2
+  elif [[ -z "$_expected_version" ]]; then
+    _ver_status="fail"
+    _ver_detail="Could not determine expected version (no journal and no version.txt)"
+    echo "  FAIL: starter_kit_version_updated (no expected version)" >&2
+  elif [[ "$_current_version" == "$_expected_version" ]]; then
+    _ver_detail="starter_kit_version correctly set to $_current_version"
+    echo "  OK: starter_kit_version_updated ($_current_version)" >&2
+  else
+    _ver_status="fail"
+    _ver_detail="starter_kit_version mismatch: expected=$_expected_version, actual=$_current_version"
+    echo "  FAIL: starter_kit_version_updated (expected=$_expected_version, actual=$_current_version)" >&2
+  fi
+fi
+
+if [[ "$_ver_status" == "ok" ]]; then
+  _add_check "$(jq -n --arg d "$_ver_detail" '{name: "starter_kit_version_updated", status: "ok", detail: $d}')"
+else
+  _add_check "$(jq -n --arg d "$_ver_detail" '{name: "starter_kit_version_updated", status: "fail", detail: $d}')"
   has_fail=true
 fi
 
