@@ -101,7 +101,7 @@ DevOpsエンジニア兼SRE。
 
 ### 10b. タスクリスト作成【必須】
 
-**【次のアクション】** `steps/common/task-management.md` の「Operations Phase: タスクテンプレート」に従いタスクリスト作成。
+**【次のアクション】** `steps/common/task-management.md` の「Operations Phase: タスクテンプレート」に従いタスクリスト作成。**タスクリスト未作成のまま次のステップに進んではいけない。**
 
 ### 11. Construction引き継ぎタスク確認【重要】
 

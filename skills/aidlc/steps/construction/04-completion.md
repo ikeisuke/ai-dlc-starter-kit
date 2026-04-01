@@ -33,6 +33,13 @@ fi
 
 未実施の場合: 今からAIレビュー実施（推奨）/ スキップ（理由記録）の2択。
 
+### 3b. 意思決定記録の参照確認【Construction Phase固有】
+
+このUnitの作業中に重要な意思決定（2つ以上の明確な選択肢からユーザーが選択した場面）が発生した場合、`steps/inception/05-completion.md` の「4. 意思決定記録」セクションの手順に従い記録すること。Construction Phase では既存の `decisions.md` への追記を行う。
+
+- **意思決定が発生した場合**: `.aidlc/cycles/{{CYCLE}}/inception/decisions.md` に追記（連番IDを継続）。ファイル未存在の場合はテンプレート（`templates/decision_record_template.md`）から新規作成
+- **意思決定が発生しなかった場合**: 「意思決定記録: 対象なし」と明示的に報告してスキップ
+
 ### 4. Unit定義ファイルの「実装状態」を更新
 
 状態を「完了」に、完了日を現在日付に更新。
