@@ -22,6 +22,8 @@ AI-DLC Starter Kit の変更履歴です。
 - `post-merge-sync.sh` のリモートブランチ存在確認を `git ls-remote --exit-code` で改善（#500）
 - `migrate-apply-config.sh` / `migrate-verify.sh` の version.txt 参照先をプラグインディレクトリに修正（Consumer リポジトリでの動作不良を解消）
 - `reviewing-*` スキルの Codex 実行コマンドに `-s read-only -C .` フラグを復元（read-only 保証の明示化）
+- `migrate-apply-config.sh`: `starter_kit_version` キー不在時にファイル先頭へ挿入する処理を追加（v1からの移行で置換がno-opになる問題を解消）
+- `migrate-apply-config.sh`: `migrate-config.sh` 失敗時のjournal statusを `warning` から `error` に昇格（部分的に壊れたconfigでの後続処理を防止）
 
 ### Changed
 
