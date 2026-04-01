@@ -99,6 +99,10 @@
 
 実行可能条件: 状態「未着手」かつ依存Unit全て「完了」or「取り下げ」。
 
+### 9a. タスクリスト作成【必須】
+
+**【次のアクション】** 対象Unit決定後、`steps/common/task-management.md` の「Construction Phase: Unit開始時タスクテンプレート」に従い、Unitのタスクリストを作成してください。**タスクリスト未作成のまま次のステップに進んではいけない。**
+
 ### 10. セッションタイトル更新【オプション】
 
 Unit確定後に `session-title` スキルを再実行（利用可能な場合のみ）。
@@ -120,7 +124,6 @@ scripts/issue-ops.sh set-status <issue_number> in-progress
 **AIレビュー**: 計画承認前に `review-flow.md` に従って実施。
 **セミオート**: フォールバック条件非該当なら自動承認。
 
-**【タスク作成】承認後、`steps/common/task-management.md` の「Construction Phase: Unit開始時タスクテンプレート」に従いタスクリスト作成。** **タスクリスト未作成のまま Phase 1/Phase 2 に進んではいけない。**
 
 ### 13. Unitブランチ作成【推奨】
 

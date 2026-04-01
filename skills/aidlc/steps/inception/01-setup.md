@@ -65,6 +65,10 @@
 - `current_branch`: `git branch --show-current`
 - `latest_cycle`: `.aidlc/cycles/` 配下の最新 `v*` ディレクトリ
 
+### 1b. Part 1タスクリスト作成【必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: Part 1」テンプレートに従い、Part 1のタスクリストを作成してください。
+
 ### 2. セッション判別設定【オプション】
 
 `session-title` スキルが利用可能な場合のみ実行。
@@ -250,5 +254,13 @@ scripts/init-cycle-dir.sh {{CYCLE}}
 ```
 
 10個のサイクル固有ディレクトリと初期履歴ファイルを一括作成。`--dry-run` で確認可能。
+
+### 12a. progress.md作成【必須】
+
+サイクルディレクトリ作成直後に `.aidlc/cycles/{{CYCLE}}/inception/progress.md` を作成する（全ステップ「未着手」で初期化）。Part 2のステップ18では既存ファイルの確認のみ行う。
+
+### 12b. タスクリスト作成【必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
 
 ---
