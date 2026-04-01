@@ -249,7 +249,7 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 
 ### 11a. progress.md読み込み【再開時必須】
 
-`.aidlc/cycles/{{CYCLE}}/inception/progress.md` が存在すれば読み込み、完了済みステップを確認する。未完了ステップから再開する。
+`.aidlc/cycles/{{CYCLE}}/inception/progress.md` が存在すれば読み込み、完了済みステップを確認する。未完了ステップから再開する。存在しない場合は新規作成する（全ステップ「未着手」で初期化）。
 
 ### 11b. タスクリスト作成【再開時必須】
 
