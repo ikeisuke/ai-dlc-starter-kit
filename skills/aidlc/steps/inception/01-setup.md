@@ -245,7 +245,15 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 
 ### 11. サイクル存在確認
 
-`.aidlc/cycles/{{CYCLE}}/` が存在 → Part 2へ、未存在 → ステップ12へ。
+`.aidlc/cycles/{{CYCLE}}/` が存在 → ステップ11a・11bを実行してからPart 2へ、未存在 → ステップ12へ。
+
+### 11a. progress.md読み込み【再開時必須】
+
+`.aidlc/cycles/{{CYCLE}}/inception/progress.md` が存在すれば読み込み、完了済みステップを確認する。未完了ステップから再開する。
+
+### 11b. タスクリスト作成【再開時必須】
+
+**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。タスクリストはセッションローカルのため、再開時も毎回作成が必要です。
 
 ### 12. サイクルディレクトリ作成
 
