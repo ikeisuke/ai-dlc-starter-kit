@@ -128,9 +128,21 @@
 | remote > local | - | `/aidlc setup`の実行を促す + starter_kit_version確認手順 |
 | local > remote | - | 警告表示（設定が先行） |
 
-**SKILL_LOCAL / REMOTE_SKILLモード**:
-- 一致 → 「取得可能分は一致」+ unavailableソースの警告
-- 不一致 → 差分表示 + 比較方向に応じたアクション（remote > skill → スキル更新案内、skill > remote → 「スキルが先行」警告） + unavailableソースの警告
+**SKILL_LOCALモード（リモート取得失敗時）**:
+
+| パターン | 条件 | アクション |
+|---------|------|-----------|
+| 一致 | skill = local | 「取得可能分は一致」+ リモート取得失敗警告 |
+| skill > local | - | `/aidlc setup`の実行を促す + リモート取得失敗警告 |
+| local > skill | - | スキル更新案内 + リモート取得失敗警告 |
+
+**REMOTE_SKILLモード（ローカル設定取得失敗時）**:
+
+| パターン | 条件 | アクション |
+|---------|------|-----------|
+| 一致 | remote = skill | 「取得可能分は一致」+ ローカル設定取得失敗警告 |
+| remote > skill | - | スキル更新案内 + ローカル設定取得失敗警告 |
+| skill > remote | - | 「スキルが先行している可能性」警告 + ローカル設定取得失敗警告 |
 
 **SINGLE_OR_NONEモード**: 比較スキップ、unavailableソースの警告のみ表示して続行。
 
