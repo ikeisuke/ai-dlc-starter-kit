@@ -1,0 +1,44 @@
+# Intent（開発意図）
+
+## プロジェクト名
+AI-DLC Starter Kit
+
+## 開発の目的
+v2.1.2リリース後のOperations Phaseで検出された設定・ルール・UX関連の4件の改善課題（#505〜#508）を一括対応し、未使用設定の除去と設定キーによる機能制御追加によって設定整合性を改善する。
+
+## ターゲットユーザー
+AI-DLCスターターキットを利用する開発者
+
+## ビジネス価値
+- 不要な設定キーの除去により設定ファイルの見通しが良くなる
+- 名前付きサイクル機能の制御性が向上する
+- AskUserQuestionツール使用ルールの明記によりsemi_autoモードでのUXが改善される
+- versionアクション追加により現在のスキルバージョンが確認できる
+
+## 成功基準
+- `[paths].cycles_dir` がconfig.toml・defaults.toml・セットアップテンプレートから削除されていること。既存の `config.toml` に `cycles_dir` が残っていても読み込みエラーにならないこと（daselは未知キーを無視する）
+- `rules.cycle.named_enabled` 設定キーが `defaults.toml` に追加され、デフォルト値 `false`（明示的にopt-in）で名前付きサイクル機能のon/offが制御できること。`false` 設定時は `inception/01-setup.md` のステップ7-8で名前付きサイクル関連の分岐がスキップされること
+- AskUserQuestionツール使用ルールが `steps/common/rules.md` に追加され、ゲート承認（semi_autoで自動化可）とユーザー選択・情報収集（AskUserQuestion必須）の区別が明記されていること
+- `/aidlc version`（短縮形: `v`）で `starter_kit_version` の値が1行で表示されること。`v` エイリアスは既存アクション短縮形（`i`/`c`/`o`/`e`/`h`）と競合しないこと
+
+## スコープ
+
+### 含まれるもの
+- #505: AskUserQuestionツール使用ルールの追加
+- #506: config.toml・defaults.toml・テンプレートの未使用設定キー `cycles_dir` の削除
+- #507: `rules.cycle.named_enabled` 設定キーの追加と `inception/01-setup.md` での分岐制御
+- #508: `/aidlc version` アクションの追加（SKILL.mdの引数ルーティングとヘルプ表示の更新）
+
+### 含まれないもの
+- スクリプト・プロンプトが `cycles_dir` を動的に参照する機能追加（#506で「削除」方針を採用）
+- 名前付きサイクル機能の文書化のみ（#507で「設定キー追加」方針を採用）
+- 既存 `config.toml` の自動マイグレーション（`cycles_dir` が残存しても実害なし）
+- version表示以外のコマンド体系再設計
+- ドキュメント更新は変更対象ファイル内のインライン修正に限定
+
+## 期限とマイルストーン
+v2.1.3パッチリリースとして4件のIssueを解消する
+
+## 制約事項
+- 原則として既存の動作を壊さないこと（後方互換性の維持）。ただし `named_enabled` は意図的なopt-in化として例外（デフォルト `false`、利用者が明示的に有効化する）
+- `cycles_dir` 削除後も、既存の `config.toml` に当該キーが残っていてもエラーにならないこと
