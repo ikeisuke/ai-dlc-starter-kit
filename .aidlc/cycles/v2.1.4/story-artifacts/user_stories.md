@@ -45,11 +45,11 @@ As a AI-DLCスターターキット開発者
 I want to PRマージ前レビュー確認（Codex PRレビュー状態判定）でPR本体へのリアクションも検出される
 So that レビュー承認判定漏れによるマージ遅延やミスを防止できる
 
-**補足**: Codex PRレビュー状態判定（c判定フロー）は、PRマージ前にCodexボットの承認状態を確認するステップ。現在はIssue Comment（`@codex review`コメント）へのリアクション（c-2）とIssue Commentの本文内容（c-4）で判定しているが、Pull Request Reviewオブジェクト（`gh api repos/{owner}/{repo}/pulls/{PR}/reviews`で取得されるレビュー）へのリアクションは検出対象外。
+**補足**: Codex PRレビュー状態判定（c判定フロー）は、PRマージ前にCodexボットの承認状態を確認するステップ。現在はIssue Comment（`@codex review`コメント）へのリアクション（c-2）とIssue Commentの本文内容（c-4）で判定しているが、Pull Request Review Comment（行コメント等）へのリアクションは検出対象外。なお、GitHub REST APIではPull Request Review本体へのリアクション取得はサポートされていないため、検出対象はReview Commentとする。
 
 **受け入れ基準**:
-- [ ] Pull Request Reviewオブジェクトに対するCodexボット（`chatgpt-codex-connector[bot]`）の`+1`リアクションが承認として検出される
-- [ ] 既存のIssue Commentベースのリアクション検出との併用で動作する（Pull Request Reviewリアクション → Issue Commentリアクション → コメント本文の優先順で判定）
+- [ ] Pull Request Review CommentへのCodexボット（`chatgpt-codex-connector[bot]`）の`+1`リアクションが承認として検出される
+- [ ] 既存のIssue Commentベースのリアクション検出との併用で動作する（Review Commentリアクション → Issue Commentリアクション → コメント本文の優先順で判定）
 - [ ] いずれのリアクションも存在しない場合はコメント本文での承認判定にフォールバックする
 
 **技術的考慮事項**:

@@ -16,7 +16,7 @@ Inception Phase開始時にリモートデフォルトブランチ（`origin/mai
 ## 依存関係
 
 ### 依存する Unit
-- なし
+- Unit 004: バージョンチェック改善・setup早期判定改修（依存理由: 同じ `01-setup.md` を編集するため、Unit 004の変更完了後に差分追加する）
 
 ### 外部依存
 - `git fetch`（リモートリポジトリへのネットワークアクセス）
@@ -25,7 +25,8 @@ Inception Phase開始時にリモートデフォルトブランチ（`origin/mai
 - オフライン時: fetch失敗をスキップして続行
 
 ## 技術的考慮事項
-- `git fetch origin` → `git rev-list --count HEAD..origin/main` でbehind数を取得
+- リモートデフォルトブランチ名の解決: `git symbolic-ref refs/remotes/origin/HEAD` でデフォルトブランチ名を取得（未設定時は `origin/main` にフォールバック）
+- `git fetch origin` → `git rev-list --count HEAD..{resolved_default_branch}` でbehind数を取得
 - behind > 0 の場合に警告表示、ahead のみの場合は警告しない
 - 既存のブランチ確認ステップ（10-3: main最新化チェック）との統合を検討
 

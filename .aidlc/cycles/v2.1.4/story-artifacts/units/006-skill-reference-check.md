@@ -1,4 +1,4 @@
-# Unit: skills/直接参照チェックスクリプト
+# Unit: skills/直接参照チェック導入
 
 ## 概要
 `skills/`以下のファイルでプロジェクトルート相対パス（`skills/aidlc/`）による参照違反をCIで自動検出するスクリプトを作成し、GitHub Actionsに統合する。
