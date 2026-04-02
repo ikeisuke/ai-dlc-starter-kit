@@ -112,26 +112,7 @@ cat .aidlc/cycles/backlog-completed.md 2>/dev/null
   - ユーザーが「いいえ」の場合: そのまま次のステップへ進行
   - 類似項目がない場合: 次のステップへ進行
 
-### 17-3. タスクリスト作成【必須】
-
-**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
-
-### 18. 進捗管理ファイル確認【重要】
-
-**progress.mdのパス（正確に）**:
-
-```text
-.aidlc/cycles/{{CYCLE}}/inception/progress.md
-                      ^^^^^^^^^
-                      ※ inception/ サブディレクトリ内
-```
-
-**注意**: `.aidlc/cycles/{{CYCLE}}/progress.md` ではありません。必ず `inception/` ディレクトリ内のファイルを確認してください。
-
-- **存在する場合**: 読み込んで完了済みステップを確認、未完了ステップから再開
-- **存在しない場合**: 初回実行として、フロー開始前にprogress.mdを作成（全ステップ「未着手」）
-
-### 19. 既存成果物の確認（冪等性の保証）
+### 18. 既存成果物の確認（冪等性の保証）
 
 ```bash
 ls .aidlc/cycles/{{CYCLE}}/requirements/ .aidlc/cycles/{{CYCLE}}/story-artifacts/ .aidlc/cycles/{{CYCLE}}/design-artifacts/
