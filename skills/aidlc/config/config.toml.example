@@ -119,10 +119,14 @@ level = "standard"
 
 [rules.cycle]
 # サイクルモード設定（v1.20.0で追加）
+# named_enabled: true | false（v2.1.3で追加）
+# - true: 名前付きサイクル機能を有効化（mode=named/askが利用可能になる）
+# - false: 名前付きサイクル機能を無効化（mode設定に関わらずdefault動作）（デフォルト）
+# named_enabled = false
 # mode: "default" | "named" | "ask"
 # - default: 従来形式（.aidlc/cycles/vX.X.X/）で動作（デフォルト）
-# - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作
-# - ask: Inception Phase開始時に名前付き/名前なしを選択
+# - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作（named_enabled=trueが必要）
+# - ask: Inception Phase開始時に名前付き/名前なしを選択（named_enabled=trueが必要）
 # mode = "default"
 
 [rules.squash]

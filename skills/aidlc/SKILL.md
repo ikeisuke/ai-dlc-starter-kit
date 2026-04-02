@@ -7,7 +7,7 @@ description: >
   "コンストラクション進めて", "start construction",
   "オペレーション進めて", "start operations",
   "start express", "start setup", "AIDLCフィードバック", "aidlc feedback",
-  "start migrate", "aidlc migrate".
+  "start migrate", "aidlc migrate", "aidlc version".
 argument-hint: "<action> [追加コンテキスト]"
 ---
 
@@ -34,9 +34,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 2. ARGUMENTSが指定されている場合:
    - 先頭の空白区切りトークンを action として取得
-   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`
-   - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `help`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/help（短縮形: inc/con/ops/exp または i/c/o/e/h）のいずれかを指定してください」を表示して処理を中断
+   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`, `v`→`version`
+   - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `help` / `version`）でない場合:
+     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/help/version（短縮形: inc/con/ops/exp または i/c/o/e/h/v）のいずれかを指定してください」を表示して処理を中断
    - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
 
 パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
@@ -53,6 +53,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 | `feedback` | `/aidlc-feedback` スキルに委譲 |
 | `migrate` | `/aidlc-migrate` スキルに委譲 |
 | `help` (`h`) | ヘルプ表示（アクション一覧） |
+| `version` (`v`) | バージョン表示 |
 
 引数なしの場合: ブランチ名が `cycle/*` なら construction、そうでなければ inception。
 
@@ -142,10 +143,29 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 | feedback | - | AI-DLCへのフィードバック送信 |
 | migrate | - | v1→v2マイグレーション |
 | help | h | このヘルプを表示 |
+| version | v | スキルバージョンを表示 |
 
 使い方: /aidlc <action> [追加コンテキスト]
 例: /aidlc ops   （Operations Phase開始）
 例: /aidlc con 前回のセッションで設計レビューまで完了
+```
+
+## バージョン表示
+
+`version` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
+
+1. スキルベースディレクトリの `version.txt` を読み込む
+2. 値を正規化する: 前後の空白をトリムし、先頭の `v` プレフィックスがあれば除去する。空文字・不正値・読取不能の場合は不存在と同じ扱いとする
+3. 以下のフォーマットで表示:
+
+```text
+AI-DLC Starter Kit v{version}
+```
+
+4. `version.txt` が存在しない、または正規化後の値が空の場合:
+
+```text
+AI-DLC Starter Kit (version unknown)
 ```
 
 ## 制約事項

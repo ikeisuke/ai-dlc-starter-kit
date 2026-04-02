@@ -160,6 +160,24 @@
 
 ### 7. サイクルモード確認
 
+**named_enabled チェック**（ステップ7の最初に実行）:
+
+```bash
+scripts/read-config.sh rules.cycle.named_enabled
+```
+
+- `false`（デフォルト）の場合: `rules.cycle.mode` を確認し、`named` または `ask` が設定されていれば以下の警告を表示してから、`cycle_mode` を `"default"` に設定しステップ9へ進む:
+
+  ```text
+  【警告】rules.cycle.mode = "{mode値}" が設定されていますが、rules.cycle.named_enabled = false のため名前付きサイクル機能は無効です。
+  名前付きサイクルを使用するには config.toml に named_enabled = true を追加してください。
+  ```
+
+- `true` の場合: 以下のモード分岐フローを実行する
+- 読み取り失敗時（終了コード2）: `false` として扱う（ステップ9へ進む）
+
+**モード分岐フロー**（`named_enabled=true` の場合のみ実行）:
+
 ```bash
 scripts/read-config.sh rules.cycle.mode
 ```
@@ -177,7 +195,7 @@ scripts/read-config.sh rules.cycle.mode
 
 ### 8. 名前付きサイクル継続確認
 
-**スキップ**: `cycle_name` 設定済み、ask→通常サイクル選択時、名前付きサイクル0件の場合。
+**スキップ**: `named_enabled=false`、`cycle_name` 設定済み、ask→通常サイクル選択時、名前付きサイクル0件の場合。
 
 `.aidlc/cycles/` 配下の名前付きサイクル（`v[0-9]`開始でない、予約名でない）を検出し、継続するか新規開始するか選択を提示。
 

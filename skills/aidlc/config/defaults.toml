@@ -55,6 +55,7 @@ ai_author = ""
 
 [rules.cycle]
 mode = "default"
+named_enabled = false
 
 [rules.upgrade_check]
 enabled = false

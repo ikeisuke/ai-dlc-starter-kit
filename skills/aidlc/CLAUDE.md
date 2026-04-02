@@ -75,6 +75,7 @@ git commit -m "feat: add new feature"
 | 「AIDLCフィードバック」「aidlc feedback」 | `/aidlc feedback` → `/aidlc-feedback` に委譲 |
 | 「start migrate」「aidlc migrate」 | `/aidlc migrate` → `/aidlc-migrate` に委譲 |
 | 「ヘルプ」「help」 | `/aidlc help`（短縮形: `/aidlc h`、アクション一覧表示） |
+| 「バージョン」「version」 | `/aidlc version`（短縮形: `/aidlc v`、スキルバージョン表示） |
 
 **追加コンテキスト**: `/aidlc <action> <テキスト>` の形式で、actionの後に任意のテキストを追加できます。追加テキストはフェーズ実行中にコンテキスト変数 `additional_context` として参照されます。ARGUMENTSパーシングの詳細仕様（有効action一覧、エラー条件、引数なし時の既定動作）は `SKILL.md` の「ARGUMENTSパーシング」セクションが正本です。
 

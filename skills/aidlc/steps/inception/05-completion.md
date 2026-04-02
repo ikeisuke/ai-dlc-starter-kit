@@ -220,7 +220,25 @@ gh pr create --draft \
 
 squashを実行していない場合は、`steps/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
 
-### 8. コンテキストリセット提示【必須】
+### 8. 完了サマリ出力【必須】
+
+コンテキストリセット提示の前に、以下のフォーマットで完了サマリを出力する。AIがInception Phase作業中のコンテキスト情報から動的に生成する。
+
+```text
+【Inception Phase 完了サマリ】
+- サイクル: {{CYCLE}}
+- 作成した成果物:
+  - Intent: [intent.mdの概要（1行）]
+  - ユーザーストーリー: [ストーリー数]件
+  - Unit定義: [Unit数]件（[Unit名の一覧]）
+- 技術スタック: [決定内容。該当しなければ「該当なし」]
+- 関連Issue: [Issue番号の一覧。なければ「なし」]
+- 残課題・バックログ: [登録したバックログIssue番号。なければ「なし」]
+```
+
+※ 情報源に存在しない内容を出力しないこと
+
+### 9. コンテキストリセット提示【必須】
 
 **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
 
