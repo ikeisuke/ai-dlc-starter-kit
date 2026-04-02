@@ -17,9 +17,6 @@ languages = [[言語リスト]]
 frameworks = [[フレームワークリスト]]
 tools = ["Claude Code"]
 
-[paths]
-cycles_dir = "docs/cycles"
-
 [rules]
 # 開発ルール
 

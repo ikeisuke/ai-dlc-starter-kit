@@ -13,9 +13,6 @@ languages = ["Markdown"]
 frameworks = []
 tools = ["Claude Code"]
 
-[paths]
-cycles_dir = ".aidlc/cycles"
-
 [rules]
 # 開発ルール
 
