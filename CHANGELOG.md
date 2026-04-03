@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.5] - 2026-04-03
+
+### Fixed
+
+- aidlc-setupスキルの `read-config.sh` パス解決バグを修正（#516）
+- `post-merge-sync.sh` の出力ステータスを明確化し、success/warningを区別するよう修正（#515）
+
+### Added
+
+- defaults.tomlをスキーマとしたconfig.toml欠落キー検出・追記候補提示機能をaidlc-setup時に追加（#517）
+- 設定ファイル（config.toml / defaults.toml）の説明ドキュメント `docs/configuration.md` を追加
+
+---
+
 ## [2.1.4] - 2026-04-03
 
 ### Added
