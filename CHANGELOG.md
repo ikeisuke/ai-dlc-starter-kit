@@ -7,6 +7,27 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.4] - 2026-04-03
+
+### Added
+
+- Inception Phase開始前にリモートデフォルトブランチの取り込み確認を追加（#510）
+- `skills/`以下の直接参照チェックスクリプト（`bin/check-skill-reference.sh`）を追加し、CI（GitHub Actions）で自動実行
+- PRマージ前レビューコメント確認のCodex PRレビュー状態判定に、Pull Request Review Commentへのリアクション検出を追加（#511）
+
+### Fixed
+
+- `post-merge-sync.sh`がリモートブランチ自動削除済み時にexit 1を返す問題を修正（#512）
+- メタ開発時にインストール済みプラグインのSKILL.mdとリポジトリの`skills/`を混同する問題を修正（#513）
+
+### Changed
+
+- バージョンチェック設定キーを`rules.upgrade_check.enabled`から`rules.version_check.enabled`にリネームし、デフォルト値を`true`に変更（旧キーはフォールバック互換あり）
+- メタ開発リポジトリ（`STARTER_KIT_DEV`）でのバージョンチェックスキップ条件を廃止
+- setupスキルの早期判定ロジックを改修し、config.toml存在時でもバージョン不一致検出時にアップグレードモードへ遷移するよう変更
+
+---
+
 ## [2.1.3] - 2026-04-02
 
 ### Changed
