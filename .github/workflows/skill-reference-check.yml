@@ -8,6 +8,9 @@ on:
       - 'bin/check-skill-references.sh'
       - '.github/workflows/skill-reference-check.yml'
 
+permissions:
+  contents: read
+
 jobs:
   skill-reference-check:
     name: Skill Reference Check
