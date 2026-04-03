@@ -30,7 +30,7 @@ PRマージ前レビュー確認のCodex PRレビュー状態判定（c判定フ
 - Review Commentのリアクション取得: `gh api repos/{owner}/{repo}/pulls/{PR}/comments` → Codexボットのコメントを特定 → `gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions` でリアクション取得
 - 判定優先順: Review Commentリアクション → Issue Commentリアクション(c-2) → コメント本文(c-4)
 - API失敗時はc-2にフォールバック
-- Review CommentがCodexボットの承認表現を含むかも合わせて判定
+- Review Comment本文の承認パターン検出はスコープ外（c-4の責務と重複するため、設計レビューで除外判断済み）
 
 ## 関連Issue
 - #511
@@ -44,9 +44,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
+- **状態**: 完了
+- **開始日**: 2026-04-03
+- **完了日**: 2026-04-03
 - **担当**: -
 - **エクスプレス適格性**: -
 - **適格性理由**: -
