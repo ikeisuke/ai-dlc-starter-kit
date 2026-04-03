@@ -129,6 +129,18 @@ _enumerate_leaf_keys() {
     done < "$file"
 }
 
+# --- config.toml の読み取り可能性を事前チェック ---
+_config_content=$(cat "$CONFIG_PATH" 2>/dev/null) || {
+    echo "error:config-read-failed:cannot read $CONFIG_PATH"
+    exit 2
+}
+
+# dasel でパースできるか検証（トップレベルキーの存在を確認）
+if ! printf '%s' "$_config_content" | dasel -i toml '.' >/dev/null 2>&1; then
+    echo "error:config-parse-failed:$CONFIG_PATH is not valid TOML"
+    exit 2
+fi
+
 # --- メイン処理 ---
 MISSING_COUNT=0
 
@@ -137,7 +149,7 @@ while IFS= read -r leaf_key; do
 
     # config.toml に存在するか確認
     dasel_key=$(_dasel_key "$leaf_key")
-    if ! cat "$CONFIG_PATH" 2>/dev/null | dasel -i toml "$dasel_key" >/dev/null 2>&1; then
+    if ! printf '%s' "$_config_content" | dasel -i toml "$dasel_key" >/dev/null 2>&1; then
         # 欠落キー: defaults.toml からデフォルト値を取得
         defaults_dasel_key=$(_dasel_key "$leaf_key")
         default_val=""
