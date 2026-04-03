@@ -163,6 +163,9 @@ main() {
         exit 2
     fi
 
+    # パス正規化（../等のトラバーサルを解決）
+    TARGET_DIR=$(cd "$TARGET_DIR" && pwd)
+
     # リポジトリ外ディレクトリの拒否
     case "$TARGET_DIR" in
         "${REPO_ROOT}"/*)
