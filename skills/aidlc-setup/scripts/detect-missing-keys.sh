@@ -55,18 +55,18 @@ fi
 
 # --- ファイル存在確認 ---
 if [[ ! -f "$DEFAULTS_PATH" ]]; then
-    echo "error:defaults-not-found:$DEFAULTS_PATH"
+    printf 'error\tdefaults-not-found\t%s\n' "$DEFAULTS_PATH"
     exit 1
 fi
 
 if [[ ! -f "$CONFIG_PATH" ]]; then
-    echo "error:config-not-found:$CONFIG_PATH"
+    printf 'error\tconfig-not-found\t%s\n' "$CONFIG_PATH"
     exit 1
 fi
 
 # --- dasel 存在確認 ---
 if ! command -v dasel >/dev/null 2>&1; then
-    echo "error:dasel-not-found:dasel is not installed"
+    printf 'error\tdasel-not-found\tdasel is not installed\n'
     exit 2
 fi
 
@@ -131,13 +131,13 @@ _enumerate_leaf_keys() {
 
 # --- config.toml の読み取り可能性を事前チェック ---
 _config_content=$(cat "$CONFIG_PATH" 2>/dev/null) || {
-    echo "error:config-read-failed:cannot read $CONFIG_PATH"
+    printf 'error\tconfig-read-failed\tcannot read %s\n' "$CONFIG_PATH"
     exit 2
 }
 
 # dasel でパースできるか検証（トップレベルキーの存在を確認）
 if ! printf '%s' "$_config_content" | dasel -i toml '.' >/dev/null 2>&1; then
-    echo "error:config-parse-failed:$CONFIG_PATH is not valid TOML"
+    printf 'error\tconfig-parse-failed\t%s is not valid TOML\n' "$CONFIG_PATH"
     exit 2
 fi
 
