@@ -81,7 +81,7 @@
 
 ### 4. スターターキット開発リポジトリ判定
 
-`.aidlc/config.toml` の `[project].name` が `ai-dlc-starter-kit` → `STARTER_KIT_DEV`（アップグレード案内スキップ）、それ以外 → `USER_PROJECT`。
+`.aidlc/config.toml` の `[project].name` が `ai-dlc-starter-kit` → `STARTER_KIT_DEV`、それ以外 → `USER_PROJECT`。この判定は参照先ポリシーの決定にのみ使用する。
 
 #### 参照先ポリシー
 
@@ -99,7 +99,16 @@
 
 ### 6. スターターキットバージョン確認（三角モデル）
 
-**スキップ条件**: `STARTER_KIT_DEV` の場合、または `rules.upgrade_check.enabled` が `true` でない場合（デフォルト `false`）。
+**スキップ条件**: `rules.version_check.enabled` が `false` の場合。
+
+**設定解決順**（互換インターフェース）:
+1. `read-config.sh rules.version_check.enabled` を実行
+2. exit 0（値あり）→ その値を使用
+3. exit 1（キー不在）→ `read-config.sh rules.upgrade_check.enabled` をフォールバック実行
+   - exit 0 → その値を使用
+   - exit 1 → デフォルト値 `true`
+   - exit 2 → 警告表示 + デフォルト値 `true`
+4. exit 2（エラー）→ 警告表示、旧キーへは進まずデフォルト値 `true`
 
 #### 6a. バージョン情報取得（3点）+ 正規化
 
