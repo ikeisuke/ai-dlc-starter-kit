@@ -1,0 +1,23 @@
+name: Skill Reference Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'bin/check-skill-references.sh'
+      - '.github/workflows/skill-reference-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  skill-reference-check:
+    name: Skill Reference Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check skill references for direct path violations
+        run: bash bin/check-skill-references.sh

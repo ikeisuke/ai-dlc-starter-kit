@@ -57,8 +57,8 @@ ai_author = ""
 mode = "default"
 named_enabled = false
 
-[rules.upgrade_check]
-enabled = false
+[rules.version_check]
+enabled = true
 
 [rules.branch]
 mode = "ask"

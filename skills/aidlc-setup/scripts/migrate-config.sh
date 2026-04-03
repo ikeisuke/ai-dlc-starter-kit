@@ -346,10 +346,26 @@ _add_section "rules\\.unit_branch" '[rules.unit_branch]
 # enabled: true | false（デフォルト: false）
 enabled = false'
 
-_add_section "rules\\.upgrade_check" '[rules.upgrade_check]
-# アップグレードチェック設定（v2.0.0で追加）
-# enabled: true | false（デフォルト: false）
-enabled = false'
+# --- セクション 7.4.5: upgrade_check → version_check リネームマイグレーション ---
+
+# 旧セクション [rules.upgrade_check] が存在する場合のリネーム処理
+if grep -q "^\[rules\.upgrade_check\]" "$_target"; then
+    if grep -q "^\[rules\.version_check\]" "$_target"; then
+        # 新旧両方存在 → 旧セクションを削除（新セクションの値を優先）
+        _safe_transform "$_target" awk '/^\[rules\.upgrade_check\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
+        _emit_migrate "remove-old:rules.upgrade_check(version_check優先)"
+    else
+        # 旧セクションのみ存在 → セクション名をリネーム（値は保持）
+        _safe_transform "$_target" sed 's/^\[rules\.upgrade_check\]/[rules.version_check]/'
+        _emit_migrate "rename:rules.upgrade_check->rules.version_check"
+    fi
+fi
+
+# 新セクションが存在しない場合にデフォルト値で追加（新規インストール環境向け）
+_add_section "rules\\.version_check" '[rules.version_check]
+# バージョンチェック設定（v2.1.4でupgrade_checkからリネーム）
+# enabled: true | false（デフォルト: true）
+enabled = true'
 
 # --- セクション 7.5: 廃止設定の検出 ---
 

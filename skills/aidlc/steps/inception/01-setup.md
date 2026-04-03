@@ -77,9 +77,21 @@
 
 `skills/aidlc/SKILL.md` の存在確認。未存在時は `/aidlc setup` を案内し続行。
 
+**注**: この確認はファイルの物理的な存在のみを判定する。環境依存の意味解釈（プラグインインストール状態 vs リポジトリソース存在）はステップ4のリポジトリ判定後に決まる。
+
 ### 4. スターターキット開発リポジトリ判定
 
-`.aidlc/config.toml` の `[project].name` が `ai-dlc-starter-kit` → `STARTER_KIT_DEV`（アップグレード案内スキップ）、それ以外 → `USER_PROJECT`。
+`.aidlc/config.toml` の `[project].name` が `ai-dlc-starter-kit` → `STARTER_KIT_DEV`、それ以外 → `USER_PROJECT`。この判定は参照先ポリシーの決定にのみ使用する。
+
+#### 参照先ポリシー
+
+判定結果に基づき、以降のステップで適用する参照先ポリシーを定義する:
+
+| ポリシー項目 | STARTER_KIT_DEV | USER_PROJECT |
+|-------------|-----------------|--------------|
+| ステップ3の意味 | リポジトリ内ソース存在確認（プラグインのインストール状態は保証しない） | プラグインのデプロイ有無を示す |
+| スキル内リソース編集対象 | `skills/aidlc/`（リポジトリ内、META-001例外） | 該当なし（スキルベースディレクトリ相対参照のみ） |
+| 除外対象 | `~/.claude/plugins/` 配下は編集候補・更新対象・差分比較対象から除外 | 同左（スキルベースディレクトリからのread-only参照は除外対象外） |
 
 ### 5. 追加ルール確認
 
@@ -87,7 +99,16 @@
 
 ### 6. スターターキットバージョン確認（三角モデル）
 
-**スキップ条件**: `STARTER_KIT_DEV` の場合、または `rules.upgrade_check.enabled` が `true` でない場合（デフォルト `false`）。
+**スキップ条件**: `rules.version_check.enabled` が `false` の場合。
+
+**設定解決順**（互換インターフェース）:
+1. `read-config.sh rules.version_check.enabled` を実行
+2. exit 0（値あり）→ その値を使用
+3. exit 1（キー不在）→ `read-config.sh rules.upgrade_check.enabled` をフォールバック実行
+   - exit 0 → その値を使用
+   - exit 1 → デフォルト値 `true`
+   - exit 2 → 警告表示 + デフォルト値 `true`
+4. exit 2（エラー）→ 警告表示、旧キーへは進まずデフォルト値 `true`
 
 #### 6a. バージョン情報取得（3点）+ 正規化
 
@@ -256,7 +277,7 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 | main_status | メッセージ |
 |-------------|-----------|
 | `up-to-date` | 最新です |
-| `behind` | 未取り込み変更あり（merge/rebase推奨） |
+| `behind` | ⚠ リモートデフォルトブランチに未取り込みコミットがあります。作業開始前に最新変更を取り込むことを推奨します（git merge/rebase）。 |
 | `fetch-failed` | リモート確認失敗（オフライン等） |
 
 **10-4. rules.md再読み込み**: ブランチ切り替えが発生した場合のみ、ステップ5を再実行。

@@ -300,7 +300,7 @@ gh api --paginate repos/{owner}/{repo}/pulls/{PR番号}/comments
 
    **注**: REST APIではスレッドのresolved状態を直接取得できないため、上記の簡易判定を採用。
 
-   **c. Codex PRレビュー状態判定**: Codex PRレビューの状態をリアクション絵文字およびIssue Commentから検出する。
+   **c. Codex PRレビュー状態判定**: Codex PRレビューの状態をReview Commentリアクション、Issue Commentリアクション、およびIssue Comment本文から検出する。
 
    c-1. `@codex review` を含むコメントを全件取得し、最新1件のIDと`created_at`を特定:
 
@@ -316,6 +316,29 @@ gh api --paginate repos/{owner}/{repo}/pulls/{PR番号}/comments
 
    - API失敗時: 下記「API失敗時のエラーハンドリング」テーブルに従い手動確認を誘導
    - コメントIDが取得できない場合（`null` / 空）: c判定全体をスキップ（a/b判定のみで続行）
+
+   c-1b. Review Commentリアクション検出（c-1でコメントIDが取得できた場合のみ実行）:
+
+   手順2で取得済みのPR Review Comments一覧から、以下の条件でCodexボットのReview Commentをフィルタ:
+
+   1. `user.login` == `chatgpt-codex-connector[bot]`（Codexボットアカウント）
+   2. `created_at` >= c-1で特定した最新`@codex review`コメントの`created_at`（レビューラウンド境界）
+
+   - CodexボットのReview Commentが0件の場合: c-1bをスキップし、c-2へ
+   - 1件以上の場合: 対象コメント全件のIDを取得し、各コメントのリアクションを取得・集約:
+
+   ```bash
+   gh api --paginate repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions \
+     --jq '[.[] | select(.user.login == "chatgpt-codex-connector[bot]")]' \
+     | jq -s 'add | map({content: .content})'
+   ```
+
+   上記を対象コメント全件に対して実行し、リアクションを集約する。いずれかのコメントで取得に失敗した場合は、そのコメントをスキップして残りで続行する。全件失敗した場合: 「⚠ Review Commentリアクション取得に失敗しました。Issue Commentベースの判定に進みます」と表示し、c-2へ
+
+   リアクション判定（集約結果に対して実施）:
+   - いずれかのコメントに `+1` リアクションが存在（`eyes` の有無に関わらず） → 「✓ Codex PRレビュー: 承認済み（Review Comment👍）」と表示（c-2〜c-4をスキップ）
+   - `eyes` リアクションのみ → c-2へ
+   - Codexボットからのリアクションなし → c-2へ
 
    c-2. コメントのリアクションを取得し、Codexボットアカウント（上記定数）からのリアクションのみフィルタ:
 
@@ -370,7 +393,7 @@ gh api --paginate repos/{owner}/{repo}/pulls/{PR番号}/comments
 すべてのエラーパターンで、6.7へ進むにはユーザーに手動確認が必要:
 「GitHub上でPRのレビューコメントを直接確認し、未対応指摘がないことを確認しましたか？」→ 「はい」の場合のみマージ可。
 
-**注**: 上記エラーハンドリングはステップ1-2（PRレビュー/コメント取得）とc-1（コメント特定）のAPI失敗に適用される。c-2（リアクション取得）およびc-4（コメント承認判定）の失敗は補助判定の失敗であり、利用可能な他のc判定結果を保持して続行する。c-2とc-4の両方が失敗した場合は「⚠ Codex PRレビュー状態を確認できませんでした。a/b判定の結果のみで続行します」と表示し、a/b判定のみで続行可能（手動確認は不要。c判定は補助的な判定であり、a/b判定が主判定として機能する）。
+**注**: 上記エラーハンドリングはステップ1-2（PRレビュー/コメント取得）とc-1（コメント特定）のAPI失敗に適用される。c-1b（Review Commentリアクション取得）、c-2（Issue Commentリアクション取得）、およびc-4（コメント承認判定）の失敗は補助判定の失敗であり、利用可能な他のc判定結果を保持して続行する。c-1b、c-2、c-4のすべてが失敗した場合は「⚠ Codex PRレビュー状態を確認できませんでした。a/b判定の結果のみで続行します」と表示し、a/b判定のみで続行可能（手動確認は不要。c判定は補助的な判定であり、a/b判定が主判定として機能する）。
 
 ---
 
