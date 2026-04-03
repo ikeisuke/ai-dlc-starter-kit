@@ -12,7 +12,7 @@ AI-DLC Starter Kit の変更履歴です。
 ### Added
 
 - Inception Phase開始前にリモートデフォルトブランチの取り込み確認を追加（#510）
-- `skills/`以下の直接参照チェックスクリプト（`bin/check-skill-reference.sh`）を追加し、CI（GitHub Actions）で自動実行
+- `skills/`以下の直接参照チェックスクリプト（`bin/check-skill-references.sh`）を追加し、CI（GitHub Actions）で自動実行
 - PRマージ前レビューコメント確認のCodex PRレビュー状態判定に、Pull Request Review Commentへのリアクション検出を追加（#511）
 
 ### Fixed
