@@ -277,7 +277,7 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 | main_status | メッセージ |
 |-------------|-----------|
 | `up-to-date` | 最新です |
-| `behind` | 未取り込み変更あり（merge/rebase推奨） |
+| `behind` | ⚠ リモートデフォルトブランチに未取り込みコミットがあります。作業開始前に最新変更を取り込むことを推奨します（git merge/rebase）。 |
 | `fetch-failed` | リモート確認失敗（オフライン等） |
 
 **10-4. rules.md再読み込み**: ブランチ切り替えが発生した場合のみ、ステップ5を再実行。
