@@ -56,6 +56,7 @@ EXCLUDE_PATTERNS=(
     "scripts/get-default-branch.sh"
     "templates/review_summary_template.md"
     "install-kiro-agent/SKILL.md"
+    "aidlc-setup/config/defaults.toml"
 )
 
 # 除外パターンに該当するか判定（パスセグメント単位で照合）
@@ -66,7 +67,8 @@ is_excluded() {
         */aidlc-migrate/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/tests/*|\
         */scripts/ios-build-check.sh|*/scripts/get-default-branch.sh|\
-        */templates/review_summary_template.md|*/install-kiro-agent/SKILL.md)
+        */templates/review_summary_template.md|*/install-kiro-agent/SKILL.md|\
+        */aidlc-setup/config/defaults.toml)
             return 0
             ;;
     esac
