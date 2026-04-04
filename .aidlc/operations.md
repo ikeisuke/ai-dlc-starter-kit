@@ -47,14 +47,15 @@ git checkout v1.2.0
 
 ### 運用時の注意点
 
-- メタ開発の意識: AI-DLCスターターキット自体を開発していることを常に意識
 - セットアップ時の動作確認: 変更後は別ディレクトリでセットアップをテスト
 
 ---
 
+<!-- META-DEV: ここからメタ開発固有セクション -->
+
 ## メタ開発特有のOperations Phase手順【重要】
 
-このプロジェクトはメタ開発のため、Operations Phaseで以下の追加手順が必要です。
+このプロジェクトはメタ開発（AI-DLCスターターキット自体を開発していること）のため、Operations Phaseで以下の追加手順が必要です。
 
 ### defaults.toml同期確認
 
@@ -68,7 +69,7 @@ bin/check-defaults-sync.sh
 - **sync:mismatch（終了コード1）**: 正本の内容をコピーに反映してから再実行。コピー先のファイル冒頭の同期用コメント（`# 正本:` で始まる行）は保持すること
 - **error:not-found（終了コード2）**: 該当ファイルが不在。ファイルの存在を確認
 
-**タイミング**: Construction Phase で `skills/aidlc/config/defaults.toml` を変更した場合、Unit完了前に実行。CIでもPR時に自動チェック��れる。
+**タイミング**: Construction Phase で `skills/aidlc/config/defaults.toml` を変更した場合、Unit完了前に実行。CIでもPR時に自動チェックされる。
 
 ### 完了前のサイズチェック
 
@@ -86,4 +87,6 @@ bin/check-size.sh
   2. 冗長な記述を削減する
   3. 閾値を調整する（`.aidlc/config.toml`の`[rules.size_check]`セクション）
 - 対応後、再度チェックを実行して警告が解消されていることを確認
+
+<!-- /META-DEV -->
 
