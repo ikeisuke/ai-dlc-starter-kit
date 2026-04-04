@@ -12,7 +12,7 @@
 - `aidlc` スキルの内部パスへの参照が残っていないことの確認
 
 ## 完了条件
-- `skills/aidlc-setup/config/defaults.toml` が存在し、`skills/aidlc/config/defaults.toml` と `diff` で差分が0
+- `skills/aidlc-setup/config/defaults.toml` が存在し、`skills/aidlc/config/defaults.toml` とTOML設定値部分が一致すること（同期用コメントの差異は許容）
 - `skills/aidlc-setup/steps/` および `skills/aidlc-setup/scripts/` 内に `aidlc` スキルの内部パス参照がない
 - `/aidlc setup` アップグレードモードで欠落キーが正しく検出される（既知キー除去テスト）
 - 既存キーが誤検出されない（false positive なし）
@@ -56,9 +56,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
+- **状態**: 完了
+- **開始日**: 2026-04-04
+- **完了日**: 2026-04-04
 - **担当**: -
 - **エクスプレス適格性**: eligible
 - **適格性理由**: 受け入れ基準が具体的で検証可能、依存なし、既知技術、変更影響範囲が限定的
