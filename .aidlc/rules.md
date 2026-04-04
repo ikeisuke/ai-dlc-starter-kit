@@ -258,7 +258,9 @@ skill="reviewing-[stage]", args="[レビュー対象] 優先ツール: [codex|cl
 
 このリポジトリではCodex（GitHub連携）によるPR自動レビューが有効になっている。
 
-**Codexボットアカウント**: `chatgpt-codex-connector[bot]`（変更可能な定数。Codex GitHub AppのBot名が変更された場合はこの値を更新する）
+**Codexボットアカウント**: `.aidlc/config.toml` の `rules.reviewing.codex_bot_account` で設定（デフォルト: `chatgpt-codex-connector[bot]`）。Codex GitHub AppのBot名が変更された場合はconfig.tomlの値を更新する。
+
+**注**: 以下の手順・コマンド例ではデフォルト値 `chatgpt-codex-connector[bot]` を使用しているが、実行時はconfig.tomlから取得した `rules.reviewing.codex_bot_account` の値で置き換えること。
 
 **初回レビュー**: PRがOpen（またはDraftからReady化）された時点でCodexの自動レビューが自動的にトリガーされる。`@codex review` コメントの手動投稿は不要。
 

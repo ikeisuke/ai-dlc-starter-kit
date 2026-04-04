@@ -55,6 +55,10 @@ tools = ["codex"]
 # - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
 # - ここに追加のパターンを指定可能
 # exclude_patterns = ["*.p12", "config/secrets/**"]
+# codex_bot_account: Codex GitHub AppのBotアカウント名
+# - Codex PRレビュー状態判定で使用
+# - デフォルト: "chatgpt-codex-connector[bot]"
+codex_bot_account = "chatgpt-codex-connector[bot]"
 
 [rules.automation]
 # 自動化設定（v1.18.0で追加）
