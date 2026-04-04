@@ -123,6 +123,10 @@ level = "standard"
 
 [rules.cycle]
 # サイクルモード設定（v1.20.0で追加）
+# git_tracked: true | false - cycles/ディレクトリをGit管理するか（v2.1.6で追加）
+# - true: Git管理する（デフォルト）
+# - false: aidlc-setup時に.gitignoreへの追記を案内（自動変更なし）
+# git_tracked = true
 # mode: "default" | "named" | "ask"
 # - default: 従来形式（.aidlc/cycles/vX.X.X/）で動作（デフォルト）
 # - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作

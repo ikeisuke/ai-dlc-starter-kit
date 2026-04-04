@@ -43,6 +43,7 @@ ai_author = ""
 
 [rules.cycle]
 mode = "default"
+git_tracked = true
 
 [rules.version_check]
 enabled = true
