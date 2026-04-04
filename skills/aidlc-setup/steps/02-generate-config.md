@@ -376,7 +376,7 @@ skip:not-found:inception.dependabot
 
 `defaults.toml` をスキーマとして、`config.toml` に欠落しているキーを検出します。
 
-**defaults.toml パスの解決**: `aidlc` スキルのベースディレクトリ配下の `config/defaults.toml` を Read ツールで存在確認し、存在すればそのパスを使用する。`aidlc` スキルのベースディレクトリは `aidlc-setup` スキルの親ディレクトリ（`skills/aidlc-setup/` → `skills/aidlc/`）ではなく、`aidlc` スキルのインストール先を基準とする。プラグイン環境では `~/.claude/plugins/marketplaces/ai-dlc-starter-kit/skills/aidlc/config/defaults.toml`、メタ開発環境では `skills/aidlc/config/defaults.toml` となる。見つからない場合は「defaults.toml が見つかりません。欠落キー検出をスキップします。」と表示してこのステップをスキップする。
+**defaults.toml パスの解決**: `aidlc` スキルのベースディレクトリ配下の `config/defaults.toml` を Read ツールで存在確認し、存在すればそのパスを使用する。`aidlc` スキルのベースディレクトリは `aidlc-setup` スキルの親ディレクトリではなく、`aidlc` スキルのインストール先を基準とする。見つからない場合は「defaults.toml が見つかりません。欠落キー検出をスキップします。」と表示してこのステップをスキップする。
 
 **実行**:
 
