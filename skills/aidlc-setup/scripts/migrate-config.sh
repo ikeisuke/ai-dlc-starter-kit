@@ -329,13 +329,6 @@ _add_section "rules\\.construction" '[rules.construction]
 # max_retry: Self-Healingループの最大リトライ回数（0以上の整数、デフォルト: 3）
 max_retry = 3'
 
-_add_section "rules\\.preflight" '[rules.preflight]
-# プリフライトチェック設定（v2.0.0で追加）
-# enabled: true | false（デフォルト: true）
-# checks: 実行するオプションチェック項目のリスト
-enabled = true
-checks = ["gh", "review-tools", "config-validation"]'
-
 _add_section "rules\\.squash" '[rules.squash]
 # Squash統合設定（v2.0.0で追加）
 # enabled: true | false（デフォルト: false）
