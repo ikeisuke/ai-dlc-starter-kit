@@ -5,9 +5,11 @@ on:
     branches: [main]
     paths:
       - '**.md'
+      - '**.toml'
       - '.markdownlint.json'
       - '.github/workflows/pr-check.yml'
       - 'bin/check-bash-substitution.sh'
+      - 'bin/check-defaults-sync.sh'
 
 jobs:
   markdown-lint:
@@ -34,3 +36,13 @@ jobs:
 
       - name: Check bash code blocks for command substitution
         run: bash bin/check-bash-substitution.sh
+
+  defaults-sync-check:
+    name: Defaults TOML Sync Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check defaults.toml sync between aidlc and aidlc-setup
+        run: bash bin/check-defaults-sync.sh
