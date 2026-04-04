@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.6] - 2026-04-04
+
+### Changed
+
+- config.toml設定キーの整理: preflight設定（enabled/checks）を削除し常時実行化、`named_enabled`を廃止し`cycle.mode`に統合、`size_check`をdefaults.tomlから除外しメタ開発専用化、`upgrade_check.enabled`を`version_check.enabled`に更新（#520）
+- `rules.history.level`を`rules.depth_level.history_level`配下に統合し、未指定時は`depth_level`から自動導出（minimal→minimal、standard→standard、comprehensive→detailed）。旧キーはフォールバック互換あり（#522）
+
+### Added
+
+- `rules.linting`にenabled/commandキーを追加し、カスタムlintコマンドの指定に対応。旧キー`markdown_lint`からのフォールバック互換あり（#523）
+- `rules.cycle.git_tracked`設定を追加し、`.aidlc/cycles/`をgit管理外にするオプションを提供。false設定時はsetup時に`.gitignore`への追記を案内（#434）
+
+---
+
 ## [2.1.5] - 2026-04-03
 
 ### Fixed

@@ -28,7 +28,7 @@ scripts/env-info.sh
 |-------------|----------|---------|-------------|
 | git | blocker | `git:available` でない場合 | フェーズ中断 |
 
-**注**: `gh_status` は手順1で常時取得されコンテキスト変数に保持されるが、`gh` の warn 判定と結果表示は手順5のオプションチェック（`preflight_checks` に `gh` が含まれる場合）で行う。`preflight_checks` から `gh` が除外されている場合、`gh_status` は内部的に保持されるが結果表示には含めない。
+**注**: `gh_status` は手順1で常時取得されコンテキスト変数に保持される。`gh` の warn 判定と結果表示は手順5のオプションチェックで行う。
 
 ### 3. aidlc.toml確認
 
@@ -58,7 +58,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry rules.preflight.enabled rules.preflight.checks
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.enabled rules.unit_branch.enabled rules.construction.max_retry
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -77,16 +77,45 @@ rules.reviewing.mode:recommend
 | 設定キー | コンテキスト変数名 | デフォルト値 |
 |---------|-------------------|------------|
 | rules.depth_level.level | `depth_level` | standard |
+| rules.depth_level.history_level | （後続の解決ロジックで処理） | ""（空文字=自動導出） |
 | rules.automation.mode | `automation_mode` | manual |
 | rules.reviewing.mode | `review_mode` | recommend |
 | rules.reviewing.tools | `review_tools` | ['codex'] |
 | rules.squash.enabled | `squash_enabled` | false |
-| rules.linting.markdown_lint | `markdown_lint` | false |
+| rules.linting.enabled | （後続の解決ロジックで処理） | false |
 | rules.unit_branch.enabled | `unit_branch_enabled` | false |
-| rules.history.level | `history_level` | standard |
 | rules.construction.max_retry | `max_retry` | 3 |
-| rules.preflight.enabled | `preflight_enabled` | true |
-| rules.preflight.checks | `preflight_checks` | ['gh', 'review-tools', 'config-validation'] |
+
+**history_level 解決ロジック**（派生コンテキスト変数）:
+
+上記バッチ取得後、`rules.depth_level.history_level`の値を確認し、以下のフローで`history_level`コンテキスト変数を解決する:
+
+1. 取得値が空文字でない → `history_level`に設定（明示オーバーライド）
+2. 取得値が空文字 → 旧キーフォールバック:
+   ```bash
+   scripts/read-config.sh rules.history.level
+   ```
+   - exit 0かつ非空 → `history_level`に設定（旧config.tomlに明示記載あり）
+   - exit 1（キー不在）→ `depth_level`から自動導出:
+
+     | depth_level | history_level |
+     |-------------|--------------|
+     | minimal | minimal |
+     | standard | standard |
+     | comprehensive | detailed |
+
+**markdown_lint 解決ロジック**（派生コンテキスト変数）:
+
+上記バッチ取得後、`rules.linting.enabled`の値を確認し、以下のフローで`markdown_lint`コンテキスト変数を解決する:
+
+1. `rules.linting.enabled`の取得値を確認
+2. 値が `true` または `false` → `markdown_lint`に設定
+3. 値が空または取得失敗 → 旧キーフォールバック:
+   ```bash
+   scripts/read-config.sh rules.linting.markdown_lint
+   ```
+   - exit 0かつ非空 → `markdown_lint`に設定（旧config.tomlに明示記載あり）
+   - exit 1（キー不在）→ デフォルト値 `false`
 
 **エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
 
@@ -94,37 +123,15 @@ rules.reviewing.mode:recommend
 【警告】{設定キー} の読み取りに失敗しました。デフォルト値 "{デフォルト値}" を使用します。
 ```
 
-### 5. オプションチェック実行（設定駆動）
+### 5. オプションチェック実行
 
-**前提判定**: `preflight_enabled` の値を確認する。
+以下の全項目を常時実行する。
 
-- **`preflight_enabled` が `false` の場合**: 以下の警告を表示し、オプションチェック（手順5全体）をスキップする。blockerチェック（手順1-3）は既に実行済み。
-  ```text
-  ⚠ プリフライトチェック: enabled=false のため、オプションチェックをスキップします（blockerチェックは実行済み）
-  ```
+#### gh チェック
 
-- **`preflight_enabled` が `true` の場合**: `preflight_checks` リストに基づいてオプションチェックを実行する。
+手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn）。
 
-**チェック項目の実行**:
-
-`preflight_checks` リストを参照し、含まれる項目のみを実行する。
-
-| チェック項目 | 実行内容 |
-|-------------|---------|
-| `gh` | 手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn） |
-| `review-tools` | レビューツール確認（後述） |
-| `config-validation` | 設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。`config/defaults.toml` の存在チェックも実施し、不在の場合は警告を表示する（severity: warn）。**注**: 「主要設定値」セクションおよび手順4の設定読み取りエラー警告は `config-validation` の有無に関わらず常時表示される（設定値の取得・エラーハンドリングは手順4で常時実行されるため）。`config-validation` が制御するのは結果提示内のバリデーション行のみ |
-
-**未知のチェック項目**: `preflight_checks` に上記有効値以外の項目が含まれる場合、以下の警告を表示してその項目を無視する:
-```text
-⚠ 未知のプリフライトチェック項目: "{項目名}" （無視します）
-```
-
-**空配列**: `preflight_checks` が空配列 `[]` の場合、全オプションチェックをスキップする（blockerチェックのみ実行される）。
-
-#### レビューツール確認（`review-tools` チェック項目）
-
-`preflight_checks` に `review-tools` が含まれる場合のみ実行する。
+#### レビューツール確認
 
 以下の**両方**を満たす場合のみ実行:
 - `review_mode` が `disabled` でない
@@ -149,6 +156,10 @@ which {先頭ツール名} >/dev/null 2>&1
 
 **severity**: info（フェーズ続行に影響しない）
 
+#### 設定バリデーション
+
+設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。`config/defaults.toml` の存在チェックも実施し、不在の場合は警告を表示する（severity: warn）。
+
 ### 6. 結果提示
 
 全チェックと設定値取得が完了したら、以下のフォーマットで結果を提示する:
@@ -160,14 +171,10 @@ which {先頭ツール名} >/dev/null 2>&1
   ✓ git: available
   ✓ aidlc.toml: 存在
 
-■ オプションチェック（preflight_checks に基づく）
-  {preflight_enabled=false の場合: ⚠ enabled=false のためスキップ}
-  {checks に "gh" 含む場合: {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）}
-  {checks に "gh" 含まない場合: - gh: skipped}
-  {checks に "review-tools" 含む場合: ℹ レビューツール ({tool名}): {available | not found}}
-  {checks に "review-tools" 含まない場合: - レビューツール: skipped}
-  {checks に "config-validation" 含む場合: {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}}
-  {checks に "config-validation" 含まない場合: - config-validation: skipped（結果提示内のバリデーション行は非表示）}
+■ オプションチェック（常時実行）
+  {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
+  ℹ レビューツール ({tool名}): {available | not found}
+  {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}
 
 ■ 主要設定値（常時表示）
   depth_level: {value}
@@ -179,8 +186,6 @@ which {先頭ツール名} >/dev/null 2>&1
   unit_branch_enabled: {value}
   history_level: {value}
   max_retry: {value}
-  preflight_enabled: {value}
-  preflight_checks: {value}
 
 ■ 判定: {続行可能 | 続行可能（警告N件）}
 ```
@@ -212,7 +217,7 @@ blocker項目が失敗した場合、ユーザーに対処を依頼する:
 
 1. 環境チェック（手順1-2）— blockerチェック含む、常時実行
 2. aidlc.toml確認（手順3）— blockerチェック、常時実行
-3. 設定値取得（手順4）— `preflight_enabled` と `preflight_checks` を含む
-4. オプションチェック実行（手順5）— `preflight_enabled` と `preflight_checks` に基づく設定駆動
+3. 設定値取得（手順4）
+4. オプションチェック実行（手順5）— 常時実行
 5. 結果提示（手順6）
 6. 必要に応じて再チェック（手順7）

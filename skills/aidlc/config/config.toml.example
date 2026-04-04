@@ -82,13 +82,10 @@ mode = "branch"
 # - false: 提案しない（デフォルト）
 enabled = false
 
-[rules.history]
-# 履歴記録設定（v1.5.1で追加）
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"
+# [rules.history]
+# DEPRECATED: v2.1.6でrules.depth_level.history_levelに統合されました。
+# 旧キー rules.history.level がconfig.tomlに残っている場合、フォールバックとして読み取られます。
+# level = "standard"
 
 [rules.release]
 # リリース設定（v1.6.0で追加）
@@ -103,14 +100,21 @@ version_tag = false
 enabled = false
 
 [rules.linting]
-# markdownlint設定（v1.8.0で追加）
-# markdown_lint: true | false
-# - true: markdownlint を実行する
-# - false: markdownlint をスキップする（デフォルト）
-markdown_lint = true
+# Markdown lint設定（v2.1.6でenabled/commandに統合）
+# enabled: true | false - lintを実行するか（デフォルト: false）
+# command: lintに使用するコマンド（デフォルト: "npx markdownlint-cli2"）
+#   シングルコマンド名のみ。引数は固定で対象パスが付与される
+# 旧キー markdown_lint=true は enabled=true として読み取られます（フォールバック）
+enabled = true
+# command = "npx markdownlint-cli2"
 
 [rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）
+# history_level: 履歴記録レベル（v2.1.6で追加、rules.history.levelから統合）
+# - "": 空文字=depth_levelから自動導出（デフォルト）
+#   自動導出マッピング: minimal→minimal、standard→standard、comprehensive→detailed
+# - "detailed" | "standard" | "minimal": 明示オーバーライド
+# history_level = ""
 # level: "minimal" | "standard" | "comprehensive"
 # - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
 # - standard: 通常の機能開発向け（デフォルト）
@@ -119,14 +123,14 @@ level = "standard"
 
 [rules.cycle]
 # サイクルモード設定（v1.20.0で追加）
-# named_enabled: true | false（v2.1.3で追加）
-# - true: 名前付きサイクル機能を有効化（mode=named/askが利用可能になる）
-# - false: 名前付きサイクル機能を無効化（mode設定に関わらずdefault動作）（デフォルト）
-# named_enabled = false
+# git_tracked: true | false - cycles/ディレクトリをGit管理するか（v2.1.6で追加）
+# - true: Git管理する（デフォルト）
+# - false: aidlc-setup時に.gitignoreへの追記を案内（自動変更なし）
+# git_tracked = true
 # mode: "default" | "named" | "ask"
 # - default: 従来形式（.aidlc/cycles/vX.X.X/）で動作（デフォルト）
-# - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作（named_enabled=trueが必要）
-# - ask: Inception Phase開始時に名前付き/名前なしを選択（named_enabled=trueが必要）
+# - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作
+# - ask: Inception Phase開始時に名前付き/名前なしを選択
 # mode = "default"
 
 [rules.squash]
@@ -136,32 +140,11 @@ level = "standard"
 # - false: squashステップをスキップ（従来の動作）
 enabled = true
 
-[rules.size_check]
-# サイズチェック設定（v1.9.0で追加）
-# enabled: true | false - サイズチェックを有効にするか（デフォルト: true）
-# max_bytes: Integer - バイト数閾値（デフォルト: 150000）
-# max_lines: Integer - 行数閾値（デフォルト: 1000）
-# max_tokens: Integer - トークン数閾値（デフォルト: 40000）
-#   tiktoken利用可能時は正確な計測、未インストール時は近似計算
-# target_pattern: String - 対象ファイルパターン（デフォルト: "*.md"）
-enabled = true
-max_bytes = 150000
-max_lines = 1000
-max_tokens = 40000
-target_pattern = "*.md"
-
 [rules.feedback]
 # フィードバック送信機能設定（v1.13.3で追加）
 # enabled: true | false
 # - true: フィードバック送信機能を有効化（デフォルト）
 # - false: フィードバック送信機能を無効化（企業利用時のセキュリティ対策）
-enabled = true
-
-[rules.upgrade_check]
-# アップグレードチェック設定（v1.22.1で追加）
-# enabled: true | false - Inception Phase開始時のバージョン確認を実行するか（デフォルト: true）
-# - true: curlでスターターキットの最新バージョンを確認（従来の動作）
-# - false: バージョン確認をスキップ（オフライン環境やCI利用時に有用）
 enabled = true
 
 [rules.construction]
@@ -170,18 +153,6 @@ enabled = true
 # - 0: Self-Healingループをスキップし、即座にユーザー判断フォールバックに遷移
 # - 負の値・非数値: 警告を表示しデフォルト値3にフォールバック
 max_retry = 3
-
-[rules.preflight]
-# プリフライトチェック設定（v1.26.0で追加）
-# enabled: true | false - プリフライトチェックのオプション項目を実行するか（デフォルト: true）
-# - true: checks リストに基づいてオプションチェックを実行（デフォルト）
-# - false: オプションチェックをスキップ（blockerチェックは常時実行）
-enabled = true
-# checks: 実行するオプションチェック項目のリスト
-# - 有効値: "gh", "review-tools", "config-validation"
-# - 未設定時: 全項目チェック（後方互換性）
-# - 空配列: blockerチェックのみ実行
-checks = ["gh", "review-tools", "config-validation"]
 
 # [rules.backlog]
 # DEPRECATED: バックログモード設定は廃止されました。

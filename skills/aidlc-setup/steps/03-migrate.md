@@ -1,3 +1,32 @@
+## 8b. cycles git管理外オプション案内
+
+**実行条件**: Gitリポジトリ内である場合のみ実行する（`git rev-parse --is-inside-work-tree 2>/dev/null` が `true`）。
+
+```bash
+scripts/read-config.sh rules.cycle.git_tracked
+```
+
+`git_tracked` が `false` の場合、`.gitignore` に `.aidlc/cycles/` が既に記載されているか確認:
+
+```bash
+grep -q '.aidlc/cycles/' .gitignore 2>/dev/null
+```
+
+- **既に記載済み**: 案内をスキップ
+- **未記載**: 以下の案内メッセージを表示（自動変更は行わない）:
+
+```text
+ℹ rules.cycle.git_tracked = false が設定されています。
+.aidlc/cycles/ ディレクトリをGit管理外にするには、.gitignore に以下を追加してください:
+
+  .aidlc/cycles/
+
+※ 既に追跡済みのファイルは自動的にはuntrackされません。
+  必要に応じて git rm --cached -r .aidlc/cycles/ を実行してください。
+```
+
+`git_tracked` が `true`（デフォルト）または読み取り失敗: 案内をスキップ。
+
 ## 9. Git コミット
 
 セットアップで作成・更新したすべてのファイルをコミット:

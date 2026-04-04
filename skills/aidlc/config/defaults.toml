@@ -16,9 +16,6 @@ exclude_patterns = []
 [rules.worktree]
 enabled = false
 
-[rules.history]
-level = "standard"
-
 [rules.release]
 changelog = false
 version_tag = false
@@ -28,6 +25,7 @@ enabled = false
 
 [rules.depth_level]
 level = "standard"
+history_level = ""
 
 [rules.automation]
 mode = "manual"
@@ -35,19 +33,9 @@ mode = "manual"
 [rules.construction]
 max_retry = 3
 
-[rules.preflight]
-enabled = true
-checks = ["gh", "review-tools", "config-validation"]
-
 [rules.linting]
-markdown_lint = false
-
-[rules.size_check]
-enabled = true
-max_bytes = 150000
-max_lines = 1000
-max_tokens = 40000
-target_pattern = "*.md"
+enabled = false
+command = "npx markdownlint-cli2"
 
 [rules.commit]
 ai_author_auto_detect = true
@@ -55,7 +43,7 @@ ai_author = ""
 
 [rules.cycle]
 mode = "default"
-named_enabled = false
+git_tracked = true
 
 [rules.version_check]
 enabled = true
