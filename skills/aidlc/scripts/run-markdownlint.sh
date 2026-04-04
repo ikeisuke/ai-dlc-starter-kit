@@ -9,21 +9,36 @@ source "${SCRIPT_DIR}/lib/bootstrap.sh"
 
 CYCLE="${1:?Usage: run-markdownlint.sh <cycle>}"
 
-# 設定確認（デフォルト: false = スキップ）
-# dasel利用可能時はdaselで読み取り、なければgrepで直接読み取る
-if command -v dasel >/dev/null 2>&1; then
-    MARKDOWN_LINT=$(cat "${AIDLC_CONFIG}" 2>/dev/null | dasel -i toml 'rules.linting.markdown_lint' 2>/dev/null | tr -d "'" || echo "false")
+# 設定取得: rules.linting.enabled（新キー優先、旧キーmarkdown_lintフォールバック）
+LINT_ENABLED=""
+LINT_COMMAND=""
+
+# read-config.shで取得を試みる（dasel必須。未インストール時はフォールバック）
+if LINT_ENABLED=$("${SCRIPT_DIR}/read-config.sh" rules.linting.enabled 2>/dev/null); then
+    : # 新キーで取得成功
+elif LINT_ENABLED=$("${SCRIPT_DIR}/read-config.sh" rules.linting.markdown_lint 2>/dev/null); then
+    : # 旧キーフォールバック
 else
-    # dasel未インストール時: awkでセクション内のキー=値行のみ抽出
-    MARKDOWN_LINT=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*markdown_lint[ \t]*=/{gsub(/.*=[ \t]*/, ""); gsub(/[ \t"'"'"']/, ""); print; exit}' "${AIDLC_CONFIG}" 2>/dev/null || echo "false")
+    # read-config.sh失敗（dasel未インストール等）: config.tomlを直接読み取り
+    if [ -f "${AIDLC_CONFIG}" ]; then
+        LINT_ENABLED=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*enabled[ \t]*=/{gsub(/.*=[ \t]*/, ""); gsub(/[ \t"'"'"']/, ""); print; exit}' "${AIDLC_CONFIG}" 2>/dev/null || echo "")
+        if [ -z "$LINT_ENABLED" ]; then
+            # 旧キーフォールバック
+            LINT_ENABLED=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*markdown_lint[ \t]*=/{gsub(/.*=[ \t]*/, ""); gsub(/[ \t"'"'"']/, ""); print; exit}' "${AIDLC_CONFIG}" 2>/dev/null || echo "")
+        fi
+    fi
 fi
 
-# 空の場合はデフォルト値を設定
-[ -z "$MARKDOWN_LINT" ] && MARKDOWN_LINT="false"
+[ -z "$LINT_ENABLED" ] && LINT_ENABLED="false"
 
-if [ "$MARKDOWN_LINT" = "true" ]; then
+if [ "$LINT_ENABLED" = "true" ]; then
+    # コマンド取得
+    LINT_COMMAND=$("${SCRIPT_DIR}/read-config.sh" rules.linting.command 2>/dev/null) || true
+    [ -z "$LINT_COMMAND" ] && LINT_COMMAND="npx markdownlint-cli2"
+
     echo "markdownlintを実行中..." >&2
-    if npx markdownlint-cli2 "${AIDLC_CYCLES}/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"; then
+    # セキュリティ: evalを使用しない。コマンドはそのまま実行
+    if $LINT_COMMAND "${AIDLC_CYCLES}/${CYCLE}/**/*.md" "prompts/**/*.md" "*.md"; then
         echo "markdownlint:success"
     else
         echo "markdownlint:error"

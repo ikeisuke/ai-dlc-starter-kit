@@ -58,7 +58,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.construction.max_retry
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.enabled rules.unit_branch.enabled rules.construction.max_retry
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -82,7 +82,7 @@ rules.reviewing.mode:recommend
 | rules.reviewing.mode | `review_mode` | recommend |
 | rules.reviewing.tools | `review_tools` | ['codex'] |
 | rules.squash.enabled | `squash_enabled` | false |
-| rules.linting.markdown_lint | `markdown_lint` | false |
+| rules.linting.enabled | （後続の解決ロジックで処理） | false |
 | rules.unit_branch.enabled | `unit_branch_enabled` | false |
 | rules.construction.max_retry | `max_retry` | 3 |
 
@@ -103,6 +103,19 @@ rules.reviewing.mode:recommend
      | minimal | minimal |
      | standard | standard |
      | comprehensive | detailed |
+
+**markdown_lint 解決ロジック**（派生コンテキスト変数）:
+
+上記バッチ取得後、`rules.linting.enabled`の値を確認し、以下のフローで`markdown_lint`コンテキスト変数を解決する:
+
+1. `rules.linting.enabled`の取得値を確認
+2. 値が `true` または `false` → `markdown_lint`に設定
+3. 値が空または取得失敗 → 旧キーフォールバック:
+   ```bash
+   scripts/read-config.sh rules.linting.markdown_lint
+   ```
+   - exit 0かつ非空 → `markdown_lint`に設定（旧config.tomlに明示記載あり）
+   - exit 1（キー不在）→ デフォルト値 `false`
 
 **エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
 

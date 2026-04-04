@@ -100,11 +100,13 @@ version_tag = false
 enabled = false
 
 [rules.linting]
-# markdownlint設定（v1.8.0で追加）
-# markdown_lint: true | false
-# - true: markdownlint を実行する
-# - false: markdownlint をスキップする（デフォルト）
-markdown_lint = true
+# Markdown lint設定（v2.1.6でenabled/commandに統合）
+# enabled: true | false - lintを実行するか（デフォルト: false）
+# command: lintに使用するコマンド（デフォルト: "npx markdownlint-cli2"）
+#   シングルコマンド名のみ。引数は固定で対象パスが付与される
+# 旧キー markdown_lint=true は enabled=true として読み取られます（フォールバック）
+enabled = true
+# command = "npx markdownlint-cli2"
 
 [rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）

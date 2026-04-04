@@ -34,7 +34,8 @@ mode = "manual"
 max_retry = 3
 
 [rules.linting]
-markdown_lint = false
+enabled = false
+command = "npx markdownlint-cli2"
 
 [rules.commit]
 ai_author_auto_detect = true
