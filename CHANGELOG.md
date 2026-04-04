@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.7] - 2026-04-04
+
+### Changed
+
+- `aidlc-setup`スキルの`defaults.toml`参照を自スキル内コピーに変更し、スキル間依存ルールに準拠（#526）
+
+### Added
+
+- `defaults.toml`同期チェックをCI（GitHub Actions `pr-check.yml`）に追加
+- `operations.md`に`defaults.toml`同期確認手順を追加
+
+---
+
 ## [2.1.6] - 2026-04-04
 
 ### Changed
