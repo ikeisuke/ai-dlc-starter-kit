@@ -58,7 +58,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.enabled rules.unit_branch.enabled rules.construction.max_retry
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.git.squash_enabled rules.linting.enabled rules.git.unit_branch_enabled rules.construction.max_retry
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -81,9 +81,9 @@ rules.reviewing.mode:recommend
 | rules.automation.mode | `automation_mode` | manual |
 | rules.reviewing.mode | `review_mode` | recommend |
 | rules.reviewing.tools | `review_tools` | ['codex'] |
-| rules.squash.enabled | `squash_enabled` | false |
+| rules.git.squash_enabled | `squash_enabled` | false |
 | rules.linting.enabled | （後続の解決ロジックで処理） | false |
-| rules.unit_branch.enabled | `unit_branch_enabled` | false |
+| rules.git.unit_branch_enabled | `unit_branch_enabled` | false |
 | rules.construction.max_retry | `max_retry` | 3 |
 
 **history_level 解決ロジック**（派生コンテキスト変数）:

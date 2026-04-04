@@ -38,6 +38,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 source "${SCRIPT_DIR}/lib/bootstrap.sh"
 source "${SCRIPT_DIR}/lib/validate.sh"
+source "${SCRIPT_DIR}/lib/key-aliases.sh"
 
 # 設定ファイルパス（優先度順: 低→高）
 DEFAULTS_CONFIG_FILE="${AIDLC_DEFAULTS}"
@@ -260,12 +261,144 @@ resolve_key() {
 }
 
 # ============================================================
+# get_value_with_alias: 1ファイル内でcanonical key → legacy keyの順で値を取得
+# 引数: file, canonical_key, legacy_key
+# 標準出力: 値（存在する場合）
+# 戻り値: 0=存在, 1=不在, 2=エラー
+# ============================================================
+get_value_with_alias() {
+    local file="$1"
+    local canonical_key="$2"
+    local legacy_key="$3"
+
+    # canonical keyを先に試行
+    local val
+    set +e
+    val=$(get_value "$file" "$canonical_key")
+    local ec=$?
+    set -e
+    if [[ $ec -eq 0 ]]; then
+        printf '%s' "$val"
+        return 0
+    elif [[ $ec -eq 2 ]]; then
+        return 2
+    fi
+
+    # legacy keyでフォールバック
+    if [[ -n "$legacy_key" ]]; then
+        set +e
+        val=$(get_value "$file" "$legacy_key")
+        ec=$?
+        set -e
+        if [[ $ec -eq 0 ]]; then
+            printf '%s' "$val"
+            return 0
+        elif [[ $ec -eq 2 ]]; then
+            return 2
+        fi
+    fi
+
+    return 1
+}
+
+# ============================================================
+# resolve_with_aliases: エイリアス解決付きのキー解決オーケストレータ
+# 各レイヤーでcanonical/legacy両方を評価し、レイヤー優先順位を維持する
+# 引数: key（文字列）
+# 標準出力: 解決された値（strip_quotes適用済み）
+# 戻り値: 0=存在, 1=不在, 2=エラー
+# ============================================================
+resolve_with_aliases() {
+    local key="$1"
+    local final_value=""
+    local value_exists=false
+
+    # 入力キーをcanonical keyに正規化
+    local canonical_key
+    canonical_key=$(aidlc_normalize_key "$key")
+    local legacy_key
+    legacy_key=$(aidlc_get_legacy_key "$canonical_key")
+
+    # 0. デフォルト値から取得（オプション、優先度: 最低）
+    if [[ -f "$DEFAULTS_CONFIG_FILE" ]]; then
+        local defaults_value
+        set +e
+        defaults_value=$(get_value_with_alias "$DEFAULTS_CONFIG_FILE" "$canonical_key" "$legacy_key")
+        local defaults_exit_code=$?
+        set -e
+        case $defaults_exit_code in
+            0) final_value="$defaults_value"; value_exists=true ;;
+            1) ;; # キー不在
+            *) echo "Warning: Failed to read defaults config file, skipping" >&2 ;;
+        esac
+    fi
+
+    # 1. HOME設定から値を取得（オプション、優先度: 低）
+    if [[ -n "$HOME_CONFIG_FILE" && -f "$HOME_CONFIG_FILE" ]]; then
+        local home_value
+        set +e
+        home_value=$(get_value_with_alias "$HOME_CONFIG_FILE" "$canonical_key" "$legacy_key")
+        local home_exit_code=$?
+        set -e
+        case $home_exit_code in
+            0) final_value="$home_value"; value_exists=true ;;
+            1) ;; # キー不在
+            *) echo "Warning: Failed to read home config file, skipping" >&2 ;;
+        esac
+    fi
+
+    # 2. プロジェクト設定から値を取得（必須、優先度: 中）
+    local project_value
+    set +e
+    project_value=$(get_value_with_alias "$PROJECT_CONFIG_FILE" "$canonical_key" "$legacy_key")
+    local project_exit_code=$?
+    set -e
+    case $project_exit_code in
+        0) final_value="$project_value"; value_exists=true ;;
+        1) ;; # キー不在
+        *)
+            emit_error "project-config-read-failed" "Failed to read project config file"
+            return 2
+            ;;
+    esac
+
+    # 3. LOCAL設定から値を取得（オプション、優先度: 高）
+    local local_file=""
+    if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
+        local_file="$LOCAL_CONFIG_FILE"
+    elif [[ -f "$LOCAL_CONFIG_FILE_LEGACY" ]]; then
+        local_file="$LOCAL_CONFIG_FILE_LEGACY"
+        echo "Warning: ${LOCAL_CONFIG_FILE_LEGACY} is deprecated. Please rename to ${LOCAL_CONFIG_FILE}" >&2
+    fi
+    if [[ -n "$local_file" ]]; then
+        local local_value
+        set +e
+        local_value=$(get_value_with_alias "$local_file" "$canonical_key" "$legacy_key")
+        local local_exit_code=$?
+        set -e
+        case $local_exit_code in
+            0) final_value="$local_value"; value_exists=true ;;
+            1) ;; # キー不在
+            *) echo "Warning: Failed to read local config file, using previous value" >&2 ;;
+        esac
+    fi
+
+    # 値の出力
+    if [[ "$value_exists" == "true" ]]; then
+        strip_quotes "$final_value"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# ============================================================
 # メイン処理
 # ============================================================
 if [[ "$MODE" == "single" ]]; then
     # 単一キーモード（従来互換）
     set +e
-    resolved_value=$(resolve_key "$KEY")
+    resolved_value=$(resolve_with_aliases "$KEY")
     resolve_exit_code=$?
     set -e
 
@@ -289,7 +422,7 @@ else
 
     for key in "${KEYS[@]}"; do
         set +e
-        resolved_value=$(resolve_key "$key")
+        resolved_value=$(resolve_with_aliases "$key")
         resolve_exit_code=$?
         set -e
 

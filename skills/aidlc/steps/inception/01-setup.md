@@ -230,12 +230,12 @@ scripts/suggest-version.sh
 
 ### 10. ブランチ確認【推奨】
 
-**10-1. ブランチ作成方式**: `scripts/read-config.sh rules.branch.mode`
+**10-1. ブランチ作成方式**: `scripts/read-config.sh rules.git.branch_mode`
 
 | mode | 動作 |
 |------|------|
 | `branch` | 自動でブランチ作成 |
-| `worktree` | worktree作成（`rules.worktree.enabled=true` 必須、false時→branch） |
+| `worktree` | worktree作成 |
 | `ask`（デフォルト） | ユーザーに選択（worktree/branch/現在のブランチで続行） |
 
 無効値 → `ask` にフォールバック。

@@ -26,3 +26,29 @@
 - **得たもの**: rules.mdの設定的項目のconfig.toml移行、operations.mdの共通/メタ開発固有の分離によるメンテナンス性向上
 - **犠牲にしたもの**: サイクルの作業量が増加
 - **判断根拠**: ファイル配置は完了しているが内容の整理は未着手であり、#521のGit設定統合と合わせて設定体系全体を整理する良い機会と判断
+
+## DR-002: worktree_enabledの廃止
+
+- **ステップ**: Construction Phase Unit 001 コード生成
+- **日時**: 2026-04-04
+
+### 背景
+
+Git関連設定キーの `[rules.git]` 統合において、`rules.worktree.enabled` を `rules.git.worktree_enabled` にエイリアス統合する計画だったが、`branch_mode=worktree` が指定されれば worktree を使うことが自明であり、`worktree_enabled` は冗長であるとの指摘があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | エイリアスとして統合（計画通り） | 後方互換性が完全 | 冗長なキーが残る |
+| 2 | worktree_enabledを廃止し、branch_mode=worktreeで代替 | 設定がシンプルに | 旧キーが即座に無効化 |
+
+### 決定
+
+**選択肢2: worktree_enabledを廃止** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: 設定体系のシンプル化。`branch_mode` で機能が自明になる
+- **犠牲にしたもの**: `rules.worktree.enabled=true` を設定していた既存プロジェクトでの互換性（ただし `branch_mode=worktree` への移行で同等機能を利用可能）
+- **判断根拠**: ユーザーの判断により除去方向で決定。参照箇所が限定的（inception/01-setup.md のみ）で影響範囲が小さい

@@ -50,7 +50,7 @@ AIツールを自動検出し、`Co-Authored-By` trailerを付与する。
 | Codex CLI | `Codex <noreply@openai.com>` |
 | KiroCLI | `Kiro <noreply@aws.com>` |
 
-`rules.commit.ai_author` が設定済みならその値を使用。未設定なら自己認識→環境変数→ユーザー確認の順で検出。
+`rules.git.ai_author` が設定済みならその値を使用。未設定なら自己認識→環境変数→ユーザー確認の順で検出。
 
 ## 操作順序ルール【重要】
 
@@ -71,7 +71,7 @@ AIツールを自動検出し、`Co-Authored-By` trailerを付与する。
 
 ## Squash統合フロー
 
-`rules.squash.enabled=true` の場合、フェーズ完了時に中間コミットを1つにまとめる。
+`rules.git.squash_enabled=true` の場合、フェーズ完了時に中間コミットを1つにまとめる。
 
 **`/squash-unit` スキルを使用する**。スキルが利用できない場合は `squash-unit.sh` を直接実行する。
 

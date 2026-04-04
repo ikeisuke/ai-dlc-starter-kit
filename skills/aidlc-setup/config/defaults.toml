@@ -6,9 +6,6 @@
 # このファイルは正本の配布用コピーです。
 # 正本が更新された場合はこのファイルも同期してください。
 
-[rules.squash]
-enabled = false
-
 [rules.feedback]
 enabled = true
 
@@ -17,15 +14,9 @@ mode = "recommend"
 tools = ["codex"]
 exclude_patterns = []
 
-[rules.worktree]
-enabled = false
-
 [rules.release]
 changelog = false
 version_tag = false
-
-[rules.unit_branch]
-enabled = false
 
 [rules.depth_level]
 level = "standard"
@@ -41,10 +32,6 @@ max_retry = 3
 enabled = false
 command = "npx markdownlint-cli2"
 
-[rules.commit]
-ai_author_auto_detect = true
-ai_author = ""
-
 [rules.cycle]
 mode = "default"
 git_tracked = true
@@ -52,12 +39,14 @@ git_tracked = true
 [rules.version_check]
 enabled = true
 
-[rules.branch]
-mode = "ask"
-
 [rules.git]
 commit_on_unit_complete = true
 commit_on_phase_complete = true
+branch_mode = "ask"
+unit_branch_enabled = false
+squash_enabled = false
+ai_author = ""
+ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
