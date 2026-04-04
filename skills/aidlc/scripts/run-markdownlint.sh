@@ -13,19 +13,28 @@ CYCLE="${1:?Usage: run-markdownlint.sh <cycle>}"
 LINT_ENABLED=""
 LINT_COMMAND=""
 
-# 設定取得: 新キー rules.linting.enabled を優先、config.tomlに未定義なら旧キーフォールバック
+# 設定取得: 新キー rules.linting.enabled を優先、ユーザー設定に未定義なら旧キーフォールバック
 # defaults.tomlに enabled=false が定義されているため、read-config.shは常に成功する。
-# そのため、config.tomlに新キーが明示定義されているかを先に確認し、
-# 未定義の��合のみ旧キー markdown_lint をフォールバックとして読み取る。
+# そのため、config.tomlまたはconfig.local.tomlに新キーが明示定義されているかを確認し、
+# どちらにも未定義の場合のみ旧キー markdown_lint をフォールバックとして読み取る。
 if "${SCRIPT_DIR}/read-config.sh" rules.linting.enabled 2>/dev/null | grep -qE '^(true|false)$'; then
-    # config.toml（またはdefaults.toml）に新キーが存在
-    # 旧キーが config.toml に明示定義されているかチェック
+    # read-config.sh成功: 新キーが config.toml または config.local.toml に明示定義されているか確認
     OLD_KEY_VAL=$("${SCRIPT_DIR}/read-config.sh" rules.linting.markdown_lint 2>/dev/null) || true
-    NEW_KEY_IN_CONFIG=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*enabled[ \t]*=/{print "yes"; exit}' "${AIDLC_CONFIG}" 2>/dev/null || echo "")
-    if [ -z "$NEW_KEY_IN_CONFIG" ] && [ -n "$OLD_KEY_VAL" ]; then
-        # config.tomlに新キー未定義だが旧キーあり → 旧キー優先
+    NEW_KEY_IN_USER_CONFIG=""
+    # config.toml をチェック
+    NEW_KEY_IN_USER_CONFIG=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*enabled[ \t]*=/{print "yes"; exit}' "${AIDLC_CONFIG}" 2>/dev/null || echo "")
+    # config.local.toml もチェック（新キーの明示オーバーライド）
+    if [ -z "$NEW_KEY_IN_USER_CONFIG" ]; then
+        AIDLC_LOCAL="${AIDLC_CONFIG%.toml}.local.toml"
+        if [ -f "$AIDLC_LOCAL" ]; then
+            NEW_KEY_IN_USER_CONFIG=$(awk '/^\[rules\.linting\]/{found=1; next} /^\[/{found=0} found && /^[ \t]*enabled[ \t]*=/{print "yes"; exit}' "$AIDLC_LOCAL" 2>/dev/null || echo "")
+        fi
+    fi
+    if [ -z "$NEW_KEY_IN_USER_CONFIG" ] && [ -n "$OLD_KEY_VAL" ]; then
+        # ユーザー設定に新キー未定義だが旧キーあり → 旧キー優先
         LINT_ENABLED="$OLD_KEY_VAL"
     else
+        # 新キーがユーザー設定に存在（またはdefaults.tomlのみ） → マージ結果を使用
         LINT_ENABLED=$("${SCRIPT_DIR}/read-config.sh" rules.linting.enabled 2>/dev/null) || true
     fi
 else
