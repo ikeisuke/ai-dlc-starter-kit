@@ -16,9 +16,6 @@ exclude_patterns = []
 [rules.worktree]
 enabled = false
 
-[rules.history]
-level = "standard"
-
 [rules.release]
 changelog = false
 version_tag = false
@@ -28,6 +25,7 @@ enabled = false
 
 [rules.depth_level]
 level = "standard"
+history_level = ""
 
 [rules.automation]
 mode = "manual"

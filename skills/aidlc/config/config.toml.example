@@ -82,13 +82,10 @@ mode = "branch"
 # - false: 提案しない（デフォルト）
 enabled = false
 
-[rules.history]
-# 履歴記録設定（v1.5.1で追加）
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"
+# [rules.history]
+# DEPRECATED: v2.1.6でrules.depth_level.history_levelに統合されました。
+# 旧キー rules.history.level がconfig.tomlに残っている場合、フォールバックとして読み取られます。
+# level = "standard"
 
 [rules.release]
 # リリース設定（v1.6.0で追加）
@@ -111,6 +108,11 @@ markdown_lint = true
 
 [rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）
+# history_level: 履歴記録レベル（v2.1.6で追加、rules.history.levelから統合）
+# - "": 空文字=depth_levelから自動導出（デフォルト）
+#   自動導出マッピング: minimal→minimal、standard→standard、comprehensive→detailed
+# - "detailed" | "standard" | "minimal": 明示オーバーライド
+# history_level = ""
 # level: "minimal" | "standard" | "comprehensive"
 # - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
 # - standard: 通常の機能開発向け（デフォルト）

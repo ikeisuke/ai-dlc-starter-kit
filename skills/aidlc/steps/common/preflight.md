@@ -58,7 +58,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.history.level rules.construction.max_retry
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.markdown_lint rules.unit_branch.enabled rules.construction.max_retry
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -77,14 +77,32 @@ rules.reviewing.mode:recommend
 | 設定キー | コンテキスト変数名 | デフォルト値 |
 |---------|-------------------|------------|
 | rules.depth_level.level | `depth_level` | standard |
+| rules.depth_level.history_level | （後続の解決ロジックで処理） | ""（空文字=自動導出） |
 | rules.automation.mode | `automation_mode` | manual |
 | rules.reviewing.mode | `review_mode` | recommend |
 | rules.reviewing.tools | `review_tools` | ['codex'] |
 | rules.squash.enabled | `squash_enabled` | false |
 | rules.linting.markdown_lint | `markdown_lint` | false |
 | rules.unit_branch.enabled | `unit_branch_enabled` | false |
-| rules.history.level | `history_level` | standard |
 | rules.construction.max_retry | `max_retry` | 3 |
+
+**history_level 解決ロジック**（派生コンテキスト変数）:
+
+上記バッチ取得後、`rules.depth_level.history_level`の値を確認し、以下のフローで`history_level`コンテキスト変数を解決する:
+
+1. 取得値が空文字でない → `history_level`に設定（明示オーバーライド）
+2. 取得値が空文字 → 旧キーフォールバック:
+   ```bash
+   scripts/read-config.sh rules.history.level
+   ```
+   - exit 0かつ非空 → `history_level`に設定（旧config.tomlに明示記載あり）
+   - exit 1（キー不在）→ `depth_level`から自動導出:
+
+     | depth_level | history_level |
+     |-------------|--------------|
+     | minimal | minimal |
+     | standard | standard |
+     | comprehensive | detailed |
 
 **エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
 

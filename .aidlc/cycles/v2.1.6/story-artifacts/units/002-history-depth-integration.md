@@ -1,7 +1,7 @@
 # Unit: history.levelとdepth_level統合
 
 ## 概要
-rules.history.levelをrules.depth_level.history_levelに��合し、depth_levelからの自動導出と明示的なオーバーライドの両方をサポートする。
+rules.history.levelをrules.depth_level.history_levelに統合し、depth_levelからの自動導出と明示的なオーバーライドの両方をサポートする。
 
 ## 含まれるユーザーストーリー
 - ストーリー 5: history.levelとdepth_levelの統合（#522）
@@ -32,7 +32,7 @@ rules.history.levelをrules.depth_level.history_levelに��合し、depth_lev
 ## 技術的考慮事項
 - 自動導出マッピング: minimal→minimal、standard→standard、comprehensive→detailed
 - read-config.shでのフォールバック: version_check/upgrade_checkの互換ロジックを参考
-- プリフライトでの一元的な導出により、フェーズ間の不整���を防止
+- プリフライトでの一元的な導出により、フェーズ間の不整合を防止
 
 ## 関連Issue
 - #522
@@ -46,9 +46,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-04
+- **完了日**: 2026-04-04
+- **担当**: AI
 - **エクスプレス適格性**: -
 - **適格性理由**: -
