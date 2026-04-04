@@ -267,7 +267,7 @@ fi
 
 echo ""
 if [[ "$WARN_COUNT" -gt 0 ]]; then
-    echo "status:success(warn:${WARN_COUNT})"
+    echo "status:warning"
 else
     echo "status:success"
 fi

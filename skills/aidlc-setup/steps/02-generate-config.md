@@ -370,6 +370,56 @@ skip:not-found:inception.dependabot
 
 **注意**: 廃止された設定は `aidlc.toml` から削除せず、そのまま残しても問題ありません（無視されます）。ユーザーが明示的に削除するまで保持されます。
 
+### 7.4b. 欠落キー検出【アップグレードモードのみ】
+
+**スキップ条件**: 新規セットアップ時（アップグレードモードでない場合）はこのステップを完全にスキップする。アップグレードモードかどうかは、ステップ 7 冒頭で判定済みのモードフラグを参照する。
+
+`defaults.toml` をスキーマとして、`config.toml` に欠落しているキーを検出します。
+
+**defaults.toml パスの解決**: `aidlc` スキルのベースディレクトリ配下の `config/defaults.toml` を Read ツールで存在確認し、存在すればそのパスを使用する。`aidlc` スキルのベースディレクトリは `aidlc-setup` スキルの親ディレクトリ（`skills/aidlc-setup/` → `skills/aidlc/`）ではなく、`aidlc` スキルのインストール先を基準とする。プラグイン環境では `~/.claude/plugins/marketplaces/ai-dlc-starter-kit/skills/aidlc/config/defaults.toml`、メタ開発環境では `skills/aidlc/config/defaults.toml` となる。見つからない場合は「defaults.toml が見つかりません。欠落キー検出をスキップします。」と表示してこのステップをスキップする。
+
+**実行**:
+
+```bash
+scripts/detect-missing-keys.sh --defaults <defaults.tomlパス> --config .aidlc/config.toml
+```
+
+**出力の解釈**:
+
+出力はタブ区切り形式です:
+
+| フィールド1 | フィールド2 | フィールド3 | 意味 |
+|------------|------------|------------|------|
+| `missing` | `<key>` | `<default_value>` | config.toml に欠落しているキーとデフォルト値 |
+| `summary` | `total` | `<N>` | 欠落キーの総数 |
+| `error` | `<type>` | `<message>` | スクリプトエラー |
+
+対応値型: boolean, integer, string, array。値は dasel 生出力（クォート除去済み）。
+
+**欠落キーが 0 件の場合**: 「欠落キーなし。config.toml は最新です。」と表示して次のステップへ進む。
+
+**欠落キーがある場合**: 以下の形式でユーザーに追記候補を提示し、確認を求める:
+
+```text
+config.toml に以下のキーが欠落しています（defaults.toml に存在するがconfig.toml に未設定）:
+
+| キー | デフォルト値 |
+|------|------------|
+| <key1> | <value1> |
+| <key2> | <value2> |
+
+これらのキーをデフォルト値で config.toml に追記しますか？
+1. はい - すべて追記する
+2. 選択して追記する - 追記するキーを選択
+3. いいえ - スキップする
+```
+
+- **「1. はい」**: 全キーを `dasel` で `config.toml` に追記する。追記コマンド例: `dasel put -f .aidlc/config.toml -t <type> '<key>' -v '<value>'`（dasel v2）またはパイプ入力形式（dasel v3）。追記後に `追記完了: N 件のキーを追加しました` と表示する
+- **「2. 選択して追記する」**: ユーザーに追記するキーを選択させ、選択されたキーのみ追記する
+- **「3. いいえ」**: 「欠落キーの追記をスキップしました。」と表示して次のステップへ進む
+
+**エラー時**: 「⚠ 欠落キー検出でエラーが発生しました。スキップして次のステップへ進みます。」と表示してスキップする。
+
 ### 7.5 旧形式バックログ移行【アップグレードモードのみ】
 
 > **DEPRECATED (v1.9.0)**: v2.0.0 で削除予定
