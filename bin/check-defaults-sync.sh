@@ -13,8 +13,9 @@
 
 set -euo pipefail
 
-SOURCE="skills/aidlc/config/defaults.toml"
-COPY="skills/aidlc-setup/config/defaults.toml"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+SOURCE="${REPO_ROOT}/skills/aidlc/config/defaults.toml"
+COPY="${REPO_ROOT}/skills/aidlc-setup/config/defaults.toml"
 
 if [ ! -f "$SOURCE" ]; then
     echo "error:not-found:$SOURCE"
@@ -26,9 +27,9 @@ if [ ! -f "$COPY" ]; then
     exit 2
 fi
 
-# コメント行と空行を除外して比較
-diff_result=$(diff <(grep -v '^#' "$SOURCE" | grep -v '^$') \
-                   <(grep -v '^#' "$COPY" | grep -v '^$') || true)
+# コメント行（先頭空白許容）と空行を除外して比較
+diff_result=$(diff <(grep -v '^[[:space:]]*#' "$SOURCE" | grep -v '^[[:space:]]*$') \
+                   <(grep -v '^[[:space:]]*#' "$COPY" | grep -v '^[[:space:]]*$') || true)
 
 if [ -z "$diff_result" ]; then
     echo "sync:ok"
