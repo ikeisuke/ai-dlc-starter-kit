@@ -19,6 +19,7 @@ scripts/env-info.sh
 | `gh:{status}` | `gh_status` | GitHub CLI状態（`available` / `not-installed` / `not-authenticated`） |
 | `git:{status}` | - | git存在確認（blocker判定に使用） |
 | `dasel:{status}` | - | dasel状態（情報保持のみ） |
+| `dasel_major_version:{version}` | `dasel_major_version` | daselメジャーバージョン（`2` / `3` / `unknown`）。dasel未インストール時は出力されない |
 
 **互換エイリアス**: 既存フェーズプロンプトで `gh:available` 形式で参照している箇所は `gh_status` で読み替える。
 
@@ -58,7 +59,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.squash.enabled rules.linting.enabled rules.unit_branch.enabled rules.construction.max_retry
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.git.squash_enabled rules.linting.enabled rules.git.unit_branch_enabled rules.construction.max_retry
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -81,9 +82,9 @@ rules.reviewing.mode:recommend
 | rules.automation.mode | `automation_mode` | manual |
 | rules.reviewing.mode | `review_mode` | recommend |
 | rules.reviewing.tools | `review_tools` | ['codex'] |
-| rules.squash.enabled | `squash_enabled` | false |
+| rules.git.squash_enabled | `squash_enabled` | false |
 | rules.linting.enabled | （後続の解決ロジックで処理） | false |
-| rules.unit_branch.enabled | `unit_branch_enabled` | false |
+| rules.git.unit_branch_enabled | `unit_branch_enabled` | false |
 | rules.construction.max_retry | `max_retry` | 3 |
 
 **history_level 解決ロジック**（派生コンテキスト変数）:
@@ -175,6 +176,9 @@ which {先頭ツール名} >/dev/null 2>&1
   {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
   ℹ レビューツール ({tool名}): {available | not found}
   {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}
+
+■ ツールバージョン
+  dasel_major_version: {value}（未インストール時は「N/A」）
 
 ■ 主要設定値（常時表示）
   depth_level: {value}

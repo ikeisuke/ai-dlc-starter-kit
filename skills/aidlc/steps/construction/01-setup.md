@@ -129,7 +129,7 @@ scripts/issue-ops.sh set-status <issue_number> in-progress
 
 ### 13. Unitブランチ作成【推奨】
 
-`rules.unit_branch.enabled = true` かつ `gh_status=available` の場合、Unitブランチを作成。
+`rules.git.unit_branch_enabled = true` かつ `gh_status=available` の場合、Unitブランチを作成。
 
 ```bash
 git checkout -b "cycle/{{CYCLE}}/unit-{NNN}"

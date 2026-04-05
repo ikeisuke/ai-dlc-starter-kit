@@ -88,6 +88,26 @@ check_gh() {
     fi
 }
 
+# daselのメジャーバージョンを取得（2 or 3）
+# dasel未インストール時は呼ばれない前提
+get_dasel_major_version() {
+    local ver=""
+    # v3: `dasel version` サブコマンド
+    ver=$(dasel version 2>/dev/null) || ver=""
+    if [[ -z "$ver" ]]; then
+        # v2: `dasel --version` フラグ
+        ver=$(dasel --version 2>/dev/null) || ver=""
+    fi
+    # "dasel version X.Y.Z" や "X.Y.Z" からメジャーバージョンを抽出
+    local major
+    major=$(echo "$ver" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 | cut -d. -f1)
+    if [[ -n "$major" ]]; then
+        echo "$major"
+    else
+        echo "unknown"
+    fi
+}
+
 # .aidlc/config.toml から project.name を取得
 # dasel未インストール時またはファイル不存在時は空値を返す
 get_project_name() {
@@ -173,9 +193,14 @@ main() {
         shift
     done
 
-    # 出力順序は固定（gh → dasel → git → starter_kit_version）
+    # 出力順序は固定（gh → dasel → dasel_major_version → git → starter_kit_version）
     echo "gh:$(check_gh)"
-    echo "dasel:$(check_tool dasel)"
+    local dasel_status
+    dasel_status="$(check_tool dasel)"
+    echo "dasel:${dasel_status}"
+    if [[ "$dasel_status" == "available" ]]; then
+        echo "dasel_major_version:$(get_dasel_major_version)"
+    fi
     echo "git:$(check_tool git)"
     echo "starter_kit_version:$(get_starter_kit_version)"
 

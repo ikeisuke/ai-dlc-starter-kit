@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.1.8] - 2026-04-05
+
+### Changed
+
+- Git関連設定キー（`rules.branch`, `rules.worktree`, `rules.unit_branch`, `rules.squash`, `rules.commit`）を`[rules.git]`セクションに統合。旧キーのフォールバック読み取りを維持（#521）
+- `.aidlc/rules.md`の設定項目を整理し、設定的な内容を`config.toml`へ移行（#437）
+- `.aidlc/operations.md`の構成を再整理し、フェーズ固有の記述を分離（#437）
+
+### Fixed
+
+- aidlc-setupのバージョン比較でdasel v3の`dasel query`サブコマンド形式に対応（#528）
+- preflightチェックでdaselバージョンを確定しv3専用に簡素化（#532）
+- `feedback.md`のdaselコマンドをv3形式に更新
+
+---
+
 ## [2.1.7] - 2026-04-04
 
 ### Changed

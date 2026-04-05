@@ -29,16 +29,24 @@ validate_user_input = true
 use_env_for_secrets = true
 
 [rules.git]
-# Git運用ルール
+# Git運用ルール（v2.1.8で統合）
 commit_on_unit_complete = true
 commit_on_phase_complete = true
-
-[rules.commit]
-# コミット設定（v1.9.1で追加）
+# branch_mode: "branch" | "worktree" | "ask"
+# - branch: 常にブランチ方式で自動作成
+# - worktree: 常にworktree方式で自動作成
+# - ask: ユーザーに都度質問（デフォルト）
+branch_mode = "ask"
+# unit_branch_enabled: Unit単位でブランチを作成するか
+unit_branch_enabled = false
+# squash_enabled: Unit/Phase完了時に中間コミットをスカッシュするか
+squash_enabled = false
 # ai_author: Co-Authored-By に使用するAI著者情報
 # - 形式: "ツール名 <email>"（推奨）または任意の文字列
 # - デフォルト: "Claude <noreply@anthropic.com>"
 ai_author = "Claude <noreply@anthropic.com>"
+# ai_author_auto_detect: AIツールを自動検出してCo-Authored-Byを付与するか
+ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
@@ -59,13 +67,6 @@ tools = ["codex"]
 # - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
 # - ここに追加のパターンを指定可能
 # exclude_patterns = ["*.p12", "config/secrets/**"]
-
-[rules.worktree]
-# git worktree設定
-# enabled: true | false
-# - true: サイクル開始時にworktreeの使用を提案する
-# - false: 提案しない（デフォルト）
-enabled = false
 
 [rules.linting]
 # markdownlint設定（v1.8.0で追加）

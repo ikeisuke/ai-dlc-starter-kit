@@ -25,16 +25,16 @@ validate_user_input = true
 use_env_for_secrets = true
 
 [rules.git]
-# Git運用ルール
+# Git運用ルール（v2.1.8で統合）
+# 旧セクション（rules.branch, rules.worktree, rules.unit_branch, rules.squash, rules.commit）は
+# 互換用エイリアスとして引き続き読み取れますが、新規設定ではこのセクションを使用してください。
 commit_on_unit_complete = true
 commit_on_phase_complete = true
-
-[rules.commit]
-# コミット設定（v1.9.1で追加）
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
+branch_mode = "branch"
+unit_branch_enabled = false
+squash_enabled = true
 ai_author = "Claude <noreply@anthropic.com>"
+ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
@@ -67,20 +67,8 @@ mode = "semi_auto"
 # プロジェクト固有のカスタムルール
 # 必要に応じて追記してください
 
-[rules.branch]
-# ブランチ作成方式設定（v1.21.2で追加）
-# mode: "branch" | "worktree" | "ask"
-# - branch: 常にブランチ方式で自動作成
-# - worktree: 常にworktree方式で自動作成（rules.worktree.enabled=trueが必要）
-# - ask: ユーザーに都度質問（デフォルト）
-mode = "branch"
-
-[rules.worktree]
-# git worktree設定（v1.4.0で追加）
-# enabled: true | false
-# - true: サイクル開始時にworktreeの使用を提案する
-# - false: 提案しない（デフォルト）
-enabled = false
+# 旧セクション [rules.branch], [rules.worktree] は [rules.git] に統合されました（v2.1.8）
+# 互換用エイリアスとして旧キーも読み取れます
 
 # [rules.history]
 # DEPRECATED: v2.1.6でrules.depth_level.history_levelに統合されました。
@@ -94,10 +82,7 @@ enabled = false
 changelog = true
 version_tag = false
 
-[rules.unit_branch]
-# Unitブランチ設定（v1.7.0で追加）
-# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: false）
-enabled = false
+# 旧セクション [rules.unit_branch] は [rules.git] に統合されました（v2.1.8）
 
 [rules.linting]
 # Markdown lint設定（v2.1.6でenabled/commandに統合）
@@ -133,12 +118,7 @@ level = "standard"
 # - ask: Inception Phase開始時に名前付き/名前なしを選択
 # mode = "default"
 
-[rules.squash]
-# squash設定（v1.15.0で追加）
-# enabled: true | false - Unit完了時にsquashを提案するか（デフォルト: false）
-# - true: Unit完了時にsquashステップを実行
-# - false: squashステップをスキップ（従来の動作）
-enabled = true
+# 旧セクション [rules.squash] は [rules.git] に統合されました（v2.1.8）
 
 [rules.feedback]
 # フィードバック送信機能設定（v1.13.3で追加）
