@@ -31,9 +31,9 @@
 - **可用性**: dasel v2/v3の両環境で動作すること
 
 ## 技術的考慮事項
-- dasel v2: `dasel -f file 'key'` / `dasel put -f file -t type 'key' -v 'value'`
-- dasel v3: `dasel query -f file 'key'` / `dasel put -f file -t type 'key' -v 'value'`（putは同じ可能性あり、要確認）
-- プロンプト内のコマンド例を `bootstrap.sh` の `_AIDLC_DASEL_BRACKET` 判定結果を活用する形式に書き換え（直接v2/v3を判定するのではなく、既存ロジックを参照する記述に）
+- dasel v2: `dasel -f file 'key'`（読取）/ `dasel put -f file -t type 'key' -v 'value'`（書込）
+- dasel v3: `cat file | dasel -i toml 'key'`（読取、`-f` フラグ廃止）/ `put` サブコマンド廃止（書込不可、AI直接編集で代替）
+- プロンプト内にv2/v3両形式を直接併記し、AIが試行で判定する方式を採用（既存スクリプトへの新たな依存は追加しない）
 
 ## 関連Issue
 - #528
@@ -47,9 +47,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-05
+- **完了日**: 2026-04-05
+- **担当**: AI
 - **エクスプレス適格性**: -
 - **適格性理由**: -
