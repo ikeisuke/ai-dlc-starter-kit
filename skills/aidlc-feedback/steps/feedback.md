@@ -7,7 +7,7 @@
 最初に `.aidlc/config.toml` の設定を確認する：
 
 ```bash
-dasel -f .aidlc/config.toml -r toml 'rules.feedback.enabled'
+cat .aidlc/config.toml | dasel -i toml 'rules.feedback.enabled'
 ```
 
 **エラーハンドリング**:
