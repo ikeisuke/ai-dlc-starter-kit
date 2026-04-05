@@ -19,6 +19,7 @@ scripts/env-info.sh
 | `gh:{status}` | `gh_status` | GitHub CLI状態（`available` / `not-installed` / `not-authenticated`） |
 | `git:{status}` | - | git存在確認（blocker判定に使用） |
 | `dasel:{status}` | - | dasel状態（情報保持のみ） |
+| `dasel_major_version:{version}` | `dasel_major_version` | daselメジャーバージョン（`2` / `3` / `unknown`）。dasel未インストール時は出力されない |
 
 **互換エイリアス**: 既存フェーズプロンプトで `gh:available` 形式で参照している箇所は `gh_status` で読み替える。
 
@@ -175,6 +176,9 @@ which {先頭ツール名} >/dev/null 2>&1
   {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
   ℹ レビューツール ({tool名}): {available | not found}
   {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}
+
+■ ツールバージョン
+  dasel_major_version: {value}（未インストール時は「N/A」）
 
 ■ 主要設定値（常時表示）
   depth_level: {value}

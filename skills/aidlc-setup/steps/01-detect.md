@@ -98,10 +98,7 @@ pwd
 
 **1a. バージョン比較**:
 
-1. プロジェクトルート（`.aidlc/config.toml` が存在するディレクトリ）でdaselを使用してローカルバージョンを取得する。dasel v2/v3でコマンド形式が異なるため、以下の順で試行する:
-   - v2: `dasel -f .aidlc/config.toml 'starter_kit_version'`
-   - v3: `cat .aidlc/config.toml | dasel -i toml 'starter_kit_version'`（v3では `-f` フラグが廃止されパイプ入力が必要）
-   - 取得値は引用符除去・前後空白トリムで正規化し、正規化後に空文字ならフェイルセーフ（失敗扱い）とする
+1. プロジェクトルート（`.aidlc/config.toml` が存在するディレクトリ）でdaselを使用してローカルバージョンを取得する: `cat .aidlc/config.toml | dasel -i toml 'starter_kit_version'`。取得値は引用符除去・前後空白トリムで正規化し、正規化後に空文字ならフェイルセーフ（失敗扱い）とする
 2. スキルの `version.txt`（SKILL.mdの親ディレクトリ直下）をReadツールで読み込みスキルバージョンを取得
 3. **フェイルセーフ判定**:
    - いずれかの取得に失敗（dasel実行失敗・キー不在、version.txt不在/空）、または正規化後の値が空（`v`除去・trim後に空文字列となるパース不能ケース）→ 従来動作（1b）+ 警告表示:
