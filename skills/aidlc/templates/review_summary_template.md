@@ -10,6 +10,25 @@
 
 ---
 
+## Setフォーマット
+
+```markdown
+## Set [N]: [YYYY-MM-DD HH:MM:SS]
+
+- **レビュー種別**: [全種別]
+- **使用ツール**: [codex / self-review(skill) / self-review(inline)]
+- **反復回数**: [1〜3]
+- **結論**: [指摘0件 / 指摘対応判断完了]
+
+### 指摘一覧
+
+| # | 重要度 | 内容 | 対応 | バックログ |
+|---|--------|------|------|-----------|
+| 1 | 高/中/低 | [対象箇所] - [問題事象] | 修正済み / TECHNICAL_BLOCKER(理由) / OUT_OF_SCOPE(理由) | - / #NNN / PENDING_MANUAL / SECURITY_PRIVATE |
+```
+
+---
+
 ## 記述例（参考 - 実ファイル作成時は削除）
 
 ### 良い例

@@ -11,8 +11,6 @@
 
 - **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/inception.md` に記録。詳細はスキルのSKILL.mdを参照。
 
-**【次のアクション】** 今すぐ `steps/common/review-flow.md` を読み込んで、内容を確認してください。
-
   **AIレビュー対象タイミング**: Intent承認前、ユーザーストーリー承認前、Unit定義承認前
 
 - **コンテキストリセット対応【重要】**: ユーザーからリセット・中断の発言があった場合:
@@ -21,16 +19,11 @@
   3. session-state.mdを生成（`common/session-continuity.md` に従う。`automation_mode` に関係なく必ず実行）
   4. 継続用プロンプトを提示: `/aidlc inception`
 
-**【次のアクション】** 今すぐ `steps/common/compaction.md` を読み込んで、内容を確認してください。
-
 ### フェーズの責務【重要】
 
 **行うこと**: サイクル作成、Intent作成、ユーザーストーリー作成、Unit定義
 **禁止**: 実装コード・テストコード・設計ドキュメント詳細化（Construction Phaseで実施）
 **承認なしにConstruction Phaseに進んではいけない**（`semi_auto`での自動承認を除く）
-
-**【次のアクション】** 今すぐ `steps/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ---
 
@@ -55,8 +48,6 @@
 ## Part 1: セットアップ
 
 ### 1. プリフライトチェック
-
-**【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
 結果をコンテキスト変数として保持。以降は再実行しない（ユーザーがインストール/認証した場合のみ再チェック）。
 

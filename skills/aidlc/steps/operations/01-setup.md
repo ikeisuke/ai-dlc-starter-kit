@@ -1,9 +1,5 @@
 # Operations Phase プロンプト
 
-**【次のアクション】** 今すぐ `steps/common/intro.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/rules.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/project-info.md` を読み込んで、内容を確認してください。
-
 **アップグレード**: `/aidlc-setup` スキルを使用してください。
 
 ---
@@ -16,12 +12,7 @@
 
 - **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/operations.md` に記録。詳細はスキルのSKILL.mdを参照。
 
-**【次のアクション】** 今すぐ `steps/common/review-flow.md` を読み込んで、内容を確認してください。
-
   **AIレビュー対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
-
-**【次のアクション】** 今すぐ `steps/common/context-reset.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/compaction.md` を読み込んで、内容を確認してください。
 
 ### フェーズの責務【重要】
 
@@ -30,9 +21,6 @@
 **禁止**: アプリケーションロジック変更、新機能実装、テストコード追加（バグ修正時を除く）
 
 **緊急バグ修正**: ユーザー承認 → 最小限の修正 → Construction Phaseへのバックトラック提案
-
-**【次のアクション】** 今すぐ `steps/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ### テスト記録とバグ対応
 - テスト記録テンプレート: `templates/test_record_template.md`
@@ -57,8 +45,6 @@ DevOpsエンジニア兼SRE。
 `.aidlc/rules.md` が存在すれば読み込む。
 
 ### 3. プリフライトチェック
-
-**【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
 結果（`gh_status`, `depth_level`, `automation_mode` 等）をコンテキスト変数として保持。
 

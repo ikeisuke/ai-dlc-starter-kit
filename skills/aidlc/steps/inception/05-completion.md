@@ -171,20 +171,7 @@ gh pr list --head "<取得したブランチ名>" --state open
 **関連Issue番号の抽出**:
 Unit定義ファイルの「関連Issue」セクションから、全Issue番号を抽出し、`Closes #XX` 形式でリスト化します。
 
-1. Writeツールで一時ファイルを作成（内容: PR本文）:
-
-```text
-## サイクル概要
-[Intentから抽出した1-2文の概要]
-
-## 含まれるUnit
-[Unit定義ファイルから一覧を生成]
-
-## Closes
-[Unit定義ファイルの関連Issueから抽出]
-- Closes #[Issue番号1]
-- Closes #[Issue番号2]
-```
+1. Writeツールで一時ファイルを作成（テンプレート: `templates/inception_pr_body_template.md` を参照）
 
 2. 以下を実行:
 
@@ -249,29 +236,4 @@ squashを実行していない場合は、`steps/common/commit-flow.md` の「In
 2. 現在のブランチ名（`git branch --show-current`）とPR/コミット状態（`git log --oneline -1` でコミット確認、ghが利用可能な場合は `gh pr view --json state,url 2>/dev/null` でPR状態確認）
 3. 次に実行すべきアクション
 
-````markdown
----
-## Inception Phase 完了
-
-コンテキストをリセットしてConstruction Phaseを開始してください。
-
-**理由**: 長い会話履歴はAIの応答品質を低下させます。新しいセッションで開始することで最適なパフォーマンスを維持できます。
-
-**セッションサマリ**:
-- **完了**: {{CYCLE}} / Inception Phase
-- **リポジトリ**: [ブランチ名]、[コミット済み/ドラフトPR作成済み等の状態]
-- **次のアクション**: Construction Phaseを開始
-
-**対応内容**:
-- **実施内容**: [主要な変更の箇条書き（関連Issue番号付き）。情報不足時は「（コンテキスト情報不足のため省略）」]
-- **変更対象**: [変更したファイル・モジュールの概要。情報不足時は「（コンテキスト情報不足のため省略）」]
-- **未対応事項**: [スコープ外としたレビュー指摘や残課題。なければ「なし」]
-- **次回の着手点**: [Construction Phaseで最初に行うべきこと]
-
-※ AIがInception Phase作業中のコンテキスト情報から生成。情報源に存在しないIssue番号・ファイル名・作業内容を出力しないこと
-
-**次のステップ**:
-- Claude Code: `/aidlc construction` と指示
-- その他: `steps/construction/01-setup.md` からステップファイルを順に読み込み
----
-````
+テンプレート（`templates/context_reset_template.md`）に従い、セッションサマリを含むメッセージを出力する。
