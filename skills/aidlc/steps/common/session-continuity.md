@@ -54,3 +54,7 @@
 | Inception | `inception/progress.md` |
 | Construction | Unit定義ファイル（`story-artifacts/units/*.md`）の「実装状態」セクション |
 | Operations | `operations/progress.md` |
+
+## コンパクション復帰
+
+コンパクション復帰と判定された場合は `steps/common/compaction.md` を読み込む。

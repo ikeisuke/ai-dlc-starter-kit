@@ -79,7 +79,6 @@ ARGUMENTS文字列を以下のルールでパースする:
 ### ステップ3: セッション継続判定
 
 `steps/common/session-continuity.md` を読み込み、前回セッションの継続かを判定。
-コンパクション復帰の場合は `steps/common/compaction.md` を読み込む。
 
 ### ステップ4: フェーズステップ読み込み
 
