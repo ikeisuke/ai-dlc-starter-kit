@@ -259,11 +259,24 @@ else
 fi
 
 _add_section "rules\\.linting" '[rules.linting]
-# markdownlint設定（v1.8.0で追加）
-# markdown_lint: true | false
-# - true: markdownlint を実行する
-# - false: markdownlint をスキップする（デフォルト）
-markdown_lint = false'
+# Markdown lint設定（v2.1.6でenabled/commandに統合）
+# enabled: true | false - lintを実行するか（デフォルト: false）
+# 旧キー markdown_lint は enabled として読み取られます（フォールバック）
+enabled = false'
+
+# [rules.linting] 内の markdown_lint → enabled リネーム（v2.2.0で追加）
+if grep -q "^\[rules\.linting\]" "$_target" 2>/dev/null; then
+    _old_key_count=$(sed -n '/^\[rules\.linting\]/,/^\[/p' "$_target" | { grep -c "^markdown_lint" || true; })
+    _new_key_count=$(sed -n '/^\[rules\.linting\]/,/^\[/p' "$_target" | { grep -c "^enabled" || true; })
+    if [[ "$_old_key_count" != "0" ]] && [[ "$_new_key_count" == "0" ]]; then
+        # markdown_lint の値を取得して enabled に置換
+        _old_value=$(sed -n '/^\[rules\.linting\]/,/^\[/{/^markdown_lint/p}' "$_target" | head -1 | sed 's/.*=[ \t]*//' | tr -d ' "'"'"'')
+        sed -i.bak '/^\[rules\.linting\]/,/^\[/{s/^markdown_lint[ \t]*=.*/enabled = '"$_old_value"'/;}' "$_target"
+        rm -f "${_target}.bak"
+        _emit "migrate:rename:rules.linting.markdown_lint->rules.linting.enabled"
+        _migrated=$((_migrated + 1))
+    fi
+fi
 
 _add_section "rules\\.depth_level" '[rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）
