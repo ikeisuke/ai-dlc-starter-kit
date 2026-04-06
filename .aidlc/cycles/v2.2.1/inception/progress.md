@@ -9,11 +9,11 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-04-06 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-04-06 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-04-06 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | 完了 | construction/progress.md | 2026-04-06 |
 
 ## 現在のステップ
 
-次回: 1. Intent明確化
+Inception Phase完了
 
 ## 完了済みステップ
 
