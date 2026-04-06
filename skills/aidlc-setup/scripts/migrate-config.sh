@@ -228,28 +228,15 @@ _add_section() {
     fi
 }
 
+_add_section "rules\\.feedback" '[rules.feedback]
+# フィードバック送信機能設定（v1.13.3で追加）
+# enabled: true | false（デフォルト: true）
+enabled = true'
+
 _add_section "rules\\.reviewing" '[rules.reviewing]
 # AIレビュー設定（v1.4.0で追加、v1.14.0でリネーム）
 # mode: "recommend" | "required" | "disabled"
-# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
-# - required: AIレビューツール利用可能時にレビュー必須
-# - disabled: レビュー推奨を無効化
 mode = "recommend"'
-
-_add_section "rules\\.worktree" '[rules.worktree]
-# git worktree設定（v1.4.0で追加）
-# enabled: true | false
-# - true: サイクル開始時にworktreeの使用を提案する
-# - false: 提案しない（デフォルト）
-enabled = false'
-
-_add_section "rules\\.history" '[rules.history]
-# 履歴記録設定（v1.5.1で追加）
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"'
 
 # [rules.backlog] は v2.0.3 で廃止。新規追加しない。
 if grep -q "^\[rules\.backlog\]" "$_target" 2>/dev/null || grep -q "^\[backlog\]" "$_target" 2>/dev/null; then
@@ -261,7 +248,6 @@ fi
 _add_section "rules\\.linting" '[rules.linting]
 # Markdown lint設定（v2.1.6でenabled/commandに統合）
 # enabled: true | false - lintを実行するか（デフォルト: false）
-# 旧キー markdown_lint は enabled として読み取られます（フォールバック）
 enabled = false'
 
 # [rules.linting] 内の markdown_lint → enabled リネーム（v2.2.0で追加）
@@ -269,24 +255,48 @@ if grep -q "^\[rules\.linting\]" "$_target" 2>/dev/null; then
     _old_key_count=$(sed -n '/^\[rules\.linting\]/,/^\[/p' "$_target" | { grep -c "^markdown_lint" || true; })
     _new_key_count=$(sed -n '/^\[rules\.linting\]/,/^\[/p' "$_target" | { grep -c "^enabled" || true; })
     if [[ "$_old_key_count" != "0" ]] && [[ "$_new_key_count" == "0" ]]; then
-        # markdown_lint の値を取得して enabled に置換
-        _old_value=$(sed -n '/^\[rules\.linting\]/,/^\[/{/^markdown_lint/p}' "$_target" | head -1 | sed 's/.*=[ \t]*//' | tr -d ' "'"'"'')
-        sed -i.bak '/^\[rules\.linting\]/,/^\[/{s/^markdown_lint[ \t]*=.*/enabled = '"$_old_value"'/;}' "$_target"
-        rm -f "${_target}.bak"
-        _emit "migrate:rename:rules.linting.markdown_lint->rules.linting.enabled"
-        _migrated=$((_migrated + 1))
+        _old_value=$(sed -n '/^\[rules\.linting\]/,/^\[/p' "$_target" | grep "^markdown_lint" | head -1 | sed 's/.*=[[:space:]]*//' | sed 's/^["'"'"']//;s/["'"'"']$//' | tr -d ' ')
+        _safe_transform "$_target" awk -v val="$_old_value" '
+/^\[rules\.linting\]/{in_sec=1}
+in_sec && /^markdown_lint[[:space:]]*=/{print "enabled = " val; next}
+/^\[/{if(in_sec && !/^\[rules\.linting\]/) in_sec=0}
+{print}'
+        _emit_migrate "rename:rules.linting.markdown_lint->rules.linting.enabled"
     fi
 fi
+
+_add_section "rules\\.release" '[rules.release]
+# リリース設定（v2.1.6で追加）
+# changelog: true | false - CHANGELOG自動更新（デフォルト: false）
+# version_tag: true | false - gitタグ作成（デフォルト: false）
+changelog = false
+version_tag = false'
 
 _add_section "rules\\.depth_level" '[rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）
 # level: "minimal" | "standard" | "comprehensive"
-# - minimal: シンプルなタスク向け（設計省略可、受け入れ基準簡略化）
-# - standard: 通常の機能開発向け（デフォルト）
-# - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
-level = "standard"'
+level = "standard"
+history_level = ""'
 
-# 3. [rules.reviewing] に tools が存在しない場合は追加（awk で BSD/GNU 互換）
+# [rules.history] → [rules.depth_level].history_level 統合（v2.1.8で統合）
+if grep -q "^\[rules\.history\]" "$_target" 2>/dev/null; then
+    _history_level=$(sed -n '/^\[rules\.history\]/,/^\[/p' "$_target" | grep "^level" | head -1 | sed 's/.*=[[:space:]]*//' | sed 's/^["'"'"']//;s/["'"'"']$//' | tr -d ' ')
+    if [[ -n "$_history_level" ]]; then
+        _hl_count=$(sed -n '/^\[rules\.depth_level\]/,/^\[/p' "$_target" | { grep -c "^history_level" || true; })
+        if [[ "$_hl_count" == "0" ]]; then
+            _safe_transform "$_target" awk -v val="$_history_level" '
+/^\[rules\.depth_level\]/{in_sec=1}
+in_sec && /^level[[:space:]]*=/{print; print "history_level = \"" val "\""; next}
+/^\[/{if(in_sec && !/^\[rules\.depth_level\]/) in_sec=0}
+{print}'
+        fi
+    fi
+    # 旧セクション削除
+    _safe_transform "$_target" awk '/^\[rules\.history\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
+    _emit_migrate "consolidate:rules.history->rules.depth_level.history_level"
+fi
+
+# 3. [rules.reviewing] に tools が存在しない場合は追加
 if grep -q "^\[rules\.reviewing\]" "$_target"; then
     _tools_count=$(sed -n '/^\[rules\.reviewing\]/,/^\[/p' "$_target" | { grep -c "^tools" || true; })
     if [[ "$_tools_count" == "0" ]]; then
@@ -295,17 +305,12 @@ if grep -q "^\[rules\.reviewing\]" "$_target"; then
 /^\[rules\.reviewing\]/{in_section=1}
 in_section && /^mode[[:space:]]*=/{
     print
-    print "# tools: AIレビューに使用するツールの優先順位リスト（v1.8.2で追加、v1.14.0でリネーム）"
-    print "# - デフォルト: [\"codex\"]"
-    print "# - 例: [\"codex\", \"claude\", \"gemini\"]"
-    print "# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）"
     print "tools = [\"codex\"]"
     next
 }
 /^\[/{if(in_section && !/^\[rules\.reviewing\]/) in_section=0}
 {print}
 ' "$_target" > "$_tmp_tools" && \mv "$_tmp_tools" "$_target"; then
-            # 挿入後の再確認: tools が実際に追加されたか検証
             if sed -n '/^\[rules\.reviewing\]/,/^\[/p' "$_target" | grep -q "^tools[[:space:]]*="; then
                 _emit_migrate "add-key:rules.reviewing.tools"
             else
@@ -321,36 +326,88 @@ else
     _emit_skip "section-not-found:rules.reviewing"
 fi
 
-_add_section "rules\\.commit" '[rules.commit]
-# コミット設定（v1.9.1で追加）
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
-ai_author = "Claude <noreply@anthropic.com>"'
-
-# --- v2.0.0 追加セクション ---
-
 _add_section "rules\\.automation" '[rules.automation]
 # セミオート設定（v2.0.0で追加）
 # mode: "manual" | "semi_auto"
-# - manual: すべての承認ポイントでユーザー確認（デフォルト）
-# - semi_auto: AIレビュー合格時にユーザー承認を省略して自動遷移
 mode = "manual"'
 
 _add_section "rules\\.construction" '[rules.construction]
 # Construction Phase設定（v2.0.0で追加）
-# max_retry: Self-Healingループの最大リトライ回数（0以上の整数、デフォルト: 3）
+# max_retry: Self-Healingループの最大リトライ回数（デフォルト: 3）
 max_retry = 3'
 
-_add_section "rules\\.squash" '[rules.squash]
-# Squash統合設定（v2.0.0で追加）
-# enabled: true | false（デフォルト: false）
-enabled = false'
+_add_section "rules\\.cycle" '[rules.cycle]
+# サイクル設定（v2.1.6で追加）
+# mode: "default"
+# git_tracked: true | false - cyclesをgit管理するか（デフォルト: true）
+mode = "default"
+git_tracked = true'
 
-_add_section "rules\\.unit_branch" '[rules.unit_branch]
-# Unitブランチ設定（v2.0.0で追加）
-# enabled: true | false（デフォルト: false）
-enabled = false'
+_add_section "rules\\.documentation" '[rules.documentation]
+# ドキュメント設定（v2.1.8で追加）
+language = "日本語"'
+
+# --- [rules.git] 統合セクション（v2.1.8で統合） ---
+
+_add_section "rules\\.git" '[rules.git]
+# Git運用ルール（v2.1.8で統合）
+commit_on_unit_complete = true
+commit_on_phase_complete = true
+branch_mode = "ask"
+unit_branch_enabled = false
+squash_enabled = false
+ai_author = ""
+ai_author_auto_detect = true'
+
+# 旧セクション → [rules.git] 統合マイグレーション（v2.1.8で統合）
+# [rules.commit] → rules.git.ai_author, rules.git.ai_author_auto_detect
+# ヘルパー: セクション内にキーがなければ [section] 直後に追加
+_add_key_to_section() {
+    local section_pattern="$1"
+    local key_name="$2"
+    local key_line="$3"
+    local _count
+    _count=$(sed -n '/^\['"$section_pattern"'\]/,/^\[/p' "$_target" | { grep -c "^${key_name}" || true; })
+    if [[ "$_count" == "0" ]]; then
+        _safe_transform "$_target" awk -v line="$key_line" '
+/^\['"$section_pattern"'\]/{print; print line; next}
+{print}'
+    fi
+}
+
+if grep -q "^\[rules\.commit\]" "$_target" 2>/dev/null; then
+    _ai_author=$(sed -n '/^\[rules\.commit\]/,/^\[/p' "$_target" | grep "^ai_author[[:space:]]*=" | head -1 | sed 's/.*=[ \t]*//')
+    if grep -q "^\[rules\.git\]" "$_target" && [[ -n "$_ai_author" ]]; then
+        _add_key_to_section "rules\\.git" "ai_author[[:space:]]*=" "ai_author = $_ai_author"
+    fi
+    _safe_transform "$_target" awk '/^\[rules\.commit\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
+    _emit_migrate "consolidate:rules.commit->rules.git"
+fi
+
+# [rules.squash] → rules.git.squash_enabled
+if grep -q "^\[rules\.squash\]" "$_target" 2>/dev/null; then
+    _squash_val=$(sed -n '/^\[rules\.squash\]/,/^\[/p' "$_target" | grep "^enabled" | head -1 | sed 's/.*=[[:space:]]*//' | sed 's/^["'"'"']//;s/["'"'"']$//' | tr -d ' ')
+    if grep -q "^\[rules\.git\]" "$_target" && [[ -n "$_squash_val" ]]; then
+        _add_key_to_section "rules\\.git" "squash_enabled" "squash_enabled = $_squash_val"
+    fi
+    _safe_transform "$_target" awk '/^\[rules\.squash\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
+    _emit_migrate "consolidate:rules.squash->rules.git.squash_enabled"
+fi
+
+# [rules.unit_branch] → rules.git.unit_branch_enabled
+if grep -q "^\[rules\.unit_branch\]" "$_target" 2>/dev/null; then
+    _ub_val=$(sed -n '/^\[rules\.unit_branch\]/,/^\[/p' "$_target" | grep "^enabled" | head -1 | sed 's/.*=[[:space:]]*//' | sed 's/^["'"'"']//;s/["'"'"']$//' | tr -d ' ')
+    if grep -q "^\[rules\.git\]" "$_target" && [[ -n "$_ub_val" ]]; then
+        _add_key_to_section "rules\\.git" "unit_branch_enabled" "unit_branch_enabled = $_ub_val"
+    fi
+    _safe_transform "$_target" awk '/^\[rules\.unit_branch\]/{skip=1; next} /^\[[a-zA-Z]/{skip=0} !skip'
+    _emit_migrate "consolidate:rules.unit_branch->rules.git.unit_branch_enabled"
+fi
+
+# [rules.worktree] は v2.1.8 で廃止。新規追加しない。
+if grep -q "^\[rules\.worktree\]" "$_target" 2>/dev/null; then
+    _emit_skip "deprecated:rules.worktree(v2.1.8: consolidated into rules.git.branch_mode)"
+fi
 
 # --- セクション 7.4.5: upgrade_check → version_check リネームマイグレーション ---
 
