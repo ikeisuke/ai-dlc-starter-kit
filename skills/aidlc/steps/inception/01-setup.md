@@ -7,7 +7,7 @@
 
 ### 開発ルール
 
-**共通ルールは `steps/common/rules.md` を参照**
+**共通ルールは `steps/common/rules-core.md` を参照**
 
 - **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/inception.md` に記録。詳細はスキルのSKILL.mdを参照。
 

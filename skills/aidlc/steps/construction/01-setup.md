@@ -6,7 +6,7 @@
 
 ### 開発ルール
 
-**共通ルールは `steps/common/rules.md` を参照**
+**共通ルールは `steps/common/rules-core.md` を参照**
 
 - **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/construction_unit{NN}.md` にUnit単位で記録。詳細はスキルのSKILL.mdを参照。
 
@@ -58,7 +58,7 @@
 
 ### 5. Depth Level確認
 
-プリフライトで取得済みの `depth_level` を確認。`common/rules.md` の「Depth Level仕様」参照。
+プリフライトで取得済みの `depth_level` を確認。`rules-reference.md` の「Depth Level仕様」参照。
 
 ### 6. セッション状態の復元
 

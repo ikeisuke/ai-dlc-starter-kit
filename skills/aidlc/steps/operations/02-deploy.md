@@ -8,7 +8,7 @@
 
 ステップ2-5の確認をスキップするかどうかを確認します。
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、「いいえ」（変更なし）を自動選択し、ステップ2-5をスキップする。`automation_mode=manual` の場合は従来どおりユーザーに確認する。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、「いいえ」（変更なし）を自動選択し、ステップ2-5をスキップする。`automation_mode=manual` の場合は従来どおりユーザーに確認する。
 
 **確認メッセージ**（`automation_mode=manual` の場合）:
 ```text
@@ -157,7 +157,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 **タスク管理機能を活用してください。**
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `comprehensive`: 通常のリリース準備に加え、ロールバック手順を詳細化（手順書作成、ロールバック判定基準の明記）
 - `minimal` / `standard`: 変更なし（現行動作）
 

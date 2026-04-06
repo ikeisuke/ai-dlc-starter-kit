@@ -34,7 +34,7 @@
 
 - **Intent作成**: 回答を得てから `.aidlc/cycles/{{CYCLE}}/requirements/intent.md` を作成（テンプレート: `templates/intent_template.md`）
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: 1-2文の簡潔な記述。質問観点も最小限に絞る
 - `comprehensive`: 詳細な記述に加え、リスク分析・代替案検討セクションをIntentに追加
 - `standard`: 変更なし（現行動作）
@@ -46,7 +46,7 @@
 - スコープが明確に定義されているか
 - 曖昧な表現や解釈の余地がないか
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
 ### ステップ2: Reverse Engineering（brownfieldのみ、greenfieldはスキップ）
 

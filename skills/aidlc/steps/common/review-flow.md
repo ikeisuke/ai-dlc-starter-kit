@@ -109,7 +109,7 @@
 
 ### スコープ保護確認（OUT_OF_SCOPE選択時のみ）
 
-`common/rules.md` の「スコープ保護ルール」に基づき、OUT_OF_SCOPEにしようとしている指摘対象がIntent内要件に該当するかを判定する。
+`common/rules-core.md` の「スコープ保護ルール」に基づき、OUT_OF_SCOPEにしようとしている指摘対象がIntent内要件に該当するかを判定する。
 
 **判定手順**:
 

@@ -227,7 +227,7 @@ squashを実行していない場合は、`steps/common/commit-flow.md` の「In
 
 ### 9. コンテキストリセット提示【必須】
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
 
 **重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、以下のメッセージを**必ず提示**してください。デフォルトはリセットです。
 

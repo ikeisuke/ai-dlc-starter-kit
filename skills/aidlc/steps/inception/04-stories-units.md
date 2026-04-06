@@ -41,7 +41,7 @@
 
 - `.aidlc/cycles/{{CYCLE}}/story-artifacts/user_stories.md` を作成（テンプレート: `templates/user_stories_template.md`）
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: 受け入れ基準を主要ケースのみに簡略化（主要エラーケースは維持）
 - `comprehensive`: 完全な受け入れ基準に加え、エッジケースを網羅
 - `standard`: 変更なし（現行動作）
@@ -53,7 +53,7 @@
 - 受け入れ基準が具体的で検証可能か
 - ユーザー視点で価値が明確か
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
 ### ステップ4: Unit定義【重要】
 
@@ -65,7 +65,7 @@
 - 依存関係は Construction Phase での実行順判断に使用される
 - 各Unitは `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/{NNN}-{unit-name}.md` に作成（テンプレート: `templates/unit_definition_template.md`）
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: 最小限の責務・境界記述。依存関係と優先度のみ記載
 - `comprehensive`: 完全な記述に加え、技術的リスク評価セクションを追加
 - `standard`: 変更なし（現行動作）
@@ -98,13 +98,13 @@
 - 見積もりが妥当か
 - 実装順序に矛盾がないか
 
-**セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
 
 ### ステップ4b: エクスプレスモード判定
 
 **スキップ条件**: `express_enabled` が `false` の場合、このステップをスキップする。
 
-`express_enabled=true` の場合、`common/rules.md` の「エクスプレスモード仕様」セクションに従い判定を実施する。
+`express_enabled=true` の場合、`common/rules-automation.md` の「エクスプレスモード仕様」セクションに従い判定を実施する。
 
 **判定手順**:
 
@@ -114,9 +114,9 @@
 ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | wc -l
 ```
 
-2. Unit数が0の場合: フォールバック。`common/rules.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（Unit数0用）を表示し、通常フローを継続（ステップ5へ進む）
+2. Unit数が0の場合: フォールバック。`common/rules-automation.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（Unit数0用）を表示し、通常フローを継続（ステップ5へ進む）
 
-3. Unit数が1以上の場合: 各 Unit に対して複雑度判定を実施する。`common/rules.md` の「複雑度判定ルール」に従い、Unit 定義ファイルの内容に基づいて4項目（受け入れ基準の明確さ、依存関係の複雑さ、技術的リスク、変更影響範囲）を評価する。
+3. Unit数が1以上の場合: 各 Unit に対して複雑度判定を実施する。`common/rules-automation.md` の「複雑度判定」に従い、Unit 定義ファイルの内容に基づいて4項目（受け入れ基準の明確さ、依存関係の複雑さ、技術的リスク、変更影響範囲）を評価する。
 
 4. 判定結果に応じた分岐:
 
@@ -129,7 +129,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | wc -l
   → `depth_level=minimal` の場合: ステップ5（PRFAQ）をスキップし、「エクスプレスモード完了処理」セクションへ進む
   → `depth_level=standard/comprehensive` の場合: ステップ5（PRFAQ）へ進み、PRFAQ作成完了後に「エクスプレスモード完了処理」セクションへ進む
 
-- **1つでも ineligible**: フォールバック。`common/rules.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（複雑度不適格用）を表示し、通常フローを継続（ステップ5へ進む）。該当 Unit 定義ファイルに `エクスプレス適格性: ineligible` と理由を記録する。
+- **1つでも ineligible**: フォールバック。`common/rules-automation.md` の「エクスプレスモード仕様」セクションのフォールバック通知メッセージ（複雑度不適格用）を表示し、通常フローを継続（ステップ5へ進む）。該当 Unit 定義ファイルに `エクスプレス適格性: ineligible` と理由を記録する。
 
 **フォールバック時の履歴記録**:
 
@@ -141,7 +141,7 @@ ls .aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | wc -l
 
 **タスク管理機能を活用してください。**
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: このステップをスキップ可能（progress.mdで「スキップ」に更新し、完了時の必須作業へ）
 - `comprehensive` / `standard`: 通常通り実行
 

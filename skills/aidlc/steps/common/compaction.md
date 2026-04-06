@@ -52,7 +52,7 @@
 
 ## automation_mode の復元【コンパクション後 必須】
 
-コンパクション後は `automation_mode` が失われるため、**モードに関わらず**以下の手順1〜5を必ず実行する（`common/rules.md` のセミオートゲート仕様を参照）:
+コンパクション後は `automation_mode` が失われるため、**モードに関わらず**以下の手順1〜5を必ず実行する（`common/rules-automation.md` のセミオートゲート仕様を参照）:
 
 ### 手順1: automation_mode の再取得【必須】
 
@@ -99,5 +99,5 @@ automation_mode = {取得した値}（read-config.sh 終了コード: {実際の
 
 コンパクション後の**最初の承認ポイント**で、`automation_mode` に基づく分岐が正しく実行されることを確認する:
 
-- `semi_auto` の場合: セミオートゲート判定（`common/rules.md`）に従い自動承認が実行されるか
+- `semi_auto` の場合: セミオートゲート判定（`common/rules-automation.md`）に従い自動承認が実行されるか
 - `manual` の場合: ユーザー承認フローが実行されるか
