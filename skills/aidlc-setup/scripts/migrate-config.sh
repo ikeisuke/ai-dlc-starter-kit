@@ -188,6 +188,18 @@ fi
 
 echo "config:${CONFIG}"
 
+# --- v1旧設定ファイルのクリーンアップ ---
+# .aidlc/config.toml が存在する場合、docs/aidlc.toml は不要（v1の旧パス）
+_old_config="${PROJECT_ROOT}/docs/aidlc.toml"
+if [[ -f "$_old_config" ]]; then
+    if [[ "$DRY_RUN" == "true" ]]; then
+        _emit_migrate "would-remove:docs/aidlc.toml(v1 legacy)"
+    else
+        rm -f "$_old_config"
+        _emit_migrate "remove:docs/aidlc.toml(v1 legacy)"
+    fi
+fi
+
 # --- セクション 7.4: 設定マイグレーション ---
 
 # 1. [rules.mcp_review] → [rules.reviewing] リネーム移行
