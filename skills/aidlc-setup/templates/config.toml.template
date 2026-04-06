@@ -69,11 +69,10 @@ tools = ["codex"]
 # exclude_patterns = ["*.p12", "config/secrets/**"]
 
 [rules.linting]
-# markdownlint設定（v1.8.0で追加）
-# markdown_lint: true | false
-# - true: markdownlint を実行する
-# - false: markdownlint をスキップする（デフォルト）
-markdown_lint = false
+# Markdown lint設定（v2.1.6でenabled/commandに統合）
+# enabled: true | false - lintを実行するか（デフォルト: false）
+# 旧キー markdown_lint は enabled として読み取られます（フォールバック）
+enabled = false
 
 [rules.feedback]
 # フィードバック送信機能設定（v1.13.3で追加）
