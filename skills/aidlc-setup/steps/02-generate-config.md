@@ -376,7 +376,7 @@ skip:not-found:inception.dependabot
 
 `defaults.toml` をスキーマとして、`config.toml` に欠落しているキーを検出します。
 
-**defaults.toml パスの解決**: `aidlc-setup` スキルのベースディレクトリ配下の `config/defaults.toml` を Read ツールで存在確認し、存在すればそのパスを使用する。見つからない場合は「defaults.toml が見つかりません。欠落キー検出をスキップします。」と表示してこのステップをスキップする。
+**defaults.toml パスの解決**: `{aidlc-setupスキルのベースディレクトリ}/config/defaults.toml` のパスを構築し、Read ツールで存在確認する（Glob/Search ではなく Read で直接パスを指定すること）。存在すればそのパスを `--defaults` に使用する。見つからない場合は「defaults.toml が見つかりません。欠落キー検出をスキップします。」と表示してこのステップをスキップする。
 
 **実行**:
 
@@ -398,8 +398,9 @@ scripts/detect-missing-keys.sh --defaults <defaults.tomlパス> --config .aidlc/
 
 **欠落キーが 0 件の場合**: 「欠落キーなし。config.toml は最新です。」と表示して次のステップへ進む。
 
-**欠落キーがある場合**: 以下の形式でユーザーに追記候補を提示し、確認を求める:
+**欠落キーがある場合**: 欠落キーの一覧テーブルをテキスト出力した後、`AskUserQuestion` ツールで追記するかを確認する（テキスト出力のみで選択肢を提示してはならない）:
 
+テーブル出力:
 ```text
 config.toml に以下のキーが欠落しています（defaults.toml に存在するがconfig.toml に未設定）:
 
@@ -407,12 +408,12 @@ config.toml に以下のキーが欠落しています（defaults.toml に存在
 |------|------------|
 | <key1> | <value1> |
 | <key2> | <value2> |
+```
 
-これらのキーをデフォルト値で config.toml に追記しますか？
+`AskUserQuestion` の選択肢:
 1. はい - すべて追記する
 2. 選択して追記する - 追記するキーを選択
 3. いいえ - スキップする
-```
 
 - **「1. はい」**: 全キーを `config.toml` に追記する。AIが直接TOMLファイルを編集して追記する（Editツール等を使用。dasel v3では `put` サブコマンドが廃止されているため）。追記後に `追記完了: N 件のキーを追加しました` と表示する
 - **「2. 選択して追記する」**: ユーザーに追記するキーを選択させ、選択されたキーのみ追記する

@@ -11,8 +11,6 @@
 
 - **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/inception.md` に記録。詳細はスキルのSKILL.mdを参照。
 
-**【次のアクション】** 今すぐ `steps/common/review-flow.md` を読み込んで、内容を確認してください。
-
   **AIレビュー対象タイミング**: Intent承認前、ユーザーストーリー承認前、Unit定義承認前
 
 - **コンテキストリセット対応【重要】**: ユーザーからリセット・中断の発言があった場合:
@@ -21,16 +19,11 @@
   3. session-state.mdを生成（`common/session-continuity.md` に従う。`automation_mode` に関係なく必ず実行）
   4. 継続用プロンプトを提示: `/aidlc inception`
 
-**【次のアクション】** 今すぐ `steps/common/compaction.md` を読み込んで、内容を確認してください。
-
 ### フェーズの責務【重要】
 
 **行うこと**: サイクル作成、Intent作成、ユーザーストーリー作成、Unit定義
 **禁止**: 実装コード・テストコード・設計ドキュメント詳細化（Construction Phaseで実施）
 **承認なしにConstruction Phaseに進んではいけない**（`semi_auto`での自動承認を除く）
-
-**【次のアクション】** 今すぐ `steps/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ---
 
@@ -55,8 +48,6 @@
 ## Part 1: セットアップ
 
 ### 1. プリフライトチェック
-
-**【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
 結果をコンテキスト変数として保持。以降は再実行しない（ユーザーがインストール/認証した場合のみ再チェック）。
 
@@ -122,62 +113,9 @@
 
 **注意**: スキルバージョンは `skills/aidlc/version.txt`（SKILL.mdの親ディレクトリ）であり、リポジトリルートの `version.txt` ではない。
 
-#### 6b. ComparisonMode決定
+#### 6b-6d. ComparisonMode判定・比較実行・確認手順
 
-| モード | 条件 | 比較対象 |
-|--------|------|---------|
-| THREE_WAY | 3点全available | 3点比較 |
-| REMOTE_LOCAL | skillのみunavailable | remote vs local（従来フォールバック） |
-| SKILL_LOCAL | remoteのみunavailable | skill vs local |
-| REMOTE_SKILL | localのみunavailable | remote vs skill |
-| SINGLE_OR_NONE | 2点以上unavailable | 比較スキップ（警告のみ表示して続行） |
-
-#### 6c. 比較実行
-
-**THREE_WAYモード**:
-
-| パターン | 条件 | アクション |
-|---------|------|-----------|
-| 全一致 | remote = skill = local | 「最新バージョンです」表示 |
-| リモートのみ新しい | remote > skill = local | スキル更新を促す（プラグイン再インストール） |
-| スキルのみ古い | remote = local > skill | スキル更新を促す |
-| ローカルのみ古い | remote = skill > local | `/aidlc setup`の実行を促す + starter_kit_version確認手順 |
-| ローカルのみ進んでいる | local > remote = skill | 警告表示（設定が先行） |
-| 複数不一致 | 上記以外 | 各差分を表示、スキル更新→ローカル設定更新の順にアクション提示 |
-
-**REMOTE_LOCALモード（スキル取得失敗時のフォールバック）**:
-
-| パターン | 条件 | アクション |
-|---------|------|-----------|
-| 一致 | remote = local | 「取得可能分は一致」+ スキル取得失敗警告 |
-| remote > local | - | `/aidlc setup`の実行を促す + starter_kit_version確認手順 |
-| local > remote | - | 警告表示（設定が先行） |
-
-**SKILL_LOCALモード（リモート取得失敗時）**:
-
-| パターン | 条件 | アクション |
-|---------|------|-----------|
-| 一致 | skill = local | 「取得可能分は一致」+ リモート取得失敗警告 |
-| skill > local | - | `/aidlc setup`の実行を促す + リモート取得失敗警告 |
-| local > skill | - | スキル更新案内 + リモート取得失敗警告 |
-
-**REMOTE_SKILLモード（ローカル設定取得失敗時）**:
-
-| パターン | 条件 | アクション |
-|---------|------|-----------|
-| 一致 | remote = skill | 「取得可能分は一致」+ ローカル設定取得失敗警告 |
-| remote > skill | - | スキル更新案内 + ローカル設定取得失敗警告 |
-| skill > remote | - | 「スキルが先行している可能性」警告 + ローカル設定取得失敗警告 |
-
-**SINGLE_OR_NONEモード**: 比較スキップ、unavailableソースの警告のみ表示して続行。
-
-#### 6d. starter_kit_version確認手順（ローカルのみ古い場合に追加表示）
-
-```text
-アップグレード後、以下を確認してください:
-1. `/aidlc setup` を実行してアップグレードモードを完了
-2. `.aidlc/config.toml` の `starter_kit_version` がスキルバージョンと一致するか確認
-```
+`guides/version-check.md` を参照し、6aで取得したバージョン情報に基づいてComparisonMode判定と比較実行を行う。
 
 ### 7. サイクルモード確認
 

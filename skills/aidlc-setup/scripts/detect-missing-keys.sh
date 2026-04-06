@@ -148,7 +148,7 @@ _config_content=$(cat "$CONFIG_PATH" 2>/dev/null) || {
 }
 
 # dasel でパースできるか検証（トップレベルキーの存在を確認）
-if ! printf '%s' "$_config_content" | dasel -i toml '.' >/dev/null 2>&1; then
+if ! printf '%s' "$_config_content" | dasel -i toml >/dev/null 2>&1; then
     printf 'error\tconfig-parse-failed\t%s is not valid TOML\n' "$CONFIG_PATH"
     exit 2
 fi

@@ -128,40 +128,17 @@ rules.reviewing.mode:recommend
 
 以下の全項目を常時実行する。
 
-#### gh チェック
+| チェック項目 | 条件 | 動作 | 表示内容 | severity |
+|-------------|------|------|---------|----------|
+| gh | `gh_status` != `available` | 警告表示、gh依存機能無効化 | `⚠ gh: {status}（gh依存機能は制限されます）` | warn |
+| レビューツール | `review_mode == disabled` | スキップ（表示なし） | （なし） | - |
+| レビューツール | `review_tools == []` | 情報表示してスキップ | `ℹ 外部CLIを使用しない設定です（tools = []）` | info |
+| レビューツール | 上記以外 | `which {先頭ツール}` で確認 | `ℹ レビューツール ({ツール名}): available / not found（レビュー実行時に���ォールバックし���す）` | info |
+| defaults.toml | `config/defaults.toml` 不在 | 警告表示 | `⚠ defaults.toml: 不在（デ��ォルト値が適用されません）` | warn |
 
-手順1で取得済みの `gh_status` を結果提示に含める。`gh:available` でない場合は警告表示し、gh依存機能を無効化して続行（severity: warn）。
+**注**: レビューツール判定は上から順に評価し、`review_mode == disabled` を最優先する。設定値のバリデーション結果は結���提示の「オプションチェック」セクションに含める。
 
-#### レビューツール確認
-
-以下の**両方**を満たす場合のみ実行:
-- `review_mode` が `disabled` でない
-- `review_tools` が空配列 `[]` でない
-
-**条件を満たさない場合**:
-- `review_mode == disabled`: スキップ（情報表示なし）
-- `review_tools == []`: 「外部CLIを使用しない設定です（tools = []）」と情報表示し、スキップ
-
-**条件を満たす場合**:
-
-`review_tools` リストの先頭ツールの存在を `which {先頭ツール名}` で確認:
-
-```bash
-which {先頭ツール名} >/dev/null 2>&1
-```
-
-（例: `review_tools = ["codex"]` なら `which codex`、`["claude"]` なら `which claude`）
-
-- 存在する場合: `ℹ レビューツール ({先頭ツール名}): available`
-- 存在しない場合: `ℹ レビューツール ({先頭ツール名}): not found（レビュー実行時にフォールバックします）`
-
-**severity**: info（フェーズ続行に影響しない）
-
-#### 設定バリデーション
-
-設定値のバリデーション結果を結果提示の「オプションチェック」セクションに含める。`config/defaults.toml` の存在チェックも実施し、不在の場合は警告を表示する（severity: warn）。
-
-### 6. 結果提示
+### 6. 結���提示
 
 全チェックと設定値取得が完了したら、以下のフォーマットで結果を提示する:
 

@@ -163,7 +163,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 - **ステップ開始時**: progress.mdでステップ7を「進行中」に更新
 
-**サブステップ一覧**（順番に実行、詳細は operations-release.md が正本）:
+**サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` を参照して従うこと）:
 1. 7.1 バージョン確認
 2. 7.2 CHANGELOG更新（`changelog = true` の場合）
 3. 7.3 README更新
@@ -180,8 +180,6 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 11. 7.11 mainブランチとの差分チェック
 12. 7.12 PRマージ前レビュー
 13. 7.13 PRマージ
-
-**【次のアクション】** 今すぐ `steps/operations/operations-release.md` を読み込んで、各サブステップの詳細手順に従ってください。
 
 - **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 

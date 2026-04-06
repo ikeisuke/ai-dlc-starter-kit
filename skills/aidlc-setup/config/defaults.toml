@@ -1,6 +1,6 @@
 # AI-DLC Default Configuration
 # このファイルはスターターキットのデフォルト値を定義します
-# プロジェクトの docs/aidlc.toml で上書き可能です
+# プロジェクトの .aidlc/config.toml で上書き可能です
 #
 # 正本: aidlc スキルの config/defaults.toml
 # このファイルは正本の配布用コピーです。

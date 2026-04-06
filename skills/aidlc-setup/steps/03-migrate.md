@@ -2,9 +2,7 @@
 
 **実行条件**: Gitリポジトリ内である場合のみ実行する（`git rev-parse --is-inside-work-tree 2>/dev/null` が `true`）。
 
-```bash
-scripts/read-config.sh rules.cycle.git_tracked
-```
+`.aidlc/config.toml` から `rules.cycle.git_tracked` の値を確認する（AIがReadツールで読み取り、該当キーを探す）。
 
 `git_tracked` が `false` の場合、`.gitignore` に `.aidlc/cycles/` が既に記載されているか確認:
 

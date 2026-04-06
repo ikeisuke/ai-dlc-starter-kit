@@ -1,9 +1,5 @@
 # Construction Phase プロンプト
 
-**【次のアクション】** 今すぐ `steps/common/intro.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/rules.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/project-info.md` を読み込んで、内容を確認してください。
-
 ---
 
 ## プロジェクト情報
@@ -26,22 +22,13 @@
   | 2 | 関係あるが別Unitに属する | バックログ or 別Unit定義に追加 |
   | 3 | 現在のUnitに関係 | Unit定義追記 → 設計更新 → 実装 |
 
-**【次のアクション】** 今すぐ `steps/common/task-management.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/review-flow.md` を読み込んで、内容を確認してください。
-
   **AIレビュー対象タイミング**: 計画ファイル承認前、設計レビュー前、コード生成後、テスト完了後
-
-**【次のアクション】** 今すぐ `steps/common/context-reset.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/compaction.md` を読み込んで、内容を確認してください。
 
 ### フェーズの責務【重要】
 
 **Phase 1（設計）**: ドメインモデル設計、論理設計、設計レビュー。探索的調査のためのコードは許可（成果物としてのコードは禁止）。
 **Phase 2（実装）**: コード生成、テスト作成、統合とレビュー。
 **設計レビューで承認を得るまでPhase 2に進んではいけない。**
-
-**【次のアクション】** 今すぐ `steps/common/phase-responsibilities.md` を読み込んで、内容を確認してください。
-**【次のアクション】** 今すぐ `steps/common/progress-management.md` を読み込んで、内容を確認してください。
 
 ---
 
@@ -62,8 +49,6 @@
 `.aidlc/rules.md` が存在すれば読み込む。
 
 ### 3. プリフライトチェック
-
-**【次のアクション】** 今すぐ `steps/common/preflight.md` を読み込んで、手順に従ってください。
 
 結果（`gh_status`, `depth_level`, `automation_mode` 等）をコンテキスト変数として保持。
 
