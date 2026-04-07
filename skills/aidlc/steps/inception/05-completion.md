@@ -33,28 +33,11 @@
 
 `/write-history` スキルで記録（`--step "Inception Phase完了（エクスプレスモード）"`）。
 
-### 4. Squash（コミット統合）【オプション】
+### 4-5. Squash・Gitコミット
 
-「完了時の必須作業」のステップ6と同じ手順を実行する。
+「完了時の必須作業」のステップ6（Squash）・ステップ7（Gitコミット）と同じ手順を実行する。squash結果に応じてコミットをスキップまたは実行。
 
-- `squash:success` の場合: ステップ5をスキップ
-- `squash:skipped` の場合: ステップ5に進む
-- `squash:error` の場合: commit-flow.md のエラーリカバリ手順に従い、ステップ5に進む
-
-### 5. Gitコミット
-
-ステップ4で squash を実行した場合（`squash:success`）、コミットは既に完了しています。`git status` で確認のみ行ってください。
-
-squash を実行していない場合は、`steps/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
-
-**コミット失敗時のエラーハンドリング**:
-
-コミットが失敗した場合、以下のメッセージを表示し、`commit-flow.md` の手順に沿った手動コミットを案内する。
-
-```text
-【エラー】コミットの作成に失敗しました。
-commit-flow.md の「Inception Phase完了コミット」手順に従い、手動でコミットを作成してください。
-```
+**コミット失敗時**: `commit-flow.md` の手順に沿った手動コミットを案内する。
 
 ### 6. Construction Phase への自動遷移
 
@@ -203,13 +186,11 @@ gh pr create --draft \
 
 ### 7. Gitコミット
 
-**注意**: ステップ6でsquashを実行した場合（`squash:success`）、コミットは既に完了しています。`git status`で確認のみ行ってください。
-
-squashを実行していない場合は、`steps/common/commit-flow.md` の「Inception Phase完了コミット」手順に従ってください。
+`squash:success` なら `git status` 確認のみ。それ以外は `commit-flow.md` の「Inception Phase完了コミット」に従う。
 
 ### 8. 完了サマリ出力【必須】
 
-コンテキストリセット提示の前に、以下のフォーマットで完了サマリを出力する。AIがInception Phase作業中のコンテキスト情報から動的に生成する。
+以下の完了サマリを出力する。※ 情報源にない内容は出力しない。
 
 ```text
 【Inception Phase 完了サマリ】
@@ -223,17 +204,8 @@ squashを実行していない場合は、`steps/common/commit-flow.md` の「In
 - 残課題・バックログ: [登録したバックログIssue番号。なければ「なし」]
 ```
 
-※ 情報源に存在しない内容を出力しないこと
-
 ### 9. コンテキストリセット提示【必須】
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、Construction Phaseを自動開始する。`automation_mode=manual` の場合は以下の従来フローを実行する。
+`semi_auto`: スキップしConstruction Phaseを自動開始。`manual`: ユーザーの明示的な連続実行指示（「続けて」等）がない限り、以下を実行（デフォルトはリセット）。
 
-**重要**: ユーザーから「続けて」「リセットしないで」「このまま次へ」等の明示的な連続実行指示がない限り、以下のメッセージを**必ず提示**してください。デフォルトはリセットです。
-
-**セッションサマリの生成**: メッセージ提示前に、AIが以下の情報を収集してセッションサマリを生成してください:
-1. サイクル番号（{{CYCLE}}）と「Inception Phase」
-2. 現在のブランチ名（`git branch --show-current`）とPR/コミット状態（`git log --oneline -1` でコミット確認、ghが利用可能な場合は `gh pr view --json state,url 2>/dev/null` でPR状態確認）
-3. 次に実行すべきアクション
-
-テンプレート（`templates/context_reset_template.md`）に従い、セッションサマリを含むメッセージを出力する。
+セッションサマリ（サイクル番号、ブランチ/PR状態、次のアクション）を収集し、テンプレート（`templates/context_reset_template.md`）に従い出力する。
