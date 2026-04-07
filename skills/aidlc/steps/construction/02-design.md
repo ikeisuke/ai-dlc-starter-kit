@@ -38,9 +38,9 @@
 
 > **順序制約**: `steps/common/review-flow.md` の手順を確認してからレビューを実行すること。設計承認なしにPhase 2（実装）に進むことは禁止。
 
-1. **AIレビュー実施**（`steps/common/review-flow.md` に従う）
+1. **AIレビュー実施**（`steps/common/review-flow.md` に従う）（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）
 2. レビュー結果を反映
-3. **セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認しPhase 2へ進む。上記以外は設計内容をユーザーに提示し、承認を得る
+3. **セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認しPhase 2へ進む。上記以外は設計内容をユーザーに提示し、承認を得る（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）
 
 **承認なしで実装フェーズに進んではいけない**（`automation_mode=semi_auto` での自動承認を除く）
 

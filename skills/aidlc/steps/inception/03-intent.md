@@ -39,14 +39,14 @@
 - `comprehensive`: 詳細な記述に加え、リスク分析・代替案検討セクションをIntentに追加
 - `standard`: 変更なし（現行動作）
 
-**AIレビュー**: Intent承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること。
+**AIレビュー**: Intent承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
 
 **Inception固有のレビュー観点**:
 - 目的・狙いが明確で妥当か
 - スコープが明確に定義されているか
 - 曖昧な表現や解釈の余地がないか
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
 
 ### ステップ2: Reverse Engineering（brownfieldのみ、greenfieldはスキップ）
 
