@@ -244,8 +244,10 @@ cmd_merge() {
     fi
 
     # CIステータス確認（--requiredで必須チェックのみ、bucketベース）
-    local checks_status
-    checks_status=$(gh pr checks "$pr_number" --required --json bucket --jq '[.[].bucket] | if length == 0 then "pass" elif all(. == "pass") then "pass" elif any(. == "pending") then "pending" else "fail" end' 2>/dev/null || echo "unknown")
+    # gh pr checks はpending時にexit 8を返すため、exit codeで判定せずjq出力で判定する
+    local checks_status checks_output
+    checks_output=$(gh pr checks "$pr_number" --required --json bucket --jq '[.[].bucket] | if length == 0 then "pass" elif all(. == "pass") then "pass" elif any(. == "pending") then "pending" else "fail" end' 2>/dev/null) || true
+    checks_status="${checks_output:-unknown}"
 
     # チェック状態不明時: fail-closed（即時マージしない）
     if [[ "$checks_status" == "unknown" ]]; then
