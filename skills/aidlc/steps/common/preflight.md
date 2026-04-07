@@ -59,7 +59,7 @@ ls .aidlc/config.toml 2>/dev/null
 全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
 
 ```bash
-scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.git.squash_enabled rules.linting.enabled rules.git.unit_branch_enabled rules.construction.max_retry
+scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.git.squash_enabled rules.linting.enabled rules.git.unit_branch_enabled rules.construction.max_retry rules.git.merge_method
 ```
 
 **出力形式**（`key:value` 形式、1行1キー）:
@@ -86,6 +86,7 @@ rules.reviewing.mode:recommend
 | rules.linting.enabled | （後続の解決ロジックで処理） | false |
 | rules.git.unit_branch_enabled | `unit_branch_enabled` | false |
 | rules.construction.max_retry | `max_retry` | 3 |
+| rules.git.merge_method | `merge_method` | ask |
 
 **history_level 解決ロジック**（派生コンテキスト変数）:
 
@@ -117,6 +118,16 @@ rules.reviewing.mode:recommend
    ```
    - exit 0かつ非空 → `markdown_lint`に設定（旧config.tomlに明示記載あり）
    - exit 1（キー不在）→ デフォルト値 `false`
+
+**merge_method バリデーション**:
+
+上記バッチ取得後、`rules.git.merge_method`の値を確認する:
+
+1. 値が `merge` / `squash` / `rebase` / `ask` のいずれか → `merge_method`に設定
+2. それ以外 → 警告を表示しデフォルト値 `ask` にフォールバック:
+   ```text
+   ⚠ merge_method の値が不正です（"{value}"）。デフォルト値 "ask" を使用します。
+   ```
 
 **エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
 
@@ -167,6 +178,7 @@ rules.reviewing.mode:recommend
   unit_branch_enabled: {value}
   history_level: {value}
   max_retry: {value}
+  merge_method: {value}
 
 ■ 判定: {続行可能 | 続行可能（警告N件）}
 ```

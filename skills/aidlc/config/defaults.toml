@@ -42,6 +42,7 @@ commit_on_phase_complete = true
 branch_mode = "ask"
 unit_branch_enabled = false
 squash_enabled = false
+merge_method = "ask"
 ai_author = ""
 ai_author_auto_detect = true
 
