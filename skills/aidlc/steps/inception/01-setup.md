@@ -68,27 +68,11 @@
 
 `skills/aidlc/SKILL.md` の存在確認。未存在時は `/aidlc setup` を案内し続行。
 
-**注**: この確認はファイルの物理的な存在のみを判定する。環境依存の意味解釈（プラグインインストール状態 vs リポジトリソース存在）はステップ4のリポジトリ判定後に決まる。
-
-### 4. スターターキット開発リポジトリ判定
-
-`.aidlc/config.toml` の `[project].name` が `ai-dlc-starter-kit` → `STARTER_KIT_DEV`、それ以外 → `USER_PROJECT`。この判定は参照先ポリシーの決定にのみ使用する。
-
-#### 参照先ポリシー
-
-判定結果に基づき、以降のステップで適用する参照先ポリシーを定義する:
-
-| ポリシー項目 | STARTER_KIT_DEV | USER_PROJECT |
-|-------------|-----------------|--------------|
-| ステップ3の意味 | リポジトリ内ソース存在確認（プラグインのインストール状態は保証しない） | プラグインのデプロイ有無を示す |
-| スキル内リソース編集対象 | `skills/aidlc/`（リポジトリ内、META-001例外） | 該当なし（スキルベースディレクトリ相対参照のみ） |
-| 除外対象 | `~/.claude/plugins/` 配下は編集候補・更新対象・差分比較対象から除外 | 同左（スキルベースディレクトリからのread-only参照は除外対象外） |
-
-### 5. 追加ルール確認
+### 4. 追加ルール確認
 
 `.aidlc/rules.md` が存在すれば読み込む。
 
-### 6. スターターキットバージョン確認（三角モデル）
+### 5. スターターキットバージョン確認（三角モデル）
 
 **スキップ条件**: `rules.version_check.enabled` が `false` の場合。
 
@@ -101,7 +85,7 @@
    - exit 2 → 警告表示 + デフォルト値 `true`
 4. exit 2（エラー）→ 警告表示、旧キーへは進まずデフォルト値 `true`
 
-#### 6a. バージョン情報取得（3点）+ 正規化
+#### 5a. バージョン情報取得（3点）+ 正規化
 
 | ソース | 取得方法 | エラー時 |
 |--------|---------|---------|
@@ -113,11 +97,11 @@
 
 **注意**: スキルバージョンは `skills/aidlc/version.txt`（SKILL.mdの親ディレクトリ）であり、リポジトリルートの `version.txt` ではない。
 
-#### 6b-6d. ComparisonMode判定・比較実行・確認手順
+#### 5b-5d. ComparisonMode判定・比較実行・確認手順
 
-`guides/version-check.md` を参照し、6aで取得したバージョン情報に基づいてComparisonMode判定と比較実行を行う。
+`guides/version-check.md` を参照し、5aで取得したバージョン情報に基づいてComparisonMode判定と比較実行を行う。
 
-### 7. サイクルモード確認
+### 6. サイクルモード確認
 
 ```bash
 scripts/read-config.sh rules.cycle.mode
@@ -135,13 +119,13 @@ scripts/read-config.sh rules.cycle.mode
 **named モード**: 既存名前付きサイクルがあれば選択肢に表示。「新規作成」で名前入力フローへ。
 選択/入力された名前は `cycle_name` として保持。
 
-### 8. 名前付きサイクル継続確認
+### 7. 名前付きサイクル継続確認
 
 **スキップ**: `cycle_mode=default`、`cycle_name` 設定済み、ask→通常サイクル選択時、名前付きサイクル0件の場合。
 
 `.aidlc/cycles/` 配下の名前付きサイクル（`v[0-9]`開始でない、予約名でない）を検出し、継続するか新規開始するか選択を提示。
 
-### 9. サイクルバージョンの決定
+### 8. サイクルバージョンの決定
 
 **9-1. コンテキスト表示**:
 
@@ -166,9 +150,9 @@ scripts/suggest-version.sh
 
 `all_cycles` に完全一致する場合はエラー（重複防止）。名前付きサイクルの `{{CYCLE}}` は `${cycle_name}/${version}` 形式。
 
-### 10. ブランチ確認【推奨】
+### 9. ブランチ確認【推奨】
 
-**10-1. ブランチ作成方式**: `scripts/read-config.sh rules.git.branch_mode`
+**9-1. ブランチ作成方式**: `scripts/read-config.sh rules.git.branch_mode`
 
 | mode | 動作 |
 |------|------|
@@ -178,7 +162,7 @@ scripts/suggest-version.sh
 
 無効値 → `ask` にフォールバック。
 
-**10-2. ブランチ状況による分岐**:
+**9-2. ブランチ状況による分岐**:
 
 | 現在のブランチ | 動作 |
 |-------------|------|
@@ -193,7 +177,7 @@ scripts/setup-branch.sh {{CYCLE}} branch   # ブランチ方式
 scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 ```
 
-**10-3. main最新化チェック**: `setup-branch.sh` 出力の `main_status:` をパースして表示。
+**9-3. main最新化チェック**: `setup-branch.sh` 出力の `main_status:` をパースして表示。
 
 | main_status | メッセージ |
 |-------------|-----------|
@@ -201,21 +185,21 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 | `behind` | ⚠ リモートデフォルトブランチに未取り込みコミットがあります。作業開始前に最新変更を取り込むことを推奨します（git merge/rebase）。 |
 | `fetch-failed` | リモート確認失敗（オフライン等） |
 
-**10-4. rules.md再読み込み**: ブランチ切り替えが発生した場合のみ、ステップ5を再実行。
+**9-4. rules.md再読み込み**: ブランチ切り替えが発生した場合のみ、ステップ4を再実行。
 
-### 11. サイクル存在確認
+### 10. サイクル存在確認
 
-`.aidlc/cycles/{{CYCLE}}/` が存在 → ステップ11a・11bを実行してからPart 2へ、未存在 → ステップ12へ。
+`.aidlc/cycles/{{CYCLE}}/` が存在 → ステップ10a・10bを実行してからPart 2へ、未存在 → ステップ11へ。
 
-### 11a. progress.md読み込み【再開時必須】
+### 10a. progress.md読み込み【再開時必須】
 
 `.aidlc/cycles/{{CYCLE}}/inception/progress.md` が存在すれば読み込み、完了済みステップを確認する。未完了ステップから再開する。存在しない場合は新規作成する（全ステップ「未着手」で初期化）。
 
-### 11b. タスクリスト作成【再開時必須】
+### 10b. タスクリスト作成【再開時必須】
 
 **【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。タスクリストはセッションローカルのため、再開時も毎回作成が必要です。
 
-### 12. サイクルディレクトリ作成
+### 11. サイクルディレクトリ作成
 
 ```bash
 scripts/init-cycle-dir.sh {{CYCLE}}
@@ -223,11 +207,11 @@ scripts/init-cycle-dir.sh {{CYCLE}}
 
 10個のサイクル固有ディレクトリと初期履歴ファイルを一括作成。`--dry-run` で確認可能。
 
-### 12a. progress.md作成【必須】
+### 11a. progress.md作成【必須】
 
 サイクルディレクトリ作成直後に `.aidlc/cycles/{{CYCLE}}/inception/progress.md` を作成する（全ステップ「未着手」で初期化）。Part 2のステップ18では既存ファイルの確認のみ行う。
 
-### 12b. タスクリスト作成【必須】
+### 11b. タスクリスト作成【必須】
 
 **【次のアクション】** `steps/common/task-management.md` の「Inception Phase: タスクテンプレート」に従い、フェーズのタスクリストを作成してください。各ステップの着手・完了時にタスクステータスを更新すること。
 

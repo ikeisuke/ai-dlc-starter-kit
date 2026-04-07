@@ -178,7 +178,7 @@ gh pr view {PR番号} --json reviewDecision --jq '.reviewDecision'
 
 ## 7.13 PRマージ【重要】
 
-PR本文の `Closes #XX` 記載を最終確認。`gh:available` 以外は手動マージ。
+PR本文の `Closes #XX` 記載を最終確認。
 
 ```bash
 gh pr view {PR番号} --json reviewDecision,state  # 承認状況確認
@@ -187,4 +187,11 @@ scripts/pr-ops.sh merge {PR番号} --squash           # Squashマージ
 scripts/pr-ops.sh merge {PR番号} --rebase           # Rebaseマージ
 ```
 
-マージ方法はユーザーに確認して実行。
+### マージ方法の決定
+
+1. **`gh_status` != `available`**: merge_methodに関わらず手動マージを案内
+2. **`merge_method` == `"ask"`**: AskUserQuestionでマージ方法を選択させる（通常マージ / Squashマージ / Rebaseマージ）
+3. **`merge_method` == `"merge"` / `"squash"` / `"rebase"`**: 指定方法で自動実行。「merge_method設定に基づき {method} マージを実行します。」と表示
+4. **マージ失敗時**:
+   - `gh` 利用不可系エラー（未認証、CLI異常、`require_gh`失敗相当）→ 手動マージ案内にフォールバック
+   - その他のエラー → エラー内容を表示し、AskUserQuestionでマージ方法を再選択（通常マージ / Squashマージ / Rebaseマージ / 中断する）
