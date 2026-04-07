@@ -117,6 +117,8 @@
 
 `guides/version-check.md` を参照し、6aで取得したバージョン情報に基づいてComparisonMode判定と比較実行を行う。
 
+**注意**: ステップ4の `STARTER_KIT_DEV` / `USER_PROJECT` 判定はバージョンチェックと無関係。バージョン比較結果や警告文面にリポジトリ種別を使用してはならない。
+
 ### 7. サイクルモード確認
 
 ```bash

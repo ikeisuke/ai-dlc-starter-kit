@@ -9,11 +9,11 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-04-07 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-04-07 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-04-07 |
-| 6. Construction用progress.md作成 | 進行中 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | 完了 | construction/progress.md | 2026-04-07 |
 
 ## 現在のステップ
 
-進行中: 6. Construction用progress.md作成 → 完了処理
+完了: 全ステップ完了
 
 ## 完了済みステップ
 
