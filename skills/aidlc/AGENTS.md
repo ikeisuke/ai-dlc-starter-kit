@@ -80,7 +80,7 @@ Setup PhaseとInception Phaseが統合され、1回の実行で
 
 ---
 
-@`steps/common/agents-rules.md` を参照してください。
+@`steps/common/rules-core.md` を参照してください。
 
 ---
 

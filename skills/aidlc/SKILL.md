@@ -67,9 +67,8 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 以下のファイルを順に読み込む:
 
-1. `steps/common/agents-rules.md` — エージェントルール
-2. `steps/common/rules.md` — 共通開発ルール
-3. `steps/common/preflight.md` — プリフライトチェック（実行）
+1. `steps/common/rules-core.md` — 共通開発ルール
+2. `steps/common/preflight.md` — プリフライトチェック（実行）
 
 ### ステップ2: プロジェクト情報確認
 
@@ -80,7 +79,6 @@ ARGUMENTS文字列を以下のルールでパースする:
 ### ステップ3: セッション継続判定
 
 `steps/common/session-continuity.md` を読み込み、前回セッションの継続かを判定。
-コンパクション復帰の場合は `steps/common/compaction.md` を読み込む。
 
 ### ステップ4: フェーズステップ読み込み
 
@@ -172,5 +170,5 @@ AI-DLC Starter Kit (version unknown)
 
 - **ドキュメント読み込み制限**: `.aidlc/cycles/{{CYCLE}}/` 配下のファイルのみ読み込む。他サイクルのドキュメントは読まない
 - **テンプレート参照**: ドキュメント作成時は `templates/` を参照（スキルベースディレクトリからの相対パス）
-- **パス解決**: `steps/` および `scripts/` で始まるパスはスキルのベースディレクトリ（SKILL.mdと同じディレクトリ）からの相対パスとして解決する。ステップファイル内の相互参照（例: `steps/common/rules.md` を読み込んで）も同じルールに従う。Bashコマンドで `scripts/` 配下のスクリプトを実行する場合は、解決した絶対パスを使用すること
+- **パス解決**: `steps/` および `scripts/` で始まるパスはスキルのベースディレクトリ（SKILL.mdと同じディレクトリ）からの相対パスとして解決する。ステップファイル内の相互参照（例: `steps/common/rules-core.md` を読み込んで）も同じルールに従う。Bashコマンドで `scripts/` 配下のスクリプトを実行する場合は、解決した絶対パスを使用すること
 - **SKILL.md本文制限**: 本文500行以内。詳細はステップファイルに分離

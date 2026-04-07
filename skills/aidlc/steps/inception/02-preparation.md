@@ -15,12 +15,12 @@ Part 1 ステップ1のプリフライトチェックで取得済みのコンテ
 
 **判定方法**: 初回入力をtrim（前後の空白除去）し、「start express」と完全一致（case-insensitive）するかを確認する。
 
-- **一致した場合**: `express_enabled=true`、`express_source=command` をコンテキスト変数として保持する。`common/rules.md` の「エクスプレスモード仕様」セクションの「`start express` コマンドの動作」に従い、メッセージを表示する。**depth_level は変更しない**。ステップ15に進む（depth_level は設定ファイルから通常通り取得する）。
+- **一致した場合**: `express_enabled=true`、`express_source=command` をコンテキスト変数として保持する。`common/rules-automation.md` の「エクスプレスモード仕様」セクションの「`start express` コマンドの動作」に従い、メッセージを表示する。**depth_level は変更しない**。ステップ15に進む（depth_level は設定ファイルから通常通り取得する）。
 - **一致しない場合**: `express_enabled=false` をコンテキスト変数として保持し、ステップ15に進む（通常フロー）。
 
 ### 15. Depth Level確認
 
-プリフライトチェック（Part 1 ステップ1）で取得済みの `depth_level` コンテキスト変数を参照し、`depth_level_source=config` を設定する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules.md` の「バリデーション仕様」に従う。
+プリフライトチェック（Part 1 ステップ1）で取得済みの `depth_level` コンテキスト変数を参照し、`depth_level_source=config` を設定する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules-reference.md` の「Depth Level仕様」に従う。
 
 ### 16. GitHub Issue確認
 

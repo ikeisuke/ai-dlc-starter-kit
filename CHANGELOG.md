@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.2.1] - 2026-04-07
+
+### Changed
+
+- `rules.md`を3階層分割（`rules-core.md` / `rules-automation.md` / `rules-reference.md`）し、初回ロード量を削減（#519）
+- `agents-rules.md`を`rules-core.md`に統合し、ファイル数を削減（#519）
+- `compaction.md`のCLAUDE.md `@`参照による二重ロードを解消（#519）
+- フェーズ完了処理（`04-completion.md` / `05-completion.md`）を共通化し、重複を削減（#519）
+- `review-flow.md`の遷移テーブルを圧縮し、条件分岐を簡素化（#519）
+
+### Added
+
+- Wave 2効果計測結果（ベースラインとの差分分析）を`baseline.md`に記録（#519）
+
+---
+
 ## [2.1.8] - 2026-04-05
 
 ### Changed

@@ -10,7 +10,7 @@
 
 **タスクステータスを更新してください（着手時: `in_progress`、完了時: `completed`）。**
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: このステップをスキップ可能。スキップする場合は「設計省略（depth_level=minimal）」を履歴に記録し、ステップ3（設計レビュー）もスキップしてPhase 2へ進む
 - `comprehensive`: 標準的なドメインモデルに加え、ドメインイベント定義を追加
 - `standard`: 変更なし（現行動作）
@@ -23,7 +23,7 @@
 
 **タスクステータスを更新してください（着手時: `in_progress`、完了時: `completed`）。**
 
-**Depth Level分岐**（`common/rules.md` の「レベル別成果物要件一覧」を参照）:
+**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
 - `minimal`: このステップをスキップ可能。スキップする場合は「設計省略（depth_level=minimal）」を履歴に記録し、ステップ3（設計レビュー）もスキップしてPhase 2へ進む
 - `comprehensive`: 標準的な論理設計に加え、シーケンス図・状態遷移図を追加
 - `standard`: 変更なし（現行動作）
@@ -40,7 +40,7 @@
 
 1. **AIレビュー実施**（`steps/common/review-flow.md` に従う）
 2. レビュー結果を反映
-3. **セミオートゲート判定**（`common/rules.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認しPhase 2へ進む。上記以外は設計内容をユーザーに提示し、承認を得る
+3. **セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認しPhase 2へ進む。上記以外は設計内容をユーザーに提示し、承認を得る
 
 **承認なしで実装フェーズに進んではいけない**（`automation_mode=semi_auto` での自動承認を除く）
 
