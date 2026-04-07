@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.2.2] - 2026-04-07
+
+### Changed
+
+- プラグインルート`AGENTS.md`にフェーズステップ読み込み前に必要なルール（承認プロセス、質問判断基準、AskUserQuestion使用ルール等）を移行し、`rules-core.md`からの明示Readを不要化（#533, #541）
+- `review-flow-reference.md`を簡略化し、review-flow関連ファイルの合計サイズを削減（#519）
+- Construction Phase `01-setup.md`からステップ8（バックログ確認）を削除。ステップ12（計画作成）でカバー済み（#542）
+
+### Added
+
+- `config.toml`に`rules.git.merge_method`キーを追加（"merge" / "squash" / "rebase" / "ask"）。PRマージ方法を事前設定可能に（#538）
+- PostToolUse hookでWriteツール実行後にU+FFFD（置換文字）を検出した場合の警告表示機能（#537）
+
+### Fixed
+
+- バージョンチェック時のSTARTER_KIT_DEV特別扱いを廃止し、全プロジェクトで統一的にバージョン不一致警告を表示（#539）
+
+---
+
 ## [2.2.1] - 2026-04-07
 
 ### Changed
