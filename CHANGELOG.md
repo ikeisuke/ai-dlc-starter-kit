@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.2.3] - 2026-04-08
+
+### Changed
+
+- `session-state.md`を廃止し、`session-continuity.md`を簡略化。セッション復帰はprogress.md・Unit定義ファイルベースに統一（#547）
+- `preflight.md`の出力フォーマットを圧縮し、冗長な説明を除去（#519）
+- 設定値に応じた条件ロードスキップを導入。`review_mode=disabled`時のreview-flow.md、`automation_mode=manual`時のrules-automation.md等のロードをスキップ（#519）
+- `SKILL.md`のセクション構造を整理し、可読性を向上（#549）
+- 不要ルール・冗長判定を棚卸しし、ステップファイル・ガイド内の重複記述を除去（#544）
+
+### Added
+
+- Operations Phaseマージフローにauto-merge対応を追加。`rules.git.auto_merge`設定で有効化可能（#548）
+- ブランチ保護ルール設定ガイド（adminマージ禁止）を追加（#548）
+
+---
+
 ## [2.2.2] - 2026-04-07
 
 ### Changed
