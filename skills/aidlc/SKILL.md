@@ -15,6 +15,16 @@ argument-hint: "<action> [追加コンテキスト]"
 
 AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定義）→ Construction（実装）→ Operations（運用）の3フェーズで開発を推進する。
 
+## 非AIDLCプロジェクトガード
+
+`.aidlc/config.toml` が存在しない場合、通常フェーズ（inception/construction/operations）の実行は行わない。
+`/aidlc setup` のみ許可し、ユーザーにセットアップを案内する:
+
+```text
+AI-DLC環境が未セットアップです。
+「start setup」または `/aidlc setup` でセットアップを開始してください。
+```
+
 ## 不変ルール【絶対遵守】
 
 以下はautomation_modeや過去の経験に関わらず、常に遵守する:
