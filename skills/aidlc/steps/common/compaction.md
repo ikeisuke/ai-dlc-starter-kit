@@ -29,12 +29,7 @@
 ### 復帰フローの確認手順
 
 1. **サイクルの特定**: ブランチ名（`git branch --show-current`）から `cycle/vX.X.X` 形式でサイクルを特定
-2. **フェーズの特定**: 進行度の高い順に `session-state.md` の存在を確認する（`aidlc-cycle-info.sh` のフェーズ判定ロジックと同じ優先順位）
-   - `.aidlc/cycles/{{CYCLE}}/operations/session-state.md` が存在 → Operations Phase
-   - `.aidlc/cycles/{{CYCLE}}/construction/session-state.md` が存在 → Construction Phase
-   - `.aidlc/cycles/{{CYCLE}}/inception/session-state.md` が存在 → Inception Phase
-   - いずれも存在しない場合 → 成果物ベースのフォールバック判定（下記参照）
-3. **session-state.md がない場合のフォールバック**: 成果物の存在で進行度の高い順にフェーズを判定する（`aidlc-cycle-info.sh` と同一ロジック）
+2. **フェーズの特定**: 成果物の存在で進行度の高い順にフェーズを判定する
 
    | 判定順 | 条件 | 判定フェーズ | 進捗確認先 |
    |-------|------|-----------|-----------|
@@ -42,13 +37,9 @@
    | 2 | `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md` が存在 | Construction | Unit定義ファイルの「実装状態」セクション |
    | 3 | 上記いずれも該当しない | Inception | `inception/progress.md`（存在しない場合は新規開始） |
 
-4. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
-5. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
-6. **作業の継続**: session-state.md またはフォールバック進捗源から中断ポイントを特定し、作業を再開
-
-## session-state.md の生成【コンパクション前】
-
-コンパクションが発生した時点で、`common/session-continuity.md` の「session-state.md の生成」セクションに従い、現在の作業状態を保存する。
+3. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
+4. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
+5. **作業の継続**: 進捗源から中断ポイントを特定し、作業を再開
 
 ## automation_mode の復元【コンパクション後 必須】
 

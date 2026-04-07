@@ -1,6 +1,6 @@
 # コンテキストリセット対応【重要】
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、作業を自動継続する。ただし、**ユーザーの明示的な中断指示**（「中断したい」「ここで止める」「一時停止」等）があった場合は、`automation_mode` に関係なくsession-state.md生成（手順4）を必ず実行する。継続用プロンプトの提示（手順5）のみ `automation_mode=manual` 時に実行する。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、コンテキストリセット提示をスキップし、作業を自動継続する。ただし、**ユーザーの明示的な中断指示**（「中断したい」「ここで止める」「一時停止」等）があった場合は、`automation_mode` に関係なく履歴記録（手順3）を必ず実行する。継続用プロンプトの提示（手順4）のみ `automation_mode=manual` 時に実行する。
 
 ユーザーから以下のような発言があった場合、現在の作業状態に応じた継続用プロンプトを提示する：
 
@@ -14,18 +14,13 @@
 1. 現在の作業状態を確認（どのUnitの何ステップか）
 2. 進捗状態を確認（「進行中」のまま保持）
 3. 履歴記録（中断状態を追記）
-4. session-state.mdを生成（下記参照）
-5. 継続用プロンプトを提示（下記フォーマット）
-
-### session-state.md の生成
-
-`common/session-continuity.md` の「session-state.md の生成」セクションに従い、現在の作業状態を保存する。
+4. 継続用プロンプトを提示（下記フォーマット）
 
 ````markdown
 ---
 ## コンテキストリセット - 作業継続
 
-現在の作業状態を保存しました。コンテキストをリセットして作業を継続できます。
+コンテキストをリセットして作業を継続できます。
 
 **現在の状態**:
 - フェーズ: {{PHASE}} Phase
@@ -47,4 +42,4 @@
 | Construction | Construction | construction |
 | Operations | Operations | operations |
 
-**再開時の復元**: フェーズプロンプトの初期チェックで `session-state.md` が自動的に読み込まれ、中断時点のステップから作業が再開される。復元フローの詳細は `common/session-continuity.md` の「session-state.md の復元」セクションを参照。
+**再開時の復元**: フェーズプロンプトの初期チェックで、フェーズ別の進捗源（`common/session-continuity.md` 参照）から中断ポイントを特定し、作業が再開される。
