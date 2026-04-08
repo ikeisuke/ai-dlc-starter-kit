@@ -28,6 +28,7 @@ use_env_for_secrets = true
 # Git運用ルール
 commit_on_unit_complete = true
 commit_on_phase_complete = true
+merge_method = "merge"
 
 [rules.commit]
 # コミット設定（v1.9.1で追加）
