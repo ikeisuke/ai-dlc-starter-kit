@@ -178,20 +178,35 @@ gh pr view {PR番号} --json reviewDecision --jq '.reviewDecision'
 
 ## 7.13 PRマージ【重要】
 
-PR本文の `Closes #XX` 記載を最終確認。
+PR本文の `Closes #XX` 記載を最終確認。adminバイパスを前提としない — Branch protectionでbypassを禁止する設定を前提とし、admin overrideは案内しない。保護設定未整備の場合は `guides/branch-protection.md` を案内。
+
+### 段1: マージ方法の決定
+
+1. **`gh_status` != `available`**: merge_methodに関わらず手動マージを案内
+2. **`merge_method` == `"ask"`**: AskUserQuestionでマージ方法を選択させる（通常マージ / Squashマージ / Rebaseマージ）
+3. **`merge_method` == `"merge"` / `"squash"` / `"rebase"`**: 指定方法で自動実行。「merge_method設定に基づき {method} マージを実行します。」と表示
+
+### 段2: 実行モード決定
+
+段1で決定した方法で `pr-ops.sh merge` を実行し、結果に応じて次アクションを決定:
 
 ```bash
-gh pr view {PR番号} --json reviewDecision,state  # 承認状況確認
 scripts/pr-ops.sh merge {PR番号}                   # 通常マージ
 scripts/pr-ops.sh merge {PR番号} --squash           # Squashマージ
 scripts/pr-ops.sh merge {PR番号} --rebase           # Rebaseマージ
 ```
 
-### マージ方法の決定
-
-1. **`gh_status` != `available`**: merge_methodに関わらず手動マージを案内
-2. **`merge_method` == `"ask"`**: AskUserQuestionでマージ方法を選択させる（通常マージ / Squashマージ / Rebaseマージ）
-3. **`merge_method` == `"merge"` / `"squash"` / `"rebase"`**: 指定方法で自動実行。「merge_method設定に基づき {method} マージを実行します。」と表示
-4. **マージ失敗時**:
-   - `gh` 利用不可系エラー（未認証、CLI異常、`require_gh`失敗相当）→ 手動マージ案内にフォールバック
-   - その他のエラー → エラー内容を表示し、AskUserQuestionでマージ方法を再選択（通常マージ / Squashマージ / Rebaseマージ / 中断する）
+| 結果 | 対応 |
+|------|------|
+| `merged` | マージ完了 |
+| `auto-merge-set` | 「CI完了後に自動マージされます」と表示。セッション終了可 |
+| `error:auto-merge-not-enabled` | `guides/branch-protection.md` を案内し、CI完了待ちを提示 |
+| `error:checks-failed` | CIエラー内容を確認し、修正を案内 |
+| `error:permission-denied` | 権限のあるメンテナへの依頼、またはGitHub UIでの保護ルール準拠マージを案内 |
+| `error:not-mergeable` | マージコンフリクトの解消を案内 |
+| `error:review-required` | レビュー承認の取得を案内 |
+| `error:gh-not-available` / `error:gh-not-authenticated` | 手動マージを案内 |
+| `error:checks-status-unknown` | CIステータス取得失敗。GitHub APIの状態を確認し、再試行を案内 |
+| `error:head-sha-unavailable` | PR head SHA取得失敗。GitHub APIの状態を確認し、再試行を案内 |
+| `error:head-mismatch` | マージ対象のheadコミットが変更された。最新状態を確認し再試行 |
+| その他error | エラー内容を表示し、AskUserQuestionで再試行/中断を選択 |

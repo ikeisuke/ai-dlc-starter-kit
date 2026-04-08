@@ -1,27 +1,21 @@
 # プリフライトチェック
 
-各フェーズ開始時に環境・ツール・設定の整合性を一括チェックし、結果をコンテキスト変数として保持する共通手順。
+フェーズ開始時の環境・ツール・設定チェック。結果はコンテキスト変数に保持。
 
 ## 手順
 
 ### 1. 環境チェック
 
-以下のコマンドを実行し、ツール状態を取得する:
-
 ```bash
 scripts/env-info.sh
 ```
 
-出力から以下を抽出し、コンテキスト変数に保持する:
-
-| 出力キー | コンテキスト変数 | 説明 |
-|---------|----------------|------|
-| `gh:{status}` | `gh_status` | GitHub CLI状態（`available` / `not-installed` / `not-authenticated`） |
-| `git:{status}` | - | git存在確認（blocker判定に使用） |
-| `dasel:{status}` | - | dasel状態（情報保持のみ） |
-| `dasel_major_version:{version}` | `dasel_major_version` | daselメジャーバージョン（`2` / `3` / `unknown`）。dasel未インストール時は出力されない |
-
-**互換エイリアス**: 既存フェーズプロンプトで `gh:available` 形式で参照している箇所は `gh_status` で読み替える。
+| 出力キー | コンテキスト変数 |
+|---------|----------------|
+| `gh:{status}` | `gh_status` |
+| `git:{status}` | - |
+| `dasel:{status}` | - |
+| `dasel_major_version:{version}` | `dasel_major_version` |
 
 ### 2. 重大度判定（環境チェック）
 
@@ -29,9 +23,7 @@ scripts/env-info.sh
 |-------------|----------|---------|-------------|
 | git | blocker | `git:available` でない場合 | フェーズ中断 |
 
-**注**: `gh_status` は手順1で常時取得されコンテキスト変数に保持される。`gh` の warn 判定と結果表示は手順5のオプションチェックで行う。
-
-### 3. aidlc.toml確認
+### 3. config.toml確認
 
 ```bash
 ls .aidlc/config.toml 2>/dev/null
@@ -56,49 +48,36 @@ ls .aidlc/config.toml 2>/dev/null
 
 ### 4. 設定値取得
 
-全設定キーを `read-config.sh` の `--keys` バッチモードで一括取得する。defaults.toml にデフォルト値が定義されているため、キー不在は発生しない。
+`read-config.sh` のバッチモードで一括取得する:
 
 ```bash
 scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_level rules.automation.mode rules.reviewing.mode rules.reviewing.tools rules.git.squash_enabled rules.linting.enabled rules.git.unit_branch_enabled rules.construction.max_retry rules.git.merge_method
 ```
 
-**出力形式**（`key:value` 形式、1行1キー）:
+出力は `key:value` 形式（1行1キー）。各行をパースしコンテキスト変数に格納:
 
-```text
-rules.depth_level.level:standard
-rules.automation.mode:manual
-rules.reviewing.mode:recommend
-...
-```
+| 設定キー | コンテキスト変数名 |
+|---------|-------------------|
+| rules.depth_level.level | `depth_level` |
+| rules.depth_level.history_level | （派生ロジックで処理） |
+| rules.automation.mode | `automation_mode` |
+| rules.reviewing.mode | `review_mode` |
+| rules.reviewing.tools | `review_tools` |
+| rules.git.squash_enabled | `squash_enabled` |
+| rules.linting.enabled | （派生ロジックで処理） |
+| rules.git.unit_branch_enabled | `unit_branch_enabled` |
+| rules.construction.max_retry | `max_retry` |
+| rules.git.merge_method | `merge_method` |
 
-各行を `key:value` でパースし、コンテキスト変数に格納する。
+**history_level 解決ロジック**:
 
-**コンテキスト変数への格納**:
-
-| 設定キー | コンテキスト変数名 | デフォルト値 |
-|---------|-------------------|------------|
-| rules.depth_level.level | `depth_level` | standard |
-| rules.depth_level.history_level | （後続の解決ロジックで処理） | ""（空文字=自動導出） |
-| rules.automation.mode | `automation_mode` | manual |
-| rules.reviewing.mode | `review_mode` | recommend |
-| rules.reviewing.tools | `review_tools` | ['codex'] |
-| rules.git.squash_enabled | `squash_enabled` | false |
-| rules.linting.enabled | （後続の解決ロジックで処理） | false |
-| rules.git.unit_branch_enabled | `unit_branch_enabled` | false |
-| rules.construction.max_retry | `max_retry` | 3 |
-| rules.git.merge_method | `merge_method` | ask |
-
-**history_level 解決ロジック**（派生コンテキスト変数）:
-
-上記バッチ取得後、`rules.depth_level.history_level`の値を確認し、以下のフローで`history_level`コンテキスト変数を解決する:
-
-1. 取得値が空文字でない → `history_level`に設定（明示オーバーライド）
-2. 取得値が空文字 → 旧キーフォールバック:
+1. 取得値が非空 → `history_level`に設定
+2. 空 → 旧キーフォールバック:
    ```bash
    scripts/read-config.sh rules.history.level
    ```
-   - exit 0かつ非空 → `history_level`に設定（旧config.tomlに明示記載あり）
-   - exit 1（キー不在）→ `depth_level`から自動導出:
+   - exit 0かつ非空 → `history_level`に設定
+   - exit 1 → `depth_level`から自動導出:
 
      | depth_level | history_level |
      |-------------|--------------|
@@ -106,30 +85,22 @@ rules.reviewing.mode:recommend
      | standard | standard |
      | comprehensive | detailed |
 
-**markdown_lint 解決ロジック**（派生コンテキスト変数）:
+**markdown_lint 解決ロジック**:
 
-上記バッチ取得後、`rules.linting.enabled`の値を確認し、以下のフローで`markdown_lint`コンテキスト変数を解決する:
-
-1. `rules.linting.enabled`の取得値を確認
-2. 値が `true` または `false` → `markdown_lint`に設定
-3. 値が空または取得失敗 → 旧キーフォールバック:
+1. `rules.linting.enabled`が `true` / `false` → `markdown_lint`に設定
+2. 空または取得失敗 → 旧キーフォールバック:
    ```bash
    scripts/read-config.sh rules.linting.markdown_lint
    ```
-   - exit 0かつ非空 → `markdown_lint`に設定（旧config.tomlに明示記載あり）
-   - exit 1（キー不在）→ デフォルト値 `false`
+   - exit 0かつ非空 → `markdown_lint`に設定
+   - exit 1 → デフォルト値 `false`
 
 **merge_method バリデーション**:
 
-上記バッチ取得後、`rules.git.merge_method`の値を確認する:
+1. `merge` / `squash` / `rebase` / `ask` → `merge_method`に設定
+2. それ以外 → `⚠ merge_method の値が不正です（"{value}"）。デフォルト値 "ask" を使用します。`
 
-1. 値が `merge` / `squash` / `rebase` / `ask` のいずれか → `merge_method`に設定
-2. それ以外 → 警告を表示しデフォルト値 `ask` にフォールバック:
-   ```text
-   ⚠ merge_method の値が不正です（"{value}"）。デフォルト値 "ask" を使用します。
-   ```
-
-**エラー処理**: `read-config.sh` が exit code 2（エラー）を返した場合、以下の警告を表示しデフォルト値を使用する:
+**エラー処理**: exit code 2 の場合:
 
 ```text
 【警告】{設定キー} の読み取りに失敗しました。デフォルト値 "{デフォルト値}" を使用します。
@@ -137,21 +108,15 @@ rules.reviewing.mode:recommend
 
 ### 5. オプションチェック実行
 
-以下の全項目を常時実行する。
-
 | チェック項目 | 条件 | 動作 | 表示内容 | severity |
 |-------------|------|------|---------|----------|
 | gh | `gh_status` != `available` | 警告表示、gh依存機能無効化 | `⚠ gh: {status}（gh依存機能は制限されます）` | warn |
-| レビューツール | `review_mode == disabled` | スキップ（表示なし） | （なし） | - |
-| レビューツール | `review_tools == []` | 情報表示してスキップ | `ℹ 外部CLIを使用しない設定です（tools = []）` | info |
-| レビューツール | 上記以外 | `which {先頭ツール}` で確認 | `ℹ レビューツール ({ツール名}): available / not found（レビュー実行時に���ォールバックし���す）` | info |
-| defaults.toml | `config/defaults.toml` 不在 | 警告表示 | `⚠ defaults.toml: 不在（デ��ォルト値が適用されません）` | warn |
+| レビューツール | `review_mode == disabled` | スキップ | （なし） | - |
+| レビューツール | `review_tools == []` | 情報表示 | `ℹ 外部CLIを使用しない設定です（tools = []）` | info |
+| レビューツール | 上記以外 | `command -v -- "{先頭ツール}"` で確認（ツール名は `[a-zA-Z0-9_-]+` のみ許可） | `ℹ レビューツール ({ツール名}): available / not found` | info |
+| defaults.toml | `config/defaults.toml` 不在 | 警告表示 | `⚠ defaults.toml: 不在（デフォルト値が適用されません）` | warn |
 
-**注**: レビューツール判定は上から順に評価し、`review_mode == disabled` を最優先する。設定値のバリデーション結果は結���提示の「オプションチェック」セクションに含める。
-
-### 6. 結���提示
-
-全チェックと設定値取得が完了したら、以下のフォーマットで結果を提示する:
+### 6. 結果提示
 
 ```text
 【プリフライトチェック結果】
@@ -185,8 +150,6 @@ rules.reviewing.mode:recommend
 
 ### 7. 再チェックフロー
 
-blocker項目が失敗した場合、ユーザーに対処を依頼する:
-
 ```text
 【プリフライトチェック失敗】
 
@@ -196,21 +159,10 @@ blocker項目が失敗した場合、ユーザーに対処を依頼する:
 問題を解決したら「再チェック」と入力してください。
 ```
 
-**再チェック**: ユーザーが「再チェック」「retry」等を入力した場合、失敗したblocker/warn項目のみを再チェックする。
-
-**最大回数**: 3回。超過時は以下を表示しフェーズ中断:
+再チェック: 失敗したblocker/warn項目のみ再実行。最大3回。超過時:
 
 ```text
 【プリフライトチェック中断】
 再チェック回数の上限（3回）に達しました。
 問題を解決してからフェーズを再開してください。
 ```
-
-## 実行順序まとめ
-
-1. 環境チェック（手順1-2）— blockerチェック含む、常時実行
-2. aidlc.toml確認（手順3）— blockerチェック、常時実行
-3. 設定値取得（手順4）
-4. オプションチェック実行（手順5）— 常時実行
-5. 結果提示（手順6）
-6. 必要に応じて再チェック（手順7）

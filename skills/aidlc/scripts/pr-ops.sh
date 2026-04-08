@@ -31,6 +31,7 @@
 #     issues:none
 #   merge:
 #     pr:<number>:merged:<method>
+#     pr:<number>:auto-merge-set:<method>
 #     pr:<number>:error:<reason>
 #
 # gh利用不可時:
@@ -86,6 +87,7 @@ OPTIONS:
 
   merge:
     pr:<number>:merged:<method>         マージ成功（method: merge/squash/rebase）
+    pr:<number>:auto-merge-set:<method> auto-merge設定成功（CI完了後に自動マージ）
     pr:<number>:error:<reason>          エラー
 
   gh利用不可時:
@@ -233,17 +235,69 @@ cmd_merge() {
             ;;
     esac
 
-    local error_output
-    if error_output=$(gh pr merge "$pr_number" "$merge_flag" 2>&1); then
-        echo "pr:${pr_number}:merged:${merge_method}"
+    # head SHAを取得（race condition防止、取得失敗時は停止）
+    local head_sha
+    head_sha=$(gh pr view "$pr_number" --json headRefOid --jq '.headRefOid' 2>/dev/null || echo "")
+    if [[ -z "$head_sha" ]]; then
+        echo "pr:${pr_number}:error:head-sha-unavailable"
+        return 1
+    fi
+
+    # CIステータス確認（--requiredで必須チェックのみ、bucketベース）
+    # gh pr checks はpending時にexit 8を返すため、exit codeで判定せずjq出力で判定する
+    local checks_status checks_output
+    checks_output=$(gh pr checks "$pr_number" --required --json bucket --jq '[.[].bucket] | if length == 0 then "pass" elif all(. == "pass") then "pass" elif any(. == "pending") then "pending" else "fail" end' 2>/dev/null) || true
+    checks_status="${checks_output:-unknown}"
+
+    # チェック状態不明時: fail-closed（即時マージしない）
+    if [[ "$checks_status" == "unknown" ]]; then
+        echo "pr:${pr_number}:error:checks-status-unknown"
+        return 1
+    fi
+
+    # --match-head-commit オプション構築
+    local head_flag="--match-head-commit ${head_sha}"
+
+    # CI全通過時: 即時マージ
+    if [[ "$checks_status" == "pass" ]]; then
+        local error_output
+        # shellcheck disable=SC2086
+        if error_output=$(gh pr merge "$pr_number" "$merge_flag" $head_flag 2>&1); then
+            echo "pr:${pr_number}:merged:${merge_method}"
+            return 0
+        else
+            if echo "$error_output" | grep -qi "not found"; then
+                echo "pr:${pr_number}:error:not-found"
+            elif echo "$error_output" | grep -qi "not mergeable\|merge conflict"; then
+                echo "pr:${pr_number}:error:not-mergeable"
+            elif echo "$error_output" | grep -qi "review.*required\|not approved"; then
+                echo "pr:${pr_number}:error:review-required"
+            elif echo "$error_output" | grep -qi "head.*match\|does not match"; then
+                echo "pr:${pr_number}:error:head-mismatch"
+            else
+                echo "pr:${pr_number}:error:unknown"
+            fi
+            return 1
+        fi
+    fi
+
+    # CIチェック失敗時
+    if [[ "$checks_status" == "fail" ]]; then
+        echo "pr:${pr_number}:error:checks-failed"
+        return 1
+    fi
+
+    # CI pending: auto-merge設定
+    local auto_error
+    # shellcheck disable=SC2086
+    if auto_error=$(gh pr merge "$pr_number" "$merge_flag" --auto $head_flag 2>&1); then
+        echo "pr:${pr_number}:auto-merge-set:${merge_method}"
         return 0
     else
-        if echo "$error_output" | grep -qi "not found"; then
-            echo "pr:${pr_number}:error:not-found"
-        elif echo "$error_output" | grep -qi "not mergeable\|merge conflict"; then
-            echo "pr:${pr_number}:error:not-mergeable"
-        elif echo "$error_output" | grep -qi "review.*required\|not approved"; then
-            echo "pr:${pr_number}:error:review-required"
+        if echo "$auto_error" | grep -qi "auto-merge is not allowed\|not enabled\|auto_merge"; then
+            echo "pr:${pr_number}:error:auto-merge-not-enabled"
+        elif echo "$auto_error" | grep -qi "permission\|forbidden\|403"; then
+            echo "pr:${pr_number}:error:permission-denied"
         else
             echo "pr:${pr_number}:error:unknown"
         fi

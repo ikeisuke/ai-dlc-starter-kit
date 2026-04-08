@@ -16,8 +16,7 @@
 - **コンテキストリセット対応【重要】**: ユーザーからリセット・中断の発言があった場合:
   1. progress.mdを更新（現在のステップを「進行中」のまま保持）
   2. 履歴記録（中断状態を追記）
-  3. session-state.mdを生成（`common/session-continuity.md` に従う。`automation_mode` に関係なく必ず実行）
-  4. 継続用プロンプトを提示: `/aidlc inception`
+  3. 継続用プロンプトを提示: `/aidlc inception`
 
 ### フェーズの責務【重要】
 

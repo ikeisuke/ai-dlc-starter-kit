@@ -46,14 +46,14 @@
 - `comprehensive`: 完全な受け入れ基準に加え、エッジケースを網羅
 - `standard`: 変更なし（現行動作）
 
-**AIレビュー**: ユーザーストーリー承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること。
+**AIレビュー**: ユーザーストーリー承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
 
 **Inception固有のレビュー観点**:
 - INVEST原則（Independent, Negotiable, Valuable, Estimable, Small, Testable）への準拠
 - 受け入れ基準が具体的で検証可能か
 - ユーザー視点で価値が明確か
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
 
 ### ステップ4: Unit定義【重要】
 
@@ -90,7 +90,7 @@
   - **適格性理由**: -
   ```
 
-**AIレビュー**: Unit定義承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること。
+**AIレビュー**: Unit定義承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
 
 **Inception固有のレビュー観点**:
 - Unit分割が適切か（独立性、凝集性）
@@ -98,7 +98,7 @@
 - 見積もりが妥当か
 - 実装順序に矛盾がないか
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める。
+**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
 
 ### ステップ4b: エクスプレスモード判定
 
