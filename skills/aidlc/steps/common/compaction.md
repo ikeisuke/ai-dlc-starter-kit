@@ -10,9 +10,9 @@
 
 | フェーズ | Claude Code | その他（ステップファイル手動読み込み） | 進捗確認先 |
 |---------|------------|-----------------------------------|-----------|
-| Inception | `/aidlc inception` | `steps/inception/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
-| Construction | `/aidlc construction` | `steps/construction/01-setup.md` から順に読み込み | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
-| Operations | `/aidlc operations` | `steps/operations/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+| Inception | `/aidlc inception` | `steps/inception/index.md` を読み込み → `inception/progress.md` から未完了ステップを特定 → 契約テーブル経由で該当 `step_id` の `detail_file` を解決（`progress.md` 不在／新規開始時のみ `inception.01-setup` を既定開始点として解決。詳細は後段「復帰フローの確認手順」参照） | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
+| Construction | `/aidlc construction` | `steps/construction/01-setup.md` から順に読み込み（Unit 003 でインデックス化予定） | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
+| Operations | `/aidlc operations` | `steps/operations/01-setup.md` から順に読み込み（Unit 004 でインデックス化予定） | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
 
 ## スキル再読み込み手順【コンパクション復帰時】
 
@@ -22,7 +22,7 @@
 
 | 順序 | スキル | 役割 | 再読み込み方法 |
 |------|--------|------|--------------|
-| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、ステップファイルを `01-setup.md` から順に読み込み |
+| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、Inception はフェーズインデックス（`index.md`）＋契約テーブル経由、Construction/Operations は `01-setup.md` から順に読み込み |
 | 2 | `reviewing-*` | AIレビュー | レビュー実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 | 3 | `squash-unit` | コミットスカッシュ | squash実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 
@@ -31,13 +31,19 @@
 1. **サイクルの特定**: ブランチ名（`git branch --show-current`）から `cycle/vX.X.X` 形式でサイクルを特定
 2. **フェーズの特定**: 成果物の存在で進行度の高い順にフェーズを判定する
 
+   > **【非正本・暫定】この判定表は v2.3.0 から非正本であり、Unit 002（汎用復帰判定基盤）で削除される予定。** Inception フェーズが正本とするのは `steps/inception/index.md` **全体**（章構成: 目次／分岐ロジック／判定チェックポイント骨格／ステップ読み込み契約）である。現時点の Inception 復帰時の実運用ルールは `steps/inception/index.md` の **「4.1 既定ルート」** に定義されている（`3. 判定チェックポイント骨格` は Unit 002 が埋める予定の骨格であり、Unit 001 時点では `TBD` プレースホルダ）。本表は Unit 002 実装完了までの暫定ガードとして残存する。
+
    | 判定順 | 条件 | 判定フェーズ | 進捗確認先 |
    |-------|------|-----------|-----------|
    | 1 | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` が存在 | Operations | `operations/progress.md` |
-   | 2 | `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md` が存在 | Construction | Unit定義ファイルの「実装状態」セクション |
-   | 3 | 上記いずれも該当しない | Inception | `inception/progress.md`（存在しない場合は新規開始） |
+   | 2 | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` が存在 かつ 未完了ステップあり（`04-stories-units` / `05-completion` 等が「進行中」「未着手」） | Inception（優先ガード） | `inception/progress.md` |
+   | 3 | `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md` が存在 かつ 上記に該当しない | Construction | Unit定義ファイルの「実装状態」セクション |
+   | 4 | 上記いずれも該当しない | Inception | `inception/progress.md`（存在しない場合は新規開始） |
+
+   **Inception 優先ガード（判定順2）の理由**: v2.2.3 までは Inception の `04-stories-units` 完了後（`units/*.md` 生成後）でも Inception 途中状態を Construction と誤判定するバグがあった（#553）。Unit 001 では暫定的に `inception/progress.md` の未完了ステップ存在チェックを Construction 判定より優先することで回避する。本格的な判定仕様は Unit 002 で `phase-recovery-spec.md` に定義予定。
 
 3. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
+   - **Inception 復帰時**: `steps/inception/index.md` を読み込み → `inception/progress.md` から未完了ステップ（「進行中」または最初の「未着手」）を特定 → 契約テーブル経由で該当 `step_id` の `detail_file` を解決。`progress.md` が存在しないかパース不能の場合は `inception.01-setup` を既定開始点としてユーザーに再開点の確認を求める
 4. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
 5. **作業の継続**: 進捗源から中断ポイントを特定し、作業を再開
 

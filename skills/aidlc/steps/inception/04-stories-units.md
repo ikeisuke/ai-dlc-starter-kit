@@ -53,7 +53,7 @@
 - 受け入れ基準が具体的で検証可能か
 - ユーザー視点で価値が明確か
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
+**セミオートゲート判定**: `steps/inception/index.md` の「2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 ### ステップ4: Unit定義【重要】
 
@@ -98,7 +98,7 @@
 - 見積もりが妥当か
 - 実装順序に矛盾がないか
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
+**セミオートゲート判定**: `steps/inception/index.md` の「2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 ### ステップ4b: エクスプレスモード判定
 

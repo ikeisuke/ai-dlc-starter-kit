@@ -46,7 +46,7 @@
 - スコープが明確に定義されているか
 - 曖昧な表現や解釈の余地がないか
 
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外は従来どおりユーザーに承認を求める（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）。
+**セミオートゲート判定**: `steps/inception/index.md` の「2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 ### ステップ2: Reverse Engineering（brownfieldのみ、greenfieldはスキップ）
 
