@@ -1,3 +1,7 @@
+# Operations Phase 完了処理（`operations.04-completion`）
+
+> バックトラック判定・worktree フロー判定・`gh_status` 分岐は `steps/operations/index.md`（フェーズインデックス）§2 に集約されている。本ファイルはバックトラック手順・PR マージ後手順・次サイクル準備の詳細手順本体のみを含む。
+
 ## このフェーズに戻る場合【バックトラック】
 
 Constructionに戻る必要がある場合（バグ修正・機能修正）:

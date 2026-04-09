@@ -12,7 +12,7 @@
 |---------|------------|-----------------------------------|-----------|
 | Inception | `/aidlc inception` | `steps/inception/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.1 参照 | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
 | Construction | `/aidlc construction` | `steps/construction/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.2 参照 | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション（Stage 1 で参照）＋ `.aidlc/cycles/{{CYCLE}}/history/construction_unit{NN}.md`（Stage 2 で参照） |
-| Operations | `/aidlc operations` | `steps/operations/01-setup.md` から順に読み込み（Unit 004 でインデックス化予定。現時点は `judge()` の暫定ディスパッチャで現行ルート維持） | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+| Operations | `/aidlc operations` | `steps/operations/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.3 参照。bootstrap 分岐（Construction 完了直後の Operations 新規開始）は `step_id=operations.01-setup` + `construction_complete` info diagnostic として返される | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` + `.aidlc/cycles/{{CYCLE}}/history/operations.md`（bootstrap 判定で参照） |
 
 ## スキル再読み込み手順【コンパクション復帰時】
 
@@ -22,7 +22,7 @@
 
 | 順序 | スキル | 役割 | 再読み込み方法 |
 |------|--------|------|--------------|
-| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、Inception / Construction はフェーズインデックス（`index.md`）＋契約テーブル経由、Operations は `01-setup.md` から順に読み込み |
+| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、全フェーズ（Inception / Construction / Operations）でフェーズインデックス（`index.md`）＋契約テーブル経由でロードする |
 | 2 | `reviewing-*` | AIレビュー | レビュー実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 | 3 | `squash-unit` | コミットスカッシュ | squash実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 
@@ -42,7 +42,7 @@
    | `construction` | `StepId`（例: `construction.02-design`） | `steps/construction/index.md` の契約テーブルから `step_id` に対応する `detail_file` を解決してロード |
    | `construction` | `None`（非 blocking。`diagnostics[].type=user_selection_required` と 1 対 1 対応） | Stage 1 で `\|executable_units\| ≥ 2 ∧ automation_mode=manual` のときに発生。`steps/construction/index.md` のみロードし、候補 Unit 一覧を提示してユーザー選択を待つ。選択後は Stage 1 を再評価し Stage 2 へ進む |
    | `construction` | `undecidable:<reason_code>`（例: `undecidable:conflict`, `undecidable:dependency_block`） | Stage 1 / Stage 2 で決着不能（blocking）。`phase-recovery-spec.md` §7.1 の `reason_code` に応じてユーザー確認必須（`automation_mode=semi_auto` でも自動継続禁止、spec §8）。候補 Unit 一覧・依存関係ブロック理由の提示を行い、`steps/construction/index.md` のみロードして再入力を待つ |
-   | `operations` | `None`（Unit 002 時点の暫定ディスパッチャ） | 現行ルートに委譲: `.aidlc/cycles/{{CYCLE}}/operations/progress.md` から再開ポイントを特定し、`steps/operations/01-setup.md` から順次ロード |
+   | `operations` | `StepId`（例: `operations.02-deploy`） | `steps/operations/index.md` の契約テーブルから `step_id` に対応する `detail_file` を解決してロード。bootstrap 状態（Construction 完了直後）では `step_id=operations.01-setup` + `construction_complete` info diagnostic |
    | `undecidable:<reason_code>` | - | PhaseResolver 側で決着不能（例: `phase_ambiguous`, `legacy_undecidable`）。ユーザー確認必須（`automation_mode=semi_auto` でも自動継続禁止、spec §8）。`reason_code` に応じて再開点の提示・優先順位ルール表示・修復手順の案内を行う |
 
    **diagnostics の扱い**:
