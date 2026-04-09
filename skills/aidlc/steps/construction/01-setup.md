@@ -79,7 +79,7 @@ scripts/issue-ops.sh set-status <issue_number> in-progress
 
 **完了条件の抽出**: Unit定義「責務」セクション（必須）+ 関連Issueの受け入れ基準（オプション）。
 
-**AIレビュー**: 計画承認前に `review-flow.md` に従って実施（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
+**AI レビュー**: 計画承認前に `steps/common/review-flow.md` に従って実施（ルーティング判定の詳細は `steps/common/review-routing.md` 参照）。`review_mode=disabled` の場合は `review-routing.md` のパス 3 に直行。
 **セミオート**: フォールバック条件非該当なら自動承認。
 
 

@@ -46,7 +46,7 @@
 - `comprehensive`: 完全な受け入れ基準に加え、エッジケースを網羅
 - `standard`: 変更なし（現行動作）
 
-**AIレビュー**: ユーザーストーリー承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
+**AI レビュー**: ユーザーストーリー承認前に `steps/common/review-flow.md` に従って実施（ルーティング判定の詳細は `steps/common/review-routing.md` 参照）。`review_mode=disabled` の場合は `review-routing.md` のパス 3 に直行。
 
 **Inception固有のレビュー観点**:
 - INVEST原則（Independent, Negotiable, Valuable, Estimable, Small, Testable）への準拠
@@ -90,7 +90,7 @@
   - **適格性理由**: -
   ```
 
-**AIレビュー**: Unit定義承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
+**AI レビュー**: Unit 定義承認前に `steps/common/review-flow.md` に従って実施（ルーティング判定の詳細は `steps/common/review-routing.md` 参照）。`review_mode=disabled` の場合は `review-routing.md` のパス 3 に直行。
 
 **Inception固有のレビュー観点**:
 - Unit分割が適切か（独立性、凝集性）

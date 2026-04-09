@@ -30,7 +30,7 @@ Operations Phase は Inception と同じく直線的進行（Unit loop なし）
 | step_id | タイトル | 目的 |
 |---------|---------|------|
 | `operations.01-setup` | 初期セットアップ | プリフライト、Depth Level 確認、`operations/progress.md` 新規作成、運用引き継ぎ情報読み込み、全 Unit 完了確認、Construction 引き継ぎタスク確認 |
-| `operations.02-deploy` | デプロイ実作業 | ステップ1（変更確認）、ステップ2-5（デプロイ準備一式: デプロイ準備 / CI/CD / 監視 / 配布）、ステップ6（バックログ整理と運用計画）、ステップ7.1-7.7（リリース準備の PR 準備完了まで） |
+| `operations.02-deploy` | デプロイ実作業 | ステップ1（変更確認）、ステップ2-5（デプロイ準備一式: デプロイ準備 / CI/CD / 監視 / 配布）、ステップ6（バックログ整理と運用計画）、ステップ7.1-7.7（リリース準備の PR 準備完了まで）。ステップ7 の自動化可能な工程は `scripts/operations-release.sh` を呼び出す |
 | `operations.03-release` | リリース完了基準確認 | 実行ルール確認、PR Ready 化、コミット漏れ確認、リモート同期、main との差分チェック、PR マージ前レビュー |
 | `operations.04-completion` | PR マージ後手順・次サイクル準備 | バックトラック対応、PR マージ後手順（mainブランチ移動、最新取得、バージョンタグ付け、ブランチ削除、worktree フロー）、次サイクル開始の準備 |
 
@@ -127,7 +127,7 @@ Construction Phase 完了直後の Operations 新規開始は **bootstrap 分岐
 
 ### 2.9 AI レビュー分岐
 
-各承認ポイントで `common/review-flow.md` に従う。`review_mode=disabled` 時は `review-flow.md` のパス3（ユーザーレビュー）へ直行。
+各承認ポイントで AI レビューを実施する。**ルーティング判定（スキル名・focus・処理パス選択）は `steps/common/review-routing.md` 参照**、**反復・指摘対応・完了処理の手順は `steps/common/review-flow.md` 参照**。`review_mode=disabled` 時は `review-routing.md` のパス 3（ユーザーレビュー）へ直行。
 
 対象タイミング（本フェーズ）:
 

@@ -39,7 +39,7 @@
 - `comprehensive`: 詳細な記述に加え、リスク分析・代替案検討セクションをIntentに追加
 - `standard`: 変更なし（現行動作）
 
-**AIレビュー**: Intent承認前に `steps/common/review-flow.md` に従ってAIレビューを実施すること（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）。
+**AI レビュー**: Intent 承認前に `steps/common/review-flow.md` に従って実施（ルーティング判定の詳細は `steps/common/review-routing.md` 参照）。`review_mode=disabled` の場合は `review-routing.md` のパス 3 に直行。
 
 **Inception固有のレビュー観点**:
 - 目的・狙いが明確で妥当か

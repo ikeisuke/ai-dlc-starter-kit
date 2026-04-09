@@ -165,7 +165,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 - **ステップ開始時**: progress.mdでステップ7を「進行中」に更新
 
-**サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` を参照して従うこと）:
+**サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` および `scripts/operations-release.sh` を参照して従うこと）:
 1. 7.1 バージョン確認
 2. 7.2 CHANGELOG更新（`changelog = true` の場合）
 3. 7.3 README更新
