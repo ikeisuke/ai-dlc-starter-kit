@@ -1,3 +1,7 @@
+# Construction Phase Unit 完了処理（`construction.04-completion`）
+
+> `automation_mode` ゲート判定・コンテキストリセット提示の分岐条件は `steps/construction/index.md` §2 に集約されている。本ファイルは Unit 完了時の必須作業手順本体を含む。
+
 ## Unit完了時の必須作業【重要】
 
 ### 1. 完了条件の確認【必須】

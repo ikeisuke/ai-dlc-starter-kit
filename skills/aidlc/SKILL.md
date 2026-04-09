@@ -163,7 +163,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 | フェーズ | 読み込み対象 |
 |---------|-------------|
 | inception | `steps/inception/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード。`06-backtrack.md` はバックトラック発動時のみ） |
-| construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md`（Unit 003 でインデックス化予定） |
+| construction | `steps/construction/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード） |
 | operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md`（Unit 004 でインデックス化予定） |
 
 ### Expressモード

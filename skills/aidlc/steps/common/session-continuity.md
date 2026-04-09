@@ -9,7 +9,7 @@
 | フェーズ | 復元元 | `judge()` 内部参照先 |
 |---------|--------|-------------------|
 | Inception | `inception/progress.md` + `judge()` 契約経由の `step_id` 決定 | `steps/inception/index.md`（binding） + `phase-recovery-spec.md` §5.1（規範仕様） |
-| Construction | Unit定義ファイル（`story-artifacts/units/*.md`）の「実装状態」セクション（Unit 003 でインデックス化予定） | 現時点は `judge()` の暫定ディスパッチャで現行ルート維持 |
+| Construction | Unit定義ファイル（`story-artifacts/units/*.md`）の「実装状態」セクション（Stage 1 / Unit 特定） + `history/construction_unit{NN}.md`（Stage 2 / Step 特定） + `judge()` 契約経由の `step_id` 決定 | `steps/construction/index.md`（binding） + `phase-recovery-spec.md` §5.2（規範仕様） |
 | Operations | `operations/progress.md`（Unit 004 でインデックス化予定） | 現時点は `judge()` の暫定ディスパッチャで現行ルート維持 |
 
 ## コンパクション復帰

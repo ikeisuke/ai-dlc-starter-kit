@@ -1,24 +1,24 @@
-### Phase 2: 実装【設計を参照してコード生成】
+# Construction Phase 実装（`construction.03-implementation`）
 
-#### ステップ4: コード生成
+> Phase 1/Phase 2 境界・`depth_level` 分岐・Self-Healing ループのトリガ条件・AI レビュー分岐・`automation_mode` ゲート判定は `steps/construction/index.md` §2 に集約されている。本ファイルは Phase 2 の詳細手順と Self-Healing ループ本体を含む。
+
+## Phase 2: 実装【設計を参照してコード生成】
+
+### ステップ4: コード生成
 
 **タスクステータスを更新してください（着手時: `in_progress`、完了時: `completed`）。**
 
 1. 設計ファイルを読み込み、それに基づいて実装コードを生成
-2. **AIレビュー実施**（`steps/common/review-flow.md` に従う）（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）
+2. **AI レビュー実施**（`steps/common/review-flow.md` に従う）
 3. レビュー結果を反映
 
-#### ステップ5: テスト生成
+### ステップ5: テスト生成
 
 **タスクステータスを更新してください（着手時: `in_progress`、完了時: `completed`）。**
 
-**Depth Level分岐**（`common/rules-reference.md` の「レベル別成果物要件」を参照）:
-- `comprehensive`: BDD/TDDに加え、統合テストを強化（コンポーネント間の連携テストを追加）
-- `minimal` / `standard`: 変更なし（現行動作）
+`depth_level` 別の動作差分は `steps/construction/index.md` §2.3 を参照（`comprehensive` で統合テスト強化）。BDD/TDD に従ってテストコードを作成する。
 
-BDD/TDDに従ってテストコードを作成
-
-#### ステップ6: 統合とレビュー
+### ステップ6: 統合とレビュー
 
 **タスクステータスを更新してください（着手時: `in_progress`、完了時: `completed`）。**
 
@@ -139,9 +139,9 @@ BDD/TDDに従ってテストコードを作成
       【登録先】{Issue番号 / なし}
       ```
 
-4. **AIレビュー実施**（`steps/common/review-flow.md` に従う。**レビュー手順を必ず確認してから実行すること**）（`review_mode=disabled` の場合は `review-flow.md` のパス3に直行）
+4. **AI レビュー実施**（`steps/common/review-flow.md` に従う。`automation_mode` / ゲート判定の分岐は `steps/construction/index.md` §2.4/§2.8 参照）
 5. レビュー結果を反映
-6. **セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` かつフォールバック条件に該当しない場合、自動承認し次ステップへ進む。上記以外はコードをユーザーに提示し、承認を得る（`automation_mode=manual` の場合、`rules-automation.md` の読み込みをスキップしユーザー承認を実施）
+6. **セミオートゲート判定**に従い承認処理（`common/rules-automation.md` 参照）
 7. `.aidlc/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `templates/implementation_record_template.md`）
 
 ---
