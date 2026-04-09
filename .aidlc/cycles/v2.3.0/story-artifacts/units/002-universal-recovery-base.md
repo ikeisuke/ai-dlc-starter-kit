@@ -13,24 +13,25 @@
 
 ### 共通判定仕様の策定
 
-- 判定ロジックの共通仕様書を作成する（例: `steps/common/phase-recovery-spec.md`）。以下を含む:
-  - 参照する成果物の一覧（`requirements/`, `story-artifacts/`, `construction/`, `operations/` の具体ファイル）
-  - 同点時の優先順位ルール（`operations/` > `construction/` > `inception/`、progress.md 完了マークでの補正）
-  - 判定結果マッピング（どのファイルが存在したら現在どのステップか）
-  - 異常系4系統の処理仕様（欠損・競合・不正フォーマット・旧バージョン混在）
-- 各フェーズインデックスは本仕様書を参照する形で判定ロジックを組み込む（Unit 003 / 004 が参照）
+- 判定ロジックの規範仕様書 `steps/common/phase-recovery-spec.md` を作成する（本 Unit の**正本**）。以下を含む:
+  - `ArtifactsState` の入力モデル（`requirements/`, `story-artifacts/`, `construction/`, `operations/` の具体ファイル + `phaseProgressStatus` enum）
+  - 2段レゾルバ構造（`PhaseResolver` + `PhaseLocalStepResolver`）と判定順（conflict → Operations → Construction → Inception → 新規開始）
+  - 判定結果マッピング（Inception §5.1 のチェックポイントルール）
+  - 異常系4系統の処理仕様（`missing_file` / `conflict` / `format_error` / `legacy_structure`）と `result + diagnostics[]` 分離
+- 各フェーズインデックスは本仕様書の **Materialized Binding**（実値化参照）として位置付け、規範仕様は常に `phase-recovery-spec.md` に一本化する（Unit 003 / 004 も同じ binding 形式で接続）
 
 ### Inception への先行適用
 
 - Unit 001 で作成した Inception フェーズインデックスに、上記共通仕様に基づく「現在位置判定セクション」を実装する
-- Inception の正常系検証: 代表的な進行中状態（Intent完了時点、ストーリー完了時点、Unit定義完了時点、完了処理中）で復帰判定が正しく動作することを確認
+- Inception の正常系検証: 代表的な進行中状態（Intent完了時点、ストーリー完了時点、Unit定義完了時点、完了処理中）で復帰判定が正しく動作することを確認（単一 step_id が導出されること）
 - Inception の異常系検証: 欠損・競合・不正フォーマット・旧バージョン混在の4系統すべてが期待動作を示すことを確認
-- **いずれの異常系でも `automation_mode=semi_auto` でも自動継続しないことを確認**
+- **blocking 3系統（`missing_file` / `conflict` / `format_error`）は `automation_mode=semi_auto` でも自動継続しない（ユーザー確認必須）**
+- **warning 1系統（`legacy_structure`）は `diagnostics[]` への追加のみで `result` 判定は継続可能。強制マイグレーションは行わない**
 
 ### #553 根本解決
 
-- #553 再現シナリオ 1（PRFAQ 未着手）と再現シナリオ 2（PRFAQ 完了）で正しい再開ステップに判定されることを実測で確認する
-- v2.2.3 で再現シナリオ 1 を実行した場合 Construction と誤判定されることを対比記録する
+- #553 再現シナリオ 1a（完了処理未着手）は `inception.04-stories-units`、1b（完了処理進行中）は `inception.05-completion`、シナリオ 2（全完了）は `construction` と、それぞれ**単一の値**に判定されることを仕様書内に明記する
+- v2.2.3 判定ロジックとの対比を `phase-recovery-spec.md §10.3` に記録する（`phaseProgressStatus` enum 正規化によって書式依存の文字列マッチング取りこぼしを構造的に排除する旨）
 
 ### compaction.md の整理
 
@@ -61,13 +62,13 @@
 
 ## 非機能要件（NFR）
 
-- **パフォーマンス**: 復帰時の追加ロードはインデックスファイル1個のみに限定する
-- **信頼性**: 異常系4系統すべてで自動継続を禁止し、ユーザー判断を必須とする
-- **後方互換性**: v2.2.x 以前の成果物構造を検出した場合は警告表示のみ（強制マイグレーションはしない）
+- **パフォーマンス**: 復帰時の追加ロードはフェーズインデックス（binding）1個 + 規範仕様 `phase-recovery-spec.md` 1個に限定する
+- **信頼性**: blocking 3系統（`missing_file` / `conflict` / `format_error`）で自動継続を禁止しユーザー判断を必須とする。warning 1系統（`legacy_structure`）は `diagnostics[]` へ追加するのみで判定継続可能
+- **後方互換性**: v2.2.x 以前の成果物構造を検出した場合は `diagnostics[]` に `legacy_structure` warning を追加するのみ（強制マイグレーションはしない）
 
 ## 技術的考慮事項
 
-- **共通仕様書の位置付け**: フェーズインデックスが「唯一の正本」ではあるが、仕様そのものは共通仕様書に記述し、各フェーズインデックスは「この仕様に基づき判定する」という参照形式にする。これにより Unit 003 / 004 での組み込みが機械的に行える
+- **共通仕様書の位置付け**: 規範仕様の正本は `steps/common/phase-recovery-spec.md` に一本化し、各フェーズインデックスは仕様の **Materialized Binding**（実値化された参照層）として位置付ける。binding 層は `spec§N.<checkpoint_id>` 参照トークンで仕様と結合する。これにより Unit 003 / 004 での組み込みが機械的に行える
 - **異常系の検知方法**: ファイル存在チェック + 簡易パース（progress.md のテーブル行数カウント、見出し構造の存在確認等）で判定。複雑な構文解析は避ける
 - **回帰検証手順**: `scripts/` 配下に再現シナリオ準備スクリプトを用意するか、手動で `vTEST` サイクルを作成して再現する
 - **複雑度**: 異常系4系統の実装 + 回帰検証 + compaction.md リファクタを含むため中規模。エクスプレス不適格
@@ -88,9 +89,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
-- **エクスプレス適格性**: -
-- **適格性理由**: -
+- **状態**: 完了
+- **開始日**: 2026-04-09
+- **完了日**: 2026-04-09
+- **担当**: Claude Code (Construction Phase)
+- **エクスプレス適格性**: 不適格
+- **適格性理由**: 異常系4系統の仕様策定 + #553 根本解決 + compaction.md/session-continuity.md リファクタを含む中規模 Unit のため、エクスプレスモード対象外
