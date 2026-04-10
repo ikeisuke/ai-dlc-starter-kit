@@ -10,8 +10,8 @@ Operations Phase ステップ 7.13（PRマージ）で `automation_mode=semi_aut
 
 ## 責務
 
-- **主変更**: `steps/operations/02-deploy.md` のステップ 7.13 にユーザー確認ゲートを追加（ユーザーが選ぶのはマージ実行の可否のみ。マージ方法は `merge_method` 設定から自動決定）
-- **参照更新**: `steps/operations/operations-release.md` のステップ 7.13 の記述をユーザー確認必須に合わせて更新
+- **主変更**: `steps/operations/operations-release.md` のステップ 7.13 にマージ実行前の `AskUserQuestion` ゲートを追加（ユーザーが選ぶのはマージ実行の可否のみ。マージ方法は `merge_method` 設定から自動決定）
+- **参照更新**: `steps/operations/02-deploy.md` のステップ 7.13 の記述をユーザー確認必須に合わせて更新（集約層としての参照のみ）
 - **分岐明記**: `steps/operations/index.md` の分岐ロジックセクションにPRマージを「ユーザー選択」分類として明記
 
 ## 境界
@@ -57,9 +57,9 @@ High
 ---
 ## 実装状態
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-11
+- **完了日**: 2026-04-11
+- **担当**: Claude
 - **エクスプレス適格性**: -
 - **適格性理由**: -

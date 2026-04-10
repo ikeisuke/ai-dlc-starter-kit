@@ -89,19 +89,24 @@ Construction Phase 完了直後の Operations 新規開始は **bootstrap 分岐
 
 詳細は `common/rules-reference.md` の「レベル別成果物要件」を参照。
 
-### 2.6 automation_mode 分岐（ゲート判定）
+### 2.6 automation_mode 分岐（ゲート判定・インタラクション種別）
 
 | automation_mode | ゲート動作 |
 |-----------------|----------|
 | `manual` | 全承認ポイントでユーザー確認 |
 | `semi_auto` | フォールバック条件非該当なら `auto_approved`、該当時は `fallback(reason_code)` |
 
-本 Operations フェーズでのゲート発生箇所:
+本 Operations フェーズでのインタラクションポイント:
 
-- ステップ1（変更確認）の選択
-- 各対話形式ステップ（ステップ2/3/4/5/6）の計画承認
-- リリース準備計画承認（ステップ7開始時）
-- PR Ready 化承認
+| ステップ | インタラクション種別 | manual | semi_auto |
+|---------|-------------------|--------|-----------|
+| ステップ1（変更確認）の選択 | ゲート承認 | ユーザー確認 | auto_approved（§2.3） |
+| 各対話形式ステップ（2/3/4/5/6）計画承認 | ゲート承認 | ユーザー確認 | auto_approved |
+| リリース準備計画承認（ステップ7開始時） | ゲート承認 | ユーザー確認 | auto_approved |
+| PR Ready 化承認 | ゲート承認 | ユーザー確認 | auto_approved |
+| PRマージ実行（ステップ7.13） | ユーザー選択 | ユーザー確認 | ユーザー確認 |
+
+**注記**: 「ユーザー選択」は SKILL.md「AskUserQuestion使用ルール」に定義されたインタラクション種別であり、`automation_mode` に関わらず（`full_auto` を含む全モードで）常にユーザー確認が必要。PRマージは破壊的・不可逆操作であるためこの分類に該当する。上記マトリクスは `manual` / `semi_auto` を列挙しているが、PRマージ実行確認は全 `automation_mode` でユーザー確認必須。詳細手順は `operations-release.md` §7.13 を参照。
 
 詳細・フォールバック条件テーブル・構造化シグナルは `common/rules-automation.md` の「セミオートゲート仕様」を参照。
 

@@ -181,7 +181,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 10. 7.10 リモート同期確認
 11. 7.11 mainブランチとの差分チェック
 12. 7.12 PRマージ前レビュー
-13. 7.13 PRマージ
+13. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
 
 - **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 
