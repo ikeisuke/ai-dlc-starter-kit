@@ -32,6 +32,7 @@ AI-DLC環境が未セットアップです。
 以下はautomation_modeや過去の経験に関わらず、常に遵守する:
 
 1. **ステップファイルの読み込みは省略不可**: 「ステップ4: フェーズステップ読み込み」に列挙された全ファイルを必ずReadツールで読み込む。「内容を覚えている」「前回と同じ」は省略理由にならない
+   - **フェーズインデックス併用時**: 「フェーズステップ読み込み」の対象がフェーズインデックスファイル（`steps/{phase}/index.md`）である場合、インデックス読み込み＋インデックスの「ステップ読み込み契約」テーブル経由で必要な詳細ファイルを読み込む流れ全体が「ステップファイル読み込み」の一形態である。インデックスのみロードして詳細ファイル読み込みを省略することは禁止
 2. **semi_autoの範囲**: ゲート承認の自動化のみ。ステップファイル読み込み・AIレビュー・progress.md管理の省略権限は含まない
 3. **review_mode=requiredの厳守**: この設定時、AIレビューのスキップはバグである。成果物の承認前に必ずreview-flow.mdに従ってレビューを実施する
 4. **コンパクション復帰時**: 前セッションの記憶に依存せず、ステップファイルを必ず再読み込みする
@@ -161,9 +162,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 | フェーズ | 読み込み対象 |
 |---------|-------------|
-| inception | `steps/inception/01-setup.md` → `02-preparation.md` → `03-intent.md` → `04-stories-units.md` → `05-completion.md`（`06-backtrack.md` は必要時） |
-| construction | `steps/construction/01-setup.md` → `02-design.md` → `03-implementation.md` → `04-completion.md` |
-| operations | `steps/operations/01-setup.md` → `02-deploy.md` → `03-release.md` → `04-completion.md` |
+| inception | `steps/inception/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード。`06-backtrack.md` はバックトラック発動時のみ） |
+| construction | `steps/construction/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード） |
+| operations | `steps/operations/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード） |
 
 ### Expressモード
 

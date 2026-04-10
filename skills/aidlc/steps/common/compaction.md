@@ -10,9 +10,9 @@
 
 | フェーズ | Claude Code | その他（ステップファイル手動読み込み） | 進捗確認先 |
 |---------|------------|-----------------------------------|-----------|
-| Inception | `/aidlc inception` | `steps/inception/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
-| Construction | `/aidlc construction` | `steps/construction/01-setup.md` から順に読み込み | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション |
-| Operations | `/aidlc operations` | `steps/operations/01-setup.md` から順に読み込み | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` |
+| Inception | `/aidlc inception` | `steps/inception/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.1 参照 | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
+| Construction | `/aidlc construction` | `steps/construction/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.2 参照 | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション（Stage 1 で参照）＋ `.aidlc/cycles/{{CYCLE}}/history/construction_unit{NN}.md`（Stage 2 で参照） |
+| Operations | `/aidlc operations` | `steps/operations/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.3 参照。bootstrap 分岐（Construction 完了直後の Operations 新規開始）は `step_id=operations.01-setup` + `construction_complete` info diagnostic として返される | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` + `.aidlc/cycles/{{CYCLE}}/history/operations.md`（bootstrap 判定で参照） |
 
 ## スキル再読み込み手順【コンパクション復帰時】
 
@@ -22,22 +22,43 @@
 
 | 順序 | スキル | 役割 | 再読み込み方法 |
 |------|--------|------|--------------|
-| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、ステップファイルを `01-setup.md` から順に読み込み |
+| 1 | `aidlc` | AI-DLCオーケストレーター | Claude Code: `/aidlc {現在のフェーズ}` で再開。その他: 上記「フェーズごとの再読み込みパス」に従い、全フェーズ（Inception / Construction / Operations）でフェーズインデックス（`index.md`）＋契約テーブル経由でロードする |
 | 2 | `reviewing-*` | AIレビュー | レビュー実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 | 3 | `squash-unit` | コミットスカッシュ | squash実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 
 ### 復帰フローの確認手順
 
 1. **サイクルの特定**: ブランチ名（`git branch --show-current`）から `cycle/vX.X.X` 形式でサイクルを特定
-2. **フェーズの特定**: 成果物の存在で進行度の高い順にフェーズを判定する
+2. **フェーズと step の判定**: `RecoveryJudgmentService.judge(ArtifactsState)` 契約に従い、復帰すべきフェーズと step を決定する
+   - 判定ロジックの本文は `steps/common/phase-recovery-spec.md`（§2〜§8）に定義されている
+   - 呼び出し層（本ドキュメント）は `judge()` の戻り値 `PhaseRecoveryJudgment` を消費する形式で記述する
+   - `PhaseRecoveryJudgment.phase.result` と `PhaseRecoveryJudgment.step.result` に応じて次の行動を決める
 
-   | 判定順 | 条件 | 判定フェーズ | 進捗確認先 |
-   |-------|------|-----------|-----------|
-   | 1 | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` が存在 | Operations | `operations/progress.md` |
-   | 2 | `.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md` が存在 | Construction | Unit定義ファイルの「実装状態」セクション |
-   | 3 | 上記いずれも該当しない | Inception | `inception/progress.md`（存在しない場合は新規開始） |
+   **戻り値の扱い**:
+
+   | `phase.result` | `step.result` | 次の行動 |
+   |---------------|---------------|---------|
+   | `inception` | `StepId`（例: `inception.04-stories-units`） | `steps/inception/index.md` の契約テーブルから `step_id` に対応する `detail_file` を解決してロード |
+   | `construction` | `StepId`（例: `construction.02-design`） | `steps/construction/index.md` の契約テーブルから `step_id` に対応する `detail_file` を解決してロード |
+   | `construction` | `None`（非 blocking。`diagnostics[].type=user_selection_required` と 1 対 1 対応） | Stage 1 で `\|executable_units\| ≥ 2 ∧ automation_mode=manual` のときに発生。`steps/construction/index.md` のみロードし、候補 Unit 一覧を提示してユーザー選択を待つ。選択後は Stage 1 を再評価し Stage 2 へ進む |
+   | `construction` | `undecidable:<reason_code>`（例: `undecidable:conflict`, `undecidable:dependency_block`） | Stage 1 / Stage 2 で決着不能（blocking）。`phase-recovery-spec.md` §7.1 の `reason_code` に応じてユーザー確認必須（`automation_mode=semi_auto` でも自動継続禁止、spec §8）。候補 Unit 一覧・依存関係ブロック理由の提示を行い、`steps/construction/index.md` のみロードして再入力を待つ |
+   | `operations` | `StepId`（例: `operations.02-deploy`） | `steps/operations/index.md` の契約テーブルから `step_id` に対応する `detail_file` を解決してロード。bootstrap 状態（Construction 完了直後）では `step_id=operations.01-setup` + `construction_complete` info diagnostic |
+   | `undecidable:<reason_code>` | - | PhaseResolver 側で決着不能（例: `phase_ambiguous`, `legacy_undecidable`）。ユーザー確認必須（`automation_mode=semi_auto` でも自動継続禁止、spec §8）。`reason_code` に応じて再開点の提示・優先順位ルール表示・修復手順の案内を行う |
+
+   **diagnostics の扱い**:
+
+   | `diagnostics[].type` | severity | 扱い |
+   |---------------------|----------|------|
+   | `legacy_structure` | warning | 警告表示 + マイグレーション案内（強制しない）。`result` が有効なら判定継続 |
+   | `new_cycle_start` | info | 情報表示 + 新規サイクル開始として Inception を開始 |
+   | `user_selection_required` | info | 候補 Unit 一覧を表示し、ユーザーに選択を促す（`construction.step.result=None` と対） |
+   | `construction_complete` | info | 情報表示 + Construction Phase 完了として Operations Phase への遷移を案内 |
+
+   **注意**: 本ステップの判定ロジックそのもの（フェーズ優先順位、#553 補正、checkpoint 判定条件、Unit 選定アルゴリズム等）は `phase-recovery-spec.md` §4 / §5 に集約されている。本ファイルでは重複記述せず、`judge()` 契約を介した結果消費のみを記述する。Operations の step 判定は Unit 004 完了時に `judge()` 内部実装に統合され、現行ルート委譲は解消される予定。
 
 3. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
+   - **Inception 復帰時**: `steps/inception/index.md` を読み込み → `judge()` 経由で決定された `step_id` の `detail_file` を契約テーブルから解決
+   - **Construction 復帰時**: `steps/construction/index.md` を読み込み → `judge()` 経由で決定された `step_id` の `detail_file` を契約テーブルから解決
 4. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
 5. **作業の継続**: 進捗源から中断ポイントを特定し、作業を再開
 

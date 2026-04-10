@@ -1,30 +1,17 @@
-# Operations Phase プロンプト
+# Operations Phase セットアップ（`operations.01-setup`）
 
-**アップグレード**: `/aidlc-setup` スキルを使用してください。
+> 分岐ロジック・Phase 構成・`automation_mode` / `depth_level` / `project.type` 分岐・bootstrap 分岐・worktree フロー判定・AI レビュー分岐は `steps/operations/index.md`（フェーズインデックス）に集約されている。本ファイルは詳細手順のみを含む。
 
----
+**フェーズの責務【重要】**:
 
-## プロジェクト情報
+- **行うこと**: デプロイ計画・実行、監視・ロギング設定、運用ドキュメント作成、CI/CD設定、インフラ設定
+- **許可されるコード記述**: CI/CD設定、デプロイスクリプト、監視・アラート設定、インフラ定義
+- **禁止**: アプリケーションロジック変更、新機能実装、テストコード追加（バグ修正時を除く）
+- **緊急バグ修正**: ユーザー承認 → 最小限の修正 → Construction Phaseへのバックトラック提案
 
-### 開発ルール
+**プロンプト履歴管理**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/operations.md` に記録。**AIレビュー対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前。
 
-**共通ルールは `steps/common/rules-core.md` を参照**
-
-- **プロンプト履歴管理【重要】**: `/write-history` スキルを使用して `.aidlc/cycles/{{CYCLE}}/history/operations.md` に記録。詳細はスキルのSKILL.mdを参照。
-
-  **AIレビュー対象タイミング**: デプロイ計画承認前、運用ドキュメント承認前
-
-### フェーズの責務【重要】
-
-**行うこと**: デプロイ計画・実行、監視・ロギング設定、運用ドキュメント作成、CI/CD設定、インフラ設定
-**許可されるコード記述**: CI/CD設定、デプロイスクリプト、監視・アラート設定、インフラ定義
-**禁止**: アプリケーションロジック変更、新機能実装、テストコード追加（バグ修正時を除く）
-
-**緊急バグ修正**: ユーザー承認 → 最小限の修正 → Construction Phaseへのバックトラック提案
-
-### テスト記録とバグ対応
-- テスト記録テンプレート: `templates/test_record_template.md`
-- バグ対応: Construction Phaseの「バックトラック」セクションに従う
+**テスト記録とバグ対応**: テスト記録テンプレートは `templates/test_record_template.md`、バグ対応は Construction Phase の「バックトラック」セクションに従う。
 
 ---
 

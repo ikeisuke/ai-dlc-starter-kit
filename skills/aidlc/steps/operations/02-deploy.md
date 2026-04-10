@@ -1,3 +1,7 @@
+# Operations Phase デプロイ実作業（`operations.02-deploy`）
+
+> 「変更なし」スキップ・`project.type` 依存スキップ・`automation_mode` ゲート判定・AI レビュー分岐は `steps/operations/index.md`（フェーズインデックス）§2 に集約されている。本ファイルはステップ1〜7 の詳細手順本体のみを含む。
+
 ## フロー
 
 各ステップ完了時にprogress.mdを更新
@@ -6,9 +10,7 @@
 
 **タスク管理機能を活用してください。**
 
-ステップ2-5の確認をスキップするかどうかを確認します。
-
-**セミオートゲート判定**（`common/rules-automation.md` のセミオートゲート仕様を参照）: `automation_mode=semi_auto` の場合、「いいえ」（変更なし）を自動選択し、ステップ2-5をスキップする。`automation_mode=manual` の場合は従来どおりユーザーに確認する。
+ステップ2-5の確認をスキップするかどうかを確認します。`automation_mode=semi_auto` での自動処理は index.md §2.3 を参照。
 
 **確認メッセージ**（`automation_mode=manual` の場合）:
 ```text
@@ -163,7 +165,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 - **ステップ開始時**: progress.mdでステップ7を「進行中」に更新
 
-**サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` を参照して従うこと）:
+**サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` および `scripts/operations-release.sh` を参照して従うこと）:
 1. 7.1 バージョン確認
 2. 7.2 CHANGELOG更新（`changelog = true` の場合）
 3. 7.3 README更新

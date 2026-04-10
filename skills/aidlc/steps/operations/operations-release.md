@@ -1,6 +1,6 @@
 # Operations Phase - ステップ7: リリース準備
 
-> 全体フローは `steps/operations/02-deploy.md` を参照。
+> 全体フローは `02-deploy.md`。自動化工程は `scripts/operations-release.sh`（`version-check` / `lint` / `pr-ready` / `verify-git` / `merge-pr`）に集約、詳細は `--help`。既存スクリプトを透過呼び出し（stdout / exit code そのまま）。本 markdown は人間判断工程のみ残す。
 
 **前提条件**: ステップ1〜6完了、共通ルール読み込み済み、環境情報確認済み。
 
@@ -8,205 +8,59 @@
 
 ## 7.1 バージョン確認
 
-### iOSプロジェクトの場合
-
-`project.type = "ios"` の場合のみ実行（未設定/エラー時は `general` 扱い）。
-
-- Inception履歴に「iOSバージョン更新実施」記録あり → MARKETING_VERSION確認スキップ、ビルド番号確認へ
-- 記録なし → 通常のバージョン確認を実行
-
-**iOSビルド番号確認**:
-
 ```bash
-scripts/ios-build-check.sh
+scripts/operations-release.sh version-check [--ios-skip-marketing-version]
 ```
 
-| status | comparison | 対応 |
-|--------|------------|------|
-| not-found | - | スキップ |
-| multiple | - | ユーザーにファイル選択→再実行 |
-| found | updated | 続行 |
-| found | same | 警告（App Storeは同一番号で再提出拒否） |
-| found | unknown | 手動確認案内 |
+`project.type` で分岐:
 
-### 通常のバージョン確認
+- **general（その他）**: `suggest-version.sh` を実行
+- **ios（フラグなし）**: `suggest-version.sh`（MARKETING_VERSION 確認）→ `ios-build-check.sh`（ビルド番号確認）の順で実行
+- **ios（`--ios-skip-marketing-version` 付与）**: `ios-build-check.sh` のみ実行
 
-`.aidlc/operations.md` の「バージョン確認設定」に従い確認。設定がなければ対話形式で対象特定。
+Inception 履歴に「iOSバージョン更新実施」記録があれば AI が `--ios-skip-marketing-version` を付与してマーケティングバージョン確認をスキップ。iOS は `vX.Y.Z` → `X.Y.Z`。最終承認はユーザー判断。
 
-バージョン未更新の場合は更新を提案。iOSプロジェクトはvプレフィックス除去（`v1.7.1` → `1.7.1`）。
+## 7.2〜7.6 CHANGELOG / README / 履歴 / lint / progress
 
-## 7.2 CHANGELOG更新
+- `rules.release.changelog = true` の場合のみ CHANGELOG を Keep a Changelog 形式で更新（CHANGELOG は `[X.Y.Z]`、git タグは `vX.Y.Z`、`history/` / `story-artifacts/units/` / コミットから収集）、README にサイクル変更内容を追記
+- `/write-history` で `history/operations.md` に記録
+- `operations-release.sh lint --cycle {{CYCLE}}`（エラー時修正、`markdownlint:skipped` は設定スキップ）
+- progress.md のステップ7を「完了」に更新し 7.7 のコミットに含める
 
-`rules.release.changelog = true` の場合のみ実行（デフォルト `false`）。
+## 7.7 Git コミット
 
-Keep a Changelog形式で更新。表記: CHANGELOG `[X.Y.Z]`（vなし）、gitタグ `vX.Y.Z`（vあり）。
+コミットなしで 7.8 に進まない。`commit-flow.md` の「Operations Phase 完了コミット」に従い全変更をコミット。
 
-変更内容の収集元: history/、story-artifacts/units/、コミット履歴。
+## 7.8 ドラフト PR Ready 化【重要】
 
-## 7.3 README更新
+ドラフト PR を Ready for Review に変更。`gh:available` 以外はスキップ。Ready 化後はバグ修正以外の変更を加えない。
 
-今回のサイクルの変更内容を追記。
-
-## 7.4 履歴記録
-
-`/write-history` スキルで `.aidlc/cycles/{{CYCLE}}/history/operations.md` に記録。
-
-## 7.5 Markdownlint実行
+**PR 本文**: `templates/pr_body_template.md` を基に作成。`construction/units/*-review-summary.md` / `inception/*-review-summary.md` があれば「Closes」直前にレビューサマリセクションを挿入し GitHub blob URL（`{REPO_URL}/blob/cycle/{{CYCLE}}/...`）でリンク。
 
 ```bash
-scripts/run-markdownlint.sh {{CYCLE}}
+scripts/operations-release.sh pr-ready --cycle {{CYCLE}} --body-file <PR本文の一時ファイル>
 ```
 
-エラーあれば修正してから次へ。`markdownlint:skipped` は設定によるスキップ。
+`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。`get-related-issues` 出力から全関連 Issue の `Closes #XX` 記載漏れを手動照合（漏れは修正 → 再実行）。
 
-## 7.6 progress.md更新
-
-ステップ7を「完了」（= PR準備完了）に更新。この更新を7.7のコミットに含める。
-
-## 7.7 Gitコミット
-
-> **順序制約**: コミットが存在しない状態で7.8に進んではいけない。
-
-Operations Phaseで作成した全ファイル（progress.md、履歴含む）をコミット。`commit-flow.md` の「Operations Phase完了コミット」に従う。
-
-## 7.8 ドラフトPR Ready化【重要】
-
-Inception Phaseで作成したドラフトPRをReady for Reviewに変更。`gh:available` 以外はスキップ。
-
-**Ready化後の注意**: バグ修正・追加要件がない限り新たな変更を加えない。
-
-### Closes記載確認
+## 7.9〜7.11 事前チェック【必須】
 
 ```bash
-scripts/pr-ops.sh get-related-issues {{CYCLE}}
+scripts/operations-release.sh verify-git
 ```
 
-PR本文に全関連Issueの `Closes #XX` が記載されているか確認。記載漏れがあれば警告。
+末尾に `verify-git:summary:uncommitted=<s>:remote-sync=<s>:default-branch=<s>` を出力。`validate-git.sh` 契約を透過（通常 exit 0、ハードエラー exit 2）、`default-branch` は推奨（fetch 失敗は `skipped`）。`warning` は追加コミット / `git push` / merge-rebase を案内、`error` はマージ停止。progress.md・history は stash せずコミット。
 
-### ドラフトPR検索・Ready化
+## 7.12 PR マージ前レビュー【推奨】
+
+`git diff {DEFAULT_BRANCH}...HEAD` → `codex review --base {DEFAULT_BRANCH}`（利用可能時）→ `reviewing-operations-premerge` → `.aidlc/rules.md` のルール。GitHub PR レビュー実行時は `gh pr view --json reviewDecision` で判定（`APPROVED` → マージへ / `CHANGES_REQUESTED` → 修正・再レビュー / その他 → 待機またはスキップ）。
+
+## 7.13 PR マージ【重要】
+
+PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。`gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion で選択 / 他 → 指定方式実行（「merge_method 設定に基づき {method} マージを実行します」と表示）。
 
 ```bash
-scripts/pr-ops.sh find-draft          # ドラフトPR検索
-scripts/pr-ops.sh ready {PR番号}       # Ready化
+scripts/operations-release.sh merge-pr --pr {PR番号} --method <merge|squash|rebase>
 ```
 
-### PR本文更新
-
-テンプレート `templates/pr_body_template.md` を基にPR本文を作成。
-
-```bash
-gh pr edit {PR番号} --body-file <一時ファイルパス>
-```
-
-**レビューサマリの記載**: `.aidlc/cycles/{{CYCLE}}/construction/units/*-review-summary.md` と `inception/*-review-summary.md` が存在する場合、「Closes」セクション直前に「レビューサマリ」セクションを挿入。GitHub blob URL形式でリンク（`{REPO_URL}/blob/cycle/{{CYCLE}}/...`）。
-
-### ドラフトPRが見つからない場合
-
-新規PR作成を提案。Issue番号は `intent.md` → `setup-context.md` の順で取得。
-
-```bash
-gh pr create --base main --title "{{CYCLE}}" --body-file <一時ファイルパス>
-```
-
-## 7.9 コミット漏れ確認【必須】
-
-```bash
-scripts/validate-git.sh uncommitted
-```
-
-| status | 対応 |
-|--------|------|
-| `ok` | 次へ |
-| `warning` | 未コミットファイル一覧を表示、追加コミットを推奨 |
-| `error` | マージ停止、git状態の確認を案内 |
-
-**注意**: progress.md・historyファイルはstashではなくコミットすべき。
-
-## 7.10 リモート同期確認【必須】
-
-```bash
-scripts/validate-git.sh remote-sync
-```
-
-| status | 対応 |
-|--------|------|
-| `ok` | 次へ |
-| `warning` | 未pushコミットあり。`git push` を案内 |
-| `error` | エラー種別に応じて対処案内（fetch失敗/upstream未設定/branch不明/log失敗） |
-
-## 7.11 mainブランチとの差分チェック【推奨】
-
-リモートfetch後、デフォルトブランチ（`git remote show origin` → fallback: main → master）との差分を確認。
-
-```bash
-git merge-base --is-ancestor origin/{DEFAULT_BRANCH} HEAD
-```
-
-| 結果 | 対応 |
-|------|------|
-| 成功（up-to-date） | 次へ |
-| 失敗（behind） | merge/rebase推奨。続行も可能（ユーザー選択） |
-| fetch失敗 | スキップして続行 |
-
-## 7.12 PRマージ前レビュー【推奨】
-
-### サブステップ0: ローカルレビュー
-
-1. `git diff {DEFAULT_BRANCH}...HEAD` で差分確認
-2. Codex CLI利用可能時: `codex review --base {DEFAULT_BRANCH}`
-3. reviewingスキル: `skill="reviewing-operations-premerge"` で実行
-
-両方失敗してもサブステップ1で品質確認可能なため中断不要。
-
-### サブステップ1: プロジェクト固有レビュー
-
-`.aidlc/rules.md` にPRマージ前レビュールールがあれば実行。なければスキップ。
-
-### サブステップ2: PRレビュー状態確認
-
-サブステップ1でGitHub PRレビューを実行した場合のみ。
-
-```bash
-gh pr view {PR番号} --json reviewDecision --jq '.reviewDecision'
-```
-
-| reviewDecision | 対応 |
-|----------------|------|
-| `APPROVED` | マージへ |
-| `CHANGES_REQUESTED` | 修正→コミット→push→サブステップ1へ戻る |
-| その他/空 | レビュー完了待ちまたはスキップ（ユーザー選択） |
-
-## 7.13 PRマージ【重要】
-
-PR本文の `Closes #XX` 記載を最終確認。adminバイパスを前提としない — Branch protectionでbypassを禁止する設定を前提とし、admin overrideは案内しない。保護設定未整備の場合は `guides/branch-protection.md` を案内。
-
-### 段1: マージ方法の決定
-
-1. **`gh_status` != `available`**: merge_methodに関わらず手動マージを案内
-2. **`merge_method` == `"ask"`**: AskUserQuestionでマージ方法を選択させる（通常マージ / Squashマージ / Rebaseマージ）
-3. **`merge_method` == `"merge"` / `"squash"` / `"rebase"`**: 指定方法で自動実行。「merge_method設定に基づき {method} マージを実行します。」と表示
-
-### 段2: 実行モード決定
-
-段1で決定した方法で `pr-ops.sh merge` を実行し、結果に応じて次アクションを決定:
-
-```bash
-scripts/pr-ops.sh merge {PR番号}                   # 通常マージ
-scripts/pr-ops.sh merge {PR番号} --squash           # Squashマージ
-scripts/pr-ops.sh merge {PR番号} --rebase           # Rebaseマージ
-```
-
-| 結果 | 対応 |
-|------|------|
-| `merged` | マージ完了 |
-| `auto-merge-set` | 「CI完了後に自動マージされます」と表示。セッション終了可 |
-| `error:auto-merge-not-enabled` | `guides/branch-protection.md` を案内し、CI完了待ちを提示 |
-| `error:checks-failed` | CIエラー内容を確認し、修正を案内 |
-| `error:permission-denied` | 権限のあるメンテナへの依頼、またはGitHub UIでの保護ルール準拠マージを案内 |
-| `error:not-mergeable` | マージコンフリクトの解消を案内 |
-| `error:review-required` | レビュー承認の取得を案内 |
-| `error:gh-not-available` / `error:gh-not-authenticated` | 手動マージを案内 |
-| `error:checks-status-unknown` | CIステータス取得失敗。GitHub APIの状態を確認し、再試行を案内 |
-| `error:head-sha-unavailable` | PR head SHA取得失敗。GitHub APIの状態を確認し、再試行を案内 |
-| `error:head-mismatch` | マージ対象のheadコミットが変更された。最新状態を確認し再試行 |
-| その他error | エラー内容を表示し、AskUserQuestionで再試行/中断を選択 |
+結果は `merged` / `auto-merge-set` / `error:<code>`。エラー対処は `merge-pr --help`。判定困難な error は AskUserQuestion で再試行 / 中断を選択。
