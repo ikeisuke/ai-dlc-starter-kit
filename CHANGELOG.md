@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.1] - 2026-04-11
+
+### Added
+
+- `compaction.md` にコンパクション復帰時の通常フロー継続禁止ガードを追加（#559）
+- `config.toml` の `rules.git.draft_pr` 設定によるドラフトPR作成方針の固定化（#557, #551）
+- `inception/index.md` §2.7.1 に `resolveDraftPrAction` 正規化契約を追加
+
+### Changed
+
+- `operations-release.md` ステップ7.13（PRマージ）でユーザー確認を必須化（#558）
+- `session-continuity.md` のコンパクション復帰委譲境界を明確化
+- `inception/05-completion.md` のステップ5をaction駆動に書き換え
+- `defaults.toml` に `draft_pr = "ask"` を追加
+
+---
+
 ## [2.3.0] - 2026-04-10
 
 ### Changed

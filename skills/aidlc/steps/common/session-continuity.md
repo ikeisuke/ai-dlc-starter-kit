@@ -14,4 +14,6 @@
 
 ## コンパクション復帰
 
-コンパクション復帰と判定された場合は `steps/common/compaction.md` を読み込む。`compaction.md` の「復帰フローの確認手順」で `judge()` 契約を介した判定を行う。
+コンパクション復帰と判定された場合は `steps/common/compaction.md` に即時委譲する。**委譲後は `session-continuity.md` の処理は完全に終了する**。再実行ポリシーの定義・ガード実行は `compaction.md` の単一責務であり、`session-continuity.md` 側で追加処理を行ってはならない。
+
+`compaction.md` の「通常フロー継続禁止ガード」に従い、現在のフローは終了され、`/aidlc` の再実行が要求される。

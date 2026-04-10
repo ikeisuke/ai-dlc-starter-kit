@@ -57,7 +57,19 @@ scripts/operations-release.sh verify-git
 
 ## 7.13 PR マージ【重要】
 
-PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。`gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion で選択 / 他 → 指定方式実行（「merge_method 設定に基づき {method} マージを実行します」と表示）。
+PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。
+
+**マージ方法の確定**: `gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion でマージ方法を選択 / 他 → `merge_method` 設定値をそのまま使用。いずれの場合もこの時点ではマージ方法の確定のみを行い、マージは実行しない。
+
+**マージ実行確認【ユーザー選択: automation_mode に関わらず常にユーザー確認必須】**:
+
+マージ方法の確定後、マージスクリプト実行前に `AskUserQuestion` でマージ実行の可否をユーザーに確認する。PRマージは破壊的・不可逆操作であり、SKILL.md「AskUserQuestion使用ルール」の「ユーザー選択」に分類されるため、`automation_mode` に関わらず（`full_auto` を含む全モードで）自動化対象外。
+
+確認メッセージには以下の情報を提示:
+- PR番号
+- 適用されるマージ方法（`resolved_merge_method`）
+
+ユーザー承認 → マージスクリプト実行へ / ユーザー拒否 → マージ中断（ユーザー判断で次のアクションを決定）。
 
 ```bash
 scripts/operations-release.sh merge-pr --pr {PR番号} --method <merge|squash|rebase>
