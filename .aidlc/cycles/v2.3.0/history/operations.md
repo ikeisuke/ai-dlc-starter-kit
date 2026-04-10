@@ -12,3 +12,13 @@
   - `version.txt`
 
 ---
+## 2026-04-10T09:55:09+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: Codexレビュー指摘対応（P1: iOS marketing version退行、P2: pr-ready retry重複PR）
+- **実行内容**: Codexレビューで2件の退行を指摘され、両方を修正。P1: cmd_version_check で project.type=ios の場合に --ios-skip-marketing-version フラグなしなら suggest-version.sh→ios-build-check.sh の順で実行するよう修正（v2.2.3 baseline 動作復元）。P2: cmd_pr_ready で find-draft が pr:not-found を返した場合に gh pr list で同ブランチの非ドラフト open PR を検索し、見つかれば ready 化スキップして gh pr edit のみ実行する経路を追加（重複 PR 作成防止）。gh pr list 失敗時はエラー終了で重複 PR 防止ガードを維持。Codex 再々レビューで両指摘とも解消確認、軽微なエラーメッセージ文言も修正済み。
+- **成果物**:
+  - `skills/aidlc/scripts/operations-release.sh`
+  - `skills/aidlc/steps/operations/operations-release.md`
+
+---

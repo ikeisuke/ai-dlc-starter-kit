@@ -62,15 +62,18 @@ Operations Phase ステップ 7.1 バージョン確認のラッパー。
 
 Options:
   --ios-skip-marketing-version    Inception 履歴に「iOSバージョン更新実施」記録がある場合に
-                                  AI エージェントが付与する informational フラグ。
-                                  本スクリプト内部挙動は変更せず、ios-build-check.sh をそのまま
-                                  呼び出す（MARKETING_VERSION の現行値確認は markdown 手順側で実施）。
+                                  AI エージェントが付与するフラグ。
+                                  付与時は suggest-version.sh（MARKETING_VERSION 確認）をスキップし、
+                                  ios-build-check.sh のみを実行する。
   --dry-run                       副作用を抑止し、呼び出しコマンドを "would run: ..." 形式で出力
   -h, --help                      このヘルプを表示
 
 Behavior:
   1. .aidlc/config.toml から project.type を read-config.sh で取得
-  2. project.type == "ios" の場合: ios-build-check.sh を呼び出し stdout / exit code を透過
+  2. project.type == "ios":
+     - --ios-skip-marketing-version なし: suggest-version.sh（MARKETING_VERSION 確認）
+       → ios-build-check.sh（ビルド番号確認）の順で実行
+     - --ios-skip-marketing-version あり: ios-build-check.sh のみ実行
   3. それ以外（general 扱い）: suggest-version.sh を呼び出し stdout / exit code を透過
 EOF
 }
@@ -110,10 +113,16 @@ Behavior:
   3. ドラフト PR がある場合:
        a. pr-ops.sh ready <PR>
        b. --body-file 指定時のみ gh pr edit <PR> --body-file <PATH>
-  4. ドラフト PR がない場合:
-       a. --body-file 未指定ならエラー（stderr: "pr-ready:error:body-file-required"、exit 1）
-       b. --body-file 指定なら gh pr create --base main --title <CYCLE> --body-file <PATH>
-          （--draft フラグは付けない。現行 operations-release.md の記述と完全一致させる）
+  4. ドラフト PR がない場合（部分成功 retry の冪等化）:
+       a. 同ブランチの非ドラフト open PR を `gh pr list` で検索（重複 PR 作成防止）
+       b. 既存の Ready 化済み PR が見つかった場合:
+          - "pr:found-ready:<番号>" を出力
+          - --body-file 指定時のみ gh pr edit <PR> --body-file <PATH>（ready 化はスキップ）
+          - --body-file 未指定なら成功扱いで終了
+       c. 既存 PR が見つからない場合:
+          - --body-file 未指定ならエラー（stderr: "pr-ready:error:body-file-required"、exit 1）
+          - --body-file 指定なら gh pr create --base main --title <CYCLE> --body-file <PATH>
+            （--draft フラグは付けない）
 
 Exit code:
   最終ステップで呼び出された既存スクリプト / gh コマンドの終了コードを透過。
@@ -233,7 +242,7 @@ resolve_default_branch() {
 # --- サブコマンド実装 ---
 
 cmd_version_check() {
-    # --ios-skip-marketing-version は informational な目印のみ。スクリプト側の挙動は不変。
+    local ios_skip_marketing=0
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)
@@ -245,6 +254,7 @@ cmd_version_check() {
                 shift
                 ;;
             --ios-skip-marketing-version)
+                ios_skip_marketing=1
                 shift
                 ;;
             *)
@@ -264,6 +274,17 @@ cmd_version_check() {
     fi
 
     if [[ "$project_type" = "ios" ]]; then
+        # iOS: --ios-skip-marketing-version が付与されていない場合は、
+        # まず通常の MARKETING_VERSION 確認（suggest-version.sh）を実行してから
+        # ビルド番号確認（ios-build-check.sh）を実行する。
+        # Inception 履歴に「iOSバージョン更新実施」記録がある場合のみ marketing を省略できる。
+        if [[ "$ios_skip_marketing" = "0" ]]; then
+            if [[ "$DRY_RUN" = "1" ]]; then
+                log_dry_run "$SCRIPT_DIR/suggest-version.sh"
+            else
+                "$SCRIPT_DIR/suggest-version.sh" || return $?
+            fi
+        fi
         if [[ "$DRY_RUN" = "1" ]]; then
             log_dry_run "$SCRIPT_DIR/ios-build-check.sh"
             return 0
@@ -368,14 +389,22 @@ cmd_pr_ready() {
     if [[ -z "$pr_number" ]]; then
         if [[ "$DRY_RUN" = "1" ]]; then
             log_dry_run "$SCRIPT_DIR/pr-ops.sh find-draft"
-            # dry-run 時はドラフト PR の存在を判定できないため、両パターンを出力する
+            # dry-run 時はドラフト PR の存在を判定できないため、3パターンを出力する:
+            #   (1) ドラフト PR あり: ready → edit
+            #   (2) ドラフト PR なし、既存 Ready PR あり: edit のみ（ready スキップ）
+            #   (3) どちらもなし: gh pr create
             if [[ -n "$body_file" ]]; then
+                log_dry_run "# (case 1) ドラフト PR あり: ready → edit"
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh ready <PR_FROM_FIND_DRAFT>"
                 log_dry_run "gh pr edit <PR_FROM_FIND_DRAFT> --body-file $body_file"
-                log_dry_run "# or (if draft not found) gh pr create --base main --title $cycle --body-file $body_file"
+                log_dry_run "# (case 2) ドラフト PR なし、既存 Ready PR あり（部分成功 retry）"
+                log_dry_run "gh pr list --head <current-branch> --state open --json number,isDraft --jq '.[] | select(.isDraft == false) | .number'"
+                log_dry_run "gh pr edit <EXISTING_PR> --body-file $body_file"
+                log_dry_run "# (case 3) どちらもなし: gh pr create"
+                log_dry_run "gh pr create --base main --title $cycle --body-file $body_file"
             else
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh ready <PR_FROM_FIND_DRAFT>"
-                log_dry_run "# if draft not found: pr-ready:error:body-file-required (exit 1)"
+                log_dry_run "# if draft not found and existing Ready PR not found: pr-ready:error:body-file-required (exit 1)"
             fi
             return 0
         fi
@@ -408,6 +437,51 @@ cmd_pr_ready() {
     fi
 
     # ドラフト PR なし
+    # 部分成功後の retry を冪等化するため、非ドラフト（既に Ready 化済み）の open PR を検索する。
+    # 見つかった場合は ready 化をスキップし、body 更新のみ実行する（重複 PR 作成を防止）。
+    #
+    # 重要: gh pr list の失敗（API transient エラー等）を「PR なし」と誤判定すると、
+    # 実際には既存 PR があるのに重複 PR を作成してしまう。失敗時はエラー終了する。
+    local existing_pr_number=""
+    if [[ "$DRY_RUN" = "1" ]]; then
+        log_dry_run "gh pr list --head <current-branch> --state open --json number,isDraft --jq '.[] | select(.isDraft == false) | .number'"
+        log_dry_run "# if existing non-draft PR found: gh pr edit <PR> --body-file $body_file (ready 化スキップ)"
+        log_dry_run "# else: gh pr create --base main --title $cycle --body-file $body_file"
+    else
+        local current_branch
+        current_branch=$(git branch --show-current 2>/dev/null || echo "")
+        if [[ -z "$current_branch" ]]; then
+            # 現在ブランチが取得できない（detached HEAD / git リポジトリ外 / git エラー）。
+            # 重複 PR 作成を避けるためエラー終了する。
+            printf 'pr-ready:error:current-branch-unavailable\n' >&2
+            return 1
+        fi
+        local pr_list_output pr_list_ec=0
+        pr_list_output=$(gh pr list --head "$current_branch" --state open --json number,isDraft --jq '.[] | select(.isDraft == false) | .number' 2>&1) || pr_list_ec=$?
+        if [[ $pr_list_ec -ne 0 ]]; then
+            # gh pr list 失敗 → エラー出力を透過して終了。重複 PR 作成は行わない。
+            printf '%s\n' "$pr_list_output" >&2
+            printf 'pr-ready:error:gh-pr-list-failed:%d\n' "$pr_list_ec" >&2
+            return $pr_list_ec
+        fi
+        existing_pr_number=$(printf '%s\n' "$pr_list_output" | head -1)
+    fi
+
+    if [[ -n "$existing_pr_number" ]]; then
+        # Ready 化済みの open PR が既に存在する → ready 化スキップ、body 更新のみ
+        printf 'pr:found-ready:%s\n' "$existing_pr_number"
+        if [[ -z "$body_file" ]]; then
+            # body-file なしなら更新するものがない → 成功扱いで終了
+            return 0
+        fi
+        if [[ "$DRY_RUN" = "1" ]]; then
+            log_dry_run "gh pr edit $existing_pr_number --body-file $body_file"
+            return 0
+        fi
+        gh pr edit "$existing_pr_number" --body-file "$body_file" || return $?
+        return 0
+    fi
+
     if [[ -z "$body_file" ]]; then
         printf 'pr-ready:error:body-file-required\n' >&2
         return 1

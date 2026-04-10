@@ -12,7 +12,13 @@
 scripts/operations-release.sh version-check [--ios-skip-marketing-version]
 ```
 
-`project.type` で分岐（iOS → `ios-build-check.sh`、他 → `suggest-version.sh`）。Inception 履歴に「iOSバージョン更新実施」記録があれば AI が `--ios-skip-marketing-version` を付与。iOS は `vX.Y.Z` → `X.Y.Z`。最終承認はユーザー判断。
+`project.type` で分岐:
+
+- **general（その他）**: `suggest-version.sh` を実行
+- **ios（フラグなし）**: `suggest-version.sh`（MARKETING_VERSION 確認）→ `ios-build-check.sh`（ビルド番号確認）の順で実行
+- **ios（`--ios-skip-marketing-version` 付与）**: `ios-build-check.sh` のみ実行
+
+Inception 履歴に「iOSバージョン更新実施」記録があれば AI が `--ios-skip-marketing-version` を付与してマーケティングバージョン確認をスキップ。iOS は `vX.Y.Z` → `X.Y.Z`。最終承認はユーザー判断。
 
 ## 7.2〜7.6 CHANGELOG / README / 履歴 / lint / progress
 
@@ -35,7 +41,7 @@ scripts/operations-release.sh version-check [--ios-skip-marketing-version]
 scripts/operations-release.sh pr-ready --cycle {{CYCLE}} --body-file <PR本文の一時ファイル>
 ```
 
-`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）。`get-related-issues` 出力から全関連 Issue の `Closes #XX` 記載漏れを手動照合（漏れは修正 → 再実行）。
+`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。`get-related-issues` 出力から全関連 Issue の `Closes #XX` 記載漏れを手動照合（漏れは修正 → 再実行）。
 
 ## 7.9〜7.11 事前チェック【必須】
 
