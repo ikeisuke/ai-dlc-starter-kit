@@ -7,6 +7,26 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.0] - 2026-04-10
+
+### Changed
+
+- **#519 コンテキスト圧縮プロジェクト完遂**: 案D（フェーズインデックス集約型プログレッシブロード）と Tier 2 施策を統合実装し、3 フェーズすべての初回ロードを削減（Inception 22,972 → 14,655 tok / -36.2%、Construction 17,980 → 15,567 tok / -13.4%、Operations 17,209 → 15,502 tok / -9.9%）。Inception の削減目標 -35% を超過達成（#519）
+- **案D 実装**: Inception / Construction / Operations の各フェーズに `steps/{phase}/index.md` を新設し、ステップ目次・分岐ロジック・現在位置判定チェックポイントを集約。詳細ステップは on_demand ロードに変更（#519）
+- **operations-release.md スクリプト化（Tier 2）**: `skills/aidlc/scripts/operations-release.sh` を新設し、Operations Phase のリリース準備手順を 2,877 → 1,433 tok（-50.2%）に簡略化（#519）
+- **review-flow.md 簡略化（Tier 2）**: ルーティング判定を `steps/common/review-routing.md` に抽出し、`review-flow.md` 本体は実行手順のみに縮約。合計 3,979 tok（整理前 review-flow.md 3,989 tok 以下）（#519）
+
+### Fixed
+
+- **#553 Inception 後半フェーズ誤判定の根本解決**: `steps/common/phase-recovery-spec.md` を新設し、汎用復帰判定基盤を導入。`phaseProgressStatus` を `ArtifactsState` 構築時に enum 正規化することで progress.md の書式変化に起因する取りこぼしを構造的に排除（#553）
+
+### Added
+
+- `bin/measure-initial-load.sh`: v2.2.3 / v2.3.0 初回ロード tok 数を tiktoken (cl100k_base) で決定論的に計測する Unit 006 計測スクリプト（#519）
+- `.aidlc/cycles/v2.3.0/measurement-report.md`: #519 達成判定の正本レポート（9 章構成、Intent §成功基準対照を含む）（#519）
+
+---
+
 ## [2.2.3] - 2026-04-08
 
 ### Changed
