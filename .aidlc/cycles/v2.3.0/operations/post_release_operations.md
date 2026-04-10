@@ -81,3 +81,15 @@
 
 - **メタ開発の特性**: 本プロジェクトはスターターキット自体を開発しているため、通常の運用メトリクス（稼働率、レスポンスタイム等）は適用外
 - **測定レポート**: 詳細な tok 数測定結果は `.aidlc/cycles/v2.3.0/measurement-report.md` 参照
+
+## パーミッション監査記録（v2.3.0リリース時）
+
+`tools:suggest-permissions --review all` 実行時の指摘とユーザー判断:
+
+| 重要度 | ルール | スコープ | 判断 | 理由 |
+|-------|-------|---------|-----|------|
+| CRITICAL | `Bash(bash -n *)` | global allow | 現状維持 | `-n` は構文チェック専用（noexec モード）でコードを実行しない。検出器は `bash` プレフィックスを一律警告するが偽陽性 |
+| HIGH | `Bash(rm /tmp/aidlc-*)` | global allow | 現状維持 | `/tmp/aidlc-*` スコープ限定。AI-DLC 一時ファイル掃除専用で影響範囲が限局 |
+| MED × 7 | `git push *` / `git tag *` / `gh issue/pr view/list *` | global/project allow | 現状維持 | `git push --force` 等の実行時は既存運用どおり個別にダイアログが出る（CLAUDE.mdで許容済み） |
+
+次回リリース時（次サイクル）の再評価対象とする。MED指摘は `git push --force` 等の明示的な `ask` ガード追加を検討する余地あり。
