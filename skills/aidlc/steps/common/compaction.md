@@ -1,10 +1,67 @@
 # コンパクション時の対応【自動要約後】
 
-コンテキストがコンパクション（自動要約）された後は、以下を確認・実行する：
+コンテキストがコンパクション（自動要約）された後は、本ファイルの指示に従って復帰する。
 
-1. このプロンプトファイルの内容が保持されているか確認
-2. 保持されていない場合、現在のフェーズのプロンプトを読み込む
-3. 作業中の進捗情報を確認して作業を継続
+## 通常フロー継続禁止ガード【絶対遵守】
+
+コンパクション復帰を検出した場合、**現在のフローを即座に終了**し、`/aidlc` の再実行を要求しなければならない。
+
+**以下の行動は全て禁止**:
+- コンパクション前の作業を「覚えている」として続行すること
+- ステップファイルの再読み込みを「前回と同じ」として省略すること
+- 本ファイルの復帰手順を実行した後、そのまま作業を継続すること
+
+**根拠**: SKILL.md 不変ルール#4「コンパクション復帰時: 前セッションの記憶に依存せず、ステップファイルを必ず再読み込みする」
+
+**ガード発動時の出力（定型文）**:
+
+フェーズが確定できる場合（`judge()` が有効なフェーズを返した場合）:
+
+```text
+【コンパクション復帰検出 - フロー継続禁止】
+
+コンテキストのコンパクション（自動要約）が検出されました。
+不変ルール#4 に基づき、現在のフローを終了します。
+
+ステップファイルの再読み込みが必要です。
+以下のコマンドを実行してフェーズを再開してください:
+
+/aidlc {phase}
+
+※ コンパクション後のサマリーに含まれる手順情報は不完全な可能性があります。
+  「覚えている」「前回と同じ」はステップファイル再読み込みの省略理由になりません。
+```
+
+フェーズが不確定の場合（`judge()` 実行前 or `undecidable` 時）:
+
+```text
+【コンパクション復帰検出 - フロー継続禁止】
+
+コンテキストのコンパクション（自動要約）が検出されました。
+不変ルール#4 に基づき、現在のフローを終了します。
+
+ステップファイルの再読み込みが必要です。
+以下のコマンドを実行してください（ブランチ名からフェーズを自動判定します）:
+
+/aidlc
+
+※ コンパクション後のサマリーに含まれる手順情報は不完全な可能性があります。
+  「覚えている」「前回と同じ」はステップファイル再読み込みの省略理由になりません。
+```
+
+## コンパクション後サマリーテンプレート
+
+コンパクション発生時、自動要約のサマリーには以下の指示を含めること:
+
+```text
+[AI-DLC コンパクション復帰指示]
+コンパクションが発生しました。現在のフローを継続してはいけません。
+必ず `/aidlc` を実行してステップファイルを再読み込みしてください。
+```
+
+## フェーズごとの再読み込みパス
+
+以下は `/aidlc` 再実行時に SKILL.md の共通初期化フローが参照する情報（参考）。**本セクションを読んだ後にフローを継続してはならない**（上記ガード参照）。
 
 **フェーズごとの再読み込みパス**:
 
@@ -13,6 +70,12 @@
 | Inception | `/aidlc inception` | `steps/inception/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.1 参照 | `.aidlc/cycles/{{CYCLE}}/inception/progress.md` |
 | Construction | `/aidlc construction` | `steps/construction/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.2 参照 | Unit定義ファイル（`.aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md`）の「実装状態」セクション（Stage 1 で参照）＋ `.aidlc/cycles/{{CYCLE}}/history/construction_unit{NN}.md`（Stage 2 で参照） |
 | Operations | `/aidlc operations` | `steps/operations/index.md` を読み込み → `judge()` 契約経由で `step_id` を決定 → 契約テーブルから `detail_file` を解決。判定ロジックの本文は `steps/common/phase-recovery-spec.md` §5.3 参照。bootstrap 分岐（Construction 完了直後の Operations 新規開始）は `step_id=operations.01-setup` + `construction_complete` info diagnostic として返される | `.aidlc/cycles/{{CYCLE}}/operations/progress.md` + `.aidlc/cycles/{{CYCLE}}/history/operations.md`（bootstrap 判定で参照） |
+
+---
+
+## 以下は `/aidlc` 再実行後の復元手順（直接到達禁止）
+
+> **重要**: 以下のセクションは `/aidlc` の再実行によって SKILL.md の共通初期化フローが起動された後にのみ参照される。コンパクション検出後にフローを継続してここに到達した場合は、上記「通常フロー継続禁止ガード」に従い即座にフローを終了すること。
 
 ## スキル再読み込み手順【コンパクション復帰時】
 
@@ -27,6 +90,8 @@
 | 3 | `squash-unit` | コミットスカッシュ | squash実行時に自動呼び出しされるため、事前の再読み込みは不要 |
 
 ### 復帰フローの確認手順
+
+> **ガード再確認**: 本手順は `/aidlc` の再実行経由でのみ到達すべきである。コンパクション後にフローを継続して本手順に到達した場合は、上記「通常フロー継続禁止ガード」に従い即座にフローを終了すること。
 
 1. **サイクルの特定**: ブランチ名（`git branch --show-current`）から `cycle/vX.X.X` 形式でサイクルを特定
 2. **フェーズと step の判定**: `RecoveryJudgmentService.judge(ArtifactsState)` 契約に従い、復帰すべきフェーズと step を決定する
@@ -59,6 +124,7 @@
 3. **スキルの再読み込み**: 特定したフェーズに応じて `aidlc` スキルを再読み込み（フェーズ再開コマンドの実行またはステップファイルの手動読み込み）
    - **Inception 復帰時**: `steps/inception/index.md` を読み込み → `judge()` 経由で決定された `step_id` の `detail_file` を契約テーブルから解決
    - **Construction 復帰時**: `steps/construction/index.md` を読み込み → `judge()` 経由で決定された `step_id` の `detail_file` を契約テーブルから解決
+   - **Operations 復帰時**: `steps/operations/index.md` を読み込み → `judge()` 経由で決定された `step_id` の `detail_file` を契約テーブルから解決。bootstrap 状態では `operations.01-setup` + `construction_complete` info diagnostic
 4. **コンテキスト変数の復元**: `automation_mode` 等の設定値は下記「automation_mode の復元」手順で再取得
 5. **作業の継続**: 進捗源から中断ポイントを特定し、作業を再開
 
