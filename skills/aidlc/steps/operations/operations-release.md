@@ -41,7 +41,9 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 scripts/operations-release.sh pr-ready --cycle {{CYCLE}} --body-file <PR本文の一時ファイル>
 ```
 
-`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。`get-related-issues` 出力から全関連 Issue の `Closes #XX` 記載漏れを手動照合（漏れは修正 → 再実行）。
+`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。
+
+**Closes/Relates 区別**: `get-related-issues` は3行出力（`issues:`/`closes:`/`relates:`）。PR本文構築時は `closes:` 行の Issue を `Closes #XX` として記載し、`relates:` 行の Issue は `Relates to #XX（部分対応）` として記載する。`closes:none` の場合は Closes セクション省略、`relates:none` の場合は Related Issues セクション省略。記載漏れの手動照合は `closes:` + `relates:` の合計で確認する。
 
 ## 7.9〜7.11 事前チェック【必須】
 
