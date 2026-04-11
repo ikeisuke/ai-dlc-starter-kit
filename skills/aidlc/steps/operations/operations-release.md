@@ -61,6 +61,16 @@ PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない
 
 **マージ方法の確定**: `gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion でマージ方法を選択 / 他 → `merge_method` 設定値をそのまま使用。いずれの場合もこの時点ではマージ方法の確定のみを行い、マージは実行しない。
 
+**設定保存フロー**（`merge_method=ask` でユーザーがマージ方法を選択した場合のみ）:
+
+選択後、「この選択を設定に保存しますか？」と確認:
+- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
+  ```bash
+  scripts/write-config.sh rules.git.merge_method "<選択した値>" --scope <local|project>
+  ```
+  成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
+- **いいえ**: 今回の選択のみ使用して続行
+
 **マージ実行確認【ユーザー選択: automation_mode に関わらず常にユーザー確認必須】**:
 
 マージ方法の確定後、マージスクリプト実行前に `AskUserQuestion` でマージ実行の可否をユーザーに確認する。PRマージは破壊的・不可逆操作であり、SKILL.md「AskUserQuestion使用ルール」の「ユーザー選択」に分類されるため、`automation_mode` に関わらず（`full_auto` を含む全モードで）自動化対象外。
