@@ -8,7 +8,7 @@
 
 計画ファイル（`.aidlc/cycles/{{CYCLE}}/plans/unit-{NNN}-plan.md`）の「完了条件チェックリスト」を確認。
 
-- **すべて達成**: 次のステップへ（`semi_auto` なら自動承認）
+- **すべて達成**: **セミオートゲート判定**: `steps/construction/index.md` の「§2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **未達成項目あり**: ユーザーに説明し、「未達成のまま完了としますか？」と確認。承認時は例外承認として履歴に記録
 - **チェックリストなし**: 警告表示してスキップ
 

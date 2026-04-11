@@ -11,6 +11,7 @@
 1. 設計ファイルを読み込み、それに基づいて実装コードを生成
 2. **AI レビュー実施**（`steps/common/review-flow.md` に従う）
 3. レビュー結果を反映
+4. **セミオートゲート判定**: `steps/construction/index.md` の「§2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 ### ステップ5: テスト生成
 
@@ -141,7 +142,7 @@
 
 4. **AI レビュー実施**（`steps/common/review-flow.md` に従う。`automation_mode` / ゲート判定の分岐は `steps/construction/index.md` §2.4/§2.8 参照）
 5. レビュー結果を反映
-6. **セミオートゲート判定**に従い承認処理（`common/rules-automation.md` 参照）
+6. **セミオートゲート判定**: `steps/construction/index.md` の「§2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 7. `.aidlc/cycles/{{CYCLE}}/construction/units/[unit_name]_implementation.md` に実装記録を作成（テンプレート: `templates/implementation_record_template.md`）
 
 ---
