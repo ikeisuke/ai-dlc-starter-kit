@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.2] - 2026-04-11
+
+### Added
+
+- `write-config.sh`: 対話UI内から設定値を `config.toml` / `config.local.toml` に安全に永続保存する機能を追加（#556）
+- 対話UIの `merge_method` / `branch_mode` / `draft_pr` 質問に「設定に保存」選択肢を追加（#556）
+- Unit定義ファイルの「関連Issue」セクションに部分対応記法 `#NNN（部分対応）` を導入（#546）
+- `pr-ops.sh get-related-issues` にCloses/Relates区別出力を追加（3行出力: issues/closes/relates）（#546）
+- PR本文生成でCloses/Relates自動判定を追加（#546）
+
+### Fixed
+
+- semi_autoモードでフォールバック条件非該当のゲート承認が自動承認されない問題を修正。全フェーズ（Inception/Construction/Operations）のステップファイルにおけるゲート承認ポイントに「セミオートゲート判定」参照を統一追加（#561）
+
+---
+
 ## [2.3.1] - 2026-04-11
 
 ### Added
