@@ -8,12 +8,12 @@
 | 2. 既存コード分析 | 完了 | requirements/existing_analysis.md | 2026-04-12 |
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-04-12 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-04-12 |
-| 5. PRFAQ作成 | 未着手 | requirements/prfaq.md | - |
+| 5. PRFAQ作成 | スキップ | - | - |
 | 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
 
 ## 現在のステップ
 
-Inception完了処理
+全ステップ完了
 
 ## 完了済みステップ
 
