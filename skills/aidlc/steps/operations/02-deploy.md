@@ -10,7 +10,7 @@
 
 **タスク管理機能を活用してください。**
 
-ステップ2-5の確認をスキップするかどうかを確認します。`automation_mode=semi_auto` での自動処理は index.md §2.3 を参照。
+ステップ2-5の確認をスキップするかどうかを確認します。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。`automation_mode=semi_auto` での自動処理は index.md §2.3 も参照。
 
 **確認メッセージ**（`automation_mode=manual` の場合）:
 ```text
@@ -38,7 +38,7 @@
 
 **タスク管理機能を活用してください。**
 
-- **ステップ開始時**: progress.mdでステップ2を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ2を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **対話形式**: 不明点は `[Question]` / `[Answer]` タグで記録し、**一問一答形式**でユーザーと対話しながら準備（1つの質問をして回答を待ち、複数の質問をまとめて提示しない）
 
 - **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/deployment_checklist.md`（テンプレート: `templates/deployment_checklist_template.md`）
@@ -48,7 +48,7 @@
 
 **タスク管理機能を活用してください。**
 
-- **ステップ開始時**: progress.mdでステップ3を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ3を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/cicd_setup.md`、CI/CD設定ファイル
 - **ステップ完了時**: progress.mdでステップ3を「完了」に更新、完了日を記録
@@ -57,7 +57,7 @@
 
 **タスク管理機能を活用してください。**
 
-- **ステップ開始時**: progress.mdでステップ4を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ4を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/monitoring_strategy.md`（テンプレート: `templates/monitoring_strategy_template.md`）
 - **ステップ完了時**: progress.mdでステップ4を「完了」に更新、完了日を記録
@@ -73,7 +73,7 @@
 - **実行対象** (`cli`, `desktop`, `ios`, `android`): 以下を実行
 
 **実行する場合**:
-- **ステップ開始時**: progress.mdでステップ5を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ5を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **対話形式**: 同様に**一問一答形式**で対話
 - **成果物**: `.aidlc/cycles/{{CYCLE}}/operations/distribution_feedback.md`（テンプレート: `templates/distribution_feedback_template.md`）
 - **ステップ完了時**: progress.mdでステップ5を「完了」に更新、完了日を記録
@@ -82,7 +82,7 @@
 
 **タスク管理機能を活用してください。**
 
-- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ6を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 - **対話形式**: 同様に**一問一答形式**で対話
 
 #### 6.1 Construction引き継ぎタスク再確認
@@ -163,7 +163,7 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 - `comprehensive`: 通常のリリース準備に加え、ロールバック手順を詳細化（手順書作成、ロールバック判定基準の明記）
 - `minimal` / `standard`: 変更なし（現行動作）
 
-- **ステップ開始時**: progress.mdでステップ7を「進行中」に更新
+- **ステップ開始時**: progress.mdでステップ7を「進行中」に更新。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 **サブステップ一覧**（順番に実行、各サブステップの詳細手順は `steps/operations/operations-release.md` および `scripts/operations-release.sh` を参照して従うこと）:
 1. 7.1 バージョン確認

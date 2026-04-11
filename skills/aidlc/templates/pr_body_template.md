@@ -11,6 +11,10 @@
 - [ ] 主要機能が動作する
 
 ## Closes
-Closes #[Issue番号]
+Closes #[完全対応Issue番号]
+
+## Related Issues
+Relates to #[部分対応Issue番号]（部分対応）
+<!-- closes:none の場合は Closes セクション省略、relates:none の場合は Related Issues セクション省略 -->
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

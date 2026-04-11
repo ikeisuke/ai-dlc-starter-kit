@@ -46,6 +46,7 @@
 
 ## 関連Issue
 - #[Issue番号]（なければ「なし」と記載）
+- 部分対応の場合は `#NNN（部分対応）` と記載（PRではClosesではなくRelatesとして扱われます）
 
 ## 実装優先度
 [High / Medium / Low]

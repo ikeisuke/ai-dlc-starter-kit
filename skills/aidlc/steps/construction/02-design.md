@@ -32,7 +32,7 @@
 
 1. **AI レビュー実施**（`steps/common/review-flow.md` に従う。`review_mode` / `automation_mode` 分岐は `steps/construction/index.md` §2.4/§2.8 参照）
 2. レビュー結果を反映
-3. **セミオートゲート判定**に従い承認処理（`common/rules-automation.md` 参照）
+3. **セミオートゲート判定**: `steps/construction/index.md` の「§2.4 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 **承認なしで実装フェーズに進んではいけない**（`automation_mode=semi_auto` での自動承認を除く）
 

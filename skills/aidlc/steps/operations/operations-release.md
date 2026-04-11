@@ -33,7 +33,7 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 
 ## 7.8 ドラフト PR Ready 化【重要】
 
-ドラフト PR を Ready for Review に変更。`gh:available` 以外はスキップ。Ready 化後はバグ修正以外の変更を加えない。
+ドラフト PR を Ready for Review に変更。`gh:available` 以外はスキップ。Ready 化後はバグ修正以外の変更を加えない。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
 
 **PR 本文**: `templates/pr_body_template.md` を基に作成。`construction/units/*-review-summary.md` / `inception/*-review-summary.md` があれば「Closes」直前にレビューサマリセクションを挿入し GitHub blob URL（`{REPO_URL}/blob/cycle/{{CYCLE}}/...`）でリンク。
 
@@ -41,7 +41,9 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 scripts/operations-release.sh pr-ready --cycle {{CYCLE}} --body-file <PR本文の一時ファイル>
 ```
 
-`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。`get-related-issues` 出力から全関連 Issue の `Closes #XX` 記載漏れを手動照合（漏れは修正 → 再実行）。
+`get-related-issues` → `find-draft` → `ready` → `gh pr edit --body-file` を順次実行。ドラフト不在時は同ブランチの非ドラフト open PR を検索し（部分成功 retry 冪等化）、見つかれば ready 化をスキップして `gh pr edit` のみ実行（重複 PR 作成を防止）。既存 PR が一切見つからない場合のみ `gh pr create --base main --title "{{CYCLE}}" --body-file <PATH>`（`--draft` なし）を実行。
+
+**Closes/Relates 区別**: `get-related-issues` は3行出力（`issues:`/`closes:`/`relates:`）。PR本文構築時は `closes:` 行の Issue を `Closes #XX` として記載し、`relates:` 行の Issue は `Relates to #XX（部分対応）` として記載する。`closes:none` の場合は Closes セクション省略、`relates:none` の場合は Related Issues セクション省略。記載漏れの手動照合は `closes:` + `relates:` の合計で確認する。
 
 ## 7.9〜7.11 事前チェック【必須】
 
@@ -60,6 +62,16 @@ scripts/operations-release.sh verify-git
 PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。
 
 **マージ方法の確定**: `gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion でマージ方法を選択 / 他 → `merge_method` 設定値をそのまま使用。いずれの場合もこの時点ではマージ方法の確定のみを行い、マージは実行しない。
+
+**設定保存フロー**（`merge_method=ask` でユーザーがマージ方法を選択した場合のみ）:
+
+選択後、「この選択を設定に保存しますか？」と確認:
+- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
+  ```bash
+  scripts/write-config.sh rules.git.merge_method "<選択した値>" --scope <local|project>
+  ```
+  成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
+- **いいえ**: 今回の選択のみ使用して続行
 
 **マージ実行確認【ユーザー選択: automation_mode に関わらず常にユーザー確認必須】**:
 

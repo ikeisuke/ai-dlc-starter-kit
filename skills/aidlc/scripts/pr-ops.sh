@@ -190,6 +190,10 @@ cmd_ready() {
 
 # get-related-issuesサブコマンド
 # 引数: $1=cycle
+# 出力:
+#   issues:<all_csv>       後方互換行（closes + relates 結合）
+#   closes:<closes_csv>    完全対応Issueのみ
+#   relates:<relates_csv>  部分対応Issueのみ
 cmd_get_related_issues() {
     local cycle="$1"
     local units_dir="${AIDLC_CYCLES}/${cycle}/story-artifacts/units"
@@ -199,16 +203,43 @@ cmd_get_related_issues() {
         return 1
     fi
 
-    # Unit定義ファイル全体から #NNN 形式のIssue番号を抽出
-    # grep がマッチしない場合でも終了しないよう || true を追加
-    local issues
-    issues=$(grep -ohE '#[0-9]+' "${units_dir}"/*.md 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' || true)
+    local -a closes_list=()
+    local -a relates_list=()
 
-    if [[ -z "$issues" ]]; then
-        echo "issues:none"
-    else
-        echo "issues:${issues}"
+    # 各Unit定義ファイルの「## 関連Issue」セクション内のみを対象に解析
+    local file section line
+    for file in "${units_dir}"/*.md; do
+        [[ -f "$file" ]] || continue
+        # 「## 関連Issue」セクションを切り出し（次の##ヘッダーまたはファイル末尾まで）
+        section=$(awk '/^## 関連Issue/{found=1;next} found && /^## /{exit} found{print}' "$file" 2>/dev/null || true)
+        [[ -z "$section" ]] && continue
+        while IFS= read -r line; do
+            if [[ "$line" =~ \#([0-9]+)（部分対応） ]]; then
+                relates_list+=("#${BASH_REMATCH[1]}")
+            elif [[ "$line" =~ \#([0-9]+) ]]; then
+                closes_list+=("#${BASH_REMATCH[1]}")
+            fi
+        done <<< "$section"
+    done
+
+    # 重複除去・ソート
+    local closes_csv relates_csv all_csv
+    if [[ ${#closes_list[@]} -gt 0 ]]; then
+        closes_csv=$(printf '%s\n' "${closes_list[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
     fi
+    if [[ ${#relates_list[@]} -gt 0 ]]; then
+        relates_csv=$(printf '%s\n' "${relates_list[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
+    fi
+
+    # 後方互換: 全Issue結合
+    local -a all_list=("${closes_list[@]}" "${relates_list[@]}")
+    if [[ ${#all_list[@]} -gt 0 ]]; then
+        all_csv=$(printf '%s\n' "${all_list[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
+    fi
+
+    echo "issues:${all_csv:-none}"
+    echo "closes:${closes_csv:-none}"
+    echo "relates:${relates_csv:-none}"
 }
 
 # mergeサブコマンド

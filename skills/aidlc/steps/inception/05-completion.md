@@ -163,6 +163,16 @@ gh pr list --head "<取得したブランチ名>" --state open
   2. いいえ - スキップする（後で手動で作成可能）
   ```
 
+  **設定保存フロー**（`ask_user` でユーザーが選択した場合のみ）:
+
+  選択後、「この選択を設定に保存しますか？」と確認:
+  - **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））。保存値: 「はい」→ `always`、「いいえ」→ `never`
+    ```bash
+    scripts/write-config.sh rules.git.draft_pr "<always|never>" --scope <local|project>
+    ```
+    成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
+  - **いいえ**: 今回の選択のみ使用して続行
+
 - **`create_draft_pr`**: ユーザー確認なしでPR作成に進む
 
 **ステップ5e. PR作成実行**（`create_draft_pr` または `ask_user` で「はい」選択時）:

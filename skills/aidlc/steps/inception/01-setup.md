@@ -161,6 +161,16 @@ scripts/suggest-version.sh
 
 無効値 → `ask` にフォールバック。
 
+**設定保存フロー**（`branch_mode=ask` でユーザーが `branch` または `worktree` を選択した場合のみ。「現在のブランチで続行」選択時は保存対象外）:
+
+選択後、「この選択を設定に保存しますか？」と確認:
+- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
+  ```bash
+  scripts/write-config.sh rules.git.branch_mode "<選択した値>" --scope <local|project>
+  ```
+  成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
+- **いいえ**: 今回の選択のみ使用して続行
+
 **9-2. ブランチ状況による分岐**:
 
 | 現在のブランチ | 動作 |

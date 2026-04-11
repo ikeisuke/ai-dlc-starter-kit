@@ -1,0 +1,38 @@
+# Operations Phase 進捗管理
+
+## ステップ一覧
+
+| ステップ | 状態 | 成果物 | 完了日 |
+|---------|------|--------|--------|
+| 1. 変更確認 | 完了 | - | 2026-04-11 |
+| 2. デプロイ準備 | スキップ | operations/deployment_checklist.md | - |
+| 3. CI/CD構築 | スキップ | operations/cicd_setup.md | - |
+| 4. 監視・ロギング戦略 | スキップ | operations/monitoring_strategy.md | - |
+| 5. 配布 | スキップ | - | - |
+| 6. バックログ整理と運用計画 | 完了 | operations/post_release_operations.md | 2026-04-11 |
+| 7. リリース準備 | 完了 | README.md, CHANGELOG.md, history.md, PR | 2026-04-11 |
+
+## 現在のステップ
+
+PR準備完了
+
+## 完了済みステップ
+
+- ステップ1: 変更確認（完了）
+- ステップ2-5: スキップ（変更なしを選択、ステップ5はproject.type=generalによりスキップ）
+- ステップ6: バックログ整理と運用計画（完了）
+- ステップ7: リリース準備（完了）
+
+## 次回実行時の指示
+
+PR Ready化・マージを実行してください。
+
+## プロジェクト種別による差異
+
+- project.type = "general" のため、ステップ5（配布）をスキップ
+
+## 再開時に読み込むファイル
+
+コンパクション後やセッション再開時は、以下のコマンドを実行してください：
+
+- `/aidlc operations`
