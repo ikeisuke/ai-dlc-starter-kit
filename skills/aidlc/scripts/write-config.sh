@@ -139,7 +139,7 @@ key_exists_in_section() {
     local total_lines
     total_lines=$(wc -l < "$file" | tr -d ' ')
     local next_section_line
-    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1)
+    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1 || true)
 
     local end_line
     if [[ -n "$next_section_line" ]]; then
@@ -177,7 +177,7 @@ update_existing_key() {
     local total_lines
     total_lines=$(wc -l < "$file" | tr -d ' ')
     local next_section_line
-    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1)
+    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1 || true)
 
     local end_line
     if [[ -n "$next_section_line" ]]; then
