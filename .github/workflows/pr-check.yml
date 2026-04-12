@@ -11,6 +11,9 @@ on:
       - 'bin/check-bash-substitution.sh'
       - 'bin/check-defaults-sync.sh'
 
+permissions:
+  contents: read
+
 jobs:
   markdown-lint:
     name: Markdown Lint
