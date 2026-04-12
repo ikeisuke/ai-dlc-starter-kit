@@ -25,6 +25,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 source "${SCRIPT_DIR}/lib/bootstrap.sh"
+source "${SCRIPT_DIR}/lib/key-aliases.sh"
 
 # --- 引数パース ---
 KEY=""
@@ -94,9 +95,155 @@ else
     TARGET_FILE="$AIDLC_LOCAL_CONFIG"
 fi
 
+# --- ユーティリティ ---
+
+# 正規表現メタ文字をエスケープ（grep/sed パターン用）
+escape_regex() {
+    printf '%s' "$1" | sed 's/\./\\./g; s/\[/\\[/g; s/\]/\\]/g; s/\*/\\*/g; s/\^/\\^/g; s/\$/\\$/g'
+}
+
+# sed 置換文字列のエスケープ（\, &, / を無害化）
+escape_sed_replacement() {
+    printf '%s' "$1" | sed -e 's/[\/&\\]/\\&/g'
+}
+
+# TOML 基本文字列としてエスケープ（" と \ を無害化）
+escape_toml_value() {
+    local v="$1"
+    v="${v//\\/\\\\}"
+    v="${v//\"/\\\"}"
+    printf '%s' "$v"
+}
+
+# --- セクション範囲内でリーフキーが存在するか判定 ---
+# 引数: $1=file, $2=section, $3=leaf
+# 戻り値: 0=存在, 1=不在
+key_exists_in_section() {
+    local file="$1"
+    local section="$2"
+    local leaf="$3"
+
+    [[ -f "$file" ]] || return 1
+
+    local esc_section
+    esc_section=$(escape_regex "$section")
+    local esc_leaf
+    esc_leaf=$(escape_regex "$leaf")
+
+    # セクションヘッダーの行番号を取得
+    local section_line
+    section_line=$(grep -n "^\\[${esc_section}\\]$" "$file" 2>/dev/null | head -1 | cut -d: -f1)
+    [[ -n "$section_line" ]] || return 1
+
+    # 次のセクションヘッダーの行番号を取得（なければファイル末尾）
+    local total_lines
+    total_lines=$(wc -l < "$file" | tr -d ' ')
+    local next_section_line
+    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1)
+
+    local end_line
+    if [[ -n "$next_section_line" ]]; then
+        end_line=$((section_line + next_section_line - 1))
+    else
+        end_line="$total_lines"
+    fi
+
+    # セクション範囲内でリーフキーを検索
+    sed -n "$((section_line + 1)),${end_line}p" "$file" | grep -q "^${esc_leaf} *= *"
+}
+
+# --- セクション範囲内の既存キーの値を更新する関数 ---
+# 引数: $1=file, $2=section, $3=leaf, $4=value
+update_existing_key() {
+    local file="$1"
+    local section="$2"
+    local leaf="$3"
+    local val="$4"
+
+    local esc_section
+    esc_section=$(escape_regex "$section")
+    local esc_leaf
+    esc_leaf=$(escape_regex "$leaf")
+    local safe_val
+    safe_val=$(escape_toml_value "$val")
+    local sed_val
+    sed_val=$(escape_sed_replacement "$safe_val")
+
+    # セクションヘッダーの行番号を取得
+    local section_line
+    section_line=$(grep -n "^\\[${esc_section}\\]$" "$file" | head -1 | cut -d: -f1)
+
+    # 次のセクションヘッダーの行番号を取得
+    local total_lines
+    total_lines=$(wc -l < "$file" | tr -d ' ')
+    local next_section_line
+    next_section_line=$(tail -n +"$((section_line + 1))" "$file" | grep -n "^\\[" | head -1 | cut -d: -f1)
+
+    local end_line
+    if [[ -n "$next_section_line" ]]; then
+        end_line=$((section_line + next_section_line - 1))
+    else
+        end_line="$total_lines"
+    fi
+
+    # セクション範囲内のみ sed 置換
+    local start=$((section_line + 1))
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "${start},${end_line}s/^${esc_leaf} *= *\".*\"/${leaf} = \"${sed_val}\"/" "$file"
+        sed -i '' "${start},${end_line}s/^${esc_leaf} *= *[^\"]*$/${leaf} = \"${sed_val}\"/" "$file"
+    else
+        sed -i "${start},${end_line}s/^${esc_leaf} *= *\".*\"/${leaf} = \"${sed_val}\"/" "$file"
+        sed -i "${start},${end_line}s/^${esc_leaf} *= *[^\"]*$/${leaf} = \"${sed_val}\"/" "$file"
+    fi
+}
+
+# --- 書き込み先決定 ---
+# 引数: $1=input_key, $2=file
+# stdout: section\tleaf\taction\tcanonical_key\tlegacy_key (タブ区切り)
+# 戻り値: 0=成功
+resolve_write_target() {
+    local input_key="$1"
+    local file="$2"
+
+    # 正規化
+    local canonical_key
+    canonical_key=$(aidlc_normalize_key "$input_key")
+    local legacy_key
+    legacy_key=$(aidlc_get_legacy_key "$canonical_key")
+
+    # canonical key を分解
+    local canonical_section="${canonical_key%.*}"
+    local canonical_leaf="${canonical_key##*.}"
+
+    # 1. canonical key がファイル内に存在するか
+    if [[ -f "$file" ]] && key_exists_in_section "$file" "$canonical_section" "$canonical_leaf"; then
+        printf '%s\t%s\t%s\t%s\t%s\n' "$canonical_section" "$canonical_leaf" "update" "$canonical_key" "$legacy_key"
+        return 0
+    fi
+
+    # 2. legacy key が存在する場合、ファイル内にlegacy keyがあるか確認
+    if [[ -n "$legacy_key" ]]; then
+        local legacy_section="${legacy_key%.*}"
+        local legacy_leaf="${legacy_key##*.}"
+        if [[ -f "$file" ]] && key_exists_in_section "$file" "$legacy_section" "$legacy_leaf"; then
+            printf '%s\t%s\t%s\t%s\t%s\n' "$legacy_section" "$legacy_leaf" "update_legacy" "$canonical_key" "$legacy_key"
+            return 0
+        fi
+    fi
+
+    # 3. どちらも不在 → canonical key で新規作成
+    printf '%s\t%s\t%s\t%s\t%s\n' "$canonical_section" "$canonical_leaf" "create" "$canonical_key" "$legacy_key"
+    return 0
+}
+
+# --- 書き込み先解決 ---
+WRITE_RESULT=$(resolve_write_target "$KEY" "$TARGET_FILE")
+IFS=$'\t' read -r WRITE_SECTION WRITE_LEAF WRITE_ACTION WRITE_CANONICAL WRITE_LEGACY <<< "$WRITE_RESULT"
+SECTION_HEADER="[${WRITE_SECTION}]"
+
 # --- dry-run ---
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "config:dry-run:${TARGET_FILE}:${KEY}=${VALUE}"
+    echo "config:dry-run:${TARGET_FILE}:${KEY}=${VALUE}:action=${WRITE_ACTION}:canonical=${WRITE_CANONICAL}:legacy=${WRITE_LEGACY}"
     exit 0
 fi
 
@@ -108,54 +255,34 @@ if [[ ! -f "$TARGET_FILE" ]]; then
     fi
 fi
 
-# --- キー分解 ---
-# rules.git.merge_method → section=rules.git, leaf=merge_method
-# rules.reviewing.mode → section=rules.reviewing, leaf=mode
-LEAF_KEY="${KEY##*.}"
-SECTION_KEY="${KEY%.*}"
-
-# TOML セクションヘッダー形式に変換
-# rules.git → [rules.git]
-SECTION_HEADER="[${SECTION_KEY}]"
-
 # --- 書き込み ---
+SAFE_VALUE=$(escape_toml_value "$VALUE")
 
-# 既存キーの値を更新する関数
-update_existing_key() {
-    local file="$1"
-    local leaf="$2"
-    local val="$3"
-
-    # macOS/Linux 互換の sed -i
-    if [[ "$(uname)" == "Darwin" ]]; then
-        sed -i '' "s/^${leaf} *= *\".*\"/${leaf} = \"${val}\"/" "$file"
-        sed -i '' "s/^${leaf} *= *[^\"]*$/${leaf} = \"${val}\"/" "$file"
-    else
-        sed -i "s/^${leaf} *= *\".*\"/${leaf} = \"${val}\"/" "$file"
-        sed -i "s/^${leaf} *= *[^\"]*$/${leaf} = \"${val}\"/" "$file"
-    fi
-}
-
-# キーが既に存在するか確認
-if grep -q "^${LEAF_KEY} *= *" "$TARGET_FILE" 2>/dev/null; then
-    update_existing_key "$TARGET_FILE" "$LEAF_KEY" "$VALUE"
-elif grep -q "^\\[${SECTION_KEY}\\]" "$TARGET_FILE" 2>/dev/null; then
-    # セクションは存在するがキーがない → セクションの直後に追加
-    if [[ "$(uname)" == "Darwin" ]]; then
-        sed -i '' "/^\\[${SECTION_KEY}\\]/a\\
-${LEAF_KEY} = \"${VALUE}\"
+case "$WRITE_ACTION" in
+    update|update_legacy)
+        update_existing_key "$TARGET_FILE" "$WRITE_SECTION" "$WRITE_LEAF" "$VALUE"
+        ;;
+    create)
+        esc_ws=$(escape_regex "$WRITE_SECTION")
+        if grep -q "^\\[${esc_ws}\\]$" "$TARGET_FILE" 2>/dev/null; then
+            # セクションは存在するがキーがない → セクションの直後に追加
+            if [[ "$(uname)" == "Darwin" ]]; then
+                sed -i '' "/^\\[${esc_ws}\\]$/a\\
+${WRITE_LEAF} = \"${SAFE_VALUE}\"
 " "$TARGET_FILE"
-    else
-        sed -i "/^\\[${SECTION_KEY}\\]/a\\${LEAF_KEY} = \"${VALUE}\"" "$TARGET_FILE"
-    fi
-else
-    # セクションもキーもない → ファイル末尾に追加
-    {
-        echo ""
-        echo "${SECTION_HEADER}"
-        echo "${LEAF_KEY} = \"${VALUE}\""
-    } >> "$TARGET_FILE"
-fi
+            else
+                sed -i "/^\\[${esc_ws}\\]$/a\\${WRITE_LEAF} = \"${SAFE_VALUE}\"" "$TARGET_FILE"
+            fi
+        else
+            # セクションもキーもない → ファイル末尾に追加
+            {
+                echo ""
+                echo "${SECTION_HEADER}"
+                echo "${WRITE_LEAF} = \"${SAFE_VALUE}\""
+            } >> "$TARGET_FILE"
+        fi
+        ;;
+esac
 
 echo "config:written:${TARGET_FILE}:${KEY}=${VALUE}"
 exit 0
