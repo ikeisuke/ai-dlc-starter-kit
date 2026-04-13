@@ -4,8 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'skills/aidlc/scripts/migrate-*.sh'
-      - 'skills/aidlc/scripts/lib/**'
+      - 'skills/aidlc-migrate/scripts/migrate-*.sh'
+      - 'skills/aidlc-migrate/scripts/lib/**'
       - 'tests/migration/**'
       - 'tests/fixtures/**'
       - '.github/workflows/migration-tests.yml'

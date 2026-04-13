@@ -4,7 +4,7 @@
 # Resolve paths
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FIXTURES_DIR="$(cd "${TESTS_DIR}/../fixtures" && pwd)"
-SCRIPTS_DIR="$(cd "${TESTS_DIR}/../../skills/aidlc/scripts" && pwd)"
+SCRIPTS_DIR="$(cd "${TESTS_DIR}/../../skills/aidlc-migrate/scripts" && pwd)"
 V1_FIXTURE_DIR="${FIXTURES_DIR}/v1-structure"
 
 # --- Environment setup/teardown ---
