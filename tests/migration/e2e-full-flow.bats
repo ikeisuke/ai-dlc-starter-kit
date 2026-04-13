@@ -7,9 +7,6 @@ setup() {
 }
 
 teardown() {
-  if [[ -n "${BACKUP_DIR:-}" && -d "${BACKUP_DIR}" ]]; then
-    rm -rf "${BACKUP_DIR}"
-  fi
   teardown_environment
 }
 
@@ -24,24 +21,19 @@ teardown() {
   MANIFEST_FILE="${TEST_TMPDIR}/manifest.json"
   save_json_to_file "${manifest}" "${MANIFEST_FILE}"
 
-  # Step 2: Backup
-  backup_result="$(run_backup "${MANIFEST_FILE}")"
-  BACKUP_DIR="$(get_backup_dir "${backup_result}")"
-  [ -d "${BACKUP_DIR}" ]
-
-  # Step 3: Apply config
-  config_journal="$(run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  # Step 2: Apply config
+  config_journal="$(run_apply_config "${MANIFEST_FILE}")"
   assert_json_field "${config_journal}" ".phase" "config"
 
-  # Step 4: Apply data
-  data_journal="$(run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  # Step 3: Apply data
+  data_journal="$(run_apply_data "${MANIFEST_FILE}")"
   assert_json_field "${data_journal}" ".phase" "data"
 
-  # Step 5: Cleanup
-  cleanup_journal="$(run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  # Step 4: Cleanup
+  cleanup_journal="$(run_cleanup "${MANIFEST_FILE}")"
   assert_json_field "${cleanup_journal}" ".phase" "cleanup"
 
-  # Step 6: Verify
+  # Step 5: Verify
   verify_result="$(run_verify "${MANIFEST_FILE}")"
   assert_json_field "${verify_result}" ".overall" "ok"
 
@@ -61,22 +53,17 @@ teardown() {
   # No further steps needed when already v2
 }
 
-@test "e2e: backup_dir is correctly passed between stages" {
+@test "e2e: manifest is correctly passed between stages" {
   MANIFEST_FILE="${TEST_TMPDIR}/manifest.json"
   run_detect > "${MANIFEST_FILE}"
 
-  # Backup produces backup_dir
-  backup_result="$(run_backup "${MANIFEST_FILE}")"
-  BACKUP_DIR="$(get_backup_dir "${backup_result}")"
-  [ -d "${BACKUP_DIR}" ]
-
-  # Apply-config, apply-data, cleanup all accept the same backup_dir
-  config_result="$(run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  # Apply-config, apply-data, cleanup all accept the same manifest
+  config_result="$(run_apply_config "${MANIFEST_FILE}")"
   assert_json_field "${config_result}" ".phase" "config"
 
-  data_result="$(run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  data_result="$(run_apply_data "${MANIFEST_FILE}")"
   assert_json_field "${data_result}" ".phase" "data"
 
-  cleanup_result="$(run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}")"
+  cleanup_result="$(run_cleanup "${MANIFEST_FILE}")"
   assert_json_field "${cleanup_result}" ".phase" "cleanup"
 }

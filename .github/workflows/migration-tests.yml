@@ -8,6 +8,7 @@ on:
       - 'skills/aidlc-migrate/scripts/lib/**'
       - 'tests/migration/**'
       - 'tests/fixtures/**'
+      - '.github/workflows/migration-tests.yml'
 
 permissions:
   contents: read

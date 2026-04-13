@@ -3,18 +3,17 @@
 load helpers/setup
 
 setup() {
-  setup_v1_with_backup
+  setup_v1_with_manifest
 }
 
 teardown() {
-  cleanup_backup_dir
   teardown_environment
 }
 
 @test "verify: config_paths OK after successful migration" {
-  run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
+  run_apply_config "${MANIFEST_FILE}" > /dev/null
+  run_apply_data "${MANIFEST_FILE}" > /dev/null
+  run_cleanup "${MANIFEST_FILE}" > /dev/null
   result="$(run_verify "${MANIFEST_FILE}")"
   config_status="$(echo "${result}" | jq -r '[.checks[] | select(.name == "config_paths")][0].status')"
   [ "${config_status}" = "ok" ]
@@ -27,9 +26,9 @@ teardown() {
 }
 
 @test "verify: v1_artifacts_removed OK after cleanup" {
-  run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
+  run_apply_config "${MANIFEST_FILE}" > /dev/null
+  run_apply_data "${MANIFEST_FILE}" > /dev/null
+  run_cleanup "${MANIFEST_FILE}" > /dev/null
   result="$(run_verify "${MANIFEST_FILE}")"
   artifacts_status="$(echo "${result}" | jq -r '[.checks[] | select(.name == "v1_artifacts_removed")][0].status')"
   [ "${artifacts_status}" = "ok" ]
@@ -42,9 +41,9 @@ teardown() {
 }
 
 @test "verify: data_migrated OK after data migration" {
-  run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
+  run_apply_config "${MANIFEST_FILE}" > /dev/null
+  run_apply_data "${MANIFEST_FILE}" > /dev/null
+  run_cleanup "${MANIFEST_FILE}" > /dev/null
   result="$(run_verify "${MANIFEST_FILE}")"
   data_status="$(echo "${result}" | jq -r '[.checks[] | select(.name == "data_migrated")][0].status')"
   [ "${data_status}" = "ok" ]
@@ -60,9 +59,9 @@ teardown() {
 }
 
 @test "verify: overall=ok when all checks pass" {
-  run_apply_config "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_apply_data "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
-  run_cleanup "${MANIFEST_FILE}" "${BACKUP_DIR}" > /dev/null
+  run_apply_config "${MANIFEST_FILE}" > /dev/null
+  run_apply_data "${MANIFEST_FILE}" > /dev/null
+  run_cleanup "${MANIFEST_FILE}" > /dev/null
   result="$(run_verify "${MANIFEST_FILE}")"
   assert_json_field "${result}" ".overall" "ok"
 }
