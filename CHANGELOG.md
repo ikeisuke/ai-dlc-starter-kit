@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.3] - 2026-04-12
+
+### Fixed
+
+- `SKILL.md` のパス解決ルールにおけるスキルベースディレクトリ解決の不整合を修正（#563）
+- `write-config.sh` のレガシーキーと正規キーの重複書き込み問題を修正。`key-aliases.sh` の正規化ロジックを導入（#564）
+- `inception/05-completion.md` ステップ5dの設定保存フローが読み飛ばされる問題を修正。独立ステップ5d-1として分離し、入出力インターフェースを明示化（#566）
+
+### Security
+
+- `pr-check.yml` と `migration-tests.yml` にworkflow-levelの `permissions: contents: read` を追加し、code-scanningアラート4件を解消
+
+---
+
 ## [2.3.2] - 2026-04-11
 
 ### Added

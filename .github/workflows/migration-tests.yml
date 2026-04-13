@@ -4,11 +4,14 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'skills/aidlc/scripts/migrate-*.sh'
-      - 'skills/aidlc/scripts/lib/**'
+      - 'skills/aidlc-migrate/scripts/migrate-*.sh'
+      - 'skills/aidlc-migrate/scripts/lib/**'
       - 'tests/migration/**'
       - 'tests/fixtures/**'
       - '.github/workflows/migration-tests.yml'
+
+permissions:
+  contents: read
 
 jobs:
   migration-tests:
@@ -19,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install bats-core
-        run: npm install -g bats@1.11.1
+        run: sudo npm install -g bats@1.11.1
 
       - name: Verify jq is available
         run: jq --version

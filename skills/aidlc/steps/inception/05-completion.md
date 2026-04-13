@@ -143,7 +143,7 @@ gh pr list --head "<取得したブランチ名>" --state open
 
 - **既存PRあり**: `action=skip_existing_pr` → 既存PRのURLを表示し、新規作成をスキップ
 
-**ステップ5d. action に応じた実行**（`index.md` §2.7.1 `resolveDraftPrAction` の結果に従う）:
+**ステップ5d. action に応じた実行**（`index.md` §2.7.1 `resolveDraftPrAction` の結果に従う）。**出力**: `action`（DraftPrAction）+ `user_confirmation`（`ask_user` 時のみ: `true`=はい / `false`=いいえ）:
 
 - **`skip_never`**: 以下を表示してスキップ
   ```text
@@ -163,19 +163,19 @@ gh pr list --head "<取得したブランチ名>" --state open
   2. いいえ - スキップする（後で手動で作成可能）
   ```
 
-  **設定保存フロー**（`ask_user` でユーザーが選択した場合のみ）:
-
-  選択後、「この選択を設定に保存しますか？」と確認:
-  - **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））。保存値: 「はい」→ `always`、「いいえ」→ `never`
-    ```bash
-    scripts/write-config.sh rules.git.draft_pr "<always|never>" --scope <local|project>
-    ```
-    成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
-  - **いいえ**: 今回の選択のみ使用して続行
-
 - **`create_draft_pr`**: ユーザー確認なしでPR作成に進む
 
-**ステップ5e. PR作成実行**（`create_draft_pr` または `ask_user` で「はい」選択時）:
+**ステップ5d-1. 設定保存フロー**（**入力**: `action` + `user_confirmation`。`action` が `ask_user` の場合のみ実行。`skip_never` / `create_draft_pr` ではスキップ）:
+
+ステップ5dでユーザーが選択した後、「この選択を設定に保存しますか？」と確認:
+- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））。保存値: 「はい」→ `always`、「いいえ」→ `never`
+  ```bash
+  scripts/write-config.sh rules.git.draft_pr "<always|never>" --scope <local|project>
+  ```
+  成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
+- **いいえ**: 今回の選択のみ使用して続行
+
+**ステップ5e. PR作成実行**（**入力**: `action` + `user_confirmation`。`action` が `ask_user` の場合はステップ5d-1完了後、`action` が `create_draft_pr` の場合はステップ5d完了後に実行。`action` が `create_draft_pr`、または `action` が `ask_user` かつ `user_confirmation=true` の場合のみ実行）:
 
 **関連Issue番号の抽出**:
 Unit定義ファイルの「関連Issue」セクションから、全Issue番号を抽出し、`Closes #XX` 形式でリスト化します。

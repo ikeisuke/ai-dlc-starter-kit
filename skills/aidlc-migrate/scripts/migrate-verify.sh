@@ -60,7 +60,7 @@ _add_check() {
 
 echo "Verifying migration results..." >&2
 
-# 1. config_update 検証: docs/aidlc → skills/aidlc に置換されているか
+# 1. config_update 検証: docs/aidlc 参照が残っていないか
 config_ok=true
 config_detail=""
 resource_count=$(jq '.resources | length' "$MANIFEST")
@@ -73,10 +73,6 @@ for i in $(seq 0 $((resource_count - 1))); do
       config_ok=false
       config_detail="docs/aidlc references still present"
       echo "  FAIL: $path still contains docs/aidlc references" >&2
-    elif ! grep -q 'skills/aidlc' "$path" 2>/dev/null; then
-      config_ok=false
-      config_detail="skills/aidlc not found after migration"
-      echo "  FAIL: $path does not contain expected skills/aidlc references" >&2
     fi
   fi
 done

@@ -4,7 +4,7 @@
 # Resolve paths
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FIXTURES_DIR="$(cd "${TESTS_DIR}/../fixtures" && pwd)"
-SCRIPTS_DIR="$(cd "${TESTS_DIR}/../../skills/aidlc/scripts" && pwd)"
+SCRIPTS_DIR="$(cd "${TESTS_DIR}/../../skills/aidlc-migrate/scripts" && pwd)"
 V1_FIXTURE_DIR="${FIXTURES_DIR}/v1-structure"
 
 # --- Environment setup/teardown ---
@@ -67,30 +67,22 @@ run_detect_with_stderr() {
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-detect.sh"
 }
 
-run_backup() {
-  local manifest="$1"
-  AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-backup.sh" --manifest "${manifest}" 2>/dev/null
-}
-
 run_apply_config() {
   local manifest="$1"
-  local backup_dir="$2"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-apply-config.sh" \
-    --manifest "${manifest}" --backup-dir "${backup_dir}" 2>/dev/null
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_apply_data() {
   local manifest="$1"
-  local backup_dir="$2"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-apply-data.sh" \
-    --manifest "${manifest}" --backup-dir "${backup_dir}" 2>/dev/null
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_cleanup() {
   local manifest="$1"
-  local backup_dir="$2"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-cleanup.sh" \
-    --manifest "${manifest}" --backup-dir "${backup_dir}" 2>/dev/null
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_verify() {
@@ -161,22 +153,6 @@ setup_v1_with_manifest() {
   run_detect > "${MANIFEST_FILE}"
 }
 
-# Setup v1 environment with manifest and backup
-# Sets: TEST_TMPDIR, AIDLC_PROJECT_ROOT, MANIFEST_FILE, BACKUP_DIR
-setup_v1_with_backup() {
-  setup_v1_with_manifest
-  local backup_result
-  backup_result="$(run_backup "${MANIFEST_FILE}")"
-  BACKUP_DIR="$(get_backup_dir "${backup_result}")"
-}
-
-# Cleanup backup dir if it exists
-cleanup_backup_dir() {
-  if [[ -n "${BACKUP_DIR:-}" && -d "${BACKUP_DIR}" ]]; then
-    rm -rf "${BACKUP_DIR}"
-  fi
-}
-
 # --- Utility helpers ---
 
 save_json_to_file() {
@@ -185,7 +161,3 @@ save_json_to_file() {
   echo "${json}" > "${path}"
 }
 
-get_backup_dir() {
-  local json="$1"
-  echo "${json}" | jq -r '.backup_dir'
-}
