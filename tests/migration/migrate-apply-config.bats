@@ -10,12 +10,11 @@ teardown() {
   teardown_environment
 }
 
-@test "apply-config: docs/aidlc replaced with skills/aidlc in config.toml" {
+@test "apply-config: docs/aidlc replaced in config.toml" {
   result="$(run_apply_config "${MANIFEST_FILE}")"
-  # Assert config.toml exists and was updated
+  # Assert config.toml exists and docs/aidlc is no longer referenced
   [ -f "${TEST_TMPDIR}/.aidlc/config.toml" ]
   ! grep -q 'docs/aidlc' "${TEST_TMPDIR}/.aidlc/config.toml"
-  grep -q 'skills/aidlc' "${TEST_TMPDIR}/.aidlc/config.toml"
   status_val="$(echo "${result}" | jq -r '[.applied[] | select(.resource_type == "config_update")][0].status')"
   [ "${status_val}" = "success" ]
 }

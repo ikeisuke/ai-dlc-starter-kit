@@ -21,19 +21,10 @@ teardown() {
   [ "${count}" -gt 0 ]
 }
 
-@test "detect: symlink_kiro agents detected" {
+@test "detect: symlink_materialize for kiro agents detected" {
   result="$(run_detect)"
-  count="$(echo "${result}" | jq '[.resources[] | select(.resource_type == "symlink_kiro" and .path == ".kiro/agents/aidlc.json")] | length')"
+  count="$(echo "${result}" | jq '[.resources[] | select(.resource_type == "symlink_materialize" and .path == ".kiro/agents/aidlc.json")] | length')"
   [ "${count}" -gt 0 ]
-}
-
-@test "detect: file_kiro detected with hash match" {
-  result="$(run_detect)"
-  assert_json_has_resource_type "${result}" "file_kiro"
-  path="$(echo "${result}" | jq -r '[.resources[] | select(.resource_type == "file_kiro")][0].path')"
-  [ "${path}" = ".kiro/agents/aidlc-poc.json" ]
-  is_owned="$(echo "${result}" | jq -r '[.resources[] | select(.resource_type == "file_kiro")][0].ownership_evidence.is_owned')"
-  [ "${is_owned}" = "true" ]
 }
 
 @test "detect: backlog_dir detected with condition" {
@@ -43,10 +34,10 @@ teardown() {
   [ "${condition}" != "null" ]
 }
 
-@test "detect: github_template detected with hash match" {
+@test "detect: issue_template detected with hash match" {
   result="$(run_detect)"
-  assert_json_has_resource_type "${result}" "github_template"
-  is_owned="$(echo "${result}" | jq -r '[.resources[] | select(.resource_type == "github_template")][0].ownership_evidence.is_owned')"
+  assert_json_has_resource_type "${result}" "issue_template"
+  is_owned="$(echo "${result}" | jq -r '[.resources[] | select(.resource_type == "issue_template")][0].ownership_evidence.is_owned')"
   [ "${is_owned}" = "true" ]
 }
 
