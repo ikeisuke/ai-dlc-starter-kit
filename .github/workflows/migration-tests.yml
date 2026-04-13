@@ -21,11 +21,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install bats-core
-        run: npm install -g bats@1.11.1
-
       - name: Verify jq is available
         run: jq --version
 
       - name: Run migration tests
-        run: bats tests/migration/
+        run: npx bats@1.11.1 tests/migration/
