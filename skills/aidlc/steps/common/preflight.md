@@ -114,7 +114,9 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 | レビューツール | `review_mode == disabled` | スキップ | （なし） | - |
 | レビューツール | `review_tools == []` | 情報表示 | `ℹ 外部CLIを使用しない設定です（tools = []）` | info |
 | レビューツール | 上記以外 | `command -v -- "{先頭ツール}"` で確認（ツール名は `[a-zA-Z0-9_-]+` のみ許可） | `ℹ レビューツール ({ツール名}): available / not found` | info |
-| defaults.toml | `config/defaults.toml` 不在 | 警告表示 | `⚠ defaults.toml: 不在（デフォルト値が適用されません）` | warn |
+| defaults.toml | SKILL.mdのパス解決ルールに従って解決した `config/defaults.toml` が不在（※） | 警告表示 | `⚠ defaults.toml: 不在（デフォルト値が適用されません）` | warn |
+
+> ※ 具体的には、スキルベースディレクトリの絶対パスを基点として `{スキルベースディレクトリ}/config/defaults.toml` の存在を確認すること（例: `ls {スキルベースディレクトリ}/config/defaults.toml`）。プロジェクトルート相対で `ls config/defaults.toml` と実行してはならない。
 
 ### 6. 結果提示
 
@@ -128,7 +130,7 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 ■ オプションチェック（常時実行）
   {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
   ℹ レビューツール ({tool名}): {available | not found}
-  {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}
+  {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。スキルベースディレクトリ配下の config/defaults.toml を確認してください）}
 
 ■ ツールバージョン
   dasel_major_version: {value}（未インストール時は「N/A」）
