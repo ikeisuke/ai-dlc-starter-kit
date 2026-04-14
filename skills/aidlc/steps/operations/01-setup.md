@@ -50,7 +50,29 @@ DevOpsエンジニア兼SRE。
 - 存在する場合: 完了済みステップを確認、未完了から再開
 - 存在しない場合: 初回実行として作成（`project.type` に応じて配布ステップをスキップ設定）
 
-### 6a. タスクリスト作成【必須】
+### 6a. リモート同期チェック【推奨】
+
+リモート追跡ブランチに未取得のコミットがないか確認し、古い状態で Operations Phase を進行するリスクを低減する（SKILL.md「推奨・提案応答確保ルール」参照）。
+
+**チェック手順**:
+
+1. upstream remote を解決: `git config branch.<current_branch>.remote`（未設定時はフォールバック `origin`）
+2. `GIT_TERMINAL_PROMPT=0 git fetch <resolved_remote>`
+3. `git rev-list HEAD..@{u} --count`
+
+**正規化状態と分岐**:
+
+| git操作結果 | 正規化状態 | 動作 |
+|------------|-----------|------|
+| fetch成功 + rev-list = 0 | `up-to-date` | 「✓ リモートブランチと同期済みです」表示、続行 |
+| fetch成功 + rev-list > 0 | `behind` | 「⚠ リモートブランチに未取得のコミットが {N} 件あります」表示 → `AskUserQuestion`「取り込む / スキップして続行」 |
+| fetch失敗 | `skipped` | 「⚠ リモート同期チェックをスキップしました（リモート接続失敗）」表示、続行 |
+| upstream未設定（`@{u}` 解決不可） | `skipped` | 「⚠ リモート同期チェックをスキップしました（upstream未設定）」表示、続行 |
+| detached HEAD | `skipped` | 「⚠ リモート同期チェックをスキップしました（detached HEAD）」表示、続行 |
+
+**behind 時の「取り込む」選択後**: ユーザーに手動で `git merge` または `git rebase` を依頼し、完了後にステップ6aを再実行して `up-to-date` を確認する。
+
+### 6b. タスクリスト作成【必須】
 
 **【次のアクション】** `steps/common/task-management.md` の「Operations Phase: タスクテンプレート」に従いタスクリスト作成。**タスクリスト未作成のまま次のステップに進んではいけない。**
 
