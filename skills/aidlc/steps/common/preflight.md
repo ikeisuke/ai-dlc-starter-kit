@@ -150,6 +150,12 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 ■ 判定: {続行可能 | 続行可能（警告N件）}
 ```
 
+**警告時の続行判断**（SKILL.md「推奨・提案応答確保ルール」参照）:
+
+- **blocker失敗あり**: §7 再チェックフローに遷移（既存動作、変更なし）
+- **warn件数≧1（blockerなし）**: `AskUserQuestion` で「続行する / 問題を解決してから再チェック」を選択。「再チェック」選択時は §7 再チェックフローに遷移
+- **warn件数=0**: そのまま続行（応答不要）
+
 ### 7. 再チェックフロー
 
 ```text
@@ -158,8 +164,9 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 以下の問題を解決してから再実行してください:
 - {失敗項目}: {対処方法}
 
-問題を解決したら「再チェック」と入力してください。
 ```
+
+> **対話方式**: §7 の再チェックフローはblocker失敗時の復旧フローであり、ユーザーが問題を解決した後に`AskUserQuestion`で「再チェック / 中断」を選択する。§6 の警告時続行判断（`AskUserQuestion`）とは排他的に動作する。
 
 再チェック: 失敗したblocker/warn項目のみ再実行。最大3回。超過時:
 
