@@ -114,7 +114,9 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 | レビューツール | `review_mode == disabled` | スキップ | （なし） | - |
 | レビューツール | `review_tools == []` | 情報表示 | `ℹ 外部CLIを使用しない設定です（tools = []）` | info |
 | レビューツール | 上記以外 | `command -v -- "{先頭ツール}"` で確認（ツール名は `[a-zA-Z0-9_-]+` のみ許可） | `ℹ レビューツール ({ツール名}): available / not found` | info |
-| defaults.toml | `config/defaults.toml` 不在 | 警告表示 | `⚠ defaults.toml: 不在（デフォルト値が適用されません）` | warn |
+| defaults.toml | SKILL.mdのパス解決ルールに従って解決した `config/defaults.toml` が不在（※） | 警告表示 | `⚠ defaults.toml: 不在（デフォルト値が適用されません）` | warn |
+
+> ※ 具体的には、スキルベースディレクトリの絶対パスを基点として `{スキルベースディレクトリ}/config/defaults.toml` の存在を確認すること（例: `ls {スキルベースディレクトリ}/config/defaults.toml`）。プロジェクトルート相対で `ls config/defaults.toml` と実行してはならない。
 
 ### 6. 結果提示
 
@@ -128,7 +130,7 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 ■ オプションチェック（常時実行）
   {✓ | ⚠} gh: {status}（{status が available でない場合: gh依存機能は制限されます}）
   ℹ レビューツール ({tool名}): {available | not found}
-  {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。config/defaults.toml を確認してください）}
+  {✓ | ⚠} defaults.toml: {存在 | 不在（デフォルト値が適用されません。スキルベースディレクトリ配下の config/defaults.toml を確認してください）}
 
 ■ ツールバージョン
   dasel_major_version: {value}（未インストール時は「N/A」）
@@ -148,6 +150,12 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 ■ 判定: {続行可能 | 続行可能（警告N件）}
 ```
 
+**警告時の続行判断**（SKILL.md「推奨・提案応答確保ルール」参照）:
+
+- **blocker失敗あり**: §7 再チェックフローに遷移（既存動作、変更なし）
+- **warn件数≧1（blockerなし）**: `AskUserQuestion` で「続行する / 問題を解決してから再チェック」を選択。「再チェック」選択時は §7 再チェックフローに遷移
+- **warn件数=0**: そのまま続行（応答不要）
+
 ### 7. 再チェックフロー
 
 ```text
@@ -156,8 +164,9 @@ scripts/read-config.sh --keys rules.depth_level.level rules.depth_level.history_
 以下の問題を解決してから再実行してください:
 - {失敗項目}: {対処方法}
 
-問題を解決したら「再チェック」と入力してください。
 ```
+
+> **対話方式**: §7 の再チェックフローはblocker失敗時の復旧フローであり、ユーザーが問題を解決した後に`AskUserQuestion`で「再チェック / 中断」を選択する。§6 の警告時続行判断（`AskUserQuestion`）とは排他的に動作する。
 
 再チェック: 失敗したblocker/warn項目のみ再実行。最大3回。超過時:
 
