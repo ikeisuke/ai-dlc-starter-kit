@@ -25,6 +25,7 @@ validate_user_input = true
 use_env_for_secrets = true
 
 [rules.git]
+draft_pr = "always"
 # Git運用ルール
 commit_on_unit_complete = true
 commit_on_phase_complete = true
