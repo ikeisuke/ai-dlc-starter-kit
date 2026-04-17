@@ -12,6 +12,13 @@
 | 6. バックログ整理と運用計画 | 未着手 | operations/post_release_operations.md | - |
 | 7. リリース準備 | 未着手 | README.md, history.md, PR | - |
 
+### ステップ7 サブステップ
+
+<!-- fixed-slot-grammar: v1 -->
+- release_gate_ready=false
+- completion_gate_ready=false
+- pr_number=
+
 ## 現在のステップ
 
 次回: 1. 変更確認

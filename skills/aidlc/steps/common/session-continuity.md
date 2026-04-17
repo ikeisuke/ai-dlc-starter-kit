@@ -10,7 +10,7 @@
 |---------|--------|-------------------|
 | Inception | `inception/progress.md` + `judge()` 契約経由の `step_id` 決定 | `steps/inception/index.md`（binding） + `phase-recovery-spec.md` §5.1（規範仕様） |
 | Construction | Unit定義ファイル（`story-artifacts/units/*.md`）の「実装状態」セクション（Stage 1 / Unit 特定） + `history/construction_unit{NN}.md`（Stage 2 / Step 特定） + `judge()` 契約経由の `step_id` 決定 | `steps/construction/index.md`（binding） + `phase-recovery-spec.md` §5.2（規範仕様） |
-| Operations | `operations/progress.md`（直線評価） + `history/operations.md`（bootstrap 判定 / release_done / completion_done 評価で参照） + `judge()` 契約経由の `step_id` 決定 | `steps/operations/index.md`（binding） + `phase-recovery-spec.md` §5.3（規範仕様） |
+| Operations | `operations/progress.md`（直線評価 + 固定スロット: `release_gate_ready` / `completion_gate_ready` / `pr_number`）+ GitHub PR 実態確認（`gh pr view`）+ `history/operations.md`（bootstrap 判定 / 旧形式フォールバック）+ `judge()` 契約経由の `step_id` 決定。判定源選択は `DecisionCategoryClassifier`（spec §7.4）で new_format / legacy_format を自動切替（Unit 005 改訂） | `steps/operations/index.md`（binding） + `phase-recovery-spec.md` §5.3（規範仕様） |
 
 ## コンパクション復帰
 
