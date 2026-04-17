@@ -95,9 +95,41 @@ scripts/run-markdownlint.sh {{CYCLE}}
 
 **【次のアクション】** `steps/common/commit-flow.md` の「Squash統合フロー」を読み込んで実行。
 
-- `squash:success` → ステップ8スキップ
-- `squash:skipped` → ステップ8へ
-- `squash:error` → エラーリカバリ後ステップ8へ
+- `squash:success` → **ステップ 7a（force-push 推奨案内）をユーザーに提示** → ステップ8スキップ
+- `squash:skipped` → ステップ8へ（ステップ 7a は**提示しない**、squash 未実施のため rewrite なし）
+- `squash:error` → エラーリカバリ後ステップ8へ（ステップ 7a は**提示しない**、エラーリカバリを優先）
+
+### 7a. Force-push 推奨コマンド案内【`squash:success` 時のみ提示】
+
+> **提示条件**: ステップ 7 が `squash:success` を出力した場合のみ、AI エージェントが本節をユーザーに提示する。
+> `squash:skipped` / `squash:error` では本節を提示しない（抑制）。
+> ユーザーが既にリモートへ force-push 済みであることを確認できる場合も本節を提示せずスキップしてよい（判断はユーザー確認で行う）。
+
+**背景**: squash 実行によりローカル履歴が rewrite されたため、リモート（`origin/{ブランチ}`）は古いコミット列を保持している。この状態で通常の `git push` は rejected になるため、`--force-with-lease` での上書きが必要となる。
+
+**推奨コマンド**:
+
+```bash
+git push --force-with-lease <remote> HEAD:<upstream_branch>
+```
+
+`<remote>` と `<upstream_branch>` は自分の環境（例: `origin` と `cycle/v2.3.5`）に置換する。
+
+**`--force-with-lease` を推奨する理由**: `--force` は他者のコミットも上書きしてしまうため、本案内では `--force-with-lease`（ローカルの upstream 記録とリモート HEAD が一致する場合のみ上書きする安全な形式）のみを推奨する。`--force` は使用しないこと。
+
+**事前確認【必須】**: 実行前に以下を必ず確認する:
+
+```bash
+# upstream 側の差分コミットを確認（他者の作業が含まれていないか）
+git log HEAD..<remote>/<upstream_branch>
+
+# ローカル側の差分コミットを確認（上書きする意図どおりか）
+git log <remote>/<upstream_branch>..HEAD
+```
+
+**実行中止の判定基準**: 他者のコミットが upstream に含まれている、または tracking 設定違いが疑われる場合は実行を中止し、rebase / tracking 再設定 / 個別相談などユーザー判断で対応する。force-push は自動実行しない（ユーザーが明示的に実行する）。
+
+**多層防御**: 本案内を見落とした場合でも、Operations Phase 開始時に `scripts/validate-git.sh remote-sync`（Unit 002 実装）が `diverged` を検出して再度案内する（`steps/operations/01-setup.md` §6a / `operations-release.md` 7.10 参照）。
 
 ### 8. Gitコミット
 
