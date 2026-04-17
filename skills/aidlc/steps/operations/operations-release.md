@@ -109,3 +109,31 @@ scripts/operations-release.sh merge-pr --pr {PR番号} --method <merge|squash|re
 ```
 
 結果は `merged` / `auto-merge-set` / `error:<code>`。エラー対処は `merge-pr --help`。判定困難な error は AskUserQuestion で再試行 / 中断を選択。
+
+**`error:checks-status-unknown` 検出時の分岐【機械可読な `reason:` 行でパース】**:
+
+`error:checks-status-unknown` が出力された場合、続く `reason:<code>` 行を機械的にパースして分岐する:
+
+- **`reason:no-checks-configured`**: リポジトリに必須 CI チェックが未設定の状態。`AskUserQuestion` で以下 2 択を提示:
+  1. `--skip-checks` を付与して再実行（CI バイパスしてマージ）
+  2. 中断（ユーザー判断で次のアクションを決定）
+
+  ユーザー選択「再実行」→ `scripts/operations-release.sh merge-pr --pr {PR番号} --method <method> --skip-checks` を実行
+
+- **`reason:checks-query-failed`**: CI チェック状態の取得に失敗（ネットワーク / API / 認証エラー）。`AskUserQuestion` で以下 2 択を提示:
+  1. 再試行（同じ引数で再呼び出し）
+  2. 中断
+
+  **`--skip-checks` は提示してはならない**（安全性契約: `checks-query-failed` は原因不明のため CI バイパス禁止）
+
+**`--skip-checks` の適用条件**（安全性契約）:
+
+| CI 状態 | `--skip-checks` の効果 |
+|---------|---------------------|
+| `pass` | フラグ無視（即時マージ） |
+| `fail` | フラグ無視（`error:checks-failed` で中断） |
+| `pending` | フラグ無視（auto-merge 設定） |
+| `no-checks-configured` | **即時マージを許可**（本 Unit の新規挙動） |
+| `checks-query-failed` | **バイパス禁止**（`error:checks-status-unknown` で中断） |
+
+詳細は `skills/aidlc/guides/merge-pr-usage.md` を参照。

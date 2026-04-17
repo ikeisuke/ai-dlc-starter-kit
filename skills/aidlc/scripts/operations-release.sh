@@ -158,7 +158,7 @@ EOF
 
 print_help_merge_pr() {
     cat <<'EOF'
-operations-release.sh merge-pr [--dry-run] --pr <PR> --method <merge|squash|rebase>
+operations-release.sh merge-pr [--dry-run] --pr <PR> --method <merge|squash|rebase> [--skip-checks]
 
 Operations Phase ステップ 7.13 PR マージ実行のラッパー。
 
@@ -166,14 +166,16 @@ Options:
   --pr <PR>          マージ対象 PR 番号（必須）
   --method <METHOD>  マージ方法（必須）: merge / squash / rebase
                      "ask" は markdown 側で事前解決すること
+  --skip-checks      no-checks-configured 時のみ CI バイパスを許可
+                     failed/pending/checks-query-failed ではバイパスされない
   --dry-run          副作用を抑止し、呼び出しコマンドを出力
   -h, --help         このヘルプを表示
 
 Behavior:
-  --method に応じて以下を実行:
-    merge  → pr-ops.sh merge <PR>
-    squash → pr-ops.sh merge <PR> --squash
-    rebase → pr-ops.sh merge <PR> --rebase
+  --method に応じて以下を実行（--skip-checks 指定時は末尾に透過）:
+    merge  → pr-ops.sh merge <PR> [--skip-checks]
+    squash → pr-ops.sh merge <PR> --squash [--skip-checks]
+    rebase → pr-ops.sh merge <PR> --rebase [--skip-checks]
   pr-ops.sh の stdout / exit code をそのまま透過する。
 
 エラーコード（merged / auto-merge-set / error:auto-merge-not-enabled /
@@ -181,6 +183,13 @@ error:checks-failed / error:permission-denied / error:not-mergeable /
 error:review-required / error:gh-not-available / error:gh-not-authenticated /
 error:checks-status-unknown / error:head-sha-unavailable / error:head-mismatch 等）
 の解釈・対処案内は markdown 側（operations-release.md）の責務。
+
+checks-status-unknown エラー時は以下の順序固定 3 行が出力される:
+  pr:<N>:error:checks-status-unknown
+  pr:<N>:reason:<no-checks-configured|checks-query-failed>
+  pr:<N>:hint:<ガイダンス>
+reason=no-checks-configured の場合のみ --skip-checks で再実行可能。
+reason=checks-query-failed では --skip-checks は効かない（安全側の仕様）。
 EOF
 }
 
@@ -572,6 +581,7 @@ cmd_verify_git() {
 cmd_merge_pr() {
     local pr_number=""
     local method=""
+    local skip_checks=0
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)
@@ -592,6 +602,10 @@ cmd_merge_pr() {
                 method="$2"
                 shift 2
                 ;;
+            --skip-checks)
+                skip_checks=1
+                shift
+                ;;
             *)
                 printf 'merge-pr:error:unknown-option:%s\n' "$1" >&2
                 return 1
@@ -608,29 +622,34 @@ cmd_merge_pr() {
         return 1
     fi
 
+    local -a extra_args=()
+    if [[ "$skip_checks" -eq 1 ]]; then
+        extra_args+=("--skip-checks")
+    fi
+
     case "$method" in
         merge)
             if [[ "$DRY_RUN" = "1" ]]; then
-                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number"
+                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number"
+            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" "${extra_args[@]}"
             return $?
             ;;
         squash)
             if [[ "$DRY_RUN" = "1" ]]; then
-                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --squash"
+                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --squash${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --squash
+            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --squash "${extra_args[@]}"
             return $?
             ;;
         rebase)
             if [[ "$DRY_RUN" = "1" ]]; then
-                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --rebase"
+                log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --rebase${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --rebase
+            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --rebase "${extra_args[@]}"
             return $?
             ;;
         *)
