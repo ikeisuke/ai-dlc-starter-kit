@@ -161,15 +161,20 @@ scripts/suggest-version.sh
 
 無効値 → `ask` にフォールバック。
 
-**設定保存フロー**（`branch_mode=ask` でユーザーが `branch` または `worktree` を選択した場合のみ。「現在のブランチで続行」選択時は保存対象外）:
+**設定保存フロー【ユーザー選択】**（`branch_mode=ask` でユーザーが `branch` または `worktree` を選択した場合のみ。「現在のブランチで続行」選択時はスキップ）:
 
-選択後、「この選択を設定に保存しますか？」と確認:
-- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
+本確認は SKILL.md「AskUserQuestion 使用ルール」の「ユーザー選択」種別のため、`automation_mode` に関わらず `AskUserQuestion` 必須（詳細は SKILL.md 参照）。
+
+選択後、`AskUserQuestion` で「この選択を設定に保存しますか？」と確認:
+
+- **いいえ（今回のみ使用） (Recommended)**: 保存せず、今回の選択のみ使用して続行
+- **はい（保存する）**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
   ```bash
   scripts/write-config.sh rules.git.branch_mode "<選択した値>" --scope <local|project>
   ```
   成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
-- **いいえ**: 今回の選択のみ使用して続行
+
+保存値: ユーザーが選択した `worktree` / `branch` の値をそのまま保存する。
 
 **9-2. ブランチ状況による分岐**:
 
