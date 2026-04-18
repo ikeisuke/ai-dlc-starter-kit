@@ -165,15 +165,20 @@ gh pr list --head "<取得したブランチ名>" --state open
 
 - **`create_draft_pr`**: ユーザー確認なしでPR作成に進む
 
-**ステップ5d-1. 設定保存フロー**（**入力**: `action` + `user_confirmation`。`action` が `ask_user` の場合のみ実行。`skip_never` / `create_draft_pr` ではスキップ）:
+**ステップ5d-1. 設定保存フロー【ユーザー選択】**（**入力**: `action` + `user_confirmation`。`action` が `ask_user` の場合のみ実行。`skip_never` / `create_draft_pr` ではスキップ）:
 
-ステップ5dでユーザーが選択した後、「この選択を設定に保存しますか？」と確認:
-- **はい**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））。保存値: 「はい」→ `always`、「いいえ」→ `never`
+本確認は SKILL.md「AskUserQuestion 使用ルール」の「ユーザー選択」種別のため、`automation_mode` に関わらず `AskUserQuestion` 必須（詳細は SKILL.md 参照）。
+
+ステップ5dでユーザーが選択した後、`AskUserQuestion` で「この選択を設定に保存しますか？」と確認:
+
+- **いいえ（今回のみ使用） (Recommended)**: 保存せず、今回の選択のみ使用して続行
+- **はい（保存する）**: 保存先を選択（デフォルト: `config.local.toml`（個人設定）、代替: `config.toml`（プロジェクト共有））
   ```bash
   scripts/write-config.sh rules.git.draft_pr "<always|never>" --scope <local|project>
   ```
   成功時: 「設定を保存しました」と表示。失敗時: 警告表示して続行
-- **いいえ**: 今回の選択のみ使用して続行
+
+保存値マッピング: ステップ5dのユーザー選択（PR 作成の可否）「はい（作成）」→ `always` / 「いいえ（作成しない）」→ `never` に変換した値を保存する。
 
 **ステップ5e. PR作成実行**（**入力**: `action` + `user_confirmation`。`action` が `ask_user` の場合はステップ5d-1完了後、`action` が `create_draft_pr` の場合はステップ5d完了後に実行。`action` が `create_draft_pr`、または `action` が `ask_user` かつ `user_confirmation=true` の場合のみ実行）:
 

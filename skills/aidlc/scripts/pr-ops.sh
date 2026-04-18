@@ -63,14 +63,18 @@ SUBCOMMANDS:
       指定サイクルのUnit定義ファイルから関連Issue番号を取得します。
       例: get-related-issues v1.13.2
 
-  merge <pr_number> [--squash|--rebase]
+  merge <pr_number> [--squash|--rebase] [--skip-checks]
       PRをマージします。
       オプション指定がない場合は通常マージ（--merge）を使用します。
+      --skip-checks 指定時は、必須CIチェックが未設定のリポジトリ
+      （no-checks-configured）でのみCIバイパスを許可します。
+      failed/pending/checks-query-failed ではバイパスされません。
 
 OPTIONS:
-  -h, --help    このヘルプを表示
-  --squash      squashマージ
-  --rebase      rebaseマージ
+  -h, --help     このヘルプを表示
+  --squash       squashマージ
+  --rebase       rebaseマージ
+  --skip-checks  no-checks-configured時のみCIバイパスを許可
 
 出力形式（stdout）:
   find-draft:
@@ -89,6 +93,12 @@ OPTIONS:
     pr:<number>:merged:<method>         マージ成功（method: merge/squash/rebase）
     pr:<number>:auto-merge-set:<method> auto-merge設定成功（CI完了後に自動マージ）
     pr:<number>:error:<reason>          エラー
+
+    checks-status-unknown エラー時は以下の3行を順序固定で出力:
+      pr:<number>:error:checks-status-unknown
+      pr:<number>:reason:<no-checks-configured|checks-query-failed>
+      pr:<number>:hint:<人間向けガイダンス>
+    reason=no-checks-configured の場合のみ --skip-checks で再実行可能。
 
   gh利用不可時:
     error:gh-not-available              gh未インストール
@@ -242,11 +252,74 @@ cmd_get_related_issues() {
     echo "relates:${relates_csv:-none}"
 }
 
+# resolve_check_status: gh pr checks の生出力から CheckStatus 5分類の文字列を返す
+# 出力: pass / fail / pending / no-checks-configured / checks-query-failed
+# 引数: $1=pr_number
+resolve_check_status() {
+    local pr_number="$1"
+    local stderr_file
+    stderr_file=$(mktemp)
+
+    # if/else で exit code を保持（|| true は $? が常に 0 になるため使わない）
+    local stdout_value
+    local checks_ec
+    if stdout_value=$(gh pr checks "$pr_number" --required --json bucket --jq '[.[].bucket] | if length == 0 then "pass" elif all(. == "pass") then "pass" elif any(. == "pending") then "pending" else "fail" end' 2>"$stderr_file"); then
+        checks_ec=0
+    else
+        checks_ec=$?
+    fi
+    local stderr_value
+    stderr_value=$(<"$stderr_file")
+    rm -f "$stderr_file"
+
+    # stdout が pass/fail/pending のいずれかなら exit code に関わらず優先
+    # 理由: gh pr checks は pending 時に exit 8 を返す（公式仕様: cli.github.com/manual/gh_pr_checks）
+    # cancel/skipping は jq で "fail" に丸められるため既存挙動として "fail" として扱う
+    if [[ "$stdout_value" =~ ^(pass|fail|pending)$ ]]; then
+        printf '%s\n' "$stdout_value"
+        return 0
+    fi
+    # no-checks 判定: gh pr checks --required は 2 パターンの stderr を返す
+    #  - "no checks reported on the '<branch>' branch" (チェック自体が設定されていない)
+    #  - "no required checks reported on the '<branch>' branch" (チェックはあるが required 指定なし)
+    # どちらも --skip-checks バイパス可能な no-checks-configured として扱う。
+    if [[ "$checks_ec" -ne 0 && ("$stderr_value" == *"no checks reported"* || "$stderr_value" == *"no required checks reported"*) ]]; then
+        printf 'no-checks-configured\n'
+        return 0
+    fi
+    printf 'checks-query-failed\n'
+    return 0
+}
+
+# emit_checks_status_unknown_error: checks-status-unknown 系エラーを順序固定で出力
+# 引数: $1=pr_number, $2=reason_code (no-checks-configured | checks-query-failed)
+# 出力順: error → reason → hint（3行連続）
+emit_checks_status_unknown_error() {
+    local pr_number="$1"
+    local reason_code="$2"
+    local hint_text
+    case "$reason_code" in
+        no-checks-configured)
+            hint_text="この PR では必須 CI チェックが検出されませんでした。リポジトリに必須チェックが未設定の場合は --skip-checks を付与してバイパスできます（failed/pending/API エラー時は無効）。"
+            ;;
+        checks-query-failed)
+            hint_text="CI チェック状態の取得に失敗しました（ネットワークまたは API エラーの可能性）。--skip-checks では回避できません。時間を置いて再試行してください。"
+            ;;
+        *)
+            hint_text="不明な reason_code: ${reason_code}"
+            ;;
+    esac
+    echo "pr:${pr_number}:error:checks-status-unknown"
+    echo "pr:${pr_number}:reason:${reason_code}"
+    echo "pr:${pr_number}:hint:${hint_text}"
+}
+
 # mergeサブコマンド
-# 引数: $1=pr_number, $2=merge_method（merge/squash/rebase）
+# 引数: $1=pr_number, $2=merge_method（merge/squash/rebase）, $3=skip_checks (0|1)
 cmd_merge() {
     local pr_number="$1"
     local merge_method="${2:-merge}"
+    local skip_checks="${3:-0}"
     require_gh
 
     local merge_flag
@@ -266,7 +339,64 @@ cmd_merge() {
             ;;
     esac
 
-    # head SHAを取得（race condition防止、取得失敗時は停止）
+    # 存在確認ドメイン: PR 自体が存在するかを先に確定
+    # （checks 系エラー分類より前。stale/invalid PR 番号を checks-query-failed に誤分類しないため）
+    # transient エラー（network / API 一時障害）と not-found を stderr メッセージで分離する。
+    local pr_view_stderr pr_view_ec=0
+    pr_view_stderr=$(gh pr view "$pr_number" --json number --jq '.number' 2>&1 >/dev/null) || pr_view_ec=$?
+    if [[ $pr_view_ec -ne 0 ]]; then
+        case "$pr_view_stderr" in
+            *"no pull requests found"*|*"could not resolve to a PullRequest"*|*"GraphQL: Could not resolve"*|*"no pull request found"*)
+                echo "pr:${pr_number}:error:not-found"
+                echo "pr:${pr_number}:hint:PR 番号が無効またはリポジトリに存在しません。gh pr list で現在の PR を確認してください。"
+                return 1
+                ;;
+            *)
+                echo "pr:${pr_number}:error:pr-view-failed"
+                echo "pr:${pr_number}:hint:gh pr view が失敗しました（ネットワーク / API 一時障害の可能性）。時間を置いて再試行してください。stderr: ${pr_view_stderr}"
+                return 1
+                ;;
+        esac
+    fi
+
+    # 判定ドメイン: CheckStatus を先に確定（head_sha 取得より前）
+    local check_status
+    check_status=$(resolve_check_status "$pr_number")
+
+    # 決定ドメイン: CheckStatus + skip_checks から action を決定
+    # 安全性契約: fail / pending / checks-query-failed は skip_checks を無視
+    local action=""
+    case "$check_status" in
+        pass)
+            action="merge-now"
+            ;;
+        fail)
+            echo "pr:${pr_number}:error:checks-failed"
+            return 1
+            ;;
+        pending)
+            action="set-auto-merge"
+            ;;
+        no-checks-configured)
+            if [[ "$skip_checks" -eq 1 ]]; then
+                action="merge-now"
+            else
+                emit_checks_status_unknown_error "$pr_number" "no-checks-configured"
+                return 1
+            fi
+            ;;
+        checks-query-failed)
+            # skip_checks が指定されていても無視（安全側に倒す）
+            emit_checks_status_unknown_error "$pr_number" "checks-query-failed"
+            return 1
+            ;;
+        *)
+            echo "pr:${pr_number}:error:unknown"
+            return 1
+            ;;
+    esac
+
+    # 実行ドメイン: head_sha を遅延解決（merge-now / set-auto-merge のみ）
     local head_sha
     head_sha=$(gh pr view "$pr_number" --json headRefOid --jq '.headRefOid' 2>/dev/null || echo "")
     if [[ -z "$head_sha" ]]; then
@@ -274,23 +404,9 @@ cmd_merge() {
         return 1
     fi
 
-    # CIステータス確認（--requiredで必須チェックのみ、bucketベース）
-    # gh pr checks はpending時にexit 8を返すため、exit codeで判定せずjq出力で判定する
-    local checks_status checks_output
-    checks_output=$(gh pr checks "$pr_number" --required --json bucket --jq '[.[].bucket] | if length == 0 then "pass" elif all(. == "pass") then "pass" elif any(. == "pending") then "pending" else "fail" end' 2>/dev/null) || true
-    checks_status="${checks_output:-unknown}"
-
-    # チェック状態不明時: fail-closed（即時マージしない）
-    if [[ "$checks_status" == "unknown" ]]; then
-        echo "pr:${pr_number}:error:checks-status-unknown"
-        return 1
-    fi
-
-    # --match-head-commit オプション構築
     local head_flag="--match-head-commit ${head_sha}"
 
-    # CI全通過時: 即時マージ
-    if [[ "$checks_status" == "pass" ]]; then
+    if [[ "$action" == "merge-now" ]]; then
         local error_output
         # shellcheck disable=SC2086
         if error_output=$(gh pr merge "$pr_number" "$merge_flag" $head_flag 2>&1); then
@@ -312,13 +428,7 @@ cmd_merge() {
         fi
     fi
 
-    # CIチェック失敗時
-    if [[ "$checks_status" == "fail" ]]; then
-        echo "pr:${pr_number}:error:checks-failed"
-        return 1
-    fi
-
-    # CI pending: auto-merge設定
+    # action == "set-auto-merge" (pending)
     local auto_error
     # shellcheck disable=SC2086
     if auto_error=$(gh pr merge "$pr_number" "$merge_flag" --auto $head_flag 2>&1); then
@@ -403,6 +513,7 @@ main() {
             shift
 
             local merge_method="merge"
+            local skip_checks=0
             while [[ $# -gt 0 ]]; do
                 case "$1" in
                     --squash)
@@ -410,6 +521,9 @@ main() {
                         ;;
                     --rebase)
                         merge_method="rebase"
+                        ;;
+                    --skip-checks)
+                        skip_checks=1
                         ;;
                     *)
                         echo "error:unknown-option:$1"
@@ -419,7 +533,7 @@ main() {
                 shift
             done
 
-            if cmd_merge "$pr_number" "$merge_method"; then
+            if cmd_merge "$pr_number" "$merge_method" "$skip_checks"; then
                 exit 0
             else
                 exit 1

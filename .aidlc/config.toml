@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "2.3.4"
+starter_kit_version = "2.3.5"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -25,6 +25,7 @@ validate_user_input = true
 use_env_for_secrets = true
 
 [rules.git]
+draft_pr = "always"
 # Git運用ルール
 commit_on_unit_complete = true
 commit_on_phase_complete = true

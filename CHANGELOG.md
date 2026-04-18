@@ -7,6 +7,29 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.5] - 2026-04-18
+
+### Added
+
+- `merge-pr` サブコマンドに `--skip-checks` オプションを追加。CIチェック未設定リポジトリで gh CLI の `--auto` が失敗するケースを回避可能に（#575）
+
+### Fixed
+
+- Operations Phase 復帰判定を `operations/progress.md` ベースの直線評価に移行し、`history/operations.md` 依存で発生していた「マージ前完結」ルールとの矛盾を解消（#579）
+- リモート同期チェックが squash 後に `behind > 0` を誤検知する問題を修正。`git fetch` 後の `rev-list` 判定と squash 履歴の扱いを整合化（#574 (1)(2)）
+
+### Changed
+
+- Construction Phase のUnit完了後 squash で divergence が発生した際の force-push 案内を追加（#574 (3)）
+- `config.toml.template` の `ai_author` 既定値を空文字化し、setup 直後から自動検出フローを機能させる（#577）
+- 設定保存フロー（`scripts/write-config.sh` 呼び出し）を暗黙書き込み防止のため「いいえ（今回のみ使用）」デフォルト化し、`AskUserQuestion` を `automation_mode` に関わらず必須化。対象: `branch_mode` / `draft_pr` / `merge_method`（#578）
+
+### Removed
+
+- Unit 007（suggest-permissions の acknowledged findings）を取り下げ。スキル本体が別リポジトリ（`ikeisuke/claude-skills`）に存在するため `ikeisuke/claude-skills#26` へ移送（#576 クローズ）
+
+---
+
 ## [2.3.4] - 2026-04-14
 
 ### Added
