@@ -279,7 +279,11 @@ resolve_check_status() {
         printf '%s\n' "$stdout_value"
         return 0
     fi
-    if [[ "$checks_ec" -ne 0 && "$stderr_value" == *"no checks reported"* ]]; then
+    # no-checks 判定: gh pr checks --required は 2 パターンの stderr を返す
+    #  - "no checks reported on the '<branch>' branch" (チェック自体が設定されていない)
+    #  - "no required checks reported on the '<branch>' branch" (チェックはあるが required 指定なし)
+    # どちらも --skip-checks バイパス可能な no-checks-configured として扱う。
+    if [[ "$checks_ec" -ne 0 && ("$stderr_value" == *"no checks reported"* || "$stderr_value" == *"no required checks reported"*) ]]; then
         printf 'no-checks-configured\n'
         return 0
     fi
