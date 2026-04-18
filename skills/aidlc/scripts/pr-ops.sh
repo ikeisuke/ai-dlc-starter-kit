@@ -335,6 +335,14 @@ cmd_merge() {
             ;;
     esac
 
+    # 存在確認ドメイン: PR 自体が存在するかを先に確定
+    # （checks 系エラー分類より前。stale/invalid PR 番号を checks-query-failed に誤分類しないため）
+    if ! gh pr view "$pr_number" --json number --jq '.number' >/dev/null 2>&1; then
+        echo "pr:${pr_number}:error:not-found"
+        echo "pr:${pr_number}:hint:PR 番号が無効またはリポジトリに存在しません。gh pr list で現在の PR を確認してください。"
+        return 1
+    fi
+
     # 判定ドメイン: CheckStatus を先に確定（head_sha 取得より前）
     local check_status
     check_status=$(resolve_check_status "$pr_number")
