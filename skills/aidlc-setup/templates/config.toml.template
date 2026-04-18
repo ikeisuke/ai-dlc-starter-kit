@@ -43,8 +43,8 @@ unit_branch_enabled = false
 squash_enabled = false
 # ai_author: Co-Authored-By に使用するAI著者情報
 # - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
-ai_author = "Claude <noreply@anthropic.com>"
+# - デフォルト: ""（空なら自動検出）
+ai_author = ""
 # ai_author_auto_detect: AIツールを自動検出してCo-Authored-Byを付与するか
 ai_author_auto_detect = true
 
