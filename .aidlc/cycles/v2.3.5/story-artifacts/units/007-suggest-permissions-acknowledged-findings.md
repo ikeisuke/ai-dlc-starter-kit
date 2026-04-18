@@ -84,9 +84,10 @@ Low（bug ではなく feature、既存運用への即時影響なし）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
+- **状態**: 取り下げ
 - **開始日**: -
 - **完了日**: -
 - **担当**: -
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+- **取り下げ理由**: `suggest-permissions` スキル本体が別リポジトリ（`ikeisuke/claude-skills`）に存在し、本サイクル（ai-dlc-starter-kit v2.3.5）内では主幹部分（Review モードへの抑制機構追加）を実装不可。スキルリポジトリ側 Issue `ikeisuke/claude-skills#26` に移送済み。詳細は `.aidlc/cycles/v2.3.5/inception/decisions.md` DR-006 参照
