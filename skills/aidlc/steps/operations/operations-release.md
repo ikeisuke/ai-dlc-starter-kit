@@ -143,4 +143,4 @@ scripts/operations-release.sh merge-pr --pr {PR番号} --method <merge|squash|re
 | `no-checks-configured` | **即時マージを許可**（本 Unit の新規挙動） |
 | `checks-query-failed` | **バイパス禁止**（`error:checks-status-unknown` で中断） |
 
-詳細は `skills/aidlc/guides/merge-pr-usage.md` を参照。
+詳細は `guides/merge-pr-usage.md` を参照。
