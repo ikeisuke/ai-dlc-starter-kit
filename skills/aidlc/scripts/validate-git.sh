@@ -225,9 +225,12 @@ run_remote_sync() {
         echo "behind_commits:${behind_count}"
     else
         # (false, false): diverged（双方向に差分、新規ステータス）
+        # 異名 upstream（例: cycle/t5-local → origin/cycle/t5-remote）でも事前確認コマンドが
+        # 正しいブランチを指すよう、local branch と upstream_branch を別行で出力する。
         echo "status:diverged"
         echo "remote:${remote}"
         echo "branch:${branch}"
+        echo "upstream_branch:${upstream_branch}"
         echo "diverged_ahead:${ahead_count}"
         echo "diverged_behind:${behind_count}"
         echo "recommended_command:git push --force-with-lease ${remote} HEAD:${upstream_branch}"

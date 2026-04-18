@@ -64,13 +64,13 @@ scripts/operations-release.sh verify-git
 
 **UI 表示の文字列契約【重要】**: `diverged` 時の推奨コマンドは `validate-git.sh` の stdout から `^recommended_command:` 行を抽出してコロン以降を**そのまま**表示する。markdown 内にリテラル `<remote> <branch>` / `<resolved_*>` プレースホルダー文字列を書かない。force push の自動実行は禁止（ユーザー手動実行のみ）。
 
-**事前確認の案内【必須】**: `diverged` の推奨コマンドは「ローカル履歴が正当な上書き対象」（自分の squash / rebase / amend 結果）を前提とする。他者の push や tracking 設定違いでも diverged は発生し、その場合 force push は他者の作業を破壊する。`recommended_command` を表示する際は、`validate-git.sh` の stdout 内 `^remote:` / `^branch:` 行（`branch` は upstream_branch を表す）から具体値を抽出し、以下の 2 コマンドを**解決済みの実値で**ユーザーに提示して事前確認を依頼する（markdown 中にリテラル `<remote>` / `<upstream_branch>` を残さない）:
+**事前確認の案内【必須】**: `diverged` の推奨コマンドは「ローカル履歴が正当な上書き対象」（自分の squash / rebase / amend 結果）を前提とする。他者の push や tracking 設定違いでも diverged は発生し、その場合 force push は他者の作業を破壊する。`recommended_command` を表示する際は、`validate-git.sh` の stdout 内 `^remote:` / `^upstream_branch:` 行から具体値を抽出し（`branch:` 行はローカルブランチ名なので**使わない**、異名 upstream では `upstream_branch:` と一致しないため）、以下の 2 コマンドを**解決済みの実値で**ユーザーに提示して事前確認を依頼する（markdown 中にリテラル `<remote>` / `<upstream_branch>` を残さない）:
 
 - `git log HEAD..<resolved_remote>/<resolved_upstream_branch>` で upstream 側の差分コミットを確認（他者の作業が含まれていないか）
 - `git log <resolved_remote>/<resolved_upstream_branch>..HEAD` でローカル側の差分コミットを確認（上書きする意図どおりか）
 - 上記を確認した上で「ローカル履歴を正として上書きしてよい」場合のみ実行
 
-注記: 上記の `<resolved_remote>` / `<resolved_upstream_branch>` は**仕様記述上のプレースホルダー**であり、エージェントはユーザーに提示する最終メッセージで必ず実値に置換すること（`recommended_command` と同じ解決元を使う）。
+注記: 上記の `<resolved_remote>` / `<resolved_upstream_branch>` は**仕様記述上のプレースホルダー**であり、エージェントはユーザーに提示する最終メッセージで必ず実値に置換すること（`recommended_command` と同じ解決元を使う）。`validate-git.sh` は `diverged` 時に `remote:` / `branch:` / `upstream_branch:` / `recommended_command:` の 4 行を出力するので、`^upstream_branch:` 行のコロン以降を `<resolved_upstream_branch>` として使用する。
 
 他者コミットが upstream に含まれる・tracking 設定違いが疑われる場合は実行を中止し、ユーザー判断で対応（rebase / tracking 再設定 / 個別相談）を行う。
 

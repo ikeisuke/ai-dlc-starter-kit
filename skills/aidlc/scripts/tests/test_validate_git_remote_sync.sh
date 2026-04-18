@@ -192,6 +192,8 @@ echo "--- テスト4: status:diverged（双方向に差分、新規分類） ---
     assert_contains "diverged_ahead:2" "diverged_ahead:2" "$out"
     assert_contains "diverged_behind:1" "diverged_behind:1" "$out"
     assert_contains "recommended_command 出力" "recommended_command:git push --force-with-lease origin HEAD:cycle/t4" "$out"
+    # 同名 upstream では upstream_branch:<branch> を出力（diverged ガイダンスの事前確認コマンド構築用）
+    assert_contains "upstream_branch 出力（同名）" "upstream_branch:cycle/t4" "$out"
 )
 
 echo ""
@@ -216,6 +218,9 @@ echo "--- テスト5: 異名 upstream の recommended_command 形式（HEAD:<ups
     assert_contains "status:diverged" "status:diverged" "$out"
     # branch: はローカルブランチ名（既存互換）
     assert_contains "branch:ローカル名" "branch:cycle/t5-local" "$out"
+    # upstream_branch: は upstream 名を個別出力（diverged ガイダンスの事前確認コマンド構築で
+    # branch: との混同を避けるため、異名 upstream でも正しいブランチを指せる）
+    assert_contains "upstream_branch:upstream名" "upstream_branch:cycle/t5-remote" "$out"
     # recommended_command は HEAD:<upstream_branch> 形式
     assert_contains "recommended_command HEAD:upstream_branch" "recommended_command:git push --force-with-lease origin HEAD:cycle/t5-remote" "$out"
 )
