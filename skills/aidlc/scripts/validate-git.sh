@@ -125,31 +125,30 @@ run_remote_sync() {
         remote="origin"
     fi
 
-    # upstream branch 名を branch.*.merge から解決（一次ソース、異名 upstream 対応）
-    # - branch.*.merge 未設定 → no-upstream（追跡ブランチ未設定、最も一般的）
-    # - branch.*.merge が refs/heads/* 以外 → upstream-resolve-failed（不正設定）
-    local merge_ref
+    # upstream branch 名を解決する優先順位:
+    # 1. branch.*.merge（一次ソース、異名 upstream 対応）
+    # 2. 同名ブランチ（`git checkout -b` や `git push --force-with-lease HEAD:<branch>` で
+    #    upstream tracking が設定されないフローのフォールバック）
+    # いずれも Step 4 の `refs/remotes/<remote>/<branch>` 存在確認で検証する。
+    local merge_ref upstream_branch
     merge_ref=$(git config "branch.${branch}.merge" 2>/dev/null || true)
-    if [ -z "$merge_ref" ]; then
-        echo "status:error"
-        echo "remote:${remote}"
-        echo "branch:${branch}"
-        emit_error "no-upstream" "No upstream tracking branch configured (branch.${branch}.merge is not set)"
-        return 2
+    if [ -n "$merge_ref" ]; then
+        case "$merge_ref" in
+            refs/heads/*)
+                upstream_branch="${merge_ref#refs/heads/}"
+                ;;
+            *)
+                echo "status:error"
+                echo "remote:${remote}"
+                echo "branch:${branch}"
+                emit_error "upstream-resolve-failed" "branch.${branch}.merge has invalid format: ${merge_ref}"
+                return 2
+                ;;
+        esac
+    else
+        # フォールバック: 同名ブランチを想定
+        upstream_branch="${branch}"
     fi
-    local upstream_branch
-    case "$merge_ref" in
-        refs/heads/*)
-            upstream_branch="${merge_ref#refs/heads/}"
-            ;;
-        *)
-            echo "status:error"
-            echo "remote:${remote}"
-            echo "branch:${branch}"
-            emit_error "upstream-resolve-failed" "branch.${branch}.merge has invalid format: ${merge_ref}"
-            return 2
-            ;;
-    esac
 
     # Step 3: FetchExecutor（非対話モードで実行）
     if ! GIT_TERMINAL_PROMPT=0 git fetch -- "$remote" >/dev/null 2>&1; then

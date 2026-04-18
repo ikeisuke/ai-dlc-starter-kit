@@ -102,7 +102,8 @@ AI-DLC Starter Kitを使用する開発者およびAIエージェント
 - `skills/aidlc/steps/operations/**` の進捗源移行・フロー調整（#579）
 - `skills/aidlc/steps/common/phase-recovery-spec.md` の復帰判定仕様更新（#579）
 - `skills/aidlc/steps/operations/index.md` のチェックポイント表更新（#579）
-- `skills/aidlc/templates/operations_progress_template.md` へのサブステップフラグ追加（#579）
+<!-- v2.3.5 Operations Phase で Codex レビュー指摘により取り下げ。new_format パス（固定スロット + GitHub PR 実態確認）の実装ロジック（pr-ready/merge-pr でのスロット更新）が未実装のため、テンプレートに箱だけ置くと次サイクル復帰判定が機能不全になる。#581 として次サイクル送り。 -->
+<!-- 取り下げ: - `skills/aidlc/templates/operations_progress_template.md` へのサブステップフラグ追加（#579） -->
 - `skills/aidlc/scripts/operations-release.sh` の `verify-git` リモート同期チェック修正（#574 (1)(2)）
 - `skills/aidlc/steps/operations/01-setup.md` / 関連ステップのステータス処理追加（#574 (2)）
 - `skills/aidlc/steps/construction/**` の squash 完了後の case-by-case 案内（diverged想定時のみ `git push --force-with-lease` 推奨を表示、自動実行はしない）追加（#574 (3)）
@@ -119,6 +120,7 @@ AI-DLC Starter Kitを使用する開発者およびAIエージェント
 
 ## 含まれないもの（明示的除外）
 
+- `operations_progress_template.md` への固定スロット追加と new_format パス実装完成（#581、次サイクル。v2.3.5 Operations Phase で Codex 指摘を受けスコープ縮小、ユーザー承認済み）
 - Construction Phase復帰判定のステップレベル化（#554、別サイクル）
 - Inception progress.md のPart/ステップ命名統一（#565、別サイクル）
 - config.toml 旧キー自動移行（#573、別サイクル）

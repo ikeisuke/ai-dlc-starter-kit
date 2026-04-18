@@ -221,18 +221,32 @@ echo "--- テスト5: 異名 upstream の recommended_command 形式（HEAD:<ups
 )
 
 echo ""
-echo "--- テスト6: status:error + no-upstream（branch.*.merge 未設定） ---"
+echo "--- テスト6: status:ok（branch.*.merge 未設定だが同名 remote refs あり、フォールバック成功） ---"
 (
     repo=$(setup_repo "t6" "cycle/t6")
     cd "$repo"
-    # 追跡設定を削除
+    # 追跡設定（merge）を削除しても、refs/remotes/origin/cycle/t6 は残っているので
+    # 同名ブランチへのフォールバックで status:ok になる。
     git config --unset "branch.cycle/t6.merge" 2>/dev/null || true
+    ec=0
+    out=$(bash "$VALIDATE_GIT" remote-sync) || ec=$?
+    assert_eq "exit 0" "0" "$ec"
+    assert_contains "status:ok" "status:ok" "$out"
+    assert_not_contains "no-upstream ではない" "no-upstream" "$out"
+)
+
+echo ""
+echo "--- テスト6b: status:error + no-upstream（branch.*.merge が存在しないブランチを指す） ---"
+(
+    repo=$(setup_repo "t6b" "cycle/t6b")
+    cd "$repo"
+    # 存在しないブランチを指す（同名フォールバックも Step 4 の存在確認で失敗する）
+    git config "branch.cycle/t6b.merge" "refs/heads/nonexistent-branch"
     ec=0
     out=$(bash "$VALIDATE_GIT" remote-sync) || ec=$?
     assert_eq "exit 2" "2" "$ec"
     assert_contains "status:error" "status:error" "$out"
     assert_contains "no-upstream code" "error:no-upstream:" "$out"
-    assert_not_contains "upstream-resolve-failed ではない" "upstream-resolve-failed" "$out"
 )
 
 echo ""
