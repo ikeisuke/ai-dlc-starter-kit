@@ -60,3 +60,22 @@
 Unit 001 完了処理の responsibility として計画で指示されていたバックログ登録を実施。テンプレート整備は Low 優先度で follow-up Issue として切り出し、Unit 001 本体のスコープを予算スライダーに沿って最小化。
 
 ---
+## 2026-04-19T20:28:58+09:00
+
+- **フェーズ**: Construction Phase
+- **Unit**: 01-operations-release-fixed-slot-reflection（operations-release.md 固定スロット反映ステップ追加）
+- **ステップ**: Unit完了
+- **実行内容**: Unit 001 完了
+
+- Unit: 001 - operations-release.md 固定スロット反映ステップ追加
+- 最終コミット: 5c4bc9d2（squash: 9 コミット → 1）
+- 完了処理:
+  - 統合 AI レビュー完了（指摘 0 件、4 反復）
+  - 旧パス参照 0 件検証完了（`rg "guides/operations-release"` 0 件、`rg "steps/operations/operations-release"` 期待箇所以上）
+  - Follow-up Issue #585 登録済み（operations_progress_template.md テンプレート整備）
+  - Unit 定義状態を「完了」に更新
+  - レビューサマリ作成（`.aidlc/cycles/v2.3.6/construction/units/001-review-summary.md`）
+- 次の作業: Unit 002（write-history.sh post-merge guard）
+- 中断理由: ユーザーによるコンテキストリセット指示（Unit 001 完了時点で一区切り）
+
+---
