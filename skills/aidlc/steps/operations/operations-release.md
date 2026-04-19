@@ -26,10 +26,18 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 - `/write-history` で `history/operations.md` に記録
 - `operations-release.sh lint --cycle {{CYCLE}}`（エラー時修正、`markdownlint:skipped` は設定スキップ）
 - progress.md のステップ7を「完了」に更新し 7.7 のコミットに含める
+- **progress.md 固定スロット反映【重要 / マージ前完結契約】**: `operations/progress.md` の構造化シグナル 3 スロットを以下のとおり更新し、§7.7 最終コミットに**必ず**含める。スロットの grammar は `key=value` 形式（§7.8 の既存 `pr_number=` 契約と同一形式）で、値型・許容値の正規定義は `steps/common/phase-recovery-spec.md` §5.3.5 を参照する（§7 は異常系・判定源整合の補助参照）。マージ後に post-merge クリーンアップで書き換えても main には反映されないため、**予約的にマージ後の状態を §7.6 時点で書き込む**こと。
+  - `release_gate_ready=true` に更新（通常系・エッジケース共通）。§5.3.5 の定義に従い `release_done` 判定の AND 条件の片方を成立させる。
+  - `completion_gate_ready=true` に更新（通常系・エッジケース共通）。マージ前完結契約により、予約的に true を書き込み §7.7 コミットで main に反映する。
+  - `pr_number=<PR 番号>` の更新は経路で分岐する:
+    - **通常系**（Inception Phase で draft PR 作成済み、§7.8 が既存 PR を Ready 化するケース）: §7.6 で `gh pr view --json number` 等から番号を確定し progress.md に反映。§7.7 最終コミットに含める。**追加コミットは不要**。
+    - **エッジケース**（Inception で `draft_pr=never` / `gh_status` 不可だった等、§7.8 で初回 PR 作成するケース）: §7.6 では `pr_number` を空のままとし、`release_gate_ready` / `completion_gate_ready` の 2 スロットのみ §7.7 に含める。`pr_number` の永続化は **§7.8 の既存エッジケース契約**（下記 §7.8「PR 番号の永続化」）に委ねる。
+  - いずれのケースでも固定スロットが既に正しく設定済みの場合は上書き不要（再確認のみ）。
+  - 値フォーマット検証（AI 実行時）: `§5.3.5` grammar は値前後の空白許容およびカンマ区切り併記を認めるため、検証は緩い正規表現で実施する。`rg "release_gate_ready\s*=\s*true\b"`、`rg "completion_gate_ready\s*=\s*true\b"`、通常系では `rg "pr_number\s*=\s*[1-9][0-9]*\b"` を `.aidlc/cycles/{{CYCLE}}/operations/progress.md` に対して実行し、各パターンが 1 件以上ヒットすることを確認する。続けて該当行の内容を目視し、同一行内を含めて同一キーの重複や矛盾がないこと（§5.3.5「重複キーは最初の出現値を採用」の挙動に依存しない健全性）を確認する。エッジケースでは `pr_number` の検証は §7.8 後に実施する。
 
 ## 7.7 Git コミット
 
-コミットなしで 7.8 に進まない。`commit-flow.md` の「Operations Phase 完了コミット」に従い全変更をコミット。
+コミットなしで 7.8 に進まない。`commit-flow.md` の「Operations Phase 完了コミット」に従い全変更をコミット。本コミットには §7.2〜§7.6 で更新した progress.md 固定スロット（通常系では 3 スロット、エッジケースでは 2 スロット）を**必ず含める**こと（マージ前完結契約の成立条件）。
 
 ## 7.8 ドラフト PR Ready 化【重要】
 
