@@ -10,7 +10,7 @@
 
 ## 責務
 
-- `write-history.sh` にマージ後判定ロジックを追加し、該当時は exit code `3` で拒否 + 標準エラーに `error:post-merge-history-write-forbidden` メッセージを出力する。
+- `write-history.sh` にマージ後判定ロジックを追加し、該当時は exit code `3` で拒否 + 標準出力と標準エラーの両方に同一の `error:post-merge-history-write-forbidden:<reason_code>:<diagnostics>` 形式の機械可読メッセージを出力する（設計レビューで決定した両チャネル契約）。stdout 出力は既存 `emit_error` 互換、stderr 出力は Story 1.2 受け入れ基準準拠。
 - 判定契約は DR-001 に従う: 第一条件 `--operations-stage=post-merge`、第二条件 `completion_gate_ready=true` AND `gh pr view` で PR が `state=MERGED` の AND 条件。
 - 既存の exit code `1` / `2` の意味を維持し、`3` の新規割り当てが既存呼び出し元に副作用を与えないことを保証する。
 - `/write-history` スキル SKILL.md（委譲スキル側）の「出力」表に exit code `3`（`error:post-merge-history-write-forbidden`）を追記し、呼び出し側契約との整合を取る。
@@ -38,7 +38,7 @@
 
 - **互換性**: Inception / Construction の既存呼び出しは挙動を変えない（exit 0 系の appended / created ステータス出力を維持）。
 - **明確性**: 拒否時のエラーメッセージは機械可読（`error:post-merge-history-write-forbidden`）かつ人間可読。
-- **診断性**: 拒否理由を特定できるよう、判定の根拠（引数値・progress.md 状態）を標準エラーに付記する（機密情報は含めない）。
+- **診断性**: 拒否理由を特定できるよう、判定の根拠（引数値・progress.md 状態）を標準出力と標準エラー両方の機械可読メッセージ内 `<diagnostics>` フィールドに付記する（機密情報は含めない）。
 
 ## 技術的考慮事項
 
@@ -64,9 +64,9 @@ High
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-19
+- **完了日**: 2026-04-19
+- **担当**: Claude Code (v2.3.6 cycle)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
