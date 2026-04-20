@@ -29,9 +29,10 @@
 
 ## 固定スロット（Operations 復帰判定用）
 
-- release_gate_ready=true
-- completion_gate_ready=false
-- pr_number=584
+<!-- fixed-slot-grammar: v1 -->
+release_gate_ready=true
+completion_gate_ready=false
+pr_number=584
 
 ## 次回実行時の指示
 

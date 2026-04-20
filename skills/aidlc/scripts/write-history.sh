@@ -219,8 +219,8 @@ query_pr_state() {
         return 1
     fi
 
-    # gh / jq の可用性確認
-    if ! command -v gh >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    # gh の可用性確認（外部 jq には依存しない: 必要最小限のフィールドを sed/bash 正規表現で抽出）
+    if ! command -v gh >/dev/null 2>&1; then
         return 1
     fi
 
@@ -236,15 +236,22 @@ query_pr_state() {
         return 1
     fi
 
-    # JSON パース
-    # `| tostring` を使う理由: `// "null"` は jq の仕様により false / 0 / null すべてで
-    # フォールバックが発動し、boolean の false を null と誤認する。tostring は null を
-    # 明示的に "null" 文字列化するため、欠損判定と false 値を区別できる。
+    # JSON パース（sed + bash 正規表現で 4 フィールドを抽出）
+    # 必要最小限の仕様: `gh pr view --json isDraft,state,mergedAt,number` の出力は
+    # 単一オブジェクトのフラット JSON。isDraft は boolean、state は string（OPEN/CLOSED/MERGED）、
+    # mergedAt は string or null、number は integer。既知構造のため正規表現で十分にパース可能。
     local parsed_is_draft parsed_state parsed_merged_at parsed_number
-    parsed_is_draft=$(echo "$json" | jq -r '.isDraft | tostring' 2>/dev/null) || return 1
-    parsed_state=$(echo "$json" | jq -r '.state | tostring' 2>/dev/null) || return 1
-    parsed_merged_at=$(echo "$json" | jq -r '.mergedAt | tostring' 2>/dev/null) || return 1
-    parsed_number=$(echo "$json" | jq -r '.number | tostring' 2>/dev/null) || return 1
+    parsed_is_draft=$(printf '%s' "$json" | sed -nE 's/.*"isDraft"[[:space:]]*:[[:space:]]*(true|false).*/\1/p')
+    [[ -z "$parsed_is_draft" ]] && parsed_is_draft="null"
+    parsed_state=$(printf '%s' "$json" | sed -nE 's/.*"state"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p')
+    [[ -z "$parsed_state" ]] && parsed_state="null"
+    parsed_number=$(printf '%s' "$json" | sed -nE 's/.*"number"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p')
+    [[ -z "$parsed_number" ]] && parsed_number="null"
+    if [[ "$json" =~ \"mergedAt\"[[:space:]]*:[[:space:]]*\"([^\"]+)\" ]]; then
+        parsed_merged_at="${BASH_REMATCH[1]}"
+    else
+        parsed_merged_at="null"
+    fi
 
     # 必須フィールド欠損チェック
     if [[ "$parsed_is_draft" == "null" || "$parsed_state" == "null" || "$parsed_number" == "null" ]]; then
