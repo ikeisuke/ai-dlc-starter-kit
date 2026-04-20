@@ -157,8 +157,13 @@ validate_operations_stage() {
 }
 
 # operations/progress.md から固定スロット値を読み取る
-# §5.3.5 grammar の意図的サブセット: 独立行 key=value のみ対応
-# （1 行カンマ区切り併記・grammar version HTML コメント検証は非対応）
+# §5.3.5 grammar 準拠:
+# - 独立行 `key=value`
+# - 1 行内のカンマ/セミコロン区切り併記（例: `release_gate_ready=true, pr_number=584`）
+# - 行頭の Markdown リスト記号（`- `）許容（視認性向上のための一般的な書式）
+# - `#` 以降はコメント（インラインコメントも含む）
+# - 値前後のスペースをトリム、重複キーは最初の出現を採用
+# grammar version HTML コメント検証は非対応（将来拡張）。
 #
 # 引数:
 #   $1 - cycle（例: v2.3.6）
@@ -174,11 +179,20 @@ read_progress_slot() {
         return 1
     fi
 
+    # パース手順:
+    # 1) `#` 以降のコメントを除去
+    # 2) カンマ / セミコロンを改行に置換（1 行併記を行単位へ正規化）
+    # 3) 各行先頭の Markdown リスト記号 `- ` を除去
+    # 4) `key[space]*=` で始まる最初のトークンを採用
+    # 5) `key[space]*=[space]*` を削除、末尾スペースをトリム
     local value
-    # 独立行 key=value のみ対応。行頭スペース無し、コメント行（# で始まる）は無視。
-    # §5.3.5 の「`#` 以降はコメント」に準拠し、インラインコメント（値の後の `# ...`）も除去する。
-    # 値前後のスペースをトリム。重複時は最初の出現を採用（grep 先頭ヒット）。
-    value=$(grep -E "^${key}[[:space:]]*=" "$progress_file" 2>/dev/null | head -n 1 | sed -E "s/^${key}[[:space:]]*=[[:space:]]*//" | sed -E 's/[[:space:]]*#.*$//' | sed -E 's/[[:space:]]+$//') || return 1
+    value=$(sed -E 's/#.*$//' "$progress_file" 2>/dev/null \
+        | tr ',;' '\n\n' \
+        | sed -E 's/^[[:space:]]*-[[:space:]]*//' \
+        | grep -E "^[[:space:]]*${key}[[:space:]]*=" \
+        | head -n 1 \
+        | sed -E "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*//" \
+        | sed -E 's/[[:space:]]+$//') || return 1
 
     if [[ -z "$value" ]]; then
         return 1
