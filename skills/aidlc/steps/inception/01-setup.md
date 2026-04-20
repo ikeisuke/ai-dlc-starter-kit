@@ -44,7 +44,7 @@
 
 ---
 
-## Part 1: セットアップ
+## ステップ1: セットアップ
 
 ### 1. プリフライトチェック
 
@@ -55,9 +55,9 @@
 - `current_branch`: `git branch --show-current`
 - `latest_cycle`: `.aidlc/cycles/` 配下の最新 `v*` ディレクトリ
 
-### 1b. Part 1タスクリスト作成【必須】
+### 1b. ステップ1タスクリスト作成【必須】
 
-**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: Part 1」テンプレートに従い、Part 1のタスクリストを作成してください。
+**【次のアクション】** `steps/common/task-management.md` の「Inception Phase: ステップ1（セットアップ）」テンプレートに従い、ステップ1のタスクリストを作成してください。
 
 ### 2. セッション判別設定【オプション】
 
@@ -203,7 +203,7 @@ scripts/setup-branch.sh {{CYCLE}} worktree  # worktree方式
 
 ### 10. サイクル存在確認
 
-`.aidlc/cycles/{{CYCLE}}/` が存在 → ステップ10a・10bを実行してからPart 2へ、未存在 → ステップ11へ。
+`.aidlc/cycles/{{CYCLE}}/` が存在 → ステップ10a・10bを実行してからステップ2以降へ、未存在 → ステップ11へ。
 
 ### 10a. progress.md読み込み【再開時必須】
 
@@ -223,7 +223,7 @@ scripts/init-cycle-dir.sh {{CYCLE}}
 
 ### 11a. progress.md作成【必須】
 
-サイクルディレクトリ作成直後に `.aidlc/cycles/{{CYCLE}}/inception/progress.md` を作成する（全ステップ「未着手」で初期化）。Part 2のステップ18では既存ファイルの確認のみ行う。
+サイクルディレクトリ作成直後に `.aidlc/cycles/{{CYCLE}}/inception/progress.md` を作成する（全ステップ「未着手」で初期化）。ステップ2以降のステップ18では既存ファイルの確認のみ行う。
 
 ### 11b. タスクリスト作成【必須】
 

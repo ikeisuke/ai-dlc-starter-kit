@@ -1,10 +1,10 @@
 # Inception Phase - インセプション準備
 
-## Part 2: インセプション準備
+## ステップ2: インセプション準備
 
 ### 14. 環境確認（プリフライト結果参照）
 
-Part 1 ステップ1のプリフライトチェックで取得済みのコンテキスト変数を参照する:
+ステップ1のプリフライトチェックで取得済みのコンテキスト変数を参照する:
 
 - `gh_status`: GitHub CLI状態（`available` / `not-installed` / `not-authenticated`）
 **注記**: 環境チェックはプリフライトで完了済みのため、個別スクリプトの再実行は不要。
@@ -20,7 +20,7 @@ Part 1 ステップ1のプリフライトチェックで取得済みのコンテ
 
 ### 15. Depth Level確認
 
-プリフライトチェック（Part 1 ステップ1）で取得済みの `depth_level` コンテキスト変数を参照し、`depth_level_source=config` を設定する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules-reference.md` の「Depth Level仕様」に従う。
+プリフライトチェック（ステップ1）で取得済みの `depth_level` コンテキスト変数を参照し、`depth_level_source=config` を設定する。バリデーション（正規化・有効値チェック・無効値時フォールバック）は `common/rules-reference.md` の「Depth Level仕様」に従う。
 
 ### 16. GitHub Issue確認
 
