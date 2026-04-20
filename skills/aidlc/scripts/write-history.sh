@@ -225,8 +225,12 @@ query_pr_state() {
     fi
 
     # gh pr view 実行（set -euo pipefail 下でも失敗を吸収）
+    # AIDLC_PROJECT_ROOT 経由の外部呼び出しでも対象リポジトリを判定できるよう
+    # サブシェルで AIDLC_PROJECT_ROOT に cd してから実行する（gh は cwd ベースで
+    # リポジトリを解決するため、cwd 未変更だと外部ディレクトリからの呼び出しが
+    # undecidable となり post-merge ガードがバイパスされる）。
     local json
-    json=$(gh pr view "$pr_number" --json isDraft,state,mergedAt,number 2>/dev/null) || return 1
+    json=$(cd "$AIDLC_PROJECT_ROOT" 2>/dev/null && gh pr view "$pr_number" --json isDraft,state,mergedAt,number 2>/dev/null) || return 1
 
     if [[ -z "$json" ]]; then
         return 1
