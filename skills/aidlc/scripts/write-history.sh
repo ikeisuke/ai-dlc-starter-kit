@@ -163,7 +163,11 @@ validate_operations_stage() {
 # - 行頭の Markdown リスト記号（`- `）許容（視認性向上のための一般的な書式）
 # - `#` 以降はコメント（インラインコメントも含む）
 # - 値前後のスペースをトリム、重複キーは最初の出現を採用
-# grammar version HTML コメント検証は非対応（将来拡張）。
+#
+# **スコープ限定**: `<!-- fixed-slot-grammar: v1 -->` マーカーが progress.md に存在する場合、
+# マーカー行以降（authoritative block）のみをパース対象とする。これにより、進捗メモや
+# ステップ説明内に例示として書かれた `key=value` 文字列が authoritative なスロット値を
+# 上書きするのを防ぐ。マーカー不在時は後方互換のため progress.md 全体をパースする。
 #
 # 引数:
 #   $1 - cycle（例: v2.3.6）
@@ -179,6 +183,14 @@ read_progress_slot() {
         return 1
     fi
 
+    # スコープ限定: fixed-slot-grammar マーカーがあればそれ以降のみを抽出（authoritative block）
+    local content
+    if grep -qE '<!--[[:space:]]*fixed-slot-grammar:[[:space:]]*v1[[:space:]]*-->' "$progress_file" 2>/dev/null; then
+        content=$(sed -n '/<!--[[:space:]]*fixed-slot-grammar:[[:space:]]*v1[[:space:]]*-->/,$p' "$progress_file" 2>/dev/null)
+    else
+        content=$(cat "$progress_file" 2>/dev/null)
+    fi
+
     # パース手順:
     # 1) `#` 以降のコメントを除去
     # 2) カンマ / セミコロンを改行に置換（1 行併記を行単位へ正規化）
@@ -186,7 +198,8 @@ read_progress_slot() {
     # 4) `key[space]*=` で始まる最初のトークンを採用
     # 5) `key[space]*=[space]*` を削除、末尾スペースをトリム
     local value
-    value=$(sed -E 's/#.*$//' "$progress_file" 2>/dev/null \
+    value=$(printf '%s\n' "$content" \
+        | sed -E 's/#.*$//' \
         | tr ',;' '\n\n' \
         | sed -E 's/^[[:space:]]*-[[:space:]]*//' \
         | grep -E "^[[:space:]]*${key}[[:space:]]*=" \

@@ -2,7 +2,7 @@ name: Migration Tests
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
     paths:
       - 'skills/aidlc-migrate/scripts/migrate-*.sh'
