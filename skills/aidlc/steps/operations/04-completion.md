@@ -37,6 +37,25 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 PRがマージされたら、次サイクル開始前に以下を実行：
 
+#### 【重要】マージ前完結ルール（Unit 002 / #583）
+
+PR マージ（7.13）完了後は `.aidlc/cycles/{{CYCLE}}/**` 配下のいかなるファイルも改変してはならない。特に以下を禁止する:
+
+- `history/operations.md` への追記（**`/write-history` スキル（`scripts/write-history.sh`）呼び出し禁止**）
+- `operations/progress.md` のステータス・固定スロット更新
+- `operations/post_release_operations.md` や他の成果物の追記
+
+**理由**: cycle ブランチは post-merge-sync.sh で削除されるため、マージ後の改変は記録として残らず、未コミット差分として手動破棄が必要になる。マージ完了の事実は GitHub 上の PR・merge commit・自動タグが記録源となる。
+
+**ガード動作**（Unit 002 / DR-001）: マージ後に `write-history.sh --phase operations` を呼び出した場合、以下のいずれかに該当すれば exit code `3` で拒否され、`error:post-merge-history-write-forbidden:<reason_code>:<diagnostics>` 形式の機械可読メッセージが stdout と stderr の両方に出力される:
+
+1. **第一条件**: `--operations-stage post-merge` を明示指定した場合（即拒否）
+2. **第二条件（AND フォールバック）**: `operations/progress.md` の `completion_gate_ready=true` かつ `gh pr view` で該当 PR が `state=MERGED ∧ mergedAt!=null ∧ number 一致` と確認できた場合
+
+7.8 以降の正常な呼び出し（Draft PR Ready 化のログ等）が必要な場合は `--operations-stage pre-merge` を明示すること。exit 3 は誤呼び出し検出用であり、正常な Operations 呼び出しには影響しない（後方互換）。
+
+---
+
 1. **未コミット変更の確認**:
 
    ```bash

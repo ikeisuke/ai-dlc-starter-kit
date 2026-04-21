@@ -2,6 +2,7 @@ name: Migration Tests
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
     paths:
       - 'skills/aidlc-migrate/scripts/migrate-*.sh'
@@ -16,6 +17,7 @@ permissions:
 jobs:
   migration-tests:
     name: Migration Script Tests
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

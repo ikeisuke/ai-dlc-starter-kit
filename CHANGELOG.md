@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.3.6] - 2026-04-20
+
+### Added
+
+- `operations-release.md §7.6` に固定スロット反映ステップを追加。PR 作成から Ready 化までの `release_gate_ready` / `pr_number` 反映を自動化し、マージ前完結契約を強化（#583-A / Unit 001）
+- `write-history.sh` に Operations Phase マージ後呼び出し拒否ガードを実装（`--operations-stage` 引数 + `operations/progress.md` 固定スロット + `gh pr view` の AND 条件判定、exit 3）。`/write-history` SKILL.md の引数表・出力表も追記。`operations/04-completion.md` に 7.8〜7.13 以降での `write-history.sh` 呼び出し禁止記述を追加（#583-B / DR-001 / Unit 002）
+- `pull_request` トリガーのワークフロー（`pr-check.yml` / `migration-tests.yml` / `skill-reference-check.yml`）に Draft PR スキップの二段ガードを追加。`types: [opened, synchronize, reopened, ready_for_review]` 明示 + ジョブレベル `if: github.event.pull_request.draft == false` により、Draft PR 期間中の runner 分単位消費を 0 にし、Ready 遷移で初回 runner 実行される運用へ（DR-004 / Unit 004）
+
+### Changed
+
+- Inception Phase 手順書の `Part 1` / `Part 2` 章立て表現を、既存 step ファイル名と整合する「ステップ1（セットアップ）」「ステップ2以降（インセプション本体）」等に修正（対象: `inception/index.md` / `01-setup.md` / `02-preparation.md` / `common/task-management.md`、#565 部分対応 / Unit 003）
+- `templates/inception_progress_template.md` の 6 ステップ構造と `verify-inception-recovery.sh` の 5 ステップ fixture、`phase-recovery-spec.md §5.1` の 5 checkpoint 判定仕様の 3 層整合化リファクタは、patch サイクル予算を超えるため本サイクルでは実施せず、次サイクル以降（minor リリース予定）で対応（#586 / DR-005）
+
+---
+
 ## [2.3.5] - 2026-04-18
 
 ### Added
