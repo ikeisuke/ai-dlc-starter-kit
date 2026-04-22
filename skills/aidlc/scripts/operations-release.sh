@@ -622,6 +622,8 @@ cmd_merge_pr() {
         return 1
     fi
 
+    # Bash 3.2 + set -u では空配列の "${array[@]}" が unbound variable になるため、
+    # 追加引数がある場合だけ配列展開する。
     local -a extra_args=()
     if [[ "$skip_checks" -eq 1 ]]; then
         extra_args+=("--skip-checks")
@@ -633,7 +635,11 @@ cmd_merge_pr() {
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" "${extra_args[@]}"
+            if [[ ${#extra_args[@]} -gt 0 ]]; then
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" "${extra_args[@]}"
+            else
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number"
+            fi
             return $?
             ;;
         squash)
@@ -641,7 +647,11 @@ cmd_merge_pr() {
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --squash${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --squash "${extra_args[@]}"
+            if [[ ${#extra_args[@]} -gt 0 ]]; then
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --squash "${extra_args[@]}"
+            else
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --squash
+            fi
             return $?
             ;;
         rebase)
@@ -649,7 +659,11 @@ cmd_merge_pr() {
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh merge $pr_number --rebase${extra_args[*]:+ ${extra_args[*]}}"
                 return 0
             fi
-            "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --rebase "${extra_args[@]}"
+            if [[ ${#extra_args[@]} -gt 0 ]]; then
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --rebase "${extra_args[@]}"
+            else
+                "$SCRIPT_DIR/pr-ops.sh" merge "$pr_number" --rebase
+            fi
             return $?
             ;;
         *)
