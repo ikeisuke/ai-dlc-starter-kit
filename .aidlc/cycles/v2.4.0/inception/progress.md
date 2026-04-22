@@ -13,7 +13,7 @@
 
 ## 現在のステップ
 
-次回: Inception 完了処理（意思決定記録 → 履歴 → squash → コミット）
+完了（Construction Phase へ遷移可能）
 
 ## 完了済みステップ
 
@@ -23,10 +23,11 @@
 - 4. Unit定義（7 Unit、AIレビュー4 反復で指摘0件、auto_approved 適格、2026-04-23）
 - 5. PRFAQ作成（2026-04-23）
 - 6. Construction用progress.md作成（Unit 一覧と推奨実装順序を含む、2026-04-23）
+- Inception完了処理（Milestone v2.4.0 #2 作成・Issue 紐付け、Squash 7コミット → 67232df9、Draft PR #599 作成、バックログ #598 起票、2026-04-23）
 
 ## 次回実行時の指示
 
-Inception 完了処理（05-completion.md）に従って意思決定記録（decisions.md）作成 → 履歴 → squash → コミット → コンテキストリセット提示まで実施してください。
+`/aidlc construction` で Construction Phase を開始してください（推奨実装順序: Unit 001 / 002 / 004 / 005 / 006 を並列着手可、Unit 003 は Unit 002 後、Unit 007 は Unit 005/006 完了後）。
 
 ## 再開時に読み込むファイル
 
