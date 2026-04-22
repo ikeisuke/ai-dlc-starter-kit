@@ -241,8 +241,14 @@ cmd_get_related_issues() {
         relates_csv=$(printf '%s\n' "${relates_list[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
     fi
 
-    # 後方互換: 全Issue結合
-    local -a all_list=("${closes_list[@]}" "${relates_list[@]}")
+    # 後方互換: 全Issue結合（set -u 環境で空配列展開を安全化）
+    local -a all_list=()
+    if [[ ${#closes_list[@]} -gt 0 ]]; then
+        all_list+=("${closes_list[@]}")
+    fi
+    if [[ ${#relates_list[@]} -gt 0 ]]; then
+        all_list+=("${relates_list[@]}")
+    fi
     if [[ ${#all_list[@]} -gt 0 ]]; then
         all_csv=$(printf '%s\n' "${all_list[@]}" | sort -u | tr '\n' ',' | sed 's/,$//')
     fi

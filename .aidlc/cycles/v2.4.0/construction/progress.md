@@ -4,7 +4,7 @@
 
 | Unit | 状態 | 担当ストーリー | 依存 | 完了日 |
 |------|------|--------------|------|--------|
-| 001 pr-ops-empty-list-fix | 未着手 | ストーリー 7（#588） | なし | - |
+| 001 pr-ops-empty-list-fix | 完了 | ストーリー 7（#588） | なし | 2026-04-23 |
 | 002 update-version-script-change | 未着手 | ストーリー 6a（#596 実装側） | なし | - |
 | 003 update-version-docs-comms | 未着手 | ストーリー 6b（#596 周知側） | Unit 002 | - |
 | 004 aidlc-setup-prompts-package-removal | 未着手 | ストーリー 5（#595） | なし | - |
@@ -21,12 +21,12 @@
 
 ## 現在の Unit
 
-未着手（Construction Phase 開始時に最初の Unit を選択）
+未着手（次の実行可能 Unit: Unit 002 / 004 / 005 / 006 が並列着手可能、semi_auto なら最小番号 Unit 002 を自動選択）
 
 ## 完了済み Unit
 
-なし
+- Unit 001 pr-ops-empty-list-fix（2026-04-23、Issue #588 解消、PR マージ時 auto-close 想定、bash 3.2 / 5.x 両対応確認済み）
 
 ## 次回実行時の指示
 
-`/aidlc construction` で Construction Phase を開始してください。
+`/aidlc construction` で Construction Phase を再開してください（Unit 002 update-version-script-change から継続）。
