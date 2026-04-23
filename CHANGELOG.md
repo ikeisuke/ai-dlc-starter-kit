@@ -9,10 +9,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ## [2.4.0] - 2026-04-XX
 
+### Added
+
+- Inception Phase に GitHub Milestone 自動作成・関連 Issue 紐付けステップを追加（`skills/aidlc/steps/inception/02-preparation.md` ステップ 16 で先行紐付け / `05-completion.md` ステップ 1 で正式作成・紐付け）。5 ケース判定（`open ≥ 2 / 1 / 0` × `closed ≥ 1 / 0` の組み合わせ）で重複作成・誤再オープンを防止。Issue 紐付けは主経路 `gh issue edit --milestone`、権限/環境差分による失敗時フォールバックで `gh api --method PATCH`。`label-cycle-issues.sh` の awk 抽出ロジック（5 形式対応）を流用（#597 / Unit 005 / Unit 007）
+- Operations Phase に Milestone close + 紐付け確認 + fallback 作成手順を追加（`skills/aidlc/steps/operations/01-setup.md` ステップ 11 / `04-completion.md` ステップ 5.5 / `index.md` §2.8 補助契約）。マージ前完結契約準拠（GitHub 側操作のみ）、5 ケース判定で誤再オープン防止、冪等補完原則で 1 Issue = 1 Milestone 制約遵守、LINK_FAILED 集約判定 exit 1 契約、`gh_status != available` 時 exit 1 + REST API 直叩き手動代替手順（#597 / Unit 006 / Unit 007）
+
 ### Changed
 
 - `bin/update-version.sh` の更新対象から `.aidlc/config.toml.starter_kit_version` を除外（hidden breaking change）。`starter_kit_version` は `aidlc-setup` / `aidlc-migrate` / 将来のアップグレード経路でのみ書き換わる「最後に実行した setup のバージョン」を表す値となり、リリース時の上書きが廃止される。これによりメタ開発リポジトリでバージョン三角検証（local / skill / remote）が正しく機能する（#596 / Unit 002 / Unit 003）
 - `bin/update-version.sh` の出力フォーマットから `aidlc_toml_current` / `aidlc_toml_new` / `aidlc_toml:${VERSION}` 行を削除（hidden breaking change）。これらの行に依存する自動化や手順書を持つ利用者は v2.4.0 アップグレード時に追従修正が必要（#596 / Unit 002 / Unit 003）
+- サイクル管理を `cycle:vX.X.X` ラベル運用から GitHub Milestone 運用に本採用変更。旧サイクル（v2.3.6 以前）の併記は残さない。過去サイクルの追跡は CHANGELOG / `.aidlc/cycles/v*/` ディレクトリ / 物理残置された `cycle:v*` ラベル（deprecated）で行う。Milestone 進捗バッジの README 追加は v2.5.0 以降のバックログとする（#597 / Unit 007）
+- 公開ドキュメント（`skills/aidlc/guides/issue-management.md` / `backlog-management.md` / `backlog-registration.md` / `glossary.md`）のサイクル運用記述を Milestone 参照に書き換え（#597 / Unit 007）
+
+### Deprecated
+
+- `skills/aidlc/scripts/cycle-label.sh` / `skills/aidlc/scripts/label-cycle-issues.sh` を v2.4.0 で deprecated 化（物理残置）。Milestone 運用本採用により Inception Phase ステップ（`02-preparation.md` ステップ 16 / `05-completion.md` ステップ 1）が後継。両スクリプトは将来サイクル（v2.5.0 以降）で物理削除を検討（#597 / Unit 005 / Unit 007）
+- `cycle:vX.X.X` ラベル運用を v2.4.0 で deprecated 化。新サイクルでは Milestone を使用。物理残置されたラベルは過去サイクル追跡用にのみ参照可能（#597 / Unit 007）
 
 ### Removed
 

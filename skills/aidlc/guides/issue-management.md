@@ -49,14 +49,11 @@ gh label create "status:blocked" --color "D93F0B" --description "他の作業に
    - バックログからサイクルで対応するIssueを選択
    - Unit定義ファイルに関連Issueとして記載
 
-2. **サイクルラベル付与**
-   ```bash
-   # 一括付与（label-cycle-issues.sh使用）
-   skills/aidlc/scripts/label-cycle-issues.sh v1.13.0
-
-   # または個別付与
-   skills/aidlc/scripts/issue-ops.sh label <issue_number> "cycle:v1.13.0"
-   ```
+2. **Milestone 紐付け**
+   - Milestone の正式作成と関連 Issue 紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施（主経路: `gh issue edit --milestone`、権限/環境差分による失敗時フォールバック: `gh api --method PATCH`）
+   - `02-preparation.md` ステップ 16 は既存 Milestone がある場合のみ先行紐付けする補助動作（v2.4.0 / #597）
+   - 補足: 旧サイクル（v2.3.6 以前）で使用していた `cycle:v*` ラベル付与スクリプト（`label-cycle-issues.sh`）は v2.4.0 で deprecated（物理残置）
+   - **手動復旧手順**: gh 利用可能時の duplicate/closed 混在復旧（パターン A-1）、gh 利用可能時の LINK_FAILED 復旧（パターン A-2、Issue / PR 双方対応）、gh 利用不可時（パターン B、curl + PAT または GitHub UI）の 3 パターンは [`backlog-management.md` の Inception Phase 節](backlog-management.md#inception-phase) を参照
 
 3. **サイクルPR作成**
    - ドラフトPRに全関連Issueを `Closes #XX` 形式で記載
@@ -174,5 +171,5 @@ skills/aidlc/scripts/issue-ops.sh set-status <issue_number> in-progress
 ## 関連ファイル
 
 - `skills/aidlc/scripts/issue-ops.sh` - Issue操作スクリプト
-- `skills/aidlc/scripts/label-cycle-issues.sh` - サイクルラベル一括付与スクリプト
-- `docs/aidlc/guides/backlog-management.md` - バックログ管理ガイド
+- `skills/aidlc/scripts/label-cycle-issues.sh` - サイクルラベル一括付与スクリプト（**v2.4.0 で deprecated**、Milestone 運用本採用により Inception ステップへ移行）
+- `skills/aidlc/guides/backlog-management.md` - バックログ管理ガイド

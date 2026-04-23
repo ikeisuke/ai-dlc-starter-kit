@@ -2,7 +2,7 @@
 
 ## 概要
 
-#597 Unit C 相当。Unit 005 / 006 で更新した Inception/Operations の Milestone 手順に整合する形で、公開ドキュメント（`docs/configuration.md` / `README.md` / `skills/aidlc/guides/` / `skills/aidlc/rules.md`）のサイクル運用記述を Milestone ベースに書き換える。旧サイクル（v2.3.6 以前）の併記は残さず、過去サイクルの追跡は CHANGELOG / `.aidlc/cycles/v*/` ディレクトリ / 残置された `cycle:v*` ラベル（deprecated）で行うことを CHANGELOG に明記する。
+#597 Unit C 相当。Unit 005 / 006 で更新した Inception/Operations の Milestone 手順に整合する形で、公開ドキュメント（`docs/configuration.md` / `README.md` / `skills/aidlc/guides/` / `.aidlc/rules.md`）のサイクル運用記述を Milestone ベースに書き換える。旧サイクル（v2.3.6 以前）の併記は残さず、過去サイクルの追跡は CHANGELOG / `.aidlc/cycles/v*/` ディレクトリ / 残置された `cycle:v*` ラベル（deprecated）で行うことを CHANGELOG に明記する。なお、`docs/configuration.md` / `README.md` / `.aidlc/rules.md` は候補として調査対象だが、Plan 段階の実態調査で書き換え対象記述が空集合（no-op）と確認された場合は触らない（過剰修正回避）。
 
 ## 含まれるユーザーストーリー
 
@@ -12,13 +12,13 @@
 
 本 Unit は **#597 Milestone 運用関連の公開ドキュメント書き換えのみ**を扱う。`#596` 関連の周知（`bin/update-version.sh` 関連の `rules.md` / `configuration.md` 段落、CHANGELOG の `#596` 節）は Unit 003 の責務。
 
-- `docs/configuration.md` の **サイクル運用セクション**（`cycle:v*` 言及・`label-cycle-issues.sh` 言及）を Milestone 参照に書き換え。`starter_kit_version` 関連段落（Unit 003 所有）は触らない
-- `README.md` の **サイクル運用記述箇所**を Milestone 運用前提に更新（Milestone 進捗バッジは v2.4.0 では追加しない、追加検討は v2.5.0 以降のバックログ）。`bin/update-version.sh` 関連の README 記述は本 Unit 対象外（Unit 003 が `bin/update-version.sh` のスクリプト先頭コメントに集約する方針）
+- `docs/configuration.md` の **サイクル運用セクション**（`cycle:v*` 言及・`label-cycle-issues.sh` 言及）を Milestone 参照に書き換え。`starter_kit_version` 関連段落（Unit 003 所有）は触らない。**注**: Plan 段階の実態調査で書き換え対象記述が存在しないことを確認した場合は no-op 扱いとし、過剰修正を避ける
+- `README.md` の **サイクル運用記述箇所**を Milestone 運用前提に更新（Milestone 進捗バッジは v2.4.0 では追加しない、追加検討は v2.5.0 以降のバックログ）。`bin/update-version.sh` 関連の README 記述は本 Unit 対象外（Unit 003 が `bin/update-version.sh` のスクリプト先頭コメントに集約する方針）。**注**: 同上、書き換え対象記述が存在しなければ no-op 扱い
 - `skills/aidlc/guides/issue-management.md` のサイクルラベル付与記述を Milestone 紐付け手順に書き換え
 - `skills/aidlc/guides/backlog-management.md` を更新: 「Backlog（Milestone 未割当）」の運用説明追加、サイクル開始時の Milestone 紐付けフロー記述
 - `skills/aidlc/guides/backlog-registration.md` を更新: 新規 Issue 登録時に Milestone 未割当を初期状態とする旨を明記
 - `skills/aidlc/guides/glossary.md` に「Milestone」エントリ追加（GitHub Milestone を AI-DLC のサイクル管理単位として用いる定義）、「サイクルラベル」エントリは「v2.4.0 で deprecated、Milestone に置換」の注記付きで残置
-- `skills/aidlc/rules.md` の **運用ルール記述のサイクル運用前提を Milestone に書き換え**（Milestone 関連セクションのみ）。「カスタムワークフロー > バージョンファイル更新」セクション（Unit 003 所有）は触らない
+- `.aidlc/rules.md` の **運用ルール記述のサイクル運用前提を Milestone に書き換え**（Milestone 関連セクションのみ）。「カスタムワークフロー > バージョンファイル更新」セクション（Unit 003 所有）は触らない。**注**: 同上、書き換え対象記述が存在しなければ no-op 扱い。`skills/aidlc/rules.md` は本リポジトリに存在しない（参照誤り、修正済み）
 - CHANGELOG（v2.4.0 リリースノート）の **`#597` 節** に以下を排他所有として記述（`#596` 節は Unit 003 所有）:
   - 旧サイクル（v2.3.6 以前）の併記を残さない方針、過去サイクル追跡は CHANGELOG / `.aidlc/cycles/v*/` ディレクトリ / `cycle:v*` ラベル（deprecated 物理残置）で行う旨
   - **`cycle-label.sh` / `label-cycle-issues.sh` の deprecation 記載**（Unit 005 から本 Unit へ委譲された項目。Unit 005 完了時に依頼内容として確定する）
@@ -53,7 +53,7 @@
 
 ## 技術的考慮事項
 
-- 設計レビュー時のガイド照合ルール（`skills/aidlc/rules.md`「設計レビュー時のガイド照合ルール」）を適用し、過剰な互換記述（旧運用の説明残置）が混入しないよう確認する
+- 設計レビュー時のガイド照合ルール（`.aidlc/rules.md`「設計レビュー時のガイド照合ルール」が定義されている場合）を適用し、過剰な互換記述（旧運用の説明残置）が混入しないよう確認する
 - `glossary.md` の「サイクルラベル」エントリ残置は、過去ドキュメントとの参照リンク切れを避ける目的。「v2.4.0 で deprecated」の注記を必ず付ける
 - README のバッジ追加可否は本 Unit では「追加しない」に固定済み（ストーリー 3 受け入れ基準）
 
@@ -75,9 +75,9 @@ Medium（Unit 005 / 006 完了後の周知、リリース前必須）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-23
+- **完了日**: 2026-04-23
+- **担当**: AI（Claude / codex 協調）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
