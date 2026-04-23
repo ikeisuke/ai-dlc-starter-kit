@@ -160,9 +160,20 @@ ISSUE_NUMBERS=$(awk '
 if [ -z "$ISSUE_NUMBERS" ]; then
   echo "milestone:{{CYCLE}}:no-issues-to-link"
 else
-  # 各 Issue を Milestone に紐付け
+  # 各 Issue を Milestone に紐付け（既存 Milestone がある場合は付け替えず警告のみ、Operations 01-setup ステップ 11 と同じ冪等補完原則）
   echo "$ISSUE_NUMBERS" | while read -r ISSUE; do
     if [ -z "$ISSUE" ]; then continue; fi
+    # 既存 Milestone を確認（1 Issue = 1 Milestone 制約のため、付け替えは行わない）
+    CURRENT_MILESTONE=$(gh issue view "$ISSUE" --json milestone --jq '.milestone.title // empty')
+    if [ -n "$CURRENT_MILESTONE" ] && [ "$CURRENT_MILESTONE" != "{{CYCLE}}" ]; then
+      echo "WARNING: issue:$ISSUE は他の Milestone （$CURRENT_MILESTONE）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認してから手動で付け替えてください" >&2
+      echo "issue:$ISSUE:other-milestone:current=$CURRENT_MILESTONE:skip-overwrite"
+      continue
+    elif [ "$CURRENT_MILESTONE" = "{{CYCLE}}" ]; then
+      echo "issue:$ISSUE:already-linked:milestone={{CYCLE}}"
+      continue
+    fi
+    # empty Milestone の場合のみ新規紐付け
     # 優先: gh issue edit --milestone（簡潔）
     if gh issue edit "$ISSUE" --milestone "{{CYCLE}}" 2>/dev/null; then
       echo "issue:$ISSUE:linked:milestone={{CYCLE}}"
@@ -180,7 +191,7 @@ fi
 
 **フォールバック手順**: `gh issue edit --milestone` が **権限または環境差分で失敗する場合** は `gh api --method PATCH` を必ず使用する。具体的なエラー時のみ自動的に PATCH に切り替わる。
 
-**1 Issue = 1 Milestone 制約**（GitHub 仕様）: Issue が既に他サイクルの Milestone に紐付いている場合、Milestone 付け替えとなる。サイクル持ち越し時は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認する。
+**1 Issue = 1 Milestone 制約**（GitHub 仕様）: Issue が既に他サイクルの Milestone に紐付いている場合、**自動では付け替えず、警告のみ出力してスキップ**する（Operations 01-setup ステップ 11 と同じ冪等補完原則）。サイクル持ち越し時は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認してから手動で付け替えること。
 
 **出力例**:
 

@@ -15,6 +15,11 @@ AI-DLC Starter Kit の変更履歴です。
 - Operations Phase に Milestone close + 紐付け確認 + fallback 作成手順を追加（`skills/aidlc/steps/operations/01-setup.md` ステップ 11 / `04-completion.md` ステップ 5.5 / `index.md` §2.8 補助契約）。マージ前完結契約準拠（GitHub 側操作のみ）、5 ケース判定で誤再オープン防止、冪等補完原則で 1 Issue = 1 Milestone 制約遵守、LINK_FAILED 集約判定 exit 1 契約、`gh_status != available` 時 exit 1 + REST API 直叩き手動代替手順（#597 / Unit 006 / Unit 007）
 - `[rules.milestone].enabled` 設定キーを新設（boolean、既定 `false`）。Milestone 運用を opt-in 方式に切り替え、未設定プロジェクト・既存利用者（v2.3.6 以前からのアップグレード者）は Milestone 機能が一切動作しない。Milestone 運用を有効化するには `.aidlc/config.toml` に `[rules.milestone]` セクションと `enabled = true` を追記する。本 opt-in 化により、`gh_status != available` 時の `exit 1` 契約および `LINK_FAILED` 集約判定 `exit 1` 契約はいずれも `enabled=true` のときのみ適用される（後方互換性確保）（#597 / Unit 008 / Unit G）
 
+### Fixed
+
+- Inception Phase `05-completion.md` ステップ 1-2 の関連 Issue 一括紐付けで、既に他 Milestone に紐付け済みの Issue を**無条件に上書き**してしまうバグを修正。Operations Phase `01-setup.md` ステップ 11 と同じ冪等補完原則を適用し、既存 Milestone がある場合は付け替えず警告のみ出力してスキップする（codex マージ前レビュー指摘 / Unit 005 範囲）
+- Inception Phase `02-preparation.md` ステップ 16 の Milestone 先行紐付けで、`gh api` の URL がリテラル placeholder `repos/{owner}/{repo}/milestones?state=all` のままで動作不能だったバグを修正。`05-completion.md` ステップ 1-1 と同じパターンで OWNER/REPO を動的解決するよう変更（codex マージ前レビュー指摘 / Unit 005 範囲）
+
 ### Changed
 
 - `bin/update-version.sh` の更新対象から `.aidlc/config.toml.starter_kit_version` を除外（hidden breaking change）。`starter_kit_version` は `aidlc-setup` / `aidlc-migrate` / 将来のアップグレード経路でのみ書き換わる「最後に実行した setup のバージョン」を表す値となり、リリース時の上書きが廃止される。これによりメタ開発リポジトリでバージョン三角検証（local / skill / remote）が正しく機能する（#596 / Unit 002 / Unit 003）

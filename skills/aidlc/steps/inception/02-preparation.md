@@ -66,14 +66,18 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・OWNER/REPO 解決・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。
 
 ```bash
-# 1. Milestone 一覧（state=all）から {{CYCLE}} を検索（同名 closed 検出のため state=all）
-MILESTONE_LOOKUP=$(gh api "repos/{owner}/{repo}/milestones?state=all" \
+# 1. OWNER/REPO 動的解決（05-completion ステップ 1-1 と同じパターン）
+OWNER=$(gh repo view --json owner --jq .owner.login)
+REPO=$(gh repo view --json name --jq .name)
+
+# 2. Milestone 一覧（state=all）から {{CYCLE}} を検索（同名 closed 検出のため state=all）
+MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
   --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
 
 OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
 CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
 
-# 2. 「open=1 && closed=0」のときだけ先行紐付け実行、それ以外は必ずスキップ
+# 3. 「open=1 && closed=0」のときだけ先行紐付け実行、それ以外は必ずスキップ
 if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
   # 各 Issue を gh issue edit で先行紐付け
   gh issue edit ISSUE_NUMBER --milestone "{{CYCLE}}"
