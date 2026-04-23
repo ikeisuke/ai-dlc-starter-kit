@@ -71,7 +71,8 @@ OWNER=$(gh repo view --json owner --jq .owner.login)
 REPO=$(gh repo view --json name --jq .name)
 
 # 2. Milestone 一覧（state=all）から {{CYCLE}} を検索（同名 closed 検出のため state=all）
-MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
+# - `--paginate` + `per_page=100` で全ページを取得（Milestone 30 件超のリポでも検索漏れ防止）
+MILESTONE_LOOKUP=$(gh api --paginate "repos/$OWNER/$REPO/milestones?state=all&per_page=100" \
   --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
 
 OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')

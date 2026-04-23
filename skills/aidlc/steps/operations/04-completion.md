@@ -220,7 +220,8 @@ OWNER=$(gh repo view --json owner --jq .owner.login)
 REPO=$(gh repo view --json name --jq .name)
 
 # 2. Milestone 一覧（state=all）を取得（01-setup ステップ11-1 と同じ判定基盤）
-MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
+# - `--paginate` + `per_page=100` で全ページを取得（Milestone 30 件超のリポでも検索漏れ防止）
+MILESTONE_LOOKUP=$(gh api --paginate "repos/$OWNER/$REPO/milestones?state=all&per_page=100" \
   --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
 
 OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
@@ -231,10 +232,10 @@ if [ "$CLOSED_COUNT" -eq 1 ] && [ "$OPEN_COUNT" -eq 0 ]; then
   CLOSED_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "closed") | .number')
   echo "milestone:{{CYCLE}}:already-closed:number=$CLOSED_NUMBER"
 elif [ "$CLOSED_COUNT" -ge 1 ]; then
-  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件 + open が ${OPEN_COUNT} 件あります（多重 closed または混在状態）。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件 + open が ${OPEN_COUNT} 件あります（多重 closed または混在状態）。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api --paginate \"repos/\$OWNER/\$REPO/milestones?state=all&per_page=100\"" >&2
   exit 1
 elif [ "$OPEN_COUNT" -ge 2 ]; then
-  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります（重複作成の可能性）。重複候補を確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります（重複作成の可能性）。重複候補を確認: gh api --paginate \"repos/\$OWNER/\$REPO/milestones?state=all&per_page=100\"" >&2
   exit 1
 elif [ "$OPEN_COUNT" -eq 1 ]; then
   MILESTONE_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "open") | .number')
@@ -248,7 +249,7 @@ elif [ "$OPEN_COUNT" -eq 1 ]; then
   fi
   rm -f /tmp/milestone-close-error.log
 else
-  echo "ERROR: Milestone {{CYCLE}} が見つかりません（open / closed のいずれにも存在しない）。01-setup.md ステップ11 の fallback 作成が未実行 or 手動作業漏れの可能性。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  echo "ERROR: Milestone {{CYCLE}} が見つかりません（open / closed のいずれにも存在しない）。01-setup.md ステップ11 の fallback 作成が未実行 or 手動作業漏れの可能性。手動確認: gh api --paginate \"repos/\$OWNER/\$REPO/milestones?state=all&per_page=100\"" >&2
   exit 1
 fi
 ```

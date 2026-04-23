@@ -100,8 +100,8 @@ gh issue list --label backlog --state open
    ```bash
    # 手動復旧パターン A-1: gh 利用可能 + duplicate/closed 混在の復旧時
    # 完了条件: title == "vX.X.X" の Milestone が open=1, closed=0 となること（同名 closed が残ると後続ステップが closed_count >= 1 で再停止する）
-   # まず同名 Milestone 一覧を確認:
-   gh api "repos/$OWNER/$REPO/milestones?state=all" --jq "[.[] | select(.title == \"vX.X.X\") | {number, state}]"
+   # まず同名 Milestone 一覧を確認（30 件超のリポでも検索漏れ防止のため --paginate + per_page=100）:
+   gh api --paginate "repos/$OWNER/$REPO/milestones?state=all&per_page=100" --jq "[.[] | select(.title == \"vX.X.X\") | {number, state}]"
    # 不要 duplicate は close ではなく title 変更（例: vX.X.X-archived-YYYY-MM-DD）または delete で同名衝突を除去:
    gh api --method PATCH "repos/$OWNER/$REPO/milestones/<dup_number>" -f title="vX.X.X-archived-2026-04-23"
    # または:
@@ -125,9 +125,10 @@ gh issue list --label backlog --state open
    # 手動復旧パターン B: gh 利用不可時。REST API 直叩き（PAT が必要）または GitHub UI で手動操作。
    # 1. リポジトリ URL から OWNER/REPO を確認（例: github.com/OWNER/REPO）
    # 2. GitHub UI の Milestones 一覧（https://github.com/OWNER/REPO/milestones）または以下の REST API で MILESTONE_NUMBER を取得:
+   # 注: 30 件超のリポでは per_page=100 を指定。100 件超の場合は Link ヘッダの rel="next" を辿ってページング。
    curl -H "Authorization: token <PAT>" \
      -H "Accept: application/vnd.github+json" \
-     "https://api.github.com/repos/OWNER/REPO/milestones?state=all" \
+     "https://api.github.com/repos/OWNER/REPO/milestones?state=all&per_page=100" \
      | jq '.[] | select(.title == "vX.X.X" and .state == "open") | .number'
    # 上記が 1 件でない場合は紐付けせず、先に duplicate/closed 衝突を解消する（パターン A-1 相当を REST/UI で実施）
    # 3a. Issue に Milestone を紐付け:

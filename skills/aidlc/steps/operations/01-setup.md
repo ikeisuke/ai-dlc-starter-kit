@@ -152,7 +152,8 @@ OWNER=$(gh repo view --json owner --jq .owner.login)
 REPO=$(gh repo view --json name --jq .name)
 
 # 2. Milestone 一覧（state=all）から {{CYCLE}} を検索
-MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
+# - `--paginate` + `per_page=100` で全ページを取得（Milestone 30 件超のリポでも検索漏れ防止）
+MILESTONE_LOOKUP=$(gh api --paginate "repos/$OWNER/$REPO/milestones?state=all&per_page=100" \
   --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
 
 OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
@@ -160,10 +161,10 @@ CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")]
 
 # 3. 5 ケース判定（ストーリー 2 受け入れ基準の優先順位通り、最初に該当した規則のみを適用）
 if [ "$CLOSED_COUNT" -ge 1 ]; then
-  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件あります。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件あります。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api --paginate \"repos/\$OWNER/\$REPO/milestones?state=all&per_page=100\"" >&2
   exit 1
 elif [ "$OPEN_COUNT" -ge 2 ]; then
-  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります。重複候補を確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります。重複候補を確認: gh api --paginate \"repos/\$OWNER/\$REPO/milestones?state=all&per_page=100\"" >&2
   exit 1
 elif [ "$OPEN_COUNT" -eq 1 ]; then
   MILESTONE_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "open") | .number')
