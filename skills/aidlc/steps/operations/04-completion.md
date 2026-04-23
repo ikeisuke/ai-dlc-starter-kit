@@ -182,6 +182,17 @@ AIが探索結果のパスを使用して以下を実行する:
 
 ### 5.5 Milestone close【マージ前完結契約準拠】
 
+**Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
+
+`MILESTONE_ENABLED` を判定する:
+
+```bash
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+```
+
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=04-completion-step5.5:reason=opt-out` を出力し、**本ステップの Milestone close をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / `gh_status != available` 時 exit 1 契約 / Milestone close 5 ケース判定処理は **一切実行しない**（opt-out 時はマージ前完結契約のサイクル完了可視化要件は **opt-out 利用者の責任範囲外** とし、close 自体を要求しないため、警告も表示しない）
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定（`available` 以外で exit 1）+ Milestone close 5 ケース判定処理を実行する
+
 **マージ完了後、サイクル完了の可視化として GitHub Milestone を close する**。マージ前完結契約（v2.3.5 / Unit 002）に従い、本ステップは GitHub 側操作のみで `.aidlc/cycles/{{CYCLE}}/**` 配下のファイルは更新しない。
 
 `gh_status` を参照する。

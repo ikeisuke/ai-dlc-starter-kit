@@ -11,6 +11,7 @@
 | 005 inception-milestone-step | 完了 | ストーリー 1, 4（#597 Unit B） | なし | 2026-04-23 |
 | 006 operations-milestone-close | 完了 | ストーリー 2（#597 Unit A） | なし | 2026-04-23 |
 | 007 docs-milestone-rewrite | 完了 | ストーリー 3（#597 Unit C） | Unit 005, 006 | 2026-04-23 |
+| 008 milestone-opt-out-setting | 完了 | 追加ストーリー（#597 Unit G） | Unit 005, 006, 007 | 2026-04-24 |
 
 ## 実装順序（推奨）
 
@@ -18,10 +19,11 @@
 
 1. **第 1 グループ（独立、並列可）**: Unit 001 / Unit 002 / Unit 004 / Unit 005 / Unit 006
 2. **第 2 グループ（依存後）**: Unit 003（Unit 002 完了後） / Unit 007（Unit 005, 006 完了後）
+3. **第 3 グループ（追加スコープ、Unit 005-007 完了後）**: Unit 008（Operations Phase 中の振り返りで追加）
 
 ## 現在の Unit
 
-なし（全 Unit 完了、Operations Phase へ遷移可能）
+全 8 Unit 完了。Operations Phase 続行（ステップ 7 リリース準備から再開）。
 
 ## 完了済み Unit
 
@@ -32,7 +34,8 @@
 - Unit 005 inception-milestone-step（2026-04-23、Issue #597 Unit B 部分対応、Inception Phase 02-preparation/05-completion/index.md の Milestone 化 + 5 ケース判定 + PATCH フォールバック + 関連 Issue awk 抽出 + cycle-label.sh / label-cycle-issues.sh DEPRECATED 注記、Markdown 整合性検証 全 OK / bash -n syntax check 全 OK、Unit 007 への CHANGELOG `#597` 節 deprecation 記載依頼明記）
 - Unit 006 operations-milestone-close（2026-04-23、Issue #597 Unit A 部分対応、Operations Phase 01-setup ステップ11「Milestone 紐付け確認・fallback 判定」追加 / 04-completion ステップ5.5「Milestone close」追加 / index.md §2.8 補助契約追記、5 ケース判定 + 冪等補完原則 + マージ前完結契約準拠 + LINK_FAILED 集約判定 exit 1 契約 + gh_status != available 時 exit 1 契約、codex implementation review 5 反復で auto_approved 適格達成、Unit 007 への CHANGELOG `#597` 節 Operations 側追記依頼明記）
 - Unit 007 docs-milestone-rewrite（2026-04-23、Issue #597 Unit C 完了、公開ドキュメント書き換え（issue-management / backlog-management / backlog-registration / glossary）+ CHANGELOG `[2.4.0]` 節を Keep a Changelog 順序（Added → Changed → Deprecated → Removed）に再構成、`#597` 関連 6 項目追加、手動復旧 3 パターン分岐（A-1 duplicate/closed / A-2 LINK_FAILED Issue+PR / B gh 不可 curl+PAT+UI 3a/3b）、過剰修正回避（docs/configuration.md / README.md / .aidlc/rules.md は no-op）、Markdown 整合性検証 全 OK、サイクル PR マージで #597 auto-close 準備完了 → Unit 005 / 006 / 007 の 3 Unit すべて完了）
+- Unit 008 milestone-opt-out-setting（2026-04-24、Issue #597 追加対応 Unit G 完了、`[rules.milestone].enabled` 設定キー新設（boolean、既定 `false`）+ defaults.toml × 2 同期 + 4 ステップへの opt-in ガード追加（Inception 02-preparation ステップ 16 / 05-completion ステップ 1 / Operations 01-setup ステップ 11 / 04-completion ステップ 5.5）+ Inception/Operations index.md 補足 + docs/configuration.md セクション + 4 guides 追記 + CHANGELOG `### Added` Unit 008 項目追加 + `.aidlc/config.toml` メタ開発リポへの `enabled=true` 明示設定。Plan codex review 2 反復で auto_approved（Round 1: P1×1 ガード制御不全 + P2×2 + P3×1 / Round 2: No findings）、Implementation codex review 2 反復で auto_approved（Round 1: P2×1 通常行未更新 + P3×1 表現整合 / Round 2: No findings）。後方互換性堅牢確保（`read-config.sh` exit 1/2 でも `false` フォールバック）+ Unit 005-007 本体ロジック非干渉 + メタ開発リポ自己整合性確保）
 
 ## 次回実行時の指示
 
-全 7 Unit 完了。`/aidlc operations` で Operations Phase を開始してください。
+全 8 Unit 完了。Operations Phase 続行（ステップ 7 リリース準備から再開）。

@@ -50,6 +50,17 @@ scripts/check-open-issues.sh
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
+**Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
+
+`MILESTONE_ENABLED` を判定する:
+
+```bash
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+```
+
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` を出力し、**本ステップの Milestone 紐付け処理をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定および Milestone 紐付け bash 群は **一切実行しない**
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定および Milestone 紐付け処理を実行する
+
 **Milestone 紐付け**（`gh_status` が `available` の場合、Issueを選択した後）:
 
 選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・OWNER/REPO 解決・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。

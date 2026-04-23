@@ -13,6 +13,7 @@ AI-DLC Starter Kit の変更履歴です。
 
 - Inception Phase に GitHub Milestone 自動作成・関連 Issue 紐付けステップを追加（`skills/aidlc/steps/inception/02-preparation.md` ステップ 16 で先行紐付け / `05-completion.md` ステップ 1 で正式作成・紐付け）。5 ケース判定（`open ≥ 2 / 1 / 0` × `closed ≥ 1 / 0` の組み合わせ）で重複作成・誤再オープンを防止。Issue 紐付けは主経路 `gh issue edit --milestone`、権限/環境差分による失敗時フォールバックで `gh api --method PATCH`。`label-cycle-issues.sh` の awk 抽出ロジック（5 形式対応）を流用（#597 / Unit 005 / Unit 007）
 - Operations Phase に Milestone close + 紐付け確認 + fallback 作成手順を追加（`skills/aidlc/steps/operations/01-setup.md` ステップ 11 / `04-completion.md` ステップ 5.5 / `index.md` §2.8 補助契約）。マージ前完結契約準拠（GitHub 側操作のみ）、5 ケース判定で誤再オープン防止、冪等補完原則で 1 Issue = 1 Milestone 制約遵守、LINK_FAILED 集約判定 exit 1 契約、`gh_status != available` 時 exit 1 + REST API 直叩き手動代替手順（#597 / Unit 006 / Unit 007）
+- `[rules.milestone].enabled` 設定キーを新設（boolean、既定 `false`）。Milestone 運用を opt-in 方式に切り替え、未設定プロジェクト・既存利用者（v2.3.6 以前からのアップグレード者）は Milestone 機能が一切動作しない。Milestone 運用を有効化するには `.aidlc/config.toml` に `[rules.milestone]` セクションと `enabled = true` を追記する。本 opt-in 化により、`gh_status != available` 時の `exit 1` 契約および `LINK_FAILED` 集約判定 `exit 1` 契約はいずれも `enabled=true` のときのみ適用される（後方互換性確保）（#597 / Unit 008 / Unit G）
 
 ### Changed
 

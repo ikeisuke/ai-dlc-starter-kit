@@ -50,6 +50,7 @@ gh label create "status:blocked" --color "D93F0B" --description "他の作業に
    - Unit定義ファイルに関連Issueとして記載
 
 2. **Milestone 紐付け**
+   - **前提（v2.4.0 以降）**: 本機能は `[rules.milestone].enabled=true` のときのみ動作する（既定 off / Unit 008 / #597 Unit G）。明示有効化していないプロジェクトでは Milestone 紐付けステップ自体がスキップされる
    - Milestone の正式作成と関連 Issue 紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施（主経路: `gh issue edit --milestone`、権限/環境差分による失敗時フォールバック: `gh api --method PATCH`）
    - `02-preparation.md` ステップ 16 は既存 Milestone がある場合のみ先行紐付けする補助動作（v2.4.0 / #597）
    - 補足: 旧サイクル（v2.3.6 以前）で使用していた `cycle:v*` ラベル付与スクリプト（`label-cycle-issues.sh`）は v2.4.0 で deprecated（物理残置）

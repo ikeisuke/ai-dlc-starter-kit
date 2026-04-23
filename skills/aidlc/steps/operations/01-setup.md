@@ -127,6 +127,17 @@ scripts/validate-git.sh remote-sync
 
 ### 11. Milestone 紐付け確認・fallback 判定【重要】
 
+**Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
+
+`MILESTONE_ENABLED` を判定する:
+
+```bash
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+```
+
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=01-setup-step11:reason=opt-out` を出力し、**本ステップ（11-1 Milestone 状態確認 + 11-2 関連 Issue 紐付け補完 + 11-3 PR 紐付け確認 + 末尾 `LINK_FAILED` 集約判定）をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / Milestone 紐付け処理 / `LINK_FAILED` 集約判定 exit 1 契約は **一切実行しない**（紐付け処理自体を実施しないため）
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定 + 11-1 / 11-2 / 11-3 + 末尾 `LINK_FAILED` 集約判定を実行する
+
 **`gh_status` を参照する。**
 
 `gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、Milestone 紐付け確認をスキップします」と表示してスキップ。

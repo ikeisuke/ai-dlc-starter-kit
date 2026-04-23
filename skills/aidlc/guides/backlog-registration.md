@@ -45,7 +45,7 @@
 
 **注**: 発見日/発見フェーズ/発見サイクルはAIが自動補完（現在の日付/フェーズ/`{{CYCLE}}`をそのまま使用。名前付きサイクルの場合は `waf/v1.0.0` のような形式になる）
 
-**Milestone について（v2.4.0 以降）**: 新規 Issue 作成時は Milestone 未割当（empty）を初期状態とする。Milestone への正式紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施し、`02-preparation.md` ステップ 16 では既存 Milestone がある場合のみ先行紐付けする（Unit 005 / #597）。
+**Milestone について（v2.4.0 以降）**: 新規 Issue 作成時は Milestone 未割当（empty）を初期状態とする。Milestone への正式紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施し、`02-preparation.md` ステップ 16 では既存 Milestone がある場合のみ先行紐付けする（Unit 005 / #597）。**ただし、Milestone 機能は `[rules.milestone].enabled=true` のときのみ動作する（既定 off / Unit 008 / #597 Unit G）**。
 
 ```markdown
 # [概要]
