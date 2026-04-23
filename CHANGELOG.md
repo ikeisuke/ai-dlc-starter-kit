@@ -14,6 +14,10 @@ AI-DLC Starter Kit の変更履歴です。
 - `bin/update-version.sh` の更新対象から `.aidlc/config.toml.starter_kit_version` を除外（hidden breaking change）。`starter_kit_version` は `aidlc-setup` / `aidlc-migrate` / 将来のアップグレード経路でのみ書き換わる「最後に実行した setup のバージョン」を表す値となり、リリース時の上書きが廃止される。これによりメタ開発リポジトリでバージョン三角検証（local / skill / remote）が正しく機能する（#596 / Unit 002 / Unit 003）
 - `bin/update-version.sh` の出力フォーマットから `aidlc_toml_current` / `aidlc_toml_new` / `aidlc_toml:${VERSION}` 行を削除（hidden breaking change）。これらの行に依存する自動化や手順書を持つ利用者は v2.4.0 アップグレード時に追従修正が必要（#596 / Unit 002 / Unit 003）
 
+### Removed
+
+- `skills/aidlc-setup/steps/01-detect.md` から `prompts/package/` ディレクトリへの言及（メタ開発モード判定の旧条件）を純削除。`prompts/package/` は v2.0.5 で削除済み（#449）であり、判定式として無効だった。挙動変化として、`ai-dlc-starter-kit` をクローンした直後で `.aidlc/config.toml` がない状態では、従来の「通常利用なら対象プロジェクトへ移動」事前ガイダンスが表示されず、初回セットアップ確認プロンプトに直接進む可能性がある。通常利用では対象プロジェクトのルートディレクトリで実行すること。代替判定条件（例: `version.txt` + `.claude-plugin/` ベース）の追加は本 Unit 対象外であり、必要性が確認された場合は v2.5.0 以降のバックログ Issue で別扱いとする（#595 / Unit 004）
+
 ---
 
 ## [2.3.6] - 2026-04-20
