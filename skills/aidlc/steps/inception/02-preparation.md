@@ -50,14 +50,28 @@ scripts/check-open-issues.sh
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
-**サイクルラベル付与**（`gh_status` が `available` の場合、Issueを選択した後）:
+**Milestone 紐付け**（`gh_status` が `available` の場合、Issueを選択した後）:
 
-選択したIssueにサイクルラベルを付与します。
+選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・OWNER/REPO 解決・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。
 
 ```bash
-# 一括付与（Unit定義作成後に実行）
-scripts/label-cycle-issues.sh {{CYCLE}}
+# 1. Milestone 一覧（state=all）から {{CYCLE}} を検索（同名 closed 検出のため state=all）
+MILESTONE_LOOKUP=$(gh api "repos/{owner}/{repo}/milestones?state=all" \
+  --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
+
+OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
+CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
+
+# 2. 「open=1 && closed=0」のときだけ先行紐付け実行、それ以外は必ずスキップ
+if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
+  # 各 Issue を gh issue edit で先行紐付け
+  gh issue edit ISSUE_NUMBER --milestone "{{CYCLE}}"
+else
+  echo "Milestone {{CYCLE}} は open=$OPEN_COUNT closed=$CLOSED_COUNT のため、本ステップでの先行紐付けはスキップします（05-completion ステップ1 で判定・作成・紐付けされます）"
+fi
 ```
+
+**注**: 本ステップでの先行紐付けは `gh issue edit --milestone` のみを使用し、PATCH フォールバックは 05-completion ステップ1 に集約します（PATCH は OWNER/REPO 動的解決を必要とするため、責任分離のため）。`gh issue edit --milestone` が権限または環境差分で失敗する場合は本ステップではエラーログのみ残し、05-completion ステップ1 のフォールバック手順で再試行されます。`OPEN_COUNT == 1 && CLOSED_COUNT == 0` 以外のケース（open≥2 / closed≥1 / 混在 / 不在）は **必ず先行紐付けをスキップ** し、05-completion ステップ1 の 5 ケース判定に委譲します。
 
 詳細は `guides/issue-management.md` を参照。
 

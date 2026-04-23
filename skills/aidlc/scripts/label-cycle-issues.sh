@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 #
+# DEPRECATED: v2.4.0 で非推奨化（#597 / Unit 005）。
+#   サイクル運用が GitHub サイクルラベルから GitHub Milestone へ移行したため、
+#   本スクリプトは新規 Inception Phase からは呼び出されません。
+#   v2.5.0 以降のサイクルでは `inception.05-completion` ステップ1 の
+#   Milestone 作成・紐付け手順を使用してください。
+#   本スクリプトの物理削除は後続サイクル Unit E（v2.5.0 以降）で実施予定です。
+#
 # label-cycle-issues.sh - 複数Issueへのサイクルラベル一括付与スクリプト
 #
 # 使用方法:
