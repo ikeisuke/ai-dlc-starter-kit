@@ -105,6 +105,9 @@ _current_version_txt=$(cat version.txt) || {
     exit 1
 }
 
+# .aidlc/config.toml の妥当性検証専用読み取り（変数値は出力に使用しない）
+# starter_kit_version 行の読取可能性・一意性・引用符付き非空値を検証し、
+# unreadable / invalid format / duplicate key を検出する既存契約を維持する。
 _rc=0
 _current_aidlc_toml=$(read_starter_kit_version ".aidlc/config.toml") || _rc=$?
 if [[ "$_rc" -ne 0 ]]; then
@@ -120,8 +123,6 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "version_update:dry-run"
     echo "version_txt_current:${_current_version_txt}"
     echo "version_txt_new:${VERSION}"
-    echo "aidlc_toml_current:${_current_aidlc_toml}"
-    echo "aidlc_toml_new:${VERSION}"
     if [[ -n "$_skill_aidlc_version" ]]; then
         echo "skill_aidlc_version_current:$(cat "$_skill_aidlc_version")"
         echo "skill_aidlc_version_new:${VERSION}"
@@ -135,20 +136,18 @@ fi
 
 # アトミック更新: 同一ディレクトリに一時ファイルを作成（mvの同一FS前提を満たす）
 _tmp_version=$(mktemp ./version.txt.XXXXXX) || { echo "error:mktemp-failed"; exit 1; }
-_tmp_toml=$(mktemp ./.aidlc/config.toml.XXXXXX) || { \rm -f "$_tmp_version"; echo "error:mktemp-failed"; exit 1; }
 _tmp_skill_aidlc=""
 _tmp_skill_setup=""
 if [[ -n "$_skill_aidlc_version" ]]; then
-    _tmp_skill_aidlc=$(mktemp "$_skill_aidlc_version.XXXXXX") || { \rm -f "$_tmp_version" "$_tmp_toml"; echo "error:mktemp-failed"; exit 1; }
+    _tmp_skill_aidlc=$(mktemp "$_skill_aidlc_version.XXXXXX") || { \rm -f "$_tmp_version"; echo "error:mktemp-failed"; exit 1; }
 fi
 if [[ -n "$_skill_setup_version" ]]; then
-    _tmp_skill_setup=$(mktemp "$_skill_setup_version.XXXXXX") || { \rm -f "$_tmp_version" "$_tmp_toml" "$_tmp_skill_aidlc"; echo "error:mktemp-failed"; exit 1; }
+    _tmp_skill_setup=$(mktemp "$_skill_setup_version.XXXXXX") || { \rm -f "$_tmp_version" "$_tmp_skill_aidlc"; echo "error:mktemp-failed"; exit 1; }
 fi
-trap '\rm -f "$_tmp_version" "$_tmp_toml" "$_tmp_skill_aidlc" "$_tmp_skill_setup" "${_bak_version:-}" "${_bak_toml:-}"' EXIT
+trap '\rm -f "$_tmp_version" "$_tmp_skill_aidlc" "$_tmp_skill_setup" "${_bak_version:-}"' EXIT
 
 # 一時ファイル作成（全対象）
 printf '%s\n' "$VERSION" > "$_tmp_version" || { echo "error:version-txt-write-failed"; exit 1; }
-sed "s/^[[:space:]]*starter_kit_version[[:space:]]*=.*/starter_kit_version = \"${VERSION}\"/" .aidlc/config.toml > "$_tmp_toml" || { echo "error:config-toml-write-failed"; exit 1; }
 if [[ -n "$_tmp_skill_aidlc" ]]; then
     printf '%s\n' "$VERSION" > "$_tmp_skill_aidlc" || { echo "error:skill-aidlc-version-write-failed"; exit 1; }
 fi
@@ -158,9 +157,7 @@ fi
 
 # バックアップ作成（全対象を反映前に取得）
 _bak_version=$(mktemp) || { echo "error:mktemp-failed"; exit 1; }
-_bak_toml=$(mktemp) || { \rm -f "$_bak_version"; echo "error:mktemp-failed"; exit 1; }
 \cp version.txt "$_bak_version" || { echo "error:backup-failed"; exit 1; }
-\cp .aidlc/config.toml "$_bak_toml" || { echo "error:backup-failed"; exit 1; }
 _bak_skill_aidlc=""
 _bak_skill_setup=""
 if [[ -n "$_skill_aidlc_version" ]]; then
@@ -175,25 +172,22 @@ fi
 # 全対象を一括反映（同一FS上のmvでアトミック）
 _rollback() {
     \cp "$_bak_version" version.txt 2>/dev/null || true
-    \cp "$_bak_toml" .aidlc/config.toml 2>/dev/null || true
     [[ -n "$_bak_skill_aidlc" ]] && \cp "$_bak_skill_aidlc" "$_skill_aidlc_version" 2>/dev/null || true
     [[ -n "$_bak_skill_setup" ]] && \cp "$_bak_skill_setup" "$_skill_setup_version" 2>/dev/null || true
-    \rm -f "$_bak_version" "$_bak_toml" "$_bak_skill_aidlc" "$_bak_skill_setup"
+    \rm -f "$_bak_version" "$_bak_skill_aidlc" "$_bak_skill_setup"
 }
 
 \mv "$_tmp_version" version.txt || { echo "error:version-txt-write-failed"; _rollback; exit 1; }
-\mv "$_tmp_toml" .aidlc/config.toml || { echo "error:config-toml-write-failed"; _rollback; exit 1; }
 if [[ -n "$_tmp_skill_aidlc" ]]; then
     \mv "$_tmp_skill_aidlc" "$_skill_aidlc_version" || { echo "error:skill-aidlc-version-write-failed"; _rollback; exit 1; }
 fi
 if [[ -n "$_tmp_skill_setup" ]]; then
     \mv "$_tmp_skill_setup" "$_skill_setup_version" || { echo "error:skill-setup-version-write-failed"; _rollback; exit 1; }
 fi
-\rm -f "$_bak_version" "$_bak_toml" "$_bak_skill_aidlc" "$_bak_skill_setup"
+\rm -f "$_bak_version" "$_bak_skill_aidlc" "$_bak_skill_setup"
 
 # 結果出力
 echo "version_update:success"
 echo "version_txt:${VERSION}"
-echo "aidlc_toml:${VERSION}"
 [[ -n "$_skill_aidlc_version" ]] && echo "skill_aidlc_version:${VERSION}"
 [[ -n "$_skill_setup_version" ]] && echo "skill_setup_version:${VERSION}"
