@@ -80,8 +80,17 @@ CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")]
 
 # 3. 「open=1 && closed=0」のときだけ先行紐付け実行、それ以外は必ずスキップ
 if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
-  # 各 Issue を gh issue edit で先行紐付け
-  gh issue edit ISSUE_NUMBER --milestone "{{CYCLE}}"
+  # 選択した各 Issue を gh issue edit で先行紐付け（複数 Issue 対応のためループ）
+  # SELECTED_ISSUES は本ステップ「Issue 確認」サブセクションで選択した Issue 番号の改行区切りリスト
+  echo "$SELECTED_ISSUES" | while read -r ISSUE; do
+    if [ -z "$ISSUE" ]; then continue; fi
+    if gh issue edit "$ISSUE" --milestone "{{CYCLE}}" 2>/dev/null; then
+      echo "issue:$ISSUE:linked-early:milestone={{CYCLE}}"
+    else
+      # 本ステップでは PATCH フォールバックを行わず、05-completion ステップ1 へ委譲（責任分離）
+      echo "issue:$ISSUE:link-failed-early:will-retry-in-05-completion" >&2
+    fi
+  done
 else
   echo "Milestone {{CYCLE}} は open=$OPEN_COUNT closed=$CLOSED_COUNT のため、本ステップでの先行紐付けはスキップします（05-completion ステップ1 で判定・作成・紐付けされます）"
 fi

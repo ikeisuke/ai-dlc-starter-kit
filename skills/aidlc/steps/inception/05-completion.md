@@ -162,7 +162,9 @@ if [ -z "$ISSUE_NUMBERS" ]; then
   echo "milestone:{{CYCLE}}:no-issues-to-link"
 else
   # 各 Issue を Milestone に紐付け（既存 Milestone がある場合は付け替えず警告のみ、Operations 01-setup ステップ 11 と同じ冪等補完原則）
-  echo "$ISSUE_NUMBERS" | while read -r ISSUE; do
+  # 失敗 ID は LINK_FAILED に蓄積し、ループ後に集約判定する（bash here-string でサブシェル化回避）
+  LINK_FAILED=""
+  while read -r ISSUE; do
     if [ -z "$ISSUE" ]; then continue; fi
     # 既存 Milestone を確認（1 Issue = 1 Milestone 制約のため、付け替えは行わない）
     CURRENT_MILESTONE=$(gh issue view "$ISSUE" --json milestone --jq '.milestone.title // empty')
@@ -184,9 +186,18 @@ else
         echo "issue:$ISSUE:linked:milestone={{CYCLE}}:via-api"
       else
         echo "issue:$ISSUE:link-failed" >&2
+        LINK_FAILED="${LINK_FAILED}issue:$ISSUE "
       fi
     fi
-  done
+  done <<< "$ISSUE_NUMBERS"
+
+  # 集約判定: 主経路 + フォールバックの両方が失敗した Issue が 1 件以上あれば exit 1
+  # （Operations 01-setup ステップ 11 末尾の LINK_FAILED 集約判定 exit 1 契約と同じパターン）
+  if [ -n "$LINK_FAILED" ]; then
+    echo "ERROR: Milestone 紐付けに失敗した Issue があります: $LINK_FAILED" >&2
+    echo "ERROR: 失敗原因（権限不足 / Issue アクセス不可 等）を解消してから本ステップを再実行してください。紐付け未達のまま進むと Operations Phase のサイクル可視化が不完全になります。" >&2
+    exit 1
+  fi
 fi
 ```
 
