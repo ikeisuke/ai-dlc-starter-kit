@@ -50,5 +50,5 @@ ai_author_auto_detect = true
 [rules.documentation]
 language = "日本語"
 
-[rules.milestone]
-enabled = false
+[rules.github]
+milestone_enabled = false

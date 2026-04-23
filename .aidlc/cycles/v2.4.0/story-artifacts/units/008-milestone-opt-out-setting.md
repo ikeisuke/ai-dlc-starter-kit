@@ -2,7 +2,7 @@
 
 ## 概要
 
-#597 Unit G 相当（追加スコープ）。Unit A-C で「本採用」として実装した GitHub Milestone 運用を、**設定キー `[rules.milestone].enabled`（既定 `false`）による opt-in 方式**に切り替える。Unit A-C の実装本体は維持したまま、各 Milestone 関連処理の冒頭にガード条件を追加する。既定 false により、未設定プロジェクト・既存利用者は Milestone 機能が動作しない（後方互換確保）。
+#597 Unit G 相当（追加スコープ）。Unit A-C で「本採用」として実装した GitHub Milestone 運用を、**設定キー `[rules.github].milestone_enabled`（既定 `false`）による opt-in 方式**に切り替える。Unit A-C の実装本体は維持したまま、各 Milestone 関連処理の冒頭にガード条件を追加する。既定 false により、未設定プロジェクト・既存利用者は Milestone 機能が動作しない（後方互換確保）。
 
 ## 含まれるユーザーストーリー
 
@@ -12,18 +12,18 @@
 
 本 Unit は **`enabled` 設定キーの追加 + 既存 Milestone ステップへのガード追加** のみを扱う。Unit 005 / 006 / 007 で確立した手順本体（5 ケース判定 / 冪等補完原則 / 手動復旧 3 パターン分岐 / Keep a Changelog 順序）は触らず、ガード分岐のみを追加する。
 
-- `skills/aidlc/config/defaults.toml`: 新規セクション `[rules.milestone]` + `enabled = false` 追加（**排他所有**）
+- `skills/aidlc/config/defaults.toml`: 新規セクション `[rules.github]` + `milestone_enabled = false` 追加（**排他所有**）
 - `skills/aidlc-setup/config/defaults.toml`: 同期コピー（**排他所有**）
-- `skills/aidlc/steps/inception/02-preparation.md`: ステップ 16 の Milestone 紐付けブロック冒頭にガード追加（既存処理は変更せず、`if enabled=false then skip` のラッパーのみ）
+- `skills/aidlc/steps/inception/02-preparation.md`: ステップ 16 の Milestone 紐付けブロック冒頭にガード追加（既存処理は変更せず、`if milestone_enabled=false then skip` のラッパーのみ）
 - `skills/aidlc/steps/inception/05-completion.md`: ステップ 1 の Milestone 作成ブロック冒頭に同様のガード追加
-- `skills/aidlc/steps/inception/index.md`: Milestone（v2.4.0以降）参照箇所に「`enabled=true` のみ動作」の補足追加
+- `skills/aidlc/steps/inception/index.md`: Milestone（v2.4.0以降）参照箇所に「`milestone_enabled=true` のみ動作」の補足追加
 - `skills/aidlc/steps/operations/01-setup.md`: ステップ 11 冒頭に同ガード追加
-- `skills/aidlc/steps/operations/04-completion.md`: ステップ 5.5 冒頭に同ガード追加（**`enabled=false` 時の exit 1 契約は無効化**、つまり `gh_status != available` 時の exit 1 は `enabled=true` のみ適用）
+- `skills/aidlc/steps/operations/04-completion.md`: ステップ 5.5 冒頭に同ガード追加（**`milestone_enabled=false` 時の exit 1 契約は無効化**、つまり `gh_status != available` 時の exit 1 は `milestone_enabled=true` のみ適用）
 - `skills/aidlc/steps/operations/index.md`: §2.8 補助契約に `enabled` 条件追加
-- `docs/configuration.md`: 新規セクション `[rules.milestone]` の設定説明追加
+- `docs/configuration.md`: 新規セクション `[rules.github]` の設定説明追加
 - `skills/aidlc/guides/issue-management.md` / `backlog-management.md` / `backlog-registration.md` / `glossary.md`: 「既定 off + 明示設定で有効化」の前提を追記
 - `CHANGELOG.md` `[2.4.0]` 節 `### Added`: Unit G の opt-out 設定追加を追記
-- `.aidlc/config.toml`: メタ開発リポジトリ自体に `[rules.milestone].enabled = true` を明示設定（v2.3.6 試験運用 + v2.4.0 本採用継続のため）
+- `.aidlc/config.toml`: メタ開発リポジトリ自体に `[rules.github].milestone_enabled = true` を明示設定（v2.3.6 試験運用 + v2.4.0 本採用継続のため）
 
 ## 境界
 
@@ -47,18 +47,18 @@
 
 ## 非機能要件（NFR）
 
-- **後方互換性【最重要】**: 既存利用者（v2.3.6 以前）は config.toml に `[rules.milestone]` を追加せずに v2.4.0 にアップグレードしても、Milestone 機能が一切動作しない。Operations Phase が止まったり警告メッセージが出たりしてはならない
-- **設定の透明性**: `defaults.toml` で `enabled = false` を明示し、利用者が「既定 off」を理解できる
-- **メタ開発の継続性**: ai-dlc-starter-kit 本体の `.aidlc/config.toml` には `enabled = true` を明示設定し、Operations Phase 04-completion ステップ 5.5 で v2.4.0 Milestone を close する流れを維持
+- **後方互換性【最重要】**: 既存利用者（v2.3.6 以前）は config.toml に `[rules.github]` を追加せずに v2.4.0 にアップグレードしても、Milestone 機能が一切動作しない。Operations Phase が止まったり警告メッセージが出たりしてはならない
+- **設定の透明性**: `defaults.toml` で `milestone_enabled = false` を明示し、利用者が「既定 off」を理解できる
+- **メタ開発の継続性**: ai-dlc-starter-kit 本体の `.aidlc/config.toml` には `milestone_enabled = true` を明示設定し、Operations Phase 04-completion ステップ 5.5 で v2.4.0 Milestone を close する流れを維持
 - **セキュリティ**: 機密情報の混入なし
-- **可用性**: ガード条件は `read-config.sh rules.milestone.enabled` の終了コード 1（キー不在）→ 既定 false として扱う（フォールバック堅牢）
+- **可用性**: ガード条件は `read-config.sh rules.github.milestone_enabled` の終了コード 1（キー不在）→ 既定 false として扱う（フォールバック堅牢）
 
 ## 技術的考慮事項
 
 - ガード条件は各ステップで **bash 単純分岐**（`if [ "$MILESTONE_ENABLED" = "true" ]; then ...; fi`）として実装。複雑な条件式は避ける
-- `read-config.sh rules.milestone.enabled` の出力を取得し、`true` 以外（空文字列・`false`・キー不在）はすべて false 扱い
+- `read-config.sh rules.github.milestone_enabled` の出力を取得し、`true` 以外（空文字列・`false`・キー不在）はすべて false 扱い
 - `defaults.toml` 同期チェック（`bin/check-defaults-sync.sh`）が新規キー追加で正しく動作することを確認
-- メタ開発リポジトリの `.aidlc/config.toml` への `[rules.milestone].enabled = true` 設定追加は、本 Unit のコミットに含める
+- メタ開発リポジトリの `.aidlc/config.toml` への `[rules.github].milestone_enabled = true` 設定追加は、本 Unit のコミットに含める
 
 ## 関連Issue
 

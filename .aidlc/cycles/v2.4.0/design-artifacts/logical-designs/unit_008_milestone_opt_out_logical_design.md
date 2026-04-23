@@ -14,21 +14,21 @@
 
 | ファイル | 変更内容 | 行数規模 |
 |---------|---------|----------|
-| `skills/aidlc/config/defaults.toml` | 末尾に `[rules.milestone]\nenabled = false` を追加（正本） | +3 行 |
+| `skills/aidlc/config/defaults.toml` | 末尾に `[rules.github]\nmilestone_enabled = false` を追加（正本） | +3 行 |
 | `skills/aidlc-setup/config/defaults.toml` | 正本と同じ追記（同期コピー） | +3 行 |
 | `skills/aidlc/steps/inception/02-preparation.md` | ステップ 16「Milestone 紐付け」ブロック冒頭にガード追加（`gh_status` 判定の前） | +14 行 |
 | `skills/aidlc/steps/inception/05-completion.md` | 「### 1. Milestone 作成・Issue 紐付け」見出し直後にガード追加 | +14 行 |
-| `skills/aidlc/steps/inception/index.md` | L33 / L113 / L208 の Milestone 参照箇所に `enabled=true` 補足追加（最小編集） | +0 行（インライン編集） |
+| `skills/aidlc/steps/inception/index.md` | L33 / L113 / L208 の Milestone 参照箇所に `milestone_enabled=true` 補足追加（最小編集） | +0 行（インライン編集） |
 | `skills/aidlc/steps/operations/01-setup.md` | 「### 11. Milestone 紐付け確認・fallback 判定」見出し直後にガード追加 | +15 行 |
 | `skills/aidlc/steps/operations/04-completion.md` | 「### 5.5 Milestone close」見出し直後にガード追加 | +15 行 |
 | `skills/aidlc/steps/operations/index.md` §2.8 | gh_status 分岐表 + 補助契約に `enabled` 条件追加 | +2 行 |
-| `docs/configuration.md` | 新規セクション `[rules.milestone]` + カスタマイズ例追加 | +14 行 |
+| `docs/configuration.md` | 新規セクション `[rules.github]` + カスタマイズ例追加 | +14 行 |
 | `skills/aidlc/guides/issue-management.md` | L52「2. Milestone 紐付け」項目に「既定 off + 明示設定で有効化」前提追加 | +1 行 |
 | `skills/aidlc/guides/backlog-management.md` | L22「対応開始時の Milestone 紐付け（v2.4.0 以降）」見出し直下に同様の追記 | +1 行 |
 | `skills/aidlc/guides/backlog-registration.md` | L48「Milestone について（v2.4.0 以降）」項目に同様の追記 | +1 行 |
-| `skills/aidlc/guides/glossary.md` | L26 Milestone エントリ説明に「`[rules.milestone].enabled=true` のとき動作（既定 off）」追記 | +0 行（インライン編集） |
+| `skills/aidlc/guides/glossary.md` | L26 Milestone エントリ説明に「`[rules.github].milestone_enabled=true` のとき動作（既定 off）」追記 | +0 行（インライン編集） |
 | `CHANGELOG.md` `[2.4.0]` 節 `### Added` | Unit 008 の opt-out 設定追加項目を末尾追加 | +1 行 |
-| `.aidlc/config.toml`（メタ開発リポ自身） | 末尾に `[rules.milestone]\nenabled = true` を明示設定 | +8 行（コメント含む） |
+| `.aidlc/config.toml`（メタ開発リポ自身） | 末尾に `[rules.github]\nmilestone_enabled = true` を明示設定 | +8 行（コメント含む） |
 
 ## 修正対象ファイル一覧（実装直前のテキスト挿入・置換内容）
 
@@ -38,8 +38,8 @@
 
 ```toml
 
-[rules.milestone]
-enabled = false
+[rules.github]
+milestone_enabled = false
 ```
 
 ### 2. `skills/aidlc-setup/config/defaults.toml`
@@ -58,7 +58,7 @@ enabled = false
 `MILESTONE_ENABLED` を判定する:
 
 ```bash
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
 ```
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` を出力し、**本ステップの Milestone 紐付け処理をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定および Milestone 紐付け bash 群は **一切実行しない**
@@ -75,7 +75,7 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 `MILESTONE_ENABLED` を判定する:
 
 ```bash
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
 ```
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=05-completion-step1:reason=opt-out` を出力し、**本ステップ（1-1 Milestone 確認・作成 + 1-2 関連 Issue 一括紐付け）をすべてスキップ**して次のステップ（履歴記録等）へ進む。後続の `gh_status` 判定および Milestone 作成・紐付け bash 群は **一切実行しない**
@@ -89,19 +89,19 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 #### 修正箇所 1: L33 のステップ表セル
 
 ```markdown
-| `inception.05-completion` | 完了処理 | Milestone（v2.4.0以降、`[rules.milestone].enabled=true` のみ動作 / 既定 off）／履歴記録、意思決定記録、ドラフト PR、squash、コミット、コンテキストリセット |
+| `inception.05-completion` | 完了処理 | Milestone（v2.4.0以降、`[rules.github].milestone_enabled=true` のみ動作 / 既定 off）／履歴記録、意思決定記録、ドラフト PR、squash、コミット、コンテキストリセット |
 ```
 
 #### 修正箇所 2: L113 §2.7 表セル
 
 ```markdown
-| `available` | Issue 確認・バックログ確認・Milestone（v2.4.0以降、`[rules.milestone].enabled=true` のみ動作 / 既定 off）紐付け・ドラフト PR 作成をすべて実行 |
+| `available` | Issue 確認・バックログ確認・Milestone（v2.4.0以降、`[rules.github].milestone_enabled=true` のみ動作 / 既定 off）紐付け・ドラフト PR 作成をすべて実行 |
 ```
 
 #### 修正箇所 3: L208 4. ステップ読み込み契約のセル
 
 ```markdown
-| `inception.05-completion` | `steps/inception/05-completion.md` | `inception.04-stories-units` 承認後 | Milestone（v2.4.0以降、`[rules.milestone].enabled=true` のみ動作 / 既定 off）／履歴／意思決定記録／PR／squash／コミット／コンテキストリセット完了 | `on_demand` |
+| `inception.05-completion` | `steps/inception/05-completion.md` | `inception.04-stories-units` 承認後 | Milestone（v2.4.0以降、`[rules.github].milestone_enabled=true` のみ動作 / 既定 off）／履歴／意思決定記録／PR／squash／コミット／コンテキストリセット完了 | `on_demand` |
 ```
 
 ### 6. `skills/aidlc/steps/operations/01-setup.md` ステップ 11
@@ -114,7 +114,7 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 `MILESTONE_ENABLED` を判定する:
 
 ```bash
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
 ```
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=01-setup-step11:reason=opt-out` を出力し、**本ステップ（11-1 Milestone 状態確認 + 11-2 関連 Issue 紐付け補完 + 11-3 PR 紐付け確認 + 末尾 `LINK_FAILED` 集約判定）をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / Milestone 紐付け処理 / `LINK_FAILED` 集約判定 exit 1 契約は **一切実行しない**（紐付け処理自体を実施しないため）
@@ -131,7 +131,7 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 `MILESTONE_ENABLED` を判定する:
 
 ```bash
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
 ```
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=04-completion-step5.5:reason=opt-out` を出力し、**本ステップの Milestone close をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / `gh_status != available` 時 exit 1 契約 / Milestone close 5 ケース判定処理は **一切実行しない**（opt-out 時はマージ前完結契約のサイクル完了可視化要件は **opt-out 利用者の責任範囲外** とし、close 自体を要求しないため、警告も表示しない）
@@ -143,15 +143,15 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 #### 修正箇所 1: L132 の表 3 行目（`available` 以外の例外行）
 
 ```markdown
-| `available` 以外（**例外: Milestone close**） | `04-completion.md` ステップ 5.5 のみ **exit 1 で停止**（サイクル完了の可視化に必須のため、未実施のままサイクル完了させない）。**ただし `[rules.milestone].enabled=false`（既定）時はステップ 5.5 自体がスキップされ本例外は発動しない**。手動代替手順（REST API 直叩き curl + PAT、または GitHub UI 上での手動 close）の完了をもって 5.5 をスキップ可とする |
+| `available` 以外（**例外: Milestone close**） | `04-completion.md` ステップ 5.5 のみ **exit 1 で停止**（サイクル完了の可視化に必須のため、未実施のままサイクル完了させない）。**ただし `[rules.github].milestone_enabled=false`（既定）時はステップ 5.5 自体がスキップされ本例外は発動しない**。手動代替手順（REST API 直叩き curl + PAT、または GitHub UI 上での手動 close）の完了をもって 5.5 をスキップ可とする |
 ```
 
 #### 修正箇所 2: L136 の補助契約
 
 ```markdown
-**補助契約: `gh_status = available` かつ `[rules.milestone].enabled=true` 時の Milestone 紐付け補完失敗**
+**補助契約: `gh_status = available` かつ `[rules.github].milestone_enabled=true` 時の Milestone 紐付け補完失敗**
 
-`01-setup.md` ステップ11 内で `gh api PATCH` 個別呼び出しが失敗し `LINK_FAILED` が 1 件以上ある場合、ステップ11 末尾で **exit 1 で停止**（紐付け未達のまま 04-completion 5.5 を実施するとサイクル可視化が不完全になるため）。失敗対象を手動復旧してから再実行。`gh_status != available` 時は setup ステップ11 はスキップされ本契約は発動しない。**`[rules.milestone].enabled=false`（既定）時も setup ステップ11 自体がスキップされ本契約は発動しない**。
+`01-setup.md` ステップ11 内で `gh api PATCH` 個別呼び出しが失敗し `LINK_FAILED` が 1 件以上ある場合、ステップ11 末尾で **exit 1 で停止**（紐付け未達のまま 04-completion 5.5 を実施するとサイクル可視化が不完全になるため）。失敗対象を手動復旧してから再実行。`gh_status != available` 時は setup ステップ11 はスキップされ本契約は発動しない。**`[rules.github].milestone_enabled=false`（既定）時も setup ステップ11 自体がスキップされ本契約は発動しない**。
 ```
 
 ### 9. `docs/configuration.md`
@@ -159,13 +159,13 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 #### 修正箇所 1: L156 直後（`### [rules.documentation]` セクションの後、`## カスタマイズ例` の前）
 
 ```markdown
-### `[rules.milestone]` — Milestone 運用（v2.4.0 で追加）
+### `[rules.github]` — Milestone 運用（v2.4.0 で追加）
 
 | キー | 型 | デフォルト | 説明 |
 |------|-----|----------|------|
 | `enabled` | boolean | `false` | GitHub Milestone 自動作成 / 紐付け / close 機能を有効にするか。`true` 時は Inception Phase で Milestone 自動作成、Operations Phase で自動 close。`false`（既定）では Milestone 関連ステップが全てスキップされる |
 
-> **後方互換性**: v2.3.6 以前から v2.4.0 にアップグレードする利用者は本キーが未設定のため、Milestone 機能は動作しません。Milestone 運用を有効化したい場合は `.aidlc/config.toml` に `[rules.milestone]\nenabled = true` を追記してください。
+> **後方互換性**: v2.3.6 以前から v2.4.0 にアップグレードする利用者は本キーが未設定のため、Milestone 機能は動作しません。Milestone 運用を有効化したい場合は `.aidlc/config.toml` に `[rules.github]\nmilestone_enabled = true` を追記してください。
 
 ```
 
@@ -175,8 +175,8 @@ MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null |
 ### Milestone 運用を有効化する
 
 ```toml
-[rules.milestone]
-enabled = true
+[rules.github]
+milestone_enabled = true
 ```
 
 ````
@@ -186,7 +186,7 @@ enabled = true
 #### 修正箇所: L52「2. Milestone 紐付け」の最初の子項目として追加
 
 ```markdown
-   - **前提（v2.4.0 以降）**: 本機能は `[rules.milestone].enabled=true` のときのみ動作する（既定 off）。明示有効化していないプロジェクトでは Milestone 紐付けステップ自体がスキップされる
+   - **前提（v2.4.0 以降）**: 本機能は `[rules.github].milestone_enabled=true` のときのみ動作する（既定 off）。明示有効化していないプロジェクトでは Milestone 紐付けステップ自体がスキップされる
 ```
 
 ### 11. `skills/aidlc/guides/backlog-management.md`
@@ -194,7 +194,7 @@ enabled = true
 #### 修正箇所: L22「**対応開始時の Milestone 紐付け（v2.4.0 以降）**:」の最初の子項目として追加
 
 ```markdown
-- **前提（v2.4.0 以降）**: 本機能は `[rules.milestone].enabled=true` のときのみ動作する（既定 off）。明示有効化していないプロジェクトでは Milestone 関連ステップが全てスキップされる
+- **前提（v2.4.0 以降）**: 本機能は `[rules.github].milestone_enabled=true` のときのみ動作する（既定 off）。明示有効化していないプロジェクトでは Milestone 関連ステップが全てスキップされる
 ```
 
 ### 12. `skills/aidlc/guides/backlog-registration.md`
@@ -202,7 +202,7 @@ enabled = true
 #### 修正箇所: L48「**Milestone について（v2.4.0 以降）**」の説明文末尾に追加
 
 ```markdown
-**Milestone について（v2.4.0 以降）**: 新規 Issue 作成時は Milestone 未割当（empty）を初期状態とする。Milestone への正式紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施し、`02-preparation.md` ステップ 16 では既存 Milestone がある場合のみ先行紐付けする（Unit 005 / #597）。**ただし、Milestone 機能は `[rules.milestone].enabled=true` のときのみ動作する（既定 off / Unit 008 / #597 Unit G）**。
+**Milestone について（v2.4.0 以降）**: 新規 Issue 作成時は Milestone 未割当（empty）を初期状態とする。Milestone への正式紐付けは Inception Phase の `05-completion.md` ステップ 1 で実施し、`02-preparation.md` ステップ 16 では既存 Milestone がある場合のみ先行紐付けする（Unit 005 / #597）。**ただし、Milestone 機能は `[rules.github].milestone_enabled=true` のときのみ動作する（既定 off / Unit 008 / #597 Unit G）**。
 ```
 
 ### 13. `skills/aidlc/guides/glossary.md`
@@ -210,7 +210,7 @@ enabled = true
 #### 修正箇所: L26 Milestone エントリの説明欄
 
 ```markdown
-| Milestone | `vX.X.X`（GitHub Milestone title） | GitHub Milestone を AI-DLC のサイクル管理単位として用いる（v2.4.0 以降、`[rules.milestone].enabled=true` のとき動作 / 既定 off）。Inception Phase が自動作成、Operations Phase が自動 close。1 Issue = 1 Milestone 制約 | 全フェーズ | `guides/backlog-management.md` |
+| Milestone | `vX.X.X`（GitHub Milestone title） | GitHub Milestone を AI-DLC のサイクル管理単位として用いる（v2.4.0 以降、`[rules.github].milestone_enabled=true` のとき動作 / 既定 off）。Inception Phase が自動作成、Operations Phase が自動 close。1 Issue = 1 Milestone 制約 | 全フェーズ | `guides/backlog-management.md` |
 ```
 
 ### 14. `CHANGELOG.md` `[2.4.0]` 節 `### Added`
@@ -218,7 +218,7 @@ enabled = true
 #### 修正箇所: L15 の Operations Phase 追加項目の後（`### Changed` の前）
 
 ```markdown
-- `[rules.milestone].enabled` 設定キーを新設（boolean、既定 `false`）。Milestone 運用を opt-in 方式に切り替え、未設定プロジェクト・既存利用者（v2.3.6 以前からのアップグレード者）は Milestone 機能が一切動作しない。Milestone 運用を有効化するには `.aidlc/config.toml` に `[rules.milestone]\nenabled = true` を追記する。本 opt-in 化により、`gh_status != available` 時の `exit 1` 契約および `LINK_FAILED` 集約判定 `exit 1` 契約はいずれも `enabled=true` のときのみ適用される（後方互換性確保）（#597 / Unit 008 / Unit G）
+- `[rules.github].milestone_enabled` 設定キーを新設（boolean、既定 `false`）。Milestone 運用を opt-in 方式に切り替え、未設定プロジェクト・既存利用者（v2.3.6 以前からのアップグレード者）は Milestone 機能が一切動作しない。Milestone 運用を有効化するには `.aidlc/config.toml` に `[rules.github]\nmilestone_enabled = true` を追記する。本 opt-in 化により、`gh_status != available` 時の `exit 1` 契約および `LINK_FAILED` 集約判定 `exit 1` 契約はいずれも `milestone_enabled=true` のときのみ適用される（後方互換性確保）（#597 / Unit 008 / Unit G）
 ```
 
 ### 15. `.aidlc/config.toml`（メタ開発リポジトリ自身）
@@ -227,13 +227,13 @@ enabled = true
 
 ```toml
 
-[rules.milestone]
+[rules.github]
 # Milestone 運用設定（v2.4.0 で追加 / Unit 008 / #597 Unit G）
 # enabled: true | false - Milestone 自動作成 / 紐付け / close を有効にするか（既定: false）
 # - true: Inception Phase で自動作成、Operations Phase で自動 close
 # - false: Milestone 関連ステップを全てスキップ
 # 本リポジトリは v2.3.6 試験運用 + v2.4.0 本採用継続のため明示有効化
-enabled = true
+milestone_enabled = true
 ```
 
 ## 動作確認手順
@@ -249,17 +249,17 @@ bash bin/check-defaults-sync.sh
 
 ```bash
 # メタ開発リポ（明示設定）
-scripts/read-config.sh rules.milestone.enabled
+scripts/read-config.sh rules.github.milestone_enabled
 # 期待: true、終了コード 0
 
-# 配布側想定 1: project config に [rules.milestone] が無い場合
-# （一時的に .aidlc/config.toml の [rules.milestone] セクションを退避してテスト）
-scripts/read-config.sh rules.milestone.enabled
+# 配布側想定 1: project config に [rules.github] が無い場合
+# （一時的に .aidlc/config.toml の [rules.github] セクションを退避してテスト）
+scripts/read-config.sh rules.github.milestone_enabled
 # 期待: false（defaults.toml フォールバック）、終了コード 0
 
 # 配布側想定 2: project / defaults 両方からキーを除去した場合
-# （一時的に defaults.toml の [rules.milestone] も退避してテスト）
-scripts/read-config.sh rules.milestone.enabled
+# （一時的に defaults.toml の [rules.github] も退避してテスト）
+scripts/read-config.sh rules.github.milestone_enabled
 # 期待: 何も出力しない、終了コード 1。ガード側で `|| echo "false"` フォールバックで false 扱い
 
 # 配布側想定 3: PROJECT_CONFIG_FILE 不在の場合（read-config.sh L106-L110 の致命扱い）
@@ -268,15 +268,15 @@ scripts/read-config.sh rules.milestone.enabled
 
 ### 3. opt-out 時のスキップ動作検証【最重要】
 
-`enabled=false` 時に Milestone 関連処理が **一切実行されないこと** を以下で検証する。これが本 Unit の主要リスクであり、bash 構文確認だけでは担保できない:
+`milestone_enabled=false` 時に Milestone 関連処理が **一切実行されないこと** を以下で検証する。これが本 Unit の主要リスクであり、bash 構文確認だけでは担保できない:
 
-1. 一時的に `.aidlc/config.toml` の `[rules.milestone].enabled` を `true` から `false` に変更して保存
+1. 一時的に `.aidlc/config.toml` の `[rules.github].milestone_enabled` を `true` から `false` に変更して保存
 2. 修正後の各ステップファイルを順に AI / 人間が読み、ガード判定後の動作を確認:
    - **Inception 02-preparation ステップ 16**: `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` のみ出力。L57 以降の `MILESTONE_LOOKUP=...` / `gh issue edit` 等は **一切実行されない**
    - **Inception 05-completion ステップ 1**: `milestone:disabled:skip:step=05-completion-step1:reason=opt-out` のみ出力。1-1 / 1-2 の `gh api` / `gh issue edit` / `awk` 抽出は **一切実行されない**
    - **Operations 01-setup ステップ 11**: `milestone:disabled:skip:step=01-setup-step11:reason=opt-out` のみ出力。11-1 / 11-2 / 11-3 の `gh api` / `gh issue edit` / `LINK_FAILED` 集約判定 exit 1 は **一切実行されない**（ステップ 12 以降に正常進行）
    - **Operations 04-completion ステップ 5.5**: `milestone:disabled:skip:step=04-completion-step5.5:reason=opt-out` のみ出力。`gh_status != available` 時 exit 1 契約 / 5 ケース判定 / `gh api PATCH state=closed` は **一切実行されない**（ステップ 6 以降に正常進行）
-3. 確認後、`.aidlc/config.toml` の `enabled=true` に戻す
+3. 確認後、`.aidlc/config.toml` の `milestone_enabled=true` に戻す
 
 **検証ポイント**: ガード分岐が独立した bash ブロック + 後続独立 bash ブロックの構造ではなく、**自然文での明示的スキップ指示** + **AI / 人間が条件付きで後続 bash を実行する解釈モデル**になっていること。`gh_status` 判定パターンと完全に同じ実行モデルが達成されていること。
 
@@ -303,7 +303,7 @@ npx markdownlint-cli2 \
 
 ```bash
 bash -n <(cat <<'EOF'
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.milestone.enabled 2>/dev/null || echo "false")
+MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
 EOF
 )
 # 期待: 構文エラーなし（exit 0）
@@ -316,8 +316,8 @@ EOF
 本 Unit のコミット直後、Operations Phase 04-completion ステップ 5.5 が `MILESTONE_ENABLED=true` で動作することを本サイクル後続の Operations Phase で確認:
 
 ```bash
-# .aidlc/config.toml の [rules.milestone].enabled が true であることを確認
-scripts/read-config.sh rules.milestone.enabled
+# .aidlc/config.toml の [rules.github].milestone_enabled が true であることを確認
+scripts/read-config.sh rules.github.milestone_enabled
 # 期待: true
 
 # Operations Phase 04-completion ステップ 5.5 実行時のガード非該当確認
@@ -340,19 +340,19 @@ scripts/read-config.sh rules.milestone.enabled
 
 | 検証項目 | 期待動作 | 検証方法 |
 |---------|---------|---------|
-| v2.3.6 以前からのアップグレード（project config 未編集 + defaults.toml 配布済み） | Milestone 機能が動作しない、警告も出ない（read-config.sh exit 0 + 値 `false`） | defaults.toml の `enabled = false` がフォールバックとして機能 |
-| defaults.toml 配布前 + project config に [rules.milestone] なし環境 | `read-config.sh` exit 1（キー不在）→ ガード `false` 扱いでスキップ | ガード分岐の `\|\| echo "false"` フォールバック |
+| v2.3.6 以前からのアップグレード（project config 未編集 + defaults.toml 配布済み） | Milestone 機能が動作しない、警告も出ない（read-config.sh exit 0 + 値 `false`） | defaults.toml の `milestone_enabled = false` がフォールバックとして機能 |
+| defaults.toml 配布前 + project config に [rules.github] なし環境 | `read-config.sh` exit 1（キー不在）→ ガード `false` 扱いでスキップ | ガード分岐の `\|\| echo "false"` フォールバック |
 | dasel 未インストール環境 | `read-config.sh` exit 2 → ガード `false` 扱いでスキップ | ガード分岐の `2>/dev/null \|\| echo "false"` フォールバック |
 | PROJECT_CONFIG_FILE 不在環境（read-config.sh L106-L110 で致命扱い） | `read-config.sh` exit 2 → ガード `false` 扱いでスキップ | 同上 |
-| `enabled = false` 明示設定 | Milestone 機能が動作しない、メッセージ `milestone:disabled:skip:...:reason=opt-out` 出力 | ガード分岐の `!= "true"` 判定 |
-| `enabled = true` 明示設定 | Milestone 機能が動作（既存ロジック実行） | ガード非該当 |
+| `milestone_enabled = false` 明示設定 | Milestone 機能が動作しない、メッセージ `milestone:disabled:skip:...:reason=opt-out` 出力 | ガード分岐の `!= "true"` 判定 |
+| `milestone_enabled = true` 明示設定 | Milestone 機能が動作（既存ロジック実行） | ガード非該当 |
 | `enabled = "yes"` 等の不正値 | Milestone 機能が動作しない（厳密一致 `!= "true"`） | ガード分岐の文字列比較 |
 
 ## メタ開発リポ自己整合性検証
 
 | 検証項目 | 期待動作 | 検証方法 |
 |---------|---------|---------|
-| 本 Unit のコミット内容に `.aidlc/config.toml` の `[rules.milestone]\nenabled = true` 追加が含まれる | コミット時の `git diff --stat` で確認 | コミット前に `git diff .aidlc/config.toml` を確認 |
+| 本 Unit のコミット内容に `.aidlc/config.toml` の `[rules.github]\nmilestone_enabled = true` 追加が含まれる | コミット時の `git diff --stat` で確認 | コミット前に `git diff .aidlc/config.toml` を確認 |
 | 本 Unit 完了直後の Operations Phase 04-completion ステップ 5.5 で v2.4.0 Milestone を close できる | ガード非該当 → 既存ロジック実行 → close 成功 | 次回サイクル（または本サイクル後続）の Operations Phase 実行時に確認 |
 | メタ開発リポでの「Milestone 運用」「opt-in ガード機能」の二重テスト成立 | 両機能が同時に動作 | Operations Phase ログで `milestone:` プレフィックスの出力を確認 |
 

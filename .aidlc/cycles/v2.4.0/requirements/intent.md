@@ -80,12 +80,12 @@ ai-dlc-starter-kit v2.4.0 — Milestone 運用本採用 + 周辺 patch 解消
 Unit A-C で Milestone 運用を「本採用」として実装したが、Operations Phase での Milestone close 強制（`gh_status != available` 時 exit 1）等が「全プロジェクト強制適用」となるため、利用者が明示的に有効化する opt-in 方式（既定 off）に切り替える。Unit A-C の実装は維持したまま、設定キーによるガードを追加する。
 
 - **Unit G: Milestone 運用 opt-out 設定の追加**
-  - 新規設定キー `[rules.milestone].enabled`（boolean、**既定 false**）を `skills/aidlc/config/defaults.toml` と `skills/aidlc-setup/config/defaults.toml`（同期コピー）に追加
+  - 新規設定キー `[rules.github].milestone_enabled`（boolean、**既定 false**）を `skills/aidlc/config/defaults.toml` と `skills/aidlc-setup/config/defaults.toml`（同期コピー）に追加
   - 既定 false により、未設定プロジェクト・既存利用者は Milestone 機能が動作しない（後方互換確保）
   - true 設定時のみ Inception ステップ 16 / `05-completion.md` ステップ 1、Operations ステップ 11 / `04-completion.md` ステップ 5.5 の Milestone 関連処理が動作
   - false 時は当該箇所を warning なくスキップ（gh 利用可不可と独立した分岐）
   - 影響ファイル: `skills/aidlc/steps/inception/02-preparation.md` / `05-completion.md` / `index.md`、`skills/aidlc/steps/operations/01-setup.md` / `04-completion.md` / `index.md` §2.8、`docs/configuration.md`、`skills/aidlc/guides/issue-management.md` / `backlog-management.md` / `backlog-registration.md` / `glossary.md`、CHANGELOG
-  - **メタ開発リポジトリ自体は `enabled = true` を `.aidlc/config.toml` に明示設定**（v2.3.6 試験運用 + v2.4.0 本採用の継続性確保のため）
+  - **メタ開発リポジトリ自体は `milestone_enabled = true` を `.aidlc/config.toml` に明示設定**（v2.3.6 試験運用 + v2.4.0 本採用の継続性確保のため）
 
 ### patch バンドル
 
@@ -143,10 +143,10 @@ Unit A-C で Milestone 運用を「本採用」として実装したが、Operat
 
 ### Milestone opt-out 設定（Unit G）
 
-- 新規設定キー `[rules.milestone].enabled`（boolean、既定 `false`）が `skills/aidlc/config/defaults.toml` および `skills/aidlc-setup/config/defaults.toml` に追加されている
-- `enabled = false`（既定 / 未設定）時、Inception ステップ 16 / `05-completion.md` ステップ 1、Operations ステップ 11 / `04-completion.md` ステップ 5.5 の Milestone 関連処理が **warning なくスキップ** される
-- `enabled = true` 時のみ、Unit A-C で実装した Milestone 関連処理が動作する
-- メタ開発リポジトリ（ai-dlc-starter-kit 本体）の `.aidlc/config.toml` に `[rules.milestone].enabled = true` が明示設定されている
+- 新規設定キー `[rules.github].milestone_enabled`（boolean、既定 `false`）が `skills/aidlc/config/defaults.toml` および `skills/aidlc-setup/config/defaults.toml` に追加されている
+- `milestone_enabled = false`（既定 / 未設定）時、Inception ステップ 16 / `05-completion.md` ステップ 1、Operations ステップ 11 / `04-completion.md` ステップ 5.5 の Milestone 関連処理が **warning なくスキップ** される
+- `milestone_enabled = true` 時のみ、Unit A-C で実装した Milestone 関連処理が動作する
+- メタ開発リポジトリ（ai-dlc-starter-kit 本体）の `.aidlc/config.toml` に `[rules.github].milestone_enabled = true` が明示設定されている
 - `docs/configuration.md` および guides 4 ファイル（`issue-management.md` / `backlog-management.md` / `backlog-registration.md` / `glossary.md`）で「既定 off + 明示設定で有効化」の記載が反映されている
 - CHANGELOG `[2.4.0]` 節に Unit G の opt-out 設定追加が `### Added` で明記されている
 
