@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# update-version.sh - version.txtとaidlc.tomlのバージョン番号を一括更新
+# update-version.sh - version.txt とスキル version.txt のバージョン番号を一括更新
 #
 # 使用方法:
 #   ./update-version.sh --version <version> [--dry-run]
@@ -11,9 +11,12 @@
 #
 # 更新対象:
 #   - version.txt（プロジェクトルート）
-#   - .aidlc/config.toml の starter_kit_version
-#   - skills/aidlc/version.txt
-#   - skills/aidlc-setup/version.txt
+#   - skills/aidlc/version.txt（存在時のみ）
+#   - skills/aidlc-setup/version.txt（存在時のみ）
+#
+# 注: .aidlc/config.toml.starter_kit_version は v2.4.0 以降は更新対象外。
+#     存在チェックと妥当性検証（read_starter_kit_version）のみ実施。
+#     書き換えは aidlc-setup / aidlc-migrate / 将来のアップグレード経路でのみ行われる。
 #
 # 出力形式:
 #   - 成功: "version_update:success" + 詳細行

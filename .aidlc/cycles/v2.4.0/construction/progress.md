@@ -6,7 +6,7 @@
 |------|------|--------------|------|--------|
 | 001 pr-ops-empty-list-fix | 完了 | ストーリー 7（#588） | なし | 2026-04-23 |
 | 002 update-version-script-change | 完了 | ストーリー 6a（#596 実装側） | なし | 2026-04-23 |
-| 003 update-version-docs-comms | 未着手 | ストーリー 6b（#596 周知側） | Unit 002 | - |
+| 003 update-version-docs-comms | 完了 | ストーリー 6b（#596 周知側） | Unit 002 | 2026-04-23 |
 | 004 aidlc-setup-prompts-package-removal | 未着手 | ストーリー 5（#595） | なし | - |
 | 005 inception-milestone-step | 未着手 | ストーリー 1, 4（#597 Unit B） | なし | - |
 | 006 operations-milestone-close | 未着手 | ストーリー 2（#597 Unit A） | なし | - |
@@ -21,13 +21,14 @@
 
 ## 現在の Unit
 
-未着手（次の実行可能 Unit: Unit 003 (002 完了で依存解消) / 004 / 005 / 006 が並列着手可能、semi_auto なら最小番号 Unit 003 を自動選択）
+未着手（次の実行可能 Unit: Unit 004 / 005 / 006 が並列着手可能、semi_auto なら最小番号 Unit 004 を自動選択）
 
 ## 完了済み Unit
 
 - Unit 001 pr-ops-empty-list-fix（2026-04-23、Issue #588 解消、PR マージ時 auto-close 想定、bash 3.2 / 5.x 両対応確認済み）
-- Unit 002 update-version-script-change（2026-04-23、Issue #596 実装側完了、starter_kit_version 上書き廃止 + メタ開発シナリオ動作確認済み、Unit 003 ドキュメント更新後にサイクル PR マージで auto-close 想定）
+- Unit 002 update-version-script-change（2026-04-23、Issue #596 実装側完了、starter_kit_version 上書き廃止 + メタ開発シナリオ動作確認済み）
+- Unit 003 update-version-docs-comms（2026-04-23、Issue #596 ドキュメント周知完了、CHANGELOG #596 節 / bin/update-version.sh ヘッダ / .aidlc/rules.md / docs/configuration.md 更新、Operations 引き継ぎタスク作成済み、サイクル PR マージで #596 auto-close 準備完了）
 
 ## 次回実行時の指示
 
-`/aidlc construction` で Construction Phase を再開してください（Unit 003 update-version-docs-comms から継続、Unit 002 への依存解消）。
+`/aidlc construction` で Construction Phase を再開してください（Unit 004 aidlc-setup-prompts-package-removal から継続）。
