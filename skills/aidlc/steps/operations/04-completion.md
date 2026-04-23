@@ -180,6 +180,92 @@ AIが探索結果のパスを使用して以下を実行する:
 
 **注意**: この手順を実行してから次サイクルのセットアップを開始してください。
 
+### 5.5 Milestone close【マージ前完結契約準拠】
+
+**マージ完了後、サイクル完了の可視化として GitHub Milestone を close する**。マージ前完結契約（v2.3.5 / Unit 002）に従い、本ステップは GitHub 側操作のみで `.aidlc/cycles/{{CYCLE}}/**` 配下のファイルは更新しない。
+
+`gh_status` を参照する。
+
+`gh_status` が `available` 以外の場合: 以下のメッセージを表示し **exit 1 で中断する**（Milestone close 未実施のままサイクル完了させない）:
+
+```text
+ERROR: GitHub CLI が利用できないため Milestone close を実行できません。
+gh CLI / 認証を復旧してから 5.5 を再実行してください。
+
+gh 非依存の手動代替手順（CLI 復旧が困難な場合のみ）:
+1. https://github.com/OWNER/REPO/milestones を開き、{{CYCLE}} の number を確認
+2. REST API 直叩き（`curl -X PATCH -H "Authorization: token <PAT>" \
+   -H "Accept: application/vnd.github+json" \
+   https://api.github.com/repos/OWNER/REPO/milestones/<number> \
+   -d '{"state":"closed"}'）または GitHub UI 上で Milestone を Close
+3. 再実行不要（手動完了後、本ステップをスキップ可）
+```
+
+`gh_status` が `available` の場合、以下を実行:
+
+```bash
+# 1. OWNER/REPO 動的解決
+OWNER=$(gh repo view --json owner --jq .owner.login)
+REPO=$(gh repo view --json name --jq .name)
+
+# 2. Milestone 一覧（state=all）を取得（01-setup ステップ11-1 と同じ判定基盤）
+MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
+  --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
+
+OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
+CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
+
+# 3. 5 ケース判定（ストーリー 2 受け入れ基準の優先順位通り、setup 側 11-1 と同じ判定基盤）
+if [ "$CLOSED_COUNT" -eq 1 ] && [ "$OPEN_COUNT" -eq 0 ]; then
+  CLOSED_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "closed") | .number')
+  echo "milestone:{{CYCLE}}:already-closed:number=$CLOSED_NUMBER"
+elif [ "$CLOSED_COUNT" -ge 1 ]; then
+  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件 + open が ${OPEN_COUNT} 件あります（多重 closed または混在状態）。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  exit 1
+elif [ "$OPEN_COUNT" -ge 2 ]; then
+  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります（重複作成の可能性）。重複候補を確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  exit 1
+elif [ "$OPEN_COUNT" -eq 1 ]; then
+  MILESTONE_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "open") | .number')
+  if gh api "repos/$OWNER/$REPO/milestones/$MILESTONE_NUMBER" --method PATCH -f state=closed --jq '.state' 2>/tmp/milestone-close-error.log; then
+    echo "milestone:{{CYCLE}}:closed:number=$MILESTONE_NUMBER"
+  else
+    ERROR_DETAIL=$(cat /tmp/milestone-close-error.log)
+    echo "ERROR: Milestone close 失敗: $ERROR_DETAIL。手動で次のコマンドを実行してください: gh api repos/$OWNER/$REPO/milestones/$MILESTONE_NUMBER --method PATCH -f state=closed" >&2
+    rm -f /tmp/milestone-close-error.log
+    exit 1
+  fi
+  rm -f /tmp/milestone-close-error.log
+else
+  echo "ERROR: Milestone {{CYCLE}} が見つかりません（open / closed のいずれにも存在しない）。01-setup.md ステップ11 の fallback 作成が未実行 or 手動作業漏れの可能性。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  exit 1
+fi
+```
+
+**5 ケース判定マトリクス（5.5 完了処理、相互排他の 5 行）**:
+
+| open 件数 | closed 件数 | 動作 |
+|----------|-----------|------|
+| ≥ 1 | ≥ 1 | エラー停止（混在、誤再オープン防止 / 優先順位 1 と整合） |
+| ≥ 2 | 0 | エラー停止（重複作成、手動修正要求） |
+| 1 | 0 | close 実行 |
+| 0 | 0 | エラー停止（運用異常、setup 側 fallback 未実行 or 手動漏れ） |
+| 0 | 1（厳密に 1） | already-closed（二重 close 回避、成功扱い） |
+
+`closed≥2 && open=0` は実装側 `elif [ "$CLOSED_COUNT" -ge 1 ]` 分岐でエラー停止（多重 closed 検出）。
+
+判定ロジックは setup 側 11-1 と同じ判定基盤を使うが、completion では `open=0,closed=1` を成功扱い、`open=0,closed=0` をエラー扱いに変える点だけが setup と異なる。
+
+**フォールバック手順**: `gh api` 失敗時（HTTP 4xx/5xx）は close 操作を中断し、警告メッセージで手動コマンドを案内する（誤った成功扱いを避ける）。
+
+**マージ前完結契約との整合**: 本ステップは GitHub 側操作のみ。`.aidlc/cycles/{{CYCLE}}/**` 配下のファイル（progress.md / history / 成果物）は更新しない。`write-history.sh` ガード（exit 3）にも影響しない。
+
+**期待出力例**:
+
+```text
+milestone:v2.4.0:closed:number=2
+```
+
 ### 6. 完了サマリ出力【必須】
 
 以下の完了サマリを出力する。※ 情報源にない内容は出力しない。

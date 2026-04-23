@@ -125,4 +125,147 @@ scripts/validate-git.sh remote-sync
 - タスクあり: 一覧提示 → 順番に確認・実行（または後続ステップで処理）
 - タスクなし: 次のステップへ
 
+### 11. Milestone 紐付け確認・fallback 判定【重要】
+
+**`gh_status` を参照する。**
+
+`gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、Milestone 紐付け確認をスキップします」と表示してスキップ。
+
+`gh_status` が `available` の場合、以下の手順を実行:
+
+#### 11-1. Milestone 状態確認（5 ケース判定 + fallback 作成）
+
+```bash
+# 1. OWNER/REPO 動的解決
+OWNER=$(gh repo view --json owner --jq .owner.login)
+REPO=$(gh repo view --json name --jq .name)
+
+# 2. Milestone 一覧（state=all）から {{CYCLE}} を検索
+MILESTONE_LOOKUP=$(gh api "repos/$OWNER/$REPO/milestones?state=all" \
+  --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
+
+OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
+CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
+
+# 3. 5 ケース判定（ストーリー 2 受け入れ基準の優先順位通り、最初に該当した規則のみを適用）
+if [ "$CLOSED_COUNT" -ge 1 ]; then
+  echo "ERROR: Milestone {{CYCLE}} の closed が ${CLOSED_COUNT} 件あります。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  exit 1
+elif [ "$OPEN_COUNT" -ge 2 ]; then
+  echo "ERROR: Milestone {{CYCLE}} の open が ${OPEN_COUNT} 件あります。重複候補を確認: gh api repos/$OWNER/$REPO/milestones?state=all" >&2
+  exit 1
+elif [ "$OPEN_COUNT" -eq 1 ]; then
+  MILESTONE_NUMBER=$(echo "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "open") | .number')
+  echo "milestone:{{CYCLE}}:exists:number=$MILESTONE_NUMBER"
+else
+  echo "WARNING: Milestone {{CYCLE}} が不在です。Inception スキップ漏れの可能性があります。fallback で作成します。"
+  MILESTONE_NUMBER=$(gh api --method POST "repos/$OWNER/$REPO/milestones" \
+    -f title="{{CYCLE}}" \
+    --jq .number)
+  echo "milestone:{{CYCLE}}:fallback-created:number=$MILESTONE_NUMBER"
+fi
+```
+
+#### 11-2. 関連 Issue/PR の Milestone 紐付け確認・補完
+
+Operations 開始時点で、関連 Issue/PR がすべて Milestone に紐付いているかを確認し、不足分を補完する:
+
+```bash
+# Unit 定義から関連 Issue 番号を抽出（Inception で同一 awk ロジックを使用）
+ISSUE_NUMBERS=$(awk '
+  /^## 関連Issue/ { in_section = 1; next }
+  /^## / { in_section = 0 }
+  in_section {
+    lower_line = tolower($0)
+    if (match(lower_line, /^[[:space:]]*(- )?(closes|fixes) #[0-9]+/)) {
+      line = $0
+      if (match(line, /#[0-9]+/)) {
+        num = substr(line, RSTART + 1, RLENGTH - 1)
+        if (num != "") print num
+      }
+    } else if (match(lower_line, /^[[:space:]]*- #[0-9]+/)) {
+      line = $0
+      if (match(line, /#[0-9]+/)) {
+        num = substr(line, RSTART + 1, RLENGTH - 1)
+        if (num != "") print num
+      }
+    }
+  }
+' .aidlc/cycles/{{CYCLE}}/story-artifacts/units/*.md 2>/dev/null | sort -n | uniq)
+
+# 各 Issue の現在の Milestone 紐付け状態を確認し、3 分岐で処理（不足時のみ PATCH、付け替えは行わない）
+# 失敗 ID は LINK_FAILED に蓄積し、ステップ11 末尾で集約判定する
+LINK_FAILED=""
+if [ -n "$ISSUE_NUMBERS" ]; then
+  while read -r ISSUE; do
+    if [ -z "$ISSUE" ]; then continue; fi
+    CURRENT_MILESTONE=$(gh issue view "$ISSUE" --json milestone --jq '.milestone.title // empty')
+    if [ -z "$CURRENT_MILESTONE" ]; then
+      if gh api --method PATCH "repos/$OWNER/$REPO/issues/$ISSUE" -F milestone=$MILESTONE_NUMBER 2>/dev/null; then
+        echo "issue:$ISSUE:linked:milestone={{CYCLE}}:via-api"
+      else
+        echo "issue:$ISSUE:link-failed" >&2
+        LINK_FAILED="${LINK_FAILED}issue:$ISSUE "
+      fi
+    elif [ "$CURRENT_MILESTONE" = "{{CYCLE}}" ]; then
+      echo "issue:$ISSUE:already-linked:milestone={{CYCLE}}"
+    else
+      echo "WARNING: issue:$ISSUE は他の Milestone （$CURRENT_MILESTONE）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は Inception の手順 (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の判断を Operations 担当者に委ねます" >&2
+      echo "issue:$ISSUE:other-milestone:current=$CURRENT_MILESTONE:skip-overwrite"
+    fi
+  done <<< "$ISSUE_NUMBERS"
+fi
+```
+
+**注**: `while ... <<< "$ISSUE_NUMBERS"` を使用するのは、`echo ... | while` だとサブシェルで `LINK_FAILED` 変数が親に伝播しないため。bash here-string で同じシェルコンテキストを維持する。
+
+**注**: `gh issue edit --milestone` ではなく `gh api PATCH` を使用するのは、Operations 開始時点では Inception で既に紐付け済みケースが多く、確実に Milestone 番号を指定するため。**冪等補完原則**: 既存 Milestone がある Issue/PR は付け替えず、empty の Issue/PR のみに新規紐付けを行う（1 Issue = 1 Milestone 制約と整合）。
+
+#### 11-3. PR の Milestone 紐付け確認
+
+```bash
+# 現在のブランチに紐づく PR を取得
+PR_NUMBER=$(gh pr list --head "$(git branch --show-current)" --state open --json number --jq '.[0].number // empty')
+
+if [ -n "$PR_NUMBER" ]; then
+  PR_MILESTONE=$(gh pr view "$PR_NUMBER" --json milestone --jq '.milestone.title // empty')
+  if [ -z "$PR_MILESTONE" ]; then
+    if gh api --method PATCH "repos/$OWNER/$REPO/issues/$PR_NUMBER" -F milestone=$MILESTONE_NUMBER 2>/dev/null; then
+      echo "pr:$PR_NUMBER:linked:milestone={{CYCLE}}:via-api"
+    else
+      echo "pr:$PR_NUMBER:link-failed" >&2
+      LINK_FAILED="${LINK_FAILED}pr:$PR_NUMBER "
+    fi
+  elif [ "$PR_MILESTONE" = "{{CYCLE}}" ]; then
+    echo "pr:$PR_NUMBER:already-linked:milestone={{CYCLE}}"
+  else
+    echo "WARNING: pr:$PR_NUMBER は他の Milestone （$PR_MILESTONE）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は Operations 担当者に委ねます" >&2
+    echo "pr:$PR_NUMBER:other-milestone:current=$PR_MILESTONE:skip-overwrite"
+  fi
+else
+  echo "pr:not-found-or-not-open"
+fi
+
+# ステップ11 末尾集約判定: 補完失敗があれば exit 1（後段 04-completion 5.5 を実施しない契約）
+if [ -n "$LINK_FAILED" ]; then
+  echo "ERROR: Milestone 紐付け補完に失敗した対象があります: $LINK_FAILED" >&2
+  echo "ERROR: 失敗対象を手動で復旧してから本ステップを再実行してください（または .aidlc/cycles/{{CYCLE}}/operations/tasks/ に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しないでください。" >&2
+  exit 1
+fi
+```
+
+**注**: PR も Issue API で Milestone 操作可能（GitHub 仕様、PR は Issue の特殊形）。**冪等補完原則**: Issue 同様、empty の場合のみ新規紐付け、他 Milestone がある場合は付け替えず警告のみ。**集約判定契約**: link-failed が 1 件以上ある場合は exit 1 で中断し、04-completion 5.5 (Milestone close) は実施しない契約とする（紐付け未達のまま close するとサイクル可視化が不完全になるため）。
+
+**判定マトリクス**（5 ケース、ストーリー 2 受け入れ基準準拠、Unit 005 と同じ 5 行表記）:
+
+| open 件数 | closed 件数 | 動作 |
+|----------|-----------|------|
+| ≥ 2 | 0 | エラー停止（重複作成、手動整理を要求） |
+| 1 | 0 | 再利用（既存 open を使用） |
+| 0 | 0 | **fallback 作成**（Inception スキップ漏れ救済、警告メッセージ表示） |
+| 0 | ≥ 1 | エラー停止（誤再オープン防止、手動判断要求） |
+| ≥ 1 | ≥ 1 | エラー停止（混在、誤再オープン防止 / 優先順位 1 と整合） |
+
+実装側では `CLOSED_COUNT >= 1` を最優先停止条件としており、この優先順位はストーリー 2 受け入れ基準と完全一致（4 段階優先順位で 5 ケースを畳み込んで表現）。
+
 ---

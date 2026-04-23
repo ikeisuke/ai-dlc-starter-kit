@@ -9,8 +9,8 @@
 | 003 update-version-docs-comms | 完了 | ストーリー 6b（#596 周知側） | Unit 002 | 2026-04-23 |
 | 004 aidlc-setup-prompts-package-removal | 完了 | ストーリー 5（#595） | なし | 2026-04-23 |
 | 005 inception-milestone-step | 完了 | ストーリー 1, 4（#597 Unit B） | なし | 2026-04-23 |
-| 006 operations-milestone-close | 未着手 | ストーリー 2（#597 Unit A） | なし | - |
-| 007 docs-milestone-rewrite | 未着手 | ストーリー 3（#597 Unit C） | Unit 005, 006 | - |
+| 006 operations-milestone-close | 完了 | ストーリー 2（#597 Unit A） | なし | 2026-04-23 |
+| 007 docs-milestone-rewrite | 進行中 | ストーリー 3（#597 Unit C） | Unit 005, 006 | - |
 
 ## 実装順序（推奨）
 
@@ -21,7 +21,7 @@
 
 ## 現在の Unit
 
-未着手（次の実行可能 Unit: Unit 006 が単独着手可能。Unit 007 は Unit 005, 006 完了後）
+Unit 007 docs-milestone-rewrite（進行中、ストーリー 3 / #597 Unit C / ドキュメント更新 + CHANGELOG `#597` 節記載）
 
 ## 完了済み Unit
 
@@ -30,7 +30,8 @@
 - Unit 003 update-version-docs-comms（2026-04-23、Issue #596 ドキュメント周知完了、CHANGELOG #596 節 / bin/update-version.sh ヘッダ / .aidlc/rules.md / docs/configuration.md 更新、Operations 引き継ぎタスク作成済み、サイクル PR マージで #596 auto-close 準備完了）
 - Unit 004 aidlc-setup-prompts-package-removal（2026-04-23、Issue #595 解消、`skills/aidlc-setup/steps/01-detect.md` L89-L91 純削除 + 空行整理、CHANGELOG `### Removed` #595 節追加（挙動変化・注意文・将来バックログ扱い明記）、fixture 4 ケース動作確認 OK、サイクル PR マージで #595 auto-close 準備完了）
 - Unit 005 inception-milestone-step（2026-04-23、Issue #597 Unit B 部分対応、Inception Phase 02-preparation/05-completion/index.md の Milestone 化 + 5 ケース判定 + PATCH フォールバック + 関連 Issue awk 抽出 + cycle-label.sh / label-cycle-issues.sh DEPRECATED 注記、Markdown 整合性検証 全 OK / bash -n syntax check 全 OK、Unit 007 への CHANGELOG `#597` 節 deprecation 記載依頼明記）
+- Unit 006 operations-milestone-close（2026-04-23、Issue #597 Unit A 部分対応、Operations Phase 01-setup ステップ11「Milestone 紐付け確認・fallback 判定」追加 / 04-completion ステップ5.5「Milestone close」追加 / index.md §2.8 補助契約追記、5 ケース判定 + 冪等補完原則 + マージ前完結契約準拠 + LINK_FAILED 集約判定 exit 1 契約 + gh_status != available 時 exit 1 契約、codex implementation review 5 反復で auto_approved 適格達成、Unit 007 への CHANGELOG `#597` 節 Operations 側追記依頼明記）
 
 ## 次回実行時の指示
 
-`/aidlc construction` で Construction Phase を再開してください（Unit 006 operations-milestone-close から継続）。
+`/aidlc construction` で Construction Phase を再開してください（Unit 007 docs-milestone-rewrite から継続）。
