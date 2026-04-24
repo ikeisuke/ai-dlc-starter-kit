@@ -142,7 +142,17 @@ scripts/read-config.sh rules.github.milestone_enabled
 
 **`gh_status` を参照する。**
 
-`gh_status` が `available` 以外の場合: 「警告: GitHub CLIが利用できないため、Milestone 紐付け確認をスキップします」と表示してスキップ。
+`gh_status` が `available` 以外の場合: 以下のメッセージを表示し **exit 1 で中断する**（Milestone 作成・紐付け未実施のままサイクル進行を許すと、04-completion 5.5 で Milestone close 必須契約に到達不能になるため）:
+
+```text
+ERROR: GitHub CLI が利用できないため Milestone 紐付け確認・fallback 作成を実行できません。
+[rules.github].milestone_enabled=true の opt-in 設定では、Milestone は Inception Phase で作成され、Operations Phase で close される運用が必須です。
+gh CLI / 認証を復旧してから 01-setup ステップ 11 を再実行してください。
+
+復旧が困難な場合の選択肢:
+1. .aidlc/config.toml の [rules.github].milestone_enabled=false に切り替えて opt-out（Milestone 関連ステップを全てスキップ、サイクル可視化機能なしで進行）
+2. GitHub UI で Milestone {{CYCLE}} を手動作成 + 関連 Issue/PR を手動紐付け後、本ステップをスキップ可（04-completion 5.5 でも UI から手動 close 想定）
+```
 
 `gh_status` が `available` の場合、以下の手順を実行:
 
