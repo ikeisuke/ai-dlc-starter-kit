@@ -68,6 +68,12 @@ Subcommands:
       stdout: issue:<N>:linked-early|link-failed-early:will-retry-in-05-completion
       exit: 0（失敗は 05-completion 1-2 で再試行）
 
+  setup-step11 <CYCLE>
+      Operations 01-setup ステップ 11 統合実行（11-1 verify-or-create + 11-2 Issue 紐付け +
+      11-3 PR 紐付け + 末尾集約 exit 1）。Issue 失敗で PR 紐付けがスキップされない設計。
+      stdout: 11-1〜11-3 各ステップの状態行
+      exit: 0 / 1（link-failed 集約）
+
 Common environment:
   GH_REPO_OWNER / GH_REPO_NAME を指定すれば dynamic resolve をスキップ可。
 EOF
@@ -325,12 +331,15 @@ cmd_link_issues_from_units() {
         if [ "$mode" = "inception" ]; then
             echo "ERROR: Milestone 紐付けに失敗した Issue があります: ${link_failed}" >&2
             echo "ERROR: 失敗原因（権限不足 / Issue アクセス不可 等）を解消してから本ステップを再実行してください。紐付け未達のまま進むと Operations Phase のサイクル可視化が不完全になります。" >&2
+            exit 1
         else
-            # operations モードでは LINK_FAILED を後段で集約するため、ここでは return のみ
-            # （呼び出し側で link-pr 実行後に集約判定を行う設計）
+            # operations モードでは PR 紐付け確認まで実行してから集約 exit 1 する必要があるため、
+            # 本 subcommand 単体では exit 0 を維持し、ステータス行 + LINK_FAILED 行を stderr に残す。
+            # 呼び出し側は cmd_setup_step11 を使うことで両方をまとめて集約判定できる
+            # （あるいは link-issues-from-units → link-pr の順で個別呼び出しすると、Issue 失敗時は
+            # ここで exit 1 されないため、PR 紐付け step も実行される）
             echo "milestone-link-failed:${link_failed}" >&2
         fi
-        exit 1
     fi
 }
 
@@ -385,6 +394,107 @@ cmd_link_pr() {
     else
         echo "WARNING: pr:${pr_number} は他の Milestone （${pr_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は Operations 担当者に委ねます" >&2
         echo "pr:${pr_number}:other-milestone:current=${pr_milestone}:skip-overwrite"
+    fi
+}
+
+# Operations 01-setup ステップ 11 の統合 subcommand。
+# verify-or-create + link-issues-from-units (operations) + link-pr を 1 回で実行し、
+# Issue 紐付け失敗 + PR 紐付け失敗を集約してから末尾で exit 1 する。
+# これにより、Issue 失敗時に PR 紐付けが skip されてしまう問題を回避する（codex round 10 P2 対応）。
+cmd_setup_step11() {
+    local cycle="$1"
+    require_dependencies
+    resolve_owner_repo
+
+    # 11-1: Milestone 状態確認 + fallback 作成
+    # verify-or-create を内部関数として実行（exit せず status のみ返す）
+    # ここでは subcommand 経由で呼ばずに直接インライン実装
+    lookup_milestones "$cycle"
+    local milestone_number=""
+    if [ "$CLOSED_COUNT" -ge 1 ]; then
+        echo "ERROR: Milestone ${cycle} の closed が ${CLOSED_COUNT} 件あります。同名 closed Milestone がある場合の意図確認を必須化（誤再オープン防止）。手動確認: gh api --paginate \"repos/<owner>/<repo>/milestones?state=all&per_page=100\"" >&2
+        exit 1
+    elif [ "$OPEN_COUNT" -ge 2 ]; then
+        echo "ERROR: Milestone ${cycle} の open が ${OPEN_COUNT} 件あります。重複候補を確認: gh api --paginate \"repos/<owner>/<repo>/milestones?state=all&per_page=100\"" >&2
+        exit 1
+    elif [ "$OPEN_COUNT" -eq 1 ]; then
+        milestone_number=$(printf '%s' "$MILESTONE_LOOKUP" | jq '.[] | select(.state == "open") | .number')
+        echo "milestone:${cycle}:exists:number=${milestone_number}"
+    else
+        echo "WARNING: Milestone ${cycle} が不在です。Inception スキップ漏れの可能性があります。fallback で作成します。" >&2
+        milestone_number=$(gh api --method POST "repos/${OWNER}/${REPO}/milestones" \
+            -f title="${cycle}" \
+            --jq .number)
+        echo "milestone:${cycle}:fallback-created:number=${milestone_number}"
+    fi
+
+    # 11-2: 関連 Issue/PR の Milestone 紐付け確認・補完（operations モード相当をインライン実行）
+    local issue_numbers
+    issue_numbers=$(extract_issue_numbers_from_units "$cycle")
+    local link_failed=""
+    local current_milestone
+    local view_rc
+    if [ -n "$issue_numbers" ]; then
+        while read -r issue; do
+            if [ -z "$issue" ]; then continue; fi
+            view_rc=0
+            current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty' 2>/dev/null) || view_rc=$?
+            if [ "$view_rc" -ne 0 ]; then
+                echo "issue:${issue}:view-failed:rc=${view_rc}" >&2
+                link_failed="${link_failed}issue:${issue} "
+                continue
+            fi
+            if [ -n "$current_milestone" ] && [ "$current_milestone" != "$cycle" ]; then
+                echo "WARNING: issue:${issue} は他の Milestone （${current_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は Inception の手順 (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の判断を Operations 担当者に委ねます" >&2
+                echo "issue:${issue}:other-milestone:current=${current_milestone}:skip-overwrite"
+                continue
+            elif [ "$current_milestone" = "$cycle" ]; then
+                echo "issue:${issue}:already-linked:milestone=${cycle}"
+                continue
+            fi
+            if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${issue}" -F "milestone=${milestone_number}" >/dev/null 2>&1; then
+                echo "issue:${issue}:linked:milestone=${cycle}:via-api"
+            else
+                echo "issue:${issue}:link-failed" >&2
+                link_failed="${link_failed}issue:${issue} "
+            fi
+        done <<< "$issue_numbers"
+    else
+        echo "milestone:${cycle}:no-issues-to-link"
+    fi
+
+    # 11-3: PR の Milestone 紐付け確認（インライン実行）
+    local current_branch pr_number pr_milestone pr_view_rc
+    current_branch=$(git branch --show-current)
+    pr_number=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number // empty')
+    if [ -z "$pr_number" ]; then
+        echo "pr:not-found-or-not-open"
+    else
+        pr_view_rc=0
+        pr_milestone=$(gh pr view "$pr_number" --json milestone --jq '.milestone.title // empty' 2>/dev/null) || pr_view_rc=$?
+        if [ "$pr_view_rc" -ne 0 ]; then
+            echo "pr:${pr_number}:view-failed:rc=${pr_view_rc}" >&2
+            link_failed="${link_failed}pr:${pr_number} "
+        elif [ -z "$pr_milestone" ]; then
+            if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${pr_number}" -F "milestone=${milestone_number}" >/dev/null 2>&1; then
+                echo "pr:${pr_number}:linked:milestone=${cycle}:via-api"
+            else
+                echo "pr:${pr_number}:link-failed" >&2
+                link_failed="${link_failed}pr:${pr_number} "
+            fi
+        elif [ "$pr_milestone" = "$cycle" ]; then
+            echo "pr:${pr_number}:already-linked:milestone=${cycle}"
+        else
+            echo "WARNING: pr:${pr_number} は他の Milestone （${pr_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は Operations 担当者に委ねます" >&2
+            echo "pr:${pr_number}:other-milestone:current=${pr_milestone}:skip-overwrite"
+        fi
+    fi
+
+    # 末尾集約判定: Issue + PR の link-failed を合算して exit 1（codex round 10 P2 対応）
+    if [ -n "$link_failed" ]; then
+        echo "ERROR: Milestone 紐付け補完に失敗した対象があります: ${link_failed}" >&2
+        echo "ERROR: 失敗対象を手動で復旧してから本ステップを再実行してください（または .aidlc/cycles/${cycle}/operations/tasks/ に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しないでください。" >&2
+        exit 1
     fi
 }
 
@@ -468,6 +578,7 @@ case "$subcommand" in
     link-issues-from-units) cmd_link_issues_from_units "$cycle" "$@" ;;
     link-pr)               cmd_link_pr "$cycle" "$@" ;;
     early-link)            cmd_early_link "$cycle" "$@" ;;
+    setup-step11)          cmd_setup_step11 "$cycle" "$@" ;;
     -h|--help|help)        usage; exit 0 ;;
     *)
         echo "Error: unknown subcommand: $subcommand" >&2

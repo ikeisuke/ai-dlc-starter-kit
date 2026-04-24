@@ -154,81 +154,54 @@ gh CLI / 認証を復旧してから 01-setup ステップ 11 を再実行して
 2. GitHub UI で Milestone {{CYCLE}} を手動作成 + 関連 Issue/PR を手動紐付け後、本ステップをスキップ可（04-completion 5.5 でも UI から手動 close 想定）
 ```
 
-`gh_status` が `available` の場合、以下の手順を実行:
+`gh_status` が `available` の場合、`scripts/milestone-ops.sh setup-step11` を実行する。本 subcommand は 11-1 / 11-2 / 11-3 を 1 回で実行し、Issue 紐付け失敗 + PR 紐付け失敗を **末尾で集約してから exit 1** する設計のため、Issue 失敗時に PR 紐付けが skip される問題を回避できる。
+
+```bash
+scripts/milestone-ops.sh setup-step11 {{CYCLE}}
+```
+
+スクリプトの内部処理（順次実行 + 末尾集約判定）:
 
 #### 11-1. Milestone 状態確認（5 ケース判定 + fallback 作成）
 
-`scripts/milestone-ops.sh verify-or-create` で 5 ケース判定 + open=0 closed=0 時の fallback 作成を行う。スクリプト内部で OWNER/REPO 動的解決、`gh api --paginate ...?state=all&per_page=100` による全ページ取得、5 ケース分岐、open=0/closed=0 時の `gh api --method POST` 作成までを完結する。
+OWNER/REPO 動的解決 + `gh api --paginate ...?state=all&per_page=100` で全ページ取得 + 5 ケース分岐:
 
-```bash
-scripts/milestone-ops.sh verify-or-create {{CYCLE}}
-```
-
-stdout 出力:
-
-- `milestone:{{CYCLE}}:exists:number=<N>`（open=1 closed=0 → 既存 Milestone を再利用）
-- `milestone:{{CYCLE}}:fallback-created:number=<N>`（open=0 closed=0 → Inception スキップ漏れと判断し fallback 作成）
-
-stderr 出力（停止条件）:
-
-- `ERROR:` + exit 1（closed≥1 / open≥2 / 混在 → 重複作成・誤再オープン防止のため運用者に手動確認を依頼）
-- `WARNING:` + 継続実行（open=0 closed=0 で fallback 作成時のみ）
-
-出力された `number=<N>` を以降のステップで `MILESTONE_NUMBER` として扱う。
+- `closed≥1` → ERROR + exit 1（同名 closed 衝突、誤再オープン防止）
+- `open≥2 closed=0` → ERROR + exit 1（重複作成）
+- `open=1 closed=0` → 既存 Milestone を再利用 / `milestone:{{CYCLE}}:exists:number=<N>`
+- `open=0 closed=0` → WARNING + fallback 作成 (`gh api --method POST`) / `milestone:{{CYCLE}}:fallback-created:number=<N>`
 
 #### 11-2. 関連 Issue/PR の Milestone 紐付け確認・補完
 
-Operations 開始時点で、関連 Issue/PR がすべて Milestone に紐付いているかを `scripts/milestone-ops.sh link-issues-from-units` で確認・補完する。
+Unit 定義ファイル群から関連 Issue 番号を抽出（Inception 05-completion ステップ1-2 と同じ awk ロジック、5 形式対応）。各 Issue について:
 
-`<MILESTONE_NUMBER>` は §11-1 出力の `number=` 部分を渡す。
-
-```bash
-scripts/milestone-ops.sh link-issues-from-units {{CYCLE}} \
-  --milestone-number <MILESTONE_NUMBER> \
-  --mode operations
-```
-
-スクリプトの内部処理:
-
-- Unit 定義ファイル群から関連 Issue 番号を抽出（Inception 05-completion ステップ1-2 と同じ awk ロジック、5 形式対応）
-- 各 Issue について `gh issue view --json milestone` で現在の紐付け状態を確認し、3 分岐（empty / 同 cycle 既紐付け / 他 cycle 紐付け済み）で処理
-- empty の Issue のみ `gh api --method PATCH .../issues/<N> -F milestone=<MILESTONE_NUMBER>` で新規紐付け（**operations モードでは PATCH を主経路に**: 既存紐付け済み多数前提で番号指定が確実）
-- **冪等補完原則**: 既存 Milestone がある Issue は付け替えず警告のみ（1 Issue = 1 Milestone 制約と整合）
-- 失敗 Issue は `LINK_FAILED` に蓄積、ループ後に **末尾集約判定 exit 1**（11-3 の PR 失敗とも合算）
+- `gh issue view --json milestone` で現在の紐付け状態を確認
+- empty → `gh api --method PATCH .../issues/<N> -F milestone=<MILESTONE_NUMBER>` で新規紐付け（**operations モードでは PATCH を主経路に**: 既存紐付け済み多数前提で番号指定が確実）
+- 同 cycle → already-linked（冪等動作）
+- 他 cycle → WARNING + skip-overwrite（**冪等補完原則**: 1 Issue = 1 Milestone 制約遵守）
+- view 失敗 / PATCH 失敗 → `LINK_FAILED` に蓄積、**continue で次の Issue を処理**
 
 stdout 出力（1 行 / Issue）:
 
 - `issue:<N>:linked:milestone={{CYCLE}}:via-api`（新規紐付け成功）
-- `issue:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け、冪等動作）
+- `issue:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け）
 - `issue:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み）
-- `milestone:{{CYCLE}}:no-issues-to-link`（Unit 定義に関連 Issue 不在）
+- `milestone:{{CYCLE}}:no-issues-to-link`（Unit 定義に関連 Issue 不在 / units/ ディレクトリ空）
 
 #### 11-3. PR の Milestone 紐付け確認
 
-`scripts/milestone-ops.sh link-pr` で現ブランチに紐づく PR の Milestone 紐付けを冪等補完する。
-
-```bash
-scripts/milestone-ops.sh link-pr {{CYCLE}} \
-  --milestone-number <MILESTONE_NUMBER>
-```
-
-スクリプトの内部処理:
-
-- 現在のブランチに紐づく open PR を `gh pr list --head <current-branch> --state open` で取得
-- 取得した PR の `milestone` フィールドを確認し、3 分岐（empty / 同 cycle 既紐付け / 他 cycle 紐付け済み）で処理
-- empty PR のみ `gh api --method PATCH .../issues/<PR_NUMBER> -F milestone=<MILESTONE_NUMBER>` で新規紐付け（PR は Issue API 経由で Milestone を操作する GitHub 仕様）
-- 失敗時は `pr-link-failed:pr:<N>` を stderr に出力し exit 1
+現在のブランチに紐づく open PR を `gh pr list --head <current-branch> --state open` で取得し、同様の 3 分岐で処理（PR は Issue API 経由で Milestone を操作する GitHub 仕様）。失敗時は `LINK_FAILED` に追加し continue。
 
 stdout 出力:
 
 - `pr:<N>:linked:milestone={{CYCLE}}:via-api`（新規紐付け成功）
-- `pr:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け、冪等動作）
+- `pr:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け）
 - `pr:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み）
-- `pr:not-found-or-not-open`（PR 未作成 / 既マージ）
+- `pr:not-found-or-not-open`（PR 未作成 / 既マージ、警告なし）
 
-**集約判定契約**: 11-2 の Issue 紐付け失敗（`milestone-link-failed:` stderr 出力 + exit 1）または 11-3 の PR 紐付け失敗（`pr-link-failed:` stderr 出力 + exit 1）が 1 件以上発生した時点で本ステップは中断され、後段 04-completion 5.5 (Milestone close) は実施しない契約とする（紐付け未達のまま close するとサイクル可視化が不完全になるため）。失敗対象を手動で復旧してから本ステップを再実行する（または `.aidlc/cycles/{{CYCLE}}/operations/tasks/` に手動対応タスクを作成）。
+**末尾集約判定契約**: 11-2 の Issue 紐付け失敗 + 11-3 の PR 紐付け失敗を `LINK_FAILED` 変数で合算し、**1 件でもあれば最後に exit 1** で中断する。これにより、Issue 失敗時に PR チェックが skip される問題（codex round 10 P2）を回避し、運用者は 1 回の実行で全ての要修正対象を把握できる。失敗対象を手動で復旧してから本ステップを再実行する（または `.aidlc/cycles/{{CYCLE}}/operations/tasks/` に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しない契約とする。
 
-**注**: `gh issue edit --milestone` ではなく `gh api PATCH` を主経路にしているのは、Operations 開始時点では Inception で既に紐付け済みケースが多く、確実に Milestone 番号を指定するため。PR も Issue API で Milestone 操作可能（GitHub 仕様、PR は Issue の特殊形）。
+**注**: `gh issue edit --milestone` ではなく `gh api PATCH` を主経路にしているのは、Operations 開始時点では Inception で既に紐付け済みケースが多く、確実に Milestone 番号を指定するため。
 
 **判定マトリクス**（5 ケース、ストーリー 2 受け入れ基準準拠、Unit 005 と同じ 5 行表記）:
 
