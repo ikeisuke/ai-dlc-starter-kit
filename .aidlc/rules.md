@@ -96,6 +96,8 @@ bin/update-version.sh --version {{CYCLE}} --dry-run
 
 **理由**: AI-DLCスターターキット自体のリリース時にバージョン番号を更新するため。
 
+**`starter_kit_version` の扱い**: `bin/update-version.sh` は v2.4.0 以降、`.aidlc/config.toml.starter_kit_version` を **更新対象から除外** する。`starter_kit_version` は「最後に実行した `aidlc-setup` / `aidlc-migrate` のバージョン」を表し、リリース時の上書きは行われない。書き換え経路は `aidlc-setup` / `aidlc-migrate` / 将来のアップグレード経路の正規フローに限定される。
+
 ### パーミッション管理【重要】
 
 Operations Phase ステップ7（リリース準備）の 7.7（Gitコミット）完了後に以下の2ステップを順に実行すること：

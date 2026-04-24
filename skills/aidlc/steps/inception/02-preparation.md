@@ -50,14 +50,49 @@ scripts/check-open-issues.sh
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **2を選択**: 次のステップへ進行
 
-**サイクルラベル付与**（`gh_status` が `available` の場合、Issueを選択した後）:
+**Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
 
-選択したIssueにサイクルラベルを付与します。
+`MILESTONE_ENABLED` を判定する:
 
 ```bash
-# 一括付与（Unit定義作成後に実行）
-scripts/label-cycle-issues.sh {{CYCLE}}
+scripts/read-config.sh rules.github.milestone_enabled
 ```
+
+実行結果（exit 0 で stdout が `true`、それ以外はキー不在 / 致命エラー）を `MILESTONE_ENABLED` として扱う。stdout が `true` 以外、または exit コードが 0 でない場合は `false` 相当として扱う。
+
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` を出力し、**本ステップの Milestone 紐付け処理をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定および Milestone 紐付け bash 群は **一切実行しない**
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定および Milestone 紐付け処理を実行する
+
+**Milestone 紐付け**（`gh_status` が `available` の場合、Issueを選択した後）:
+
+選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。
+
+`scripts/milestone-ops.sh early-link` がスクリプト内部で 5 ケース判定を行い、`open=1 && closed=0` のときのみ各 Issue を `gh issue edit --milestone {{CYCLE}}` で先行紐付けします。それ以外のケース（open≥2 / closed≥1 / 不在 / 混在）は必ず **先行紐付けをスキップ** し、05-completion ステップ1 の 5 ケース判定 + 作成 + フォールバック PATCH に委譲します。
+
+`<SELECTED_ISSUES>` は本ステップ「Issue 確認」サブセクションで選択した Issue 番号の改行区切りリストを、`--issues` に文字列として渡します（複数 Issue 対応）。`<MILESTONE_NUMBER>` は 05-completion で確定するため本ステップでは未確定でも構わず、空でも先行紐付け自体は試行可能（PATCH フォールバックを行わないため）。
+
+```bash
+scripts/milestone-ops.sh early-link {{CYCLE}} \
+  --milestone-number 0 \
+  --issues "<SELECTED_ISSUES>"
+```
+
+スクリプトの内部処理:
+
+- `open=1 closed=0` のとき、各 Issue について `gh issue view --json milestone` で現在の紐付け状態を確認し、3 分岐で処理（**冪等補完原則**: 既存 Milestone がある Issue は付け替えず警告のみ、`link-issues-from-units` と同じ）
+- empty Issue のみ `gh issue edit --milestone {{CYCLE}}` で新規紐付け
+- 失敗時は `link-failed-early:will-retry-in-05-completion` を stderr 出力するが exit 0 を維持（05-completion ステップ1 で再試行される）
+
+stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
+
+- `issue:<N>:linked-early:milestone={{CYCLE}}`（empty → 新規先行紐付け成功）
+- `issue:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け、冪等動作）
+- `issue:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み、付け替えず警告のみ）
+- `issue:<N>:link-failed-early:will-retry-in-05-completion`（gh issue edit 失敗、05-completion ステップ1 で再試行されるため本ステップは exit 0 を維持）
+- `early-link:skip:open=<N>:closed=<N>:reason=defer-to-05-completion`（5 ケース判定でスキップ条件に該当）
+- `early-link:no-issues-provided`（`SELECTED_ISSUES` が空）
+
+**注**: 本ステップでの先行紐付けは `gh issue edit --milestone` のみを使用し、PATCH フォールバックは 05-completion ステップ1 に集約します（責任分離のため）。`gh issue edit --milestone` が権限または環境差分で失敗する場合は本ステップではエラーログのみ残し、05-completion ステップ1 のフォールバック手順で再試行されます。
 
 詳細は `guides/issue-management.md` を参照。
 

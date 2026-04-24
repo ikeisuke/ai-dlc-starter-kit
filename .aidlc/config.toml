@@ -185,3 +185,11 @@ checks = ["gh", "review-tools", "config-validation"]
 # バックログは常にGitHub Issueに記録されます。
 # このセクションは後方互換性のために残されていますが、設定値は無視されます。
 # mode = "issue-only"
+
+[rules.github]
+# GitHub 連携設定（v2.4.0 で追加 / Unit 008 / #597 Unit G）
+# milestone_enabled: true | false - Milestone 自動作成 / 紐付け / close を有効にするか（既定: false）
+# - true: Inception Phase で自動作成、Operations Phase で自動 close
+# - false: Milestone 関連ステップを全てスキップ
+# 本リポジトリは v2.3.6 試験運用 + v2.4.0 本採用継続のため明示有効化
+milestone_enabled = true

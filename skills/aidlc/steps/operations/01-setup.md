@@ -125,4 +125,94 @@ scripts/validate-git.sh remote-sync
 - タスクあり: 一覧提示 → 順番に確認・実行（または後続ステップで処理）
 - タスクなし: 次のステップへ
 
+### 11. Milestone 紐付け確認・fallback 判定【重要】
+
+**Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
+
+`MILESTONE_ENABLED` を判定する:
+
+```bash
+scripts/read-config.sh rules.github.milestone_enabled
+```
+
+実行結果（exit 0 で stdout が `true`、それ以外はキー不在 / 致命エラー）を `MILESTONE_ENABLED` として扱う。stdout が `true` 以外、または exit コードが 0 でない場合は `false` 相当として扱う。
+
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=01-setup-step11:reason=opt-out` を出力し、**本ステップ（11-1 Milestone 状態確認 + 11-2 関連 Issue 紐付け補完 + 11-3 PR 紐付け確認 + 末尾 `LINK_FAILED` 集約判定）をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / Milestone 紐付け処理 / `LINK_FAILED` 集約判定 exit 1 契約は **一切実行しない**（紐付け処理自体を実施しないため）
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定 + 11-1 / 11-2 / 11-3 + 末尾 `LINK_FAILED` 集約判定を実行する
+
+**`gh_status` を参照する。**
+
+`gh_status` が `available` 以外の場合: 以下のメッセージを表示し **exit 1 で中断する**（Milestone 作成・紐付け未実施のままサイクル進行を許すと、04-completion 5.5 で Milestone close 必須契約に到達不能になるため）:
+
+```text
+ERROR: GitHub CLI が利用できないため Milestone 紐付け確認・fallback 作成を実行できません。
+[rules.github].milestone_enabled=true の opt-in 設定では、Milestone は Inception Phase で作成され、Operations Phase で close される運用が必須です。
+gh CLI / 認証を復旧してから 01-setup ステップ 11 を再実行してください。
+
+復旧が困難な場合の選択肢:
+1. .aidlc/config.toml の [rules.github].milestone_enabled=false に切り替えて opt-out（Milestone 関連ステップを全てスキップ、サイクル可視化機能なしで進行）
+2. GitHub UI で Milestone {{CYCLE}} を手動作成 + 関連 Issue/PR を手動紐付け後、本ステップをスキップ可（04-completion 5.5 でも UI から手動 close 想定）
+```
+
+`gh_status` が `available` の場合、`scripts/milestone-ops.sh setup-step11` を実行する。本 subcommand は 11-1 / 11-2 / 11-3 を 1 回で実行し、Issue 紐付け失敗 + PR 紐付け失敗を **末尾で集約してから exit 1** する設計のため、Issue 失敗時に PR 紐付けが skip される問題を回避できる。
+
+```bash
+scripts/milestone-ops.sh setup-step11 {{CYCLE}}
+```
+
+スクリプトの内部処理（順次実行 + 末尾集約判定）:
+
+#### 11-1. Milestone 状態確認（5 ケース判定 + fallback 作成）
+
+OWNER/REPO 動的解決 + `gh api --paginate ...?state=all&per_page=100` で全ページ取得 + 5 ケース分岐:
+
+- `closed≥1` → ERROR + exit 1（同名 closed 衝突、誤再オープン防止）
+- `open≥2 closed=0` → ERROR + exit 1（重複作成）
+- `open=1 closed=0` → 既存 Milestone を再利用 / `milestone:{{CYCLE}}:exists:number=<N>`
+- `open=0 closed=0` → WARNING + fallback 作成 (`gh api --method POST`) / `milestone:{{CYCLE}}:fallback-created:number=<N>`
+
+#### 11-2. 関連 Issue/PR の Milestone 紐付け確認・補完
+
+Unit 定義ファイル群から関連 Issue 番号を抽出（Inception 05-completion ステップ1-2 と同じ awk ロジック、5 形式対応）。各 Issue について:
+
+- `gh issue view --json milestone` で現在の紐付け状態を確認
+- empty → `gh api --method PATCH .../issues/<N> -F milestone=<MILESTONE_NUMBER>` で新規紐付け（**operations モードでは PATCH を主経路に**: 既存紐付け済み多数前提で番号指定が確実）
+- 同 cycle → already-linked（冪等動作）
+- 他 cycle → WARNING + skip-overwrite（**冪等補完原則**: 1 Issue = 1 Milestone 制約遵守）
+- view 失敗 / PATCH 失敗 → `LINK_FAILED` に蓄積、**continue で次の Issue を処理**
+
+stdout 出力（1 行 / Issue）:
+
+- `issue:<N>:linked:milestone={{CYCLE}}:via-api`（新規紐付け成功）
+- `issue:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け）
+- `issue:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み）
+- `milestone:{{CYCLE}}:no-issues-to-link`（Unit 定義に関連 Issue 不在 / units/ ディレクトリ空）
+
+#### 11-3. PR の Milestone 紐付け確認
+
+現在のブランチに紐づく open PR を `gh pr list --head <current-branch> --state open` で取得し、同様の 3 分岐で処理（PR は Issue API 経由で Milestone を操作する GitHub 仕様）。失敗時は `LINK_FAILED` に追加し continue。
+
+stdout 出力:
+
+- `pr:<N>:linked:milestone={{CYCLE}}:via-api`（新規紐付け成功）
+- `pr:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け）
+- `pr:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み）
+- `pr:not-found-or-not-open`（PR 未作成 / 既マージ、警告なし）
+
+**末尾集約判定契約**: 11-2 の Issue 紐付け失敗 + 11-3 の PR 紐付け失敗を `LINK_FAILED` 変数で合算し、**1 件でもあれば最後に exit 1** で中断する。これにより、Issue 失敗時に PR チェックが skip される問題（codex round 10 P2）を回避し、運用者は 1 回の実行で全ての要修正対象を把握できる。失敗対象を手動で復旧してから本ステップを再実行する（または `.aidlc/cycles/{{CYCLE}}/operations/tasks/` に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しない契約とする。
+
+**注**: `gh issue edit --milestone` ではなく `gh api PATCH` を主経路にしているのは、Operations 開始時点では Inception で既に紐付け済みケースが多く、確実に Milestone 番号を指定するため。
+
+**判定マトリクス**（5 ケース、ストーリー 2 受け入れ基準準拠、Unit 005 と同じ 5 行表記）:
+
+| open 件数 | closed 件数 | 動作 |
+|----------|-----------|------|
+| ≥ 2 | 0 | エラー停止（重複作成、手動整理を要求） |
+| 1 | 0 | 再利用（既存 open を使用） |
+| 0 | 0 | **fallback 作成**（Inception スキップ漏れ救済、警告メッセージ表示） |
+| 0 | ≥ 1 | エラー停止（誤再オープン防止、手動判断要求） |
+| ≥ 1 | ≥ 1 | エラー停止（混在、誤再オープン防止 / 優先順位 1 と整合） |
+
+実装側では `CLOSED_COUNT >= 1` を最優先停止条件としており、この優先順位はストーリー 2 受け入れ基準と完全一致（4 段階優先順位で 5 ケースを畳み込んで表現）。
+
 ---

@@ -127,8 +127,13 @@ Construction Phase 完了直後の Operations 新規開始は **bootstrap 分岐
 
 | gh_status | 対象機能の動作 |
 |-----------|--------------|
-| `available` | Issue クローズ・PR 操作・タグ push・GitHub Release 作成をすべて実行 |
-| `available` 以外 | 関連機能をスキップし、警告表示して続行 |
+| `available` | Issue クローズ・PR 操作・タグ push・GitHub Release 作成を実行。Milestone 紐付け確認 / Milestone close は **`[rules.github].milestone_enabled=true` のときのみ実行**（既定 off では `01-setup.md` ステップ 11 / `04-completion.md` ステップ 5.5 自体がスキップされる、Unit 008 / #597 Unit G） |
+| `available` 以外（既定） | 関連機能をスキップし、警告表示して続行 |
+| `available` 以外（**例外: Milestone close**） | `04-completion.md` ステップ 5.5 のみ **exit 1 で停止**（サイクル完了の可視化に必須のため、未実施のままサイクル完了させない）。**ただし `[rules.github].milestone_enabled=false`（既定）時はステップ 5.5 自体がスキップされ本例外は発動しない**。手動代替手順（REST API 直叩き curl + PAT、または GitHub UI 上での手動 close）の完了をもって 5.5 をスキップ可とする |
+
+**補助契約: `gh_status = available` かつ `[rules.github].milestone_enabled=true` 時の Milestone 紐付け補完失敗**
+
+`01-setup.md` ステップ11 内で `gh api PATCH` 個別呼び出しが失敗し `LINK_FAILED` が 1 件以上ある場合、ステップ11 末尾で **exit 1 で停止**（紐付け未達のまま 04-completion 5.5 を実施するとサイクル可視化が不完全になるため）。失敗対象を手動復旧してから再実行。`gh_status != available` 時は setup ステップ11 はスキップされ本契約は発動しない。**`[rules.github].milestone_enabled=false`（既定）時も setup ステップ11 自体がスキップされ本契約は発動しない**。
 
 ### 2.9 AI レビュー分岐
 
