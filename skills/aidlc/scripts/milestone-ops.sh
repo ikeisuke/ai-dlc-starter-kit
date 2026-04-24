@@ -243,9 +243,18 @@ cmd_link_issues_from_units() {
 
     local link_failed=""
     local current_milestone
+    local view_rc
     while read -r issue; do
         if [ -z "$issue" ]; then continue; fi
-        current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty')
+        # `set -e` 配下でも個別 Issue 単位で失敗を集約するため `|| view_rc=$?` で exit 抑制
+        view_rc=0
+        current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty' 2>/dev/null) || view_rc=$?
+        if [ "$view_rc" -ne 0 ]; then
+            # Issue 不在 / 権限不足 / typo 等で view 自体が失敗 → link-failed として集約
+            echo "issue:${issue}:view-failed:rc=${view_rc}" >&2
+            link_failed="${link_failed}issue:${issue} "
+            continue
+        fi
         if [ -n "$current_milestone" ] && [ "$current_milestone" != "$cycle" ]; then
             if [ "$mode" = "inception" ]; then
                 echo "WARNING: issue:${issue} は他の Milestone （${current_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、付け替えが必要な場合は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認してから手動で付け替えてください" >&2
@@ -259,11 +268,12 @@ cmd_link_issues_from_units() {
             continue
         fi
         # empty Milestone の場合のみ新規紐付け
+        # 注: gh / gh api の通常出力は machine-readable な status stream を汚染するため /dev/null へ捨てる
         if [ "$mode" = "inception" ]; then
             # 主経路: gh issue edit、フォールバック: gh api PATCH
-            if gh issue edit "$issue" --milestone "$cycle" 2>/dev/null; then
+            if gh issue edit "$issue" --milestone "$cycle" >/dev/null 2>&1; then
                 echo "issue:${issue}:linked:milestone=${cycle}"
-            elif gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${issue}" -F "milestone=${milestone_number}" 2>/dev/null; then
+            elif gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${issue}" -F "milestone=${milestone_number}" >/dev/null 2>&1; then
                 echo "issue:${issue}:linked:milestone=${cycle}:via-api"
             else
                 echo "issue:${issue}:link-failed" >&2
@@ -271,7 +281,7 @@ cmd_link_issues_from_units() {
             fi
         else
             # operations: PATCH 直接（既存紐付け済み多数前提で番号指定が確実）
-            if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${issue}" -F "milestone=${milestone_number}" 2>/dev/null; then
+            if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${issue}" -F "milestone=${milestone_number}" >/dev/null 2>&1; then
                 echo "issue:${issue}:linked:milestone=${cycle}:via-api"
             else
                 echo "issue:${issue}:link-failed" >&2
@@ -324,9 +334,15 @@ cmd_link_pr() {
     fi
 
     local pr_milestone
-    pr_milestone=$(gh pr view "$pr_number" --json milestone --jq '.milestone.title // empty')
+    local pr_view_rc=0
+    pr_milestone=$(gh pr view "$pr_number" --json milestone --jq '.milestone.title // empty' 2>/dev/null) || pr_view_rc=$?
+    if [ "$pr_view_rc" -ne 0 ]; then
+        echo "pr:${pr_number}:view-failed:rc=${pr_view_rc}" >&2
+        echo "pr-link-failed:pr:${pr_number}" >&2
+        exit 1
+    fi
     if [ -z "$pr_milestone" ]; then
-        if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${pr_number}" -F "milestone=${milestone_number}" 2>/dev/null; then
+        if gh api --method PATCH "repos/${OWNER}/${REPO}/issues/${pr_number}" -F "milestone=${milestone_number}" >/dev/null 2>&1; then
             echo "pr:${pr_number}:linked:milestone=${cycle}:via-api"
         else
             echo "pr:${pr_number}:link-failed" >&2
@@ -367,11 +383,19 @@ cmd_early_link() {
 
     if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
         local current_milestone
+        local view_rc
         while read -r issue; do
             if [ -z "$issue" ]; then continue; fi
             # 既存 Milestone を確認（1 Issue = 1 Milestone 制約のため、付け替えは行わない）
             # link-issues-from-units と同じ冪等補完原則を 02-preparation 段階でも適用
-            current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty')
+            # `set -e` 配下でも個別 Issue 単位で失敗を集約するため `|| view_rc=$?` で exit 抑制
+            view_rc=0
+            current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty' 2>/dev/null) || view_rc=$?
+            if [ "$view_rc" -ne 0 ]; then
+                # 本ステップは exit 0 を維持し、05-completion ステップ1 で再試行（同じ view 失敗が出れば link-failed として exit 1）
+                echo "issue:${issue}:view-failed-early:rc=${view_rc}:will-retry-in-05-completion" >&2
+                continue
+            fi
             if [ -n "$current_milestone" ] && [ "$current_milestone" != "$cycle" ]; then
                 echo "WARNING: issue:${issue} は他の Milestone （${current_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、本ステップでは付け替えず警告のみ。05-completion ステップ1 でも同様にスキップされます。付け替えが必要な場合は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認してから手動で付け替えてください" >&2
                 echo "issue:${issue}:other-milestone:current=${current_milestone}:skip-overwrite"
@@ -380,8 +404,8 @@ cmd_early_link() {
                 echo "issue:${issue}:already-linked:milestone=${cycle}"
                 continue
             fi
-            # empty Milestone の場合のみ先行紐付け
-            if gh issue edit "$issue" --milestone "$cycle" 2>/dev/null; then
+            # empty Milestone の場合のみ先行紐付け（gh の通常出力は status stream を汚染するため /dev/null へ捨てる）
+            if gh issue edit "$issue" --milestone "$cycle" >/dev/null 2>&1; then
                 echo "issue:${issue}:linked-early:milestone=${cycle}"
             else
                 echo "issue:${issue}:link-failed-early:will-retry-in-05-completion" >&2
