@@ -77,9 +77,17 @@ scripts/milestone-ops.sh early-link {{CYCLE}} \
   --issues "<SELECTED_ISSUES>"
 ```
 
+スクリプトの内部処理:
+
+- `open=1 closed=0` のとき、各 Issue について `gh issue view --json milestone` で現在の紐付け状態を確認し、3 分岐で処理（**冪等補完原則**: 既存 Milestone がある Issue は付け替えず警告のみ、`link-issues-from-units` と同じ）
+- empty Issue のみ `gh issue edit --milestone {{CYCLE}}` で新規紐付け
+- 失敗時は `link-failed-early:will-retry-in-05-completion` を stderr 出力するが exit 0 を維持（05-completion ステップ1 で再試行される）
+
 stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
 
-- `issue:<N>:linked-early:milestone={{CYCLE}}`（先行紐付け成功）
+- `issue:<N>:linked-early:milestone={{CYCLE}}`（empty → 新規先行紐付け成功）
+- `issue:<N>:already-linked:milestone={{CYCLE}}`（同 cycle に既紐付け、冪等動作）
+- `issue:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み、付け替えず警告のみ）
 - `issue:<N>:link-failed-early:will-retry-in-05-completion`（gh issue edit 失敗、05-completion ステップ1 で再試行されるため本ステップは exit 0 を維持）
 - `early-link:skip:open=<N>:closed=<N>:reason=defer-to-05-completion`（5 ケース判定でスキップ条件に該当）
 - `early-link:no-issues-provided`（`SELECTED_ISSUES` が空）

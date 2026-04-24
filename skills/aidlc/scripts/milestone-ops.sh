@@ -87,10 +87,14 @@ resolve_owner_repo() {
 
 # Milestone 一覧（state=all、--paginate で全ページ）から CYCLE タイトル一致を絞り込む
 # 出力: stdout に JSON array、グローバル変数 OPEN_COUNT / CLOSED_COUNT に件数
+#
+# 注: `gh api --paginate ... --jq ...` は --jq をページごとに適用するため、
+# 100 件超のリポでは複数の JSON 配列が連結された不正な JSON が返る。
+# そのため --jq は使わず、jq -s (slurp) でページを 1 つの配列に統合してから絞り込む。
 lookup_milestones() {
     local cycle="$1"
     MILESTONE_LOOKUP=$(gh api --paginate "repos/${OWNER}/${REPO}/milestones?state=all&per_page=100" \
-        --jq "[.[] | select(.title == \"${cycle}\") | {number, state}]")
+        | jq -s --arg cycle "$cycle" '[.[][] | select(.title == $cycle) | {number, state}]')
     OPEN_COUNT=$(printf '%s' "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
     CLOSED_COUNT=$(printf '%s' "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
 }
@@ -362,8 +366,21 @@ cmd_early_link() {
     lookup_milestones "$cycle"
 
     if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
+        local current_milestone
         while read -r issue; do
             if [ -z "$issue" ]; then continue; fi
+            # 既存 Milestone を確認（1 Issue = 1 Milestone 制約のため、付け替えは行わない）
+            # link-issues-from-units と同じ冪等補完原則を 02-preparation 段階でも適用
+            current_milestone=$(gh issue view "$issue" --json milestone --jq '.milestone.title // empty')
+            if [ -n "$current_milestone" ] && [ "$current_milestone" != "$cycle" ]; then
+                echo "WARNING: issue:${issue} は他の Milestone （${current_milestone}）に紐付け済みです。1 Issue = 1 Milestone 制約のため、本ステップでは付け替えず警告のみ。05-completion ステップ1 でも同様にスキップされます。付け替えが必要な場合は (a) 新サイクルへ付け替え / (b) Backlog に戻して保持 の 2 択をユーザーに確認してから手動で付け替えてください" >&2
+                echo "issue:${issue}:other-milestone:current=${current_milestone}:skip-overwrite"
+                continue
+            elif [ "$current_milestone" = "$cycle" ]; then
+                echo "issue:${issue}:already-linked:milestone=${cycle}"
+                continue
+            fi
+            # empty Milestone の場合のみ先行紐付け
             if gh issue edit "$issue" --milestone "$cycle" 2>/dev/null; then
                 echo "issue:${issue}:linked-early:milestone=${cycle}"
             else
