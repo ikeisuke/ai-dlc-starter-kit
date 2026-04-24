@@ -100,8 +100,21 @@ lookup_milestones() {
 }
 
 # Unit 定義ファイル群から関連 Issue 番号を抽出（label-cycle-issues.sh 由来 5 形式対応）
+# 注: units/ ディレクトリが空 / 不在の場合は何も出力せず exit 0（呼び出し側で no-issues-to-link 扱い）
 extract_issue_numbers_from_units() {
     local cycle="$1"
+    local units_dir="${AIDLC_CYCLES}/${cycle}/story-artifacts/units"
+    if [ ! -d "$units_dir" ]; then
+        return 0
+    fi
+    # nullglob 相当: 一致 0 件でもリテラルパターンを awk に渡さないため、find で明示列挙
+    local files=()
+    while IFS= read -r -d '' f; do
+        files+=("$f")
+    done < <(find "$units_dir" -maxdepth 1 -type f -name '*.md' -print0 2>/dev/null)
+    if [ ${#files[@]} -eq 0 ]; then
+        return 0
+    fi
     awk '
         /^## 関連Issue/ { in_section = 1; next }
         /^## / { in_section = 0 }
@@ -121,7 +134,7 @@ extract_issue_numbers_from_units() {
                 }
             }
         }
-    ' "${AIDLC_CYCLES}/${cycle}/story-artifacts/units/"*.md 2>/dev/null | sort -n | uniq
+    ' "${files[@]}" 2>/dev/null | sort -n | uniq
 }
 
 # --- subcommand 実装 ---
