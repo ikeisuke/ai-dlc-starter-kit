@@ -11,6 +11,8 @@ on:
       - '.github/workflows/pr-check.yml'
       - 'bin/check-bash-substitution.sh'
       - 'bin/check-defaults-sync.sh'
+      - 'version.txt'
+      - 'skills/**/version.txt'
 
 permissions:
   contents: read
