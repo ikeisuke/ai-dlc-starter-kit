@@ -55,48 +55,36 @@ scripts/check-open-issues.sh
 `MILESTONE_ENABLED` を判定する:
 
 ```bash
-MILESTONE_ENABLED=$(scripts/read-config.sh rules.github.milestone_enabled 2>/dev/null || echo "false")
+scripts/read-config.sh rules.github.milestone_enabled
 ```
+
+実行結果（exit 0 で stdout が `true`、それ以外はキー不在 / 致命エラー）を `MILESTONE_ENABLED` として扱う。stdout が `true` 以外、または exit コードが 0 でない場合は `false` 相当として扱う。
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` を出力し、**本ステップの Milestone 紐付け処理をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定および Milestone 紐付け bash 群は **一切実行しない**
 - `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定および Milestone 紐付け処理を実行する
 
 **Milestone 紐付け**（`gh_status` が `available` の場合、Issueを選択した後）:
 
-選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・OWNER/REPO 解決・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。
+選択したIssueを今回サイクルの Milestone に紐付けます。Milestone は `inception.05-completion` ステップ1で正式に作成・紐付けされます。本ステップでは **既存 Milestone がある場合のみ先行紐付け** を行うオプショナル動作とし、Milestone 作成・フォールバック PATCH の正式な手順は 05-completion ステップ1 に集約します。
+
+`scripts/milestone-ops.sh early-link` がスクリプト内部で 5 ケース判定を行い、`open=1 && closed=0` のときのみ各 Issue を `gh issue edit --milestone {{CYCLE}}` で先行紐付けします。それ以外のケース（open≥2 / closed≥1 / 不在 / 混在）は必ず **先行紐付けをスキップ** し、05-completion ステップ1 の 5 ケース判定 + 作成 + フォールバック PATCH に委譲します。
+
+`<SELECTED_ISSUES>` は本ステップ「Issue 確認」サブセクションで選択した Issue 番号の改行区切りリストを、`--issues` に文字列として渡します（複数 Issue 対応）。`<MILESTONE_NUMBER>` は 05-completion で確定するため本ステップでは未確定でも構わず、空でも先行紐付け自体は試行可能（PATCH フォールバックを行わないため）。
 
 ```bash
-# 1. OWNER/REPO 動的解決（05-completion ステップ 1-1 と同じパターン）
-OWNER=$(gh repo view --json owner --jq .owner.login)
-REPO=$(gh repo view --json name --jq .name)
-
-# 2. Milestone 一覧（state=all）から {{CYCLE}} を検索（同名 closed 検出のため state=all）
-# - `--paginate` + `per_page=100` で全ページを取得（Milestone 30 件超のリポでも検索漏れ防止）
-MILESTONE_LOOKUP=$(gh api --paginate "repos/$OWNER/$REPO/milestones?state=all&per_page=100" \
-  --jq "[.[] | select(.title == \"{{CYCLE}}\") | {number, state}]")
-
-OPEN_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "open")] | length')
-CLOSED_COUNT=$(echo "$MILESTONE_LOOKUP" | jq '[.[] | select(.state == "closed")] | length')
-
-# 3. 「open=1 && closed=0」のときだけ先行紐付け実行、それ以外は必ずスキップ
-if [ "$OPEN_COUNT" -eq 1 ] && [ "$CLOSED_COUNT" -eq 0 ]; then
-  # 選択した各 Issue を gh issue edit で先行紐付け（複数 Issue 対応のためループ）
-  # SELECTED_ISSUES は本ステップ「Issue 確認」サブセクションで選択した Issue 番号の改行区切りリスト
-  echo "$SELECTED_ISSUES" | while read -r ISSUE; do
-    if [ -z "$ISSUE" ]; then continue; fi
-    if gh issue edit "$ISSUE" --milestone "{{CYCLE}}" 2>/dev/null; then
-      echo "issue:$ISSUE:linked-early:milestone={{CYCLE}}"
-    else
-      # 本ステップでは PATCH フォールバックを行わず、05-completion ステップ1 へ委譲（責任分離）
-      echo "issue:$ISSUE:link-failed-early:will-retry-in-05-completion" >&2
-    fi
-  done
-else
-  echo "Milestone {{CYCLE}} は open=$OPEN_COUNT closed=$CLOSED_COUNT のため、本ステップでの先行紐付けはスキップします（05-completion ステップ1 で判定・作成・紐付けされます）"
-fi
+scripts/milestone-ops.sh early-link {{CYCLE}} \
+  --milestone-number 0 \
+  --issues "<SELECTED_ISSUES>"
 ```
 
-**注**: 本ステップでの先行紐付けは `gh issue edit --milestone` のみを使用し、PATCH フォールバックは 05-completion ステップ1 に集約します（PATCH は OWNER/REPO 動的解決を必要とするため、責任分離のため）。`gh issue edit --milestone` が権限または環境差分で失敗する場合は本ステップではエラーログのみ残し、05-completion ステップ1 のフォールバック手順で再試行されます。`OPEN_COUNT == 1 && CLOSED_COUNT == 0` 以外のケース（open≥2 / closed≥1 / 混在 / 不在）は **必ず先行紐付けをスキップ** し、05-completion ステップ1 の 5 ケース判定に委譲します。
+stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
+
+- `issue:<N>:linked-early:milestone={{CYCLE}}`（先行紐付け成功）
+- `issue:<N>:link-failed-early:will-retry-in-05-completion`（gh issue edit 失敗、05-completion ステップ1 で再試行されるため本ステップは exit 0 を維持）
+- `early-link:skip:open=<N>:closed=<N>:reason=defer-to-05-completion`（5 ケース判定でスキップ条件に該当）
+- `early-link:no-issues-provided`（`SELECTED_ISSUES` が空）
+
+**注**: 本ステップでの先行紐付けは `gh issue edit --milestone` のみを使用し、PATCH フォールバックは 05-completion ステップ1 に集約します（責任分離のため）。`gh issue edit --milestone` が権限または環境差分で失敗する場合は本ステップではエラーログのみ残し、05-completion ステップ1 のフォールバック手順で再試行されます。
 
 詳細は `guides/issue-management.md` を参照。
 
