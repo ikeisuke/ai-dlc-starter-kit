@@ -75,6 +75,24 @@ EOF
 
 # --- ヘルパー関数 ---
 
+# 依存コマンドのチェック（gh / jq は必須）
+# 不在時は明示的なエラーメッセージで案内（jq: command not found のような不親切なメッセージを避ける）
+require_dependencies() {
+    local missing=""
+    if ! command -v gh >/dev/null 2>&1; then
+        missing="${missing}gh "
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        missing="${missing}jq "
+    fi
+    if [ -n "$missing" ]; then
+        echo "ERROR: milestone-ops.sh requires the following commands to be installed and on PATH: ${missing}" >&2
+        echo "ERROR: Install with: brew install gh jq （macOS）/ apt install gh jq （Debian/Ubuntu）/ etc." >&2
+        echo "ERROR: または .aidlc/config.toml の [rules.github].milestone_enabled=false に切り替えて Milestone 機能を opt-out できます。" >&2
+        exit 2
+    fi
+}
+
 resolve_owner_repo() {
     if [ -n "${GH_REPO_OWNER:-}" ] && [ -n "${GH_REPO_NAME:-}" ]; then
         OWNER="$GH_REPO_OWNER"
@@ -439,6 +457,9 @@ fi
 subcommand="$1"
 cycle="$2"
 shift 2
+
+# 全 subcommand 実行前に依存コマンド（gh / jq）の有無をチェック
+require_dependencies
 
 case "$subcommand" in
     ensure-create)         cmd_ensure_create "$cycle" "$@" ;;
