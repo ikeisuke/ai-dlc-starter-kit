@@ -359,6 +359,15 @@ _add_section "rules\\.documentation" '[rules.documentation]
 # ドキュメント設定（v2.1.8で追加）
 language = "日本語"'
 
+# --- [rules.github] GitHub 連携設定（v2.4.0で追加 / Unit 008 / #597 Unit G） ---
+
+_add_section "rules\\.github" '[rules.github]
+# GitHub 連携設定（v2.4.0で追加 / Unit 008 / #597 Unit G）
+# milestone_enabled: true | false - GitHub Milestone 自動作成 / 紐付け / close を有効にするか（既定: false）
+# - true: Inception Phase で自動作成、Operations Phase で自動 close
+# - false: Milestone 関連ステップを全てスキップ（後方互換性確保のため既定は false）
+milestone_enabled = false'
+
 # --- [rules.git] 統合セクション（v2.1.8で統合） ---
 
 _add_section "rules\\.git" '[rules.git]
