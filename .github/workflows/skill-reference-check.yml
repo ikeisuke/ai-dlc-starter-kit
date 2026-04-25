@@ -4,10 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
-    paths:
-      - 'skills/**'
-      - 'bin/check-skill-references.sh'
-      - '.github/workflows/skill-reference-check.yml'
 
 permissions:
   contents: read
@@ -15,11 +11,38 @@ permissions:
 jobs:
   skill-reference-check:
     name: Skill Reference Check
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
+      - name: Detect skip
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PATHS_REGEX: '^(skills/.+|bin/check-skill-references\.sh|\.github/workflows/skill-reference-check\.yml)$'
+        run: |
+          set -eu
+          if [ "$PR_DRAFT" = "true" ]; then
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: Draft PR"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed-files.txt"
+          if grep -E "$PATHS_REGEX" "$RUNNER_TEMP/changed-files.txt" >/dev/null; then
+            printf 'should_skip=false\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: none (paths matched)"
+          else
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: paths not match"
+          fi
+
       - name: Checkout
+        if: steps.detect.outputs.should_skip != 'true'
         uses: actions/checkout@v4
 
       - name: Check skill references for direct path violations
+        if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-skill-references.sh
