@@ -48,6 +48,7 @@ scripts/check-open-issues.sh
 ```
 
 - **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
+- **1を選択時の追加処理**: 選択した Issue 番号を改行区切りで `SELECTED_ISSUES` 変数として保持する（後続の Milestone 早期紐付けで `--issues "<SELECTED_ISSUES>"` に渡すため）
 - **2を選択**: 次のステップへ進行
 
 **Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
@@ -61,7 +62,7 @@ scripts/read-config.sh rules.github.milestone_enabled
 実行結果（exit 0 で stdout が `true`、それ以外はキー不在 / 致命エラー）を `MILESTONE_ENABLED` として扱う。stdout が `true` 以外、または exit コードが 0 でない場合は `false` 相当として扱う。
 
 - `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=02-preparation-step16:reason=opt-out` を出力し、**本ステップの Milestone 紐付け処理をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定および Milestone 紐付け bash 群は **一切実行しない**
-- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定および Milestone 紐付け処理を実行する
+- `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定および Milestone 紐付け処理を実行する。**ただし** `SELECTED_ISSUES` が空の場合は early-link 呼び出し自体をスキップする（呼び出し側 AND ガード: `MILESTONE_ENABLED == true` AND `SELECTED_ISSUES` 非空のときのみ early-link を実行）
 
 **Milestone 紐付け**（`gh_status` が `available` の場合、Issueを選択した後）:
 
@@ -90,7 +91,7 @@ stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
 - `issue:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み、付け替えず警告のみ）
 - `issue:<N>:link-failed-early:will-retry-in-05-completion`（gh issue edit 失敗、05-completion ステップ1 で再試行されるため本ステップは exit 0 を維持）
 - `early-link:skip:open=<N>:closed=<N>:reason=defer-to-05-completion`（5 ケース判定でスキップ条件に該当）
-- `early-link:no-issues-provided`（`SELECTED_ISSUES` が空）
+- `early-link:no-issues-provided`（`SELECTED_ISSUES` が空。**下位互換用の出力**であり、呼び出し側 AND ガードにより実運用上は発生しない）
 
 **注**: 本ステップでの先行紐付けは `gh issue edit --milestone` のみを使用し、PATCH フォールバックは 05-completion ステップ1 に集約します（責任分離のため）。`gh issue edit --milestone` が権限または環境差分で失敗する場合は本ステップではエラーログのみ残し、05-completion ステップ1 のフォールバック手順で再試行されます。
 
