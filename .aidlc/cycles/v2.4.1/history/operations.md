@@ -20,3 +20,12 @@
   - `README.md`
 
 ---
+## 2026-04-26T01:27:29+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: PRマージ前レビュー（7.12）
+- **実行内容**: Codex CLI が usage limit のため reviewing-operations-premerge スキルでセルフレビュー実施（サブエージェント方式）。中レベル指摘 2 件（CHANGELOG L14 / L21 の記述精度）を検出。両方とも実装に整合する記述に修正（Unit 002: 案2「常時起動 + 内部 step 分岐」を明記、Unit 005: 実際の改訂対象 4 ファイルのフルパスと改訂内容を明記）。markdownlint / bash-substitution 再実行 PASS。
+- **成果物**:
+  - `CHANGELOG.md`
+
+---
