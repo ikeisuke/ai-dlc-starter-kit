@@ -267,12 +267,14 @@ gh pr create --draft \
 このPRはOperations Phase完了時にReady for Reviewに変更されます。
 ```
 
-### 6. Squash（コミット統合）【オプション】
+### 6. Squash（コミット統合）
+
+`rules.git.squash_enabled=true` の場合は本ステップを **必ず実施** する。前提チェック（`squash_enabled` の値判定）は `commit-flow.md` の「Squash統合フロー」冒頭で実施され、`squash_enabled` が `true` でなければ `squash:skipped` として後続のステップ 7（通常コミット）に進む。
 
 **【次のアクション】** `steps/common/commit-flow.md` の「Squash統合フロー」を読み込んで、Inception Phase完了squashの手順に従ってください。
 
 - `squash:success` の場合: ステップ7をスキップ
-- `squash:skipped:no-commits` の場合: ステップ7に進む
+- `squash:skipped` / `squash:skipped:no-commits` の場合: ステップ7に進む
 - `squash:error` の場合: commit-flow.mdのエラーリカバリ手順に従う。リカバリ後、ステップ7（通常コミット）に進む
 
 ### 7. Gitコミット

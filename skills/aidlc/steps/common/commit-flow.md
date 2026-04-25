@@ -73,6 +73,41 @@ AIツールを自動検出し、`Co-Authored-By` trailerを付与する。
 
 `rules.git.squash_enabled=true` の場合、フェーズ完了時に中間コミットを1つにまとめる。
 
+### 前提チェック【必須】
+
+`scripts/read-config.sh rules.git.squash_enabled` を実行し、結果に応じて分岐する:
+
+| `read-config.sh` の結果 | 動作 | 戻り値 |
+|------------------------|------|--------|
+| exit 0 + stdout が `true` | 「Squash の実行」へ進む（次のセクション） | （実行結果次第） |
+| exit 0 + stdout が `false` | Squash 実行せずフロー終了 | `squash:skipped`（ログ: `reason: squash_enabled=false`） |
+| exit 1（キー不在） | Squash 実行せずフロー終了 | `squash:skipped`（ログ: `reason: squash_enabled=unset`） |
+| exit 2 / その他のエラー | Squash 実行せずフロー終了（安全側） | `squash:skipped`（ログ: `reason: read-config.sh failed`） |
+
+**判定上の注意**: `read-config.sh` は `false` を返した場合も exit 0 で終了する。`if scripts/read-config.sh ... ; then` のような exit code のみの判定は誤実行を招くため禁止。**exit code と stdout の両方を併せて評価する**こと。
+
+**シグナル設計**: 既存の `squash:skipped` 文字列をそのまま使う（新シグナル文字列は導入しない）。呼び出し元（`04-completion.md` ステップ 7 / `inception/05-completion.md` ステップ 6）の既存 `squash:skipped` 分岐がそのまま機能する。`reason: ...` ログは前提チェック由来の `squash:skipped` でのみ出力され、`/squash-unit` 由来の `squash:skipped:no-commits` には付かない。
+
+**判定パターン例**（`$(...)` コマンド置換禁止のプロジェクトルール準拠、ファイル経由 + `grep -Fxq`）:
+
+```bash
+scripts/read-config.sh rules.git.squash_enabled > /tmp/aidlc-squash-enabled.out 2>/dev/null
+ec=$?
+if [ "$ec" = "0" ] && grep -Fxq 'true' /tmp/aidlc-squash-enabled.out; then
+    : # 「Squash の実行」へ進む
+else
+    case "$ec" in
+        0) echo "reason: squash_enabled=false" ;;
+        1) echo "reason: squash_enabled=unset" ;;
+        *) echo "reason: read-config.sh failed" ;;
+    esac
+    echo "squash:skipped"
+fi
+rm -f /tmp/aidlc-squash-enabled.out
+```
+
+### Squash の実行
+
 **`/squash-unit` スキルを使用する**。スキルが利用できない場合は `squash-unit.sh` を直接実行する。
 
 | 呼び出し元 | squashメッセージID |
