@@ -95,6 +95,12 @@ stdout は次のいずれか（数値部は実行時に確定）:
 
 stderr に `ERROR:` 出力 + exit 1 が出る場合（closed≥1 / open≥2 / 混在）は、本ステップを中断し、運用者に手動確認を依頼する。出力された `number=<N>` を以降のステップで `MILESTONE_NUMBER` として扱う。
 
+```bash
+# MILESTONE_NUMBER の抽出例（ensure-create stdout から awk で抽出）
+scripts/milestone-ops.sh ensure-create {{CYCLE}} | awk -F= '{print $NF}'
+# 例: 出力 "milestone:v2.4.1:created:number=42" → "42" のみが標準出力される
+```
+
 **判定マトリクス**（5 ケース、closed 混在含む）:
 
 | open 件数 | closed 件数 | 動作 |
@@ -121,7 +127,7 @@ scripts/milestone-ops.sh link-issues-from-units {{CYCLE}} \
 
 スクリプトの内部処理:
 
-- Unit 定義ファイル群から関連 Issue 番号を抽出（旧 `label-cycle-issues.sh` の `extract_issue_numbers()` 由来、5 形式対応: `Closes #数字` / `Fixes #数字` / `- Closes #数字` / `- Fixes #数字` / `- #数字`）。スコープは各 Unit ファイルの `## 関連Issue` セクションから次の `## ` まで
+- Unit 定義ファイル群から関連 Issue 番号を抽出（旧 `label-cycle-issues.sh` の `extract_issue_numbers()` 由来、5 形式対応: `Closes #数字` / `Fixes #数字` / `- Closes #数字` / `- Fixes #数字` / `- #数字`）。スコープは各 Unit ファイルの `## 関連Issue` セクションから次の `##` 見出しまで
 - 各 Issue について `gh issue view --json milestone` で現在の紐付け状態を確認し、3 分岐（empty / 同 cycle 既紐付け / 他 cycle 紐付け済み）で処理（**冪等補完原則**: 既存 Milestone がある Issue は付け替えず警告のみ）
 - empty の Issue のみ新規紐付け: 主経路 `gh issue edit --milestone {{CYCLE}}`、失敗時はフォールバックで `gh api --method PATCH .../issues/<N> -F milestone=<MILESTONE_NUMBER>`
 - 主経路 + フォールバック両方失敗した Issue は `LINK_FAILED` に蓄積、ループ後に **集約判定 exit 1**（Operations 01-setup ステップ 11 末尾の集約判定契約と同じ）
@@ -267,12 +273,14 @@ gh pr create --draft \
 このPRはOperations Phase完了時にReady for Reviewに変更されます。
 ```
 
-### 6. Squash（コミット統合）【オプション】
+### 6. Squash（コミット統合）
+
+`rules.git.squash_enabled=true` の場合は本ステップを **必ず実施** する。前提チェック（`squash_enabled` の値判定）は `commit-flow.md` の「Squash統合フロー」冒頭で実施され、`squash_enabled` が `true` でなければ `squash:skipped` として後続のステップ 7（通常コミット）に進む。
 
 **【次のアクション】** `steps/common/commit-flow.md` の「Squash統合フロー」を読み込んで、Inception Phase完了squashの手順に従ってください。
 
 - `squash:success` の場合: ステップ7をスキップ
-- `squash:skipped:no-commits` の場合: ステップ7に進む
+- `squash:skipped` / `squash:skipped:no-commits` の場合: ステップ7に進む
 - `squash:error` の場合: commit-flow.mdのエラーリカバリ手順に従う。リカバリ後、ステップ7（通常コミット）に進む
 
 ### 7. Gitコミット

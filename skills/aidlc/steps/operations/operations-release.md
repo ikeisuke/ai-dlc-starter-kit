@@ -109,6 +109,140 @@ PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない
 
 保存値: ユーザーが選択した `merge` / `squash` / `rebase` の値をそのまま保存する。
 
+**未コミット差分検出ガード【ユーザー選択】**（`merge_method=ask` + 「保存 はい」+ `scope=project` を選択した場合のみ）:
+
+> **本ガードについて**: Issue #601（Operations 7.13 merge_method 設定保存が PR に追従しない）に対する案B（マージ前コミット+push フロー明示）の実装。案A（Inception 側で merge_method を事前確定）は大規模リファクタリングのため v2.5.0 以降で別途検討。
+
+本ガードは `scripts/write-config.sh --scope project` の実行直後に発動し、`.aidlc/config.toml` の未コミット差分がマージ前に PR へ反映されない事象（#601）を解消する。本確認は SKILL.md「AskUserQuestion 使用ルール」の「ユーザー選択」種別のため、`automation_mode` に関わらず `AskUserQuestion` 必須。
+
+**スキップ条件**（以下のいずれかに該当する場合、本ガードをスキップして「マージ実行確認」へ進む）:
+
+- `merge_method=merge/squash/rebase` 固定（`write-config.sh` 未実行）
+- `merge_method=ask` + 「保存 いいえ」（`write-config.sh` 未実行）
+- `merge_method=ask` + 「保存 はい」+ `scope=local`（`.aidlc/config.local.toml` は `.gitignore` 対象で tracked 差分なし）
+
+**検出ロジック**:
+
+```bash
+git diff --quiet -- .aidlc/config.toml
+```
+
+- exit 0（差分なし）→ スキップしてマージ実行確認へ進む（理論上は `write-config.sh` 失敗や no-op の稀なケース）
+- exit 1（差分あり）→ 以下の `AskUserQuestion` を提示
+
+**AskUserQuestion 呼び出し**:
+
+- question: 「設定保存後の `.aidlc/config.toml` に未コミット差分が残っています。どのように処理しますか？」
+- header: 「差分ガード」
+- options:
+  1. **コミット+push（現 PR に反映）**: 現サイクルブランチに追加コミットして push、PR 本文に反映させる
+  2. **follow-up PR で対応**: 設定変更を別ブランチ + 新規 PR に切り出し、現 PR は差分なしでマージ可能にする
+  3. **破棄（設定変更を取り消す）**: `git restore` で `config.toml` を巻き戻し、未コミット差分を解消する
+
+**分岐 A: コミット+push**
+
+```bash
+git add .aidlc/config.toml
+git commit -m "chore: persist merge_method=<値> for {{CYCLE}}"
+git push origin HEAD
+```
+
+- コミットメッセージは commit-flow.md の既存命名体系（UNIT_COMPLETE / INCEPTION_COMPLETE 等）と重複しないよう `chore` スコープの単発コミットとする（Unit-Number trailer は付けない）
+- 複数行メッセージが必要なときは `-m` を重ねる（ヒアドキュメント禁止）
+- `git push` 失敗（rejected 等）時はユーザーに手動 `pull` + `rebase` を案内（本ガード外）
+
+**終了条件**: `git log origin/<branch>` に当該コミットが含まれる（`gh pr view` で確認）→「マージ実行確認」へ進む
+
+**分岐 B: follow-up PR**
+
+前提: `{DEFAULT_BRANCH}` は `.aidlc/config.toml` の `[rules.git]` セクションまたは `git remote show origin` の `HEAD branch` 行から解決する（本ガード実行前に確定済みであること）。`{PR_NUMBER}` は現サイクルの PR 番号。
+
+手順:
+
+1. 対象ファイルのみ stash 退避（パス限定）:
+
+   ```bash
+   git stash push -m "{{CYCLE}}: merge_method follow-up" -- .aidlc/config.toml
+   ```
+
+2. 現在ブランチのコミット漏れ確認:
+
+   ```bash
+   git status
+   ```
+
+3. ブランチ名衝突確認（suffix 付与判定）:
+
+   ```bash
+   git show-ref --quiet refs/heads/chore/persist-merge-method-{{CYCLE}}
+   ```
+
+   - exit 0（既存あり）: `chore/persist-merge-method-{{CYCLE}}-<timestamp|short-sha>` のように suffix を付与して採用ブランチ名を決定（またはユーザーに確認）。以降の `<採用ブランチ名>` をこの値に置換
+   - exit 1（未存在）: そのまま `chore/persist-merge-method-{{CYCLE}}` を採用ブランチ名とする
+
+4. 新ブランチ作成（`{DEFAULT_BRANCH}` 起点）:
+
+   ```bash
+   git checkout -b "<採用ブランチ名>" "origin/{DEFAULT_BRANCH}"
+   ```
+
+5. stash 適用:
+
+   ```bash
+   git stash pop
+   ```
+
+6. ステージング・コミット・push:
+
+   ```bash
+   git add .aidlc/config.toml
+   git commit -m "chore: persist merge_method for {{CYCLE}} (follow-up)"
+   git push -u origin "<採用ブランチ名>"
+   ```
+
+7. PR 作成（`--body` で単発コマンド化、Closes は含めない）:
+
+   ```bash
+   gh pr create --draft --base "{DEFAULT_BRANCH}" --head "<採用ブランチ名>" \
+     --title "chore: persist merge_method for {{CYCLE}}" \
+     --body "Related to #{PR_NUMBER} — follow-up for merge_method persistence."
+   ```
+
+   - 改行を含む長文本文が必要な場合のみ、`mktemp /tmp/aidlc-followup-body.XXXXXX` で一時ファイルを生成し Write ツールで本文を書き込み `--body-file <生成パス>` に切り替える（その後一時ファイルは削除）
+   - `Closes` は含めない（本 PR は設定変更のみで Issue を閉じない）
+
+8. 現サイクルブランチに復帰:
+
+   ```bash
+   git checkout "cycle/{{CYCLE}}"
+   ```
+
+9. `/write-history` スキルで follow-up PR 番号を `history/operations.md` に記録
+
+**終了条件**（全てを満たすこと）:
+
+- 現サイクルブランチに `.aidlc/config.toml` の未コミット差分なし（`git status` 確認）
+- follow-up PR 番号が確定している（PR 番号不明のまま「マージ実行確認」に進むのは禁止）
+- follow-up PR 番号が `history/operations.md` に記録済み
+
+**ユーザー環境差分の fallback**:
+
+- **`gh auth` 未認証**: `git push -u origin …` までを実行し、`gh pr create` は手動作成を案内。**この場合、本分岐を「完了」扱いにせず、ユーザーが `AskUserQuestion` の補足として PR 番号を入力してから「マージ実行確認」に進む**（PR 番号未確定のまま「マージ実行確認」到達は禁止）。`/write-history` は確定後の PR 番号で記録
+- **`git stash` 不可（他の未コミット差分が多数等）**: 本分岐を中断し、分岐 C（破棄）または手動対応をユーザーに再選択させる
+
+**分岐 C: 破棄**
+
+```bash
+git restore -- .aidlc/config.toml
+git status --porcelain .aidlc/config.toml
+```
+
+- `-- .aidlc/config.toml` でパス限定（他ファイルの未コミット差分を保護）
+- `git status --porcelain` が空行ならクリーン
+- 注: 「破棄」選択時は `write-config.sh` で書き込まれた値が巻き戻されるため、次回 `merge_method=ask` 時に再度保存選択が可能
+
+**終了条件**: `.aidlc/config.toml` の未コミット差分なし（`git status --porcelain` で空行）→「マージ実行確認」へ進む
+
 **マージ実行確認【ユーザー選択: automation_mode に関わらず常にユーザー確認必須】**:
 
 マージ方法の確定後、マージスクリプト実行前に `AskUserQuestion` でマージ実行の可否をユーザーに確認する。PRマージは破壊的・不可逆操作であり、SKILL.md「AskUserQuestion使用ルール」の「ユーザー選択」に分類されるため、`automation_mode` に関わらず（`full_auto` を含む全モードで）自動化対象外。

@@ -4,15 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
-    paths:
-      - '**.md'
-      - '**.toml'
-      - '.markdownlint.json'
-      - '.github/workflows/pr-check.yml'
-      - 'bin/check-bash-substitution.sh'
-      - 'bin/check-defaults-sync.sh'
-      - 'version.txt'
-      - 'skills/**/version.txt'
 
 permissions:
   contents: read
@@ -20,13 +11,40 @@ permissions:
 jobs:
   markdown-lint:
     name: Markdown Lint
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
+      - name: Detect skip
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+        run: |
+          set -eu
+          if [ "$PR_DRAFT" = "true" ]; then
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: Draft PR"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed-files.txt"
+          if grep -E "$PATHS_REGEX" "$RUNNER_TEMP/changed-files.txt" >/dev/null; then
+            printf 'should_skip=false\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: none (paths matched)"
+          else
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: paths not match"
+          fi
+
       - name: Checkout
+        if: steps.detect.outputs.should_skip != 'true'
         uses: actions/checkout@v4
 
       - name: Run markdownlint
+        if: steps.detect.outputs.should_skip != 'true'
         uses: DavidAnson/markdownlint-cli2-action@v18
         with:
           globs: |
@@ -36,22 +54,76 @@ jobs:
 
   bash-substitution-check:
     name: Bash Substitution Check
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
+      - name: Detect skip
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+        run: |
+          set -eu
+          if [ "$PR_DRAFT" = "true" ]; then
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: Draft PR"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed-files.txt"
+          if grep -E "$PATHS_REGEX" "$RUNNER_TEMP/changed-files.txt" >/dev/null; then
+            printf 'should_skip=false\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: none (paths matched)"
+          else
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: paths not match"
+          fi
+
       - name: Checkout
+        if: steps.detect.outputs.should_skip != 'true'
         uses: actions/checkout@v4
 
       - name: Check bash code blocks for command substitution
+        if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-bash-substitution.sh
 
   defaults-sync-check:
     name: Defaults TOML Sync Check
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
+      - name: Detect skip
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+        run: |
+          set -eu
+          if [ "$PR_DRAFT" = "true" ]; then
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: Draft PR"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed-files.txt"
+          if grep -E "$PATHS_REGEX" "$RUNNER_TEMP/changed-files.txt" >/dev/null; then
+            printf 'should_skip=false\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: none (paths matched)"
+          else
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: paths not match"
+          fi
+
       - name: Checkout
+        if: steps.detect.outputs.should_skip != 'true'
         uses: actions/checkout@v4
 
       - name: Check defaults.toml sync between aidlc and aidlc-setup
+        if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-defaults-sync.sh

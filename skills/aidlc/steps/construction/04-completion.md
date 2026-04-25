@@ -89,14 +89,16 @@ scripts/run-markdownlint.sh {{CYCLE}}
 
 `markdown_lint=false`（デフォルト）ならスキップ。エラーあれば修正。
 
-### 7. Squash（コミット統合）【オプション】
+### 7. Squash（コミット統合）
+
+`rules.git.squash_enabled=true` の場合は本ステップを **必ず実施** する。前提チェック（`squash_enabled` の値判定）は `commit-flow.md` の「Squash統合フロー」冒頭で実施され、`squash_enabled` が `true` でなければ `squash:skipped` として後続のステップ 8 に進む。
 
 コミットが存在しない状態でPR作成（ステップ9）に進んではいけない。
 
 **【次のアクション】** `steps/common/commit-flow.md` の「Squash統合フロー」を読み込んで実行。
 
 - `squash:success` → **ステップ 7a（force-push 推奨案内）をユーザーに提示** → ステップ8スキップ
-- `squash:skipped` → ステップ8へ（ステップ 7a は**提示しない**、squash 未実施のため rewrite なし）
+- `squash:skipped` / `squash:skipped:no-commits` → ステップ8へ（ステップ 7a は**提示しない**、squash 未実施のため rewrite なし）
 - `squash:error` → エラーリカバリ後ステップ8へ（ステップ 7a は**提示しない**、エラーリカバリを優先）
 
 ### 7a. Force-push 推奨コマンド案内【`squash:success` 時のみ提示】
