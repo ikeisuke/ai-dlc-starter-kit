@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: 2025-12-06
 
-starter_kit_version = "2.3.6"
+starter_kit_version = "2.4.0"
 
 [project]
 name = "ai-dlc-starter-kit"
@@ -25,18 +25,16 @@ validate_user_input = true
 use_env_for_secrets = true
 
 [rules.git]
+unit_branch_enabled = false
+squash_enabled = true
+ai_author = "Claude <noreply@anthropic.com>"
 draft_pr = "always"
 # Git運用ルール
 commit_on_unit_complete = true
 commit_on_phase_complete = true
 merge_method = "merge"
-
-[rules.commit]
-# コミット設定（v1.9.1で追加）
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: "Claude <noreply@anthropic.com>"
-ai_author = "Claude <noreply@anthropic.com>"
+branch_mode = "ask"
+ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
@@ -57,6 +55,9 @@ tools = ["codex"]
 # - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
 # - ここに追加のパターンを指定可能
 # exclude_patterns = ["*.p12", "config/secrets/**"]
+exclude_patterns = []
+codex_bot_account = "chatgpt-codex-connector[bot]"
+
 [rules.automation]
 # 自動化設定（v1.18.0で追加）
 # mode: "manual" | "semi_auto"
@@ -83,14 +84,6 @@ mode = "branch"
 # - false: 提案しない（デフォルト）
 enabled = false
 
-[rules.history]
-# 履歴記録設定（v1.5.1で追加）
-# level: "detailed" | "standard" | "minimal"
-# - detailed: ステップ完了時に記録 + 修正差分も記録
-# - standard: ステップ完了時に記録（デフォルト）
-# - minimal: Unit完了時にまとめて記録
-level = "standard"
-
 [rules.release]
 # リリース設定（v1.6.0で追加）
 # changelog: true | false - CHANGELOG.md更新を行うか（デフォルト: false）
@@ -98,17 +91,13 @@ level = "standard"
 changelog = true
 version_tag = false
 
-[rules.unit_branch]
-# Unitブランチ設定（v1.7.0で追加）
-# enabled: true | false - Unit開始時にUnitブランチ作成を提案するか（デフォルト: false）
-enabled = false
-
 [rules.linting]
 # markdownlint設定（v1.8.0で追加）
 # markdown_lint: true | false
 # - true: markdownlint を実行する
 # - false: markdownlint をスキップする（デフォルト）
-markdown_lint = true
+enabled = true
+command = "npx markdownlint-cli2"
 
 [rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）
@@ -117,6 +106,7 @@ markdown_lint = true
 # - standard: 通常の機能開発向け（デフォルト）
 # - comprehensive: 複雑な機能開発向け（リスク分析・代替案検討等を追加）
 level = "standard"
+history_level = "standard"
 
 [rules.cycle]
 # サイクルモード設定（v1.20.0で追加）
@@ -124,14 +114,8 @@ level = "standard"
 # - default: 従来形式（.aidlc/cycles/vX.X.X/）で動作（デフォルト）
 # - named: 名前付きサイクル（.aidlc/cycles/[name]/vX.X.X/）で動作
 # - ask: Inception Phase開始時に名前付き/名前なしを選択
-# mode = "default"
-
-[rules.squash]
-# squash設定（v1.15.0で追加）
-# enabled: true | false - Unit完了時にsquashを提案するか（デフォルト: false）
-# - true: Unit完了時にsquashステップを実行
-# - false: squashステップをスキップ（従来の動作）
-enabled = true
+mode = "default"
+git_tracked = true
 
 [rules.size_check]
 # サイズチェック設定（v1.9.0で追加）
