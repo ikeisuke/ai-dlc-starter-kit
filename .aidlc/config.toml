@@ -33,7 +33,7 @@ draft_pr = "always"
 commit_on_unit_complete = true
 commit_on_phase_complete = true
 merge_method = "merge"
-branch_mode = "ask"
+branch_mode = "branch"
 ai_author_auto_detect = true
 
 [rules.documentation]
