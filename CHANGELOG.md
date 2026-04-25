@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.4.1] - 2026-04-26
+
+### Added
+
+- 必須 Checks の常時 PASS 報告化を `.github/workflows/pr-check.yml` / `migration-tests.yml` / `skill-reference-check.yml` に追加。`paths` フィルタや Draft skip で本来のジョブが発火しなかった場合にも `Required Checks Pass` 相当のレポート専用ジョブが必ず PASS を報告し、ブランチ保護で PR が merge 不可になる事象を解消（#598 / Unit 002）
+
+### Changed
+
+- Operations Phase §7.13 の `merge_method=ask` 選択後の保存フローに、マージ実行前のガード手順（案B）を導入。`write-config.sh` による `.aidlc/config.toml` 書き換えがマージ前の PR に反映されず未コミットで残る事象を、設定保存の有無確認と保存時の追加コミットで解消（#601 / Unit 001）
+- Construction Phase 完了処理のステップ 7「Squash（コミット統合）」表記から「【オプション】」ラベルを除去し、`commit-flow.md` 冒頭に `squash_enabled=true` の前提チェックを追加。`squash_enabled=true` 環境で Squash がスキップされる誤省略事故を抑止（#594 / Unit 003）
+- `skills/aidlc-setup/steps/01-detect.md` セクション1「早期判定」の 3 条件チェックを独立評価する指針と具体コマンド例を追加。`&&` / `||` チェーンで束ねた結果 v1 残骸の検出が漏れる事故を防止し、aidlc-setup 検出ステップの再実行容易性を確保（#600 / Unit 004）
+- `skills/aidlc/steps/inception/03-units/` 配下の Milestone 関連 4 ファイル（contract / template / examples / decisions）の責務境界・参照関係を明確化（empirical-prompt-tuning 由来の構造審査指摘 5 件、中優先度 1 件 / 低〜中 1 件 / 低 2 件 + 軽微確認 1 件を最小修正案で解消）（#602 / Unit 005）
+
+---
+
 ## [2.4.0] - 2026-04-24
 
 ### Added
