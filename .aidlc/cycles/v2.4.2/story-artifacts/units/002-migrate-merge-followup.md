@@ -2,25 +2,30 @@
 
 ## 概要
 
-`/aidlc-migrate` の最終ステップに、PR マージ後の一時ブランチ削除案内（#607 migrate 側）を追加する。ユーザー対話によるオプトイン方式とし、既存の migrate フロー（verify 完了まで）を破壊しない。
+`/aidlc-migrate` の最終ステップに、PR マージ後の一時ブランチ削除案内（v1→v2 マイグレーション用 `aidlc-migrate/v2` ブランチ）を追加する。ユーザー対話によるオプトイン方式とし、既存の migrate フロー（verify 完了まで）を破壊しない。
+
+> **対象ブランチ名修正（Construction Phase Unit 002 着手時）**: 当初 Unit 定義は `chore/aidlc-v<version>-upgrade` を対象として記述していたが、これは aidlc-setup スキルが生成するブランチ名であり、aidlc-migrate スキルは v1→v2 専用の `aidlc-migrate/v2` ブランチを生成する。Issue #607 本文は setup ケースのみ言及しているが、Unit 002 の本質的意図「マージ後の一時ブランチ削除案内」は migrate 側でも同様の利用者体験向上に寄与するため、対象ブランチを `aidlc-migrate/v2` に修正してスコープを維持する。詳細は decisions.md DR-016 を参照。
 
 ## 含まれるユーザーストーリー
 
-- ストーリー1: アップグレード一時ブランチの自動削除案内（#607、migrate スコープのみ）
+- ストーリー1: マイグレーション用一時ブランチの自動削除案内（migrate スコープ、対象ブランチ: `aidlc-migrate/v2`）
 
 ## 責務
 
-- `skills/aidlc-migrate/steps/03-verify.md`（最終ステップ末尾相当）に、以下のフローを追加:
-  1. **マージ確認ガード**: 「PR をマージしましたか？」をユーザーに確認
-  2. **一時ブランチ削除案内**（マージ済み回答時）: `chore/aidlc-v<version>-upgrade` ローカル + リモートブランチの削除を提案 → 同意で `git branch -d` + `git push origin --delete`（push 失敗時は warning + exit 0 で継続）
-- `skills/aidlc-migrate/SKILL.md`: 新規ステップへの誘導見出し追記のみ。本体記述は `steps/03-verify.md` 側に集約
+- `skills/aidlc-migrate/steps/03-verify.md`（§4 PR push 案内の後ろ、§5 として新規追加）に、以下のフローを追加:
+  1. **マージ確認ガード**: 「v1→v2 マイグレーション PR をマージしましたか？」をユーザーに確認（はい / いいえ / 判断保留）
+  2. **チェックアウト位置切替案内**（マージ済み回答時）: 現在ブランチが `aidlc-migrate/v2` の場合、削除前に HEAD を `origin/main` に detach する手順を案内（git 制約: チェックアウト中ブランチは削除不可）
+  3. **一時ブランチ削除案内**（HEAD 切替後）: `aidlc-migrate/v2` ローカル + リモートブランチの削除を提案 → 同意で `git branch -d`（失敗時 `-D` 再確認）+ `git push origin --delete`（push 失敗時は warning + 継続）。3 択（ローカル+リモート / ローカルのみ / スキップ）で push 権限不在ユーザーに対応
+- `skills/aidlc-migrate/SKILL.md`: 「ステップ実行」リスト構造で完結している場合は変更不要。Phase 1 設計レビューで確認
 - スキップ選択時はローカル/リモートいずれも変更しない
 
 ## 境界
 
 - `aidlc-setup` 側の処理（一時ブランチ削除 + HEAD 同期）は Unit 001 で扱う（本 Unit のスコープ外）
-- HEAD 同期処理は本 Unit のスコープ外（migrate ではアップグレードフローが setup ほど密ではないため、HEAD 同期を別フローで案内するかは v2.4.2 では非対応）
+- 本格的な HEAD 同期処理（5 サブ条件マトリクス）は本 Unit のスコープ外。**ただし `aidlc-migrate/v2` 削除のためにはチェックアウト位置を切り替える必要があり、最低限の HEAD 切替（`git checkout --detach origin/main` 1 ケースのみ）は本 Unit に含める**（Construction Phase 着手時の発見、DR-016 参照）
+- 未コミット差分ガード / 5 サブ条件マトリクス（worktree / main 系判定）は本 Unit のスコープ外（migrate のフロー特性上、03-verify.md §4 直後は通常クリーンな状態）
 - `bin/post-merge-sync.sh` への変更は行わない
+- 対象ブランチは `aidlc-migrate/v2` のみ（v1→v2 マイグレーション固定。Issue #607 が言及する `chore/aidlc-v<version>-upgrade` は Unit 001 で対応済み）
 
 ## 依存関係
 
@@ -61,9 +66,9 @@ High
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-27
+- **完了日**: 2026-04-27
+- **担当**: Claude Code (Opus 4.7)
 - **エクスプレス適格性**: -
 - **適格性理由**: -

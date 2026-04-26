@@ -150,3 +150,20 @@
 - **決定**: B（サブサブセクション統合）
 - **理由**: (1) 構造的にアップグレードケース限定が保証される、(2) §10 以降のリナンバ不要、(3) §10「アップグレードの場合」見出し配下のサブサブセクションとしてアップグレード完了メッセージの「前段」に配置することで、フォローアップ完了 → 完了メッセージという自然な流れを実現
 - **影響**: Unit 001 手順書実装で (b) を採用、`steps/03-migrate.md` §10 の構造変更なし（サブサブセクション追加のみ）
+
+## DR-016: Unit 002 対象ブランチを `aidlc-migrate/v2` に修正
+
+- **日時**: 2026-04-27
+- **判断者**: ユーザー（Construction Phase Unit 002 着手時に発見、AskUserQuestion で 3 択提示し選択）
+- **コンテキスト**: Unit 002 定義は当初「`chore/aidlc-v<version>-upgrade` ローカル + リモートブランチの削除」と記載していたが、`aidlc-migrate` スキルが実際に生成するブランチ名は `aidlc-migrate/v2`（v1→v2 マイグレーション専用、固定名）であることが判明。Issue #607 本文も setup ケース（`chore/aidlc-vX.X.X-upgrade`）のみ言及しており、Unit 002 定義の対象ブランチ表記は誤転記
+- **選択肢**:
+  - A: Unit 002 スコープを `aidlc-migrate/v2` ブランチのマージ後削除案内に変更（推奨）
+  - B: Unit 002 を取り下げ（スコープ外と判断）
+  - C: Unit 002 定義をそのまま実装（不整合許容、推奨しない）
+- **決定**: A（Unit 002 スコープを `aidlc-migrate/v2` 用に変更）
+- **理由**: Unit 002 の本質的意図「マージ後の一時ブランチ削除案内」は migrate 側でも同様の利用者体験向上に寄与する。Issue #607 本文は setup スコープのみだが、対象ブランチを `aidlc-migrate/v2` に変更することで Unit の意図を維持しつつ実装可能
+- **影響**:
+  - Unit 002 定義（`story-artifacts/units/002-migrate-merge-followup.md`）の対象ブランチを `aidlc-migrate/v2` に修正
+  - HEAD 切替（`git checkout --detach origin/main` の 1 ケースのみ）を Unit 002 のスコープ内とし、5 サブ条件マトリクス完全実装は Unit 001 のみとする
+  - 未コミット差分ガードは migrate のフロー特性上スコープ外
+  - Issue 関連付け: Unit 002 は #607 の「精神」に従う形で migrate 側のマージ後フォローアップを実装するが、#607 本文は setup スコープのみ言及のため、本 Unit の close 対象 Issue は別途整理（Operations Phase で明示）
