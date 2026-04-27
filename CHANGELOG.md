@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.4.2] - 2026-04-27
+
+### Added
+
+- `skills/aidlc-setup/steps/03-migrate.md` のアップグレードフロー最終ステップに「マージ後フォローアップ」サブセクションを追加。マージ確認ガード → 未コミット差分ガード → `origin/main` への HEAD 同期案内 → `chore/aidlc-v<version>-upgrade` 一時ブランチ削除案内の 4 段階対話フローを実装し、オプトイン方式で worktree / 通常ブランチ / detached HEAD の各状態に応じた 5 サブ条件マトリクスでローカル+リモートの最新化を支援（#607 setup 側 / #605 / Unit 001）
+- `skills/aidlc-migrate/steps/03-verify.md` に PR マージ後の `chore/aidlc-v<version>-upgrade` 一時ブランチ削除案内を追加。setup 側と同じくマージ確認ガード + 3 択（ローカル+リモート / ローカルのみ / スキップ）でオプトイン化し、push 権限不在ユーザーは warning + 継続で破壊的影響を回避（#607 migrate 側 / Unit 002）
+- `skills/aidlc/templates/operations_progress_template.md` に固定スロット（`release_gate_ready` / `completion_gate_ready` / `pr_number`）を追加し、`operations/progress.md` 初期化時点で復帰判定の構造化シグナル領域を明示。マージ前完結契約と整合（#585 / Unit 003）
+
+### Changed
+
+- Operations Phase 手順書 `operations-release.md §7.2-§7.6` および `02-deploy.md §7` を明文化。固定スロット配置位置・状態ラベル・コミット対象（マージ前完結契約により `release_gate_ready=true` / `completion_gate_ready=true` を §7.6 時点で予約的に書き込み §7.7 最終コミットに含める）を仕様レベルで明文化し、`pr_number` 永続化の通常系/エッジケース 2 経路を §7.6 / §7.8 に分離して規定（#591 / Unit 003）
+
+---
+
 ## [2.4.1] - 2026-04-26
 
 ### Added
