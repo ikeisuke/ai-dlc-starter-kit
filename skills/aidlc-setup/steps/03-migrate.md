@@ -42,6 +42,54 @@ git add .aidlc/
 
 ---
 
+<!-- guidance:id=unit002-user-global -->
+## 9b. 個人好み user-global 推奨案内
+
+**実行条件**: **初回セットアップの場合のみ**実行する。アップグレード／移行モードでは表示しない（既存ユーザーへの再表示を避ける）。
+
+**automation_mode 全モード対応**: 初回セットアップ経路では `automation_mode` が `manual` / `semi_auto` / `full_auto` のいずれでも本セクションをスキップせず、案内を 1 回のみ表示する（LLM が automation_mode 判定で本セクションを誤って省略しないこと）。
+
+**出力先**:
+- 対話モード（既定）: 通常のコンソール出力でユーザーに表示する
+- 非対話モード（自動走行コンテキスト / 将来 `--non-interactive` フラグ導入時も同様）: AI エージェントが echo / printf 等で出力する場合は `>&2`（stderr）にリダイレクトしてログとして記録する
+
+**冪等性**: 本セクションは初回セットアップ完了直前に **1 回のみ** 表示する。`01-detect.md` / `02-generate-config.md` に同等の案内は含めない（単一ソース原則）。
+
+### 表示する案内テキスト
+
+以下のメッセージをそのまま表示する（インデントなし）:
+
+```text
+ℹ AI-DLC は設定値を 4 階層（defaults / user-global / project / project.local）でマージして読み取ります。
+  個人の好みに関する設定（例: rules.reviewing.mode / rules.automation.mode / rules.linting.enabled など）は
+  user-global の `~/.aidlc/config.toml` に書くことを推奨します。
+
+  user-global に書く理由:
+  - project 共有 `.aidlc/config.toml` に書くとチームメンバー全員にその好みが反映されてしまうため
+  - user-global ならリポジトリの clone を汚さず、自分の環境にだけ好みを反映できるため
+
+  記述例（`~/.aidlc/config.toml`）:
+
+      [rules.reviewing]
+      mode = "required"
+
+      [rules.automation]
+      mode = "semi_auto"
+
+      [rules.linting]
+      enabled = true
+
+  defaults.toml に集約済みのため、上書きしたいキーだけを user-global に書けば十分です。
+```
+
+### 補足
+
+- 4 階層マージの詳細は `skills/aidlc/docs/configuration.md` 等の関連ドキュメントを参照する（存在しない場合はスキップ）
+- 上記の `[rules.reviewing]` / `[rules.automation]` / `[rules.linting]` の 3 セクションは Unit 001 で defaults.toml に集約された個人好みキー群の代表 3 件
+- 案内表示後、続けて `## 10. 完了メッセージと次のステップ` のモード別メッセージを表示する
+
+---
+
 ## 10. 完了メッセージと次のステップ
 
 ### 初回セットアップの場合

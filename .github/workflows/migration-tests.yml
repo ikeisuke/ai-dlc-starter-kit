@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PATHS_REGEX: '^(skills/aidlc-migrate/scripts/migrate-.*\.sh|skills/aidlc-migrate/scripts/lib/.+|tests/migration/.+|tests/config-defaults/.+|tests/fixtures/v1-structure/.+|tests/fixtures/config-defaults/.+|skills/aidlc-setup/templates/config\.toml\.template|skills/aidlc/config/defaults\.toml|skills/aidlc-setup/config/defaults\.toml|skills/aidlc/config/config\.toml\.example|\.github/workflows/migration-tests\.yml)$'
+          PATHS_REGEX: '^(skills/aidlc-migrate/scripts/migrate-.*\.sh|skills/aidlc-migrate/scripts/lib/.+|tests/migration/.+|tests/config-defaults/.+|tests/aidlc-setup/.+|tests/fixtures/v1-structure/.+|tests/fixtures/config-defaults/.+|skills/aidlc-setup/templates/config\.toml\.template|skills/aidlc-setup/steps/.+|skills/aidlc/config/defaults\.toml|skills/aidlc-setup/config/defaults\.toml|skills/aidlc/config/config\.toml\.example|\.github/workflows/migration-tests\.yml)$'
         run: |
           set -eu
           if [ "$PR_DRAFT" = "true" ]; then
@@ -53,4 +53,4 @@ jobs:
 
       - name: Run migration tests
         if: steps.detect.outputs.should_skip != 'true'
-        run: bats tests/migration/ tests/config-defaults/
+        run: bats tests/migration/ tests/config-defaults/ tests/aidlc-setup/
