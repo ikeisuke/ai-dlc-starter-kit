@@ -11,8 +11,10 @@
 ## 責務
 
 - `skills/aidlc-setup/templates/config.toml.template` から対象 7 キー削除
-- `skills/aidlc/config/defaults.toml` に対象 7 キーの既定値追加（`config.toml.template` の現値を移植）
-- 既存設定読み取り経路の整合性（`scripts/read-config.sh` バッチ＋単一キー両対応）の確認・テスト追加
+- `skills/aidlc/config/defaults.toml` における対象 7 キーの既定値**同等性確認**（Construction Phase で確認した結果、対象 7 キーは既に `defaults.toml` に template 旧値と完全一致する形で収録済み。本 Unit では新規追加・編集を行わず、`bin/check-defaults-sync.sh` での正本／コピー sync 維持と bats テストでの値同等性検証のみを行う）
+- `skills/aidlc/config/config.toml.example` を template と同等のスタンスで対象 7 キーから整理（実値もコメント例も削除）
+- 既存設定読み取り経路の整合性（`scripts/read-config.sh` バッチ＋単一キー両対応）を bats テストで検証（観点 B1: defaults 採用 / 観点 B2: project 値優先による後方互換 NFR）
+- `tests/config-defaults/` 配下に bats テストと fixture を追加し、`.github/workflows/migration-tests.yml` の検出 regex／実行コマンドを拡張
 
 ## 境界
 
@@ -57,9 +59,9 @@ High（#590 系 Unit のすべての前提）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-04-29
+- **完了日**: 2026-04-29
+- **担当**: Claude Code
 - **エクスプレス適格性**: -
 - **適格性理由**: -
