@@ -17,7 +17,7 @@ AI-DLC Starter Kit の変更履歴です。
 
 ### Fixed
 
-- `migrate-backlog.sh` の Perl invocation を UTF-8 対応に修正。`-CSDA` フラグ付与で `cut -c1-50` 等のロケール依存箇所での多バイト境界分断を解消し、slug 末尾の文字化けを防止。副次発見の `cut -c1-50` ロケール依存問題は Issue #615 として OUT_OF_SCOPE 化（DR-008、#610 / Unit 003）
+- `migrate-backlog.sh` の Perl invocation を UTF-8 対応に修正。`-CSD -Mutf8` 併用で IO レイヤと正規表現リテラルの両方の UTF-8 解釈を有効化し、fullwidth カッコ等を含む日本語タイトルでの `tr: Illegal byte sequence` 発生・slug 後半欠落を解消。副次発見の `cut -c1-50` ロケール依存問題は Issue #615 として OUT_OF_SCOPE 化（DR-008、#610 / Unit 003）
 
 ---
 
