@@ -8,9 +8,9 @@
 
 **パス 1（外部 CLI）**: (1) レビュー前コミット → (2) 機密情報除外スキャン（`review-routing.md §2` の除外パターンで照合、`/`なし→ベース名、`/`あり→相対パス、ケースインセンシティブ。全除外 → パス 3、除外ファイルはパスのみ通知）→ (3) 反復レビュー（最大 3 回）: スキル呼び出し → 指摘あれば修正 → 再レビュー、指摘ゼロで完了、3 回後も残で指摘対応判断フロー。
 
-**Codex セッション管理**: 初回後 session id を記録、2 回目以降 `codex exec resume <session-id>`。**エラー時**は `review-routing.md §6` の `fallback_policy` に従う（`skip_reason_required=true` は下記バリデーション適用）。
+**Codex セッション管理**: 初回後 session id を記録、2 回目以降 `codex exec resume <session-id>`。**エラー時**は `review-routing.md §6` の `fallback_policy` に従う（`cli_runtime_error` / `cli_output_parse_error` への対応ポリシー、`skip_reason_required=true` は下記バリデーション適用）。
 
-**パス 2（セルフ）**: 呼び出し形式は `review-routing.md §7`。反復・完了はパス 1 と同一。
+**パス 2（セルフ）**: 呼び出し形式は `review-routing.md §7`。反復・完了はパス 1 と同一。**パス 1 → パス 2 の遷移**は `review-routing.md §4` の ToolSelection 順序（`["codex", "self"]` 相当のリスト走査）の自然な延長として読める。`tools = ["codex"]` 設定の場合、暗黙シムにより末尾 self が補完されるため、外部 CLI 失敗時のセルフ降下は `fallback_to_self` ポリシーと等価に動作する（`recommend` モード）。
 
 **パス 3（ユーザー）**: レビュー前コミット → 成果物提示 → 承認要求。修正依頼 → 反映 → レビュー後コミット → 再提示。
 

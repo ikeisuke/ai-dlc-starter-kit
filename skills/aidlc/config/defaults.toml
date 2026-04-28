@@ -7,6 +7,9 @@ enabled = true
 
 [rules.reviewing]
 mode = "recommend"
+# tools: 優先順位リスト = フォールバック順序。許容エントリは外部 CLI 名 / "self" / "claude"(alias)。
+# review-routing.md §4 の暗黙末尾 self 補完シムにより、本デフォルト ["codex"] は実質
+# ["codex", "self"] 相当として動作する（既存設定の後方互換性維持、Issue #611 / Unit 002）。
 tools = ["codex"]
 exclude_patterns = []
 codex_bot_account = "chatgpt-codex-connector[bot]"
