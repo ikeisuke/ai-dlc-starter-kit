@@ -72,7 +72,7 @@ generate_slug() {
     local title="$1"
     echo "$title" | \
         tr '[:upper:]' '[:lower:]' | \
-        perl -pe 's/[^a-z0-9一-龯ぁ-んァ-ヶー ]//g' | \
+        perl -CSD -Mutf8 -pe 's/[^a-z0-9一-龯ぁ-んァ-ヶー ]//g' | \
         tr ' ' '-' | \
         sed 's/--*/-/g' | \
         sed 's/^-//;s/-$//' | \

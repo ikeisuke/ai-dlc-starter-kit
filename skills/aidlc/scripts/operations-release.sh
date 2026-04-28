@@ -7,7 +7,6 @@
 #
 # SUBCOMMANDS:
 #   version-check    ステップ 7.1 - バージョン確認（iOS 分岐 + suggest-version.sh）
-#   lint             ステップ 7.5 - run-markdownlint.sh 実行
 #   pr-ready         ステップ 7.8 - ドラフト PR Ready 化 + PR 本文更新
 #   verify-git       ステップ 7.9-7.11 - コミット漏れ / リモート同期 / main 差分チェック
 #   merge-pr         ステップ 7.13 - PR マージ実行
@@ -41,7 +40,6 @@ operations-release.sh - Operations Phase ステップ7リリース準備の orch
 
 Subcommands:
   version-check    ステップ 7.1  - バージョン確認（iOS 分岐 + suggest-version.sh）
-  lint             ステップ 7.5  - run-markdownlint.sh 実行
   pr-ready         ステップ 7.8  - ドラフト PR Ready 化 + PR 本文更新
   verify-git       ステップ 7.9-7.11 - コミット漏れ / リモート同期 / main 差分チェック
   merge-pr         ステップ 7.13 - PR マージ実行
@@ -75,22 +73,6 @@ Behavior:
        → ios-build-check.sh（ビルド番号確認）の順で実行
      - --ios-skip-marketing-version あり: ios-build-check.sh のみ実行
   3. それ以外（general 扱い）: suggest-version.sh を呼び出し stdout / exit code を透過
-EOF
-}
-
-print_help_lint() {
-    cat <<'EOF'
-operations-release.sh lint [--dry-run] [--cycle <CYCLE>]
-
-Operations Phase ステップ 7.5 markdownlint 実行のラッパー。
-
-Options:
-  --cycle <CYCLE>   サイクル名（必須。省略時は git ブランチから cycle/<name> を推定）
-  --dry-run         副作用を抑止し、呼び出しコマンドを "would run: ..." 形式で出力
-  -h, --help        このヘルプを表示
-
-Behavior:
-  run-markdownlint.sh <CYCLE> を呼び出し、stdout / exit code をそのまま透過する。
 EOF
 }
 
@@ -308,42 +290,6 @@ cmd_version_check() {
         return 0
     fi
     "$SCRIPT_DIR/suggest-version.sh"
-    return $?
-}
-
-cmd_lint() {
-    local cycle=""
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -h|--help)
-                print_help_lint
-                return 0
-                ;;
-            --dry-run)
-                DRY_RUN=1
-                shift
-                ;;
-            --cycle)
-                require_option_value "lint" "--cycle" "$#" "${2:-}" || return 1
-                cycle="$2"
-                shift 2
-                ;;
-            *)
-                printf 'lint:error:unknown-option:%s\n' "$1" >&2
-                return 1
-                ;;
-        esac
-    done
-
-    if [[ -z "$cycle" ]]; then
-        cycle=$(resolve_cycle_from_branch)
-    fi
-
-    if [[ "$DRY_RUN" = "1" ]]; then
-        log_dry_run "$SCRIPT_DIR/run-markdownlint.sh $cycle"
-        return 0
-    fi
-    "$SCRIPT_DIR/run-markdownlint.sh" "$cycle"
     return $?
 }
 
@@ -691,9 +637,6 @@ main() {
             ;;
         version-check)
             cmd_version_check "$@"
-            ;;
-        lint)
-            cmd_lint "$@"
             ;;
         pr-ready)
             cmd_pr_ready "$@"
