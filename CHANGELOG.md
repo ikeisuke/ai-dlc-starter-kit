@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.4.3] - 2026-04-28
+
+### Changed
+
+- `.aidlc/rules.md` のブランチ運用文言を `aidlc-setup` / `aidlc-migrate` の実動作に整合させ、`cycle/vX.X.X`（スターターキット自身）と `chore/aidlc-v<version>-upgrade` / `aidlc-migrate/v2`（ダウンストリーム消費プロジェクト）の用途別対比表を追加。`upgrade/v*` を過去サイクル名残として注記化（#612 / Unit 001）
+- レビューツール解決ロジックに `self` を `tools` 配列の正式エントリとして統合。`fallback_to_self` の検出契機・対応ポリシー・適用範囲を `review-routing.md` で明文化し、6 パターンの擬似実行表を追加。`claude` alias は `AliasNormalization` 前処理で `self` に正規化することで後方互換シムとして維持（#611 / Unit 002）
+- markdownlint の実行系を Operations §7.5 の手動ステップから Claude Code PostToolUse hook（`bin/check-markdownlint.sh`）への自動実行に移行。`operations-release.md §7.5` / `02-deploy.md §7.5` / `operations-release.sh lint` を削除し、CI（`pr-check.yml` の `markdownlint-cli2-action`）と hook の二段構成に簡素化。fallback chain `direct → npx → skip` で未インストール環境も非ブロッキング（#609 / Unit 004）
+
+### Fixed
+
+- `migrate-backlog.sh` の Perl invocation を UTF-8 対応に修正。`-CSDA` フラグ付与で `cut -c1-50` 等のロケール依存箇所での多バイト境界分断を解消し、slug 末尾の文字化けを防止。副次発見の `cut -c1-50` ロケール依存問題は Issue #615 として OUT_OF_SCOPE 化（DR-008、#610 / Unit 003）
+
+---
+
 ## [2.4.2] - 2026-04-27
 
 ### Added
