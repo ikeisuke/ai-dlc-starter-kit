@@ -1,6 +1,6 @@
 # Operations Phase - ステップ7: リリース準備
 
-> 全体フローは `02-deploy.md`。自動化工程は `scripts/operations-release.sh`（`version-check` / `lint` / `pr-ready` / `verify-git` / `merge-pr`）に集約、詳細は `--help`。既存スクリプトを透過呼び出し（stdout / exit code そのまま）。本 markdown は人間判断工程のみ残す。
+> 全体フローは `02-deploy.md`。自動化工程は `scripts/operations-release.sh`（`version-check` / `pr-ready` / `verify-git` / `merge-pr`）に集約、詳細は `--help`。既存スクリプトを透過呼び出し（stdout / exit code そのまま）。本 markdown は人間判断工程のみ残す。
 
 **前提条件**: ステップ1〜6完了、共通ルール読み込み済み、環境情報確認済み。
 
@@ -20,12 +20,11 @@ scripts/operations-release.sh version-check [--ios-skip-marketing-version]
 
 Inception 履歴に「iOSバージョン更新実施」記録があれば AI が `--ios-skip-marketing-version` を付与してマーケティングバージョン確認をスキップ。iOS は `vX.Y.Z` → `X.Y.Z`。最終承認はユーザー判断。
 
-## 7.2〜7.6 CHANGELOG / README / 履歴 / lint / progress
+## 7.2〜7.6 CHANGELOG / README / 履歴 / progress
 
 - `rules.release.changelog = true` の場合のみ CHANGELOG を Keep a Changelog 形式で更新（CHANGELOG は `[X.Y.Z]`、git タグは `vX.Y.Z`、`history/` / `story-artifacts/units/` / コミットから収集）、README にサイクル変更内容を追記
   - **設定値確認手順**: 事前に `scripts/read-config.sh rules.release.changelog` を実行して値を取得する。出力が `true` の場合のみ CHANGELOG 更新を実行し、`false` の場合は CHANGELOG 更新を**スキップ**（README 更新は値に関わらず実行）
 - `/write-history` で `history/operations.md` に記録
-- `operations-release.sh lint --cycle {{CYCLE}}`（エラー時修正、`markdownlint:skipped` は設定スキップ）
 - progress.md のステップ7を「完了」に更新し 7.7 のコミットに含める
 - **progress.md 固定スロット反映【重要 / マージ前完結契約】**: `operations/progress.md` の構造化シグナル 3 スロットを以下のとおり更新し、§7.7 最終コミットに**必ず**含める。スロットの grammar は `key=value` 形式（§7.8 の既存 `pr_number=` 契約と同一形式）で、値型・許容値の正規定義は `steps/common/phase-recovery-spec.md` §5.3.5 を参照する（§7 は異常系・判定源整合の補助参照）。マージ後に post-merge クリーンアップで書き換えても main には反映されないため、**予約的にマージ後の状態を §7.6 時点で書き込む**こと。
   - **既存 progress.md の固定スロットセクション有無判定**: 既存 `operations/progress.md` に `## 固定スロット（Operations 復帰判定用）` セクションが存在するか確認する。**未存在時**は新規セクションを progress.md 内に追加してから固定スロット 3 行を記載する（v2.4.1 以前のサイクルから引き継いだ progress.md にはセクションが存在しないため、本判定が必須）。**存在時**はセクション内の既存スロット行を更新する。
@@ -60,7 +59,6 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 - `README.md`（必須、§7.3 の更新を含む）
 - `CHANGELOG.md`（**条件付き**: `rules.release.changelog=true` の場合のみ。§7.2 で `scripts/read-config.sh rules.release.changelog` 確認結果が `true` のときに限る）
 - `version.txt` / `.aidlc/config.toml`（**条件付き**: `bin/update-version.sh` でバージョン更新を実施した場合のみ含める。利用有無は §7.1 でのバージョン確認結果に依存）
-- markdownlint で修正したその他ファイル（§7.5 で `markdownlint:auto-fix` が発生した場合のみ）
 
 **行区切り規約**: 固定スロットの 3 行（`release_gate_ready=` / `completion_gate_ready=` / `pr_number=`）は **独立行** で記述する。Markdown リスト形式 `- key=value` ではなく、独立した 1 行として `key=value` のみを各行に配置し、改行で区切る。同一行に複数の `key=value` を並べない（grammar v1 のパース挙動上、同一行内のカンマ区切り併記は許容されるが、可読性のため独立行を推奨）。
 

@@ -9,6 +9,15 @@
             "command": "bin/check-utf8-corruption.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bin/check-markdownlint.sh"
+          }
+        ]
       }
     ]
   },
@@ -29,8 +38,11 @@
       "Bash(git pull:*)",
       "Bash(git revert:*)",
       "Bash(markdownlint:*)",
+      "Bash(markdownlint-cli2:*)",
       "Bash(mktemp /tmp/aidlc-:*)",
       "Bash(npx markdownlint-cli:*)",
+      "Bash(npx --no-install markdownlint-cli2:*)",
+      "Bash(npx markdownlint-cli2:*)",
       "Bash(skills/aidlc/scripts/*)",
       "Bash(test:*)",
       "Skill(aidlc-setup)",

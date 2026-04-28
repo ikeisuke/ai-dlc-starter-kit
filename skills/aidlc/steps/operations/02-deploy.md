@@ -180,20 +180,19 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 2. 7.2 CHANGELOG更新（`changelog = true` の場合）
 3. 7.3 README更新
 4. 7.4 履歴記録
-5. 7.5 Markdownlint実行
-6. 7.6 progress.md更新 ← **PR準備完了**
-7. 7.7 Gitコミット
+5. 7.6 progress.md更新 ← **PR準備完了**
+6. 7.7 Gitコミット
 
 **注**: 7.6でprogress.mdを「PR準備完了」状態に更新し、7.7でコミットしてPRに反映します。以下はレビュー・マージ作業です。
 
 > **[必読] `operations-release.md §7.7`**: §7.7 Git コミットのコミット対象ファイル / 行区切り規約 / 設定依存判定の詳細は `steps/operations/operations-release.md §7.7` を参照する。本ファイル（02-deploy.md）にはサブステップ番号の列挙のみを残し、詳細手順は集約先で管理する。
 
-8. 7.8 ドラフトPR Ready化
-9. 7.9 コミット漏れ確認
-10. 7.10 リモート同期確認
-11. 7.11 mainブランチとの差分チェック
-12. 7.12 PRマージ前レビュー
-13. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
+7. 7.8 ドラフトPR Ready化
+8. 7.9 コミット漏れ確認
+9. 7.10 リモート同期確認
+10. 7.11 mainブランチとの差分チェック
+11. 7.12 PRマージ前レビュー
+12. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
 
 - **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 
