@@ -280,11 +280,325 @@ _extract() {
     ' "$path"
 }
 
-# skill_caused 派生値計算 + mirror_state 状態判定
-# 入力: extract 出力（TSV）
-# 出力: candidate\t<idx>\t<state>\t<skill_caused>（state="" / sent / skipped / pending、skill_caused=true/false）
+# ─── Unit 006: 氾濫緩和（重複検出 + サイクル毎上限）────────────────────
+# 純粋関数フィルタ層（_filter_dedup_and_cap）+ 設定解決 / 正規化サポート
+
+# Python 3 利用可否チェック（NFKC 正規化 / Jaccard / 編集距離計算で必須）
+# 不在時 → exit 2 fatal（NfkcUnavailablePolicy = Fatal / DR-006 fatal 系統）
+_check_python3() {
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "error	nfkc-unavailable	python3-required" >&2
+        return 2
+    fi
+    return 0
+}
+
+# 文字列正規化（trim + collapse_whitespace + NFKC / Python 3 必須）
+# 純粋性レベル: ビジネス副作用なし（python3 サブプロセス呼び出しあり）
+_normalize_text() {
+    local s="$1"
+    if [ -z "$s" ]; then
+        echo ""
+        return 0
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "error	nfkc-unavailable	python3-required" >&2
+        return 2
+    fi
+    printf '%s' "$s" | python3 -c '
+import sys, unicodedata, re
+text = sys.stdin.read()
+text = unicodedata.normalize("NFKC", text)
+text = text.strip()
+text = re.sub(r"\s+", " ", text)
+sys.stdout.write(text)
+' 2>/dev/null
+}
+
+# Jaccard 整数化（文字 bigram ベース / マルチバイト対応のため Python 3 経由）
+# 出力: Integer 0..1000（= Jaccard係数 × 1000、切り捨て丸め）
+# 純粋性レベル: ビジネス副作用なし
+# セキュリティ: 入力文字列は stdin にて NUL 区切りで渡す（環境変数経由を避け /proc/*/environ 露出を抑止）
+_jaccard_bigram_milli() {
+    local a="$1" b="$2"
+    if [ -z "$a" ] || [ -z "$b" ]; then
+        echo 0
+        return 0
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "error	nfkc-unavailable	python3-required" >&2
+        return 2
+    fi
+    printf '%s\0%s' "$a" "$b" | python3 -c '
+import sys
+data = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+parts = data.split("\x00", 1)
+a = parts[0]
+b = parts[1] if len(parts) > 1 else ""
+def bigrams(s):
+    if len(s) < 2:
+        return {s} if s else set()
+    return {s[i:i+2] for i in range(len(s)-1)}
+A = bigrams(a)
+B = bigrams(b)
+union = len(A | B)
+if union == 0:
+    print(0)
+else:
+    inter = len(A & B)
+    print(int(inter * 1000 / union))
+' 2>/dev/null
+}
+
+# 編集距離整数化（Levenshtein 距離 / マルチバイト対応のため Python 3 経由）
+# 出力: Integer 0..100（= edit_distance × 100 / min_len、切り捨て丸め）
+# 両方空文字時は 0 を返す
+# セキュリティ: 入力文字列は stdin にて NUL 区切りで渡す（環境変数経由を避ける）
+_edit_distance_ratio_pct() {
+    local a="$1" b="$2"
+    if [ -z "$a" ] && [ -z "$b" ]; then
+        echo 0
+        return 0
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "error	nfkc-unavailable	python3-required" >&2
+        return 2
+    fi
+    printf '%s\0%s' "$a" "$b" | python3 -c '
+import sys
+data = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+parts = data.split("\x00", 1)
+a = parts[0]
+b = parts[1] if len(parts) > 1 else ""
+la, lb = len(a), len(b)
+if la == 0 or lb == 0:
+    print(100 if (la + lb) > 0 else 0)
+else:
+    if la < lb:
+        a, b, la, lb = b, a, lb, la
+    prev = list(range(lb + 1))
+    for i in range(1, la + 1):
+        curr = [i] + [0]*lb
+        for j in range(1, lb + 1):
+            cost = 0 if a[i-1] == b[j-1] else 1
+            curr[j] = min(curr[j-1] + 1, prev[j] + 1, prev[j-1] + cost)
+        prev = curr
+    dist = prev[lb]
+    min_len = min(la, lb)
+    print(int(dist * 100 / min_len))
+' 2>/dev/null
+}
+
+# flood_mitigation 設定解決
+# 出力: stdout 1 行 TSV 構造化出力
+#   config\t<feedback_max_per_cycle>\t<jaccard_milli>\t<edit_dist_pct>\t<nfkc_policy>\t<cap_strategy>
+# 純粋性レベル: ビジネス副作用なし（dasel / read-config.sh 呼び出しあり）
+_resolve_flood_mitigation_config() {
+    # schema からデフォルト値読み込み
+    local default_max default_jaccard default_edit_pct default_policy default_cap
+    default_max="$(_dasel_query_yaml 'retrospective_schema.flood_mitigation.feedback_max_per_cycle_default')"
+    default_jaccard="$(_dasel_query_yaml 'retrospective_schema.flood_mitigation.dedup_jaccard_threshold_milli')"
+    default_edit_pct="$(_dasel_query_yaml 'retrospective_schema.flood_mitigation.dedup_edit_distance_ratio_pct')"
+    default_policy="$(_strip_quotes "$(_dasel_query_yaml 'retrospective_schema.flood_mitigation.nfkc_unavailable_policy')")"
+    default_cap="$(_strip_quotes "$(_dasel_query_yaml 'retrospective_schema.flood_mitigation.cap_strategy')")"
+
+    [ -z "$default_max" ] && default_max=3
+    [ -z "$default_jaccard" ] && default_jaccard=700
+    [ -z "$default_edit_pct" ] && default_edit_pct=30
+    [ -z "$default_policy" ] && default_policy="fatal"
+    [ -z "$default_cap" ] && default_cap="skip-and-record"
+
+    # 4 階層マージで feedback_max_per_cycle 取得
+    local raw_max=""
+    if raw_max="$("${SCRIPT_DIR}/read-config.sh" rules.retrospective.feedback_max_per_cycle 2>/dev/null)"; then
+        :
+    else
+        raw_max=""
+    fi
+    raw_max="${raw_max#\"}"
+    raw_max="${raw_max%\"}"
+
+    local resolved_max="$default_max"
+    if [ -n "$raw_max" ]; then
+        if [[ "$raw_max" =~ ^[0-9]+$ ]]; then
+            resolved_max="$raw_max"
+        else
+            echo "warn	feedback-max-per-cycle-invalid	${raw_max}:fallback-to-default" >&2
+        fi
+    fi
+
+    # schema 値も範囲検証（後方互換: 値が壊れていれば default 同値に戻す）
+    local resolved_jaccard="$default_jaccard"
+    if [[ "$default_jaccard" =~ ^[0-9]+$ ]] && [ "$default_jaccard" -ge 0 ] && [ "$default_jaccard" -le 1000 ]; then
+        resolved_jaccard="$default_jaccard"
+    else
+        echo "warn	jaccard-threshold-invalid	${default_jaccard}:fallback-to-700" >&2
+        resolved_jaccard=700
+    fi
+
+    local resolved_edit_pct="$default_edit_pct"
+    if [[ "$default_edit_pct" =~ ^[0-9]+$ ]] && [ "$default_edit_pct" -ge 0 ] && [ "$default_edit_pct" -le 100 ]; then
+        resolved_edit_pct="$default_edit_pct"
+    else
+        echo "warn	edit-distance-pct-invalid	${default_edit_pct}:fallback-to-30" >&2
+        resolved_edit_pct=30
+    fi
+
+    printf 'config\t%s\t%s\t%s\t%s\t%s\n' \
+        "$resolved_max" "$resolved_jaccard" "$resolved_edit_pct" "$default_policy" "$default_cap"
+}
+
+# Pass A: 引用箇所完全一致による重複統合
+# 入力: stdin に 6 列 TSV（candidate\t<idx>\t<state>\t<sc>\t<title>\t<normalized_quote>）
+# 出力: 各行を以下のいずれかでタグ付けして stdout 出力（同 6 列 + status 列追加）
+#   candidate\t<idx>\t...\t<quote>\tpassing                  : 通過
+#   candidate\t<idx>\t...\t<quote>\tdedup-merged:<rep_idx>:quote-exact-match : 統合
+# 純粋性レベル: 完全純粋（awk 内のみで完結）
+_dedup_pass_a() {
+    awk -F'\t' '
+    $1 == "candidate" {
+        idx = $2
+        quote = $6
+        # quote が "-"（プレースホルダ）なら統合キーにしない（個別通過）
+        if (quote == "-" || quote == "") {
+            key = "__SOLO__:" NR
+        } else {
+            key = quote
+        }
+        if (!(key in first_idx)) {
+            first_idx[key] = idx
+            tags[NR] = "passing"
+            order[++cnt] = NR
+            rows[NR] = $0
+        } else {
+            tags[NR] = "dedup-merged:" first_idx[key] ":quote-exact-match"
+            order[++cnt] = NR
+            rows[NR] = $0
+        }
+    }
+    END {
+        for (i = 1; i <= cnt; i++) {
+            n = order[i]
+            printf "%s\t%s\n", rows[n], tags[n]
+        }
+    }
+    '
+}
+
+# Pass B: タイトル類似度（Jaccard / 編集距離）による重複統合
+# 入力: Pass A の出力（7 列: 6 列 candidate + status）
+# 出力: 7 列（status 列を更新）
+#   passing → そのまま passing or dedup-merged:<rep_idx>:title-jaccard|title-edit-distance
+# 純粋性レベル: 完全純粋（_jaccard_bigram_milli / _edit_distance_ratio_pct はビジネス副作用なしレベル → 全体としてはビジネス副作用なしに格下げ）
+_dedup_pass_b() {
+    local jaccard_milli="$1"
+    local edit_dist_pct="$2"
+
+    # 一旦全行を配列に読み込み、passing 行同士を比較する
+    local lines=()
+    local line
+    while IFS= read -r line; do
+        lines+=("$line")
+    done
+
+    local n="${#lines[@]}"
+    if [ "$n" -eq 0 ]; then
+        return 0
+    fi
+
+    # 各行を分解して passing 配列と全行配列を構築
+    # row_quote は本 Pass では参照しないため row_idx / row_title / row_status / row_full のみ保持
+    local -a row_idx row_title row_status row_full
+    local i
+    for ((i=0; i<n; i++)); do
+        local fields="${lines[i]}"
+        local _kind _state _sc _quote
+        IFS=$'\t' read -r _kind idx _state _sc title _quote status <<<"$fields"
+        row_idx[i]="$idx"
+        row_title[i]="$title"
+        row_status[i]="$status"
+        row_full[i]="$fields"
+    done
+
+    # passing 行の representative を idx 昇順で確定し、各 passing 行を比較
+    # i < j の関係で passing[i] が passing[j] の代表となる場合 j を dedup-merged にする
+    local j
+    for ((i=0; i<n; i++)); do
+        if [ "${row_status[i]}" != "passing" ]; then continue; fi
+        local title_i="${row_title[i]}"
+        local idx_i="${row_idx[i]}"
+        for ((j=i+1; j<n; j++)); do
+            if [ "${row_status[j]}" != "passing" ]; then continue; fi
+            local title_j="${row_title[j]}"
+            local jaccard
+            jaccard="$(_jaccard_bigram_milli "$title_i" "$title_j")"
+            if [ "$jaccard" -ge "$jaccard_milli" ]; then
+                row_status[j]="dedup-merged:${idx_i}:title-jaccard"
+                continue
+            fi
+            local edit_pct
+            edit_pct="$(_edit_distance_ratio_pct "$title_i" "$title_j")"
+            if [ "$edit_pct" -le "$edit_dist_pct" ]; then
+                row_status[j]="dedup-merged:${idx_i}:title-edit-distance"
+            fi
+        done
+    done
+
+    # 結果を再構築して出力（元の 6 列 + 更新 status）
+    for ((i=0; i<n; i++)); do
+        local fields_full="${row_full[i]}"
+        local kind idx_re state sc title quote _old
+        IFS=$'\t' read -r kind idx_re state sc title quote _old <<<"$fields_full"
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$kind" "$idx_re" "$state" "$sc" "$title" "$quote" "${row_status[i]}"
+    done
+}
+
+# Cap フィルタ: idx 昇順で max 件まで passing → 残りは cap-exceeded
+# 入力: stdin に Pass B 出力（7 列）
+# 出力: 7 列（status 列を更新）
+#   passing → 通過 max 件まで残し、超過分は cap-exceeded:<count>:<max>
+# 純粋性レベル: 完全純粋（awk のみ）
+_cap_filter() {
+    local max="$1"
+    # cap-exceeded payload は計画契約に従い "count;max"（セミコロン区切り）
+    # status 列内では cap-exceeded:<count>;<max> 形式で表現する
+    awk -F'\t' -v max="$max" '
+    BEGIN { passed = 0 }
+    $1 == "candidate" {
+        if ($7 == "passing") {
+            passed++
+            if (passed > max) {
+                $7 = "cap-exceeded:" passed ";" max
+            }
+        }
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $3, $4, $5, $6, $7
+    }
+    '
+}
+
+# フィルタオーケストレーション（Pass A → Pass B → Cap）
+# 入力: stdin に 6 列 TSV（_classify_candidates の sc=true && state=- 限定行）
+# 出力: 7 列 TSV（status 列で passing / dedup-merged:<rep>:<reason> / cap-exceeded:<n>:<max> を区別）
+# 純粋性レベル: ビジネス副作用なし（_dedup_pass_b 経由で python3 サブプロセス呼び出しあり）
+_filter_dedup_and_cap() {
+    local max="$1"
+    local jaccard_milli="$2"
+    local edit_dist_pct="$3"
+    _dedup_pass_a | _dedup_pass_b "$jaccard_milli" "$edit_dist_pct" | _cap_filter "$max"
+}
+
+# skill_caused 派生値計算 + mirror_state 状態判定 + 引用箇所抽出（Unit 006 拡張）
+# 入力: extract 出力（TSV）, retrospective.md パス（title 抽出のため）
+# 出力: candidate\t<idx>\t<state>\t<skill_caused>\t<normalized_title>\t<normalized_quote>
+#       （state="-"/sent/skipped/pending、skill_caused=true/false）
+#
+# 純粋性レベル: ビジネス副作用なし
+#  - retrospective.md 読み取りあり（_extract_title）
+#  - python3 サブプロセス呼び出しあり（_normalize_text）
+#  - ファイル / 永続ストア更新なし
 _classify_candidates() {
     local extract_input="$1"
+    local path="${2:-}"
     local fw_joined=""
     local fw_n="${#FORBIDDEN_WORDS[@]}"
     if [ "$fw_n" -gt 0 ]; then
@@ -298,7 +612,10 @@ _classify_candidates() {
         done
     fi
 
-    awk -F'\t' -v qmin="$QUOTE_MIN_LENGTH" -v fwords="$fw_joined" '
+    # awk で 5 列の中間表現を出力: candidate\t<idx>\t<state>\t<sc>\t<raw_quote>
+    # raw_quote は q*_quote のうち最初の non-empty（skill_caused=true 寄与候補）。空時は "-" プレースホルダ
+    local intermediate
+    intermediate="$(awk -F'\t' -v qmin="$QUOTE_MIN_LENGTH" -v fwords="$fw_joined" '
     BEGIN {
         fw_n = split(fwords, fw_arr, "|")
         for (i = 1; i <= fw_n; i++) {
@@ -322,8 +639,8 @@ _classify_candidates() {
     END {
         for (i = 1; i <= problem_total; i++) {
             idx = order[i]
-            # skill_caused 派生計算
             sc = "false"
+            chosen_quote = ""
             for (qn = 1; qn <= 3; qn++) {
                 qprefix = "q" qn
                 ans_key = qprefix "_answer"
@@ -332,8 +649,6 @@ _classify_candidates() {
                 quote = problems[idx SUBSEP quote_key]
                 if (ans == "yes") {
                     if (length(quote) >= qmin + 0) {
-                        # 禁止語単独 + qmin 以下チェックは validate スクリプトでダウングレード済みのはず
-                        # ここでは長さのみ確認（validate --apply で q*_answer は no になるため）
                         forbid_match = 0
                         if (length(quote) <= qmin + 0) {
                             for (j = 1; j <= fw_n; j++) {
@@ -345,19 +660,53 @@ _classify_candidates() {
                         }
                         if (forbid_match == 0) {
                             sc = "true"
+                            chosen_quote = quote
                             break
                         }
                     }
                 }
             }
-            # mirror_state.state（欠落時は "-" プレースホルダー / bash の IFS=tab で空フィールド折り畳み回避）
             state_key = idx SUBSEP "mirror_state.state"
             state_val = (state_key in problems) ? problems[state_key] : ""
             if (state_val == "") state_val = "-"
-            printf "candidate\t%d\t%s\t%s\n", idx, state_val, sc
+            if (chosen_quote == "") chosen_quote = "-"
+            printf "candidate\t%d\t%s\t%s\t%s\n", idx, state_val, sc, chosen_quote
         }
     }
-    ' <<<"$extract_input"
+    ' <<<"$extract_input")"
+
+    # bash 後処理: title と normalized_quote を補強して 6 列出力
+    if [ -z "$intermediate" ]; then
+        return 0
+    fi
+    local kind idx state sc raw_quote
+    while IFS=$'\t' read -r kind idx state sc raw_quote; do
+        if [ "$kind" != "candidate" ]; then
+            continue
+        fi
+        local title=""
+        if [ -n "$path" ] && [ -f "$path" ]; then
+            title="$(_extract_title "$path" "$idx" 2>/dev/null || true)"
+        fi
+        if [ -z "$title" ]; then
+            title="（タイトル不明）"
+        fi
+        local normalized_title normalized_quote
+        normalized_title="$(_normalize_text "$title")"
+        if [ "$raw_quote" = "-" ]; then
+            normalized_quote="-"
+        else
+            normalized_quote="$(_normalize_text "$raw_quote")"
+            if [ -z "$normalized_quote" ]; then
+                normalized_quote="-"
+            fi
+        fi
+        # title が正規化後空になった場合のガード
+        if [ -z "$normalized_title" ]; then
+            normalized_title="（タイトル不明）"
+        fi
+        printf 'candidate\t%s\t%s\t%s\t%s\t%s\n' "$idx" "$state" "$sc" "$normalized_title" "$normalized_quote"
+    done <<<"$intermediate"
 }
 
 # 問題タイトルを retrospective.md から取得
@@ -472,6 +821,11 @@ _detect() {
         return 0
     fi
 
+    # Python 3 必須前提チェック（Unit 006 / NFKC 正規化 / Jaccard / 編集距離計算）
+    if ! _check_python3; then
+        return 2
+    fi
+
     # extract → classify（trap で EXIT 時に自動削除）
     local extract_tmp
     extract_tmp="$(mktemp /tmp/retrospective-mirror-extract.XXXXXX)"
@@ -481,7 +835,7 @@ _detect() {
     local classify_tmp
     classify_tmp="$(mktemp /tmp/retrospective-mirror-classify.XXXXXX)"
     _register_cleanup "$classify_tmp"
-    _classify_candidates "$(cat "$extract_tmp")" >"$classify_tmp"
+    _classify_candidates "$(cat "$extract_tmp")" "$path" >"$classify_tmp"
 
     local cycle
     cycle="$(_resolve_cycle_from_path "$path")"
@@ -489,17 +843,33 @@ _detect() {
         cycle="unknown-cycle"
     fi
 
-    # candidate 行（candidate\t<idx>\t<state>\t<skill_caused>）を処理
+    # Unit 006: flood_mitigation 設定解決
+    local config_line cfg_kind cfg_max cfg_jaccard cfg_edit
+    local _cfg_policy _cfg_cap
+    config_line="$(_resolve_flood_mitigation_config)"
+    # cfg_policy / cfg_cap は v2.5.0 では未使用（Unit 007 以降で利用予定 / 単一ソース宣言として保持）
+    IFS=$'\t' read -r cfg_kind cfg_max cfg_jaccard cfg_edit _cfg_policy _cfg_cap <<<"$config_line"
+    if [ "$cfg_kind" != "config" ]; then
+        echo "error	config-resolve-failed	flood-mitigation" >&2
+        return 2
+    fi
+
+    # フィルタ層への入力（sc=true && state="-"（Empty）の行のみ）
+    local filter_input_tmp filter_output_tmp
+    filter_input_tmp="$(mktemp /tmp/retrospective-mirror-filter-in.XXXXXX)"
+    _register_cleanup "$filter_input_tmp"
+    filter_output_tmp="$(mktemp /tmp/retrospective-mirror-filter-out.XXXXXX)"
+    _register_cleanup "$filter_output_tmp"
+
+    # candidate 行（6 列）を処理: total / skill_caused_true / already_processed のカウント + フィルタ入力構築
     local total=0
     local skill_caused_true=0
     local already_processed=0
-    local emitted_candidate=0
-
-    while IFS=$'\t' read -r kind idx state sc; do
+    local kind idx state sc title norm_quote
+    while IFS=$'\t' read -r kind idx state sc title norm_quote; do
         if [ "$kind" != "candidate" ]; then
             continue
         fi
-        # state プレースホルダー "-" は空文字に戻す
         if [ "$state" = "-" ]; then
             state=""
         fi
@@ -510,37 +880,60 @@ _detect() {
                 already_processed=$((already_processed + 1))
                 continue
             fi
-            # candidate として出力 + draft 生成
-            local title
-            title="$(_extract_title "$path" "$idx")"
-            if [ -z "$title" ]; then
-                title="（タイトル不明）"
-            fi
-            local draft_path draft_base
-            # macOS BSD mktemp は template の末尾の X 群しか置換しないため、
-            # .md 拡張子は mktemp 後にリネームで付与する
-            draft_base="$(mktemp "/tmp/retrospective-mirror-draft.${idx}.XXXXXX")"
-            draft_path="${draft_base}.md"
-            mv -- "$draft_base" "$draft_path"
-            # draft のライフサイクル（Codex 指摘 #4 / セキュリティ運用ガイド）:
-            # - draft は detect の EXIT trap で削除しない（後続の send が別プロセスで参照するため）
-            # - 正常系: Step 5 の全候補処理完了後、ユーザーが任意で `rm /tmp/retrospective-mirror-draft.*` で削除
-            # - draft 本文は機密情報を含まない前提（retrospective.md は git 管理対象 / 公開リポジトリ向け要約）
-            # - 万一 detect が _generate_draft で失敗した場合は draft_path がここで生成されているため、明示エラー時に削除する
-            _generate_draft "$path" "$idx" "$cycle" "$title" "$draft_path" || {
-                rm -f -- "$draft_path" 2>/dev/null || true
-                echo "error	draft-generation-failed	${idx}" >&2
-                return 2
-            }
-            printf 'mirror\tcandidate\t%s\t%s\t%s\n' "$idx" "$title" "$draft_path"
-            emitted_candidate=1
+            # フィルタ入力に 6 列で書き出し（state を "-" プレースホルダで保持）
+            printf 'candidate\t%s\t-\t%s\t%s\t%s\n' "$idx" "$sc" "$title" "$norm_quote" >>"$filter_input_tmp"
         fi
     done <"$classify_tmp"
 
-    # 中間ファイルは trap で EXIT 時にクリーンアップされる（明示削除も保持し、早期解放）
-    rm -f -- "$extract_tmp" "$classify_tmp" 2>/dev/null || true
+    # フィルタ層実行（Pass A → Pass B → Cap）
+    _filter_dedup_and_cap "$cfg_max" "$cfg_jaccard" "$cfg_edit" <"$filter_input_tmp" >"$filter_output_tmp"
 
-    if [ "$emitted_candidate" -eq 0 ]; then
+    # フィルタ結果を処理: passing は emit candidate（draft 生成）、それ以外は dedup-merged / cap-exceeded 行を出力
+    local emitted_candidate=0
+    local dedup_merged=0
+    local cap_exceeded=0
+    local f_kind f_idx f_title f_status
+    local _f_state _f_sc _f_quote
+    while IFS=$'\t' read -r f_kind f_idx _f_state _f_sc f_title _f_quote f_status; do
+        if [ "$f_kind" != "candidate" ]; then
+            continue
+        fi
+        case "$f_status" in
+            passing)
+                local draft_path draft_base
+                draft_base="$(mktemp "/tmp/retrospective-mirror-draft.${f_idx}.XXXXXX")"
+                draft_path="${draft_base}.md"
+                mv -- "$draft_base" "$draft_path"
+                _generate_draft "$path" "$f_idx" "$cycle" "$f_title" "$draft_path" || {
+                    rm -f -- "$draft_path" 2>/dev/null || true
+                    echo "error	draft-generation-failed	${f_idx}" >&2
+                    return 2
+                }
+                printf 'mirror\tcandidate\t%s\t%s\t%s\n' "$f_idx" "$f_title" "$draft_path"
+                emitted_candidate=1
+                ;;
+            dedup-merged:*)
+                # status: dedup-merged:<rep_idx>:<reason>
+                local rep_idx
+                rep_idx="$(echo "$f_status" | cut -d: -f2)"
+                printf 'mirror\tdedup-merged\t%s\t%s\n' "$f_idx" "$rep_idx"
+                dedup_merged=$((dedup_merged + 1))
+                ;;
+            cap-exceeded:*)
+                # status: cap-exceeded:<count>;<max>（計画契約 / セミコロン区切り）
+                local count_max
+                count_max="${f_status#cap-exceeded:}"
+                # count_max は "<count>;<max>" 形式 → そのまま payload に流用
+                printf 'mirror\tcap-exceeded\t%s\t%s\n' "$f_idx" "$count_max"
+                cap_exceeded=$((cap_exceeded + 1))
+                ;;
+        esac
+    done <"$filter_output_tmp"
+
+    # 中間ファイルは trap で EXIT 時にクリーンアップされる（明示削除も保持し、早期解放）
+    rm -f -- "$extract_tmp" "$classify_tmp" "$filter_input_tmp" "$filter_output_tmp" 2>/dev/null || true
+
+    if [ "$emitted_candidate" -eq 0 ] && [ "$dedup_merged" -eq 0 ] && [ "$cap_exceeded" -eq 0 ]; then
         if [ "$skill_caused_true" -eq 0 ]; then
             echo "mirror	skip	no-skill-caused"
         else
@@ -548,8 +941,8 @@ _detect() {
         fi
     fi
 
-    printf 'summary\tcounts\ttotal=%d;skill_caused_true=%d;already-processed=%d\n' \
-        "$total" "$skill_caused_true" "$already_processed"
+    printf 'summary\tcounts\ttotal=%d;skill_caused_true=%d;already-processed=%d;dedup-merged=%d;cap-exceeded=%d\n' \
+        "$total" "$skill_caused_true" "$already_processed" "$dedup_merged" "$cap_exceeded"
     return 0
 }
 
@@ -919,38 +1312,42 @@ _record() {
 }
 
 # ─── 引数ディスパッチ ─────────
-SUBCOMMAND="${1:-}"
-case "$SUBCOMMAND" in
-    detect)
-        if [ "$#" -lt 2 ]; then
-            echo "error	usage	retrospective-mirror.sh detect <retrospective.md>" >&2
+# source 経由で関数のみロードするテスト用途では BASH_SOURCE[0] != $0 となるため、
+# 直接実行時のみディスパッチを行う（Unit 006 ユニットテスト追加に伴うガード）
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]]; then
+    SUBCOMMAND="${1:-}"
+    case "$SUBCOMMAND" in
+        detect)
+            if [ "$#" -lt 2 ]; then
+                echo "error	usage	retrospective-mirror.sh detect <retrospective.md>" >&2
+                exit 2
+            fi
+            _detect "$2"
+            exit $?
+            ;;
+        send)
+            if [ "$#" -lt 5 ]; then
+                echo "error	usage	retrospective-mirror.sh send <retrospective.md> <problem_index> <title> <draft_body_path>" >&2
+                exit 2
+            fi
+            _send "$2" "$3" "$4" "$5"
+            exit $?
+            ;;
+        record)
+            if [ "$#" -lt 4 ]; then
+                echo "error	usage	retrospective-mirror.sh record <retrospective.md> <problem_index> <decision>" >&2
+                exit 2
+            fi
+            _record "$2" "$3" "$4"
+            exit $?
+            ;;
+        "")
+            echo "error	usage	retrospective-mirror.sh detect|send|record ..." >&2
             exit 2
-        fi
-        _detect "$2"
-        exit $?
-        ;;
-    send)
-        if [ "$#" -lt 5 ]; then
-            echo "error	usage	retrospective-mirror.sh send <retrospective.md> <problem_index> <title> <draft_body_path>" >&2
+            ;;
+        *)
+            echo "error	unknown-subcommand	${SUBCOMMAND}" >&2
             exit 2
-        fi
-        _send "$2" "$3" "$4" "$5"
-        exit $?
-        ;;
-    record)
-        if [ "$#" -lt 4 ]; then
-            echo "error	usage	retrospective-mirror.sh record <retrospective.md> <problem_index> <decision>" >&2
-            exit 2
-        fi
-        _record "$2" "$3" "$4"
-        exit $?
-        ;;
-    "")
-        echo "error	usage	retrospective-mirror.sh detect|send|record ..." >&2
-        exit 2
-        ;;
-    *)
-        echo "error	unknown-subcommand	${SUBCOMMAND}" >&2
-        exit 2
-        ;;
-esac
+            ;;
+    esac
+fi

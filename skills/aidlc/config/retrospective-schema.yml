@@ -64,3 +64,20 @@ retrospective_schema:
     - gh-rate-limit
     - gh-network-error
     - gh-unknown-error
+  # flood_mitigation（Unit 006 / #590）: detect サブコマンド内のフィルタ層が参照する設定値。
+  # 重複検出（dedup）とサイクル毎上限ガード（cap）のしきい値を機械可読契約として単一ソース化する。
+  # しきい値は全て整数値（bash 互換性 / 浮動小数点誤差排除のため）。
+  flood_mitigation:
+    feedback_max_per_cycle_default: 3
+    dedup_quote_normalize_rules:
+      - trim_whitespace        # 前後空白除去
+      - collapse_whitespace    # 連続空白を半角スペース 1 個に
+      - nfkc_unicode           # NFKC 正規化（全角半角統一 / Python 3 必須）
+    # Jaccard 整数化: intersection * 1000 / union（切り捨て）。閾値 700 = 0.700 ちょうど（>= で一致判定）
+    dedup_jaccard_threshold_milli: 700
+    # 編集距離整数化: edit_distance * 100 / min(len_a, len_b)（切り捨て）。閾値 30 = 30%（<= で一致判定）
+    dedup_edit_distance_ratio_pct: 30
+    # NFKC 不可（Python 3 不在）時の方針: fatal（exit 2 + error\tnfkc-unavailable\tpython3-required）
+    nfkc_unavailable_policy: fatal
+    # 上限超過時の戦略: 超過分を AskUserQuestion 抑制 + cap-exceeded TSV 行で記録
+    cap_strategy: skip-and-record
