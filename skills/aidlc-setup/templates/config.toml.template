@@ -39,40 +39,15 @@ commit_on_phase_complete = true
 branch_mode = "ask"
 # unit_branch_enabled: Unit単位でブランチを作成するか
 unit_branch_enabled = false
-# squash_enabled: Unit/Phase完了時に中間コミットをスカッシュするか
-squash_enabled = false
-# ai_author: Co-Authored-By に使用するAI著者情報
-# - 形式: "ツール名 <email>"（推奨）または任意の文字列
-# - デフォルト: ""（空なら自動検出）
-ai_author = ""
-# ai_author_auto_detect: AIツールを自動検出してCo-Authored-Byを付与するか
-ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
 
 [rules.reviewing]
-# AIレビュー設定
-# mode: "recommend" | "required" | "disabled"
-# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
-# - required: AIレビューツール利用可能時にレビュー必須
-# - disabled: レビュー推奨を無効化
-mode = "recommend"
-# tools: AIレビューに使用するツールの優先順位リスト
-# - デフォルト: ["codex"]
-# - 例: ["codex", "claude", "gemini"]
-# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
-tools = ["codex"]
 # exclude_patterns: レビュー対象から除外するファイルパターン（配列）
 # - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
 # - ここに追加のパターンを指定可能
 # exclude_patterns = ["*.p12", "config/secrets/**"]
-
-[rules.linting]
-# Markdown lint設定（v2.1.6でenabled/commandに統合）
-# enabled: true | false - lintを実行するか（デフォルト: false）
-# 旧キー markdown_lint は enabled として読み取られます（フォールバック）
-enabled = false
 
 [rules.feedback]
 # フィードバック送信機能設定（v1.13.3で追加）
@@ -80,13 +55,6 @@ enabled = false
 # - true: フィードバック送信機能を有効化（デフォルト）
 # - false: フィードバック送信機能を無効化（企業利用時のセキュリティ対策）
 enabled = true
-
-[rules.automation]
-# 自動化設定（v1.18.0で追加）
-# mode: "manual" | "semi_auto"
-# - manual: 従来どおりすべての承認ポイントでユーザー確認（デフォルト）
-# - semi_auto: AIレビュー合格時にユーザー承認を省略し自動遷移
-mode = "manual"
 
 [rules.custom]
 # プロジェクト固有のカスタムルール

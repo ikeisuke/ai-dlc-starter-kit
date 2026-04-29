@@ -30,6 +30,153 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 ### 3. バックログ記録
 次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `guides/backlog-management.md`）。
 
+<!-- guidance:id=unit004-retrospective-creation -->
+
+### 3.5. retrospective 作成（v2.5.0+ / Unit 004 / #590）
+
+**マージ前完結契約準拠**: 本サブステップは `.aidlc/cycles/{{CYCLE}}/operations/retrospective.md` への書き込みを伴うため、**5. PR マージ後の手順より前**に完結させる必要がある（マージ後は exit 3 ガードで拒否される）。
+
+**責務分離**: 本サブステップは **呼び出し順序と分岐のみ** を記述する。判定ロジック（feedback_mode 解決 / テンプレート展開 / YAML 検証 / ダウングレード）は全て下記スクリプトに委譲される。
+
+#### Step 1: サイクルバージョンガード
+
+```bash
+bash scripts/lib/cycle-version-check.sh "{{CYCLE}}"
+```
+
+判定:
+
+- exit 0 → 続行（Step 2 へ）
+- exit 1 → `retrospective\tskip\tcycle-too-old` を表示してスキップ（v2.5.0 未満のサイクルでは生成しない）
+- exit 2 → `error\tcycle-version-format\t<input>` を表示して停止（フォーマット違反）
+
+#### Step 2: retrospective-generate.sh 呼び出し
+
+```bash
+bash scripts/retrospective-generate.sh "{{CYCLE}}"
+```
+
+`feedback_mode` 解決は generate スクリプトが一元実施する（Step では `read-config.sh` を呼び出さない / 責務集約）。
+
+#### Step 3: 出力プレフィックス分岐（複数行出力時の判定優先順位）
+
+generate の出力を上から順に評価し、**最初にマッチした行で確定**する:
+
+1. **最優先 / exit code != 0**: generate スクリプトの exit code が `2`（fatal）の場合、即座に停止（stderr の `error\t...` 行を表示してユーザに通知）
+2. **次優先 / `error\t...` 行のみ存在**: stderr に `error\t...` 行が存在し、かつ stdout に `retrospective\t...` 行が **1 件もない**場合、停止
+3. **続行判定 / `retrospective\tcreated\t<path>`**: stdout に `retrospective\tcreated\t<path>` 行が **1 行以上存在すれば**続行（`warn\t...` 行は無視 / 警告は表示するが分岐に使わない）→ Step 4 へ
+4. **スキップ判定 / `retrospective\tskip\t*`**: stdout に `retrospective\tskip\tdisabled` / `retrospective\tskip\talready-exists` / `retrospective\tskip\tcycle-too-old` 行が存在すればスキップ（次のサブステップへ進まず Step 3.5 終了。`cycle-too-old` は Step 1 で除外済みだが、generate スクリプトの単体実行時の API 互換性のため受理する）
+5. **その他**: 上記いずれにも該当しない場合は警告を表示してスキップ（保守的フォールバック）
+
+**判定対象の分離契約**:
+
+- 機械判定対象: stdout の `retrospective\t` プレフィックス行のみ
+- 補助情報（表示のみ / 分岐に使わない）: stderr の `warn\t...` / `error\t...` 行
+
+#### Step 4: retrospective-validate.sh 呼び出し（続行時のみ）
+
+Step 3 で続行判定された場合、生成された retrospective.md パスを引数に validate スクリプトを `--apply` で呼び出す:
+
+```bash
+bash scripts/retrospective-validate.sh validate "<生成パス>" --apply
+```
+
+判定:
+
+- exit 0 → `downgrade\t...` 行をユーザに表示（違反項目があれば q*_answer が yes → no に書き換え済み）
+- exit 2 → `error\tapply-failed\trollback-completed` 等を表示して停止
+
+<!-- guidance:id=unit005-mirror-flow -->
+
+#### Step 5: mirror フロー（v2.5.0+ / Unit 005 / #590）
+
+**責務分離**: 本 Step も呼び出し順序と分岐のみを記述する。判定ロジック（feedback_mode 解決 / 候補抽出 / Issue 起票 / mirror_state 書き込み）は全て `retrospective-mirror.sh` に委譲される。
+
+##### Step 5-1: 候補検出（detect）
+
+```bash
+bash scripts/retrospective-mirror.sh detect "<生成パス>"
+```
+
+`feedback_mode` 解決は detect サブコマンド内で一元実施する（Step では `read-config.sh rules.retrospective.feedback_mode` を呼ばない / 責務集約）。
+
+##### Step 5-2: 出力プレフィックス分岐
+
+detect の出力を上から順に評価し、**最初にマッチしたパターンで確定**する:
+
+1. **最優先 / exit code != 0**: detect の exit code が `2`（fatal）の場合、即時停止（stderr の `error\t...` 行を表示してユーザに通知）
+2. **スキップ判定 / `mirror\tskip\t<reason>`**: stdout に `mirror\tskip\tnot-mirror-mode` / `mirror\tskip\tno-skill-caused` / `mirror\tskip\tall-processed` のいずれかがあればスキップ理由を表示してフロー終了（次の `## 4. 次期サイクル計画` へ）
+3. **続行判定 / `mirror\tcandidate\t<idx>\t<title>\t<draft_path>`**: 1 行以上存在で Step 5-3（candidate ループ）へ
+4. **その他**: 上記いずれにも該当しない場合は警告を表示してスキップ（保守的フォールバック）
+
+**判定対象の分離契約**:
+
+- 機械判定対象: stdout の `mirror\t` プレフィックス行のみ
+- 補助情報（表示のみ / 分岐に使わない）: stderr の `warn\t...` / `error\t...` 行（exit 2 時のみ機械判定対象）
+
+##### Step 5-3: candidate ループ + AskUserQuestion 分岐
+
+各 `mirror\tcandidate\t<idx>\t<title>\t<draft_path>` 行について以下を順に実行:
+
+1. **AskUserQuestion 提示**:
+
+   ```text
+   問題 <idx>: <title>
+   下書き本文: <draft_path>
+
+   どのように対応しますか？
+   1. 送信する（upstream Issue 起票）
+   2. 送信しない（ローカル記録のみ）
+   3. 後で判断（保留）
+   ```
+
+2. **「送信する」選択時**:
+
+   ```bash
+   bash scripts/retrospective-mirror.sh send "<生成パス>" <idx> "<title>" "<draft_path>"
+   ```
+
+   - exit 0 + `mirror\tsent\t<idx>\t<url>` → 起票成功 / Issue URL を表示してサマリに加算
+   - exit 0 + `mirror\tsend-failed\t<idx>\t<reason>` → 警告表示（reason: gh-not-authenticated / gh-rate-limit / gh-network-error / gh-unknown-error / gh-not-installed）して次の candidate へ続行（recoverable failure）
+   - exit 2 → `error\t<code>\t<payload>` を表示してフロー全体停止（fatal）
+
+3. **「送信しない」選択時**:
+
+   ```bash
+   bash scripts/retrospective-mirror.sh record "<生成パス>" <idx> skipped
+   ```
+
+   - exit 0 + `mirror\trecorded\t<idx>\tskipped` → 記録完了表示してサマリに加算
+   - exit 2 → fatal 停止
+
+4. **「後で判断（保留）」選択時**:
+
+   ```bash
+   bash scripts/retrospective-mirror.sh record "<生成パス>" <idx> pending
+   ```
+
+   - exit 0 + `mirror\trecorded\t<idx>\tpending` → 同上
+
+##### Step 5-4: サマリ表示
+
+全 candidate 処理完了後、以下のサマリを表示:
+
+```text
+【mirror フロー完了】
+  起票成功: <sent_count>
+  送信しない（記録のみ）: <skipped_count>
+  保留: <pending_count>
+  送信失敗（recoverable）: <send_failed_count>
+```
+
+##### マージ前完結契約との整合（Unit 004 から継承）
+
+mirror フローの全ての書き込み（mirror_state 更新）は Operations Phase の **5. PR マージ後の手順より前**で完結する。マージ後に `retrospective-mirror.sh send` / `record` を呼び出した場合は `_validate_apply_path` ガードで AIDLC_CYCLES 配下のみ許可しており、保護効果として `.aidlc/cycles/{{CYCLE}}/**` 配下が破壊されないよう設計されている。
+
+##### Unit 006 への引き継ぎ点
+
+本 Step の Step 5-1（detect）と Step 5-3（candidate ループ）の間に Unit 006 が「重複検出 + サイクル毎上限ガード」フィルタ層を挿入する。本 Step は detect の TSV 出力スキーマを安定インターフェースとして提供する。
+
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
 

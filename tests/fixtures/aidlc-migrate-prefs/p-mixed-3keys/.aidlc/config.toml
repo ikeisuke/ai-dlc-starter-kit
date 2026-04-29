@@ -1,0 +1,20 @@
+# project config with 3 individual preference keys (Unit 003 fixture: p-mixed-3keys)
+starter_kit_version = "v2.5.0"
+
+[project]
+name = "test-project"
+description = "Unit 003 fixture"
+type = "general"
+
+[rules.git]
+commit_on_unit_complete = true
+commit_on_phase_complete = true
+branch_mode = "ask"
+unit_branch_enabled = false
+squash_enabled = true
+
+[rules.reviewing]
+mode = "required"
+
+[rules.linting]
+enabled = true

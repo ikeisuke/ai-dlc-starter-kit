@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.0] - 2026-04-29
+
+### Added
+
+- 個人好みキー 7 種（`rules.git.commit_on_unit_complete` / `rules.git.commit_on_phase_complete` / `rules.git.branch_mode` / `rules.git.draft_pr` / `rules.git.merge_method` / `rules.git.unit_branch_enabled` / `rules.git.squash_enabled`）を `defaults.toml` に集約。4 階層マージ（project-local < project-shared < user-global < defaults）を整理し、user-global 側に寄せられる構成へリファクタ（#592 / Unit 001）
+- `aidlc-setup` ウィザードに個人好みキーの user-global 移動推奨案内を追加。setup 実行時に `~/.claude/aidlc/config.toml` への分離をオプトイン提案し、プロジェクト共有設定と個人好みの境界を明示化（#592 / Unit 002）
+- `aidlc-migrate` に v2.5.0 経路（個人好みキーの user-global 移動提案）を追加。既存プロジェクトの `.aidlc/config.toml` から個人好みキー 7 種を検出し、user-global への移動を 3 択（移動 / 保持 / スキップ）で提案する非破壊フロー（#592 / Unit 003）
+- Operations Phase 完了時の `retrospective.md` 自動生成テンプレート（`templates/retrospective_template.md`）と判定エンジン（`scripts/retrospective-mirror.sh`）を追加。skill 起因 6 キー判定で改善候補を抽出し、`feedback_mode = "silent"`（既定）でローカル記録、`feedback_mode = "mirror"` で下書き → AskUserQuestion 承認 → upstream Issue 起票フローに分岐（#590 / Unit 004 / Unit 005）
+- `[rules.feedback].upstream_repo`（既定 `ikeisuke/ai-dlc-starter-kit`）と `[rules.retrospective].feedback_max_per_cycle`（既定 `3`）の 2 設定キーを `defaults.toml` に追加。フォーク利用や貢献先変更時のみ user-global で上書き、不正値時は警告 + デフォルトフォールバック（#590 / Unit 005 / Unit 006）
+- mirror モード氾濫緩和（重複検出 + サイクル毎上限ガード）を追加。Pass A（quote NFKC 完全一致）→ Pass B（title Jaccard milli 700 + Levenshtein ratio 30%）→ Cap（`feedback_max_per_cycle=3`）の 3 段純粋関数フィルタパイプラインで、retrospective 候補の重複統合と上限超過記録を実施。NFKC 正規化は Python 3 必須（不在時 fatal）、TSV 6 列契約（`kind/idx/state/sc/title/normalized_quote`）で `_classify_candidates` → `_filter_dedup_and_cap` → `_detect` を疎結合化（#590 / Unit 006）
+
+### Changed
+
+- 自己改善ループの導入により、Operations Phase 完了時に retrospective テンプレートが自動生成され、サイクル振り返りが定型化。`feedback_mode = "mirror"` 時は AI-DLC 自身の改善 backlog（upstream Issue）として GitHub に直接起票され、開発者からのフィードバック収集ループが整備される（#590）
+
+---
+
 ## [2.4.3] - 2026-04-28
 
 ### Changed

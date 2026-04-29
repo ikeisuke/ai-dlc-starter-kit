@@ -32,36 +32,15 @@ commit_on_unit_complete = true
 commit_on_phase_complete = true
 branch_mode = "branch"
 unit_branch_enabled = false
-squash_enabled = true
-ai_author = ""
-ai_author_auto_detect = true
 
 [rules.documentation]
 language = "日本語"
 
 [rules.reviewing]
-# AIレビュー設定
-# mode: "recommend" | "required" | "disabled"
-# - recommend: AIレビューツール利用可能時にレビューを推奨（デフォルト）
-# - required: AIレビューツール利用可能時にレビュー必須
-# - disabled: レビュー推奨を無効化
-mode = "required"
-# tools: AIレビューに使用するツールの優先順位リスト
-# - デフォルト: ["codex"]
-# - 例: ["codex", "claude", "gemini"]
-# - リスト先頭を優先ツールヒントとしてスキルに渡す（最終選択はスキル内部の責務）
-tools = ["codex"]
 # exclude_patterns: レビュー対象から除外するファイルパターン（配列）
 # - デフォルトパターン(.env*, *.key, *.pem, credentials.*, *secret*)は常に適用
 # - ここに追加のパターンを指定可能
 # exclude_patterns = ["*.p12", "config/secrets/**"]
-
-[rules.automation]
-# 自動化設定（v1.18.0で追加）
-# mode: "manual" | "semi_auto"
-# - manual: 従来どおりすべての承認ポイントでユーザー確認（デフォルト）
-# - semi_auto: AIレビュー合格時にユーザー承認を省略し自動遷移
-mode = "semi_auto"
 
 [rules.custom]
 # プロジェクト固有のカスタムルール
@@ -83,15 +62,6 @@ changelog = true
 version_tag = false
 
 # 旧セクション [rules.unit_branch] は [rules.git] に統合されました（v2.1.8）
-
-[rules.linting]
-# Markdown lint設定（v2.1.6でenabled/commandに統合）
-# enabled: true | false - lintを実行するか（デフォルト: false）
-# command: lintに使用するコマンド（デフォルト: "npx markdownlint-cli2"）
-#   シングルコマンド名のみ。引数は固定で対象パスが付与される
-# 旧キー markdown_lint=true は enabled=true として読み取られます（フォールバック）
-enabled = true
-# command = "npx markdownlint-cli2"
 
 [rules.depth_level]
 # 成果物詳細度設定（v1.19.0で追加）

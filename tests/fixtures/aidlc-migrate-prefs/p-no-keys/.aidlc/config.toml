@@ -1,0 +1,13 @@
+# project config with 0 individual preference keys (Unit 003 fixture: p-no-keys)
+starter_kit_version = "v2.5.0"
+
+[project]
+name = "test-project"
+description = "Unit 003 fixture"
+type = "general"
+
+[rules.git]
+commit_on_unit_complete = true
+commit_on_phase_complete = true
+branch_mode = "ask"
+unit_branch_enabled = false

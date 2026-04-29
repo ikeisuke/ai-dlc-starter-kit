@@ -4,6 +4,12 @@
 
 [rules.feedback]
 enabled = true
+# Issue 送信先 owner/repo（v2.5.0 で追加 / Unit 005 / #590）
+# - mirror モードの retrospective Issue 送信先
+# - フォーク利用や貢献先変更時のみ user-global で上書きする
+# - 形式: <owner>/<repo>（正規表現: ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ / `/` はちょうど 1 個）
+# - 不正値時は警告 + デフォルト（ikeisuke/ai-dlc-starter-kit）にフォールバック
+upstream_repo = "ikeisuke/ai-dlc-starter-kit"
 
 [rules.reviewing]
 mode = "recommend"
@@ -55,3 +61,13 @@ language = "日本語"
 
 [rules.github]
 milestone_enabled = false
+
+[rules.retrospective]
+# 許容値: "silent"（自動生成 + ローカル記録のみ） / "mirror"（自動生成 + 下書き → 承認 → upstream Issue 起票）/ "disabled"（自動生成スキップ）
+# mirror モードの実装は Unit 005 / 上限ガードは Unit 006 を参照
+feedback_mode = "silent"
+# サイクル毎の mirror Issue 起票候補の上限件数（Unit 006 / #590）
+# - 重複検出 + 上限ガード後の通過件数がこの値を超えると、超過分は AskUserQuestion 抑制対象
+# - user-global で上書き可能（4 階層マージ: project-local / project-shared / user-global / defaults）
+# - 不正値（負数 / 非整数）時は警告 + retrospective-schema.yml の feedback_max_per_cycle_default = 3 にフォールバック
+feedback_max_per_cycle = 3
