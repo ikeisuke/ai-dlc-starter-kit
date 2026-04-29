@@ -1,0 +1,26 @@
+# project config with all 7 individual preference keys (Unit 003 fixture: p-all7-keys)
+starter_kit_version = "v2.5.0"
+
+[project]
+name = "test-project"
+description = "Unit 003 fixture"
+type = "general"
+
+[rules.git]
+commit_on_unit_complete = true
+commit_on_phase_complete = true
+branch_mode = "ask"
+unit_branch_enabled = false
+squash_enabled = true
+ai_author = "Claude Code <noreply@anthropic.com>"
+ai_author_auto_detect = false
+
+[rules.reviewing]
+mode = "required"
+tools = ["claude"]
+
+[rules.linting]
+enabled = true
+
+[rules.automation]
+mode = "full_auto"
