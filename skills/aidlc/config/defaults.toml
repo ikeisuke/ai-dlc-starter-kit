@@ -55,3 +55,8 @@ language = "日本語"
 
 [rules.github]
 milestone_enabled = false
+
+[rules.retrospective]
+# 許容値: "silent"（自動生成 + ローカル記録のみ） / "mirror"（自動生成 + 下書き → 承認 → upstream Issue 起票）/ "disabled"（自動生成スキップ）
+# mirror モードの実装は Unit 005 / 上限ガードは Unit 006 を参照
+feedback_mode = "silent"

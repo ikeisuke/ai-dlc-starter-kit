@@ -30,6 +30,66 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 ### 3. バックログ記録
 次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `guides/backlog-management.md`）。
 
+<!-- guidance:id=unit004-retrospective-creation -->
+
+### 3.5. retrospective 作成（v2.5.0+ / Unit 004 / #590）
+
+**マージ前完結契約準拠**: 本サブステップは `.aidlc/cycles/{{CYCLE}}/operations/retrospective.md` への書き込みを伴うため、**5. PR マージ後の手順より前**に完結させる必要がある（マージ後は exit 3 ガードで拒否される）。
+
+**責務分離**: 本サブステップは **呼び出し順序と分岐のみ** を記述する。判定ロジック（feedback_mode 解決 / テンプレート展開 / YAML 検証 / ダウングレード）は全て下記スクリプトに委譲される。
+
+#### Step 1: サイクルバージョンガード
+
+```bash
+bash skills/aidlc/scripts/lib/cycle-version-check.sh "{{CYCLE}}"
+```
+
+判定:
+
+- exit 0 → 続行（Step 2 へ）
+- exit 1 → `retrospective\tskip\tcycle-too-old` を表示してスキップ（v2.5.0 未満のサイクルでは生成しない）
+- exit 2 → `error\tcycle-version-format\t<input>` を表示して停止（フォーマット違反）
+
+#### Step 2: retrospective-generate.sh 呼び出し
+
+```bash
+bash skills/aidlc/scripts/retrospective-generate.sh "{{CYCLE}}"
+```
+
+`feedback_mode` 解決は generate スクリプトが一元実施する（Step では `read-config.sh` を呼び出さない / 責務集約）。
+
+#### Step 3: 出力プレフィックス分岐（複数行出力時の判定優先順位）
+
+generate の出力を上から順に評価し、**最初にマッチした行で確定**する:
+
+1. **最優先 / exit code != 0**: generate スクリプトの exit code が `2`（fatal）の場合、即座に停止（stderr の `error\t...` 行を表示してユーザに通知）
+2. **次優先 / `error\t...` 行のみ存在**: stderr に `error\t...` 行が存在し、かつ stdout に `retrospective\t...` 行が **1 件もない**場合、停止
+3. **続行判定 / `retrospective\tcreated\t<path>`**: stdout に `retrospective\tcreated\t<path>` 行が **1 行以上存在すれば**続行（`warn\t...` 行は無視 / 警告は表示するが分岐に使わない）→ Step 4 へ
+4. **スキップ判定 / `retrospective\tskip\t*`**: stdout に `retrospective\tskip\tdisabled` / `retrospective\tskip\talready-exists` / `retrospective\tskip\tcycle-too-old` 行が存在すればスキップ（次のサブステップへ進まず Step 3.5 終了。`cycle-too-old` は Step 1 で除外済みだが、generate スクリプトの単体実行時の API 互換性のため受理する）
+5. **その他**: 上記いずれにも該当しない場合は警告を表示してスキップ（保守的フォールバック）
+
+**判定対象の分離契約**:
+
+- 機械判定対象: stdout の `retrospective\t` プレフィックス行のみ
+- 補助情報（表示のみ / 分岐に使わない）: stderr の `warn\t...` / `error\t...` 行
+
+#### Step 4: retrospective-validate.sh 呼び出し（続行時のみ）
+
+Step 3 で続行判定された場合、生成された retrospective.md パスを引数に validate スクリプトを `--apply` で呼び出す:
+
+```bash
+bash skills/aidlc/scripts/retrospective-validate.sh validate "<生成パス>" --apply
+```
+
+判定:
+
+- exit 0 → `downgrade\t...` 行をユーザに表示（違反項目があれば q*_answer が yes → no に書き換え済み）
+- exit 2 → `error\tapply-failed\trollback-completed` 等を表示して停止
+
+#### Mirror モード固有処理（Unit 005 引き継ぎ）
+
+`feedback_mode = mirror` の場合は本 Unit ではローカル記録 + skill 起因判定フラグ（派生値）まで完結し、下書き生成 → AskUserQuestion 承認 → `/aidlc-feedback` Issue 起票のフローは **Unit 005 で導入**される。本 Unit の retrospective.md は同フローへの入力として疎結合に引き継がれる（`retrospective-schema.yml` を単一ソースとして参照）。
+
 ### 4. 次期サイクルの計画
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
 

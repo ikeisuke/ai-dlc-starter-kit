@@ -1,0 +1,40 @@
+# retrospective.md 機械可読契約スキーマ（Unit 004 / #590）
+# テンプレート / 生成 / 検証 / Unit 005 / Unit 006 が唯一参照する単一ソース定義。
+# テンプレート（retrospective_template.md）は表示層として扱い、検証ルール本体は本ファイルに集約する。
+retrospective_schema:
+  version: 1
+  required_sections:
+    - "## 概要"
+    - "## 問題項目"
+    - "## 次サイクルへの引き継ぎ事項"
+  skill_caused_judgment:
+    # 永続化キー（YAML フロントマターに書き出す契約 6 キーのみ）
+    # skill_caused は派生値で永続化しない（validate スクリプトが summary 行で集計通知）
+    keys:
+      - q1_answer
+      - q1_quote
+      - q2_answer
+      - q2_quote
+      - q3_answer
+      - q3_quote
+    questions:
+      q1: "skill 内の具体的な箇所を引用できるか?"
+      q2: "別の skill ファイルとの矛盾を示せるか?"
+      q3: "「どう読んでも複数解釈できる」と示せるか?"
+    answer_enum:
+      - "yes"
+      - "no"
+    quote_min_length: 10
+    quote_forbidden_words:
+      - 該当
+      - あり
+      - 該当箇所
+      - あります
+  skill_caused_rule: "q1_answer / q2_answer / q3_answer のいずれかが yes かつ対応する quote が valid → skill_caused = true（派生値計算 / 永続化しない）"
+  downgrade_rule: "q*_quote 違反時は対応する q*_answer を no に書き換え。skill_caused は派生値のため書き換え対象外（6 キーのみ書き換え）"
+  valid_feedback_modes:
+    - silent
+    - mirror
+    - disabled
+  default_feedback_mode: silent
+  stable_id: unit004-retrospective-creation
