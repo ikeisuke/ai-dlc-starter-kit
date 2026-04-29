@@ -38,6 +38,10 @@ skill_caused_judgment:
   q2_quote: ""
   q3_answer: "no"
   q3_quote: ""
+mirror_state:
+  state: ""
+  issue_url: ""
+  recorded_at: ""
 ```
 
 ## 次サイクルへの引き継ぎ事項

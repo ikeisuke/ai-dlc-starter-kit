@@ -38,3 +38,29 @@ retrospective_schema:
     - disabled
   default_feedback_mode: silent
   stable_id: unit004-retrospective-creation
+  # mirror_state（Unit 005 / #590 で追加）: mirror フローの処理状態を retrospective.md の
+  # YAML フロントマター内 mirror_state ブロックとして永続化する。Markdown 文言ではなく
+  # 機械可読キーで「送信済み / 保留 / 送信しない」状態を表現し、単一ソース原則を維持する。
+  mirror_state:
+    keys:
+      - state
+      - issue_url
+      - recorded_at
+    state_enum:
+      - sent
+      - skipped
+      - pending
+      - ""
+    state_default: ""
+    issue_url_default: ""
+    recorded_at_default: ""
+    issue_url_pattern: '^https://github\.com/[^/]+/[^/]+/issues/[0-9]+$'
+    recorded_at_pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
+  mirror_reason_tag_format: "[mirror-reason] cycle={cycle}; problem_index={problem_index}"
+  upstream_repo_pattern: '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'
+  send_failure_reasons:
+    - gh-not-installed
+    - gh-not-authenticated
+    - gh-rate-limit
+    - gh-network-error
+    - gh-unknown-error
