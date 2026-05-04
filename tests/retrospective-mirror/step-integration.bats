@@ -31,9 +31,11 @@ teardown() {
   grep -q '保留' "${STEP_FILE_PATH}"
 }
 
-@test "step-integration: 既存 Step 1〜4 (Unit 004) が保持されている" {
-  grep -q '#### Step 1: サイクルバージョンガード' "${STEP_FILE_PATH}"
-  grep -q '#### Step 2: retrospective-generate.sh 呼び出し' "${STEP_FILE_PATH}"
-  grep -q '#### Step 3: 出力プレフィックス分岐' "${STEP_FILE_PATH}"
-  grep -q '#### Step 4: retrospective-validate.sh 呼び出し' "${STEP_FILE_PATH}"
+@test "step-integration: 既存 Step 2〜4 (Unit 004) が保持されている（Step 1 サイクルバージョンガードは Issue #625 fix で撤廃）" {
+  # Issue #625 fix: 旧 Step 1（cycle-version-check.sh によるサイクル番号 v2.5.0 比較ガード）は撤廃
+  # 理由: プロダクトサイクル番号と starter kit バージョンを直接 SemVer 比較する名前空間混同バグ
+  ! grep -q 'サイクルバージョンガード' "${STEP_FILE_PATH}"
+  grep -q '##### Step 2: retrospective-generate.sh 呼び出し' "${STEP_FILE_PATH}"
+  grep -q '##### Step 3: 出力プレフィックス分岐' "${STEP_FILE_PATH}"
+  grep -q '##### Step 4: retrospective-validate.sh 呼び出し' "${STEP_FILE_PATH}"
 }

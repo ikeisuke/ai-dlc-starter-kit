@@ -21,51 +21,108 @@ Constructionに戻る必要がある場合（バグ修正・機能修正）:
 
 ## AI-DLCサイクル完了【重要・コンテキストリセット必須】
 
-### 1. フィードバック収集
-ユーザーからのフィードバック、メトリクス、課題を収集
+<!-- guidance:id=unit007-retrospective-restructure -->
 
-### 2. 分析と改善点洗い出し
-次期バージョンで対応すべき改善点をリストアップ
+### 1. 振り返り（retrospective）
 
-### 3. バックログ記録
-次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `guides/backlog-management.md`）。
+サイクルを振り返り、Keep（継続したい良い点）/ Problem（顕在化した課題）/ Try（次サイクル以降で試す改善）を整理する。
+
+#### 1.0 実施判定【必須・最初に評価】
+
+`[rules.retrospective] feedback_mode` 設定値で本ステップ全体の実施可否を決める（opt-out スイッチ）:
+
+```bash
+scripts/read-config.sh rules.retrospective.feedback_mode
+```
+
+| feedback_mode | 本ステップ §1 全体 | §1.5 自動生成フロー | §1.5 Step 5 mirror フロー |
+|---------------|--------------------|--------------------|--------------------------|
+| `silent`（既定） | **実施**（手動 KPT + 自動生成） | 実施（テンプレ展開 + ローカル記録） | スキップ（Issue 起票なし） |
+| `mirror` | **実施**（手動 KPT + 自動生成 + Issue 起票） | 実施 | 実施（候補 → AskUserQuestion → upstream Issue 起票） |
+| `disabled` | **全体スキップ**（次の §2 バックログ記録へ進む） | スキップ | スキップ |
+
+`disabled` を選択した場合、本セクション §1.1〜§1.6 の全サブステップ（KPT 手動記入 / 主因切り分け / 格納先選択 / write-history.sh 整合 / 自動生成 / 次サイクル Intent 反映）は**一切実施しない**。`feedback_mode` 未設定時は defaults.toml の既定値 `silent` にフォールバックする。
+
+`silent` または `mirror` を選択した場合、§1.1〜§1.6 を順次実施する。3 分岐（後述 §1.3）のいずれかを必ず選んで output を残す。
+
+**前身**: v2.4.x 以前は §1「フィードバック収集」/ §2「分析と改善点洗い出し」の項目立てだけが存在し、テンプレ・格納先・write-history.sh ガードとの整合が未整理で暗黙スキップされる事象が多発していた（visitory v1.14.1 等）。v2.5.0 で本セクションに統合し、KPT + 主因切り分け + 3 分岐ガイド + opt-out スイッチを整備した（Issue #625 / Unit 007）。
+
+#### 1.1 KPT テンプレ（推奨フォーマット）
+
+| 観点 | 内容 |
+|------|------|
+| Keep | 次サイクル以降も継続したい良いプラクティス・成果 |
+| Problem | 今回顕在化した課題・改善が必要な事象 |
+| Try | Problem への対策として次サイクル以降で試す施策 |
+
+各 Problem / Try には次の §1.2「主因切り分け」を必ず含める。
+
+#### 1.2 主因切り分け【必須・3 分類】
+
+各 Problem / Try について、以下の 3 分類のいずれかを選択する:
+
+- **プロダクト固有**: プロダクトリポジトリ側で対応（GitHub Issue 起票 / 次サイクル Intent 反映）
+- **AI-DLC Starter Kit 固有**: `/aidlc feedback` で起票（後述 §1.3 分岐 c）
+- **両方に責任**: 両側で対応（プロダクト側は短期保険、AI-DLC 側は構造改善）
+
+主因切り分けは markdown マトリクス記載（自由記述）で、機械判定は実施しない（v2.6.x 以降の課題）。skill 起因判定（q1/q2/q3 自問）は §1.5 自動生成フローで別途記録される。
+
+#### 1.3 格納先の選択【必須・3 分岐から選ぶ】
+
+実施タイミングと output の性質に応じて以下から選択する:
+
+| 分岐 | 状況 | 格納先 | マージ前完結契約 |
+|------|------|--------|----------------|
+| (a) マージ前 | PR マージ前に本ステップを実施 | `cycles/{{CYCLE}}/operations/retrospective.md` | 遵守（pre-merge stage） |
+| (b) マージ後 | PR マージ後に本ステップを実施 | 次サイクル `cycles/{{NEXT}}/inception/predecessor_retrospective.md` | 遵守（次サイクル領域） |
+| (c) 横断改善 | AI-DLC Starter Kit への改善要望 | `/aidlc feedback` で Issue 起票 | 影響なし（外部リポジトリ） |
+
+**重要**: マージ前完結契約（DR-001 / Unit 002 / v2.3.5）により、マージ後は `.aidlc/cycles/{{CYCLE}}/**` 配下を改変できない。マージ後に振り返りを実施した場合は (b) または (c) を選択すること。
+
+複数分岐の併用可（例: プロダクト固有事項を (a) または (b) に書きつつ、AI-DLC 横断改善は (c) で起票）。
+
+**テンプレ**:
+
+- 分岐 (a): `templates/retrospective_template.md`（既存 / Unit 004 / v2.5.0+ で KPT セクション + 主因切り分けマトリクス追加）
+- 分岐 (b): `templates/predecessor_retrospective.md`（v2.5.0+ / Unit 007 / 新規）
+- 分岐 (c): `/aidlc feedback` で対話的に起票（テンプレファイル不要）
+
+#### 1.4 write-history.sh ガードとの関係
+
+| 分岐 | write-history.sh 呼び出し | exit code |
+|------|----------------------------|-----------|
+| (a) マージ前 | `--operations-stage pre-merge` 明示 | 0（正常） |
+| (b) マージ後 | 次サイクル領域への書き込み（本サイクルへの追記なし） | ガード対象外 |
+| (c) 横断改善 | GitHub Issue 起票のみ | ガード対象外 |
+
+post-merge で本サイクル `cycles/{{CYCLE}}/**` に振り返りを追記しようとすると `write-history.sh --operations-stage post-merge` 等で exit 3 でブロックされる。この場合は (b) に切り替えること。`write-history.sh` ガード詳細は §4「PR マージ後の手順」の【重要】マージ前完結ルールを参照。
 
 <!-- guidance:id=unit004-retrospective-creation -->
 
-### 3.5. retrospective 作成（v2.5.0+ / Unit 004 / #590）
+#### 1.5 自動生成フロー（v2.5.0+ / Unit 004-006 / #590）
 
-**マージ前完結契約準拠**: 本サブステップは `.aidlc/cycles/{{CYCLE}}/operations/retrospective.md` への書き込みを伴うため、**5. PR マージ後の手順より前**に完結させる必要がある（マージ後は exit 3 ガードで拒否される）。
+分岐 (a) マージ前を選択した場合、以下の自動生成フローで `retrospective.md` を作成・検証・mirror 起票する。本サブステップは `.aidlc/cycles/{{CYCLE}}/operations/retrospective.md` への書き込みを伴うため、**§4. PR マージ後の手順より前**に完結させる必要がある（マージ後は exit 3 ガードで拒否される）。
 
 **責務分離**: 本サブステップは **呼び出し順序と分岐のみ** を記述する。判定ロジック（feedback_mode 解決 / テンプレート展開 / YAML 検証 / ダウングレード）は全て下記スクリプトに委譲される。
 
-#### Step 1: サイクルバージョンガード
+> **Issue #625 fix（v2.5.0）**: 旧版にあった「`scripts/lib/cycle-version-check.sh "{{CYCLE}}"` によるサイクル番号ガード」は撤廃された。理由: 旧版は引数として渡されたプロダクトサイクル識別子（例: `v1.14.2`）を starter kit 側の機能導入バージョン `v2.5.0` と直接 SemVer 比較していたため、v2 系サイクル番号を使うプロダクト以外では永久に skip され、自動生成が永久無効化されるバグがあった。本スクリプトは v2.5.0+ の skill として配布される時点で機能可用性が保証されるため、追加のバージョンガードは不要。opt-out が必要な場合は §1.0 実施判定の `feedback_mode = "disabled"` を使用する。
+
+##### Step 2: retrospective-generate.sh 呼び出し
 
 ```bash
-bash skills/aidlc/scripts/lib/cycle-version-check.sh "{{CYCLE}}"
-```
-
-判定:
-
-- exit 0 → 続行（Step 2 へ）
-- exit 1 → `retrospective\tskip\tcycle-too-old` を表示してスキップ（v2.5.0 未満のサイクルでは生成しない）
-- exit 2 → `error\tcycle-version-format\t<input>` を表示して停止（フォーマット違反）
-
-#### Step 2: retrospective-generate.sh 呼び出し
-
-```bash
-bash skills/aidlc/scripts/retrospective-generate.sh "{{CYCLE}}"
+bash scripts/retrospective-generate.sh "{{CYCLE}}"
 ```
 
 `feedback_mode` 解決は generate スクリプトが一元実施する（Step では `read-config.sh` を呼び出さない / 責務集約）。
 
-#### Step 3: 出力プレフィックス分岐（複数行出力時の判定優先順位）
+##### Step 3: 出力プレフィックス分岐（複数行出力時の判定優先順位）
 
 generate の出力を上から順に評価し、**最初にマッチした行で確定**する:
 
 1. **最優先 / exit code != 0**: generate スクリプトの exit code が `2`（fatal）の場合、即座に停止（stderr の `error\t...` 行を表示してユーザに通知）
 2. **次優先 / `error\t...` 行のみ存在**: stderr に `error\t...` 行が存在し、かつ stdout に `retrospective\t...` 行が **1 件もない**場合、停止
 3. **続行判定 / `retrospective\tcreated\t<path>`**: stdout に `retrospective\tcreated\t<path>` 行が **1 行以上存在すれば**続行（`warn\t...` 行は無視 / 警告は表示するが分岐に使わない）→ Step 4 へ
-4. **スキップ判定 / `retrospective\tskip\t*`**: stdout に `retrospective\tskip\tdisabled` / `retrospective\tskip\talready-exists` / `retrospective\tskip\tcycle-too-old` 行が存在すればスキップ（次のサブステップへ進まず Step 3.5 終了。`cycle-too-old` は Step 1 で除外済みだが、generate スクリプトの単体実行時の API 互換性のため受理する）
+4. **スキップ判定 / `retrospective\tskip\t*`**: stdout に `retrospective\tskip\tdisabled` / `retrospective\tskip\talready-exists` 行が存在すればスキップ（次のサブステップへ進まず §1.5 自動生成フロー終了）
 5. **その他**: 上記いずれにも該当しない場合は警告を表示してスキップ（保守的フォールバック）
 
 **判定対象の分離契約**:
@@ -73,12 +130,12 @@ generate の出力を上から順に評価し、**最初にマッチした行で
 - 機械判定対象: stdout の `retrospective\t` プレフィックス行のみ
 - 補助情報（表示のみ / 分岐に使わない）: stderr の `warn\t...` / `error\t...` 行
 
-#### Step 4: retrospective-validate.sh 呼び出し（続行時のみ）
+##### Step 4: retrospective-validate.sh 呼び出し（続行時のみ）
 
 Step 3 で続行判定された場合、生成された retrospective.md パスを引数に validate スクリプトを `--apply` で呼び出す:
 
 ```bash
-bash skills/aidlc/scripts/retrospective-validate.sh validate "<生成パス>" --apply
+bash scripts/retrospective-validate.sh validate "<生成パス>" --apply
 ```
 
 判定:
@@ -88,24 +145,24 @@ bash skills/aidlc/scripts/retrospective-validate.sh validate "<生成パス>" --
 
 <!-- guidance:id=unit005-mirror-flow -->
 
-#### Step 5: mirror フロー（v2.5.0+ / Unit 005 / #590）
+##### Step 5: mirror フロー（v2.5.0+ / Unit 005 / #590）
 
 **責務分離**: 本 Step も呼び出し順序と分岐のみを記述する。判定ロジック（feedback_mode 解決 / 候補抽出 / Issue 起票 / mirror_state 書き込み）は全て `retrospective-mirror.sh` に委譲される。
 
-##### Step 5-1: 候補検出（detect）
+###### Step 5-1: 候補検出（detect）
 
 ```bash
-bash skills/aidlc/scripts/retrospective-mirror.sh detect "<生成パス>"
+bash scripts/retrospective-mirror.sh detect "<生成パス>"
 ```
 
 `feedback_mode` 解決は detect サブコマンド内で一元実施する（Step では `read-config.sh rules.retrospective.feedback_mode` を呼ばない / 責務集約）。
 
-##### Step 5-2: 出力プレフィックス分岐
+###### Step 5-2: 出力プレフィックス分岐
 
 detect の出力を上から順に評価し、**最初にマッチしたパターンで確定**する:
 
 1. **最優先 / exit code != 0**: detect の exit code が `2`（fatal）の場合、即時停止（stderr の `error\t...` 行を表示してユーザに通知）
-2. **スキップ判定 / `mirror\tskip\t<reason>`**: stdout に `mirror\tskip\tnot-mirror-mode` / `mirror\tskip\tno-skill-caused` / `mirror\tskip\tall-processed` のいずれかがあればスキップ理由を表示してフロー終了（次の `## 4. 次期サイクル計画` へ）
+2. **スキップ判定 / `mirror\tskip\t<reason>`**: stdout に `mirror\tskip\tnot-mirror-mode` / `mirror\tskip\tno-skill-caused` / `mirror\tskip\tall-processed` のいずれかがあればスキップ理由を表示してフロー終了（次の §2 バックログ記録へ）
 3. **続行判定 / `mirror\tcandidate\t<idx>\t<title>\t<draft_path>`**: 1 行以上存在で Step 5-3（candidate ループ）へ
 4. **その他**: 上記いずれにも該当しない場合は警告を表示してスキップ（保守的フォールバック）
 
@@ -114,7 +171,7 @@ detect の出力を上から順に評価し、**最初にマッチしたパタ�
 - 機械判定対象: stdout の `mirror\t` プレフィックス行のみ
 - 補助情報（表示のみ / 分岐に使わない）: stderr の `warn\t...` / `error\t...` 行（exit 2 時のみ機械判定対象）
 
-##### Step 5-3: candidate ループ + AskUserQuestion 分岐
+###### Step 5-3: candidate ループ + AskUserQuestion 分岐
 
 各 `mirror\tcandidate\t<idx>\t<title>\t<draft_path>` 行について以下を順に実行:
 
@@ -133,7 +190,7 @@ detect の出力を上から順に評価し、**最初にマッチしたパタ�
 2. **「送信する」選択時**:
 
    ```bash
-   bash skills/aidlc/scripts/retrospective-mirror.sh send "<生成パス>" <idx> "<title>" "<draft_path>"
+   bash scripts/retrospective-mirror.sh send "<生成パス>" <idx> "<title>" "<draft_path>"
    ```
 
    - exit 0 + `mirror\tsent\t<idx>\t<url>` → 起票成功 / Issue URL を表示してサマリに加算
@@ -143,7 +200,7 @@ detect の出力を上から順に評価し、**最初にマッチしたパタ�
 3. **「送信しない」選択時**:
 
    ```bash
-   bash skills/aidlc/scripts/retrospective-mirror.sh record "<生成パス>" <idx> skipped
+   bash scripts/retrospective-mirror.sh record "<生成パス>" <idx> skipped
    ```
 
    - exit 0 + `mirror\trecorded\t<idx>\tskipped` → 記録完了表示してサマリに加算
@@ -152,12 +209,12 @@ detect の出力を上から順に評価し、**最初にマッチしたパタ�
 4. **「後で判断（保留）」選択時**:
 
    ```bash
-   bash skills/aidlc/scripts/retrospective-mirror.sh record "<生成パス>" <idx> pending
+   bash scripts/retrospective-mirror.sh record "<生成パス>" <idx> pending
    ```
 
    - exit 0 + `mirror\trecorded\t<idx>\tpending` → 同上
 
-##### Step 5-4: サマリ表示
+###### Step 5-4: サマリ表示
 
 全 candidate 処理完了後、以下のサマリを表示:
 
@@ -169,18 +226,28 @@ detect の出力を上から順に評価し、**最初にマッチしたパタ�
   送信失敗（recoverable）: <send_failed_count>
 ```
 
-##### マージ前完結契約との整合（Unit 004 から継承）
+###### マージ前完結契約との整合（Unit 004 から継承）
 
-mirror フローの全ての書き込み（mirror_state 更新）は Operations Phase の **5. PR マージ後の手順より前**で完結する。マージ後に `retrospective-mirror.sh send` / `record` を呼び出した場合は `_validate_apply_path` ガードで AIDLC_CYCLES 配下のみ許可しており、保護効果として `.aidlc/cycles/{{CYCLE}}/**` 配下が破壊されないよう設計されている。
+mirror フローの全ての書き込み（mirror_state 更新）は Operations Phase の **§4. PR マージ後の手順より前**で完結する。マージ後に `retrospective-mirror.sh send` / `record` を呼び出した場合は `_validate_apply_path` ガードで AIDLC_CYCLES 配下のみ許可しており、保護効果として `.aidlc/cycles/{{CYCLE}}/**` 配下が破壊されないよう設計されている。
 
-##### Unit 006 への引き継ぎ点
+#### 1.6 次サイクル Intent への反映
 
-本 Step の Step 5-1（detect）と Step 5-3（candidate ループ）の間に Unit 006 が「重複検出 + サイクル毎上限ガード」フィルタ層を挿入する。本 Step は detect の TSV 出力スキーマを安定インターフェースとして提供する。
+Try のうちプロダクト固有事項は、次サイクル Inception の `requirements/intent.md` 前置きで「前サイクル振り返り由来の前提」として参照する。次サイクル Inception 開始時に下記を必ず読む:
 
-### 4. 次期サイクルの計画
+- 分岐 (a) 採用時: 直前サイクルの `cycles/{{PREV_CYCLE}}/operations/retrospective.md`
+- 分岐 (b) 採用時: 本サイクルの `cycles/{{CYCLE}}/inception/predecessor_retrospective.md`
+
+参照手順は `steps/inception/01-setup.md` の「前サイクル振り返り読込」セクションに記載されている。
+
+### 2. バックログ記録
+
+次サイクルに引き継ぐタスクがある場合、GitHub Issueを作成してバックログに記録する（ガイド: `guides/backlog-management.md`）。§1.2 主因切り分けで「プロダクト固有」「両方に責任」と判定された Problem / Try のうち本サイクル外で対応するものは、本ステップで Issue 化する。
+
+### 3. 次期サイクルの計画
+
 新しいサイクル識別子を決定（例: v1.0.1 → v1.1.0, 2024-12 → 2025-01）
 
-### 5. PRマージ後の手順【重要】
+### 4. PRマージ後の手順【重要】
 
 PRがマージされたら、次サイクル開始前に以下を実行：
 
@@ -327,7 +394,7 @@ AIが探索結果のパスを使用して以下を実行する:
 
 **注意**: この手順を実行してから次サイクルのセットアップを開始してください。
 
-### 5.5 Milestone close【マージ前完結契約準拠】
+### 4.5 Milestone close【マージ前完結契約準拠】
 
 **Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
 
@@ -339,7 +406,7 @@ scripts/read-config.sh rules.github.milestone_enabled
 
 実行結果（exit 0 で stdout が `true`、それ以外はキー不在 / 致命エラー）を `MILESTONE_ENABLED` として扱う。stdout が `true` 以外、または exit コードが 0 でない場合は `false` 相当として扱う。
 
-- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=04-completion-step5.5:reason=opt-out` を出力し、**本ステップの Milestone close をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / `gh_status != available` 時 exit 1 契約 / Milestone close 5 ケース判定処理は **一切実行しない**（opt-out 時はマージ前完結契約のサイクル完了可視化要件は **opt-out 利用者の責任範囲外** とし、close 自体を要求しないため、警告も表示しない）
+- `MILESTONE_ENABLED` が `true` 以外（既定）の場合: メッセージ `milestone:disabled:skip:step=04-completion-step4.5:reason=opt-out` を出力し、**本ステップの Milestone close をすべてスキップ**して次のステップへ進む。後続の `gh_status` 判定 / `gh_status != available` 時 exit 1 契約 / Milestone close 5 ケース判定処理は **一切実行しない**（opt-out 時はマージ前完結契約のサイクル完了可視化要件は **opt-out 利用者の責任範囲外** とし、close 自体を要求しないため、警告も表示しない）
 - `MILESTONE_ENABLED` が `true` の場合: 以下の `gh_status` 判定（`available` 以外で exit 1）+ Milestone close 5 ケース判定処理を実行する
 
 **マージ完了後、サイクル完了の可視化として GitHub Milestone を close する**。マージ前完結契約（v2.3.5 / Unit 002）に従い、本ステップは GitHub 側操作のみで `.aidlc/cycles/{{CYCLE}}/**` 配下のファイルは更新しない。
@@ -350,7 +417,7 @@ scripts/read-config.sh rules.github.milestone_enabled
 
 ```text
 ERROR: GitHub CLI が利用できないため Milestone close を実行できません。
-gh CLI / 認証を復旧してから 5.5 を再実行してください。
+gh CLI / 認証を復旧してから 4.5 を再実行してください。
 
 gh 非依存の手動代替手順（CLI 復旧が困難な場合のみ）:
 1. https://github.com/OWNER/REPO/milestones を開き、{{CYCLE}} の number を確認
@@ -379,7 +446,7 @@ stderr 出力 + exit 1（停止条件）:
 - `ERROR: Milestone ... の open が ... 件あります（重複作成の可能性）...`（重複 open）
 - `ERROR: Milestone ... が見つかりません...`（運用異常、setup 側 fallback 未実行 or 手動漏れ）
 
-**5 ケース判定マトリクス（5.5 完了処理、相互排他の 5 行）**:
+**5 ケース判定マトリクス（4.5 完了処理、相互排他の 5 行）**:
 
 | open 件数 | closed 件数 | 動作 |
 |----------|-----------|------|
@@ -403,7 +470,7 @@ stderr 出力 + exit 1（停止条件）:
 milestone:v2.4.0:closed:number=2
 ```
 
-### 6. 完了サマリ出力【必須】
+### 5. 完了サマリ出力【必須】
 
 以下の完了サマリを出力する。※ 情報源にない内容は出力しない。
 
@@ -416,7 +483,7 @@ milestone:v2.4.0:closed:number=2
 - 残課題・バックログ: [登録したバックログIssue番号。なければ「なし」]
 ```
 
-### 7. 次のサイクル開始【必須】
+### 6. 次のサイクル開始【必須】
 
 ユーザーの明示的な連続実行指示（「続けて」等）がない限り、以下のメッセージを提示する（デフォルトはリセット）。セッションサマリ（サイクル番号、ブランチ/PR状態、次のアクション）を収集する。
 
@@ -445,11 +512,13 @@ milestone:v2.4.0:closed:number=2
 **必要に応じて前バージョンのファイルをコピー/参照**:
 - `.aidlc/rules.md` → 全サイクル共通なので引き継がれます
 - `.aidlc/cycles/vX.X.X/requirements/intent.md` → 新サイクルで参照して改善点を反映
+- 前サイクル振り返り: 分岐 (a) 採用時 `.aidlc/cycles/{{PREV_CYCLE}}/operations/retrospective.md` / 分岐 (b) 採用時 `.aidlc/cycles/{{CYCLE}}/inception/predecessor_retrospective.md`
 - その他、引き継ぎたいファイルがあればコピー
 
 セットアップ完了後、新しいセッションで Inception Phase を開始
 
 ---
 
-### 8. ライフサイクルの継続
+### 7. ライフサイクルの継続
+
 Inception → Construction → Operations → (次サイクル) を繰り返し、継続的に価値を提供

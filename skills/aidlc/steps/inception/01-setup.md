@@ -71,6 +71,37 @@
 
 `.aidlc/rules.md` が存在すれば読み込む。
 
+### 4a. 前サイクル振り返り読込【推奨】
+
+前サイクルの振り返り output が存在する場合、Inception 開始時に必ず読み込む（v2.5.0+ / Unit 007 / #625）。本ステップは振り返りの 3 分岐（`04-completion.md §1.3`）に対応する読込手順を提供する。
+
+**前サイクル特定**: 直前にリリースしたサイクルのバージョンを `{{PREV_CYCLE}}` とする（例: 本サイクルが v2.6.0 なら `{{PREV_CYCLE}} = v2.5.0`）。
+
+**読込対象**（存在する方を優先順に確認、両方存在すれば両方読む）:
+
+1. **分岐 (b) マージ後振り返り採用時**: 本サイクルディレクトリに既配置されている `cycles/{{CYCLE}}/inception/predecessor_retrospective.md`
+   - 前サイクルマージ後に分岐 (b) を選択した利用者が、本サイクル Inception 開始前に手動配置済みの想定
+   - 本ファイルが存在する場合は最優先で読み、本サイクルの Intent 前提として参照する
+2. **分岐 (a) マージ前振り返り採用時**: 直前サイクルの `cycles/{{PREV_CYCLE}}/operations/retrospective.md`
+   - 前サイクルマージ前に分岐 (a) を選択した利用者の output
+   - 本ファイルが存在する場合は読み、本サイクルへの引き継ぎ事項を Intent 前提として参照する
+
+**読込実行**:
+
+```bash
+# 分岐 (b) 確認
+test -f .aidlc/cycles/{{CYCLE}}/inception/predecessor_retrospective.md && \
+  echo "predecessor:found:cycles/{{CYCLE}}/inception/predecessor_retrospective.md"
+
+# 分岐 (a) 確認
+test -f .aidlc/cycles/{{PREV_CYCLE}}/operations/retrospective.md && \
+  echo "retrospective:found:cycles/{{PREV_CYCLE}}/operations/retrospective.md"
+```
+
+存在確認後、Read ツールで内容を読み取り、本サイクルの Intent 前置きで参照する。
+
+**スキップ条件**: 両ファイルとも存在しない場合（初回サイクル / 前サイクルが v2.4.x 以前で振り返り output 未配置 / 分岐 (c) 横断改善のみ採用された場合）はスキップして §5 へ進む。
+
 ### 5. スターターキットバージョン確認（三角モデル）
 
 **スキップ条件**: `rules.version_check.enabled` が `false` の場合。

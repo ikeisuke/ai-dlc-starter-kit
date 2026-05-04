@@ -444,14 +444,13 @@ _rewrite_answer_to_no() {
             exit 1
         }
     }
-    ' "$path" >"$tmp"
-    local awk_rc=$?
-
-    if [ "$awk_rc" -ne 0 ]; then
-        # rewritten==0（書き換え対象未検出 / コードブロック検出ミス等）→ fail-safe で rollback 起動
+    ' "$path" >"$tmp" || {
+        # awk が exit 1 を返した場合（rewritten==0 / 書き換え対象未検出 / コードブロック検出ミス等）
+        # set -e モード下でもここで補足し、fail-safe で rollback を起動できるようにする
+        # （`awk ...; local rc=$?` パターンは set -e で awk 失敗時に rc 捕捉前にスクリプト終了するため避ける / codex review P1）
         rm -f -- "$tmp"
         return 1
-    fi
+    }
 
     if mv -- "$tmp" "$path"; then
         return 0

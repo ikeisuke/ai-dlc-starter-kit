@@ -162,3 +162,39 @@ So that upstream Issue が氾濫せず、retrospective.md が肥大化しない
 - [ ] 重複検出と上限ガードのロジックがユニットテストで個別検証される
 
 **技術的考慮事項**: タイトル類似度は単純な文字列正規化 + Jaccard 係数または編集距離のしきい値で判定する（AI 推論は使わない）。実装複雑度を抑える
+
+---
+
+## Epic 3: 振り返りステップの構造化（#625）
+
+### ストーリー 8: 04-completion §1-2 を振り返りステップに統合（KPT + 3 分岐 + マージ前完結契約整合）
+
+**優先順位**: Should-have
+
+As a AI-DLC 利用者（プロダクト開発者 / メタ開発者）
+I want to Operations Phase 完了処理の §1「フィードバック収集」/ §2「分析と改善点洗い出し」が「振り返り（retrospective）」として統合され、KPT テンプレ + 主因切り分け + 格納先 3 分岐 + `feedback_mode` ベースの opt-out スイッチ（`disabled` で §1 全体スキップ）が明示されている
+So that 振り返りが暗黙スキップされず、output が散逸せず、マージ前完結契約と矛盾しない格納先で記録でき、振り返り自体を実施しない選択も明示的に opt-out できる
+
+**背景**: Unit 004（retrospective 自動生成）は §3.5 として追加されたが、§1-2 の項目立てが残存しており、エージェント / ユーザーが暗黙スキップする余地がある。visitory v1.14.1 で実例発生。本サイクル v2.5.0 でも Operations Phase 実行中に同問題が顕在化（retrospective.md 問題 1 として記録）。
+
+**受け入れ基準**:
+
+- [ ] `skills/aidlc/steps/operations/04-completion.md` §1-2 が §1「振り返り（retrospective）」に統合され、§3 以降が繰り上げられている
+- [ ] §1 に KPT (Keep / Problem / Try) テンプレが推奨フォーマットとして記載されている
+- [ ] §1 に主因切り分け 3 分類（プロダクト固有 / AI-DLC Starter Kit 固有 / 両方）が必須化されている
+- [ ] §1 に格納先 3 分岐ガイドが記載されている（(a) マージ前 → `cycles/{{CYCLE}}/operations/retrospective.md` / (b) マージ後 → 次サイクル `cycles/{{NEXT}}/inception/predecessor_retrospective.md` / (c) 横断改善 → `/aidlc feedback`）
+- [ ] §1 冒頭の §1.0「実施判定」で `feedback_mode` ベースの opt-out スイッチが明示されている（`disabled` で §1 全体スキップ / `silent` `mirror` で実施）
+- [ ] §1 に各分岐と `write-history.sh` exit 3 ガードの整合が明記されている
+- [ ] `skills/aidlc/templates/predecessor_retrospective.md` が新規作成されている（分岐 b 用テンプレ）
+- [ ] 既存 `skills/aidlc/templates/retrospective_template.md` に KPT セクション + 主因切り分けマトリクスが追加されている（分岐 a 用、Unit 004 で作成したスキーマと整合）
+- [ ] `skills/aidlc/steps/operations/index.md` のフェーズインデックスから新 §1 を参照できる
+- [ ] `skills/aidlc/steps/inception/01-setup.md` 等で次サイクル Inception 開始時に `predecessor_retrospective.md` を読む手順が追加されている（分岐 b 採用時）
+- [ ] 受け入れ基準の動作確認: v2.5.0 自身の Operations Phase で本構造化を適用し、retrospective.md に KPT + 主因切り分けが含まれた状態でマージできる（自己改善ループの本番テストを兼ねる）
+
+**境界**:
+
+- 既存 retrospective 自動生成スクリプト（`retrospective-generate.sh` / `retrospective-validate.sh` / `retrospective-mirror.sh`）の挙動変更は最小限（KPT セクションは markdown 拡張のみ、YAML frontmatter スキーマは Unit 004 のまま維持）
+- 主因切り分けは markdown マトリクス記載で機械判定はしない（v2.6.x 以降の課題）
+- 分岐 (b) `predecessor_retrospective.md` の自動読込は Inception Phase の手順追加のみで自動化はしない（v2.6.x 以降）
+
+**技術的考慮事項**: 04-completion.md §1-2 を統合するため §3 以降の繰り上げが発生する。既存の §3.5 retrospective 作成は新 §1 の中に統合する位置取りで、既存スクリプト呼び出しは保持する。

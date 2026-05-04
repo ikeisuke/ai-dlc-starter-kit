@@ -44,7 +44,7 @@ Subcommands:
       exit: 0 / 1
 
   close <CYCLE>
-      Operations 04-completion §5.5 用。5 ケース判定 + open=1 時に close 実行。
+      Operations 04-completion §4.5 用。5 ケース判定 + open=1 時に close 実行。
       stdout: milestone:<CYCLE>:closed|already-closed:number=<N>
       stderr: ERROR
       exit: 0 / 1
@@ -493,7 +493,7 @@ cmd_setup_step11() {
     # 末尾集約判定: Issue + PR の link-failed を合算して exit 1（codex round 10 P2 対応）
     if [ -n "$link_failed" ]; then
         echo "ERROR: Milestone 紐付け補完に失敗した対象があります: ${link_failed}" >&2
-        echo "ERROR: 失敗対象を手動で復旧してから本ステップを再実行してください（または .aidlc/cycles/${cycle}/operations/tasks/ に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しないでください。" >&2
+        echo "ERROR: 失敗対象を手動で復旧してから本ステップを再実行してください（または .aidlc/cycles/${cycle}/operations/tasks/ に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ 4.5 (Milestone close) は実施しないでください。" >&2
         exit 1
     fi
 }

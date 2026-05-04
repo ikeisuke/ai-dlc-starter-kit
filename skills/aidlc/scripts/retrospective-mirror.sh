@@ -1087,13 +1087,13 @@ _rewrite_mirror_state() {
         }
         exit 1
     }
-    ' "$path" >"$tmp"
-    local awk_rc=$?
-
-    if [ "$awk_rc" -ne 0 ]; then
+    ' "$path" >"$tmp" || {
+        # awk が exit 1 を返した場合（対象 idx 未検出 / YAML ブロック不正等）
+        # set -e モード下でもここで補足し、send/record の rollback / error 経路に到達できるようにする
+        # （`awk ...; local rc=$?` パターンは set -e で awk 失敗時に rc 捕捉前にスクリプト終了するため避ける / codex review P1）
         rm -f -- "$tmp"
         return 1
-    fi
+    }
 
     if mv -- "$tmp" "$path"; then
         return 0

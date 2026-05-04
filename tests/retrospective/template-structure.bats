@@ -19,6 +19,29 @@ load helpers/setup
   grep -F "q3_quote" "${TEMPLATE_PATH}"
 }
 
+@test "T4: テンプレートに KPT セクション + 主因切り分けマトリクスが含まれる（Unit 007 / #625）" {
+  grep -F "## メトリクスサマリ" "${TEMPLATE_PATH}"
+  grep -F "## Keep" "${TEMPLATE_PATH}"
+  grep -F "## Try" "${TEMPLATE_PATH}"
+  grep -F "**主因切り分け**" "${TEMPLATE_PATH}"
+  grep -F "プロダクト固有" "${TEMPLATE_PATH}"
+  grep -F "AI-DLC Starter Kit 固有" "${TEMPLATE_PATH}"
+  grep -F "両方に責任" "${TEMPLATE_PATH}"
+  grep -F "## 反映先一覧" "${TEMPLATE_PATH}"
+}
+
+@test "T5: predecessor_retrospective.md（分岐 b 用テンプレ）が存在し、KPT + 引き継ぎ事項を含む（Unit 007 / #625）" {
+  local predecessor_template="${TEMPLATE_PATH%/*}/predecessor_retrospective.md"
+  [ -f "${predecessor_template}" ]
+  grep -F "前サイクル" "${predecessor_template}"
+  grep -F "## Keep" "${predecessor_template}"
+  grep -F "## Try" "${predecessor_template}"
+  grep -F "## Problem" "${predecessor_template}"
+  grep -F "本サイクルへの引き継ぎ事項" "${predecessor_template}"
+  grep -F "{{PREV_CYCLE}}" "${predecessor_template}"
+  grep -F "{{CYCLE}}" "${predecessor_template}"
+}
+
 @test "T3: テンプレートが markdownlint パスする" {
   if ! command -v markdownlint-cli2 >/dev/null 2>&1 && ! command -v npx >/dev/null 2>&1; then
     skip "markdownlint-cli2 / npx not available"
