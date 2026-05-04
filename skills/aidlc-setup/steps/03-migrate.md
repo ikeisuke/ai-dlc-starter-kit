@@ -84,8 +84,7 @@ git add .aidlc/
 
 ### 補足
 
-- 4 階層マージの詳細は `skills/aidlc/docs/configuration.md` 等の関連ドキュメントを参照する（存在しない場合はスキップ）
-- 上記の `[rules.reviewing]` / `[rules.automation]` / `[rules.linting]` の 3 セクションは Unit 001 で defaults.toml に集約された個人好みキー群の代表 3 件
+- 上記の `[rules.reviewing]` / `[rules.automation]` / `[rules.linting]` の 3 セクションは Unit 001 で defaults.toml に集約された個人好みキー群の代表 3 件（4 階層マージの詳細は AI-DLC スキル本体の `defaults.toml` 冒頭コメントを参照）
 - 案内表示後、続けて `## 10. 完了メッセージと次のステップ` のモード別メッセージを表示する
 
 ---
