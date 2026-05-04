@@ -188,7 +188,7 @@ gh auth login
 
 ```text
 旧運用（v2.3.6 以前、deprecated）: `gh label create "cycle:v1.8.0" ...` を手動実行していた
-新運用（v2.4.0 以降）: Milestone 作成の主経路は Inception Phase の `05-completion.md` ステップ 1。Milestone 不在時は Operations Phase の `01-setup.md` ステップ 11 が fallback 作成する。**Issue/PR の Milestone 紐付け復旧に限れば**、手動対応が必要なのは `gh` 利用不可時、または duplicate/closed 混在・`LINK_FAILED` で自動処理が停止した後の復旧時のみ。なお Milestone close（`04-completion.md` ステップ 5.5）は `gh_status != available` 時 / close API 失敗時にも手動復旧が必要（REST API 直叩き curl + PAT または GitHub UI、詳細は `skills/aidlc/steps/operations/04-completion.md` ステップ 5.5 を参照）
+新運用（v2.4.0 以降）: Milestone 作成の主経路は Inception Phase の `05-completion.md` ステップ 1。Milestone 不在時は Operations Phase の `01-setup.md` ステップ 11 が fallback 作成する。**Issue/PR の Milestone 紐付け復旧に限れば**、手動対応が必要なのは `gh` 利用不可時、または duplicate/closed 混在・`LINK_FAILED` で自動処理が停止した後の復旧時のみ。なお Milestone close（`04-completion.md` ステップ 4.5）は `gh_status != available` 時 / close API 失敗時にも手動復旧が必要（REST API 直叩き curl + PAT または GitHub UI、詳細は `skills/aidlc/steps/operations/04-completion.md` ステップ 4.5 を参照）
 ```
 
 ---
@@ -198,7 +198,7 @@ gh auth login
 GitHub Milestone との連携は v2.4.0 で本採用済み:
 
 - **Inception Phase の `05-completion.md` ステップ 1 での Milestone 作成**: Inception Phase 完了処理として自動実施（Unit 005 / #597）
-- **Operations Phase の `04-completion.md` ステップ 5.5 での Milestone close**: サイクル完了時に自動実施（Unit 006 / #597）
+- **Operations Phase の `04-completion.md` ステップ 4.5 での Milestone close**: サイクル完了時に自動実施（Unit 006 / #597）
 - **Operations Phase の `01-setup.md` ステップ 11 での Milestone 紐付け確認・fallback 作成**: Operations 開始時に自動実施（5 ケース判定 + 冪等補完原則）
 
 将来的な追加検討:

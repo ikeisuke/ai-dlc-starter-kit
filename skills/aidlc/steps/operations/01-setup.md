@@ -142,7 +142,7 @@ scripts/read-config.sh rules.github.milestone_enabled
 
 **`gh_status` を参照する。**
 
-`gh_status` が `available` 以外の場合: 以下のメッセージを表示し **exit 1 で中断する**（Milestone 作成・紐付け未実施のままサイクル進行を許すと、04-completion 5.5 で Milestone close 必須契約に到達不能になるため）:
+`gh_status` が `available` 以外の場合: 以下のメッセージを表示し **exit 1 で中断する**（Milestone 作成・紐付け未実施のままサイクル進行を許すと、04-completion 4.5 で Milestone close 必須契約に到達不能になるため）:
 
 ```text
 ERROR: GitHub CLI が利用できないため Milestone 紐付け確認・fallback 作成を実行できません。
@@ -151,7 +151,7 @@ gh CLI / 認証を復旧してから 01-setup ステップ 11 を再実行して
 
 復旧が困難な場合の選択肢:
 1. .aidlc/config.toml の [rules.github].milestone_enabled=false に切り替えて opt-out（Milestone 関連ステップを全てスキップ、サイクル可視化機能なしで進行）
-2. GitHub UI で Milestone {{CYCLE}} を手動作成 + 関連 Issue/PR を手動紐付け後、本ステップをスキップ可（04-completion 5.5 でも UI から手動 close 想定）
+2. GitHub UI で Milestone {{CYCLE}} を手動作成 + 関連 Issue/PR を手動紐付け後、本ステップをスキップ可（04-completion 4.5 でも UI から手動 close 想定）
 ```
 
 `gh_status` が `available` の場合、`scripts/milestone-ops.sh setup-step11` を実行する。本 subcommand は 11-1 / 11-2 / 11-3 を 1 回で実行し、Issue 紐付け失敗 + PR 紐付け失敗を **末尾で集約してから exit 1** する設計のため、Issue 失敗時に PR 紐付けが skip される問題を回避できる。
@@ -199,7 +199,7 @@ stdout 出力:
 - `pr:<N>:other-milestone:current=<TITLE>:skip-overwrite`（他 cycle に紐付け済み）
 - `pr:not-found-or-not-open`（PR 未作成 / 既マージ、警告なし）
 
-**末尾集約判定契約**: 11-2 の Issue 紐付け失敗 + 11-3 の PR 紐付け失敗を `LINK_FAILED` 変数で合算し、**1 件でもあれば最後に exit 1** で中断する。これにより、Issue 失敗時に PR チェックが skip される問題（codex round 10 P2）を回避し、運用者は 1 回の実行で全ての要修正対象を把握できる。失敗対象を手動で復旧してから本ステップを再実行する（または `.aidlc/cycles/{{CYCLE}}/operations/tasks/` に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ5.5 (Milestone close) は実施しない契約とする。
+**末尾集約判定契約**: 11-2 の Issue 紐付け失敗 + 11-3 の PR 紐付け失敗を `LINK_FAILED` 変数で合算し、**1 件でもあれば最後に exit 1** で中断する。これにより、Issue 失敗時に PR チェックが skip される問題（codex round 10 P2）を回避し、運用者は 1 回の実行で全ての要修正対象を把握できる。失敗対象を手動で復旧してから本ステップを再実行する（または `.aidlc/cycles/{{CYCLE}}/operations/tasks/` に手動対応タスクを作成）。link-failed が解消するまで 04-completion ステップ 4.5 (Milestone close) は実施しない契約とする。
 
 **注**: `gh issue edit --milestone` ではなく `gh api PATCH` を主経路にしているのは、Operations 開始時点では Inception で既に紐付け済みケースが多く、確実に Milestone 番号を指定するため。
 

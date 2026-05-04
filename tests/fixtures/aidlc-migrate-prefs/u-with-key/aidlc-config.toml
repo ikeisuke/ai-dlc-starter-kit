@@ -1,0 +1,5 @@
+# user-global config (Unit 003 fixture: u-with-key)
+# rules.reviewing.mode が既に存在する状況の検証用
+
+[rules.reviewing]
+mode = "recommend"

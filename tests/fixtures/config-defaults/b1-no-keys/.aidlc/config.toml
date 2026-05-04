@@ -1,0 +1,17 @@
+# Unit 001 観点 B1 用 fixture
+# 個人好み 7 キーを意図的に含まない最小プロジェクト設定。
+# read-config.sh が defaults.toml の値を返すことを検証する。
+
+[project]
+name = "test-b1-no-keys"
+type = "general"
+description = "Unit 001 B1 fixture - no individual preference keys"
+
+[rules]
+
+[rules.coding]
+naming_convention = "lowerCamelCase"
+
+[rules.security]
+validate_user_input = true
+use_env_for_secrets = true

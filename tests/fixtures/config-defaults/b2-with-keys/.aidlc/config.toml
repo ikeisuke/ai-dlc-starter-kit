@@ -1,0 +1,37 @@
+# Unit 001 観点 B2 用 fixture
+# 個人好み 7 キーを意図的に含む（既存プロジェクトで未マイグレーションの状態を模す）。
+# 値は defaults.toml と区別可能な「異なる値」を設定し、read-config.sh が project 値を
+# defaults より優先して返すこと（後方互換 NFR）を検証する。
+
+[project]
+name = "test-b2-with-keys"
+type = "general"
+description = "Unit 001 B2 fixture - with individual preference keys (defaults と異なる値)"
+
+[rules]
+
+[rules.coding]
+naming_convention = "lowerCamelCase"
+
+[rules.security]
+validate_user_input = true
+use_env_for_secrets = true
+
+[rules.git]
+# 個人好みキー: defaults と異なる値
+squash_enabled = true
+ai_author = "TestAuthor <test@example.com>"
+ai_author_auto_detect = false
+
+[rules.reviewing]
+# 個人好みキー: defaults と異なる値
+mode = "required"
+tools = ["claude"]
+
+[rules.linting]
+# 個人好みキー: defaults と異なる値
+enabled = true
+
+[rules.automation]
+# 個人好みキー: defaults と異なる値
+mode = "semi_auto"

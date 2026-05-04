@@ -7,6 +7,29 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.0] - 2026-04-29
+
+### Added
+
+- 個人好みキー 7 種（`rules.git.commit_on_unit_complete` / `rules.git.commit_on_phase_complete` / `rules.git.branch_mode` / `rules.git.draft_pr` / `rules.git.merge_method` / `rules.git.unit_branch_enabled` / `rules.git.squash_enabled`）を `defaults.toml` に集約。4 階層マージ（project-local < project-shared < user-global < defaults）を整理し、user-global 側に寄せられる構成へリファクタ（#592 / Unit 001）
+- `aidlc-setup` ウィザードに個人好みキーの user-global 移動推奨案内を追加。setup 実行時に `~/.claude/aidlc/config.toml` への分離をオプトイン提案し、プロジェクト共有設定と個人好みの境界を明示化（#592 / Unit 002）
+- `aidlc-migrate` に v2.5.0 経路（個人好みキーの user-global 移動提案）を追加。既存プロジェクトの `.aidlc/config.toml` から個人好みキー 7 種を検出し、user-global への移動を 3 択（移動 / 保持 / スキップ）で提案する非破壊フロー（#592 / Unit 003）
+- Operations Phase 完了時の `retrospective.md` 自動生成テンプレート（`templates/retrospective_template.md`）と判定エンジン（`scripts/retrospective-mirror.sh`）を追加。skill 起因 6 キー判定で改善候補を抽出し、`feedback_mode = "silent"`（既定）でローカル記録、`feedback_mode = "mirror"` で下書き → AskUserQuestion 承認 → upstream Issue 起票フローに分岐（#590 / Unit 004 / Unit 005）
+- `[rules.feedback].upstream_repo`（既定 `ikeisuke/ai-dlc-starter-kit`）と `[rules.retrospective].feedback_max_per_cycle`（既定 `3`）の 2 設定キーを `defaults.toml` に追加。フォーク利用や貢献先変更時のみ user-global で上書き、不正値時は警告 + デフォルトフォールバック（#590 / Unit 005 / Unit 006）
+- mirror モード氾濫緩和（重複検出 + サイクル毎上限ガード）を追加。Pass A（quote NFKC 完全一致）→ Pass B（title Jaccard milli 700 + Levenshtein ratio 30%）→ Cap（`feedback_max_per_cycle=3`）の 3 段純粋関数フィルタパイプラインで、retrospective 候補の重複統合と上限超過記録を実施。NFKC 正規化は Python 3 必須（不在時 fatal）、TSV 6 列契約（`kind/idx/state/sc/title/normalized_quote`）で `_classify_candidates` → `_filter_dedup_and_cap` → `_detect` を疎結合化（#590 / Unit 006）
+- Operations Phase 完了処理 `04-completion.md` §1-2 を §1「振り返り（retrospective）」に統合し、§3 以降を繰り上げ。KPT (Keep / Problem / Try) テンプレ + 主因切り分け 3 分類（プロダクト固有 / AI-DLC Starter Kit 固有 / 両方）+ 格納先 3 分岐ガイド（マージ前 / マージ後 / 横断改善）+ `write-history.sh` exit 3 ガード整合 + `feedback_mode` ベースの opt-out スイッチ（§1.0 実施判定）を組み込み、振り返り実施は `feedback_mode != "disabled"` のときに条件付き必須化（`disabled` 選択時は §1 全体スキップ可）。新規テンプレ `templates/predecessor_retrospective.md`（マージ後分岐用）追加、既存 `templates/retrospective_template.md` に KPT セクション + 主因切り分けマトリクス拡張。`steps/inception/01-setup.md §4a` に前サイクル振り返り読込手順を追加し、サイクル間の引き継ぎ契約を明示化（#625 / Unit 007）
+
+### Changed
+
+- 自己改善ループの導入により、Operations Phase 完了時に retrospective テンプレートが自動生成され、サイクル振り返りが定型化。`feedback_mode = "mirror"` 時は AI-DLC 自身の改善 backlog（upstream Issue）として GitHub に直接起票され、開発者からのフィードバック収集ループが整備される（#590）
+- `04-completion.md` のセクション番号繰り上げに伴い、`steps/operations/index.md` / `steps/operations/01-setup.md` / `guides/backlog-management.md` / `scripts/milestone-ops.sh` 内の §5.5 → §4.5 参照を更新（破壊的変更だが利用者影響は無し、サイクル運用フローは同一）
+
+### Fixed
+
+- `scripts/lib/cycle-version-check.sh` を撤廃（Unit 004 由来の名前空間混同バグ修正）。旧版は引数として渡された **プロダクトサイクル識別子**（例: visitory `v1.14.2`）を **starter kit の機能導入バージョン** `v2.5.0` と直接 SemVer 比較していたため、v2 系サイクル番号を使うプロダクト以外（visitory v1.x / 日付サイクル等の大半のダウンストリームプロジェクト）では永久に `cycle-too-old` と判定され、`04-completion.md §1.5` 自動生成フローが永久 skip される事象が発生していた。本スクリプトは v2.5.0+ の skill として配布される時点で機能可用性が保証されるため、追加のバージョンガード自体を撤廃し、`feedback_mode = "disabled"` での opt-out に統一。`scripts/lib/cycle-version-check.sh` / `tests/retrospective/cycle-version-check.bats` 削除、`retrospective-generate.sh` の source / 呼び出し削除、`04-completion.md §1.5 Step 1` 撤廃、関連テスト更新（IS3 / GE5 / GE6 を撤廃確認に変更）（#625 / Unit 007 fix / visitory v1.14.2 報告）
+
+---
+
 ## [2.4.3] - 2026-04-28
 
 ### Changed
