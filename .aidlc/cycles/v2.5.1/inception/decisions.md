@@ -228,3 +228,60 @@ Codex の Unit 定義レビューで「Unit 001 と Unit 002 で 04-completion �
 - **得たもの**: 命名規約・データ契約・編集主体の正本が一元化、Unit 間責務境界が明確、検証時の参照経路が短い
 - **犠牲にしたもの**: Intent §「主要設計判断」セクションが肥大化（4 → 6 判断）
 - **判断根拠**: AI-DLC の Inception 成果物として Intent が「決定の正本」を担うのが自然。Unit 定義はそれを参照する設計が読み手にも親切
+
+---
+
+## DR-009: Unit 001 wizard 対話手段を AskUserQuestion ではなく `read -p` に固定
+
+- **ステップ**: Construction Unit 001 設計レビュー（指摘 #6 への対応）
+- **日時**: 2026-05-05
+
+### 背景
+
+設計初期は AskUserQuestion 連携を含む形を検討したが、Codex 設計レビューで「AskUserQuestion 依存と read -p 案が混在し、対話レイヤー責務が揺れている」と指摘された。bash スクリプトから AskUserQuestion を直接呼ぶ手段がない。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | 純シェル対話（`read -p`）で完結 | 既存 v2.5.0 対話パターンと整合、shell 単独完結 | UI が素朴 |
+| 2 | エージェント側で AskUserQuestion を起動 → 環境変数経由で結果受渡 | リッチ UI | bash 単体テスト困難、責務混在 |
+| 3 | Claude Code 経由のみ AskUserQuestion、CLI 単体は read -p | 両対応 | 二重実装 |
+
+### 決定
+
+**選択肢 1: 純シェル対話（`read -p`）で完結**を Unit 001 範囲に固定。Claude Code 経由の AskUserQuestion 連携は将来の拡張（本サイクル外）。
+
+### トレードオフと判断根拠
+
+- **得たもの**: 対話レイヤー責務が単一に確定 / shell スクリプト単独で実行可能 / BATS テスト可能（AIDLC_FORCE_INTERACTIVE で tty バイパス）
+- **犠牲にしたもの**: AskUserQuestion のリッチ UI（数値選択メニューと比べて少しシンプル）
+- **判断根拠**: bash から AskUserQuestion を呼べない以上、二択（責務混在を許容するか単一化するか）。レビュー指摘の解消優先で単一化を採用
+
+---
+
+## DR-010: Unit 001 マイグレーション適用経路を manifest 拡張（resource_type=feedback_mode_migrate）に固定
+
+- **ステップ**: Construction Unit 001 設計レビュー（指摘 #4 への対応）
+- **日時**: 2026-05-05
+
+### 背景
+
+設計初期は migrate-feedback-mode.sh が直接書込みする独立フローも候補だったが、レビューで「manifest 拡張 vs 独立フロー が未確定 / responsibility boundary 曖昧」と指摘。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | manifest 拡張（resource_type=feedback_mode_migrate） | 既存 aidlc-migrate の 3 層構造（detect / apply / cleanup）と整合、書込責務が migrate-apply-config.sh に集約 | manifest スキーマ拡張が必要 |
+| 2 | 独立フロー（migrate-feedback-mode.sh が write-config.sh を直接呼出） | シンプル | aidlc-migrate のトランザクション境界（バックアップ/rollback）外で書込が発生、責務分散 |
+
+### 決定
+
+**選択肢 1: manifest 拡張**。`migrate-feedback-mode.sh` は decide 層（旧値検出 + 同意取得 + manifest 積み込み）に限定。実書込みは `migrate-apply-config.sh` が manifest 経由で行う。バックアップ / rollback は上位 aidlc-migrate の既存責務を再利用。
+
+### トレードオフと判断根拠
+
+- **得たもの**: 3 層責務分離（decide / apply / backup-rollback）が明確 / 既存 rollback 経路を再利用 / 書込失敗時 exit 1 伝播で上位 rollback が発火する単一経路
+- **犠牲にしたもの**: manifest スキーマに新 resource_type を追加する必要
+- **判断根拠**: 既存 v2.0.x の migrate スクリプト群と同じパターンを踏襲することで、マイグレーション全体の挙動が一貫する。書込失敗 → rollback の経路を一本化することで失敗時の状態遷移が機械的に検証可能になる

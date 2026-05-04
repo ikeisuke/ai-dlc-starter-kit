@@ -73,13 +73,16 @@ EOF
   [ "$status" -eq 0 ]
 }
 
-@test "GE4: 不正な feedback_mode (on) → warn\tfeedback-mode-invalid + 通常生成" {
+@test "GE4: 不正な feedback_mode (on) → warn\tfeedback_mode_unknown + disabled スキップ（v2.5.1 / Unit 001）" {
+  # v2.5.1 で fallback 値を silent → disabled に変更（保守的フォールバック）。
+  # feedback-mode.sh の feedback_mode_normalize() が未知値を disabled に正規化し、
+  # その後の retrospective-generate.sh が disabled としてスキップする。
   setup_env
   set_project_feedback_mode "on"
   run run_generate v2.5.0
   [ "$status" -eq 0 ]
-  [[ "$output" == *"warn	feedback-mode-invalid	on:downgrade-to-silent"* ]]
-  [[ "$output" == *"retrospective	created	"* ]]
+  [[ "$output" == *"warn	feedback_mode_unknown	on"* ]]
+  [[ "$output" == *"retrospective	skip	disabled"* ]]
 }
 
 @test "GE5: 旧版にあった cycle 番号バージョンガードは Issue #625 fix で撤廃された（cycle 番号と starter kit 番号の名前空間混同バグ修正）" {

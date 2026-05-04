@@ -95,7 +95,12 @@ _resolve_upstream_repo() {
     fi
 }
 
-# feedback_mode 解決（4 階層マージ / 不正値は silent 同等扱い → スキップ）
+# feedback_mode 解決（4 階層マージ / Unit 001 互換アダプタ層）
+# v2.5.1: 5 値 enum + 旧 3 値（silent/mirror/disabled）を後方互換で受理。
+# feedback-mode.sh の feedback_mode_normalize() で旧→新値に正規化する。
+# 戻り値: mirror 起票判定用に「mirror（mirror_only / both 相当）」または「skip（その他）」を返す。
+# シンタックスは旧版互換（"mirror" / "silent" / "disabled" の 3 系統）を維持しつつ、
+# 新値も適切にマップする。Unit 002 が retrospective Issue 一本化を実装したら本関数は廃止予定。
 _resolve_feedback_mode() {
     local raw=""
     if raw="$("${SCRIPT_DIR}/read-config.sh" rules.retrospective.feedback_mode 2>/dev/null)"; then
@@ -105,13 +110,37 @@ _resolve_feedback_mode() {
     fi
     raw="${raw#\"}"
     raw="${raw%\"}"
-    if [ -z "$raw" ]; then
-        echo "silent"
-        return 0
+
+    # feedback-mode.sh で正規化（旧→新値変換）
+    local normalized="$raw"
+    local feedback_lib="${SCRIPT_DIR}/lib/feedback-mode.sh"
+    if [ -f "$feedback_lib" ]; then
+        # shellcheck source=/dev/null
+        . "$feedback_lib"
+        if normalized="$(feedback_mode_normalize "$raw" 2>/dev/null)"; then
+            :
+        else
+            normalized="$raw"
+        fi
     fi
-    case "$raw" in
+
+    # 新値 → 旧 3 系統への mirror フロー判定マッピング
+    case "$normalized" in
+        mirror-only|local-and-mirror)
+            # mirror_only / both は upstream Issue 起票経路を含む
+            echo "mirror"
+            ;;
+        disabled)
+            echo "disabled"
+            ;;
+        interactive|local-issue-only)
+            # interactive は wizard 起動経路、local-issue-only はプロダクト Issue のみ
+            # どちらも本スクリプト（mirror = upstream Issue 起票）の対象外 → silent 扱いでスキップ
+            echo "silent"
+            ;;
         silent|mirror|disabled)
-            echo "$raw"
+            # 旧値そのまま（aidlc-migrate 未実行時の互換）
+            echo "$normalized"
             ;;
         *)
             echo "warn	feedback-mode-invalid	${raw}:treated-as-silent" >&2

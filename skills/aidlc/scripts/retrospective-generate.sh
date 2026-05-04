@@ -10,7 +10,7 @@
 #
 # 出力:
 #   stdout: retrospective\tcreated\t<path> / retrospective\tskip\tdisabled / retrospective\tskip\talready-exists
-#   stderr: warn\tfeedback-mode-invalid\t<value>:downgrade-to-silent / error\t<code>\t<payload>
+#   stderr: warn\tfeedback-mode-invalid\t<value>:downgrade-to-disabled / warn\tfeedback_mode_unknown\t<value> / error\t<code>\t<payload>
 #
 # 終了コード:
 #   0 - 正常（生成 / スキップ いずれも 0）
@@ -32,8 +32,9 @@ readonly SCHEMA_PATH="${AIDLC_PLUGIN_ROOT}/config/retrospective-schema.yml"
 _load_schema_values() {
     if ! command -v dasel >/dev/null 2>&1 || [ ! -f "$SCHEMA_PATH" ]; then
         # フォールバック（スキーマ未配置 / dasel 未インストール時）
-        VALID_FEEDBACK_MODES=("silent" "mirror" "disabled")
-        DEFAULT_FEEDBACK_MODE="silent"
+        # v2.5.1 / Unit 001: 5 値新値 + 旧 3 値（後方互換）。既定は interactive。
+        VALID_FEEDBACK_MODES=("interactive" "local-issue-only" "mirror-only" "local-and-mirror" "disabled" "silent" "mirror")
+        DEFAULT_FEEDBACK_MODE="interactive"
         return
     fi
 
@@ -48,12 +49,13 @@ _load_schema_values() {
     done < <(dasel query -i yaml 'retrospective_schema.valid_feedback_modes' <"$SCHEMA_PATH" 2>/dev/null || true)
 
     if [ "${#VALID_FEEDBACK_MODES[@]}" -eq 0 ]; then
-        VALID_FEEDBACK_MODES=("silent" "mirror" "disabled")
+        # v2.5.1 で 5 値 enum + 旧 3 値（後方互換）に拡張
+        VALID_FEEDBACK_MODES=("interactive" "local-issue-only" "mirror-only" "local-and-mirror" "disabled" "silent" "mirror")
     fi
 
-    DEFAULT_FEEDBACK_MODE="$(dasel query -i yaml 'retrospective_schema.default_feedback_mode' <"$SCHEMA_PATH" 2>/dev/null | sed 's/^"//; s/"$//' || echo "silent")"
+    DEFAULT_FEEDBACK_MODE="$(dasel query -i yaml 'retrospective_schema.default_feedback_mode' <"$SCHEMA_PATH" 2>/dev/null | sed 's/^"//; s/"$//' || echo "interactive")"
     if [ -z "$DEFAULT_FEEDBACK_MODE" ]; then
-        DEFAULT_FEEDBACK_MODE="silent"
+        DEFAULT_FEEDBACK_MODE="interactive"
     fi
 }
 _load_schema_values
@@ -105,8 +107,23 @@ else
     FEEDBACK_MODE_RAW="$DEFAULT_FEEDBACK_MODE"
 fi
 
-# 不正値チェック → silent ダウングレード
-FEEDBACK_MODE="$FEEDBACK_MODE_RAW"
+# v2.5.1: 旧値（silent / mirror）が混在する状態でも feedback-mode.sh の正規化で新値に変換
+# Unit 001 互換アダプタ層 - 既存スクリプトを新 5 値 enum に対応させる
+_FEEDBACK_LIB="${SCRIPT_DIR}/lib/feedback-mode.sh"
+if [ -f "$_FEEDBACK_LIB" ]; then
+    # shellcheck source=/dev/null
+    . "$_FEEDBACK_LIB"
+    # 警告は stderr に流す（normalize 内で warn 出力 / exit 0）
+    if FEEDBACK_MODE="$(feedback_mode_normalize "$FEEDBACK_MODE_RAW")"; then
+        :
+    else
+        FEEDBACK_MODE="$FEEDBACK_MODE_RAW"
+    fi
+else
+    FEEDBACK_MODE="$FEEDBACK_MODE_RAW"
+fi
+
+# 不正値チェック（正規化後）→ disabled ダウングレード（保守的フォールバック）
 _is_valid_mode=0
 for valid in "${VALID_FEEDBACK_MODES[@]}"; do
     if [ "$FEEDBACK_MODE" = "$valid" ]; then
@@ -115,8 +132,8 @@ for valid in "${VALID_FEEDBACK_MODES[@]}"; do
     fi
 done
 if [ "$_is_valid_mode" -eq 0 ]; then
-    echo "warn	feedback-mode-invalid	${FEEDBACK_MODE_RAW}:downgrade-to-silent" >&2
-    FEEDBACK_MODE="silent"
+    echo "warn	feedback-mode-invalid	${FEEDBACK_MODE_RAW}:downgrade-to-disabled" >&2
+    FEEDBACK_MODE="disabled"
 fi
 
 # disabled スキップ

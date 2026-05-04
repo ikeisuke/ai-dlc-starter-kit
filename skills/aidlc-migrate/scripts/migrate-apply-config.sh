@@ -123,6 +123,63 @@ for i in $(seq 0 $((resource_count - 1))); do
   fi
 done
 
+# Unit 001（v2.5.1）: feedback_mode_migrate リソースを処理
+# migrate-feedback-mode.sh が manifest に積み込んだ {from, to, consent_outcome} を読み取り、
+# write-config.sh ラッパで .aidlc/config.toml の rules.retrospective.feedback_mode を書き換える。
+# 純粋適用層（対話制御は行わない）。書込失敗時は exit ≥ 1 を上位 aidlc-migrate に伝播。
+# 診断出力は `<level>\t<code>\t<detail>` 形式（既存部は段階移行のため未統一だが、新規追加分は準拠）。
+FEEDBACK_MODE_MIGRATE_FAILED=0
+for i in $(seq 0 $((resource_count - 1))); do
+  resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
+  [[ "$resource_type" != "feedback_mode_migrate" ]] && continue
+
+  fm_from=$(jq -r ".resources[$i].from" "$MANIFEST")
+  fm_to=$(jq -r ".resources[$i].to" "$MANIFEST")
+  fm_consent=$(jq -r ".resources[$i].consent_outcome" "$MANIFEST")
+
+  # to が空または null の場合は skip
+  if [[ -z "$fm_to" || "$fm_to" == "null" ]]; then
+    printf 'warn\tfeedback_mode_to_missing\t%s\n' "from=${fm_from}" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg from "$fm_from" \
+      '{resource_type: $rt, from: $from, status: "skipped", detail: "to value missing"}')"
+    continue
+  fi
+
+  # 入力検証（多層防御 / write-config.sh 側のバリデーションに加えて適用層でも enum チェック）
+  case "$fm_to" in
+    interactive|local-issue-only|mirror-only|local-and-mirror|disabled) : ;;
+    *)
+      printf 'error\tfeedback_mode_invalid_to\t%s\n' "$fm_to" >&2
+      _add_applied "$(jq -n --arg rt "$resource_type" --arg from "$fm_from" --arg to "$fm_to" \
+        '{resource_type: $rt, from: $from, to: $to, status: "error", detail: ("invalid to value: " + $to), reason_code: "feedback_mode_invalid_to"}')"
+      FEEDBACK_MODE_MIGRATE_FAILED=1
+      continue
+      ;;
+  esac
+
+  # write-config.sh で rules.retrospective.feedback_mode を新値に書込
+  write_config_script="${AIDLC_PROJECT_ROOT}/skills/aidlc/scripts/write-config.sh"
+  if [[ ! -x "$write_config_script" ]]; then
+    printf 'error\tfeedback_mode_write_config_missing\t%s\n' "$write_config_script" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg from "$fm_from" --arg to "$fm_to" \
+      '{resource_type: $rt, from: $from, to: $to, status: "error", detail: "write-config.sh not found", reason_code: "write_config_missing"}')"
+    FEEDBACK_MODE_MIGRATE_FAILED=1
+    continue
+  fi
+  fm_write_rc=0
+  if "$write_config_script" rules.retrospective.feedback_mode "$fm_to" --scope project >&2; then
+    printf 'info\tfeedback_mode_migrated\t%s\n' "from=${fm_from} to=${fm_to} consent=${fm_consent}" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg from "$fm_from" --arg to "$fm_to" --arg consent "$fm_consent" \
+      '{resource_type: $rt, from: $from, to: $to, consent_outcome: $consent, status: "success", detail: ("feedback_mode migrated: " + $from + " -> " + $to + " (consent: " + $consent + ")")}')"
+  else
+    fm_write_rc=$?
+    printf 'error\tfeedback_mode_write_failed\texit=%d\n' "$fm_write_rc" >&2
+    _add_applied "$(jq -n --arg rt "$resource_type" --arg from "$fm_from" --arg to "$fm_to" --arg rc "$fm_write_rc" \
+      '{resource_type: $rt, from: $from, to: $to, status: "error", detail: ("write-config.sh exit " + $rc), reason_code: "feedback_mode_write_failed"}')"
+    FEEDBACK_MODE_MIGRATE_FAILED=1
+  fi
+done
+
 # v1→v2 コンテンツマイグレーション: 廃止セクション削除
 config_dest=".aidlc/config.toml"
 if [[ -f "$config_dest" ]]; then
@@ -213,3 +270,9 @@ done
 # journal JSON 出力
 jq -n --arg phase "config" --argjson applied "$APPLIED" \
   '{phase: $phase, applied: $applied}'
+
+# Unit 001（v2.5.1）: feedback_mode_migrate に書込失敗があった場合は非0を返し、
+# 上位 aidlc-migrate の rollback 経路に書込失敗を伝播する。
+if [[ "${FEEDBACK_MODE_MIGRATE_FAILED:-0}" -ne 0 ]]; then
+  exit 1
+fi
