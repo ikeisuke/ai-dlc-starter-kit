@@ -9,11 +9,11 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-05-05 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md（5 Unit） | 2026-05-05 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-05-05 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | 完了 | construction/progress.md | 2026-05-05 |
 
 ## 現在のステップ
 
-次回: 6. Construction用progress.md作成（Inception完了処理）
+Inception Phase 完了。次回: Construction Phase 開始（`/aidlc construction`）
 
 ## 完了済みステップ
 
@@ -22,6 +22,7 @@
 - 3. ユーザーストーリー作成（2026-05-05、6 ストーリー）
 - 4. Unit定義（2026-05-05、5 Unit / 依存順 001 → 002 → 003/004 / 005 並列）
 - 5. PRFAQ作成（2026-05-05）
+- 6. Construction用progress.md作成（2026-05-05）
 
 ## 次回実行時の指示
 
