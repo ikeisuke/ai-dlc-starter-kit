@@ -24,8 +24,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 source "${SCRIPT_DIR}/lib/bootstrap.sh"
-# shellcheck source=lib/cycle-version-check.sh
-source "${SCRIPT_DIR}/lib/cycle-version-check.sh"
 
 readonly TEMPLATE_PATH="${AIDLC_PLUGIN_ROOT}/templates/retrospective_template.md"
 readonly SCHEMA_PATH="${AIDLC_PLUGIN_ROOT}/config/retrospective-schema.yml"
@@ -68,21 +66,23 @@ fi
 
 CYCLE="$1"
 
-# サイクルバージョン検証（v2.5.0 以降）
-# step file (operations/04-completion.md) と挙動を統一:
-#   v2.5.0 未満 → retrospective\tskip\tcycle-too-old + exit 0（スキップ）
-#   フォーマット違反 → exit 2（cycle-version-check が出力済み）
-# 注: `if ! cmd` 構文だと $? が常に 0/1 になり exit 2 を識別できないため、
-# `|| rc=$?` 形式で実 rc を取得する（set -e は影響しない / pipefail は単一コマンドのため無関係）
-rc=0
-aidlc_is_cycle_v25_or_later "$CYCLE" || rc=$?
-if [ "$rc" -ne 0 ]; then
-    if [ "$rc" -eq 2 ]; then
-        exit 2
-    fi
-    # rc == 1: v2.5.0 未満 → スキップ（exit 0）
-    echo "retrospective	skip	cycle-too-old"
-    exit 0
+# 注: 旧版にあった「cycle-version-check.sh によるサイクル番号 v2.5.0 比較ガード」は
+# Issue #625 fix で撤廃した。本スクリプトは v2.5.0+ の skill として配布される時点で
+# 機能可用性が保証されるため、追加のバージョンガードは不要。
+# 過去サイクルディレクトリ（v2.4.x 等）で誤実行された場合も retrospective.md は
+# 新規ファイルとして作られるだけで害はない（feedback_mode = "disabled" で完全 opt-out 可能）。
+
+# パストラバーサル防止検証（codex review P1 対応 / Issue #625 fix の副次対応）:
+# cycle 引数は RETROSPECTIVE_PATH に直接補間されるため、`../` や `/` を含むと
+# .aidlc/cycles/ ツリー外への書き込みが可能になる。緩い shape 検証のみ実施し、
+# 旧 cycle-version-check の厳格な ^v[0-9]+\.[0-9]+\.[0-9]+$ には戻さない（visitory v1.14.2 /
+# 日付サイクル 2024-12 等の汎用的な命名を許容するため）。
+#
+# `.` / `..` は `[A-Za-z0-9._-]+` regex には match するが、ディレクトリトラバーサルとして
+# 機能するため明示拒否（codex review 2nd round P1）。
+if [[ ! "$CYCLE" =~ ^[A-Za-z0-9._-]+$ ]] || [ "$CYCLE" = "." ] || [ "$CYCLE" = ".." ]; then
+    echo "error	retrospective-generate	invalid-cycle-format:${CYCLE}" >&2
+    exit 2
 fi
 
 # テンプレート存在確認

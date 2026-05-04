@@ -36,7 +36,6 @@ teardown() { teardown_env; }
 EOF
   # 必要 lib / config を実体からコピー
   cp "${REPO_ROOT}/skills/aidlc/scripts/lib/bootstrap.sh" "${tmp_plugin}/scripts/lib/"
-  cp "${REPO_ROOT}/skills/aidlc/scripts/lib/cycle-version-check.sh" "${tmp_plugin}/scripts/lib/"
   cp "${REPO_ROOT}/skills/aidlc/config/retrospective-schema.yml" "${tmp_plugin}/config/"
   cp "${REPO_ROOT}/skills/aidlc/config/defaults.toml" "${tmp_plugin}/config/"
   cp "${REPO_ROOT}/skills/aidlc/scripts/read-config.sh" "${tmp_plugin}/scripts/"
@@ -83,17 +82,50 @@ EOF
   [[ "$output" == *"retrospective	created	"* ]]
 }
 
-@test "GE5: cycle が v2.4.3 → exit 0 + retrospective\tskip\tcycle-too-old + ファイル作成なし" {
+@test "GE5: 旧版にあった cycle 番号バージョンガードは Issue #625 fix で撤廃された（cycle 番号と starter kit 番号の名前空間混同バグ修正）" {
   setup_env
-  run run_generate v2.4.3
+  # 旧版では cycle が v2.5.0 未満の場合 cycle-too-old skip だったが、撤廃したため通常生成される
+  run run_generate v1.14.2
   [ "$status" -eq 0 ]
-  [[ "$output" == *"retrospective	skip	cycle-too-old"* ]]
-  [ ! -f "${AIDLC_PROJECT_ROOT}/.aidlc/cycles/v2.4.3/operations/retrospective.md" ]
+  [[ "$output" == *"retrospective	created	"* ]]
+  [ -f "${AIDLC_PROJECT_ROOT}/.aidlc/cycles/v1.14.2/operations/retrospective.md" ]
 }
 
-@test "GE6: cycle がフォーマット違反 → exit 2 + invalid-format" {
+@test "GE6: cycle 引数のパストラバーサル防止検証（codex P1 対応 / Issue #625 fix）" {
   setup_env
-  run run_generate "2.5.0"
+
+  # `../` 含むパスは弾く
+  run run_generate "../etc"
   [ "$status" -eq 2 ]
-  [[ "$output" == *"invalid-format:2.5.0"* ]]
+  [[ "$output" == *"invalid-cycle-format"* ]]
+
+  # `/` 含むパスは弾く
+  run run_generate "v2.5.0/foo"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"invalid-cycle-format"* ]]
+
+  # `..` 単独は弾く（regex には match するが、ディレクトリトラバーサルとして機能するため）
+  run run_generate ".."
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"invalid-cycle-format"* ]]
+
+  # `.` 単独も弾く
+  run run_generate "."
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"invalid-cycle-format"* ]]
+
+  # 通常の SemVer プレフィックス付きは通る
+  run run_generate "v2.5.0-test"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"retrospective	created	"* ]]
+
+  # visitory 形式 (v1.14.2) も通る
+  run run_generate "v1.14.2"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"retrospective	created	"* ]]
+
+  # 日付サイクル (2024-12) も通る
+  run run_generate "2024-12"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"retrospective	created	"* ]]
 }

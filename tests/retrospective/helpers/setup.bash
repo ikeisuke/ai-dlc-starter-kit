@@ -11,7 +11,6 @@ readonly TEMPLATE_PATH="${REPO_ROOT}/skills/aidlc/templates/retrospective_templa
 readonly SCHEMA_PATH="${REPO_ROOT}/skills/aidlc/config/retrospective-schema.yml"
 readonly DEFAULTS_TOML="${REPO_ROOT}/skills/aidlc/config/defaults.toml"
 readonly STEP_FILE_PATH="${REPO_ROOT}/skills/aidlc/steps/operations/04-completion.md"
-readonly CYCLE_VERSION_CHECK="${REPO_ROOT}/skills/aidlc/scripts/lib/cycle-version-check.sh"
 readonly GENERATE_SCRIPT="${REPO_ROOT}/skills/aidlc/scripts/retrospective-generate.sh"
 readonly VALIDATE_SCRIPT="${REPO_ROOT}/skills/aidlc/scripts/retrospective-validate.sh"
 readonly FIXTURES_DIR="${REPO_ROOT}/tests/fixtures/retrospective"
@@ -70,11 +69,6 @@ copy_fixture() {
 # テスト用 retrospective.md パス（AIDLC_CYCLES 配下に配置）
 test_retrospective_path() {
   echo "${AIDLC_PROJECT_ROOT}/.aidlc/cycles/v2.5.0/operations/retrospective.md"
-}
-
-# cycle ガード呼び出しラッパ
-run_cycle_check() {
-  bash "${CYCLE_VERSION_CHECK}" "$@"
 }
 
 run_generate() {
