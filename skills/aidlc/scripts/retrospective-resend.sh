@@ -39,8 +39,13 @@ EOF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --cycle)
+            if [[ $# -lt 2 || -z "${2:-}" || "${2:0:2}" == "--" || "${2:0:1}" == "-" ]]; then
+                echo "error	missing-value	--cycle requires a non-empty value" >&2
+                usage >&2
+                exit 2
+            fi
             shift
-            CYCLE="${1:-}"
+            CYCLE="$1"
             ;;
         --dry-run)
             DRY_RUN=true
@@ -72,6 +77,11 @@ if [[ -z "$CYCLE" ]]; then
         echo "error	no-cycle-found" >&2
         exit 2
     fi
+fi
+
+# cycle バリデーション（path traversal 防御 / __retro_validate_cycle は retrospective-issue.sh で定義）
+if ! __retro_validate_cycle "$CYCLE"; then
+    exit 2
 fi
 
 SPOOL_PATH=".aidlc/cycles/$CYCLE/history/retrospective-spool.md"

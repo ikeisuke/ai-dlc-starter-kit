@@ -160,3 +160,24 @@ _make_spool_with_entry() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Usage:"* ]]
 }
+
+@test "resend: --cycle 値欠落（末尾）で exit 2 + missing-value" {
+  cd "$TMP"
+  run bash "$RESEND" --cycle
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"missing-value"* ]]
+}
+
+@test "resend: --cycle の次が別フラグで exit 2 + missing-value" {
+  cd "$TMP"
+  run bash "$RESEND" --cycle --dry-run
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"missing-value"* ]]
+}
+
+@test "resend: --cycle に path traversal を渡すと exit 2 + cycle_invalid" {
+  cd "$TMP"
+  run bash "$RESEND" --cycle "../malicious"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"cycle_invalid"* ]]
+}

@@ -40,14 +40,41 @@ __retro_llm_is_interactive() {
 }
 
 # ─── feedback_mode 解決（Unit 001 関数を呼ぶ。未ロード時は disabled で skip）─────────
+# Unit 001 の feedback_mode_resolve(mode, env_interactive) を呼び出すため、
+# raw mode を read-config.sh から取得 + feedback_mode_normalize で正規化 +
+# is_interactive_env で env_interactive を解決し、2 引数を完全に揃えてから呼ぶ。
+# read-config.sh / feedback_mode_normalize / is_interactive_env のいずれかが
+# 不在の場合は disabled に倒す（安全側 / Unit 001 関数未ロード時と同等の挙動）。
 __retro_llm_resolve_feedback_mode() {
-    if command -v feedback_mode_resolve >/dev/null 2>&1; then
-        feedback_mode_resolve
-        return $?
+    if ! command -v feedback_mode_resolve >/dev/null 2>&1; then
+        printf 'disabled\n'
+        return 0
     fi
-    # Unit 001 関数が未ロードの場合は disabled として安全側に振る
-    printf 'disabled\n'
-    return 0
+
+    local script_root
+    script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+    local raw_mode=""
+    if [[ -x "$script_root/read-config.sh" ]]; then
+        raw_mode=$("$script_root/read-config.sh" rules.retrospective.feedback_mode 2>/dev/null || true)
+    fi
+
+    local mode
+    if command -v feedback_mode_normalize >/dev/null 2>&1; then
+        mode=$(feedback_mode_normalize "$raw_mode")
+    else
+        mode="${raw_mode:-disabled}"
+    fi
+
+    local env_interactive="false"
+    if command -v is_interactive_env >/dev/null 2>&1; then
+        env_interactive=$(is_interactive_env)
+    elif __retro_llm_is_interactive; then
+        env_interactive="true"
+    fi
+
+    feedback_mode_resolve "$mode" "$env_interactive"
+    return $?
 }
 
 # ─── スキーマ検証（簡易 / 必須キーの存在確認 + 値域チェック）─────────
