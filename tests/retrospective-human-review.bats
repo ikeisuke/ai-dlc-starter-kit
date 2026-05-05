@@ -82,6 +82,9 @@ teardown() {
 }
 
 # ─── 本文サンプル ─────
+# 注: human_reviewed marker は末尾 ```yaml ... ``` フェンス内のキーのみを正解とする
+# （codex review P2 / Unit 003 領域）。本文上部の Markdown 展開やコードブロック例示は
+# 誤検出されない設計のため、フィクスチャも末尾フェンス込みの形式で生成する。
 make_body_with_false_marker() {
   cat <<'EOF'
 # Retrospective: v2.5.1
@@ -94,7 +97,9 @@ skill_caused_judgment:
 mirror_state:
   state: "created"
 
+```yaml
 human_reviewed: false
+```
 EOF
 }
 
@@ -108,7 +113,9 @@ skill_caused_judgment:
 mirror_state:
   state: "created"
 
+```yaml
 human_reviewed: true
+```
 EOF
 }
 
@@ -406,4 +413,73 @@ SHIM
   rc=99
   __retro_hr_has_diff "$TMP/data.yaml" && rc=0 || rc=$?
   [ "$rc" -eq 0 ]
+}
+
+# ─── H14: __retro_hr_owner_repo: GitHub Issue URL から owner/repo 抽出 ─────
+@test "H14: __retro_hr_owner_repo は URL から owner/repo を返す" {
+  source "$HOOK_LIB"
+
+  run __retro_hr_owner_repo "https://github.com/ikeisuke/ai-dlc-starter-kit/issues/100"
+  [ "$status" -eq 0 ]
+  [ "$output" = "ikeisuke/ai-dlc-starter-kit" ]
+
+  # 末尾スラッシュあり
+  run __retro_hr_owner_repo "https://github.com/owner/repo/issues/123/"
+  [ "$status" -eq 0 ]
+  [ "$output" = "owner/repo" ]
+}
+
+# ─── H15: gh コマンドに --repo が必ず付与される（codex review P1 / Unit 003 領域）─────
+@test "H15: gh issue view/edit/comment に --repo が必ず付く（mirror リポ対応）" {
+  source "$HOOK_LIB"
+
+  GH_MOCK_BODY="$(make_body_with_false_marker)"
+  : > "$TMP/final.yaml"
+  echo "problem_drafts: []" > "$TMP/final.yaml"
+  AIDLC_RETRO_HUMAN_REVIEW_FINAL_PATH="$TMP/final.yaml"
+  export GH_MOCK_BODY AIDLC_RETRO_HUMAN_REVIEW_FINAL_PATH
+
+  run retrospective_update_hook "https://github.com/ikeisuke/ai-dlc-starter-kit/issues/200" "v2.5.1"
+  [ "$status" -eq 0 ]
+
+  # view / comment / edit いずれも --repo ikeisuke/ai-dlc-starter-kit を持つ
+  grep -qE 'issue view 200 --repo ikeisuke/ai-dlc-starter-kit' "$GH_MOCK_LOG"
+  grep -qE 'issue comment 200 --repo ikeisuke/ai-dlc-starter-kit' "$GH_MOCK_LOG"
+  grep -qE 'issue edit 200 --repo ikeisuke/ai-dlc-starter-kit --body-file' "$GH_MOCK_LOG"
+  grep -qE 'issue edit 200 --repo ikeisuke/ai-dlc-starter-kit --add-label' "$GH_MOCK_LOG"
+}
+
+# ─── H16: 末尾 YAML フェンス内のみで human_reviewed を判定（codex review P2 / Unit 003 領域）─────
+@test "H16: 本文上部の human_reviewed: true 例示は誤検出されず、末尾フェンス内 false が正解" {
+  source "$HOOK_LIB"
+
+  # 本文上部にコードブロック例示で human_reviewed: true を含むが、末尾フェンス内は false
+  GH_MOCK_BODY="$(cat <<'EOF'
+# Retrospective: v2.5.1
+
+## レビュー手順
+
+確認後、末尾の human_reviewed を以下のように更新してください:
+
+```yaml
+human_reviewed: true
+```
+
+## Problem 一覧
+
+skill_caused_judgment:
+  q1_answer: "yes"
+
+```yaml
+human_reviewed: false
+```
+EOF
+)"
+  export GH_MOCK_BODY
+
+  run retrospective_update_hook "https://github.com/owner/repo/issues/300" "v2.5.1"
+  [ "$status" -eq 0 ]
+
+  # 末尾 YAML フェンス内が false なので、edit が呼ばれる（H6 のように skip されない）
+  grep -qE 'issue edit 300 --repo owner/repo --body-file' "$GH_MOCK_LOG"
 }

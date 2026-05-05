@@ -34,3 +34,13 @@
   - `tests/retrospective-issue-create.bats`
 
 ---
+## 2026-05-05T16:41:20+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: AIレビュー指摘対応判断
+- **実行内容**: PR マージ前レビュー round 3 で codex から指摘された Unit 003 領域 P1/P2 を現サイクル内で修正。P1 (--repo 欠落): retrospective-human-review.sh の gh issue view/edit/comment 全 4 箇所に --repo オプション追加、URL から owner/repo を抽出する __retro_hr_owner_repo 関数を追加、mirror モードで別リポ操作のリスクを解消。P2 (human_reviewed parse 誤検出): 本文全行 grep を末尾  フェンス内のみ参照に変更、__retro_hr_extract_trailing_yaml で末尾フェンス抽出してから grep。テストフィクスチャを末尾フェンス込みの新仕様に合わせて更新、新規 H14/H15/H16 を追加（owner/repo 抽出 / --repo 必須 / 本文上部誤検出排除）。回帰: BATS 188 件全 pass、shellcheck warning 0。
+- **成果物**:
+  - `skills/aidlc/scripts/lib/retrospective-human-review.sh`
+  - `tests/retrospective-human-review.bats`
+
+---

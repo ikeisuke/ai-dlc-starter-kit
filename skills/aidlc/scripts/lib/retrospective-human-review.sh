@@ -42,25 +42,65 @@ __retro_hr_issue_number() {
     printf '%s\n' "${trimmed##*/}"
 }
 
-# ─── 本文取得（gh issue view）─────────
+# ─── owner/repo 抽出（URL から `<owner>/<repo>` を取る）─────────
+# 用途: gh issue view/edit/comment の --repo 引数で mirror モード等の
+# 別リポを正しく操作するため（codex review P1 対応 / Unit 003 領域）。
+# 入力 URL は __retro_hr_validate_url で形式検証済みである前提。
+__retro_hr_owner_repo() {
+    local url="$1"
+    # https://github.com/<owner>/<repo>/issues/<N>(/) → <owner>/<repo>
+    local stripped="${url#https://github.com/}"
+    stripped="${stripped%/}"
+    # 末尾の /issues/<N> を除去
+    stripped="${stripped%/issues/*}"
+    printf '%s\n' "$stripped"
+}
+
+# ─── 本文取得（gh issue view --repo）─────────
 # stdout: 本文（成功時）
 # 戻り値: 0=成功 / 1=失敗
 __retro_hr_fetch_body() {
     local issue_number="$1"
+    local owner_repo="$2"
     local body
-    if ! body=$(gh issue view "$issue_number" --json body --jq '.body' 2>&1); then
+    if ! body=$(gh issue view "$issue_number" --repo "$owner_repo" --json body --jq '.body' 2>&1); then
         return 1
     fi
     printf '%s\n' "$body"
     return 0
 }
 
-# ─── 本文 YAML から human_reviewed 抽出 ─────────
+# ─── 末尾 YAML フェンス抽出 ─────────
+# 用途: human_reviewed marker は本文末尾の ```yaml ... ``` メタデータブロック
+# 内のキーのみを正解とする（codex review P2 対応 / Unit 003 領域）。
+# 本文上部の Markdown 展開やコードブロック例示の human_reviewed: は誤検出しない。
+# stdout: 末尾 YAML フェンスの中身（成功時）/ なし（フェンス未検出時）
+__retro_hr_extract_trailing_yaml() {
+    local body="$1"
+    # awk で最後の ```yaml ... ``` ブロックの中身のみを抽出
+    printf '%s\n' "$body" | awk '
+        /^```yaml[[:space:]]*$/ { in_block=1; buf=""; next }
+        in_block && /^```[[:space:]]*$/ { last_buf=buf; in_block=0; next }
+        in_block { buf = buf $0 ORS }
+        END { if (length(last_buf)) printf "%s", last_buf }
+    '
+}
+
+# ─── 本文 YAML から human_reviewed 抽出（末尾 YAML フェンス内のみ参照）─────────
 # stdout: "true" / "false" / "missing"
 __retro_hr_parse_human_reviewed() {
     local body="$1"
+    local trailing_yaml
+    trailing_yaml=$(__retro_hr_extract_trailing_yaml "$body")
+    if [[ -z "$trailing_yaml" ]]; then
+        # フェンス未検出時は従来 fallback（本文全体を grep）
+        # ※ retrospective Issue 本文の生成経路では末尾 YAML フェンスが必ず存在する
+        # ことを前提とするが、想定外の本文形式に対しては「missing」相当の安全側で進む
+        printf 'missing\n'
+        return 0
+    fi
     local line
-    line=$(printf '%s\n' "$body" | grep -E '^human_reviewed:' | head -1)
+    line=$(printf '%s\n' "$trailing_yaml" | grep -E '^human_reviewed:' | head -1)
     if [[ -z "$line" ]]; then
         printf 'missing\n'
         return 0
@@ -160,9 +200,12 @@ retrospective_update_hook() {
     local issue_number
     issue_number=$(__retro_hr_issue_number "$issue_url")
 
-    # 本文取得
+    local owner_repo
+    owner_repo=$(__retro_hr_owner_repo "$issue_url")
+
+    # 本文取得（mirror モード等の別リポ対応で --repo 必須 / codex review P1 対応）
     local current_body
-    if ! current_body=$(__retro_hr_fetch_body "$issue_number"); then
+    if ! current_body=$(__retro_hr_fetch_body "$issue_number" "$owner_repo"); then
         __retro_hr_diag "warn" "human_review_gh_edit_failed" \
             "failed to fetch issue body for $issue_url"
         return 0
@@ -210,7 +253,7 @@ retrospective_update_hook() {
         local comment_body
         comment_body=$(__retro_hr_compose_diff_comment "$cycle" "$original_yaml_text" "$final_yaml_text")
 
-        if ! printf '%s\n' "$comment_body" | gh issue comment "$issue_number" --body-file - >/dev/null 2>&1; then
+        if ! printf '%s\n' "$comment_body" | gh issue comment "$issue_number" --repo "$owner_repo" --body-file - >/dev/null 2>&1; then
             __retro_hr_diag "warn" "human_review_gh_comment_failed" \
                 "gh issue comment failed for $issue_url (skipping body update / label)"
             return 0
@@ -234,7 +277,7 @@ retrospective_update_hook() {
     printf '%s\n' "$new_body" > "$tmp_body_file"
 
     local edit_rc=0
-    if ! gh issue edit "$issue_number" --body-file "$tmp_body_file" >/dev/null 2>&1; then
+    if ! gh issue edit "$issue_number" --repo "$owner_repo" --body-file "$tmp_body_file" >/dev/null 2>&1; then
         edit_rc=1
     fi
     rm -f -- "$tmp_body_file"
@@ -246,7 +289,7 @@ retrospective_update_hook() {
     fi
 
     # ラベル付与
-    if ! gh issue edit "$issue_number" --add-label human-reviewed >/dev/null 2>&1; then
+    if ! gh issue edit "$issue_number" --repo "$owner_repo" --add-label human-reviewed >/dev/null 2>&1; then
         __retro_hr_diag "warn" "human_review_label_failed" \
             "gh issue edit --add-label human-reviewed failed for $issue_url (continuing)"
     fi
