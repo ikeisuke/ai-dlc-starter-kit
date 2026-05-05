@@ -44,3 +44,13 @@
   - `tests/retrospective-human-review.bats`
 
 ---
+## 2026-05-05T16:45:59+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: バックログ自動登録
+- **実行内容**: PR マージ前レビュー round 4 で codex から指摘された AIDLC_PROJECT_ROOT 関連 2 件を OUT_OF_SCOPE として GitHub Issue 化。Issue #631 (Unit 002 領域 / retrospective-resend.sh の spool path)、Issue #632 (Unit 004 領域 / predecessor-issue.sh の fallback path)。本サイクル Intent の含まれるもの範疇外（横断リファクタリング案件）であり、本リポでは顕在化しないため defer 妥当。千日手抜け出しのため次サイクルで対応予定。
+- **成果物**:
+  - `https://github.com/ikeisuke/ai-dlc-starter-kit/issues/631`
+  - `https://github.com/ikeisuke/ai-dlc-starter-kit/issues/632`
+
+---
