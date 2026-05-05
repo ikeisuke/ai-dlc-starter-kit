@@ -5,7 +5,7 @@
 | Unit | タイトル | 状態 | Phase 1（設計） | Phase 2（実装） | 完了日 |
 |------|---------|------|-----------------|-----------------|--------|
 | 001 | feedback_mode 5 値拡張 + マイグレーション + 初回 wizard（基盤） | 完了 | 完了 | 完了 | 2026-05-05 |
-| 002 | retrospective Issue 一本化 + spool + mirror_state ラベル化 | 未着手 | - | - | - |
+| 002 | retrospective Issue 一本化 + spool + mirror_state ラベル化 | 完了 | 完了 | 完了 | 2026-05-05 |
 | 003 | 主因分類 LLM 下書き + 人間確認運用 | 未着手 | - | - | - |
 | 004 | predecessor handoff の Issue 検索化 | 未着手 | - | - | - |
 | 005 | #616 マージ前 write-history 追加コミット漏れガード | 未着手 | - | - | - |
@@ -24,7 +24,7 @@
 
 ## 現在のステップ
 
-Unit 001 完了。次回: Unit 002（retrospective Issue 一本化 + spool + mirror_state ラベル化）
+Unit 002 完了。次回: Unit 003（主因分類 LLM 下書き + 人間確認運用）または Unit 004（predecessor handoff の Issue 検索化）
 
 ## 再開時に読み込むファイル
 

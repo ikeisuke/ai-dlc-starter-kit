@@ -97,17 +97,142 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 
 post-merge で本サイクル `cycles/{{CYCLE}}/**` に振り返りを追記しようとすると `write-history.sh --operations-stage post-merge` 等で exit 3 でブロックされる。この場合は (b) に切り替えること。`write-history.sh` ガード詳細は §4「PR マージ後の手順」の【重要】マージ前完結ルールを参照。
 
-<!-- guidance:id=unit004-retrospective-creation -->
+<!-- guidance:id=unit002-retrospective-issue-only -->
 
-#### 1.5 自動生成フロー（v2.5.0+ / Unit 004-006 / #590）
+#### 1.5 Issue 起票フロー（v2.5.1+ / Unit 002）
 
-分岐 (a) マージ前を選択した場合、以下の自動生成フローで `retrospective.md` を作成・検証・mirror 起票する。本サブステップは `.aidlc/cycles/{{CYCLE}}/operations/retrospective.md` への書き込みを伴うため、**§4. PR マージ後の手順より前**に完結させる必要がある（マージ後は exit 3 ガードで拒否される）。
+分岐 (a) マージ前を選択した場合、以下の Issue 起票フローで retrospective Issue を作成する。**v2.5.1 で全面刷新**: ローカル `retrospective.md` ファイル生成は撤廃され、最初から GitHub Issue 起票で完結する。`gh_status != available` 時は `cycles/{{CYCLE}}/history/retrospective-spool.md` にスプールし、次回 `gh` 利用可能時に `scripts/retrospective-resend.sh` で再送する。
 
-**責務分離**: 本サブステップは **呼び出し順序と分岐のみ** を記述する。判定ロジック（feedback_mode 解決 / テンプレート展開 / YAML 検証 / ダウングレード）は全て下記スクリプトに委譲される。
+**責務分離**: 本サブステップは **呼び出し順序と分岐のみ** を記述する。判定ロジック（feedback_mode 解決 / wizard / cap / 本文構築 / 起票 / spool / mirror_state ラベル化）は `lib/retrospective-issue.sh` の共有関数に委譲される。
 
-> **Issue #625 fix（v2.5.0）**: 旧版にあった「`scripts/lib/cycle-version-check.sh "{{CYCLE}}"` によるサイクル番号ガード」は撤廃された。理由: 旧版は引数として渡されたプロダクトサイクル識別子（例: `v1.14.2`）を starter kit 側の機能導入バージョン `v2.5.0` と直接 SemVer 比較していたため、v2 系サイクル番号を使うプロダクト以外では永久に skip され、自動生成が永久無効化されるバグがあった。本スクリプトは v2.5.0+ の skill として配布される時点で機能可用性が保証されるため、追加のバージョンガードは不要。opt-out が必要な場合は §1.0 実施判定の `feedback_mode = "disabled"` を使用する。
+##### Step 1: feedback_mode 解決 + wizard 判定
 
-##### Step 2: retrospective-generate.sh 呼び出し
+```bash
+source skills/aidlc/scripts/lib/feedback-mode.sh
+
+scripts/read-config.sh rules.retrospective.feedback_mode > /tmp/aidlc-raw.txt
+read raw < /tmp/aidlc-raw.txt
+
+feedback_mode_normalize "$raw" > /tmp/aidlc-mode.txt
+read mode < /tmp/aidlc-mode.txt
+
+is_interactive_env > /tmp/aidlc-env.txt
+read env_interactive < /tmp/aidlc-env.txt
+
+feedback_mode_requires_wizard "$mode" "$env_interactive" > /tmp/aidlc-wizard.txt
+read needs_wizard < /tmp/aidlc-wizard.txt
+
+if [[ "$needs_wizard" == "true" ]]; then
+    source skills/aidlc/scripts/lib/feedback-mode-wizard.sh
+    feedback_mode_wizard > /tmp/aidlc-wizard-result.txt
+    read mode < /tmp/aidlc-wizard-result.txt
+fi
+```
+
+`mode == "disabled"` の場合は §1.5 全体をスキップして §1.6 へ進む。
+
+##### Step 2: cap 判定 + Unit 003 prefill フック
+
+```bash
+scripts/read-config.sh rules.retrospective.feedback_max_per_cycle > /tmp/aidlc-limit.txt
+read limit < /tmp/aidlc-limit.txt
+
+# current_count: cycle 内の retrospective ラベル付き Issue 数（gh 不可時は 0 扱い）
+gh issue list --label retrospective --milestone "{{CYCLE}}" --state all --limit 100 --json url > /tmp/aidlc-issues.json 2>/dev/null || printf '[]\n' > /tmp/aidlc-issues.json
+jq 'length' < /tmp/aidlc-issues.json > /tmp/aidlc-current.txt
+read current_count < /tmp/aidlc-current.txt
+
+feedback_cap_check "$mode" "$current_count" "$limit" > /tmp/aidlc-cap.txt
+grep '^over=true$' /tmp/aidlc-cap.txt > /tmp/aidlc-over.txt 2>/dev/null || : > /tmp/aidlc-over.txt
+# /tmp/aidlc-over.txt が非空なら cap 超過 → §1.5 全体スキップして §1.6 へ進む
+# （Step 3 / Step 4 / Step 5 は実行しない）
+
+# Unit 003 prefill フック呼び出し（cap 超過時はスキップ / 未定義時は内部 no-op で空 YAML フォールバック）
+if [[ ! -s /tmp/aidlc-over.txt ]]; then
+    draft_yaml_path=/tmp/aidlc-retro-draft.yml
+    : > "$draft_yaml_path"
+    if command -v retrospective_prefill_hook >/dev/null 2>&1; then
+        retrospective_prefill_hook "{{CYCLE}}" "$kpt_md_path" > "$draft_yaml_path" || : > "$draft_yaml_path"
+    fi
+fi
+```
+
+`/tmp/aidlc-over.txt` が非空（cap 超過）の場合は Step 3 / Step 4 / Step 5 をすべてスキップして §1.6 へ進む。`feedback_cap_check` の判定値は `retrospective_issue_create` でも環境変数経由で再評価される（二重防御）。
+
+##### Step 3: 本文構築 + validate
+
+```bash
+source skills/aidlc/scripts/lib/retrospective-issue.sh
+
+kpt_md_path=/tmp/aidlc-retro-kpt.md
+sed "s/{{CYCLE}}/{{CYCLE}}/g" skills/aidlc/templates/retrospective_template.md > "$kpt_md_path"
+
+body_path=/tmp/aidlc-retro-body.md
+retrospective_body_compose "$draft_yaml_path" "$kpt_md_path" "{{CYCLE}}" > "$body_path"
+
+# validate（既存 retrospective-validate.sh の --apply は AIDLC_CYCLES 配下限定のため、
+# 本フローでは直接呼び出さず、Issue 本文への適用は呼出元責任で実施）
+```
+
+##### Step 4: Issue 起票
+
+```bash
+set +e
+AIDLC_RETRO_CURRENT_COUNT="$current_count" \
+AIDLC_RETRO_LIMIT="$limit" \
+    retrospective_issue_create "$body_path" "$mode" "{{CYCLE}}" > /tmp/aidlc-retro-result.txt
+rc=$?
+set -e
+
+case "$rc" in
+    0)
+        if grep -q '^result=created' /tmp/aidlc-retro-result.txt; then
+            grep -E '^(local|mirror)?_?issue_url=' /tmp/aidlc-retro-result.txt > /tmp/aidlc-retro-url.txt
+            head -n 1 /tmp/aidlc-retro-url.txt > /tmp/aidlc-retro-url-first.txt
+            cut -d= -f2 /tmp/aidlc-retro-url-first.txt > /tmp/aidlc-retro-issue-url.txt
+            read issue_url < /tmp/aidlc-retro-issue-url.txt
+            echo "起票成功: $issue_url"
+        elif grep -q '^result=spooled' /tmp/aidlc-retro-result.txt; then
+            echo "gh が利用不可のためスプールしました。次回 gh 利用可能時に bash skills/aidlc/scripts/retrospective-resend.sh を実行してください。"
+        else
+            grep '^reason=' /tmp/aidlc-retro-result.txt > /tmp/aidlc-retro-reason.txt
+            read reason_line < /tmp/aidlc-retro-reason.txt
+            echo "起票スキップ: $reason_line"
+        fi
+        ;;
+    1)
+        grep '^reason=' /tmp/aidlc-retro-result.txt > /tmp/aidlc-retro-reason.txt
+        read reason_line < /tmp/aidlc-retro-reason.txt
+        echo "[警告] 起票失敗（再送可能）: $reason_line"
+        ;;
+    2)
+        echo "[エラー] retrospective_issue_create 引数 / fatal エラー" >&2
+        ;;
+esac
+```
+
+`exit 1`（failed）でも §1.5 全体は中断せず、警告を表示して §1.6 へ進む（spool 経路で内容は永続化済み）。`exit 2`（fatal）の場合は §1.5 を中断する。
+
+##### Step 5: Unit 003 update フック（起票成功時のみ）
+
+```bash
+if [[ -n "${issue_url:-}" ]]; then
+    if command -v retrospective_update_hook >/dev/null 2>&1; then
+        retrospective_update_hook "$issue_url" "{{CYCLE}}" || \
+            printf 'warn\tunit003_update_hook_failed\t%s\n' "$issue_url" >&2
+    fi
+fi
+```
+
+Unit 003 の update フックは `gh issue edit` で `human_reviewed: false → true` 更新と差分コメント追記を行う。フック失敗時は警告のみで §1.5 は exit 0 を維持する（Plan §「Unit 003 フック契約」参照）。
+
+<!-- guidance:id=unit002-legacy-removed -->
+
+##### 旧フロー（v2.5.0）の撤廃について
+
+v2.5.0 で導入された `retrospective-generate.sh` / `retrospective-mirror.sh` を経由する自動生成 + mirror フローは v2.5.1 で本ステップから撤廃された。互換アダプタ層として旧スクリプトは残置するが、`v2.7.x` で完全削除予定。詳細は `.aidlc/cycles/v2.5.1/plans/unit-002-plan.md` の「互換アダプタ層 保証範囲」を参照。
+
+##### 旧仕様参考（撤廃済 / v2.5.0 実装）
 
 ```bash
 bash scripts/retrospective-generate.sh "{{CYCLE}}"

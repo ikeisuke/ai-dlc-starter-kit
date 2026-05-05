@@ -29,6 +29,18 @@ setup_env() {
 
   # plugin root を本リポの skills/aidlc に固定
   export AIDLC_PLUGIN_ROOT="${REPO_ROOT}/skills/aidlc"
+
+  # v2.5.1 / Unit 002: gh を不可状態にする shim（テスト環境での副作用防止）
+  # gh が auth ng を返すことで retrospective_issue_create は spool 経路に乗る
+  local shim_dir="${TEST_TMPDIR}/shim"
+  mkdir -p "$shim_dir"
+  cat > "${shim_dir}/gh" <<'SHIM'
+#!/usr/bin/env bash
+# 全 gh コマンドを失敗扱い（テスト環境で gh 副作用を発生させない）
+exit 1
+SHIM
+  chmod +x "${shim_dir}/gh"
+  export PATH="${shim_dir}:${PATH}"
 }
 
 teardown_env() {

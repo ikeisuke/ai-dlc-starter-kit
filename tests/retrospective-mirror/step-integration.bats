@@ -31,11 +31,13 @@ teardown() {
   grep -q '保留' "${STEP_FILE_PATH}"
 }
 
-@test "step-integration: 既存 Step 2〜4 (Unit 004) が保持されている（Step 1 サイクルバージョンガードは Issue #625 fix で撤廃）" {
-  # Issue #625 fix: 旧 Step 1（cycle-version-check.sh によるサイクル番号 v2.5.0 比較ガード）は撤廃
-  # 理由: プロダクトサイクル番号と starter kit バージョンを直接 SemVer 比較する名前空間混同バグ
+@test "step-integration: 旧 Step 2〜4 は §1.5 で撤廃され『旧仕様参考』セクションに残置（Unit 002 / v2.5.1）" {
+  # Issue #625 fix: 旧 Step 1（cycle-version-check.sh）は撤廃
   ! grep -q 'サイクルバージョンガード' "${STEP_FILE_PATH}"
-  grep -q '##### Step 2: retrospective-generate.sh 呼び出し' "${STEP_FILE_PATH}"
-  grep -q '##### Step 3: 出力プレフィックス分岐' "${STEP_FILE_PATH}"
-  grep -q '##### Step 4: retrospective-validate.sh 呼び出し' "${STEP_FILE_PATH}"
+  # Unit 002 (v2.5.1): §1.5 全面刷新により旧 Step 2-4 は『旧仕様参考（撤廃済 / v2.5.0 実装）』セクションに移動
+  grep -q 'guidance:id=unit002-legacy-removed' "${STEP_FILE_PATH}"
+  grep -q '旧仕様参考（撤廃済 / v2.5.0 実装）' "${STEP_FILE_PATH}"
+  # 新 §1.5 Step 1-5 が SSOT として存在
+  grep -q '##### Step 1: feedback_mode 解決' "${STEP_FILE_PATH}"
+  grep -q '##### Step 4: Issue 起票' "${STEP_FILE_PATH}"
 }
