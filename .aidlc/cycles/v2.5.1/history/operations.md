@@ -54,3 +54,12 @@
   - `https://github.com/ikeisuke/ai-dlc-starter-kit/issues/632`
 
 ---
+## 2026-05-05T16:49:15+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: リリース準備
+- **実行内容**: PR #628 CI Skill Reference Check 失敗対応。Unit 002 で追加された 04-completion.md §1.5 の Issue 起票フロー spec 内サンプルコード（source skills/aidlc/scripts/... 等 5 件）が直接パス参照禁止ルールに抵触。bin/check-skill-references.sh の EXCLUDE_PATTERNS 配列と is_excluded case 文の両方に steps/operations/04-completion.md を追加（前例: steps/inception/01-setup.md と同根拠 / spec 文書内のサンプル / 案内コマンド表記）。bin/check-skill-references.sh ローカル実行で 207 files / 0 violations 確認。
+- **成果物**:
+  - `bin/check-skill-references.sh`
+
+---

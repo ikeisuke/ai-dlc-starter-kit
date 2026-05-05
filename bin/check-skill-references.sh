@@ -48,6 +48,7 @@ EOF
 EXCLUDE_PATTERNS=(
     "guides/"
     "steps/inception/01-setup.md"
+    "steps/operations/04-completion.md"
     "aidlc-migrate/"
     "write-history/SKILL.md"
     "scripts/lib/bootstrap.sh"
@@ -62,7 +63,7 @@ EXCLUDE_PATTERNS=(
 is_excluded() {
     local rel_file="$1"
     case "$rel_file" in
-        */guides/*|*/steps/inception/01-setup.md|\
+        */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
         */aidlc-migrate/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/tests/*|\
         */scripts/ios-build-check.sh|*/scripts/get-default-branch.sh|\
