@@ -109,7 +109,7 @@ predecessor_resolve_issue(prev_cycle: String) -> PredecessorReference
 __pred_read_spool_issue_url(spool_path: Path) -> Option<URL>
 ```
 
-Unit 002 の `_spool_extract_entries` を呼び出し、NDJSON 各行から `jq -r .issue_url` で URL を抽出。複数件ある場合は最後の有効 URL を採用（spool 末尾優先 / Unit 002 の append 順 invariant に依存）。
+Unit 002 の `_spool_extract_entries` を呼び出し、NDJSON 各行から URL を抽出。優先順位: `.partial_state.local_created` → `.partial_state.mirror_created` → `.issue_url`（旧 v2.5.0 schema 互換 fallback）/ 複数件ある場合は最後の有効 URL を採用（spool 末尾優先 / Unit 002 の append 順 invariant に依存）。**v2.5.1 Unit 005 統合レビューで Unit 002 spool 実 schema との不整合が発覚 → fix 適用済**（旧記述 `jq -r .issue_url` のみは誤りで partial_state を見ないと Unit 002 spool に対応できない）。
 
 ## 5. 状態遷移
 

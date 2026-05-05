@@ -47,7 +47,7 @@
 
 ## レビュー完了時の共通処理
 
-パス 1/2 完了時: (1) シグナル生成（`review_detected`, `deferred_count`, `resolved_count`, `unresolved_count`、承認ポイント内有効）/ (2) レビュー後コミット / (3) **レビューサマリ更新**【必須、計画承認前除く、未作成のまま次へ進まない】/ (4) セミオートゲート判定（`unresolved_count == 0` かつフォールバック非該当 → `auto_approved`）。
+パス 1/2 完了時: (1) シグナル生成（`review_detected`, `deferred_count`, `resolved_count`, `unresolved_count`、承認ポイント内有効）/ (2) レビュー後コミット【**v2.5.1 Unit 005 / #616 で三段階明示**: (2a) 修正コミット（コードベース変更を反映）→ (2b) 履歴記録（`/write-history` で `history/*.md` に AIレビュー完了等を追記）→ (2c) 履歴コミット（`history/*.md` のみ / `chore: [{{CYCLE}}] レビュー履歴追記` 等）/ (2c) 未実施のままマージ実行に進むと `operations-release.sh merge-pr` の pre-flight check が `pre-merge-uncommitted-detected` で exit 1 で停止する】/ (3) **レビューサマリ更新**【必須、計画承認前除く、未作成のまま次へ進まない】/ (4) セミオートゲート判定（`unresolved_count == 0` かつフォールバック非該当 → `auto_approved`）。
 
 ## レビューサマリファイル
 

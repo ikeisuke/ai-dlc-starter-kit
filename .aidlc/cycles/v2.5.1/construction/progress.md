@@ -8,7 +8,7 @@
 | 002 | retrospective Issue 一本化 + spool + mirror_state ラベル化 | 完了 | 完了 | 完了 | 2026-05-05 |
 | 003 | 主因分類 LLM 下書き + 人間確認運用 | 完了 | 完了 | 完了 | 2026-05-05 |
 | 004 | predecessor handoff の Issue 検索化 | 完了 | 完了 | 完了 | 2026-05-05 |
-| 005 | #616 マージ前 write-history 追加コミット漏れガード | 未着手 | - | - | - |
+| 005 | #616 マージ前 write-history 追加コミット漏れガード | 完了 | 完了 | 完了 | 2026-05-05 |
 
 ## 依存関係
 
@@ -24,7 +24,7 @@
 
 ## 現在のステップ
 
-Unit 004 完了。次は Unit 005（#616 マージ前 write-history 追加コミット漏れガード）。`/aidlc c` で再開する場合、`construction.01-setup` で Unit 005 の計画ファイル作成から開始。
+全 Unit（001-005）完了。Construction Phase 完了。Operations Phase へ移行可能。`/aidlc operations` で Operations Phase を開始。
 
 ## 再開時に読み込むファイル
 

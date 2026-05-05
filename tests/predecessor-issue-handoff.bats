@@ -63,7 +63,20 @@ teardown() {
 
 # ─── ヘルパ: spool ファイル作成 ─────
 make_spool_with_url() {
-  # $1: issue_url
+  # $1: issue_url（partial_state.local_created に格納 / Unit 002 spool schema 整合）
+  local spool_path=".aidlc/cycles/${PREV_CYCLE}/history/retrospective-spool.md"
+  cat > "$spool_path" <<EOF
+<!-- retrospective-spool v1 -->
+
+\`\`\`ndjson
+{"id":"abc","version":"1","cycle":"${PREV_CYCLE}","feedback_mode":"local","attempted_at":"2026-05-05T00:00:00Z","target":"local","retry_target":"local","partial_state":{"local_created":"$1","mirror_created":null},"attempt_reason":"relabel-failed-local","body_b64":"e30=","body_sha256":"x"}
+\`\`\`
+EOF
+}
+
+# 旧版互換 spool（issue_url キー / Unit 005 P19 で fallback parse を verify）
+make_spool_with_legacy_url() {
+  # $1: issue_url（旧 v2.5.0 schema / partial_state なしで .issue_url のみ）
   local spool_path=".aidlc/cycles/${PREV_CYCLE}/history/retrospective-spool.md"
   cat > "$spool_path" <<EOF
 <!-- retrospective-spool v1 -->
@@ -259,6 +272,34 @@ make_compat_file() {
   run _pure_format_query_args "v2.5.0" "false"
   [[ "$output" != *"--milestone"* ]]
   [[ "$output" == *"--label retrospective"* ]]
+}
+
+# ─── P19: spool fallback で partial_state.local_created を参照（Unit 005 コードレビュー P1 対応） ─────
+@test "P19: spool fallback / partial_state.local_created に URL あり → 正しく抽出" {
+  source "$HOOK_LIB"
+
+  GH_MOCK_LIST_RESULT='[]'
+  export GH_MOCK_LIST_RESULT
+  make_spool_with_url "https://github.com/owner/repo/issues/900"  # partial_state.local_created に格納
+
+  run --separate-stderr predecessor_resolve_issue "$PREV_CYCLE"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"spool_fallback"* ]]
+  [[ "$output" == *"issues/900"* ]]
+}
+
+# ─── P20: spool fallback / 旧 issue_url キーへの fallback parse（v2.5.0 互換） ─────
+@test "P20: spool fallback / 旧 v2.5.0 schema (.issue_url) でも fallback で URL 抽出" {
+  source "$HOOK_LIB"
+
+  GH_MOCK_LIST_RESULT='[]'
+  export GH_MOCK_LIST_RESULT
+  make_spool_with_legacy_url "https://github.com/owner/repo/issues/901"
+
+  run --separate-stderr predecessor_resolve_issue "$PREV_CYCLE"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"spool_fallback"* ]]
+  [[ "$output" == *"issues/901"* ]]
 }
 
 # ─── P18: __pred_gh_query 内部関数 / label fallback で prev_cycle title 絞り込み ─────

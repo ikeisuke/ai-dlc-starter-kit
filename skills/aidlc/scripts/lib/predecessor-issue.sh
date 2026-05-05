@@ -138,6 +138,14 @@ __pred_gh_query() {
 # 入力: $1=spool_path
 # stdout: 1 件の issue_url（複数あれば末尾優先）/ 取得失敗時は空文字
 # 戻り値: 0=成功（空文字でも 0）/ 1=I/O エラー / 2=ヘッダ不正
+#
+# Unit 002 spool schema:
+#   .partial_state.local_created  - local 起票成功時の URL（ない場合 null）
+#   .partial_state.mirror_created - mirror 起票成功時の URL（ない場合 null）
+# 旧版互換: .issue_url（v2.5.0 以前の互換 / 現行 schema にはないが parse fallback として残す）
+#
+# 優先順位: partial_state.local_created → partial_state.mirror_created → issue_url（旧版互換）
+# 全 null の場合は空文字を返す（gh-not-available 等で URL 未確定の状態）
 __pred_read_spool_issue_url() {
     local spool_path="$1"
 
@@ -151,9 +159,13 @@ __pred_read_spool_issue_url() {
         return 2
     fi
 
-    # NDJSON 各行から jq -r .issue_url で URL を抽出 → 最後の有効 URL を採用
+    # NDJSON 各行から URL 抽出（partial_state.local_created 優先 / mirror_created → 旧 issue_url の順で fallback）
+    # 最後の非 null URL を採用（spool 末尾優先 / Unit 002 append 順 invariant に依存）
     local last_url
-    last_url=$(printf '%s\n' "$entries" | jq -r 'select(.issue_url != null and .issue_url != "") | .issue_url' 2>/dev/null | tail -1)
+    last_url=$(printf '%s\n' "$entries" | jq -r '
+        (.partial_state.local_created // .partial_state.mirror_created // .issue_url // empty)
+        | select(. != null and . != "")
+    ' 2>/dev/null | tail -1)
     if [[ -z "$last_url" ]]; then
         return 0
     fi
