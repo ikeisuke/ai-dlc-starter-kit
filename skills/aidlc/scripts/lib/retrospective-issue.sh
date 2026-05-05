@@ -937,21 +937,28 @@ retrospective_issue_create() {
         target="local"
     fi
 
-    # 重複検出（local 側 / mirror 側 / both 両方）
+    # 重複検出（local 側 / mirror 側 / both は両方）
+    # both 時は 1 Issue = 1 Milestone 制約準拠で local → mirror の順に検査し、
+    # いずれかにヒットすれば skip（mirror 側に既存があるのに local 側だけ無くて
+    # mirror に重複起票してしまう codex review 指摘 P2 対応）。
     local existing_url=""
-    local check_repo=""
     case "$target" in
-        local) check_repo="$local_repo" ;;
-        mirror) check_repo="$MIRROR_REPO" ;;
-        both) check_repo="$local_repo" ;;
+        local)
+            existing_url=$(GH_REPO="$local_repo" _gh_find_duplicate "$title" "$cycle" 2>/dev/null || true)
+            ;;
+        mirror)
+            existing_url=$(GH_REPO="$MIRROR_REPO" _gh_find_duplicate "$title" "$cycle" 2>/dev/null || true)
+            ;;
+        both)
+            existing_url=$(GH_REPO="$local_repo" _gh_find_duplicate "$title" "$cycle" 2>/dev/null || true)
+            if [[ -z "$existing_url" ]]; then
+                existing_url=$(GH_REPO="$MIRROR_REPO" _gh_find_duplicate "$title" "$cycle" 2>/dev/null || true)
+            fi
+            ;;
     esac
-    if [[ -n "$check_repo" ]]; then
-        # 重複検索は現リポで実施（GH_REPO で切替）
-        existing_url=$(GH_REPO="$check_repo" _gh_find_duplicate "$title" "$cycle" 2>/dev/null || true)
-        if [[ -n "$existing_url" ]]; then
-            printf 'result=skipped\nreason=duplicate\nexisting_issue_url=%s\nmirror_state=skipped:duplicate\n' "$existing_url"
-            return 0
-        fi
+    if [[ -n "$existing_url" ]]; then
+        printf 'result=skipped\nreason=duplicate\nexisting_issue_url=%s\nmirror_state=skipped:duplicate\n' "$existing_url"
+        return 0
     fi
 
     # 起票

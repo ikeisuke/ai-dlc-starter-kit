@@ -24,3 +24,13 @@
   - `tests/retrospective-resend.bats`
 
 ---
+## 2026-05-05T16:28:48+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: AIレビュー指摘対応判断
+- **実行内容**: PR マージ前レビュー round 2 で codex から再出した Unit 002 領域 P2（target=both 時 mirror 重複検出欠落）を現サイクル内で修正。retrospective-issue.sh:940-955 で target=both 時に local→mirror の順で _gh_find_duplicate を呼ぶよう変更、いずれかにヒットすれば skip（1 Issue = 1 Milestone 制約準拠）。回帰: tests/retrospective-issue-create.bats に 1 件（target=both で mirror 側のみ重複時 skip）追加、BATS 185 件全 pass、shellcheck warning 0。
+- **成果物**:
+  - `skills/aidlc/scripts/lib/retrospective-issue.sh`
+  - `tests/retrospective-issue-create.bats`
+
+---

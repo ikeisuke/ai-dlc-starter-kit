@@ -253,3 +253,52 @@ GITSHIM
   [ "$status" -eq 0 ]
   [[ "$output" == *"target=local"* ]]
 }
+
+@test "create: target=both で duplicate 時 skip（codex review P2 / Unit 002 領域 mirror 重複対応）" {
+  cd "$TMP"
+  # git mock は default（test-owner/test-repo）→ MIRROR_REPO と異なるので両方検査される
+  GH_MOCK_AUTH=ok
+  # local 側 list は空、mirror 側 list は重複ありにする mock
+  cat > "$SHIM_DIR/gh" <<'SHIM'
+#!/usr/bin/env bash
+echo "$@" >> "${GH_MOCK_LOG:-/dev/null}"
+case "$1" in
+  auth) exit 0 ;;
+  issue)
+    sub="$2"; shift 2
+    case "$sub" in
+      list)
+        # --repo 抽出
+        repo=""
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            --repo) repo="$2"; shift 2 ;;
+            *) shift ;;
+          esac
+        done
+        # GH_REPO 環境変数優先（gh の挙動模倣）
+        if [[ -z "$repo" && -n "${GH_REPO:-}" ]]; then
+          repo="$GH_REPO"
+        fi
+        if [[ "$repo" == "ikeisuke/ai-dlc-starter-kit" ]]; then
+          printf '%s\n' '[{"url":"https://example.com/mirror-dup","title":"Retrospective: v2.5.1"}]'
+        else
+          printf '%s\n' '[]'
+        fi
+        exit 0
+        ;;
+      create) printf '%s\n' "${GH_MOCK_CREATE_URL:-https://example.com/issue}"; exit 0 ;;
+      edit) exit 0 ;;
+    esac
+    ;;
+esac
+exit 0
+SHIM
+  chmod +x "$SHIM_DIR/gh"
+  export GH_MOCK_AUTH
+  run bash -c "source '$RETRO_LIB' && retrospective_issue_create '$BODY' 'local-and-mirror' 'v2.5.1'"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"result=skipped"* ]]
+  [[ "$output" == *"reason=duplicate"* ]]
+  [[ "$output" == *"existing_issue_url=https://example.com/mirror-dup"* ]]
+}
