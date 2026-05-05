@@ -524,6 +524,31 @@ cmd_verify_git() {
     return $final_ec
 }
 
+# Unit 005 (#616) pre-flight check: マージ前 write-history 追加コミット漏れガード
+# validate-git.sh uncommitted を呼出し、status:warning 時は exit 1 で停止する
+__operations_release_pre_flight_check() {
+    local uncommitted_output
+    uncommitted_output=$("$SCRIPT_DIR/validate-git.sh" uncommitted 2>&1) || true
+
+    local uncommitted_status
+    uncommitted_status=$(printf '%s\n' "$uncommitted_output" | awk -F':' '/^status:/ {print $2; exit}')
+    [[ -z "$uncommitted_status" ]] && uncommitted_status="unknown"
+
+    case "$uncommitted_status" in
+        ok)
+            return 0
+            ;;
+        warning)
+            printf 'error\tpre-merge-uncommitted-detected\t%s\n' "$uncommitted_output" >&2
+            return 1
+            ;;
+        error|unknown|*)
+            printf 'warn\tpre-merge-uncommitted-unknown\tvalidate-git.sh status undecidable: %s\n' "$uncommitted_output" >&2
+            return 0
+            ;;
+    esac
+}
+
 cmd_merge_pr() {
     local pr_number=""
     local method=""
@@ -566,6 +591,17 @@ cmd_merge_pr() {
     if [[ -z "$method" ]]; then
         printf 'merge-pr:error:method-required\n' >&2
         return 1
+    fi
+
+    # Unit 005 (#616) pre-flight check: --skip-checks 指定なし時のみ実行
+    # dry-run でも pre-flight は必ず通す（構造的検証の信頼性 / I2）
+    if [[ "$skip_checks" -eq 0 ]]; then
+        if ! __operations_release_pre_flight_check; then
+            return 1
+        fi
+        if [[ "$DRY_RUN" = "1" ]]; then
+            printf 'merge-pr:dry-run:pre-flight-pass\n'
+        fi
     fi
 
     # Bash 3.2 + set -u では空配列の "${array[@]}" が unbound variable になるため、

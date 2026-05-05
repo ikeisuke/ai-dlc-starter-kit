@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.1] - 2026-05-05
+
+### Added
+
+- `feedback_mode` を 5 値（`disabled` / `silent` / `mirror_dry_run` / `mirror` / `interactive`）に拡張し、初回 setup ウィザードで値選択 + 既存 `.aidlc/config.toml` の 3 値（`disabled` / `silent` / `mirror`）を 5 値体系へ非破壊で移行する flow を追加。`mirror_dry_run` は本物の Issue 起票せずローカル spool にのみ書き出すドライラン経路、`interactive` は AskUserQuestion で 1 件ずつ承認する経路として、運用者が段階的に retrospective フローを試せる選択肢を提供（#627 / Unit 001）
+- retrospective の格納先を `retrospective.md` ローカルファイル + mirror Issue の二重管理から GitHub Issue 一本化（`type:retrospective` ラベル付き Issue）に統一。`scripts/retrospective-mirror.sh` を spool 駆動（`.aidlc/cycles/{{CYCLE}}/operations/retrospective_spool/*.json`）に改修し、`mirror_state` ラベル（`pending` / `posted` / `error` / `dry_run`）で投稿状態を可視化。旧 `retrospective.md` テンプレを物理削除し、Operations Phase 04-completion §1 を Issue 起票一本化フローに刷新（#627 / Unit 002）
+- 主因分類（プロダクト固有 / AI-DLC Starter Kit 固有 / 両方）の LLM 下書き + 人間確認運用と検証 CLI を追加。`scripts/retrospective-classify.sh draft` で LLM が候補に分類タグを付与し、人間が `verify` で diff を承認・修正する 2 段階フローを構築。CI 環境でも手動入力 fallback で運用可能（#627 / Unit 003）
+- predecessor handoff（前サイクルの未対応事項引き継ぎ）の入力源を `predecessor_retrospective.md` ローカルファイルから `gh issue list --label type:retrospective` の Issue 検索に変更。サイクル間引き継ぎを Issue ベースに一本化し、ローカル状態とリポジトリ状態の二重管理を解消。`templates/predecessor_retrospective.md` を物理削除（#627 / Unit 004）
+
+### Fixed
+
+- Operations §7.13 PR マージ実行時に `validate-git.sh uncommitted` を pre-flight check として呼び出し、未コミット差分検出時は exit 1 + `pre-merge-uncommitted-detected` で停止する構造的ガードを追加。`#616` で報告された v2.4.3 顕在シナリオ（write-history 追記後にコミット未実施 → push → マージ → 未コミット差分が post-merge で破棄しか選択肢なくなる事象）を AI 規律不要の構造的防御線で防止。`--skip-checks` で従来通り skip 可能（緊急時用 escape hatch）。Unit 004 由来の spool schema 不整合（`mirror_state` ラベル既存値の取り扱い）も合わせて修正（#616 / Unit 005）
+
+---
+
 ## [2.5.0] - 2026-04-29
 
 ### Added

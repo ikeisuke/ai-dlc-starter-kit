@@ -32,11 +32,23 @@ retrospective_schema:
       - あります
   skill_caused_rule: "q1_answer / q2_answer / q3_answer のいずれかが yes かつ対応する quote が valid → skill_caused = true（派生値計算 / 永続化しない）"
   downgrade_rule: "q*_quote 違反時は対応する q*_answer を no に書き換え。skill_caused は派生値のため書き換え対象外（6 キーのみ書き換え）"
+  # v2.5.1 で 5 値 enum に拡張（Unit 001）。旧 3 値も後方互換として valid 扱い。
+  # 旧→新マッピングは scripts/lib/feedback-mode.sh の feedback_mode_normalize() / aidlc-migrate が担当。
+  #   silent  → interactive    （同意プロンプト必要 / 非対話時 disabled fallback）
+  #   mirror  → mirror-only    （同意不要 / 動作互換）
+  #   disabled → disabled
+  # 既存 retrospective-generate.sh / retrospective-mirror.sh は本リスト経由で新値も透過的に扱う。
   valid_feedback_modes:
+    # v2.5.1 新値（5 値）
+    - interactive
+    - local-issue-only
+    - mirror-only
+    - local-and-mirror
+    - disabled
+    # v2.5.0 までの旧値（後方互換 / aidlc-migrate でマイグレーション対象）
     - silent
     - mirror
-    - disabled
-  default_feedback_mode: silent
+  default_feedback_mode: interactive
   stable_id: unit004-retrospective-creation
   # mirror_state（Unit 005 / #590 で追加）: mirror フローの処理状態を retrospective.md の
   # YAML フロントマター内 mirror_state ブロックとして永続化する。Markdown 文言ではなく

@@ -1,171 +1,116 @@
 #!/usr/bin/env bash
+# retrospective-generate.sh - 互換アダプタ層（v2.5.1+ / Unit 002）
 #
-# retrospective-generate.sh - retrospective.md 生成 + feedback_mode 解決 + 空ファイル禁止補完
+# 旧 stdout プレフィックス契約を保持しつつ、内部処理は retrospective_issue_create() に委譲する。
+# v2.7.x で完全削除予定（Plan §「互換アダプタ層 保証範囲」参照）。
 #
-# 使用方法:
-#   retrospective-generate.sh <cycle>
+# Usage (旧 I/F): retrospective-generate.sh <CYCLE>
 #
-# 入力:
-#   cycle - サイクルバージョン（^v[0-9]+\.[0-9]+\.[0-9]+$ 形式）
-#
-# 出力:
-#   stdout: retrospective\tcreated\t<path> / retrospective\tskip\tdisabled / retrospective\tskip\talready-exists
-#   stderr: warn\tfeedback-mode-invalid\t<value>:downgrade-to-silent / error\t<code>\t<payload>
+# 出力（旧プレフィックス互換）:
+#   retrospective\tcreated\t<issue_url>
+#   retrospective\tskip\tdisabled
+#   retrospective\tskip\talready-exists
+#   retrospective\tskip\tspooled
 #
 # 終了コード:
-#   0 - 正常（生成 / スキップ いずれも 0）
-#   2 - fatal エラー
-#
-# 責務外:
-#   - YAML スキーマ検証 / q*_answer ダウングレード判定 / Markdown 内 YAML 抽出
-#     → retrospective-validate.sh が担当
+#   0 - 正常 / 受理可能経路
+#   1 - failed
+#   2 - 引数 / fatal
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-source "${SCRIPT_DIR}/lib/bootstrap.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/retrospective-issue.sh
+source "$SCRIPT_DIR/lib/retrospective-issue.sh"
 
-readonly TEMPLATE_PATH="${AIDLC_PLUGIN_ROOT}/templates/retrospective_template.md"
-readonly SCHEMA_PATH="${AIDLC_PLUGIN_ROOT}/config/retrospective-schema.yml"
-
-# スキーマから契約値を動的読み込み（ハードコード回避 / 単一ソース）
-_load_schema_values() {
-    if ! command -v dasel >/dev/null 2>&1 || [ ! -f "$SCHEMA_PATH" ]; then
-        # フォールバック（スキーマ未配置 / dasel 未インストール時）
-        VALID_FEEDBACK_MODES=("silent" "mirror" "disabled")
-        DEFAULT_FEEDBACK_MODE="silent"
-        return
-    fi
-
-    VALID_FEEDBACK_MODES=()
-    while IFS= read -r line; do
-        line="${line#- }"
-        line="${line//\"/}"
-        line="$(echo "$line" | sed 's/^[ \t]*//; s/[ \t]*$//')"
-        if [ -n "$line" ]; then
-            VALID_FEEDBACK_MODES+=("$line")
-        fi
-    done < <(dasel query -i yaml 'retrospective_schema.valid_feedback_modes' <"$SCHEMA_PATH" 2>/dev/null || true)
-
-    if [ "${#VALID_FEEDBACK_MODES[@]}" -eq 0 ]; then
-        VALID_FEEDBACK_MODES=("silent" "mirror" "disabled")
-    fi
-
-    DEFAULT_FEEDBACK_MODE="$(dasel query -i yaml 'retrospective_schema.default_feedback_mode' <"$SCHEMA_PATH" 2>/dev/null | sed 's/^"//; s/"$//' || echo "silent")"
-    if [ -z "$DEFAULT_FEEDBACK_MODE" ]; then
-        DEFAULT_FEEDBACK_MODE="silent"
-    fi
-}
-_load_schema_values
-
-# 引数チェック
-if [ "$#" -lt 1 ]; then
-    echo "error	retrospective-generate	missing-cycle-argument" >&2
+CYCLE="${1:-}"
+if [[ -z "$CYCLE" ]]; then
+    echo "error	usage	retrospective-generate.sh <CYCLE>" >&2
     exit 2
 fi
 
-CYCLE="$1"
-
-# 注: 旧版にあった「cycle-version-check.sh によるサイクル番号 v2.5.0 比較ガード」は
-# Issue #625 fix で撤廃した。本スクリプトは v2.5.0+ の skill として配布される時点で
-# 機能可用性が保証されるため、追加のバージョンガードは不要。
-# 過去サイクルディレクトリ（v2.4.x 等）で誤実行された場合も retrospective.md は
-# 新規ファイルとして作られるだけで害はない（feedback_mode = "disabled" で完全 opt-out 可能）。
-
-# パストラバーサル防止検証（codex review P1 対応 / Issue #625 fix の副次対応）:
-# cycle 引数は RETROSPECTIVE_PATH に直接補間されるため、`../` や `/` を含むと
-# .aidlc/cycles/ ツリー外への書き込みが可能になる。緩い shape 検証のみ実施し、
-# 旧 cycle-version-check の厳格な ^v[0-9]+\.[0-9]+\.[0-9]+$ には戻さない（visitory v1.14.2 /
-# 日付サイクル 2024-12 等の汎用的な命名を許容するため）。
-#
-# `.` / `..` は `[A-Za-z0-9._-]+` regex には match するが、ディレクトリトラバーサルとして
-# 機能するため明示拒否（codex review 2nd round P1）。
-if [[ ! "$CYCLE" =~ ^[A-Za-z0-9._-]+$ ]] || [ "$CYCLE" = "." ] || [ "$CYCLE" = ".." ]; then
-    echo "error	retrospective-generate	invalid-cycle-format:${CYCLE}" >&2
+# cycle バリデーション（sed の前に / Unit 002 path traversal 防御）
+if ! __retro_validate_cycle "$CYCLE"; then
     exit 2
 fi
 
-# テンプレート存在確認
-if [ ! -f "$TEMPLATE_PATH" ]; then
-    echo "error	retrospective-template-not-found	${TEMPLATE_PATH}" >&2
-    exit 2
+# Deprecation warning
+echo "warn	deprecated	retrospective-generate.sh は v2.5.1 で互換アダプタ層化されました（v2.7.x で削除予定 / 新フローは 04-completion.md §1.5 経由で retrospective_issue_create を直接呼び出してください）" >&2
+
+# feedback_mode 解決
+RAW_MODE=""
+if [[ -x "$SCRIPT_DIR/read-config.sh" ]]; then
+    RAW_MODE=$("$SCRIPT_DIR/read-config.sh" rules.retrospective.feedback_mode 2>/dev/null || true)
 fi
 
-# feedback_mode 解決（4 階層マージ）
-FEEDBACK_MODE_RAW=""
-if FEEDBACK_MODE_RAW="$("${SCRIPT_DIR}/read-config.sh" rules.retrospective.feedback_mode 2>/dev/null)"; then
-    :
+# Unit 001 feedback-mode.sh で正規化
+if [[ -f "$SCRIPT_DIR/lib/feedback-mode.sh" ]]; then
+    # shellcheck source=lib/feedback-mode.sh
+    source "$SCRIPT_DIR/lib/feedback-mode.sh"
+    MODE=$(feedback_mode_normalize "$RAW_MODE")
 else
-    rc=$?
-    if [ "$rc" -eq 2 ]; then
-        echo "error	read-config-failed	rules.retrospective.feedback_mode" >&2
+    MODE="${RAW_MODE:-disabled}"
+fi
+
+# disabled は即 skip
+if [[ "$MODE" == "disabled" ]]; then
+    printf 'retrospective\tskip\tdisabled\n'
+    exit 0
+fi
+
+# KPT テンプレ展開（最小実装: テンプレファイルから {{CYCLE}} を置換）
+KPT_PATH=$(mktemp -t aidlc-retro-kpt.XXXXXX)
+TEMPLATE_PATH="${AIDLC_PLUGIN_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}/templates/retrospective_template.md"
+if [[ -f "$TEMPLATE_PATH" ]]; then
+    sed "s/{{CYCLE}}/$CYCLE/g" "$TEMPLATE_PATH" > "$KPT_PATH"
+fi
+
+# 空 draft で本文構築
+DRAFT_PATH=$(mktemp -t aidlc-retro-draft.XXXXXX)
+: > "$DRAFT_PATH"
+
+BODY_PATH=$(mktemp -t aidlc-retro-body.XXXXXX)
+if ! retrospective_body_compose "$DRAFT_PATH" "$KPT_PATH" "$CYCLE" > "$BODY_PATH"; then
+    echo "error	body-compose-failed	cycle=$CYCLE" >&2
+    rm -f "$KPT_PATH" "$DRAFT_PATH" "$BODY_PATH"
+    exit 2
+fi
+
+# Issue 起票
+RESULT_PATH=$(mktemp -t aidlc-retro-result.XXXXXX)
+set +e
+retrospective_issue_create "$BODY_PATH" "$MODE" "$CYCLE" > "$RESULT_PATH"
+RC=$?
+set -e
+
+# 旧プレフィックスへ変換
+case $RC in
+    0)
+        if grep -q '^result=created' "$RESULT_PATH"; then
+            URL=$(awk -F'=' '/^(local|mirror)_issue_url=|^issue_url=/{print $2; exit}' "$RESULT_PATH")
+            printf 'retrospective\tcreated\t%s\n' "$URL"
+        elif grep -q '^result=spooled' "$RESULT_PATH"; then
+            printf 'retrospective\tskip\tspooled\n'
+        elif grep -q 'reason=duplicate' "$RESULT_PATH"; then
+            printf 'retrospective\tskip\talready-exists\n'
+        elif grep -q 'reason=mode-disabled' "$RESULT_PATH"; then
+            printf 'retrospective\tskip\tdisabled\n'
+        else
+            printf 'retrospective\tskip\tunknown\n'
+        fi
+        ;;
+    1)
+        REASON=$(awk -F'=' '/^reason=/{print $2; exit}' "$RESULT_PATH")
+        echo "error	create-failed	reason=$REASON" >&2
+        rm -f "$KPT_PATH" "$DRAFT_PATH" "$BODY_PATH" "$RESULT_PATH"
+        exit 1
+        ;;
+    *)
+        echo "error	create-fatal	rc=$RC" >&2
+        rm -f "$KPT_PATH" "$DRAFT_PATH" "$BODY_PATH" "$RESULT_PATH"
         exit 2
-    fi
-    # rc == 1: キー不在 → デフォルト
-    FEEDBACK_MODE_RAW="$DEFAULT_FEEDBACK_MODE"
-fi
+        ;;
+esac
 
-# 不正値チェック → silent ダウングレード
-FEEDBACK_MODE="$FEEDBACK_MODE_RAW"
-_is_valid_mode=0
-for valid in "${VALID_FEEDBACK_MODES[@]}"; do
-    if [ "$FEEDBACK_MODE" = "$valid" ]; then
-        _is_valid_mode=1
-        break
-    fi
-done
-if [ "$_is_valid_mode" -eq 0 ]; then
-    echo "warn	feedback-mode-invalid	${FEEDBACK_MODE_RAW}:downgrade-to-silent" >&2
-    FEEDBACK_MODE="silent"
-fi
-
-# disabled スキップ
-if [ "$FEEDBACK_MODE" = "disabled" ]; then
-    echo "retrospective	skip	disabled"
-    exit 0
-fi
-
-# 出力先決定
-RETROSPECTIVE_PATH="${AIDLC_CYCLES}/${CYCLE}/operations/retrospective.md"
-RETROSPECTIVE_DIR="$(dirname "$RETROSPECTIVE_PATH")"
-
-# 既存ファイルあり → スキップ
-if [ -f "$RETROSPECTIVE_PATH" ]; then
-    echo "retrospective	skip	already-exists"
-    exit 0
-fi
-
-# ディレクトリ作成
-if ! mkdir -p "$RETROSPECTIVE_DIR" 2>/dev/null; then
-    echo "error	mkdir-failed	${RETROSPECTIVE_DIR}" >&2
-    exit 2
-fi
-
-# テンプレート展開（{{CYCLE}} 置換 / _safe_transform 相当: tmp → mv）
-TMP_FILE="$(mktemp "${RETROSPECTIVE_DIR}/.retrospective.XXXXXX")"
-trap 'rm -f "$TMP_FILE"' EXIT
-
-if ! sed "s|{{CYCLE}}|${CYCLE}|g" "$TEMPLATE_PATH" >"$TMP_FILE"; then
-    echo "error	template-render-failed	${TEMPLATE_PATH}" >&2
-    exit 2
-fi
-
-# 空ファイル禁止補完: 問題項目が「### 問題 1: {{タイトル}}」のままで実質的にエントリ無し相当の場合、
-# 「### 問題なし」明示エントリを追加する。本実装では「### 問題 」見出しが 1 つも無い場合に補完する。
-if ! grep -q "^### 問題 " "$TMP_FILE"; then
-    {
-        cat "$TMP_FILE"
-        printf '\n### 問題なし\n\n本サイクルでは特筆すべきプロセス問題は発生しなかった。\n'
-    } >"${TMP_FILE}.complete"
-    mv "${TMP_FILE}.complete" "$TMP_FILE"
-fi
-
-# 最終配置
-if ! mv "$TMP_FILE" "$RETROSPECTIVE_PATH"; then
-    echo "error	mv-failed	${RETROSPECTIVE_PATH}" >&2
-    exit 2
-fi
-trap - EXIT
-
-echo "retrospective	created	${RETROSPECTIVE_PATH}"
+rm -f "$KPT_PATH" "$DRAFT_PATH" "$BODY_PATH" "$RESULT_PATH"
 exit 0

@@ -117,9 +117,13 @@ progress.md・history は stash せずコミット。
 
 `git diff {DEFAULT_BRANCH}...HEAD` → `codex review --base {DEFAULT_BRANCH}`（利用可能時）→ `reviewing-operations-premerge` → `.aidlc/rules.md` のルール。GitHub PR レビュー実行時は `gh pr view --json reviewDecision` で判定（`APPROVED` → マージへ / `CHANGES_REQUESTED` → 修正・再レビュー / その他 → 待機またはスキップ）。
 
+**完了条件**（v2.5.1 Unit 005 / #616）: レビュー反映後の (2a) 修正コミット → (2b) `/write-history` で `history/operations.md` に AIレビュー完了を追記 → (2c) 履歴コミット（`history/*.md` のみ）が完了していること。`scripts/operations-release.sh verify-git` で `uncommitted=ok` を確認することを強く推奨（再実行案内）。**§7.13 `merge-pr` の pre-flight check が最終防衛線として機能する**ため、(2c) 未実施のままでもマージ実行時点で停止するが、§7.12 内で確認しておくと早期発見できる。
+
 ## 7.13 PR マージ【重要】
 
 PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。
+
+**Pre-flight check（v2.5.1 Unit 005 / #616）**: `scripts/operations-release.sh merge-pr` 実行直後に `validate-git.sh uncommitted` を呼び、`status:warning`（未コミット差分検出）の場合は exit 1 + stderr `error\tpre-merge-uncommitted-detected\t...` で停止する。これは §7.12 でレビュー反映 → 履歴記録 → 履歴コミットの (2c) を忘れて push → マージに進む運用ミスを構造的にブロックする最終防衛線。escape hatch として `--skip-checks` で明示バイパス可能（緊急時用）。本ガードは下記「未コミット差分検出ガード」（#601 案 B / `.aidlc/config.toml` 特化）と §7.13 内で併存する（対象が異なり競合せず、新規 pre-flight が広範な最初のフィルタ / `.aidlc/config.toml` 特化ガードは設定保存フローの専用案内）。
 
 **マージ方法の確定**: `gh_status` != `available` → 手動案内 / `merge_method=ask` → AskUserQuestion でマージ方法を選択 / 他 → `merge_method` 設定値をそのまま使用。いずれの場合もこの時点ではマージ方法の確定のみを行い、マージは実行しない。
 

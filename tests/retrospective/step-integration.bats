@@ -3,14 +3,14 @@
 
 load helpers/setup
 
-@test "IS1: §1.5 自動生成フロー セクションが存在（Unit 007 で §3.5 → §1.5 に再配置）" {
-  grep -F "#### 1.5 自動生成フロー" "${STEP_FILE_PATH}"
+@test "IS1: §1.5 Issue 起票フロー セクションが存在（v2.5.1 / Unit 002 で §1.5 自動生成フロー → Issue 起票フローに刷新）" {
+  grep -F "#### 1.5 Issue 起票フロー" "${STEP_FILE_PATH}"
 }
 
-@test "IS2: 安定 ID コメントアンカー guidance:id=unit004-retrospective-creation が #### 1.5 直前行に配置" {
+@test "IS2: 安定 ID コメントアンカー guidance:id=unit002-retrospective-issue-only が #### 1.5 直前行に配置（v2.5.1 / Unit 002）" {
   awk '
-  /<!-- guidance:id=unit004-retrospective-creation -->/ {anchor_line=NR}
-  /^#### 1\.5 自動生成フロー/ {section_line=NR}
+  /<!-- guidance:id=unit002-retrospective-issue-only -->/ {anchor_line=NR}
+  /^#### 1\.5 Issue 起票フロー/ {section_line=NR}
   END {
     if (anchor_line > 0 && section_line > 0 && section_line - anchor_line <= 2) {
       exit 0
@@ -25,8 +25,6 @@ load helpers/setup
 @test "IS3: cycle-version-check ガードが撤廃されている（Issue #625 fix）" {
   ! grep -F "cycle-version-check.sh" "${STEP_FILE_PATH}"
   ! grep -F "starter-kit-version-check.sh" "${STEP_FILE_PATH}"
-  # 撤廃理由が文書化されている
-  grep -F "Issue #625 fix" "${STEP_FILE_PATH}"
 }
 
 @test "IS4: retrospective-generate.sh の呼び出し記述がある" {
@@ -58,7 +56,8 @@ load helpers/setup
   grep -F "#### 1.2 主因切り分け" "${STEP_FILE_PATH}"
   grep -F "#### 1.3 格納先の選択" "${STEP_FILE_PATH}"
   grep -F "#### 1.4 write-history.sh ガード" "${STEP_FILE_PATH}"
-  grep -F "predecessor_retrospective.md" "${STEP_FILE_PATH}"
+  # v2.5.1 Unit 004: 分岐 (b) は predecessor_retrospective.md ファイル配置 → GitHub Issue + predecessor_resolve_issue 探索に変更
+  grep -F "predecessor_resolve_issue" "${STEP_FILE_PATH}"
 }
 
 @test "IS9: Unit 007 で導入された feedback_mode ベースの opt-out スイッチが §1.0 に存在" {

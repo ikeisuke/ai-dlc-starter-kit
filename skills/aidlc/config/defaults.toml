@@ -63,9 +63,19 @@ language = "日本語"
 milestone_enabled = false
 
 [rules.retrospective]
-# 許容値: "silent"（自動生成 + ローカル記録のみ） / "mirror"（自動生成 + 下書き → 承認 → upstream Issue 起票）/ "disabled"（自動生成スキップ）
-# mirror モードの実装は Unit 005 / 上限ガードは Unit 006 を参照
-feedback_mode = "silent"
+# 許容値（v2.5.1 / 5 値 enum）:
+#   - "interactive"        : 04-completion §1.5 直前に wizard を起動して 5 値のいずれかに確定（新規セットアップ既定）
+#   - "local-issue-only"   : プロダクトリポジトリの Issue にのみ起票
+#   - "mirror-only"        : upstream（AI-DLC starter kit）の Issue にのみ起票
+#   - "local-and-mirror"   : 両方に起票（合算 cap）
+#   - "disabled"           : 起票しない（振り返り自体はローカル記録）
+# 旧値（v2.5.0 まで）"silent" / "mirror" は `aidlc-migrate` で自動マイグレーションされる:
+#   - "silent" → "interactive"（同意プロンプト必要 / 非対話時は disabled fallback）
+#   - "mirror" → "mirror-only"（同意不要 / 動作互換）
+#   - 未設定 → "interactive"（同意プロンプト必要 / 非対話時は disabled fallback）
+# read-config.sh / write-config.sh は新値での読み書きを行う。旧値で読まれた場合は
+# scripts/lib/feedback-mode.sh の feedback_mode_normalize() で新値に正規化される。
+feedback_mode = "interactive"
 # サイクル毎の mirror Issue 起票候補の上限件数（Unit 006 / #590）
 # - 重複検出 + 上限ガード後の通過件数がこの値を超えると、超過分は AskUserQuestion 抑制対象
 # - user-global で上書き可能（4 階層マージ: project-local / project-shared / user-global / defaults）
