@@ -73,8 +73,8 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 
 | 分岐 | 状況 | 格納先 | マージ前完結契約 |
 |------|------|--------|----------------|
-| (a) マージ前 | PR マージ前に本ステップを実施 | `cycles/{{CYCLE}}/operations/retrospective.md` | 遵守（pre-merge stage） |
-| (b) マージ後 | PR マージ後に本ステップを実施 | 次サイクル `cycles/{{NEXT}}/inception/predecessor_retrospective.md` | 遵守（次サイクル領域） |
+| (a) マージ前 | PR マージ前に本ステップを実施 | `cycles/{{CYCLE}}/operations/retrospective.md`（v2.5.1 Unit 002 で Issue 起票化に伴い縮退 / §1.5 で Issue として作成） | 遵守（pre-merge stage） |
+| (b) マージ後 | PR マージ後に本ステップを実施 | GitHub Issue（`retrospective` ラベル + `Retrospective: {cycle}` title）/ 次サイクル Inception §4a で `predecessor_resolve_issue` が解決 | 遵守（外部 GitHub Issue 領域） |
 | (c) 横断改善 | AI-DLC Starter Kit への改善要望 | `/aidlc feedback` で Issue 起票 | 影響なし（外部リポジトリ） |
 
 **重要**: マージ前完結契約（DR-001 / Unit 002 / v2.3.5）により、マージ後は `.aidlc/cycles/{{CYCLE}}/**` 配下を改変できない。マージ後に振り返りを実施した場合は (b) または (c) を選択すること。
@@ -83,8 +83,8 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 
 **テンプレ**:
 
-- 分岐 (a): `templates/retrospective_template.md`（既存 / Unit 004 / v2.5.0+ で KPT セクション + 主因切り分けマトリクス追加）
-- 分岐 (b): `templates/predecessor_retrospective.md`（v2.5.0+ / Unit 007 / 新規）
+- 分岐 (a): `templates/retrospective_template.md`（既存 / v2.5.0+ で KPT セクション + 主因切り分けマトリクス追加 / v2.5.1 Unit 002 で Issue 本文構築に再利用）
+- 分岐 (b): GitHub Issue として作成（v2.5.1 Unit 004 でファイル配置を撤廃 / 次サイクル Inception 側で `predecessor_resolve_issue` が探索）
 - 分岐 (c): `/aidlc feedback` で対話的に起票（テンプレファイル不要）
 
 #### 1.4 write-history.sh ガードとの関係
@@ -357,12 +357,14 @@ mirror フローの全ての書き込み（mirror_state 更新）は Operations 
 
 #### 1.6 次サイクル Intent への反映
 
-Try のうちプロダクト固有事項は、次サイクル Inception の `requirements/intent.md` 前置きで「前サイクル振り返り由来の前提」として参照する。次サイクル Inception 開始時に下記を必ず読む:
+Try のうちプロダクト固有事項は、次サイクル Inception の `requirements/intent.md` 前置きで「前サイクル振り返り由来の前提」として参照する。次サイクル Inception 開始時、`steps/inception/01-setup.md §4a` の `predecessor_resolve_issue` が以下 5 経路で前サイクル振り返りを解決する（v2.5.1 Unit 004）:
 
-- 分岐 (a) 採用時: 直前サイクルの `cycles/{{PREV_CYCLE}}/operations/retrospective.md`
-- 分岐 (b) 採用時: 本サイクルの `cycles/{{CYCLE}}/inception/predecessor_retrospective.md`
+- 経路 1/1': 分岐 (a)/(b) 採用時 GitHub Issue（`retrospective` ラベル + Milestone or title 一致）
+- 経路 2: spool fallback（`gh` 不可時に履歴 spool から URL 抽出）
+- 経路 3: v2.5.0 互換 fallback（`cycles/{{PREV_CYCLE}}/operations/retrospective.md` 存在時）
+- 経路 4: 全経路 0 件 → warn + continue
 
-参照手順は `steps/inception/01-setup.md` の「前サイクル振り返り読込」セクションに記載されている。
+参照手順は `steps/inception/01-setup.md §4a` を参照。
 
 ### 2. バックログ記録
 
@@ -637,7 +639,7 @@ milestone:v2.4.0:closed:number=2
 **必要に応じて前バージョンのファイルをコピー/参照**:
 - `.aidlc/rules.md` → 全サイクル共通なので引き継がれます
 - `.aidlc/cycles/vX.X.X/requirements/intent.md` → 新サイクルで参照して改善点を反映
-- 前サイクル振り返り: 分岐 (a) 採用時 `.aidlc/cycles/{{PREV_CYCLE}}/operations/retrospective.md` / 分岐 (b) 採用時 `.aidlc/cycles/{{CYCLE}}/inception/predecessor_retrospective.md`
+- 前サイクル振り返り: 分岐 (a)/(b) 採用時は GitHub Issue（次サイクル Inception §4a で `predecessor_resolve_issue` が自動解決）/ v2.5.0 以前との互換時のみ `.aidlc/cycles/{{PREV_CYCLE}}/operations/retrospective.md`
 - その他、引き継ぎたいファイルがあればコピー
 
 セットアップ完了後、新しいセッションで Inception Phase を開始

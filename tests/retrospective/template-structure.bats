@@ -30,17 +30,7 @@ load helpers/setup
   grep -F "## 反映先一覧" "${TEMPLATE_PATH}"
 }
 
-@test "T5: predecessor_retrospective.md（分岐 b 用テンプレ）が存在し、KPT + 引き継ぎ事項を含む（Unit 007 / #625）" {
-  local predecessor_template="${TEMPLATE_PATH%/*}/predecessor_retrospective.md"
-  [ -f "${predecessor_template}" ]
-  grep -F "前サイクル" "${predecessor_template}"
-  grep -F "## Keep" "${predecessor_template}"
-  grep -F "## Try" "${predecessor_template}"
-  grep -F "## Problem" "${predecessor_template}"
-  grep -F "本サイクルへの引き継ぎ事項" "${predecessor_template}"
-  grep -F "{{PREV_CYCLE}}" "${predecessor_template}"
-  grep -F "{{CYCLE}}" "${predecessor_template}"
-}
+# T5 は v2.5.1 Unit 004 でテンプレ物理削除に伴い廃止（P14 in predecessor-issue-handoff.bats で削除検証済）
 
 @test "T3: テンプレートが markdownlint パスする" {
   if ! command -v markdownlint-cli2 >/dev/null 2>&1 && ! command -v npx >/dev/null 2>&1; then

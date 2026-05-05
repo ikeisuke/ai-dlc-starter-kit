@@ -7,7 +7,7 @@
 | 001 | feedback_mode 5 値拡張 + マイグレーション + 初回 wizard（基盤） | 完了 | 完了 | 完了 | 2026-05-05 |
 | 002 | retrospective Issue 一本化 + spool + mirror_state ラベル化 | 完了 | 完了 | 完了 | 2026-05-05 |
 | 003 | 主因分類 LLM 下書き + 人間確認運用 | 完了 | 完了 | 完了 | 2026-05-05 |
-| 004 | predecessor handoff の Issue 検索化 | 未着手 | - | - | - |
+| 004 | predecessor handoff の Issue 検索化 | 完了 | 完了 | 完了 | 2026-05-05 |
 | 005 | #616 マージ前 write-history 追加コミット漏れガード | 未着手 | - | - | - |
 
 ## 依存関係
@@ -24,7 +24,7 @@
 
 ## 現在のステップ
 
-Unit 003 完了。次は Unit 004（predecessor handoff の Issue 検索化）または Unit 005（#616 マージ前 write-history 追加コミット漏れガード）への着手判断。
+Unit 004 完了。次は Unit 005（#616 マージ前 write-history 追加コミット漏れガード）。`/aidlc c` で再開する場合、`construction.01-setup` で Unit 005 の計画ファイル作成から開始。
 
 ## 再開時に読み込むファイル
 

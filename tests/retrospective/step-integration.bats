@@ -56,7 +56,8 @@ load helpers/setup
   grep -F "#### 1.2 主因切り分け" "${STEP_FILE_PATH}"
   grep -F "#### 1.3 格納先の選択" "${STEP_FILE_PATH}"
   grep -F "#### 1.4 write-history.sh ガード" "${STEP_FILE_PATH}"
-  grep -F "predecessor_retrospective.md" "${STEP_FILE_PATH}"
+  # v2.5.1 Unit 004: 分岐 (b) は predecessor_retrospective.md ファイル配置 → GitHub Issue + predecessor_resolve_issue 探索に変更
+  grep -F "predecessor_resolve_issue" "${STEP_FILE_PATH}"
 }
 
 @test "IS9: Unit 007 で導入された feedback_mode ベースの opt-out スイッチが §1.0 に存在" {
