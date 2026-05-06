@@ -68,6 +68,28 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 - `bin/update-version.sh` の **利用有無** に応じて `version.txt` / `.aidlc/config.toml` のコミット対象有無を決定（利用時のみコミット対象）
 - いずれの設定依存ファイルも、コミット対象に含める判断を §7.6 の progress.md 更新前に確定し、コミットメッセージで言及する
 
+## 7.7.1 release_prep_commit slot 記録【Unit 004 / #639 追加】
+
+§7.7（最終コミット）完了直後に、Squash 起点となる commit hash を `progress.md` の HTML コメント形式独立スロット `<!-- release_prep_commit: <40 桁 SHA> -->`（DR-009）に記録する。§7.12.5 の Squash サブステップが本 slot を参照する。
+
+```bash
+scripts/operations-release.sh record-release-prep-commit --cycle {{CYCLE}}
+```
+
+**動作概要**:
+
+1. `git rev-parse HEAD` で 40 桁 SHA 取得
+2. `progress.md` の `<!-- release_prep_commit: -->` 行を取得した SHA で更新（既存値の上書き）
+3. 行が存在しない場合（v2.5.1 以前のサイクル再開時）: 固定スロットセクション末尾に追加
+4. `git add operations/progress.md && git commit -m "chore: [{{CYCLE}}] release_prep_commit 記録 - <SHA-prefix>"` で自動コミット
+
+**stdout 出力**:
+
+- `release_prep_commit:recorded:<40 桁 SHA>` — 行を新規追加した場合
+- `release_prep_commit:updated:<40 桁 SHA>` — 既存行を更新した場合
+
+**異常系**: exit 1 + stderr `error\trecord-release-prep-commit:*\t...` で Operations Phase block。
+
 ## 7.8 ドラフト PR Ready 化【重要】
 
 ドラフト PR を Ready for Review に変更。`gh:available` 以外はスキップ。Ready 化後はバグ修正以外の変更を加えない。**セミオートゲート判定**: `steps/operations/index.md` の「§2.6 automation_mode 分岐」に従う（詳細: `common/rules-automation.md`）。
@@ -118,6 +140,27 @@ progress.md・history は stash せずコミット。
 `git diff {DEFAULT_BRANCH}...HEAD` → `codex review --base {DEFAULT_BRANCH}`（利用可能時）→ `reviewing-operations-premerge` → `.aidlc/rules.md` のルール。GitHub PR レビュー実行時は `gh pr view --json reviewDecision` で判定（`APPROVED` → マージへ / `CHANGES_REQUESTED` → 修正・再レビュー / その他 → 待機またはスキップ）。
 
 **完了条件**（v2.5.1 Unit 005 / #616）: レビュー反映後の (2a) 修正コミット → (2b) `/write-history` で `history/operations.md` に AIレビュー完了を追記 → (2c) 履歴コミット（`history/*.md` のみ）が完了していること。`scripts/operations-release.sh verify-git` で `uncommitted=ok` を確認することを強く推奨（再実行案内）。**§7.13 `merge-pr` の pre-flight check が最終防衛線として機能する**ため、(2c) 未実施のままでもマージ実行時点で停止するが、§7.12 内で確認しておくと早期発見できる。
+
+## 7.12.5 PR レビュー反映コミット Squash 統合【Unit 004 / #639 追加】
+
+§7.12 で発生した複数 round のレビュー反映コミット（修正コミット + 履歴コミット）を 1 コミットに統合する。`merge_method=merge` 設定下でも main 履歴に細粒度のレビュー反映コミットが残らないようにする。
+
+```bash
+scripts/operations-release.sh squash-712 --cycle {{CYCLE}}
+```
+
+**戻り値ハンドリング**（外部シグナルは `commit-flow.md` 既存契約準拠 / 詳細は `operations-release.sh squash-712 --help`）:
+
+| stdout | exit | 動作 |
+|--------|------|------|
+| `squash:success:<sha>` | 0 | §7.13 へ進行。Squash 実行により HEAD が rewrite されたため、§7.9〜§7.11 `verify-git` で `remote-sync=diverged` 検出 → 既存 force-push 案内発動 |
+| `squash:skipped` | 0 | §7.13 へ進行（block しない）。stderr `info\treason\t<reason>` に skip 理由（`squash_enabled=false` / `release_prep_commit_missing` / `no_commits` 等） |
+| `squash:failed:reason=format_error` | 1 | Operations Phase block。`progress.md` の `release_prep_commit` slot 値が不正フォーマット |
+| `squash:failed:reason=git_op_failed:<exit_code>` | 1 | Operations Phase block。`git reset --soft` または `git commit` 失敗。`commit` 失敗時は `git reset --hard ORIG_HEAD` で rollback 実施済（DR-008） |
+
+**§7.13 pre-flight check との整合**: `git reset --soft + git commit` の組み合わせは作業ツリー clean を維持するため、`validate-git.sh uncommitted` は `uncommitted=ok` を返す。`pre-merge-uncommitted-detected` は発火しない。
+
+**Squash 後の force-push**: §7.9〜§7.11 の `verify-git` で `remote-sync=diverged` が検出されると、既存の `recommended_command:` 案内（`git push --force-with-lease ...`）がユーザーに表示される。本ステップで追加実装は不要。
 
 ## 7.13 PR マージ【重要】
 

@@ -19,6 +19,8 @@ release_gate_ready=false
 completion_gate_ready=false
 pr_number=
 
+<!-- release_prep_commit: -->
+
 ## 現在のステップ
 
 次回: 1. 変更確認

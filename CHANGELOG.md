@@ -9,6 +9,11 @@ AI-DLC Starter Kit の変更履歴です。
 
 ## [2.5.2] - Unreleased
 
+### Added
+
+- Operations Phase 7.12 PR レビュー反映コミット squash 統合: §7.12 と §7.13 の間に Squash サブステップ (§7.12.5) を追加し、`squash_enabled=true` 設定下で複数 round のレビュー反映コミットを 1 コミットに統合。`progress.md` の HTML コメント形式独立スロット `<!-- release_prep_commit: <40 桁 SHA> -->` (新規 / DR-009) で起点 commit を追跡。`operations-release.sh record-release-prep-commit` / `operations-release.sh squash-712` の 2 サブコマンドを新設、`git reset --soft + git commit` 方式 (DR-008) で完全非対話 + commit 失敗時 `git reset --hard ORIG_HEAD` で rollback (#639 / Unit 004)
+- `templates/operations_progress_template.md` の固定スロットセクション直後に `<!-- release_prep_commit: -->` を追加 (Unit 004)
+
 ### Changed
 
 - AIDLC_PROJECT_ROOT 横断対応: 共通 path resolution helper (`skills/aidlc/scripts/lib/aidlc-paths.sh`) を新設し、producer (`__retro_spool_path`) と consumer (`scripts/retrospective-resend.sh` / `scripts/lib/predecessor-issue.sh`) 両側で `aidlc_cycle_path` 経由の path 解決に統一。AI-DLC を別リポで利用する際の path 不整合を解消（#638, closes #631 #632 / Unit 003）
