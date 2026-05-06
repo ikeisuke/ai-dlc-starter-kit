@@ -7,10 +7,12 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
-## [2.5.2] - Unreleased
+## [2.5.2] - 2026-05-06
 
 ### Added
 
+- review-flow 5R 化と defer / Round 4+ 新領域 backlog 自動化: round 上限を 3R から 5R に拡張し、完了条件を「最後 2 round 連続で指摘ゼロまたは defer 化」に改定。defer 判定時の自動 Issue 起票（必須ラベル `backlog` / `type:defer-from-review`、起票後ラベル検証必須）と Round 4 以降の新領域指摘の自動 backlog 化（領域キー差分による準機械判定、判定手順 0〜7 を機械的に固定）を追加。本サイクル自身の review に自己適用し、User Stories 9R / Unit 定義 7R で 5R + 「最後 2R 連続ゼロ」完了条件の妥当性を実証（#635 / Unit 001）
+- Construction Unit 完了時の CI 構造チェック強化: `bin/check-test-isolation.sh` を新規作成し、`scripts/squash-unit.sh` 経由で 3 種チェック（skill-references / bash-substitution / test-isolation）を Unit 完了時に必須実行。既存違反は出口条件付き allowlist（追加日 / 理由 / 期限 / 追跡 Issue 必須、CI で期限切れ・stale を fail）で一時隔離し、構造的退行を防止（#636 / Unit 002）
 - Operations Phase 7.12 PR レビュー反映コミット squash 統合: §7.12 と §7.13 の間に Squash サブステップ (§7.12.5) を追加し、`squash_enabled=true` 設定下で複数 round のレビュー反映コミットを 1 コミットに統合。`progress.md` の HTML コメント形式独立スロット `<!-- release_prep_commit: <40 桁 SHA> -->` (新規 / DR-009) で起点 commit を追跡。`operations-release.sh record-release-prep-commit` / `operations-release.sh squash-712` の 2 サブコマンドを新設、`git reset --soft + git commit` 方式 (DR-008) で完全非対話 + commit 失敗時 `git reset --hard ORIG_HEAD` で rollback (#639 / Unit 004)
 - `templates/operations_progress_template.md` の固定スロットセクション直後に `<!-- release_prep_commit: -->` を追加 (Unit 004)
 
