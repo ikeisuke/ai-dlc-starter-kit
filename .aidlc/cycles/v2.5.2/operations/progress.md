@@ -19,6 +19,8 @@ release_gate_ready=true
 completion_gate_ready=true
 pr_number=642
 
+<!-- release_prep_commit: 1ee71f4140bd0d6ef2307895988ed24538ca4358 -->
+
 ## 現在のステップ
 
 次回: 7.7 Gitコミット → 7.8 ドラフトPR Ready化

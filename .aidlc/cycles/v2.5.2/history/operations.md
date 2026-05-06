@@ -30,3 +30,20 @@
   - `README.md`
 
 ---
+## 2026-05-06T23:42:16+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: AIレビュー完了 (PRマージ前レビュー round 1)
+- **実行内容**: codex review --base main 実施。P1/P2 の 2 件指摘あり：(1) operations-release.sh record-release-prep-commit のリトライ非冪等性、(2) check-test-isolation.sh の allowlist stale 誤判定。両方とも本サイクル Unit 002/004 実装範囲のバグのため即時修正。bash -n / bin/tests passes / bin/check-test-isolation.sh / bin/check-bash-substitution.sh / bin/check-defaults-sync.sh / bin/check-size.sh 全合格。
+- **成果物**:
+  - `skills/aidlc/scripts/operations-release.sh`
+  - `bin/check-test-isolation.sh`
+
+---
+## 2026-05-06T23:44:36+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: AIレビュー完了 (PRマージ前レビュー round 2-3)
+- **実行内容**: codex review --base main を round 2 と round 3 で再実行。両 round とも指摘 0 件。Unit 001 で導入された 5R 完了条件「最後 2 round 連続で指摘ゼロ」を満たし、PR マージ前レビュー完了。
+
+---

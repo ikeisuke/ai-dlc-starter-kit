@@ -377,6 +377,9 @@ check_bats_file() {
             if [ "$VERBOSE" = "true" ]; then
                 echo "  [ALLOWED] ${file_v}:${line_v} ${func_v} ${reason}" >&2
             fi
+            # allowlist stale 判定用: allowlist 抑制された violation も比較セットに記録する。
+            # ここで記録しないと allowlist エントリが「解決済み」として誤判定され CI fail になる。
+            printf '%s\t%s\t%s\n' "${file_v}" "${func_v}" "${reason}" >> "${current_violations_file}"
             continue
         fi
         if [ "$kind" = "fatal" ]; then

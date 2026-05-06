@@ -854,6 +854,11 @@ cmd_record_release_prep_commit() {
         printf 'error\trecord-release-prep-commit:write-failed\tgit add failed\n' >&2
         return 1
     fi
+    # 冪等性: ステージに差分がない場合（既に同一 SHA で記録済み等）は git commit を呼ばずに成功扱い
+    if git diff --cached --quiet -- "$progress_file"; then
+        printf 'release_prep_commit:already-recorded:%s\n' "$head_sha"
+        return 0
+    fi
     local commit_msg="chore: [${cycle}] release_prep_commit 記録 - ${sha_prefix}"
     if ! git commit -m "$commit_msg" >/dev/null 2>&1; then
         printf 'error\trecord-release-prep-commit:commit-failed\tgit commit failed\n' >&2
