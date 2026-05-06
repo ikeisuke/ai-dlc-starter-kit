@@ -20,7 +20,7 @@ setup() {
 }
 
 teardown() {
-  cd "$REPO_ROOT"
+  cd "$BATS_TMPDIR"
   rm -rf "$TMP"
 }
 

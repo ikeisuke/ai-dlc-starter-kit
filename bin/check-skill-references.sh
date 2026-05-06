@@ -45,10 +45,12 @@ EOF
 # - steps/inception/01-setup.md: STARTER_KIT_DEV判定・参照先ポリシーテーブル
 # - aidlc-migrate/: v1→v2マイグレーションスクリプト
 # - write-history/SKILL.md: 委譲スキルの注記
+# - steps/common/review-flow.md: 規範記述（Round 4+ 新領域判定の境界条件テーブル / 列の記述ガイダンスのパス例）
 EXCLUDE_PATTERNS=(
     "guides/"
     "steps/inception/01-setup.md"
     "steps/operations/04-completion.md"
+    "steps/common/review-flow.md"
     "aidlc-migrate/"
     "write-history/SKILL.md"
     "scripts/lib/bootstrap.sh"
@@ -64,6 +66,7 @@ is_excluded() {
     local rel_file="$1"
     case "$rel_file" in
         */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
+        */steps/common/review-flow.md|\
         */aidlc-migrate/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/tests/*|\
         */scripts/ios-build-check.sh|*/scripts/get-default-branch.sh|\

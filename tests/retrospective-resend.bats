@@ -52,6 +52,7 @@ GITSHIM
 }
 
 teardown() {
+  cd "$BATS_TMPDIR"
   rm -rf "$TMP"
 }
 

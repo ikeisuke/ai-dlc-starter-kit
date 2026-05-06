@@ -187,12 +187,14 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 
 > **[必読] `operations-release.md §7.7`**: §7.7 Git コミットのコミット対象ファイル / 行区切り規約 / 設定依存判定の詳細は `steps/operations/operations-release.md §7.7` を参照する。本ファイル（02-deploy.md）にはサブステップ番号の列挙のみを残し、詳細手順は集約先で管理する。
 
-7. 7.8 ドラフトPR Ready化
-8. 7.9 コミット漏れ確認
-9. 7.10 リモート同期確認
-10. 7.11 mainブランチとの差分チェック
-11. 7.12 PRマージ前レビュー
-12. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
+7. 7.7.1 release_prep_commit slot 記録【Unit 004 / #639】
+8. 7.8 ドラフトPR Ready化
+9. 7.9 コミット漏れ確認
+10. 7.10 リモート同期確認
+11. 7.11 mainブランチとの差分チェック
+12. 7.12 PRマージ前レビュー
+13. 7.12.5 PRレビュー反映コミットSquash統合【Unit 004 / #639】
+14. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
 
 - **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
 

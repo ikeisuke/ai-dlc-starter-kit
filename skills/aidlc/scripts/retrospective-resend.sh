@@ -14,6 +14,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/retrospective-issue.sh
 source "$SCRIPT_DIR/lib/retrospective-issue.sh"
+# Unit 003 (#638): aidlc-paths.sh helper を明示 source（retrospective-issue.sh 経由でも到達可能だが冗長 source は idempotent）
+# shellcheck source=lib/aidlc-paths.sh
+source "$SCRIPT_DIR/lib/aidlc-paths.sh"
 
 CYCLE=""
 DRY_RUN=false
@@ -84,7 +87,7 @@ if ! __retro_validate_cycle "$CYCLE"; then
     exit 2
 fi
 
-SPOOL_PATH=".aidlc/cycles/$CYCLE/history/retrospective-spool.md"
+SPOOL_PATH=$(aidlc_cycle_path "$CYCLE" "history/retrospective-spool.md")
 
 if [[ ! -f "$SPOOL_PATH" ]]; then
     echo "error	spool-not-found	cycle=$CYCLE	path=$SPOOL_PATH" >&2

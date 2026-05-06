@@ -39,10 +39,12 @@ operations-release.sh - Operations Phase ステップ7リリース準備の orch
   operations-release.sh <subcommand> [options...]
 
 Subcommands:
-  version-check    ステップ 7.1  - バージョン確認（iOS 分岐 + suggest-version.sh）
-  pr-ready         ステップ 7.8  - ドラフト PR Ready 化 + PR 本文更新
-  verify-git       ステップ 7.9-7.11 - コミット漏れ / リモート同期 / main 差分チェック
-  merge-pr         ステップ 7.13 - PR マージ実行
+  version-check                ステップ 7.1   - バージョン確認（iOS 分岐 + suggest-version.sh）
+  pr-ready                     ステップ 7.8   - ドラフト PR Ready 化 + PR 本文更新
+  verify-git                   ステップ 7.9-7.11 - コミット漏れ / リモート同期 / main 差分チェック
+  merge-pr                     ステップ 7.13  - PR マージ実行
+  record-release-prep-commit   ステップ 7.7.1 - release_prep_commit slot 記録 (Unit 004)
+  squash-712                   ステップ 7.12.5 - PR レビュー反映コミット Squash 統合 (Unit 004)
 
 Global options:
   -h, --help       ヘルプを表示
@@ -655,6 +657,353 @@ cmd_merge_pr() {
     esac
 }
 
+# --- Unit 004 (#639): record-release-prep-commit / squash-712 サブコマンド ---
+
+print_help_record_release_prep_commit() {
+    cat <<'EOF'
+operations-release.sh record-release-prep-commit [--dry-run] --cycle <CYCLE>
+
+Operations Phase ステップ 7.7.1 release_prep_commit slot 記録のラッパー (Unit 004 / #639)。
+
+Options:
+  --cycle <CYCLE>   サイクル名（必須、例: v2.5.2）。progress.md のパス解決に使用
+  --dry-run         副作用を抑止し、実行予定を "would run: ..." 出力
+  -h, --help        このヘルプを表示
+
+Behavior:
+  1. git rev-parse HEAD で 40 桁 SHA を取得
+  2. .aidlc/cycles/<CYCLE>/operations/progress.md の "<!-- release_prep_commit: -->" 行を更新
+     - 行不在時: 固定スロットセクション末尾に "<!-- release_prep_commit: <SHA> -->" を追加
+     - 行存在時: 値を新 SHA で置換
+  3. git add operations/progress.md && git commit -m "chore: [<CYCLE>] release_prep_commit 記録 - <SHA-prefix>"
+
+Output (stdout):
+  release_prep_commit:recorded:<40桁SHA>   - 行を新規追加した場合
+  release_prep_commit:updated:<40桁SHA>    - 既存行を更新した場合
+
+Errors (stderr):
+  error\trecord-release-prep-commit:progress-not-found\t<path>
+  error\trecord-release-prep-commit:git-rev-parse-failed
+  error\trecord-release-prep-commit:write-failed\t<reason>
+  error\trecord-release-prep-commit:commit-failed\t<reason>
+
+Exit code: 0 (success) / 1 (validation / IO error)
+EOF
+}
+
+print_help_squash_712() {
+    cat <<'EOF'
+operations-release.sh squash-712 [--dry-run] --cycle <CYCLE>
+
+Operations Phase ステップ 7.12.5 PR レビュー反映コミット Squash 統合のラッパー (Unit 004 / #639)。
+
+Options:
+  --cycle <CYCLE>   サイクル名（必須、例: v2.5.2）
+  --dry-run         副作用を抑止し、判定結果のみ出力
+  -h, --help        このヘルプを表示
+
+Behavior (DR-008 / git reset --soft 方式):
+  1. read-config.sh rules.git.squash_enabled を取得
+  2. progress.md から "<!-- release_prep_commit: ([0-9a-f]{40})? -->" を 2 段階判定でパース
+     - 行存在判定 + 値抽出 + 厳格バリデーション
+  3. git log <release_prep_commit>..HEAD --oneline で対象数判定
+  4. git reset --soft <release_prep_commit> + git commit -m "chore: ... PR レビュー反映 squash 統合"
+  5. 失敗時 git reset --hard ORIG_HEAD で rollback (commit 失敗時のみ)
+
+External signal contract (commit-flow.md 準拠):
+  Output (stdout):
+    squash:success:<新規コミット SHA>          - 通常系成功
+    squash:skipped                              - スキップ系 (理由は stderr "info\treason\t<reason>")
+    squash:failed:reason=format_error           - release_prep_commit 値が不正
+    squash:failed:reason=git_op_failed:<exit>   - git reset --soft / commit 失敗
+
+  Auxiliary log (stderr):
+    info\treason\tsquash_enabled=false           - squash_enabled 設定が false
+    info\treason\tsquash_enabled=unset           - squash_enabled 設定が未定義
+    info\treason\tread-config.sh failed          - read-config.sh エラー (安全側で skip)
+    info\treason\trelease_prep_commit_missing    - slot 行不在 / 値空
+    info\treason\tno_commits                     - <release_prep_commit>..HEAD が 0 件
+    error\trelease_prep_commit_format_error\t<rawValue>
+    error\tsquash_712:reset-soft-failed\t<exit_code>
+    error\tsquash_712:commit-failed\t<exit_code>
+    error\tsquash_712:rollback-failed\t<details> (rollback 失敗 / fatal)
+    recommended_command:<手動 squash 案内>
+
+Exit code:
+  0 - success / skipped (block しない)
+  1 - failed (Operations Phase block)
+EOF
+}
+
+# progress.md path 解決（cycle に対応）
+__operations_release_progress_path() {
+    local cycle="$1"
+    printf '%s' ".aidlc/cycles/${cycle}/operations/progress.md"
+}
+
+# release_prep_commit slot をパース（DomainModel ParseResult 仕様準拠）
+# stdout: "missing" / "found:<SHA>" / "format_error:<rawValue>"
+# return: 0 (success / always; パース結果は stdout)
+__operations_release_parse_release_prep_commit() {
+    local progress_file="$1"
+    if [[ ! -f "$progress_file" ]]; then
+        printf 'missing\n'
+        return 0
+    fi
+    # 2 段階判定: 1) 行存在 (コロン後にスペース or 行末)
+    local match_count
+    match_count=$(grep -cE '^<!-- release_prep_commit:( |$)' "$progress_file" || true)
+    if [[ "$match_count" -eq 0 ]]; then
+        printf 'missing\n'
+        return 0
+    fi
+    # 2) 値抽出 + trim
+    local raw_value
+    raw_value=$(grep -E '^<!-- release_prep_commit:( |$)' "$progress_file" \
+        | head -1 \
+        | sed -E 's/^<!-- release_prep_commit:[[:space:]]*//; s/[[:space:]]*-->[[:space:]]*$//')
+    # 残った両端空白を再 trim
+    raw_value=$(printf '%s' "$raw_value" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+    if [[ -z "$raw_value" ]]; then
+        printf 'missing\n'
+        return 0
+    fi
+    if [[ "$raw_value" =~ ^[0-9a-f]{40}$ ]]; then
+        printf 'found:%s\n' "$raw_value"
+        return 0
+    fi
+    printf 'format_error:%s\n' "$raw_value"
+    return 0
+}
+
+cmd_record_release_prep_commit() {
+    local cycle=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                print_help_record_release_prep_commit
+                return 0
+                ;;
+            --dry-run)
+                DRY_RUN=1
+                shift
+                ;;
+            --cycle)
+                require_option_value "record-release-prep-commit" "--cycle" "$#" "${2:-}" || return 1
+                cycle="$2"
+                shift 2
+                ;;
+            *)
+                printf 'record-release-prep-commit:error:unknown-option:%s\n' "$1" >&2
+                return 1
+                ;;
+        esac
+    done
+    if [[ -z "$cycle" ]]; then
+        printf 'record-release-prep-commit:error:cycle-required\n' >&2
+        return 1
+    fi
+    local progress_file
+    progress_file=$(__operations_release_progress_path "$cycle")
+    if [[ ! -f "$progress_file" ]]; then
+        printf 'error\trecord-release-prep-commit:progress-not-found\t%s\n' "$progress_file" >&2
+        return 1
+    fi
+    local head_sha
+    if ! head_sha=$(git rev-parse HEAD 2>&1); then
+        printf 'error\trecord-release-prep-commit:git-rev-parse-failed\t%s\n' "$head_sha" >&2
+        return 1
+    fi
+    if [[ ! "$head_sha" =~ ^[0-9a-f]{40}$ ]]; then
+        printf 'error\trecord-release-prep-commit:git-rev-parse-failed\tinvalid SHA: %s\n' "$head_sha" >&2
+        return 1
+    fi
+    local sha_prefix="${head_sha:0:7}"
+    if [[ "$DRY_RUN" = "1" ]]; then
+        log_dry_run "update $progress_file with release_prep_commit=$head_sha"
+        log_dry_run "git add $progress_file && git commit -m 'chore: [$cycle] release_prep_commit 記録 - $sha_prefix'"
+        printf 'release_prep_commit:dry-run:%s\n' "$head_sha"
+        return 0
+    fi
+    # 既存行の有無を確認
+    local match_count action
+    match_count=$(grep -cE '^<!-- release_prep_commit:( |$)' "$progress_file" || true)
+    if [[ "$match_count" -ge 1 ]]; then
+        action="updated"
+        local tmp_file
+        tmp_file=$(mktemp -t aidlc-progress.XXXXXX)
+        if ! sed -E "s|^<!-- release_prep_commit:.*-->[[:space:]]*$|<!-- release_prep_commit: ${head_sha} -->|" "$progress_file" > "$tmp_file"; then
+            rm -f "$tmp_file"
+            printf 'error\trecord-release-prep-commit:write-failed\tsed failed\n' >&2
+            return 1
+        fi
+        mv "$tmp_file" "$progress_file" || {
+            rm -f "$tmp_file"
+            printf 'error\trecord-release-prep-commit:write-failed\tmv failed\n' >&2
+            return 1
+        }
+    else
+        action="recorded"
+        # 末尾に追加（ファイル末尾改行の整合確保）
+        printf '\n<!-- release_prep_commit: %s -->\n' "$head_sha" >> "$progress_file" || {
+            printf 'error\trecord-release-prep-commit:write-failed\tappend failed\n' >&2
+            return 1
+        }
+    fi
+    if ! git add "$progress_file" 2>&1; then
+        printf 'error\trecord-release-prep-commit:write-failed\tgit add failed\n' >&2
+        return 1
+    fi
+    # 冪等性: ステージに差分がない場合（既に同一 SHA で記録済み等）は git commit を呼ばずに成功扱い
+    if git diff --cached --quiet -- "$progress_file"; then
+        printf 'release_prep_commit:already-recorded:%s\n' "$head_sha"
+        return 0
+    fi
+    local commit_msg="chore: [${cycle}] release_prep_commit 記録 - ${sha_prefix}"
+    if ! git commit -m "$commit_msg" >/dev/null 2>&1; then
+        printf 'error\trecord-release-prep-commit:commit-failed\tgit commit failed\n' >&2
+        return 1
+    fi
+    printf 'release_prep_commit:%s:%s\n' "$action" "$head_sha"
+    return 0
+}
+
+cmd_squash_712() {
+    local cycle=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                print_help_squash_712
+                return 0
+                ;;
+            --dry-run)
+                DRY_RUN=1
+                shift
+                ;;
+            --cycle)
+                require_option_value "squash-712" "--cycle" "$#" "${2:-}" || return 1
+                cycle="$2"
+                shift 2
+                ;;
+            *)
+                printf 'squash-712:error:unknown-option:%s\n' "$1" >&2
+                return 1
+                ;;
+        esac
+    done
+    if [[ -z "$cycle" ]]; then
+        printf 'squash-712:error:cycle-required\n' >&2
+        return 1
+    fi
+    # Step 1: squash_enabled 取得 (commit-flow.md 既存契約準拠 / set -e 抑止で exit code を保持)
+    local enabled_output enabled_ec
+    set +e
+    enabled_output=$("$SCRIPT_DIR/read-config.sh" rules.git.squash_enabled 2>/dev/null)
+    enabled_ec=$?
+    set -e
+    if [[ "$enabled_ec" -eq 0 ]]; then
+        if [[ "$enabled_output" = "true" ]]; then
+            : # 続行
+        elif [[ "$enabled_output" = "false" ]]; then
+            printf 'info\treason\tsquash_enabled=false\n' >&2
+            printf 'squash:skipped\n'
+            return 0
+        else
+            printf 'info\treason\tsquash_enabled=%s\n' "$enabled_output" >&2
+            printf 'squash:skipped\n'
+            return 0
+        fi
+    elif [[ "$enabled_ec" -eq 1 ]]; then
+        printf 'info\treason\tsquash_enabled=unset\n' >&2
+        printf 'squash:skipped\n'
+        return 0
+    else
+        printf 'info\treason\tread-config.sh failed\n' >&2
+        printf 'squash:skipped\n'
+        return 0
+    fi
+    # Step 2: release_prep_commit slot をパース
+    local progress_file
+    progress_file=$(__operations_release_progress_path "$cycle")
+    local parse_result
+    parse_result=$(__operations_release_parse_release_prep_commit "$progress_file")
+    case "$parse_result" in
+        missing)
+            printf 'info\treason\trelease_prep_commit_missing\n' >&2
+            printf 'squash:skipped\n'
+            return 0
+            ;;
+        format_error:*)
+            local raw_value="${parse_result#format_error:}"
+            printf 'error\trelease_prep_commit_format_error\t%s\n' "$raw_value" >&2
+            printf 'squash:failed:reason=format_error\n'
+            return 1
+            ;;
+        found:*)
+            : # 続行
+            ;;
+        *)
+            printf 'error\tsquash_712:parse-failed\tunexpected: %s\n' "$parse_result" >&2
+            printf 'squash:failed:reason=parse_failed\n'
+            return 1
+            ;;
+    esac
+    local release_prep_commit="${parse_result#found:}"
+    # Step 3: 対象コミット数判定
+    local commit_count
+    commit_count=$(git log "${release_prep_commit}..HEAD" --oneline 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+    if [[ "$commit_count" -eq 0 ]]; then
+        printf 'info\treason\tno_commits\n' >&2
+        printf 'squash:skipped\n'
+        return 0
+    fi
+    if [[ "$DRY_RUN" = "1" ]]; then
+        log_dry_run "git reset --soft $release_prep_commit"
+        log_dry_run "git commit -m 'chore: [$cycle] PR レビュー反映 squash 統合'"
+        printf 'squash:dry-run:target_count=%d\n' "$commit_count"
+        return 0
+    fi
+    # Step 4: git reset --soft（set -e 抑止のため subshell + || 構造）
+    local reset_soft_output reset_soft_ec
+    set +e
+    reset_soft_output=$(git reset --soft "$release_prep_commit" 2>&1)
+    reset_soft_ec=$?
+    set -e
+    if [[ "$reset_soft_ec" -ne 0 ]]; then
+        printf 'error\tsquash_712:reset-soft-failed\t%d\n' "$reset_soft_ec" >&2
+        printf 'recommended_command:git reset --hard <自身で確認した SHA> ; 詳細はログ参照\n' >&2
+        printf 'squash:failed:reason=git_op_failed:%d\n' "$reset_soft_ec"
+        return 1
+    fi
+    # Step 5: git commit（set -e 抑止のため一時的に無効化）
+    local commit_msg="chore: [${cycle}] PR レビュー反映 squash 統合"
+    local commit_output commit_ec
+    set +e
+    commit_output=$(git commit -m "$commit_msg" 2>&1)
+    commit_ec=$?
+    set -e
+    if [[ "$commit_ec" -ne 0 ]]; then
+        # rollback: reset --soft 成功 AND commit 失敗 → ORIG_HEAD で復旧（set -e 抑止）
+        local rollback_output rollback_ec
+        set +e
+        rollback_output=$(git reset --hard ORIG_HEAD 2>&1)
+        rollback_ec=$?
+        set -e
+        printf 'error\tsquash_712:commit-failed\t%d\n' "$commit_ec" >&2
+        if [[ "$rollback_ec" -ne 0 ]]; then
+            printf 'error\tsquash_712:rollback-failed\t%s\n' "$rollback_output" >&2
+            printf 'recommended_command:git reflog で履歴を確認し手動復旧してください\n' >&2
+        fi
+        printf 'recommended_command:git reset --soft %s ; <レビュー反映を再実行> ; git commit -m "..."\n' "$release_prep_commit" >&2
+        printf 'squash:failed:reason=git_op_failed:%d\n' "$commit_ec"
+        return 1
+    fi
+    local new_sha
+    new_sha=$(git rev-parse HEAD)
+    printf 'squash:success:%s\n' "$new_sha"
+    return 0
+}
+
 # --- ディスパッチャ ---
 
 main() {
@@ -682,6 +1031,12 @@ main() {
             ;;
         merge-pr)
             cmd_merge_pr "$@"
+            ;;
+        record-release-prep-commit)
+            cmd_record_release_prep_commit "$@"
+            ;;
+        squash-712)
+            cmd_squash_712 "$@"
             ;;
         *)
             printf 'operations-release:error:unknown-subcommand:%s\n' "$subcommand" >&2

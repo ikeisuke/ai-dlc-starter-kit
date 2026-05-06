@@ -414,6 +414,8 @@ bootstrap でない場合、以下の 4 checkpoint を順に評価し、**未達
 
 **grammar 規則**: キー=値形式（`key=value`）。値の前後に空白許容。1 行内にカンマ区切り併記可能。boolean は `true`/`false` 小文字固定。integer は `^[1-9][0-9]*$`（正の整数、0 は不許可。`<=0` や非数値は `format_error`）。型不一致は `format_error`。未知キーは無視。重複キーは最初の出現値を採用。`#` 以降はコメント。grammar version は `<!-- fixed-slot-grammar: v1 -->` HTML コメントで管理し、`ArtifactsStateRepository` のパース工程が互換性を検証する。
 
+**`release_prep_commit` 独立スロット（Unit 004 / #639 追加）**: 上記 `key=value` 形式の grammar v1 とは**別系統**の独立スロット。フォーマット: `<!-- release_prep_commit: <40 桁 SHA> -->`（値部は `^[0-9a-f]{40}$`、コロン直後の空白は任意）。`fixed-slot-grammar: v1` のキー=値パース対象**外**であり、`ArtifactsStateRepository` の通常パース工程ではスキップされる。Operations Phase §7.7.1 で書き込まれ、§7.12.5 で `operations-release.sh squash-712` が独自正規表現で参照する（DR-009）。空値 `<!-- release_prep_commit: -->` および行不在は「未存在」扱い（`format_error` ではなく `release_prep_commit_missing` シグナル）。値が非空で正規表現に合致しない場合のみ `format_error` として `squash:failed:reason=format_error` を返す。本スロットは復帰判定（`PhaseResolver` / `OperationsStepResolver`）には影響しない（`squash-712` 専用）。
+
 ##### §5.3.6 GitHubPullRequestGateway 信頼境界契約（Unit 005 追加）
 
 `GitHubPullRequestGateway.fetchByNumber(prNumber)` が `gh pr view <prNumber> --json isDraft,state,mergedAt,number` で取得したデータを信頼する境界条件を定義する:
