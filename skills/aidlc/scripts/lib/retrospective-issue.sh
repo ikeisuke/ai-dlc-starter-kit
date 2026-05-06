@@ -35,6 +35,11 @@ if [[ "${__AIDLC_RETROSPECTIVE_ISSUE_SH_LOADED:-}" == "1" ]]; then
 fi
 __AIDLC_RETROSPECTIVE_ISSUE_SH_LOADED=1
 
+# Unit 003 (#638): aidlc-paths.sh helper を source（aidlc_cycle_path 提供）
+__RETRO_ISSUE_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+# shellcheck source=aidlc-paths.sh
+source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-paths.sh"
+
 # ─── 命名規約定数 ─────────
 readonly RETROSPECTIVE_LABEL="retrospective"
 readonly MIRROR_STATE_LABEL_PREFIX="mirror-state:"
@@ -504,13 +509,10 @@ retrospective_body_compose() {
 
 __retro_spool_path() {
     # $1: cycle
-    # AIDLC_PROJECT_ROOT 指定時は絶対パス、未指定時は cwd 相対
+    # Unit 003 (#638): aidlc-paths.sh helper 経由で path 解決
+    # AIDLC_PROJECT_ROOT 指定時は <root>/.aidlc/..、未指定時は cwd 相対 .aidlc/..
     local cycle="$1"
-    if [[ -n "${AIDLC_PROJECT_ROOT:-}" ]]; then
-        printf '%s/.aidlc/cycles/%s/history/retrospective-spool.md\n' "$AIDLC_PROJECT_ROOT" "$cycle"
-    else
-        printf '.aidlc/cycles/%s/history/retrospective-spool.md\n' "$cycle"
-    fi
+    aidlc_cycle_path "$cycle" "history/retrospective-spool.md"
 }
 
 __retro_spool_lock_dir() {

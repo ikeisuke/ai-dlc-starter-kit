@@ -35,6 +35,10 @@ if [[ -z "${__AIDLC_RETROSPECTIVE_ISSUE_SH_LOADED:-}" ]]; then
     source "${__PRED_SCRIPT_DIR}/retrospective-issue.sh"
 fi
 
+# Unit 003 (#638): aidlc-paths.sh helper を明示 source（多重 source ガードにより副作用なし）
+# shellcheck source=aidlc-paths.sh
+source "${__PRED_SCRIPT_DIR}/aidlc-paths.sh"
+
 # ─── 診断出力ヘルパ ─────────
 __pred_diag() {
     # $1: level, $2: code, $3: detail
@@ -178,7 +182,9 @@ __pred_read_spool_issue_url() {
 # stdout: ファイルパス（存在時）/ 空文字（不在時）
 __pred_read_compat_file() {
     local prev_cycle="$1"
-    local compat_path=".aidlc/cycles/${prev_cycle}/operations/retrospective.md"
+    local compat_path
+    # Unit 003 (#638): aidlc-paths.sh helper 経由
+    compat_path=$(aidlc_cycle_path "$prev_cycle" "operations/retrospective.md")
 
     if [[ -f "$compat_path" ]]; then
         printf '%s\n' "$compat_path"
@@ -244,9 +250,10 @@ predecessor_resolve_issue() {
         fi
     fi
 
-    # spool / 互換パス事前計算
-    local spool_path=".aidlc/cycles/${prev_cycle}/history/retrospective-spool.md"
-    local compat_path=".aidlc/cycles/${prev_cycle}/operations/retrospective.md"
+    # spool / 互換パス事前計算（Unit 003 #638: aidlc-paths.sh helper 経由）
+    local spool_path compat_path
+    spool_path=$(aidlc_cycle_path "$prev_cycle" "history/retrospective-spool.md")
+    compat_path=$(aidlc_cycle_path "$prev_cycle" "operations/retrospective.md")
 
     local spool_exists="false"
     [[ -f "$spool_path" && -s "$spool_path" ]] && spool_exists="true"

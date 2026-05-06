@@ -7,6 +7,14 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.2] - Unreleased
+
+### Changed
+
+- AIDLC_PROJECT_ROOT 横断対応: 共通 path resolution helper (`skills/aidlc/scripts/lib/aidlc-paths.sh`) を新設し、producer (`__retro_spool_path`) と consumer (`scripts/retrospective-resend.sh` / `scripts/lib/predecessor-issue.sh`) 両側で `aidlc_cycle_path` 経由の path 解決に統一。AI-DLC を別リポで利用する際の path 不整合を解消（#638, closes #631 #632 / Unit 003）
+
+---
+
 ## [2.5.1] - 2026-05-05
 
 ### Added
