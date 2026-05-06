@@ -1,0 +1,16 @@
+# check-test-isolation.sh allowlist (TSV, tab-separated)
+# 既存違反の一時隔離リスト (出口条件付き)
+# Format: file_path<TAB>function_name<TAB>reason<TAB>added_date<TAB>tracking_issue<TAB>expiry_date
+# - file_path: repo-relative path (例: tests/foo.bats)
+# - function_name: BATS 関数名 (teardown / setup / setup_file / teardown_file / @test "name")
+# - reason: 照合キーの一部となる識別子 (例: legacy-cleanup-without-cd)
+# - added_date: YYYY-MM-DD
+# - tracking_issue: #NNN または GitHub Issue URL
+# - expiry_date: YYYY-MM-DD (これを過ぎると CI exit 1)
+#
+# 注意:
+# - 致命パターン (rm -rf "$REPO_ROOT" / .aidlc/... / "$(pwd)" / $HOME/...) は allowlist 不可 (即修正)
+# - 1 行でも不正フォーマットは exit 1 (fail-closed)
+# - tracking_issue で参照される Issue で段階解消し、expiry_date を延長し続けない
+#
+# 現時点では既存違反なし (Unit 002 実装で確認)

@@ -971,6 +971,30 @@ main() {
         exit 1
     fi
 
+    # 3 種 CI 構造チェック（Unit 完了時必須実行 / cwd 非依存 / violation で squash 中止）
+    # 検査対象: skill-references / bash-substitution / test-isolation
+    # script dir 起点で repo root を解決し絶対パスで実行
+    local repo_root_for_checks
+    repo_root_for_checks=$(git rev-parse --show-toplevel 2>/dev/null) || {
+        echo "Error: not in a git repository" >&2
+        echo "squash:error:not-a-repository"
+        exit 1
+    }
+    # 3 種チェックは必須実行（fail-closed）。実行権限ビット欠落でもスキップしない。
+    # ファイル不在は即 exit 1 で fail-closed
+    local check_script
+    for check_script in check-skill-references check-bash-substitution check-test-isolation; do
+        if [[ ! -f "${repo_root_for_checks}/bin/${check_script}.sh" ]]; then
+            echo "Error: required check script not found: bin/${check_script}.sh" >&2
+            echo "squash:error:${check_script}-script-missing"
+            exit 1
+        fi
+        if ! bash "${repo_root_for_checks}/bin/${check_script}.sh" >&2; then
+            echo "squash:error:${check_script}-failed"
+            exit 1
+        fi
+    done
+
     # retroactive モード: 専用フローへ分岐
     if [[ "$RETROACTIVE" == "true" ]]; then
         # --from/--to バリデーション（排他チェック、フルハッシュ正規化、祖先検証）

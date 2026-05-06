@@ -17,6 +17,7 @@ setup() {
 }
 
 teardown() {
+  cd "$BATS_TMPDIR"
   if [[ -n "${TEST_TMPDIR:-}" && -d "${TEST_TMPDIR}" ]]; then
     rm -rf "${TEST_TMPDIR}"
   fi
