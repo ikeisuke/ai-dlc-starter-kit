@@ -2,7 +2,7 @@
 
 ## 概要
 
-`skills/aidlc/steps/common/review-flow.md` の「完了条件の判定単一仕様」（v2.5.2 Unit 001 / #635 で導入）から `last_two_rounds_clean` 規則を削除し、`last_round_clean`（直近 round が clean なら完了）ベースに書き換える。これにより Round 1 で指摘 → Round 2 で全 resolve した場合に追加の Round 3 を強制せず 2R で完了できる。同時に `templates/review_summary_template.md` の反復回数表記補注を新ルールと整合させる。
+`skills/aidlc/steps/common/review-flow.md` の「完了条件の判定単一仕様」（v2.5.2 Unit 001 / #635 で導入）から `last_two_rounds_clean` 規則を削除し、`last_round_clean`（直近 round が clean なら完了）ベースに書き換える。これにより Round 1 で指摘 → Round 2 で全 resolve した場合に追加の Round 3 を強制せず 2R で完了できる。同時に `skills/aidlc/templates/review_summary_template.md` の反復回数表記補注を新ルールと整合させる。
 
 5R 上限 / defer 自動 Issue 起票 / 千日手検出 / Round 4+ 新領域 backlog 化 などの v2.5.2 で導入された他要素は **完全に維持**する。
 
@@ -18,7 +18,7 @@
   - 同一 round が二重判定されない一意な規則体系を担保
 - `skills/aidlc/steps/common/review-flow.md` の他箇所で `last_two_rounds_clean` への参照が残っていれば併せて削除（`grep -c "last_two_rounds_clean"` が **0** になるまで）
 - `skills/aidlc/steps/common/review-flow.md` のパス 2（セルフ）記述「反復上限・完了条件はパス 1 と同一」が新ルールと整合していることを確認
-- `templates/review_summary_template.md` の反復回数表記補注（`v2.5.2 以降の上限値・完了条件`）を新ルールと整合させる更新
+- `skills/aidlc/templates/review_summary_template.md` の反復回数表記補注（`v2.5.2 以降の上限値・完了条件`）を新ルールと整合させる更新
 - 履歴記録 (`history/construction_unit05.md`) に Unit 005 の変更内容と「本サイクル後続 Unit（002 / 003 / 004）への新ルール即時適用」の証跡を残す
 
 ## 境界

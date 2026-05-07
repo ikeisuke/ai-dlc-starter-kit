@@ -111,5 +111,5 @@ v2.5.4 Unit 002 計画レビュー時にユーザーから「2 round clean 要�
   - 形式 B: `1R clean 特例`を独立規則として残し、`2R 以上 + last_round_clean` を別規則として明記（既存スタイル踏襲）
 - どちらの形式でも、**同一 round が二重に判定される矛盾がない**こと（テスト: Round 1 clean / Round 2 clean / Round 5 unresolved の 3 ケースで判定結果が一意）
 - `5R 上限`・`defer 自動 Issue 起票`・`千日手検出（5R 中 3R 連続同種）`・`Round 4+ 新領域 backlog 化` は維持（grep で各キーワードが既存と同等以上の件数で残ること）
-- `templates/review_summary_template.md` の反復回数表記補注（`v2.5.2 以降の上限値・完了条件`）が **新ルール（`last_round_clean`）と整合**するよう更新されている
+- `skills/aidlc/templates/review_summary_template.md` の反復回数表記補注（`v2.5.2 以降の上限値・完了条件`）が **新ルール（`last_round_clean`）と整合**するよう更新されている
 - 本 Unit 完了後、本サイクル後続 Unit（002 / 003 / 004）の AI レビューに **新ルールが即時適用**されることを Unit 005 の履歴に記録（適用順序の証跡）
