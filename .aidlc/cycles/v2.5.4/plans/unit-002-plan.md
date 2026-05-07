@@ -18,15 +18,40 @@ worktree 環境で AI-DLC を運用する際、Operations Phase 開始時にメ�
 | レイヤ | 役割 | ファイル |
 |--------|------|---------|
 | 検出ロジック | unmerged paths / マージ進行中 / コンフリクトマーカー scan の 3 項目を実装 | `skills/aidlc/scripts/main-repo-health-check.sh`（新設） |
-| 呼び出し点 | Operations Phase 冒頭で health check を必須実行 | `skills/aidlc/steps/operations/01-setup.md`（改修、step:3a 相当） |
+| 呼び出し点 | Operations Phase 冒頭で health check を必須実行 | `skills/aidlc/steps/operations/01-setup.md`（改修、挿入位置は次節「挿入位置の決定」を参照） |
 | 自動テスト | 4 ケース以上の bats シナリオ（健全 / unmerged / MERGE_HEAD / コンフリクトマーカー残骸） | `tests/main-repo-health-check.bats`（新設） |
 | 履歴 | 実装進捗の記録 | `.aidlc/cycles/v2.5.4/history/construction_unit02.md`（新規作成） |
 
-**ドリフト防止策**:
+### 挿入位置の決定
+
+Unit 定義の責務記述（「step:0 または step:1a 相当の位置に挿入」）と境界（「step:0 等の追加挿入位置を慎重に選ぶ」）は **早期検出を意図する flex な指示**である。本計画では Unit 定義の意図（早期検出）を満たしつつ、依存制約（git CLI 可用性）を考慮して挿入位置を **step:3a**（プリフライト直後 / セッションタイトル設定前）に確定する。
+
+**根拠**:
+
+- `01-setup.md` 既存番号体系: `1, 2, 3, 4, 5, 6, 6a, 6b, 7, 8, 9, 10, 11`。`step:0` / `step:1a` は実体上不在
+- main-repo-health-check.sh は `git rev-parse --git-common-dir` / `git status --porcelain` 等を依存。step:3 プリフライトで `git:available` を確認済みであることが安全前提
+- step:3a は「プリフライト後 / 詳細処理前」の最早期点であり、Unit 定義の「早期検出」意図と整合
+
+**SoT 整合**: Unit 定義側の責務記述は本計画の決定（step:3a）に合わせて Unit 完了処理時に補足追記する（責務記述行に「step:3a に確定」を追記し、SoT 二重化を解消）。
+
+### ドリフト防止策
 
 - helper の出力 contract（`health-check:<項目>:<status>:<detail>` 形式）を `validate-git.sh` の `status:`/`error:` 出力規約に揃え、AI エージェント側で独自の git 判定を行わない
-- 01-setup.md への組み込みは **step:3a**（プリフライト後 / セッションタイトル設定前）の 1 箇所のみ。step 番号体系は維持し、後続 step を再採番しない
-- 終了コード規約は `guides/exit-code-convention.md` に整合させる（0=健全 / 1=警告 / 2=致命的エラー）
+- 01-setup.md への組み込みは **step:3a**（プリフライト後 / セッションタイトル設定前）の 1 箇所のみ。既存 step 番号は再採番しない
+- 終了コード規約は `guides/exit-code-convention.md` に整合させる:
+  - **exit 0**: 正常完了（健全シナリオ + warning 検出を含む。warning は stdout の `status:warning` で通知）
+  - **exit 1**: バリデーションエラー（引数不正等。本 helper は引数を取らないため通常は発生しない）
+  - **exit 2**: システムエラー（`git rev-parse --git-common-dir` 失敗 / 必須コマンド不在等）
+- 呼び出し側（01-setup.md）は **stdout の `status:warning` を判定**して警告表示・続行可否を決定する（exit code 1 を warning として扱わない）
+
+### main-repo パス解決の契約
+
+helper のメインリポジトリパス解決は以下の手順で行う:
+
+1. 現ディレクトリの worktree トップレベルを `git rev-parse --show-toplevel` で取得
+2. `git rev-parse --git-common-dir` の戻り値が相対パスの場合、`show-toplevel` を基準に絶対化する（`cd <toplevel> && cd <git-common-dir>` で正規化）
+3. `git-common-dir` の親ディレクトリが「メインリポジトリの worktree top」となる
+4. 解決失敗（`show-toplevel` または `git-common-dir` が空・相対化失敗）時は exit 2 で `error:git-path-resolve-failed:<details>` を stdout に出力
 
 ## 変更対象ファイル
 
@@ -56,42 +81,46 @@ worktree 環境で AI-DLC を運用する際、Operations Phase 開始時にメ�
 
 1. `main-repo-health-check.sh` 新設（検出ロジック 3 項目 + stdout フォーマット + 終了コード）
 2. `tests/main-repo-health-check.bats` 新設（4 シナリオ + fixture セットアップ）
-3. bats 実行 → Self-Healing ループ（max_retry=3）で失敗時自動修正
-4. `01-setup.md` step:3a 追加（helper 呼び出し + warning/error 時の挙動明示）
-5. AI レビュー（`reviewing-construction-code`）→ 統合レビュー（`reviewing-construction-integration`）
-6. cross-platform 観点レビュー（`tools:cross-platform-review` 観点。BSD vs GNU `grep` / `find` 差異）
-7. markdownlint 実行 / 履歴記録の補足追加
+3. bats 実行 → Self-Healing ループ（失敗時自動修正）
+4. `01-setup.md` step:3a 追加（helper 呼び出し + stdout の `status:warning` を解釈する分岐記述）
+5. AI レビュー → 統合レビュー
+6. cross-platform 観点レビュー / markdownlint 実行 / 履歴補足
+
+> 具体的なコマンド分岐・関数構成・bats シナリオ詳細・Self-Healing リトライ条件は **論理設計** で確定する。
 
 ## エラーハンドリング / 異常系
 
 | 状況 | 対応 |
 |------|------|
-| `git rev-parse --git-common-dir` 失敗（git 未初期化 / 破損） | exit 2（致命的エラー）、stdout に `error:git-common-dir-failed:<message>` を出力 |
+| `git rev-parse --show-toplevel` / `--git-common-dir` 失敗 | exit 2、stdout に `error:git-path-resolve-failed:<message>` を出力 |
 | メインリポジトリパス解決後に `git status --porcelain` 失敗 | exit 2、stdout に `error:git-status-failed:<message>` を出力 |
 | worktree 環境ではない通常リポジトリで実行された場合 | best-effort 動作（メインリポジトリ = カレントリポジトリとして 3 項目チェック）。warning/error が出ない限り exit 0 |
-| バイナリファイルが `git ls-files` の結果に含まれる場合 | `git grep -I` の `-I` フラグでバイナリ自動除外、または `file --mime-type` で text/* 限定 |
-| macOS（BSD）/ Linux（GNU）の `grep` 差異 | POSIX 互換オプションのみ使用（`-E` / `-l` / `-I` 等）、独自拡張回避。`tools:cross-platform-review` 観点で検証 |
-| パフォーマンス（数千ファイル中規模リポジトリ）が 1 秒を超える | コンフリクトマーカー scan を `git grep` 経由（tracked のみ + バイナリ除外）に統一し、`find` での全 walk を回避 |
-| 01-setup.md の挿入位置で後続 step 番号がズレる | step:3a として挿入し既存 step 番号は不変（step 4-11 を再採番しない） |
-| bats テスト fixture（fake main repo）の隔離 | `setup()` で `BATS_TEST_TMPDIR` 配下に独立した bare/working repo を生成し、`teardown()` で破棄。既存 `tests/fixtures/` を参考に独立 fixture 設計 |
+| バイナリファイル除外戦略 | `git grep -I` を主経路（git の tracked + バイナリ自動除外）。`grep` 単体への依存は避ける |
+| macOS（BSD）/ Linux（GNU）の `grep` 差異 | scan は `git grep` 中心に統一し、`grep` 単体オプションへの依存を避ける（`tools:cross-platform-review` 観点で検証） |
+| パフォーマンス（数千ファイル中規模リポジトリ）が 1 秒を超える | `git grep` 経由（tracked + バイナリ自動除外）に統一し、`find` での全 walk を回避 |
+| 01-setup.md の挿入位置で後続 step 番号がズレる | step:3a として挿入し既存 step 番号は不変 |
+| bats テスト fixture（fake main repo）の隔離 | `BATS_TEST_TMPDIR` 配下で隔離（詳細な fixture 構造は logical design で確定） |
 
 ## NFR
 
-- **パフォーマンス**: コンフリクトマーカー scan は `git grep -I -lE '...'` で tracked + バイナリ除外。中規模リポジトリ（数千ファイル）で 1 秒以下
-- **セキュリティ**: メインリポジトリパスは `git rev-parse --git-common-dir` で動的解決、ハードコード禁止。stdout 出力は機械可読固定フォーマットで、ファイルパスをエスケープせずそのまま出すケースに留意（ファイルパスに改行を含む異常入力は `git ls-files -z` で対処）
+- **パフォーマンス**: コンフリクトマーカー scan は `git grep` 中心（tracked + バイナリ自動除外）。中規模リポジトリ（数千ファイル）で 1 秒以下
+- **セキュリティ**: メインリポジトリパスは `git rev-parse --show-toplevel` + `--git-common-dir` で動的解決し絶対化、ハードコード禁止。stdout 出力は機械可読固定フォーマット。ファイルパスに改行を含む異常入力は `-z` 系オプション（`git ls-files -z` 等）で対処（詳細は logical design）
 - **後方互換**: 既存 `01-setup.md` の step 番号体系を維持。既存スクリプト（`validate-git.sh` / `post-merge-cleanup.sh`）への変更なし
-- **可用性**: Operations Phase の開始時間に最大 1 秒程度のオーバーヘッド。warning 検出時もユーザー判断で続行可能（exit 1 で中断はしない）
+- **可用性**: Operations Phase の開始時間に最大 1 秒程度のオーバーヘッド。warning 検出時もユーザー判断で続行可能（**exit 0 を維持し、stdout の `status:warning` で通知**）
 
 ## 完了条件チェックリスト
 
 ### 機能要件
 
 - [ ] `skills/aidlc/scripts/main-repo-health-check.sh` が新設され、unmerged paths / マージ進行中状態 / コンフリクトマーカー scan の 3 項目を実装している
-- [ ] スクリプトの終了コードが規約通り（0=健全 / 1=警告 / 2=致命的エラー）
-- [ ] stdout 出力が `health-check:<項目>:<status>:<detail>` 形式で機械可読
-- [ ] メインリポジトリパスが `git rev-parse --git-common-dir` で動的解決されており、ハードコードされていない
+- [ ] スクリプトの終了コードが `guides/exit-code-convention.md` 規約通り（**exit 0**: 健全 + warning 検出 / **exit 1**: バリデーションエラー / **exit 2**: システムエラー）
+- [ ] warning 検出は exit 0 を維持し、stdout の `status:warning` および `health-check:<項目>:<status>:<detail>` で通知している
+- [ ] メインリポジトリパスが `git rev-parse --show-toplevel` + `--git-common-dir` で動的解決・絶対化されており、相対パス／ハードコードに依存していない
+- [ ] コンフリクトマーカー scan が `git grep` を主経路として実装されており、`grep` 単体（BSD/GNU 差異リスク）への依存がない
 - [ ] `skills/aidlc/steps/operations/01-setup.md` の step:3a 相当の位置に health check 必須呼び出しが追加されている
+- [ ] 01-setup.md の呼び出し記述が **exit code ではなく stdout の `status:warning` を解釈** して警告表示する形になっている
 - [ ] warning / error 時の挙動（続行可能 / 復旧手順案内）が 01-setup.md に明示されている
+- [ ] Unit 定義ファイル（`002-main-repo-health-check.md`）の責務記述に「step:3a に確定」の補足が追記されている（SoT 二重化解消）
 
 ### 自動テスト
 
