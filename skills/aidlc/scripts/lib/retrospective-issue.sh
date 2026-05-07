@@ -899,8 +899,24 @@ retrospective_dialog_token_verify() {
     # 加えて、resend スクリプトは常に AIDLC_RETRO_FORCE_TARGET を set してから retrospective_issue_create
     # を呼び出すため、本 bypass の有効化条件として AIDLC_RETRO_FORCE_TARGET の併設を必須化することで
     # 「環境変数 1 つ set するだけでガードを迂回できる」リスクを抑える（resend 経路の構造的検証）。
+    #
+    # **構造的ガード（v2.5.3 Codex review 指摘対応）**: env var 2 個併設だけでは AI agent や
+    # accidental shell environment leakage 経由で bypass される懸念があるため、`BASH_SOURCE`
+    # chain に `retrospective-resend.sh` が含まれることを追加で必須化する。これにより、resend.sh
+    # からの呼び出し経路でない場合は bypass フラグが set されていても通常検証にフォールスルーする。
     if [[ "${AIDLC_RETRO_RESEND_INTERNAL_BYPASS:-}" == "1" && -n "${AIDLC_RETRO_FORCE_TARGET:-}" ]]; then
-        return 0
+        local __retro_resend_chain=0
+        local __retro_i
+        for (( __retro_i=1; __retro_i<${#BASH_SOURCE[@]}; __retro_i++ )); do
+            if [[ "${BASH_SOURCE[__retro_i]:-}" == */retrospective-resend.sh ]]; then
+                __retro_resend_chain=1
+                break
+            fi
+        done
+        if [[ "$__retro_resend_chain" == "1" ]]; then
+            return 0
+        fi
+        __retro_diag warn bypass_attempted_outside_resend_chain ""
     fi
 
     if [[ $# -lt 1 ]]; then

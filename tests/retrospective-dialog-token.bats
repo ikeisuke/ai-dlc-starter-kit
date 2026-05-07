@@ -186,15 +186,37 @@ GITSHIM
   [[ "$output" == *"verify_exit=4"* ]]
 }
 
-@test "issue_create 統合: AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 + AIDLC_RETRO_FORCE_TARGET 必須" {
-  # bypass のセキュリティ境界: 環境変数 1 つだけでは bypass 無効、AIDLC_RETRO_FORCE_TARGET 併設必須
+@test "verify 構造的ガード: env var 2 個併設のみで resend chain 外 → bypass 不能" {
+  # v2.5.3 Codex review 指摘対応: env var だけでは bypass されない（BASH_SOURCE chain に
+  # retrospective-resend.sh が含まれることが追加で必須）
   bash -c "source '$RETRO_LIB' && retrospective_dialog_token_record_response 'v2.5.3' 'denied'"
+
   # bypass フラグだけ set / FORCE_TARGET なし → bypass 無効化されないため denied で blocked
   run bash -c "AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 source '$RETRO_LIB' && AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 retrospective_dialog_token_verify 'v2.5.3'"
   [ "$status" -eq 4 ]
   [[ "$output" == *"token_denied"* ]]
 
-  # bypass フラグ + FORCE_TARGET 併設 → bypass 有効化
+  # bypass フラグ + FORCE_TARGET 併設だが、resend.sh chain 外 → bypass 不能で denied のまま
+  # （旧仕様では bypass 有効、新仕様では BASH_SOURCE chain ガードによりフォールスルー）
   run bash -c "AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 AIDLC_RETRO_FORCE_TARGET=mirror source '$RETRO_LIB' && AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 AIDLC_RETRO_FORCE_TARGET=mirror retrospective_dialog_token_verify 'v2.5.3'"
+  [ "$status" -eq 4 ]
+  [[ "$output" == *"token_denied"* ]]
+  [[ "$output" == *"bypass_attempted_outside_resend_chain"* ]]
+}
+
+@test "verify 構造的ガード: retrospective-resend.sh chain 経由 → bypass 有効" {
+  # resend.sh の caller chain をシミュレートするスタブを作成
+  bash -c "source '$RETRO_LIB' && retrospective_dialog_token_record_response 'v2.5.3' 'denied'"
+  STUB_DIR="$TMP/stub"
+  mkdir -p "$STUB_DIR"
+  # スタブは BASH_SOURCE chain に retrospective-resend.sh を含めるためにファイル名を一致させる
+  cat > "$STUB_DIR/retrospective-resend.sh" <<STUB_EOF
+#!/usr/bin/env bash
+source "$RETRO_LIB"
+AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 AIDLC_RETRO_FORCE_TARGET=mirror retrospective_dialog_token_verify 'v2.5.3'
+STUB_EOF
+  chmod +x "$STUB_DIR/retrospective-resend.sh"
+
+  run bash "$STUB_DIR/retrospective-resend.sh"
   [ "$status" -eq 0 ]
 }
