@@ -5,7 +5,7 @@
 | Unit | タイトル | 状態 | Phase 1（設計） | Phase 2（実装） | 完了日 |
 |------|---------|------|-----------------|-----------------|--------|
 | 001 | 振り返り対話強制ガード強化（Operations §1） | 完了 | 完了 | 完了 | 2026-05-07 |
-| 002 | write-history skill にモード追加（unit-complete-short-note + operations-round） | 未着手 | 未着手 | 未着手 | - |
+| 002 | write-history skill にモード追加（unit-complete-short-note + operations-round） | 完了 | 完了 | 完了 | 2026-05-07 |
 | 003 | 事実テーブル先抽出ステップ + 推定値検出ガード（#634 絞込） | 未着手 | 未着手 | 未着手 | - |
 | 004 | predecessor-issue.sh の retrospective-issue.sh 横依存解消（用途別 helper 独立化） | 未着手 | 未着手 | 未着手 | - |
 
@@ -30,7 +30,7 @@
 
 ## 現在のステップ
 
-Unit 001（振り返り対話強制ガード強化）完了。次は Unit 002（write-history skill にモード追加）に着手予定。
+Unit 001 / Unit 002 完了。次は Unit 003（事実テーブル先抽出ステップ + 推定値検出ガード）に着手予定。
 
 ## 再開時に読み込むファイル
 

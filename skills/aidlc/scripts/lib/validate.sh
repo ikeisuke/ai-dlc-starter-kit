@@ -89,3 +89,39 @@ validate_cycle() {
 
     return 0
 }
+
+# Unit 002 (#637): write-history skill の --mode 値を検証
+#
+# 引数:
+#   $1 - mode 値
+# 戻り値:
+#   0: 有効（base / unit-complete-short-note / operations-round）
+#   1: 無効
+validate_write_history_mode() {
+    case "$1" in
+        base|unit-complete-short-note|operations-round) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Unit 002 (#637): 非負整数を検証（count 系の数値引数用）
+#
+# 引数:
+#   $1 - 値
+# 戻り値:
+#   0: 非負整数（^[0-9]+$）
+#   1: 非数値または負数
+validate_non_negative_int() {
+    [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+# Unit 002 (#637): round 番号を検証（1-5 の整数のみ許可、user_stories.md ストーリー 2B 受け入れ基準準拠）
+#
+# 引数:
+#   $1 - 値
+# 戻り値:
+#   0: 1-5 の整数
+#   1: それ以外
+validate_round_number() {
+    [[ "$1" =~ ^[1-5]$ ]]
+}
