@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.4] - 2026-05-08
+
+### Added
+
+- worktree 環境立ち上げ時のメインリポジトリ health check 追加: `scripts/main-repo-health-check.sh` を新設し、unmerged paths / `MERGE_HEAD` 残骸 / コンフリクトマーカー scan の 3 項目を検証。`steps/operations/01-setup.md` から必須呼び出しに組み込み、Operations Phase 終盤の `post-merge-cleanup.sh` 失敗ではなく **サイクル開始時点** でメインリポジトリ状態異常を早期検出できる構造に変更（#657 / Unit 002）
+- 設計レビュー 5R 到達時の千日手・議論密度ガード強化: `steps/common/review-flow.md` に **Construction Phase 設計レビュー限定** で適用される早期 defer ガイドを追加。Round 3 で指摘 ≥ 5 件時の OUT_OF_SCOPE 化推奨アラート、Round 4 以降の新規仮説追加検出ロジック（手順番号付き）、議論密度ベースの千日手早期検出ガイドを追記し、設計レビューが 5R に到達する前にユーザー判断を促せる経路を整備（#658 / Unit 003）
+- helper の zsh source 互換性保証: `scripts/lib/predecessor-issue.sh` の `__PRED_SCRIPT_DIR` 解決を zsh / bash 両対応化し、zsh interactive shell から `source && 関数呼び出し` した際の解決失敗を解消。全 helper 6 ファイル（`predecessor-issue.sh` / `aidlc-paths.sh` / `aidlc-validate.sh` / `aidlc-gh.sh` / `aidlc-spool.sh` / `retrospective-issue.sh`）に zsh source 動作確認テストを追加（修正対象は patch スコープ保護のため `predecessor-issue.sh` の 1 ファイル限定 / DR-001）。`retrospective-issue.sh` の zsh 互換性問題は OUT_OF_SCOPE として #661 にバックログ起票（#659 / Unit 004）
+
+### Changed
+
+- Operations §7 ステップ7「完了」更新タイミングをマージ前に統一: `steps/operations/02-deploy.md` §7 のステップ7「完了」更新記述を **§7.7 Git コミット時** に明示的に確定させ（DR-003）、`04-completion.md` のマージ前完結ルールと `operations-release.md` §7 サブステップ列挙を整合化。`progress.md` 固定スロット更新（§7.6）と同一コミットに含まれる構造になり、AI エージェントが PR マージ後に `progress.md` を編集してマージ前完結契約違反を起こす経路をドキュメントレベルで構造的に消した（#656 / Unit 001）
+- AI レビュー完了条件を `last_round_clean` に緩和: `steps/common/review-flow.md`「完了条件の判定単一仕様」（v2.5.2 Unit 001 / #635 導入）から `last_two_rounds_clean` 規則を削除し、`last_round_clean`（直近 round が clean なら完了）ベースに書き換え。Round 1 で指摘 → Round 2 で全 resolve した場合に追加の Round 3 を強制せず 2R で完了可能に。`5R 上限` / `defer 自動 Issue 起票` / `千日手検出（5R 中 3R 連続同種）` / `Round 4+ 新領域 backlog 化` 等 v2.5.2 導入要素は完全に維持（v2.5.4 内部 hotfix / Unit 005、Issue 起票なし）
+
+---
+
 ## [2.5.3] - 2026-05-07
 
 ### Added
