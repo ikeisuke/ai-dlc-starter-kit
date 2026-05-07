@@ -6,6 +6,10 @@
 #       -> Markdown 本文を stdout に出力
 #   retrospective_issue_create <body_path> <feedback_mode> <cycle>
 #       -> key=value 形式の結果を stdout に出力
+#   retrospective_dialog_token_record_response <cycle> <response>  (Unit 001 / #647)
+#       -> 対話確認トークン発行（${TMPDIR:-/tmp}/aidlc-retro-confirmed-${cycle}.flag）
+#   retrospective_dialog_token_verify <cycle>  (Unit 001 / #647)
+#       -> 対話確認トークン検証（exit 4 で起票ブロック、reason 値で詳細分類）
 #
 # 提供する命名規約定数:
 #   RETROSPECTIVE_LABEL                  = "retrospective"
@@ -47,6 +51,9 @@ readonly RETROSPECTIVE_ISSUE_TITLE_TEMPLATE="Retrospective: %s"
 readonly RETROSPECTIVE_SPOOL_HEADER="<!-- retrospective-spool v1 -->"
 readonly RETROSPECTIVE_SPOOL_VERSION="1"
 readonly MIRROR_REPO="ikeisuke/ai-dlc-starter-kit"
+
+# Unit 001 (#647): 対話確認トークン TTL（秒、環境変数で上書き可）
+: "${AIDLC_RETRO_TOKEN_TTL_SECONDS:=300}"
 
 # ─── 診断出力ヘルパ ─────────
 __retro_diag() {
@@ -836,6 +843,178 @@ __retro_build_spool_entry() {
         }'
 }
 
+# ─── Unit 001 (#647): 対話確認トークン（発行 / 検証）─────────
+#
+# 振り返り Issue 起票時の対話必須ガード（実行時ガード）。AI エージェントの
+# auto mode 動作下で対話を経ない `gh issue create` を構造的に防止する。
+# 詳細は `.aidlc/cycles/v2.5.3/design-artifacts/logical-designs/unit_001_retro_dialog_guard_logical_design.md` を参照。
+
+__retro_dialog_token_path() {
+    # $1: cycle
+    # 出力: トークンファイルパス（${TMPDIR:-/tmp}/aidlc-retro-confirmed-${cycle}.flag）
+    local cycle="$1"
+    local tmpdir="${TMPDIR:-/tmp}"
+    # TMPDIR の末尾スラッシュ除去
+    tmpdir="${tmpdir%/}"
+    printf '%s/aidlc-retro-confirmed-%s.flag\n' "$tmpdir" "$cycle"
+}
+
+__retro_iso8601_to_epoch() {
+    # $1: ISO 8601 タイムスタンプ（UTC / 例: 2026-05-07T05:30:00Z）
+    # 出力: epoch 秒（成功時）
+    # 戻り値: 0=成功 / 1=parse 失敗
+    local ts="$1"
+    # 厳密な regex 検証（Z 終端必須 / mm/dd/HH/MM/SS の桁数固定）
+    if ! [[ "$ts" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+        return 1
+    fi
+    # GNU date を試行
+    local epoch
+    if epoch=$(date -u -d "$ts" +%s 2>/dev/null) && [[ -n "$epoch" ]]; then
+        printf '%s\n' "$epoch"
+        return 0
+    fi
+    # BSD date にフォールバック
+    if epoch=$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$ts" +%s 2>/dev/null) && [[ -n "$epoch" ]]; then
+        printf '%s\n' "$epoch"
+        return 0
+    fi
+    return 1
+}
+
+retrospective_dialog_token_record_response() {
+    # $1: cycle (必須、許可文字: ^[A-Za-z0-9._-]+$)
+    # $2: response (必須、approved | denied)
+    # 戻り値: 0=成功 / 1=引数不正 / 2=書き込み失敗
+    if [[ $# -lt 2 ]]; then
+        __retro_diag error missing_args "cycle and response required"
+        return 1
+    fi
+    local cycle="$1"
+    local response="$2"
+
+    # cycle バリデーション（既存ヘルパ流用、path traversal 防御）
+    if ! __retro_validate_cycle "$cycle" 2>/dev/null; then
+        __retro_diag error invalid_cycle "$cycle"
+        return 1
+    fi
+
+    # response バリデーション
+    if [[ "$response" != "approved" && "$response" != "denied" ]]; then
+        __retro_diag error invalid_response "$response"
+        return 1
+    fi
+
+    local token_path
+    token_path=$(__retro_dialog_token_path "$cycle")
+
+    local timestamp
+    timestamp=$(__retro_iso8601)
+
+    # umask 077 でユーザーのみ読み書き可（0600）
+    local previous_umask
+    previous_umask=$(umask)
+    umask 077
+    if ! { printf '%s\n%s\n' "$timestamp" "$response" > "$token_path"; } 2>/dev/null; then
+        umask "$previous_umask"
+        __retro_diag error write_failed "$token_path"
+        return 2
+    fi
+    umask "$previous_umask"
+
+    return 0
+}
+
+retrospective_dialog_token_verify() {
+    # $1: cycle (必須)
+    # 戻り値: 0=検証成功 / 1=引数不正 / 4=業務拒否または I/O 異常
+    # stderr 出力: error\t<reason>\t[<detail>]
+    #   reason 値:
+    #     業務拒否系: dialog_required (token_missing / token_stale / token_denied)
+    #     I/O 異常系: dialog_required (token_io_error / token_parse_error)
+    #
+    # 内部 bypass (resend 専用): retrospective-resend.sh が spool 退避済みエントリの再送経路で、
+    # 過去の対話確認を流用するため `AIDLC_RETRO_RESEND_INTERNAL_BYPASS` を set する。
+    # この変数は **resend 内部 sentinel** として扱い、外部から set してはならない（外部ドキュメントには露出しない）。
+    # 加えて、resend スクリプトは常に AIDLC_RETRO_FORCE_TARGET を set してから retrospective_issue_create
+    # を呼び出すため、本 bypass の有効化条件として AIDLC_RETRO_FORCE_TARGET の併設を必須化することで
+    # 「環境変数 1 つ set するだけでガードを迂回できる」リスクを抑える（resend 経路の構造的検証）。
+    if [[ "${AIDLC_RETRO_RESEND_INTERNAL_BYPASS:-}" == "1" && -n "${AIDLC_RETRO_FORCE_TARGET:-}" ]]; then
+        return 0
+    fi
+
+    if [[ $# -lt 1 ]]; then
+        __retro_diag error missing_args "cycle required"
+        return 1
+    fi
+    local cycle="$1"
+
+    if ! __retro_validate_cycle "$cycle" 2>/dev/null; then
+        __retro_diag error invalid_cycle "$cycle"
+        return 1
+    fi
+
+    local token_path
+    token_path=$(__retro_dialog_token_path "$cycle")
+
+    # トークン不在 → token_missing
+    if [[ ! -f "$token_path" ]]; then
+        __retro_diag error dialog_required "token_missing"
+        return 4
+    fi
+
+    # 読み取り権限確認
+    if [[ ! -r "$token_path" ]]; then
+        __retro_diag error dialog_required "token_io_error"
+        return 4
+    fi
+
+    # ファイル形式: 行 1=ISO 8601 タイムスタンプ、行 2=response（approved | denied）
+    local line1 line2
+    if ! IFS= read -r line1 < "$token_path"; then
+        __retro_diag error dialog_required "token_io_error"
+        return 4
+    fi
+    if ! line2=$(sed -n '2p' "$token_path" 2>/dev/null); then
+        __retro_diag error dialog_required "token_io_error"
+        return 4
+    fi
+
+    # 行 1 を厳密な ISO 8601 形式として検証 + epoch 化（mtime に依存しない）
+    local issued_epoch
+    if ! issued_epoch=$(__retro_iso8601_to_epoch "$line1"); then
+        __retro_diag error dialog_required "token_parse_error"
+        return 4
+    fi
+
+    # 行 2 の response 値チェック
+    if [[ "$line2" != "approved" && "$line2" != "denied" ]]; then
+        __retro_diag error dialog_required "token_parse_error"
+        return 4
+    fi
+
+    # TTL 切れ判定（行 1 タイムスタンプ epoch ベース、ファイル mtime には依存しない）
+    local ttl="${AIDLC_RETRO_TOKEN_TTL_SECONDS:-300}"
+    if ! [[ "$ttl" =~ ^[0-9]+$ ]]; then
+        ttl=300
+    fi
+    local now
+    now=$(date -u +%s)
+    local age=$(( now - issued_epoch ))
+    if (( age > ttl )); then
+        __retro_diag error dialog_required "token_stale"
+        return 4
+    fi
+
+    # response が denied なら token_denied
+    if [[ "$line2" == "denied" ]]; then
+        __retro_diag error dialog_required "token_denied"
+        return 4
+    fi
+
+    return 0
+}
+
 # ─── 公開関数: Issue 起票 ─────────
 
 retrospective_issue_create() {
@@ -961,6 +1140,21 @@ retrospective_issue_create() {
     if [[ -n "$existing_url" ]]; then
         printf 'result=skipped\nreason=duplicate\nexisting_issue_url=%s\nmirror_state=skipped:duplicate\n' "$existing_url"
         return 0
+    fi
+
+    # Unit 001 (#647): 対話確認トークン検証（gh issue create 直前の実行時ガード）
+    # AskUserQuestion 応答を経ずに起票しようとする経路を構造的にブロックする。
+    # 適用範囲: target != none（local / mirror / both）の全経路で verify 必須。
+    # 真理表は logical_design.md「feedback_mode / target 別の verify 呼出真理表」を SoT として参照。
+    # - target=none（disabled / silent）: 既に early return 済のため verify 到達なし
+    # - spool 経路（gh 不可）: 起票実行前に return 済のため verify 到達なし
+    # - 重複検出 hit 時: 既に return 済のため verify 到達なし
+    # - ここに到達: target=local/mirror/both + gh available + 重複なし + 起票実行直前
+    local verify_rc=0
+    retrospective_dialog_token_verify "$cycle" || verify_rc=$?
+    if [[ "$verify_rc" -ne 0 ]]; then
+        printf 'result=failed\nreason=dialog-required\nmirror_state=blocked\nverify_exit=%s\n' "$verify_rc"
+        return "$verify_rc"
     fi
 
     # 起票

@@ -174,8 +174,11 @@ while IFS= read -r entry; do
         SKIP_LOCAL="1"
     fi
     set +e
+    # Unit 001 (#647): resend は spool 退避済みエントリ（対話を経た過去の起票試行）の再送経路のため、
+    # 対話確認トークン検証を bypass する。詳細は retrospective-issue.sh の verify 関数コメント参照。
     AIDLC_RETRO_FORCE_TARGET="$RETRY_TARGET" \
     AIDLC_RETRO_SKIP_LOCAL="$SKIP_LOCAL" \
+    AIDLC_RETRO_RESEND_INTERNAL_BYPASS=1 \
         retrospective_issue_create "$BODY_FILE" "$FEEDBACK_MODE" "$ENTRY_CYCLE" > "$RESULT_FILE"
     RC=$?
     set -e

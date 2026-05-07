@@ -83,6 +83,20 @@ GITSHIM
 
   echo "test body" > "$TMP/body.md"
   BODY="$TMP/body.md"
+
+  # Unit 001 (#647): 対話確認トークンの保管先を独立させる
+  # 各テスト本体で必要に応じて record_response を呼び出す（フレーク回避のため setup での固定発行は撤廃）
+  TEST_TMPDIR_FOR_TOKEN="$TMP/token-tmp"
+  mkdir -p "$TEST_TMPDIR_FOR_TOKEN"
+  export TMPDIR="$TEST_TMPDIR_FOR_TOKEN"
+}
+
+# Unit 001 (#647): 各テスト内で都度トークン発行するためのヘルパ
+_issue_dialog_token() {
+  # $1: cycle (default v2.5.1), $2: response (default approved)
+  local cycle="${1:-v2.5.1}"
+  local response="${2:-approved}"
+  bash -c "source '$RETRO_LIB' && retrospective_dialog_token_record_response '$cycle' '$response'" >/dev/null 2>&1
 }
 
 teardown() {
@@ -158,6 +172,7 @@ _run_create() {
 
 @test "create: mirror-only 成功 → result=created issue_url mirror_state=created" {
   cd "$TMP"
+  _issue_dialog_token
   GH_MOCK_AUTH=ok
   GH_MOCK_LIST_RESULT='[]'
   GH_MOCK_CREATE_URL='https://github.com/ikeisuke/ai-dlc-starter-kit/issues/100'
@@ -177,6 +192,7 @@ _run_create() {
 
 @test "create: local-and-mirror で local 成功 / mirror 失敗 → result=failed reason=mirror-failed-after-local-created exit 1 + spool に partial 記録" {
   cd "$TMP"
+  _issue_dialog_token
   GH_MOCK_AUTH=ok
   GH_MOCK_LIST_RESULT='[]'
   GH_MOCK_CREATE_URL='https://github.com/test-owner/test-repo/issues/50'
@@ -194,6 +210,7 @@ _run_create() {
 
 @test "create: relabel 失敗 → result=failed reason=relabel-failed-mirror exit 1 + spool 退避" {
   cd "$TMP"
+  _issue_dialog_token
   GH_MOCK_AUTH=ok
   GH_MOCK_LIST_RESULT='[]'
   GH_MOCK_CREATE_URL='https://github.com/ikeisuke/ai-dlc-starter-kit/issues/200'
@@ -210,6 +227,7 @@ _run_create() {
 
 @test "create: AIDLC_RETRO_FORCE_TARGET=mirror で local-and-mirror モードを mirror のみに上書き" {
   cd "$TMP"
+  _issue_dialog_token
   GH_MOCK_AUTH=ok
   GH_MOCK_LIST_RESULT='[]'
   GH_MOCK_CREATE_URL='https://github.com/ikeisuke/ai-dlc-starter-kit/issues/300'
@@ -224,6 +242,7 @@ _run_create() {
 
 @test "create: AIDLC_RETRO_SKIP_LOCAL=1 で both 指定でも local 起票スキップ" {
   cd "$TMP"
+  _issue_dialog_token
   GH_MOCK_AUTH=ok
   GH_MOCK_LIST_RESULT='[]'
   GH_MOCK_CREATE_URL='https://github.com/ikeisuke/ai-dlc-starter-kit/issues/400'
@@ -236,6 +255,7 @@ _run_create() {
 
 @test "create: メタ開発リポ（local==mirror）で target=both を local に縮退" {
   cd "$TMP"
+  _issue_dialog_token
   # git mock を「mirror リポと同一」を返すよう差し替え
   cat > "$SHIM_DIR/git" <<'GITSHIM'
 #!/usr/bin/env bash
@@ -257,6 +277,7 @@ GITSHIM
 
 @test "create: target=both で duplicate 時 skip（codex review P2 / Unit 002 領域 mirror 重複対応）" {
   cd "$TMP"
+  _issue_dialog_token
   # git mock は default（test-owner/test-repo）→ MIRROR_REPO と異なるので両方検査される
   GH_MOCK_AUTH=ok
   # local 側 list は空、mirror 側 list は重複ありにする mock
