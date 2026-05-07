@@ -483,6 +483,8 @@ PR マージ（7.13）完了後は `.aidlc/cycles/{{CYCLE}}/**` 配下のいか�
 
 **理由**: cycle ブランチは post-merge-sync.sh で削除されるため、マージ後の改変は記録として残らず、未コミット差分として手動破棄が必要になる。マージ完了の事実は GitHub 上の PR・merge commit・自動タグが記録源となる。
 
+**前提（ステップ7「完了」更新タイミング）**: `operations/progress.md` のステップ7「完了」更新は **§7.7 Git コミット時に PR ブランチで確定済み**（マージ前完結契約の成立点 / 実際の main 反映は §7.13 PR マージ時 / タイミング契約 SoT: `operations-release.md §7.7`）。マージ後の編集は二重更新となり、本マージ前完結ルールの意図を破る。
+
 **ガード動作**（Unit 002 / DR-001）: マージ後に `write-history.sh --phase operations` を呼び出した場合、以下のいずれかに該当すれば exit code `3` で拒否され、`error:post-merge-history-write-forbidden:<reason_code>:<diagnostics>` 形式の機械可読メッセージが stdout と stderr の両方に出力される:
 
 1. **第一条件**: `--operations-stage post-merge` を明示指定した場合（即拒否）

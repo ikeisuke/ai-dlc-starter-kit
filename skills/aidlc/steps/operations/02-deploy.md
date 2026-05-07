@@ -180,10 +180,10 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 2. 7.2 CHANGELOG更新（`changelog = true` の場合）
 3. 7.3 README更新
 4. 7.4 履歴記録
-5. 7.6 progress.md更新 ← **PR準備完了**
+5. 7.6 progress.md更新 ← **PR準備完了**（= ステップ7「完了」、§7.7 で PR ブランチに確定し §7.13 で main 反映 / 詳細は `operations-release.md §7.7` 参照）
 6. 7.7 Gitコミット
 
-**注**: 7.6でprogress.mdを「PR準備完了」状態に更新し、7.7でコミットしてPRに反映します。以下はレビュー・マージ作業です。
+**注**: 7.6 で progress.md を「PR準備完了」（= ステップ7「完了」）に更新し、7.7 で PR ブランチに確定（マージ前完結契約の成立点 / `operations-release.md §7.7` 参照）、7.13 マージで main に反映。以下はレビュー・マージ作業です。
 
 > **[必読] `operations-release.md §7.7`**: §7.7 Git コミットのコミット対象ファイル / 行区切り規約 / 設定依存判定の詳細は `steps/operations/operations-release.md §7.7` を参照する。本ファイル（02-deploy.md）にはサブステップ番号の列挙のみを残し、詳細手順は集約先で管理する。
 
@@ -196,6 +196,6 @@ scripts/issue-ops.sh close {ISSUE_NUMBER}
 13. 7.12.5 PRレビュー反映コミットSquash統合【Unit 004 / #639】
 14. 7.13 PRマージ【ユーザー選択: automation_mode に関わらずユーザー確認必須】
 
-- **ステップ完了時**: progress.mdでステップ7を「完了」に更新、完了日を記録
+- **ステップ完了時（§7.7 Git コミット時に PR ブランチで確定）**: §7.6 で progress.md のステップ7 を「完了」（= `PR準備完了`、line 17 状態ラベル参照）に更新し、完了日を記録、§7.7 のコミットで PR ブランチに確定する（マージ前完結契約の成立点）。実際の main 反映は §7.13 PR マージ時。**マージ後（§7.13 後）の `progress.md` 編集は禁止**（マージ前完結契約 / 詳細は `operations-release.md §7.7` のタイミング契約 SoT 参照）
 
 ---

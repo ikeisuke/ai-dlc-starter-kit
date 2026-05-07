@@ -11,6 +11,7 @@
 | 5. 配布 | 未着手 | operations/distribution_feedback.md | - |
 | 6. バックログ整理と運用計画 | 未着手 | operations/post_release_operations.md | - |
 | 7. リリース準備 | 未着手 | README.md, history.md, PR | - |
+<!-- ステップ7「完了」状態は §7.6 で書き込み、§7.7 Git コミット時に PR ブランチで確定する（マージ前完結契約の成立点）。実際の main 反映は §7.13 PR マージ時（タイミング契約 SoT: operations-release.md §7.7）。「完了」と「PR準備完了」は §7.6 で書き込む状態の同義表現（02-deploy.md line 17 の状態ラベル定義参照）。マージ後（§7.13 後）の編集は禁止（DR-001 / Unit 002 / #583）。 -->
 
 ## 固定スロット（Operations 復帰判定用）
 

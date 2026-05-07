@@ -26,7 +26,7 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
   - **設定値確認手順**: 事前に `scripts/read-config.sh rules.release.changelog` を実行して値を取得する。出力が `true` の場合のみ CHANGELOG 更新を実行し、`false` の場合は CHANGELOG 更新を**スキップ**（README 更新は値に関わらず実行）
 - `/write-history` で `history/operations.md` に記録
 - progress.md のステップ7を「完了」に更新し 7.7 のコミットに含める
-- **progress.md 固定スロット反映【重要 / マージ前完結契約】**: `operations/progress.md` の構造化シグナル 3 スロットを以下のとおり更新し、§7.7 最終コミットに**必ず**含める。スロットの grammar は `key=value` 形式（§7.8 の既存 `pr_number=` 契約と同一形式）で、値型・許容値の正規定義は `steps/common/phase-recovery-spec.md` §5.3.5 を参照する（§7 は異常系・判定源整合の補助参照）。マージ後に post-merge クリーンアップで書き換えても main には反映されないため、**予約的にマージ後の状態を §7.6 時点で書き込む**こと。
+- **progress.md 固定スロット反映【重要 / マージ前完結契約】**: **タイミング契約: progress.md ステップ7「完了」(= `02-deploy.md` line 17 の `PR準備完了` と同義 / `03-release.md` 完了時の確認 SoT) は §7.6 で書き込み、§7.7 Git コミットで PR ブランチに確定する（マージ前完結契約の成立点）。実際の main 反映は §7.13 PR マージ時**（タイミング契約の正本は §7.7 セクション）。`operations/progress.md` の構造化シグナル 3 スロットを以下のとおり更新し、§7.7 最終コミットに**必ず**含める。スロットの grammar は `key=value` 形式（§7.8 の既存 `pr_number=` 契約と同一形式）で、値型・許容値の正規定義は `steps/common/phase-recovery-spec.md` §5.3.5 を参照する（§7 は異常系・判定源整合の補助参照）。マージ後に post-merge クリーンアップで書き換えても main には反映されないため、**予約的にマージ後の状態を §7.6 時点で書き込む**こと。
   - **既存 progress.md の固定スロットセクション有無判定**: 既存 `operations/progress.md` に `## 固定スロット（Operations 復帰判定用）` セクションが存在するか確認する。**未存在時**は新規セクションを progress.md 内に追加してから固定スロット 3 行を記載する（v2.4.1 以前のサイクルから引き継いだ progress.md にはセクションが存在しないため、本判定が必須）。**存在時**はセクション内の既存スロット行を更新する。
   - **progress.md への記載例**（grammar v1 準拠、`phase-recovery-spec.md §5.3.5`）:
 
@@ -41,7 +41,7 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 
     grammar 規則: HTML コメント `<!-- fixed-slot-grammar: v1 -->` はセクション見出しの直下、3 スロットより前に配置（パース工程が見出し → コメント → スロット行の順序で読み取ることを想定）。boolean は小文字固定 `true` / `false`、integer（`pr_number`）は `^[1-9][0-9]*$` 形式。各スロットは独立行で記述する（改行区切り、Markdown リスト形式 `- key=value` ではなく独立した 1 行として `key=value` のみ）。
   - `release_gate_ready=true` に更新（通常系・エッジケース共通）。§5.3.5 の定義に従い `release_done` 判定の AND 条件の片方を成立させる。
-  - `completion_gate_ready=true` に更新（通常系・エッジケース共通）。マージ前完結契約により、予約的に true を書き込み §7.7 コミットで main に反映する。
+  - `completion_gate_ready=true` に更新（通常系・エッジケース共通）。マージ前完結契約により、予約的に true を書き込み §7.7 コミットで PR ブランチに確定する（実際の main 反映は §7.13 PR マージ時）。
   - `pr_number=<PR 番号>` の更新は経路で分岐する:
     - **通常系**（Inception Phase で draft PR 作成済み、§7.8 が既存 PR を Ready 化するケース）: §7.6 で `gh pr view --json number` 等から番号を確定し progress.md に反映。§7.7 最終コミットに含める。**追加コミットは不要**。
     - **エッジケース**（Inception で `draft_pr=never` / `gh_status` 不可だった等、§7.8 で初回 PR 作成するケース）: §7.6 では `pr_number` を空のままとし、`release_gate_ready` / `completion_gate_ready` の 2 スロットのみ §7.7 に含める。`pr_number` の永続化は **§7.8 の既存エッジケース契約**（下記 §7.8「PR 番号の永続化」）に委ねる。
@@ -50,7 +50,7 @@ Inception 履歴に「iOSバージョン更新実施」記録があれば AI が
 
 ## 7.7 Git コミット
 
-コミットなしで 7.8 に進まない。`commit-flow.md` の「Operations Phase 完了コミット」に従い全変更をコミット。本コミットには §7.2〜§7.6 で更新した progress.md 固定スロット（通常系では 3 スロット、エッジケースでは 2 スロット）を**必ず含める**こと（マージ前完結契約の成立条件）。
+コミットなしで 7.8 に進まない。`commit-flow.md` の「Operations Phase 完了コミット」に従い全変更をコミット。本コミットには §7.2〜§7.6 で更新した progress.md 固定スロット（通常系では 3 スロット、エッジケースでは 2 スロット）を**必ず含める**こと（マージ前完結契約の成立条件）。**ステップ7「完了」更新タイミング契約の正本**: progress.md のステップ7「完了」（= `02-deploy.md` line 17 の `PR準備完了` と同義）は §7.6 で書き込み、本 §7.7 Git コミットで PR ブランチに確定する（**マージ前完結契約の成立点** = サイクル成果物への編集はここで終了、以降のフローはレビュー/マージのみ）。実際の main 反映は §7.13 PR マージで行われる。マージ後（§7.13 後）の `progress.md` 編集は二重更新となるため禁止（`04-completion.md` §4 マージ前完結ルール参照）。
 
 **コミット対象ファイル一覧**:
 
