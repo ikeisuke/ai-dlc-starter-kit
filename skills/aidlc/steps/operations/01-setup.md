@@ -35,6 +35,38 @@ DevOpsエンジニア兼SRE。
 
 結果（`gh_status`, `depth_level`, `automation_mode` 等）をコンテキスト変数として保持。
 
+### 3a. メインリポジトリ Health Check【重要】
+
+worktree 環境で AI-DLC を運用する際、過去の `git stash pop` 残骸 / マージ進行中状態 / unmerged paths を Operations Phase 開始時に早期検出する（v2.5.3 で発生した `post-merge-cleanup.sh` 失敗の再発防止、Unit 002 / #657）。
+
+**チェック手順**:
+
+```bash
+scripts/main-repo-health-check.sh
+```
+
+出力の `status:` 行と `health-check:<item>:<status>:<detail>` 行から判定する。**AI エージェントは独自の git 判定を行わず、helper の出力をそのまま消費する**（検出ロジックは helper 内に閉じる）。
+
+**正規化状態と分岐**:
+
+| helper 出力 | 動作 |
+|------------|------|
+| `status:ok` | 「✓ メインリポジトリ health check: 異常なし」表示、続行 |
+| `status:warning` + `health-check:<item>:warning:<detail>` | 「⚠ メインリポジトリ health check で警告検出: <item> (<detail>)」表示 → `AskUserQuestion`「復旧手順を実施 / スキップして続行 / 中断」 |
+| `status:error` + `error:<code>:<message>` | 「⚠ メインリポジトリ health check 実行失敗: <code> - <message>」表示、続行（致命的でない場合）または中断（git 環境破損等） |
+
+**warning 時の復旧手順案内例**（呼び出し側で表示する内容）:
+
+- `unmerged-paths`: メインリポジトリの worktree top に移動し `git status` で詳細確認 → 各ファイルを手動編集してコンフリクトを解消 → `git add <files>` でステージ → 進行中状態に応じて `git merge --continue` / `git cherry-pick --continue` / `git rebase --continue` で継続、もしくは `git merge --abort` / `git cherry-pick --abort` / `git rebase --abort` で中断
+- `merge-in-progress`: メインリポジトリで `git status` で進行中の操作種別を確認 → 完了させるなら上記 `--continue`、放棄するなら `--abort`
+- `conflict-marker`: 該当ファイルでコンフリクトマーカー（`<<<<<<<` / `>>>>>>>` / `=======`）を手動編集して解消 → `git add` してコミット
+
+> **注**: `git checkout --` は意図しないファイル破棄を引き起こす可能性があるため、上記復旧手順例には**含めない**。ユーザーが個別に判断する局面（編集中の変更を破棄したい等）で別途使用する想定。
+
+**AskUserQuestion 必須性**: warning は「ユーザー選択」（SKILL.md「AskUserQuestion 使用ルール」）に分類され、`automation_mode` に関わらず対話を省略してはならない。
+
+**呼び出し側は exit code を warning として扱わない**: helper の exit code は `0`（健全 + 警告）または `2`（システムエラー）。warning は **stdout の `status:warning` を判定**して検出する（`guides/exit-code-convention.md` 規約準拠 / スキルベース相対）。
+
 ### 4. セッション判別設定【オプション】
 
 `session-title` スキルが利用可能な場合のみ実行。

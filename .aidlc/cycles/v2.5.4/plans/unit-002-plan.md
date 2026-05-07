@@ -32,13 +32,16 @@ Unit 定義の責務記述（「step:0 または step:1a 相当の位置に挿�
 - main-repo-health-check.sh は `git rev-parse --git-common-dir` / `git status --porcelain` 等を依存。step:3 プリフライトで `git:available` を確認済みであることが安全前提
 - step:3a は「プリフライト後 / 詳細処理前」の最早期点であり、Unit 定義の「早期検出」意図と整合
 
-**SoT 整合**: Unit 定義側の責務記述は本計画の決定（step:3a）に合わせて Unit 完了処理時に補足追記する（責務記述行に「step:3a に確定」を追記し、SoT 二重化を解消）。
+**SoT 整合**: Unit 定義側の責務記述は本計画の決定に合わせて Unit 完了処理時に補足追記する（SoT 二重化解消の対象は **2 点**）:
+
+1. **位置契約**: 「step:3a に確定」（Unit 定義の責務記述「step:0 または step:1a 相当」を本計画決定に整合）
+2. **終了コード契約**: Unit 定義の「終了コード規約」（旧 `0`=健全 / `1`=警告検出 / `2`=致命的エラー）を `skills/aidlc/guides/exit-code-convention.md` 規約準拠の形（`0`=健全+警告 / `1`=バリデーションエラー / `2`=システムエラー）に更新。warning は stdout の `status:warning` で通知する形に統一。Intent 側「成功基準」(a) の `exit code は 0（健全）または 1（警告検出）` も併せて更新する
 
 ### ドリフト防止策
 
 - helper の出力 contract（`health-check:<項目>:<status>:<detail>` 形式）を `validate-git.sh` の `status:`/`error:` 出力規約に揃え、AI エージェント側で独自の git 判定を行わない
 - 01-setup.md への組み込みは **step:3a**（プリフライト後 / セッションタイトル設定前）の 1 箇所のみ。既存 step 番号は再採番しない
-- 終了コード規約は `guides/exit-code-convention.md` に整合させる:
+- 終了コード規約は `skills/aidlc/guides/exit-code-convention.md` に整合させる:
   - **exit 0**: 正常完了（健全シナリオ + warning 検出を含む。warning は stdout の `status:warning` で通知）
   - **exit 1**: バリデーションエラー（引数不正等。本 helper は引数を取らないため通常は発生しない）
   - **exit 2**: システムエラー（`git rev-parse --git-common-dir` 失敗 / 必須コマンド不在等）
@@ -113,7 +116,7 @@ helper のメインリポジトリパス解決は以下の手順で行う:
 ### 機能要件
 
 - [ ] `skills/aidlc/scripts/main-repo-health-check.sh` が新設され、unmerged paths / マージ進行中状態 / コンフリクトマーカー scan の 3 項目を実装している
-- [ ] スクリプトの終了コードが `guides/exit-code-convention.md` 規約通り（**exit 0**: 健全 + warning 検出 / **exit 1**: バリデーションエラー / **exit 2**: システムエラー）
+- [ ] スクリプトの終了コードが `skills/aidlc/guides/exit-code-convention.md` 規約通り（**exit 0**: 健全 + warning 検出 / **exit 1**: バリデーションエラー / **exit 2**: システムエラー）
 - [ ] warning 検出は exit 0 を維持し、stdout の `status:warning` および `health-check:<項目>:<status>:<detail>` で通知している
 - [ ] メインリポジトリパスが `git rev-parse --show-toplevel` + `--git-common-dir` で動的解決・絶対化されており、相対パス／ハードコードに依存していない
 - [ ] コンフリクトマーカー scan が `git grep` を主経路として実装されており、`grep` 単体（BSD/GNU 差異リスク）への依存がない
@@ -125,17 +128,18 @@ helper のメインリポジトリパス解決は以下の手順で行う:
 ### 自動テスト
 
 - [ ] `tests/main-repo-health-check.bats` が新設され、以下 4 ケース以上を含む:
-  - [ ] 健全シナリオ（3 項目すべて問題なし）→ exit 0
-  - [ ] unmerged paths ありシナリオ → exit 1 + warning 出力
-  - [ ] MERGE_HEAD ありシナリオ → exit 1 + warning 出力
-  - [ ] コンフリクトマーカー残骸シナリオ（v2.5.3 再現）→ exit 1 + warning 出力
+  - [ ] 健全シナリオ（3 項目すべて問題なし）→ **exit 0** + stdout に `status:ok`
+  - [ ] unmerged paths ありシナリオ → **exit 0** + stdout に `status:warning` + 該当項目の `health-check:<項目>:warning:<detail>`
+  - [ ] MERGE_HEAD ありシナリオ → **exit 0** + stdout に `status:warning` + `health-check:merge-in-progress:warning:<detail>`
+  - [ ] コンフリクトマーカー残骸シナリオ（v2.5.3 再現）→ **exit 0** + stdout に `status:warning` + `health-check:conflict-marker:warning:<detail>`
 - [ ] 全 bats テストが pass する
 
 ### 既存ガード仕様との論理整合
 
 - [ ] 01-setup.md の step 番号体系（既存 step 1-11）が維持されており、step 3a 挿入により後続が再採番されていない
 - [ ] `validate-git.sh` / `post-merge-cleanup.sh` への変更がない（`git diff --name-only -- "skills/aidlc/scripts/validate-git.sh" "skills/aidlc/scripts/post-merge-cleanup.sh"` が空）
-- [ ] 終了コード規約が `guides/exit-code-convention.md` に整合している（warning 付き完了 = exit 1、致命的エラー = exit 2）
+- [ ] 終了コード規約が `skills/aidlc/guides/exit-code-convention.md` に整合している（**警告付き完了 = exit 0 + stdout `status:warning`**、バリデーションエラー = exit 1（本 helper は引数を取らないため通常発生しない）、システムエラー = exit 2）
+- [ ] Unit 定義ファイル（`002-main-repo-health-check.md`）の責務セクションに記載された終了コード規約が、`skills/aidlc/guides/exit-code-convention.md` に整合する形（旧 `1=警告検出` ではなく `0=健全+警告`）に更新されている（SoT 二重化解消の対象）
 
 ### スコープ保護
 

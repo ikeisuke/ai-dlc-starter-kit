@@ -13,18 +13,20 @@ worktree 環境で AI-DLC を運用する際、Operations Phase 開始時にメ�
 - `skills/aidlc/scripts/main-repo-health-check.sh`（新設）を作成し、以下 3 項目を実施:
   1. **unmerged paths 検出**: メインリポジトリの `git status --porcelain` 出力で `^UU ` / `^AA ` / `^DD ` 等のマージコンフリクト行を検出
   2. **マージ進行中状態の検出**: メインリポジトリの `.git/MERGE_HEAD` / `.git/CHERRY_PICK_HEAD` / `.git/REBASE_HEAD` ファイルの存在確認
-  3. **コンフリクトマーカー scan**: メインリポジトリの worktree 配下の tracked ファイルに `<<<<<<< ` / `>>>>>>> ` / `^=======$` パターンが残存していないか scan（`git ls-files` 経由でバイナリ除外）
-- 終了コード規約:
-  - `0`: 健全（3 項目すべて問題なし）
-  - `1`: 警告検出（少なくとも 1 項目で問題検出、運用続行可）
-  - `2`: 致命的エラー（メインリポジトリパス解決失敗、git コマンド失敗等）
-- stdout 出力: `health-check:<項目>:<status>:<detail>` 形式で各項目の判定を機械可読出力
-- `skills/aidlc/steps/operations/01-setup.md` から health check の **必須呼び出し**を追加（step:0 または step:1a 相当の位置に挿入）
+  3. **コンフリクトマーカー scan**: メインリポジトリの worktree 配下の tracked ファイルに `<<<<<<< ` / `>>>>>>> ` / `^=======$` パターンが残存していないか scan（**主経路: `git grep -I`** による tracked + バイナリ自動除外。`git ls-files` 経由は代替経路として記載するが、BSD/GNU 差異吸収のため `git grep` 中心に統一する）
+- 終了コード規約（`skills/aidlc/guides/exit-code-convention.md` 準拠）:
+  - `0`: 正常完了（健全 + 警告検出を含む。警告は stdout の `status:warning` および `health-check:<項目>:warning:<detail>` で通知）
+  - `1`: バリデーションエラー（引数不正等。本 helper は引数を取らないため通常発生しない）
+  - `2`: システムエラー（メインリポジトリパス解決失敗、git コマンド失敗等）
+- stdout 出力:
+  - 全体ステータス: `status:ok` / `status:warning` / `error:<code>:<message>`（システムエラー時）
+  - 各項目: `health-check:<項目>:<status>:<detail>` 形式で機械可読出力
+- `skills/aidlc/steps/operations/01-setup.md` から health check の **必須呼び出し**を追加（**step:3a** に確定: プリフライト直後 / セッションタイトル設定前。詳細は計画ファイル「挿入位置の決定」参照）。呼び出し側は **stdout の `status:warning` を判定**して警告表示・続行可否を決定する（exit code 1 を warning として扱わない）
 - `tests/main-repo-health-check.bats`（新設）に 4 ケース以上の自動テスト:
-  - 健全シナリオ → exit 0
-  - unmerged paths あり → exit 1 + warning 出力
-  - MERGE_HEAD ありシナリオ → exit 1 + warning 出力
-  - コンフリクトマーカー残骸シナリオ（v2.5.3 再現） → exit 1 + warning 出力
+  - 健全シナリオ → exit 0 + stdout `status:ok`
+  - unmerged paths あり → exit 0 + stdout `status:warning` + 該当項目の `health-check` 行
+  - MERGE_HEAD ありシナリオ → exit 0 + stdout `status:warning` + `health-check:merge-in-progress:warning:<detail>`
+  - コンフリクトマーカー残骸シナリオ（v2.5.3 再現） → exit 0 + stdout `status:warning` + `health-check:conflict-marker:warning:<detail>`
 
 ## 境界
 
@@ -48,7 +50,7 @@ worktree 環境で AI-DLC を運用する際、Operations Phase 開始時にメ�
 
 ## 非機能要件（NFR）
 
-- **パフォーマンス**: コンフリクトマーカー scan は `git ls-files` で tracked ファイルに限定し、バイナリは除外。中規模リポジトリ（数千ファイル）で 1 秒以下を目標
+- **パフォーマンス**: コンフリクトマーカー scan は **主経路 `git grep -I`** で tracked ファイル + バイナリ自動除外。中規模リポジトリ（数千ファイル）で 1 秒以下を目標
 - **セキュリティ**: メインリポジトリのパスは `git rev-parse --git-common-dir` で動的解決し、ハードコード禁止
 - **スケーラビリティ**: 影響なし（運用ツール）
 - **可用性**: 影響なし
@@ -82,11 +84,11 @@ Medium（Should-have / 運用診断時間短縮 / v2.5.3 で 1 度の実害発�
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-07
+- **完了日**: 2026-05-07
+- **担当**: Claude Code (AI-DLC) / codex external review
 - **エクスプレス適格性**: -
 - **適格性理由**: -
 
-> **一時中断ノート (2026-05-07)**: Unit 005（review-flow last_round_clean 化）ホットフィックス追加のため一時中断。計画ファイル `.aidlc/cycles/v2.5.4/plans/unit-002-plan.md` は Round 1 レビュー反映済み（commit 336b20db）。Unit 005 完了後に再開し、新ルール（`last_round_clean`）でレビューを継続する。
+> **完了ノート (2026-05-07)**: Unit 005（review-flow `last_round_clean` 化）完了後に再開し、新ルール下でレビューを継続して完了。計画レビュー Round 1〜4（最終 Round 4 で 0 件、last_round_clean）/ 設計レビュー Round 1〜5（Round 5 残指摘 1 件低をユーザー判断で resolve）/ コードレビュー Round 1-2（Round 2 で 0 件、last_round_clean）/ 統合レビュー Round 1-2（Round 1 残指摘を完了処理で resolve）。
