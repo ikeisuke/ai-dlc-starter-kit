@@ -19,11 +19,13 @@
 各 round 終了後に以下の規則で `ReviewSession.is_completed()` を評価する:
 
 - `rounds.size == 1 && rounds[0].is_clean()` → `completed`（**1R clean 特例**: Round 1 で指摘ゼロまたは defer 化されたら 1 round で完了）
-- `rounds.size >= 2 && last_two_rounds_clean` → `completed`（最後 2 round 連続で指摘ゼロまたは defer 化）
+- `rounds.size >= 2 && last_round_clean` → `completed`（直近 round が指摘ゼロまたは defer 化済みなら完了。Round 1 で指摘あり → Round 2 で全 resolve した場合も 2R で完了する）
 - `rounds.size >= 5 && unresolved_count > 0` → `decision_required`（指摘対応判断フローへ遷移）
 - 上記いずれにも該当しない → `in_progress`（次 round へ進む）
 
-`is_clean()` は ReviewRound の `findings` が空または全件 defer 化（OUT_OF_SCOPE / TECHNICAL_BLOCKER 判定済み）されているかで判定する。`last_two_rounds_clean` は末尾 2 round がいずれも `is_clean()` で真。
+`is_clean()` は ReviewRound の `findings` が空または全件 defer 化（OUT_OF_SCOPE / TECHNICAL_BLOCKER 判定済み）されているかで判定する。`last_round_clean` は末尾 round が `is_clean()` で真。
+
+> **規則変更履歴**: v2.5.2 Unit 001（#635）で 5R 化導入時に完了条件として「最後 2 round 連続 clean」を採用したが、Round 1 指摘 → Round 2 全 resolve でも Round 3 を強制する冗長性があったため、v2.5.4 Unit 005 で `last_round_clean`（直近 round が clean なら完了）に緩和した。`5R 上限` / `defer 自動 Issue 起票` / `千日手検出` / `Round 4+ 新領域 backlog 化` などの v2.5.2 導入要素は維持されている。
 
 **スキップ理由バリデーション**（`skip_reason_required=true` 時）: 空文字不可、禁止パターン（「パッチだから」「小さい変更だから」「時間がないから」等）のみは拒否、履歴に記録。
 

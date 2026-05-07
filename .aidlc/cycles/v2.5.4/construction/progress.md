@@ -8,7 +8,7 @@
 | 002 | worktree 環境立ち上げ時のメインリポジトリ health check 追加 | 未着手（hotfix のため一時中断、Unit 005 完了後に再開） | - | - | #657 |
 | 003 | 設計レビュー 5R 到達時の千日手・議論密度ガード強化 | 未着手 | - | - | #658 |
 | 004 | helper の zsh source 互換性保証 | 未着手 | - | - | #659 |
-| 005 | AI レビュー完了条件を `last_round_clean` に緩和（hotfix） | 未着手 | - | - | （内部 hotfix） |
+| 005 | AI レビュー完了条件を `last_round_clean` に緩和（hotfix） | 完了 | 2026-05-07 | 2026-05-07 | （内部 hotfix） |
 
 ## 推奨実行順（Unit 005 hotfix 追加後の更新）
 
