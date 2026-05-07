@@ -7,7 +7,7 @@
 | 001 | 振り返り対話強制ガード強化（Operations §1） | 完了 | 完了 | 完了 | 2026-05-07 |
 | 002 | write-history skill にモード追加（unit-complete-short-note + operations-round） | 完了 | 完了 | 完了 | 2026-05-07 |
 | 003 | 事実テーブル先抽出ステップ + 推定値検出ガード（#634 絞込） | 完了 | 完了 | 完了 | 2026-05-07 |
-| 004 | predecessor-issue.sh の retrospective-issue.sh 横依存解消（用途別 helper 独立化） | 未着手 | 未着手 | 未着手 | - |
+| 004 | predecessor-issue.sh の retrospective-issue.sh 横依存解消（用途別 helper 独立化） | 完了 | 完了 | 完了 | 2026-05-07 |
 
 ## 依存関係
 
@@ -30,7 +30,7 @@
 
 ## 現在のステップ
 
-Unit 001 / Unit 002 完了（リモート push 済み）。次は Unit 003（事実テーブル先抽出ステップ + 推定値検出ガード）または Unit 004（predecessor-issue.sh 横依存解消）に着手予定。Unit 003 と Unit 004 は論理依存なしで並列実装可能。
+**全 Unit 完了**（Unit 001 / 002 / 003 / 004 すべて完了）。Construction Phase 終了。次は Operations Phase へ遷移（`/aidlc operations` で開始）。
 
 ### 次セッション再開時の必読情報
 

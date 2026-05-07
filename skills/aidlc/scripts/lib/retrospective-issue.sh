@@ -44,11 +44,22 @@ __RETRO_ISSUE_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 
 # shellcheck source=aidlc-paths.sh
 source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-paths.sh"
 
+# Unit 004 (#643): 横依存解消のため独立 helper 群を source（順序固定）
+# shellcheck source=aidlc-validate.sh
+source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-validate.sh"
+# shellcheck source=aidlc-gh.sh
+source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-gh.sh"
+# shellcheck source=aidlc-spool.sh
+source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-spool.sh"
+
 # ─── 命名規約定数 ─────────
+# Unit 004 (#643): aidlc-spool.sh で先に readonly される可能性があるため、未定義時のみ readonly する
 readonly RETROSPECTIVE_LABEL="retrospective"
 readonly MIRROR_STATE_LABEL_PREFIX="mirror-state:"
 readonly RETROSPECTIVE_ISSUE_TITLE_TEMPLATE="Retrospective: %s"
-readonly RETROSPECTIVE_SPOOL_HEADER="<!-- retrospective-spool v1 -->"
+if [[ -z "${RETROSPECTIVE_SPOOL_HEADER:-}" ]]; then
+    readonly RETROSPECTIVE_SPOOL_HEADER="<!-- retrospective-spool v1 -->"
+fi
 readonly RETROSPECTIVE_SPOOL_VERSION="1"
 readonly MIRROR_REPO="ikeisuke/ai-dlc-starter-kit"
 
@@ -98,24 +109,7 @@ __retro_iso8601() {
     date -u +"%Y-%m-%dT%H:%M:%SZ"
 }
 
-# cycle バリデーション（path traversal 防御 / 文字種制限）
-__retro_validate_cycle() {
-    # $1: cycle
-    # 戻り値: 0=valid, 2=invalid
-    local cycle="$1"
-    if [[ -z "$cycle" ]]; then
-        __retro_diag error cycle_invalid "cycle is empty"
-        return 2
-    fi
-    if [[ ! "$cycle" =~ ^[A-Za-z0-9._-]+$ ]]; then
-        __retro_diag error cycle_invalid "cycle contains forbidden chars: $cycle"
-        return 2
-    fi
-    case "$cycle" in
-        .|..|*/*|*\\*) __retro_diag error cycle_invalid "cycle is reserved or contains separator: $cycle"; return 2 ;;
-    esac
-    return 0
-}
+# cycle バリデーション関数（__retro_validate_cycle）は Unit 004 (#643) で aidlc-validate.sh に移管済
 
 # ─── 排他ロックヘルパ（mkdir ベース、macOS / Linux 両対応） ─────────
 __retro_lock_acquire() {
@@ -608,30 +602,7 @@ _spool_append() {
     return $rc
 }
 
-_spool_extract_entries() {
-    # $1: spool_path
-    # 出力: NDJSON 各行を stdout
-    local spool_path="$1"
-    if [[ ! -f "$spool_path" ]]; then
-        __retro_diag error spool_not_found "$spool_path"
-        return 2
-    fi
-
-    # ヘッダ確認
-    local first_line
-    first_line=$(head -n 1 "$spool_path")
-    if [[ "$first_line" != "$RETROSPECTIVE_SPOOL_HEADER" ]]; then
-        __retro_diag error spool_header_missing "$spool_path"
-        return 2
-    fi
-
-    awk '
-    BEGIN { in_block = 0 }
-    /^```ndjson[[:space:]]*$/ && in_block == 0 { in_block = 1; next }
-    /^```[[:space:]]*$/ && in_block == 1 { in_block = 0; next }
-    in_block == 1 && length($0) > 0 { print }
-    ' "$spool_path"
-}
+# NDJSON spool パース関数（_spool_extract_entries）は Unit 004 (#643) で aidlc-spool.sh に移管済
 
 _spool_remove_by_id() {
     # $1: spool_path
@@ -683,18 +654,7 @@ _spool_remove_by_id() {
 
 # ─── gh I/O ─────────
 
-__retro_gh_status() {
-    # 出力: available | unavailable | not-installed
-    if ! command -v gh >/dev/null 2>&1; then
-        printf 'not-installed\n'
-        return 0
-    fi
-    if gh auth status >/dev/null 2>&1; then
-        printf 'available\n'
-    else
-        printf 'unavailable\n'
-    fi
-}
+# gh CLI 可用性チェック関数（__retro_gh_status）は Unit 004 (#643) で aidlc-gh.sh に移管済
 
 __retro_gh_owner_repo_local() {
     # 出力: OWNER/REPO（git remote get-url origin から抽出）
