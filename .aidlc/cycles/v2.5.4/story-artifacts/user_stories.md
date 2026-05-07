@@ -79,3 +79,37 @@ v2.5.3 リリース直後、`predecessor-issue.sh` を zsh interactive shell で
 - `__PRED_SCRIPT_DIR` の解決が `BASH_SOURCE` 単独依存ではなく、zsh でも動作する代替経路（例: `${(%):-%N}` などの zsh 互換構文 fallback）を持つ
 - 全 helper 6 ファイル（`aidlc-paths.sh` / `aidlc-validate.sh` / `aidlc-gh.sh` / `aidlc-spool.sh` / `predecessor-issue.sh` / `retrospective-issue.sh`）に zsh source 動作確認テスト（**6 件以上**、source による SCRIPT_DIR 解決成否を確認するテスト）が追加される
 - patch スコープ保護: 修正対象は `predecessor-issue.sh` の 1 ファイル限定。他 5 ファイルはテスト追加のみで構造変更しない
+
+---
+
+## ストーリー 5: AI レビュー完了条件の `last_round_clean` 化（v2.5.4 内部 hotfix）
+
+**As a** AI-DLC で Construction Phase の AI レビューを実行する AI エージェント / 開発者
+**I want** Round 1 で指摘 → Round 2 で全 resolve した場合に、追加の Round 3 を強制されず 2R で完了できること
+**So that** 修正が完了したレビューに不要なラウンドを重ねず、Construction Phase の所要時間を 1〜2 round 分短縮できる
+
+### 背景
+
+v2.5.2 Unit 001（#635）で導入された 5R 化の「完了条件の判定単一仕様」に `last_two_rounds_clean`（最後 2 round 連続 clean）規則が含まれている。これにより:
+
+- Round 1 で指摘あり → Round 2 で全部修正して clean → Round 3 を強制（修正の妥当性検証目的）
+
+しかし実運用上は以下の不都合がある:
+
+- 1 round 余分にかかる（Codex セッション継続のため指摘 0 になっても通信・処理コストが残る）
+- 同一エージェントが同一文脈で再評価するだけのため、独立した検証としての意義が弱い
+- 修正自体は指摘内容に応じて行われるため、re-review なしでも修正の妥当性は担保される
+
+v2.5.4 Unit 002 計画レビュー時にユーザーから「2 round clean 要求がよろしくない」との指摘があり、本サイクル内のホットフィックスとして対応する（Issue 起票なし、内部運用改善）。
+
+### 受け入れ基準
+
+- `steps/common/review-flow.md` の「完了条件の判定単一仕様」セクションが `last_round_clean`（直近 round が clean なら完了）ベースに書き換えられている
+- `last_two_rounds_clean` の文字列が `steps/common/review-flow.md` から **完全に消える**（`grep -c "last_two_rounds_clean" steps/common/review-flow.md` が **0**）
+- 完了条件の規則表現が以下のいずれかの形式で表現されている（実装者の選択）:
+  - 形式 A: `last_round_clean` を主規則とし、`1R clean 特例`は自然な帰結として一行記述に縮約
+  - 形式 B: `1R clean 特例`を独立規則として残し、`2R 以上 + last_round_clean` を別規則として明記（既存スタイル踏襲）
+- どちらの形式でも、**同一 round が二重に判定される矛盾がない**こと（テスト: Round 1 clean / Round 2 clean / Round 5 unresolved の 3 ケースで判定結果が一意）
+- `5R 上限`・`defer 自動 Issue 起票`・`千日手検出（5R 中 3R 連続同種）`・`Round 4+ 新領域 backlog 化` は維持（grep で各キーワードが既存と同等以上の件数で残ること）
+- `templates/review_summary_template.md` の反復回数表記補注（`v2.5.2 以降の上限値・完了条件`）が **新ルール（`last_round_clean`）と整合**するよう更新されている
+- 本 Unit 完了後、本サイクル後続 Unit（002 / 003 / 004）の AI レビューに **新ルールが即時適用**されることを Unit 005 の履歴に記録（適用順序の証跡）
