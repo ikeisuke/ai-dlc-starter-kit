@@ -109,6 +109,34 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 
 各 Problem / Try には次の §1.2「主因切り分け」を必ず含める。
 
+<!-- guidance:id=unit003-fact-table-extraction -->
+
+#### 1.1.5 事実テーブル先抽出ステップ【Unit 003 / #634 / 必須・KPT 後・主因切り分け前】
+
+§1.1 KPT 記入後、§1.2 主因切り分けの前に、推測値混入を予防するため以下の 3 source から事実を構造化抽出する。本ステップは推測値混入バグの構造的予防（user_stories.md ストーリー 3 / Intent v2.5.3）が目的であり、自動抽出ツール化は OUT_OF_SCOPE（#652）。
+
+##### 読み込み対象 source（最低 3 種別必須）
+
+- (a) `.aidlc/cycles/{{CYCLE}}/inception/decisions.md` — Decision Record（DR-NNN）件数・経緯
+- (b) `.aidlc/cycles/{{CYCLE}}/construction/units/*-review-summary.md` — review round 数・指摘件数・defer 件数
+- (c) `.aidlc/cycles/{{CYCLE}}/history/*.md` — 時系列イベント（コミット / Phase 遷移 / レビュー完了等）
+
+各 source を Read し、事実項目を以下の markdown 表形式で構造化する。値は推測ではなく**実際に Read した結果のみ**を記載する。
+
+##### 事実テーブル形式
+
+| 項目 | 値 | 出典 |
+|------|-----|------|
+| DR 件数 | （Read 結果からの実数） | `inception/decisions.md` |
+| review round 数（合計） | （集計値） | `construction/units/*-review-summary.md` |
+| 指摘件数（合計） | （集計値） | 同上 |
+| defer 件数 | （集計値） | 同上 |
+| 時系列イベント（主要なもの） | （タイムスタンプ + 概要を 5 件程度） | `history/*.md` |
+
+事実テーブル抽出後、§1.2 主因切り分けに進む。Try / mirror 候補本文の起草時には本テーブルの値のみを根拠として参照すること（推測値の導入禁止）。事実テーブル外の値が必要な場合は、改めて該当 source を Read する。
+
+> **連携**: §1.5 Step 4 の AskUserQuestion 直後、AI エージェントが `retrospective_dialog_token_record_response` を呼び出す前に、事実テーブルの内容と一致しない数値が Issue 本文に混入していないかを確認する。`steps/common/review-flow.md` の「推定値検出ガード」が flag した場合は再対話で修正する。
+
 #### 1.2 主因切り分け【必須・3 分類】
 
 各 Problem / Try について、以下の 3 分類のいずれかを選択する:
