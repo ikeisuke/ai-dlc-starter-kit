@@ -7,6 +7,17 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.3] - 2026-05-07
+
+### Added
+
+- 振り返り対話強制ガード強化（Operations §1）: `skills/aidlc/steps/operations/04-completion.md` §1 冒頭に「対話必須」明記を追加し、`feedback_mode=silent` でも KPT 判断は対話必須である旨の補足を §1.0 テーブルに併記。`gh issue create` / `gh api PATCH` 直前への AskUserQuestion 必須化記述、SKILL.md「AskUserQuestion 使用ルール」テーブルへの「振り返り内容の決定」種別追加、ドライラン用 fixture (`construction/fixtures/operations-mirror-autodialog.md`) 作成により、auto mode 動作中の独断起票を構造的に防止（#647 / Unit 001）
+- write-history skill にモード追加（`unit-complete-short-note` / `operations-round`）: `skills/aidlc/scripts/write-history.sh` に Unit 完了時 short note モード（`--cycle X --unit N --short-note "<3-5 行>"`）と Operations PR マージ前レビュー round モード（`--cycle X --round R --findings F --critical C --high H --medium M --low L --resolved-count X --deferred-count Y`）を追加。`history/construction_unitNN.md` への「## 補足（short note）」セクション追記と、`history/operations.md` への round R エントリ（指摘件数・重要度内訳・対応判定の集計テーブル）追記を構造化記録できるようにし、v2.5.1 で発生した履歴漏れの再発を防止。post-merge ガード（exit 3）も新モードで有効、`--mode` 未指定の従来呼び出しは完全互換（#637 / Unit 002）
+- 事実テーブル先抽出ステップ + 推定値検出ガード: `skills/aidlc/steps/operations/04-completion.md` §1.x（§1.1 KPT テンプレと §1.2 主因切り分けの間）に「事実テーブル先抽出ステップ」を追加し、3 source（`decisions.md` / `construction/units/*-review-summary.md` / `history/*.md`）から DR 件数・review round 数・指摘件数・defer 件数・時系列イベントを構造化抽出。`skills/aidlc/steps/common/review-flow.md` に推定値検出ガードを追加し、検出マーカー（`約` / `およそ` / `approximately` / `推定` 等）と数値隣接判定 + 根拠リンク併記時の例外を許容例 / 非許容例併記で明文化、振り返り作業時の推測値混入を構造的に予防（#634 絞込 / Unit 003 / OUT_OF_SCOPE 切り出し: #652）
+- `predecessor-issue.sh` の `retrospective-issue.sh` 横依存解消: 借用関数（`__retro_validate_cycle` / `__retro_gh_status` / `_spool_extract_entries`）を責務別の独立 helper（`skills/aidlc/scripts/lib/aidlc-validate.sh` / `aidlc-gh.sh` / `aidlc-spool.sh`）に分離し、両ファイルがそれぞれ独立して新 helper を source する構造に再構成。多重 source ガード（`__AIDLC_<NAME>_SH_LOADED=1`）を新 helper 群でも踏襲し、CLI 引数 / exit code / stderr 文言の互換性を維持。v2.5.2 サイクルの `predecessor_resolve_issue` 出力（4 candidates / `milestone_and_label` resolution_path）と回帰一致を確認（#643 / Unit 004）
+
+---
+
 ## [2.5.2] - 2026-05-06
 
 ### Added

@@ -29,11 +29,34 @@ aidlcスキルの `scripts/write-history.sh` を実行して、AI-DLCの履歴�
 | `--content-file` | 片方必須 | 実行内容をファイルから読み込み。`--content` と排他 |
 | `--artifacts` | No | 成果物パス（複数回指定可能） |
 | `--operations-stage` | No | Operations Phase ステージ（`pre-merge` / `post-merge`）。`post-merge` は即拒否（exit 3）。未定義値は exit 1。省略時は従来動作（7.8 以降の未指定呼び出しは第二条件フォールバックで判定される）。Unit 002 / DR-001 |
+| `--mode` | No | 履歴エントリのモード（`base` / `unit-complete-short-note` / `operations-round`、デフォルト `base`）。Unit 002 / #637（v2.5.3） |
+| `--short-note` | `--mode unit-complete-short-note` 時必須 | Unit 完了 short note（3-5 行の自由記述） |
+| `--round` | `--mode operations-round` 時必須 | Operations round 番号（1-5 の整数 / user_stories.md ストーリー 2B 準拠） |
+| `--findings` | `--mode operations-round` 時必須 | 指摘総数（非負整数） |
+| `--critical` / `--high` / `--medium` / `--low` | `--mode operations-round` 時必須 | 重要度別件数（各非負整数） |
+| `--resolved-count` / `--deferred-count` | `--mode operations-round` 時必須 | 修正対応件数 / defer 化件数（各非負整数） |
 | `--dry-run` | No | 追記せず、状態のみ表示 |
 
 `--content` と `--content-file` は排他。長文の場合は一時ファイルに書き出して `--content-file` を使用する。
 
 `--operations-stage` は Unit 002 で追加された Operations Phase の post-merge ガード用引数。7.8〜7.13 以降の誤呼び出しは本引数または第二条件（`completion_gate_ready=true` AND `gh pr view` で `state=MERGED ∧ mergedAt!=null ∧ number 一致`）によって拒否される。
+
+### `--mode` モード仕様（v2.5.3 / Unit 002 / #637）
+
+| モード | 動作 | 必須追加引数 |
+|--------|------|-------------|
+| `base`（デフォルト） | 既存動作（完全互換）。base エントリのみ追記 | なし |
+| `unit-complete-short-note` | base 追記後、`history/construction_unitNN.md` 末尾に「## 補足（short note）」セクションを追加 | `--short-note` |
+| `operations-round` | base 追記後、`history/operations.md` 末尾に「## Round R: timestamp」見出し + 指摘集計テーブルを追加 | `--round` / `--findings` / `--critical` / `--high` / `--medium` / `--low` / `--resolved-count` / `--deferred-count`（すべて非負整数） |
+
+エラーコード:
+- `error:invalid-mode`: `--mode` 値が列挙値以外
+- `error:invalid-mode-phase-combination`: mode と phase の組み合わせが不正（`unit-complete-short-note` は construction、`operations-round` は operations のみ）
+- `error:missing-short-note`: `--mode unit-complete-short-note` で `--short-note` 欠落
+- `error:missing-round-args`: `--mode operations-round` で必須引数のいずれか欠落
+- `error:invalid-numeric-arg`: `--round` が 1-5 の整数以外 / count が非負整数以外
+
+post-merge ガード（`--operations-stage post-merge`）は新モードでも有効（exit 3）。
 
 ## 出力
 

@@ -26,18 +26,19 @@ if [[ "${__AIDLC_PREDECESSOR_ISSUE_SH_LOADED:-}" == "1" ]]; then
 fi
 __AIDLC_PREDECESSOR_ISSUE_SH_LOADED=1
 
-# SCRIPT_DIR は無条件初期化（retrospective-issue.sh が事前 source 済でも read-config.sh パス解決に使用）
+# SCRIPT_DIR は無条件初期化（read-config.sh パス解決に使用）
 __PRED_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
 
-# Unit 002 ライブラリを source（`__retro_validate_cycle` / `__retro_gh_status` / `_spool_extract_entries` 借用）
-if [[ -z "${__AIDLC_RETROSPECTIVE_ISSUE_SH_LOADED:-}" ]]; then
-    # shellcheck source=/dev/null
-    source "${__PRED_SCRIPT_DIR}/retrospective-issue.sh"
-fi
-
-# Unit 003 (#638): aidlc-paths.sh helper を明示 source（多重 source ガードにより副作用なし）
+# Unit 004 (#643): retrospective-issue.sh への直接 source を撤去し、独立 helper 群を直接 source
+# 順序固定: aidlc-paths → aidlc-validate → aidlc-gh → aidlc-spool（全 helper 多重 source ガード適用）
 # shellcheck source=aidlc-paths.sh
 source "${__PRED_SCRIPT_DIR}/aidlc-paths.sh"
+# shellcheck source=aidlc-validate.sh
+source "${__PRED_SCRIPT_DIR}/aidlc-validate.sh"
+# shellcheck source=aidlc-gh.sh
+source "${__PRED_SCRIPT_DIR}/aidlc-gh.sh"
+# shellcheck source=aidlc-spool.sh
+source "${__PRED_SCRIPT_DIR}/aidlc-spool.sh"
 
 # ─── 診断出力ヘルパ ─────────
 __pred_diag() {

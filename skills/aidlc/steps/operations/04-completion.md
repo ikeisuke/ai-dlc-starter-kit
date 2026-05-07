@@ -45,7 +45,59 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 
 `silent` または `mirror` を選択した場合、§1.1〜§1.6 を順次実施する。3 分岐（後述 §1.3）のいずれかを必ず選んで output を残す。
 
+> **`silent` でも KPT 判断は対話必須**: `feedback_mode=silent` は §1.5 Step 5 mirror フロー（upstream Issue 起票）をスキップするだけであり、§1.1 KPT テンプレ記入・§1.2 主因切り分け・§1.3 格納先選択といった**判断要素は対話必須**。AI エージェントの auto mode 動作下でも KPT 各観点・主因・格納先は AskUserQuestion で 1 項目ずつ確認すること（§1.0.5 対話必須ガード参照）。
+
 **前身**: v2.4.x 以前は §1「フィードバック収集」/ §2「分析と改善点洗い出し」の項目立てだけが存在し、テンプレ・格納先・write-history.sh ガードとの整合が未整理で暗黙スキップされる事象が多発していた（visitory v1.14.1 等）。v2.5.0 で本セクションに統合し、KPT + 主因切り分け + 3 分岐ガイド + opt-out スイッチを整備した（Issue #625 / Unit 007）。
+
+<!-- guidance:id=unit001-retro-dialog-required-guard -->
+
+#### 1.0.5 対話必須ガード【Unit 001 / #647 / 必読】
+
+> **重要**: 振り返りは判断要件を含むため、AI エージェントの auto mode（Claude Code 等の自動実行モード）動作に**関わらず**、必ずユーザー対話を経て進めること。本節は文書ガード（規範・手順）と実行時ガード（`retrospective-issue.sh` 内 `retrospective_dialog_token_verify`）の二段防御の手順側 SoT を定義する。
+
+**規範（SoT）**: AskUserQuestion 使用ルールの正本は `skills/aidlc/SKILL.md`「AskUserQuestion 使用ルール」節（「ユーザー選択（振り返り内容の決定）」種別）。本節は同 SoT を Operations Phase §1 に適用した手順記述である。
+
+##### 抽象操作レベルの禁止対象
+
+以下の抽象操作は AskUserQuestion 応答（「対話確認トークン」発行）を経ずに実行してはならない:
+
+| 抽象操作 | 説明 |
+|---------|------|
+| `retrospective publish` | 振り返り内容を外部システム（GitHub Issue / API）に永続化する全ての副作用 |
+| `retrospective state mutation` | mirror_state ラベルや local 記録を含む振り返り状態の更新副作用 |
+| `dialog bypass` | AskUserQuestion 応答を経ずに上記 publish / state mutation を実行する経路 |
+
+##### 実装マッピング表（参考 / 構造変更時はここを更新）
+
+| 抽象操作 | 現行実装エントリポイント |
+|---------|-------------------------|
+| `retrospective publish` | `retrospective_issue_create` 関数経由の `gh issue create`（`skills/aidlc/scripts/lib/retrospective-issue.sh`） |
+| `retrospective state mutation` | `retrospective_update_hook` / `retrospective_prefill_hook` の Issue edit 経路（同上） |
+| `dialog bypass` | 本節の禁止事項に違反する全経路（実行時ガードで `retrospective_dialog_token_verify` が exit 4 でブロック） |
+
+実装が変更される場合は本表のみ更新し、抽象操作レベルの禁止事項は不変として残す。
+
+##### 禁止事項（抽象操作レベル）
+
+- `dialog bypass`: AskUserQuestion 応答を経ずに `retrospective publish` / `retrospective state mutation` を実行すること
+- KPT 各観点（Keep / Problem / Try）/ 主因切り分け / 格納先選択 / mirror 送信判断のすべてを AI エージェントが独断で決定すること
+- auto mode（Claude Code 等の自動実行モード）を理由とした AskUserQuestion 省略
+
+##### 必須事項
+
+- §1.1 KPT 各観点（Keep / Problem / Try）について 1 項目ずつ AskUserQuestion で確認
+- §1.2 主因切り分け（プロダクト固有 / AI-DLC Starter Kit 固有 / 両方に責任）について AskUserQuestion で確認
+- §1.3 格納先選択（マージ前 / マージ後 / 横断改善）について AskUserQuestion で確認
+- §1.5 Step 4 起票実行直前に「この内容で Issue を起票してよいか」を AskUserQuestion で確認 → 応答得た直後に `retrospective_dialog_token_record_response "$cycle" "$response"` を呼び出して**対話確認トークンを発行**する（実行時ガードへの引き継ぎ）
+- §1.5 Step 5-3 の既存 AskUserQuestion ループ（候補ごとの送信 / 送信しない / 保留）は引き続き必須
+
+##### 実行時ガードとの連携
+
+- 起票実行は `retrospective_issue_create` 関数を経由する。同関数は `gh issue create` 直前に `retrospective_dialog_token_verify "$cycle"` を呼び出し、対話確認トークン未発行 / 鮮度切れ / `denied` 応答 / I/O 異常時は exit 4 で起票をブロックする
+- 対話確認トークンの TTL は `AIDLC_RETRO_TOKEN_TTL_SECONDS=300`（環境変数で上書き可）
+- 文書ガードと実行時ガードの二段防御により、文書記述の見落とし / バイパス経路でも `gh issue create` 副作用は発生しない
+
+詳細仕様は `.aidlc/cycles/v2.5.3/design-artifacts/logical-designs/unit_001_retro_dialog_guard_logical_design.md` を参照。
 
 #### 1.1 KPT テンプレ（推奨フォーマット）
 
@@ -56,6 +108,34 @@ scripts/read-config.sh rules.retrospective.feedback_mode
 | Try | Problem への対策として次サイクル以降で試す施策 |
 
 各 Problem / Try には次の §1.2「主因切り分け」を必ず含める。
+
+<!-- guidance:id=unit003-fact-table-extraction -->
+
+#### 1.1.5 事実テーブル先抽出ステップ【Unit 003 / #634 / 必須・KPT 後・主因切り分け前】
+
+§1.1 KPT 記入後、§1.2 主因切り分けの前に、推測値混入を予防するため以下の 3 source から事実を構造化抽出する。本ステップは推測値混入バグの構造的予防（user_stories.md ストーリー 3 / Intent v2.5.3）が目的であり、自動抽出ツール化は OUT_OF_SCOPE（#652）。
+
+##### 読み込み対象 source（最低 3 種別必須）
+
+- (a) `.aidlc/cycles/{{CYCLE}}/inception/decisions.md` — Decision Record（DR-NNN）件数・経緯
+- (b) `.aidlc/cycles/{{CYCLE}}/construction/units/*-review-summary.md` — review round 数・指摘件数・defer 件数
+- (c) `.aidlc/cycles/{{CYCLE}}/history/*.md` — 時系列イベント（コミット / Phase 遷移 / レビュー完了等）
+
+各 source を Read し、事実項目を以下の markdown 表形式で構造化する。値は推測ではなく**実際に Read した結果のみ**を記載する。
+
+##### 事実テーブル形式
+
+| 項目 | 値 | 出典 |
+|------|-----|------|
+| DR 件数 | （Read 結果からの実数） | `inception/decisions.md` |
+| review round 数（合計） | （集計値） | `construction/units/*-review-summary.md` |
+| 指摘件数（合計） | （集計値） | 同上 |
+| defer 件数 | （集計値） | 同上 |
+| 時系列イベント（主要なもの） | （タイムスタンプ + 概要を 5 件程度） | `history/*.md` |
+
+事実テーブル抽出後、§1.2 主因切り分けに進む。Try / mirror 候補本文の起草時には本テーブルの値のみを根拠として参照すること（推測値の導入禁止）。事実テーブル外の値が必要な場合は、改めて該当 source を Read する。
+
+> **連携**: §1.5 Step 4 の AskUserQuestion 直後、AI エージェントが `retrospective_dialog_token_record_response` を呼び出す前に、事実テーブルの内容と一致しない数値が Issue 本文に混入していないかを確認する。`steps/common/review-flow.md` の「推定値検出ガード」が flag した場合は再対話で修正する。
 
 #### 1.2 主因切り分け【必須・3 分類】
 
@@ -176,6 +256,16 @@ retrospective_body_compose "$draft_yaml_path" "$kpt_md_path" "{{CYCLE}}" > "$bod
 
 ##### Step 4: Issue 起票
 
+> **対話必須ガード（Unit 001 / #647）**: §1.0.5 必須事項に従い、起票実行直前に AskUserQuestion で「この内容で Issue を起票してよいか」をユーザーに確認すること（auto mode 動作下でも省略禁止）。応答が `approved` の場合のみ次の `retrospective_dialog_token_record_response` 呼出に進む。応答が `denied` の場合は同関数に `denied` を渡す（実行時ガードが起票をブロックするため、起票実行を中止する明示的な意思表示として記録される）。
+>
+> ```bash
+> # AskUserQuestion 応答得た直後（response = "approved" or "denied"）
+> source skills/aidlc/scripts/lib/retrospective-issue.sh
+> retrospective_dialog_token_record_response "{{CYCLE}}" "$response"
+> ```
+>
+> `retrospective_issue_create` は内部で `retrospective_dialog_token_verify` を呼び出し、対話確認トークン未発行 / 鮮度切れ（TTL 300 秒）/ `denied` 応答 / I/O 異常時は exit 4（`reason=dialog-required`）で起票をブロックする。
+
 ```bash
 set +e
 AIDLC_RETRO_CURRENT_COUNT="$current_count" \
@@ -208,10 +298,15 @@ case "$rc" in
     2)
         echo "[エラー] retrospective_issue_create 引数 / fatal エラー" >&2
         ;;
+    4)
+        # Unit 001 (#647): 対話確認トークン検証失敗（業務拒否系 / I/O 異常系）
+        # 詳細 reason は stderr の error \t dialog_required \t token_* を参照
+        echo "[エラー] 対話必須ガード: 対話確認トークンの発行 / 検証に失敗したため起票をブロックしました。AskUserQuestion で起票実行可否を確認した上で再実行してください。" >&2
+        ;;
 esac
 ```
 
-`exit 1`（failed）でも §1.5 全体は中断せず、警告を表示して §1.6 へ進む（spool 経路で内容は永続化済み）。`exit 2`（fatal）の場合は §1.5 を中断する。
+`exit 1`（failed）でも §1.5 全体は中断せず、警告を表示して §1.6 へ進む（spool 経路で内容は永続化済み）。`exit 2`（fatal）の場合は §1.5 を中断する。`exit 4`（dialog-required / Unit 001 / #647）の場合は §1.0.5 対話必須ガードに従い AskUserQuestion で起票実行可否を再確認し、`retrospective_dialog_token_record_response` を再実行してから再起票する。
 
 ##### Step 5: Unit 003 update フック（起票成功時のみ）
 

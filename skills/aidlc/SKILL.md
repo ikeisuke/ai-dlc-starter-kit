@@ -91,12 +91,14 @@ AI-DLC環境が未セットアップです。
 |------|------|---------|---------------------|--------|
 | ゲート承認 | フェーズ/ステップの進行承認。ステップファイルで「セミオートゲート判定」と定義された選択（Unit自動選択、ステップスキップ等）を含む | セミオートゲート仕様に従う | `auto_approved` / `fallback` で判定 | 「この設計で進めてよろしいですか？」「計画を承認しますか？」「どのUnitから着手しますか？」（semi_auto時は自動選択） |
 | ユーザー選択 | ゲート承認に該当しない選択場面（ステップファイルで「セミオートゲート判定」と定義されていないもの） | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`） | 「マージ方法を選んでください」「force pushしてよろしいですか？」「設定保存確認（`branch_mode` / `draft_pr` / `merge_method`）」 |
+| ユーザー選択（振り返り内容の決定） | Operations Phase §1 振り返りでの KPT / 主因切り分け / 格納先選択 / mirror 送信判断 / 起票実行確認。AI エージェントの `auto mode`（Claude Code 等）動作に関わらず適用される（auto mode 適用外） | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`）。実行時ガード（対話確認トークン検証）と併用 | 「この Keep を振り返り Issue に含めますか？」「この主因切り分けで進めてよいですか？」「この内容で Issue を起票しますか？」 |
 | 情報収集 | ユーザーからの自由入力やコンテキスト提供が必要な場面 | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`） | 「今回取り組みたい内容は何ですか？」「追加コンテキストを教えてください」 |
 
 #### セミオートゲート仕様との関係
 
 - **ゲート承認のみ**がセミオートゲート仕様の対象。`automation_mode=semi_auto` 時にフォールバック条件に該当しなければ `auto_approved` となる
 - **ユーザー選択**と**情報収集**は `automation_mode` に関わらず常に `AskUserQuestion` ツールを使用する。テキスト出力のみで代替してはならない
+- 「ユーザー選択（振り返り内容の決定）」は AI エージェントの auto mode（Claude Code 等）動作に**関わらず**適用される。auto mode を理由とした AskUserQuestion 省略は禁止。Operations Phase §1 における具体的手順は `steps/operations/04-completion.md` §1.0.5 を参照
 
 #### 推奨・提案応答確保ルール
 

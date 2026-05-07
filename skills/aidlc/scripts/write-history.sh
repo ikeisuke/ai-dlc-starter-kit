@@ -66,6 +66,18 @@ ARTIFACTS=()
 DRY_RUN=false
 OPERATIONS_STAGE=""
 
+# Unit 002 (#637): mode 関連グローバル
+MODE="base"
+SHORT_NOTE=""
+ROUND=""
+FINDINGS=""
+SEVERITY_CRITICAL=""
+SEVERITY_HIGH=""
+SEVERITY_MEDIUM=""
+SEVERITY_LOW=""
+RESOLVED_COUNT=""
+DEFERRED_COUNT=""
+
 # ガード判定用のグローバル（main が事前取得、evaluate_post_merge_guard が参照）
 GUARD_COMPLETION_GATE_READY=""
 GUARD_PR_NUMBER_FROM_PROGRESS=""
@@ -95,6 +107,16 @@ OPTIONS:
   --operations-stage <S>  Operations Phase のステージ（pre-merge|post-merge、省略可）
                           post-merge は即拒否（exit 3）
                           未定義値は引数不正（exit 1）
+  --mode <M>              履歴エントリのモード（base|unit-complete-short-note|operations-round、デフォルト base）
+                          base: 既存動作（完全互換）
+                          unit-complete-short-note: --short-note を必須化、補足セクションを追記
+                          operations-round: --round / --findings / --critical / --high / --medium / --low / --resolved-count / --deferred-count を必須化、round 集計テーブルを追記
+  --short-note <NOTE>     Unit 完了 short note（--mode unit-complete-short-note 時必須）
+  --round <N>             Operations round 番号（--mode operations-round 時必須、非負整数）
+  --findings <N>          指摘総数（--mode operations-round 時必須、非負整数）
+  --critical / --high / --medium / --low <N> 重要度別件数（--mode operations-round 時必須、各非負整数）
+  --resolved-count <N>    修正対応件数（--mode operations-round 時必須、非負整数）
+  --deferred-count <N>    defer 化件数（--mode operations-round 時必須、非負整数）
   -h, --help              このヘルプを表示
   --dry-run               ファイル追記せず、状態のみ表示
 
@@ -584,6 +606,90 @@ main() {
                 OPERATIONS_STAGE="$2"
                 shift 2
                 ;;
+            --mode)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-mode-value" "--mode requires a value"
+                    exit 1
+                fi
+                if ! validate_write_history_mode "$2"; then
+                    emit_error "invalid-mode" "Invalid --mode value. Must be base, unit-complete-short-note, or operations-round"
+                    exit 1
+                fi
+                MODE="$2"
+                shift 2
+                ;;
+            --short-note)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-short-note-value" "--short-note requires a value"
+                    exit 1
+                fi
+                SHORT_NOTE="$2"
+                shift 2
+                ;;
+            --round)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-round-value" "--round requires a value"
+                    exit 1
+                fi
+                ROUND="$2"
+                shift 2
+                ;;
+            --findings)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-findings-value" "--findings requires a value"
+                    exit 1
+                fi
+                FINDINGS="$2"
+                shift 2
+                ;;
+            --critical)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-critical-value" "--critical requires a value"
+                    exit 1
+                fi
+                SEVERITY_CRITICAL="$2"
+                shift 2
+                ;;
+            --high)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-high-value" "--high requires a value"
+                    exit 1
+                fi
+                SEVERITY_HIGH="$2"
+                shift 2
+                ;;
+            --medium)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-medium-value" "--medium requires a value"
+                    exit 1
+                fi
+                SEVERITY_MEDIUM="$2"
+                shift 2
+                ;;
+            --low)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-low-value" "--low requires a value"
+                    exit 1
+                fi
+                SEVERITY_LOW="$2"
+                shift 2
+                ;;
+            --resolved-count)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-resolved-count-value" "--resolved-count requires a value"
+                    exit 1
+                fi
+                RESOLVED_COUNT="$2"
+                shift 2
+                ;;
+            --deferred-count)
+                if [[ -z "${2:-}" ]]; then
+                    emit_error "missing-deferred-count-value" "--deferred-count requires a value"
+                    exit 1
+                fi
+                DEFERRED_COUNT="$2"
+                shift 2
+                ;;
             -*)
                 emit_error "unknown-option" "Unknown option: $1"
                 exit 1
@@ -665,6 +771,63 @@ main() {
             exit 1
         fi
     fi
+
+    # Unit 002 (#637): mode × phase 組み合わせ制約（論理設計準拠、コードレビュー Round 1 指摘 #1 反映）
+    case "$MODE" in
+        unit-complete-short-note)
+            if [[ "$PHASE" != "construction" ]]; then
+                emit_error "invalid-mode-phase-combination" "--mode unit-complete-short-note requires --phase construction (got: $PHASE)"
+                exit 1
+            fi
+            ;;
+        operations-round)
+            if [[ "$PHASE" != "operations" ]]; then
+                emit_error "invalid-mode-phase-combination" "--mode operations-round requires --phase operations (got: $PHASE)"
+                exit 1
+            fi
+            ;;
+    esac
+
+    # Unit 002 (#637): mode 別必須引数バリデーション
+    case "$MODE" in
+        base)
+            : # 追加引数なし
+            ;;
+        unit-complete-short-note)
+            if [[ -z "$SHORT_NOTE" ]]; then
+                emit_error "missing-short-note" "--mode unit-complete-short-note requires --short-note"
+                exit 1
+            fi
+            ;;
+        operations-round)
+            local missing=()
+            [[ -z "$ROUND" ]] && missing+=("--round")
+            [[ -z "$FINDINGS" ]] && missing+=("--findings")
+            [[ -z "$SEVERITY_CRITICAL" ]] && missing+=("--critical")
+            [[ -z "$SEVERITY_HIGH" ]] && missing+=("--high")
+            [[ -z "$SEVERITY_MEDIUM" ]] && missing+=("--medium")
+            [[ -z "$SEVERITY_LOW" ]] && missing+=("--low")
+            [[ -z "$RESOLVED_COUNT" ]] && missing+=("--resolved-count")
+            [[ -z "$DEFERRED_COUNT" ]] && missing+=("--deferred-count")
+            if [[ ${#missing[@]} -gt 0 ]]; then
+                emit_error "missing-round-args" "--mode operations-round requires: ${missing[*]}"
+                exit 1
+            fi
+            # round は 1-5 の整数のみ許可（user_stories.md ストーリー 2B 受け入れ基準準拠）
+            if ! validate_round_number "$ROUND"; then
+                emit_error "invalid-numeric-arg" "--round must be an integer in 1-5 (got: $ROUND)"
+                exit 1
+            fi
+            # count 系は非負整数
+            local n
+            for n in "$FINDINGS" "$SEVERITY_CRITICAL" "$SEVERITY_HIGH" "$SEVERITY_MEDIUM" "$SEVERITY_LOW" "$RESOLVED_COUNT" "$DEFERRED_COUNT"; do
+                if ! validate_non_negative_int "$n"; then
+                    emit_error "invalid-numeric-arg" "count args must be non-negative integers (got: $n)"
+                    exit 1
+                fi
+            done
+            ;;
+    esac
 
     # ============================================================
     # Operations Phase post-merge ガード判定（Unit 002 / DR-001）
@@ -773,6 +936,38 @@ main() {
         emit_error "failed-append-file" "Failed to append to file: $filepath"
         exit 2
     fi
+
+    # Unit 002 (#637): mode 固有の追加追記
+    case "$MODE" in
+        base)
+            : # 追加処理なし
+            ;;
+        unit-complete-short-note)
+            local short_note_block
+            short_note_block=$(printf '\n## 補足（short note）\n\n%s\n' "$SHORT_NOTE")
+            if ! printf '%s' "$short_note_block" >> "$filepath" 2>/dev/null; then
+                echo "history:${filepath}:error"
+                emit_error "failed-append-mode-section" "Failed to append short-note section: $filepath"
+                exit 2
+            fi
+            ;;
+        operations-round)
+            # SoT (user_stories.md ストーリー 2B 技術的考慮事項) に従い "YYYY-MM-DD HH:MM:SS" 形式
+            local round_timestamp
+            round_timestamp=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null) || true
+            if [[ -z "$round_timestamp" ]]; then
+                round_timestamp="1970-01-01 00:00:00"
+            fi
+            local round_block
+            round_block=$(printf '\n## Round %s: %s\n\n| 項目 | 値 |\n|------|-----|\n| 指摘総数 | %s |\n| 重要度: critical | %s |\n| 重要度: high | %s |\n| 重要度: medium | %s |\n| 重要度: low | %s |\n| 修正対応 | %s |\n| defer 化 | %s |\n' \
+                "$ROUND" "$round_timestamp" "$FINDINGS" "$SEVERITY_CRITICAL" "$SEVERITY_HIGH" "$SEVERITY_MEDIUM" "$SEVERITY_LOW" "$RESOLVED_COUNT" "$DEFERRED_COUNT")
+            if ! printf '%s' "$round_block" >> "$filepath" 2>/dev/null; then
+                echo "history:${filepath}:error"
+                emit_error "failed-append-mode-section" "Failed to append operations-round section: $filepath"
+                exit 2
+            fi
+            ;;
+    esac
 
     # 成功出力
     if [[ "$is_new_file" == "true" ]]; then
