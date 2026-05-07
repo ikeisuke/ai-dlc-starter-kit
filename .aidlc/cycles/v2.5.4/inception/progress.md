@@ -10,10 +10,11 @@
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-05-07 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-05-07 |
 | 6. Construction用progress.md作成 | 完了 | construction/progress.md | 2026-05-07 |
+| 7. バックトラック追加: Unit 005 hotfix (review-flow last_round_clean) | 完了 | requirements/intent.md / story-artifacts/user_stories.md / story-artifacts/units/005-*.md | 2026-05-07 |
 
 ## 現在のステップ
 
-Inception Phase 完了。Construction Phase へ遷移可能。
+Inception Phase 完了（Unit 005 hotfix バックトラック含む）。Construction Phase へ遷移可能。
 
 ## 完了済みステップ
 
@@ -23,6 +24,7 @@ Inception Phase 完了。Construction Phase へ遷移可能。
 - ステップ4: Unit定義 (4 件: #656 / #657 / #658 / zsh source 互換性)
 - ステップ5: PRFAQ作成
 - ステップ6: Construction用progress.md作成
+- ステップ7: バックトラック追加 (Unit 005 hotfix) — Intent / Story 5 / Unit 005 定義追加。Codex review Round 1 で 3 件指摘 (中1/低2、パス整合性) → Round 2 で 0 件、ユーザー承認により last_round_clean 相当で完了扱い
 
 ## 次回実行時の指示
 
