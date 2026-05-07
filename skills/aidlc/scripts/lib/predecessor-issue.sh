@@ -27,7 +27,17 @@ fi
 __AIDLC_PREDECESSOR_ISSUE_SH_LOADED=1
 
 # SCRIPT_DIR は無条件初期化（read-config.sh パス解決に使用）
-__PRED_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+# Unit 004 (#659): zsh interactive shell からの `source` 経路でも SCRIPT_DIR を解決できるよう、
+# ZSH_VERSION で shell 判定し zsh 用に ${(%):-%N} を使用する（bash 経路は既存ロジック維持）。
+# ${(%):-%N} は zsh パラメータ展開（プロンプト展開）で source されたファイルパスを返す。
+# bash パーサで ${(%):-%N} を含む式を直接評価するとエラーとなるため、shell 判定で完全に独立したブロックに分岐する。
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+    # shellcheck disable=SC1083,SC2296
+    # zsh パラメータ展開（${(%):-%N}）は shellcheck（bash 前提）で警告となるが、ZSH_VERSION 判定下でのみ評価されるため安全
+    __PRED_SCRIPT_DIR=$(cd -- "$(dirname -- "${(%):-%N}")" >/dev/null 2>&1 && pwd)
+else
+    __PRED_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+fi
 
 # Unit 004 (#643): retrospective-issue.sh への直接 source を撤去し、独立 helper 群を直接 source
 # 順序固定: aidlc-paths → aidlc-validate → aidlc-gh → aidlc-spool（全 helper 多重 source ガード適用）
