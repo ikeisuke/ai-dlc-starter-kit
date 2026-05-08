@@ -441,7 +441,11 @@ cmd_merge() {
         echo "pr:${pr_number}:auto-merge-set:${merge_method}"
         return 0
     else
-        if echo "$auto_error" | grep -qi "auto-merge is not allowed\|not enabled\|auto_merge"; then
+        # 文言バリアント (Unit 001 / #665):
+        #   - auto[- ]merge is not allowed: 半角スペース型 (#665 観測) と既存ハイフン型を統合
+        #   - enablePullRequestAutoMerge:   GraphQL ミューテーション名 (gh CLI が GraphQL レスポンスをそのまま転送するケース)
+        #   - not enabled / auto_merge:     既存後方互換パターン (削除・絞り込みは Intent OUT_OF_SCOPE「全エラーパターン網羅再設計」相当のため変更しない)
+        if echo "$auto_error" | grep -qiE "auto[- ]merge is not allowed|enablePullRequestAutoMerge|not enabled|auto_merge"; then
             echo "pr:${pr_number}:error:auto-merge-not-enabled"
         elif echo "$auto_error" | grep -qi "permission\|forbidden\|403"; then
             echo "pr:${pr_number}:error:permission-denied"
