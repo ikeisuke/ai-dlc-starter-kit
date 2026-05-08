@@ -594,6 +594,34 @@ AIが探索結果のパスを使用して以下を実行する:
    - `version_tag = false`（デフォルト）: このステップをスキップ
    - `version_tag = true`: 以下を実行
 
+   **3.1 リモート CI 自動 tag 機構との競合事前確認**（v2.5.5 / Unit 004 / #650）:
+
+   GitHub Actions 等の CI で auto-merge 後にリリース tag を自動作成する運用と併用する場合、ローカル `git tag` + `git push` 前にリモート tag の状態を必ず確認する。`git ls-remote --tags` の素の出力は annotated tag では tag object SHA を返すため、コミット SHA と直接比較してはならない（誤分類防止）。**peeled commit SHA 同士で比較**する。
+
+   ```bash
+   # (3.1.1) リモートに同名タグが既に存在するか確認（存在検出）
+   git ls-remote --tags origin vX.X.X
+
+   # (3.1.2) annotated tag の誤分類を防ぐため、peeled commit SHA を取得
+   git ls-remote origin "refs/tags/vX.X.X^{}"
+   # 出力空かつ (3.1.1) が非空なら lightweight tag → (3.1.1) の SHA を採用
+
+   # (3.1.3) ローカルマージコミット SHA を取得
+   git rev-parse HEAD
+   ```
+
+   **判定マトリクス**:
+
+   | ケース名 | 検出条件 | 期待結果 / 動作 | 次アクション |
+   |---------|---------|---------------|------------|
+   | ケース A: 不在 | (3.1.1) が空出力 | リモートに未作成。ローカルから新規作成可 | 既存手順 3.2 へ進む（`git tag -a` + `git push`） |
+   | ケース B: 同 SHA 衝突 | (3.1.2) の peeled commit SHA = (3.1.3) の `git rev-parse HEAD` | CI 側（例: tagger `github-actions[bot]`）が先に作成済み。最終 commit SHA が同じなのでリモート版が正規 | **同 SHA 衝突 fallback 手順 3.3** でローカル同期 |
+   | ケース C: 異 SHA 衝突 | (3.1.2) の peeled commit SHA ≠ (3.1.3)（lightweight 時は (3.1.1) の SHA で判定。両方の比較で不一致を含む） | リモート tag が予期しないコミットを指している（誤操作 / 古い CI 実行 / 別ブランチ tag 等） | **異 SHA 衝突 手順 3.4** で安全側中断 |
+
+   > SHA 比較は **40 文字 full SHA** の文字列完全一致で判定する。短縮 SHA / 部分一致は使わない。
+
+   **3.2 ケース A: 標準パス**:
+
    ```bash
    # アノテーション付きタグを作成（マージ後の最新コミットに付与）
    git tag -a vX.X.X -m "Release vX.X.X"
@@ -601,6 +629,29 @@ AIが探索結果のパスを使用して以下を実行する:
    # タグをリモートにプッシュ（個別タグ指定で安全にプッシュ）
    git push origin vX.X.X
    ```
+
+   **3.3 ケース B: 同 SHA 衝突 fallback 手順**（CI 自動 tag が正規版である運用の典型ケース）:
+
+   1. **ローカル tag 削除**: `git tag -d vX.X.X`（ローカルにアノテーション付きで作成済みの場合のみ。未作成ならスキップ。冪等）
+   2. **リモート版を取得**: `git fetch origin tag vX.X.X`
+   3. **同期検証**: `git show vX.X.X` で commit / tagger（例: `github-actions[bot]`）を確認し、想定どおりであることを確認
+
+   完了後、ステップ 4（マージ済みブランチの削除）へ進む。
+
+   **3.4 ケース C: 異 SHA 衝突手順**（リモート tag が予期しないコミットを指す異常パターン）:
+
+   1. **自動 push 中止**: `git push origin vX.X.X` を実行しない（既に実行している場合は reject されているため追加対応不要）
+   2. **差分提示**: peeled commit SHA を `<remote-commit-sha>` として、`git rev-parse HEAD` の SHA を `<local-sha>` として表示し、双方向の差分をユーザーに提示する。**tag object SHA を `git log` に渡してはならない**（peeled が空の場合は (3.1.1) の SHA を採用 / lightweight tag fallback）
+
+      ```bash
+      git log <remote-commit-sha>..<local-sha>
+      git log <local-sha>..<remote-commit-sha>
+      ```
+
+   3. **ユーザー選択肢提示**:
+      - **(i) リモート優先（推奨）**: ローカル tag を削除し `git fetch origin tag vX.X.X` で同期する非破壊フロー
+      - **(ii) ローカル優先（破壊的・明示確認必須）**: `git push --force origin vX.X.X` を実行する。**破壊的操作のため `automation_mode` に関わらず明示確認必須**。CI 機構や他のリリース成果物との整合性が壊れるリスクをユーザーに警告する
+      - **(iii) 中断**: tag 操作をスキップし、Operations Phase を中断 → CI 設定 / リモート tag の作成経緯を調査。`history/operations.md` に「tag 競合により中断」を記録し、調査完了後にステップ 3 から再開
 
    **GitHub Release作成（オプション）**:
    ```bash
