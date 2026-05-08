@@ -123,3 +123,12 @@ rm -f /tmp/aidlc-squash-enabled.out
 - [ ] 履歴ファイル
 - [ ] 設計ファイル（作成した場合）
 - [ ] 実装ファイル（作成した場合）
+- [ ] **履歴ファイル staged 確認【Unit 003 (#654 / DR-002)】**: `write-history.sh` で生成・更新した履歴ファイル（`.aidlc/cycles/{{CYCLE}}/history/*.md`）が `git status` または `git diff --cached --name-only` の staged 一覧に含まれている。**自動判定**: `write-history.sh` が `--mode base` 完了時に履歴ファイルが unstaged の場合、stderr に `warning: history file unstaged: <絶対パス>` を出力する。判定主体は `scripts/write-history.sh` の `check_history_staged_status()`、warning 契約の詳細は `.aidlc/cycles/v2.5.5/plans/unit-003-plan.md` § warning 契約 を参照
+
+### 履歴ファイル staged 確認のドライラン手順【Unit 003 (#654 / DR-002) 対応】
+
+step5↔step8 分裂（履歴ファイルが Unit 完了 commit に含まれない事故）を予防するためのドライラン手順:
+
+- **(d-1) write-history 実行**: `bash scripts/write-history.sh --mode base ...`（Skill ベース相対）を実行し、stderr の warning（`warning: history file unstaged: ...`）の有無を確認する
+- **(d-2) staged 確認**: `git status` または `git diff --cached --name-only` で履歴ファイルが staged 一覧に含まれることを確認する
+- **(d-3) 未 staged 時の対応**: warning が出た場合、または staged 一覧に含まれない場合は `git add <履歴ファイルパス>` を実行し、再度 `git status` で staged を確認する
