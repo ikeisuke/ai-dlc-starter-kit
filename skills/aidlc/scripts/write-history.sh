@@ -509,6 +509,66 @@ format_entry() {
     echo "---"
 }
 
+# Unit 003 (#654 / DR-002): 履歴ファイル staged 状態の自動判定 + 警告
+# step5↔step8 分裂（履歴ファイルが Unit 完了 commit に含まれない事故）の構造的予防として、
+# --mode base 経路の正常終了フックから呼び出される。
+# warning 契約は .aidlc/cycles/v2.5.5/plans/unit-003-plan.md § warning 契約 を SoT とする:
+#   - 出力先: stderr 一本化
+#   - 文言:   "warning: history file unstaged: <絶対パス>"
+#   - exit:   常に 0（後方互換性保護、git diff 失敗時も警告スキップで return 0）
+# パス比較は repo-root 相対へ正規化してから grep -Fxq で完全一致判定（部分マッチ防止）。
+check_history_staged_status() {
+    local filepath="$1"
+    local filepath_real_dir filepath_real
+    local repo_root rel_path staged_files
+
+    # ステップ 0: filepath の symlink 解決（macOS の /tmp → /private/tmp 等への対応）
+    # `pwd -P` で実体パス化することで、後続の git rev-parse --show-toplevel 出力との
+    # 接頭辞比較が成立するようにする（symlink 経由パスでの誤判定回避）。
+    # Round 1 指摘 #1 対応: || true 経由で $? が握りつぶされる挙動を避け、
+    # if ! ... の形で元の終了コードを保持して分岐する。
+    if ! filepath_real_dir=$(cd "$(dirname -- "$filepath")" 2>/dev/null && pwd -P 2>/dev/null); then
+        # 親ディレクトリにアクセス不能 → 判定不能 → warning スキップ
+        return 0
+    fi
+    if [ -z "$filepath_real_dir" ]; then
+        return 0
+    fi
+    filepath_real="${filepath_real_dir}/$(basename -- "$filepath")"
+
+    # ステップ 1: 実体パスからリポジトリルートを取得
+    if ! repo_root=$(git -C "$filepath_real_dir" rev-parse --show-toplevel 2>/dev/null); then
+        # 判定不能（git リポジトリ外 等）→ warning スキップ
+        return 0
+    fi
+    if [ -z "$repo_root" ]; then
+        return 0
+    fi
+
+    # ステップ 2: filepath_real を repo-root 相対パスに正規化
+    rel_path="${filepath_real#${repo_root}/}"
+    if [ "$rel_path" = "$filepath_real" ]; then
+        # 接頭辞除去に失敗（filepath が repo 配下でない）→ 判定不能 → warning スキップ
+        return 0
+    fi
+
+    # ステップ 3: git diff --cached の出力（既に repo-root 相対）と比較
+    if ! staged_files=$(git -C "$repo_root" diff --cached --name-only -- "$filepath_real" 2>/dev/null); then
+        # git diff 失敗 → 判定不能 → warning スキップ
+        return 0
+    fi
+
+    # ステップ 4: 出力に rel_path が完全一致する行が含まれるか判定
+    if printf '%s\n' "$staged_files" | grep -Fxq -- "$rel_path"; then
+        # staged → 警告なし
+        return 0
+    fi
+
+    # unstaged → stderr に warning（filepath は呼び出し元の表示と一致させるため元の値を出力）
+    echo "warning: history file unstaged: $filepath" >&2
+    return 0
+}
+
 # メイン処理
 main() {
     # 引数解析
@@ -974,6 +1034,12 @@ main() {
         echo "history:${filepath}:created"
     else
         echo "history:${filepath}:appended"
+    fi
+
+    # Unit 003 (#654 / DR-002): --mode base 経路の正常終了フックで履歴ファイル staged 状態を自動判定
+    # step5↔step8 分裂の構造的予防（warning 契約は計画書 SoT、stderr 一本化 / exit 0 維持）
+    if [[ "$MODE" == "base" ]]; then
+        check_history_staged_status "$filepath"
     fi
 
     exit 0

@@ -7,6 +7,18 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.5] - 2026-05-08
+
+### Changed
+
+- `pr-ops.sh merge` の auto-merge 無効リポジトリ判定を強化: `error:unknown` で吸収されていた "Pull request is not mergeable" / "auto-merge is not allowed" などの GraphQL エラーパターンを `error:auto-merge-not-enabled` として明示分類し、Operations Phase §7.13 マージスクリプトが auto-merge 有効化前提の運用ミスを構造的に検知できるようにした。失敗系 BATS 5 ケース追加で grep パターン拡張を回帰検証（#665 / Unit 001）
+- `retrospective-issue.sh` の zsh `source` 互換性復元: `__RETRO_SCRIPT_DIR` 解決で zsh interactive shell から `source` した際に発生していた解決失敗を `${(%):-%x}` フォールバックで解消し、v2.5.4 で残っていた helper 6 ファイル中の最後の 1 ファイルを互換化。`source && 関数呼び出し` 動作を bash / zsh 両方で確認（#661 / Unit 002）
+- Construction Unit 完了処理 step5↔step8 分裂の構造的予防: Unit 完了処理の step5（履歴記録）と step8（コミット）の関係を明文化し、`steps/construction/04-completion.md` に「履歴記録は同一コミットに含める」順序契約を追加（DR-002）。`/write-history` skill 経由で `history/construction_unitNN.md` に追記された履歴は次の Unit 完了コミットに同梱される構造とし、レビュー reply round で履歴と修正コミットが分裂する事象を AI エージェント運用レベルで防止（#654 / Unit 003）
+- Operations 04-completion ステップ 3 の CI 自動 tag 競合手順追加: `steps/operations/04-completion.md` ステップ 3（バージョンタグ付け）に「リモート CI 自動 tag 機構との競合確認」手順を追加し、`git fetch --tags` でリモート tag 状態を先取り → ローカル `git tag` 作成前に同名 tag の存在検出 → 存在時は `auto-tag.yml` がマージ後に作成済みとみなしてローカル作成をスキップする分岐を明文化。CI auto-tag.yml と手動タグ付けの競合エラーを構造的に予防（#650 / Unit 004）
+- `gh pr edit --body-file` のスコープ不足エラーに REST PATCH fallback 経路を追加: `pr-ops.sh edit-body` を新設し、`gh pr edit` がトークンスコープ不足（read:org 等）で失敗した際に `gh api --method PATCH /repos/{owner}/{repo}/pulls/{number} -F body=@<file>` への自動 fallback で本文更新を継続できるようにした。`tools:gh-api-fallback` skill の知見を Operations Phase §7.8 PR Ready 化フローに組み込み、PR 本文更新失敗で Operations Phase が停止する経路を排除（#626 / Unit 005）
+
+---
+
 ## [2.5.4] - 2026-05-08
 
 ### Added

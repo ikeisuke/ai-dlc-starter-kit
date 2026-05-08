@@ -295,6 +295,54 @@ cmd_version_check() {
     return $?
 }
 
+# gh_pr_edit_body_with_fallback - gh pr edit のスコープ不足エラー時に gh api PATCH へ fallback する
+#
+# Args:
+#   $1 pr_number   PR 番号
+#   $2 body_file   PR 本文ファイル
+#
+# 関連 Issue: #626
+# 関連 Unit: v2.5.5 Unit 005
+gh_pr_edit_body_with_fallback() {
+    local pr_number="$1"
+    local body_file="$2"
+    local stderr_file
+    local stderr_capture=""
+    local edit_ec=0
+
+    # 1. gh CLI 経路を実行（stdout は呼び出し元へ透過、stderr のみ一時ファイルに捕捉して grep で判別する）
+    stderr_file=$(mktemp -t aidlc-gh-pr-edit-stderr.XXXXXX)
+    gh pr edit "$pr_number" --body-file "$body_file" 2>"$stderr_file" || edit_ec=$?
+    stderr_capture=$(<"$stderr_file")
+    rm -f "$stderr_file"
+    if [[ $edit_ec -eq 0 ]]; then
+        # 成功時も stderr が空でなければ透過する（warning 等を握り潰さない）
+        if [[ -n "$stderr_capture" ]]; then
+            printf '%s\n' "$stderr_capture" >&2
+        fi
+        return 0
+    fi
+
+    # 2. ScopeErrorDetector: read:org / read:discussion / requires.*scope / Could not resolve to a User
+    if printf '%s' "$stderr_capture" | grep -qE 'read:org|read:discussion|requires.*scope|Could not resolve to a User'; then
+        # 3. fallback 発動シグナル（ドメインモデル §「FallbackOutcome」）
+        printf 'pr-ready:fallback:rest-patch:%s\n' "$pr_number" >&2
+        # 4. REST PATCH 経路（stdout は呼び出し元へ透過する）
+        local patch_ec=0
+        gh api -X PATCH "/repos/{owner}/{repo}/pulls/${pr_number}" -F "body=@${body_file}" || patch_ec=$?
+        if [[ $patch_ec -ne 0 ]]; then
+            # 5. fallback 失敗ログキー（DR-003 観測点）
+            printf 'pr-ready:fallback:rest-patch:failed:%s:%d\n' "$pr_number" "$patch_ec" >&2
+            return $patch_ec
+        fi
+        return 0
+    fi
+
+    # 6. 非スコープエラー: 元 stderr を透過し、元 exit code で return
+    printf '%s\n' "$stderr_capture" >&2
+    return $edit_ec
+}
+
 cmd_pr_ready() {
     local cycle=""
     local pr_number=""
@@ -354,9 +402,11 @@ cmd_pr_ready() {
                 log_dry_run "# (case 1) ドラフト PR あり: ready → edit"
                 log_dry_run "$SCRIPT_DIR/pr-ops.sh ready <PR_FROM_FIND_DRAFT>"
                 log_dry_run "gh pr edit <PR_FROM_FIND_DRAFT> --body-file $body_file"
+                log_dry_run "# fallback (when scope-insufficient): gh api -X PATCH /repos/{owner}/{repo}/pulls/<PR_FROM_FIND_DRAFT> -F body=@$body_file"
                 log_dry_run "# (case 2) ドラフト PR なし、既存 Ready PR あり（部分成功 retry）"
                 log_dry_run "gh pr list --head <current-branch> --state open --json number,isDraft --jq '.[] | select(.isDraft == false) | .number'"
                 log_dry_run "gh pr edit <EXISTING_PR> --body-file $body_file"
+                log_dry_run "# fallback (when scope-insufficient): gh api -X PATCH /repos/{owner}/{repo}/pulls/<EXISTING_PR> -F body=@$body_file"
                 log_dry_run "# (case 3) どちらもなし: gh pr create"
                 log_dry_run "gh pr create --base main --title $cycle --body-file $body_file"
             else
@@ -383,12 +433,13 @@ cmd_pr_ready() {
             log_dry_run "$SCRIPT_DIR/pr-ops.sh ready $pr_number"
             if [[ -n "$body_file" ]]; then
                 log_dry_run "gh pr edit $pr_number --body-file $body_file"
+                log_dry_run "# fallback (when scope-insufficient): gh api -X PATCH /repos/{owner}/{repo}/pulls/$pr_number -F body=@$body_file"
             fi
             return 0
         fi
         "$SCRIPT_DIR/pr-ops.sh" ready "$pr_number" || return $?
         if [[ -n "$body_file" ]]; then
-            gh pr edit "$pr_number" --body-file "$body_file" || return $?
+            gh_pr_edit_body_with_fallback "$pr_number" "$body_file" || return $?
         fi
         return 0
     fi
@@ -433,9 +484,10 @@ cmd_pr_ready() {
         fi
         if [[ "$DRY_RUN" = "1" ]]; then
             log_dry_run "gh pr edit $existing_pr_number --body-file $body_file"
+            log_dry_run "# fallback (when scope-insufficient): gh api -X PATCH /repos/{owner}/{repo}/pulls/$existing_pr_number -F body=@$body_file"
             return 0
         fi
-        gh pr edit "$existing_pr_number" --body-file "$body_file" || return $?
+        gh_pr_edit_body_with_fallback "$existing_pr_number" "$body_file" || return $?
         return 0
     fi
 
@@ -1046,4 +1098,6 @@ main() {
     esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

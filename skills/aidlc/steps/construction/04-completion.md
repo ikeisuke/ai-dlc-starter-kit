@@ -81,6 +81,12 @@ fi
 
 `/write-history` スキルで履歴追記。
 
+**履歴ファイルとコミットの整合性【重要 / Unit 003 (#654 / DR-002) 対応】**:
+
+- `write-history.sh` 実行後に生成・更新された履歴ファイルは **必ずステップ 8 の Unit 完了 commit に含める**（step5↔step8 分裂の予防）
+- `write-history.sh` は `--mode base` 完了時に履歴ファイルが unstaged の場合、stderr に `warning: history file unstaged: <絶対パス>` を出力する。判定主体は `scripts/write-history.sh` の `check_history_staged_status()`、warning 契約の詳細は計画ファイル `.aidlc/cycles/v2.5.5/plans/unit-003-plan.md` § warning 契約 / DR-002 を参照
+- ステップ 5 で履歴を作成したら、ステップ 8 でコミットする際に **`git add <履歴ファイル>` を忘れない**。事前確認手順は `commit-flow.md` の「コミット前確認チェックリスト」を参照
+
 ### 6. Markdownlint実行
 
 ```bash
@@ -136,6 +142,8 @@ git log <remote>/<upstream_branch>..HEAD
 ### 8. Gitコミット
 
 squash実行済み（`squash:success`）なら `git status` 確認のみ。未実行なら `commit-flow.md` の「Unit完了コミット」に従う。
+
+**事前確認【Unit 003 (#654 / DR-002) 対応】**: ステップ 5 で作成された履歴ファイルが staged されていることを `git status` または `git diff --cached --name-only` で確認する。staged されていない場合は `git add <履歴ファイル>` を実行（詳細手順は `commit-flow.md` の「コミット前確認チェックリスト」および「履歴ファイル staged 確認のドライラン手順」を参照）。
 
 ### 9. Unit PR作成・マージ【推奨】
 

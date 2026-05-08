@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Unit 005 単一 gh shim: GH_MOCK_MODE 環境変数で挙動を分岐する。
+#
+# 想定呼び出し:
+#   gh pr edit <PR> --body-file <FILE>
+#   gh api -X PATCH /repos/{owner}/{repo}/pulls/<PR> -F body=@<FILE>
+#
+# モード:
+#   pr-edit-success         pr edit 成功（gh api PATCH は呼ばれない）
+#   pr-edit-scope-org       pr edit が read:org スコープ不足エラーで失敗
+#   pr-edit-graphql-error   pr edit が GraphQL field error で失敗
+#   pr-edit-network-error   pr edit が非スコープエラー（network）で失敗
+
+case "$1" in
+    pr)
+        if [[ "$2" == "edit" ]]; then
+            case "${GH_MOCK_MODE:-}" in
+                pr-edit-success)
+                    echo "https://github.com/owner/repo/pull/123"
+                    exit 0
+                    ;;
+                pr-edit-scope-org)
+                    printf 'Could not resolve to a User of organization. requires read:org scope\n' >&2
+                    exit 1
+                    ;;
+                pr-edit-graphql-error)
+                    printf "Could not resolve to a User: Field 'login' doesn't exist\n" >&2
+                    exit 1
+                    ;;
+                pr-edit-network-error)
+                    printf 'network error: timeout connecting to api.github.com\n' >&2
+                    exit 1
+                    ;;
+                *)
+                    printf 'unexpected GH_MOCK_MODE for gh pr edit: %s\n' "${GH_MOCK_MODE:-<unset>}" >&2
+                    exit 99
+                    ;;
+            esac
+        fi
+        ;;
+    api)
+        if [[ "$2" == "-X" && "$3" == "PATCH" ]]; then
+            case "${GH_MOCK_MODE:-}" in
+                pr-edit-scope-org|pr-edit-graphql-error)
+                    printf '{"number": 123, "body": "..."}\n'
+                    exit 0
+                    ;;
+                pr-edit-success|pr-edit-network-error)
+                    printf 'unexpected api PATCH call in mode: %s\n' "${GH_MOCK_MODE}" >&2
+                    exit 99
+                    ;;
+                *)
+                    printf 'unexpected GH_MOCK_MODE for gh api: %s\n' "${GH_MOCK_MODE:-<unset>}" >&2
+                    exit 99
+                    ;;
+            esac
+        fi
+        ;;
+esac
+
+printf 'unhandled gh shim invocation: %s\n' "$*" >&2
+exit 99
