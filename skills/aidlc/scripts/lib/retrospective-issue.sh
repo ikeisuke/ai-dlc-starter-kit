@@ -40,7 +40,17 @@ fi
 __AIDLC_RETROSPECTIVE_ISSUE_SH_LOADED=1
 
 # Unit 003 (#638): aidlc-paths.sh helper を source（aidlc_cycle_path 提供）
-__RETRO_ISSUE_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+# Unit 002 (#661): zsh interactive shell からの `source` 経路でも SCRIPT_DIR を解決できるよう、
+# ZSH_VERSION で shell 判定し zsh 用に ${(%):-%N} を使用する（bash 経路は既存ロジック維持）。
+# v2.5.4 Unit 004 (#659) の predecessor-issue.sh:31-40 と同パターン。前提・非サポート挙動の詳細は
+# .aidlc/cycles/v2.5.5/design-artifacts/domain-models/unit_002_retrospective_issue_zsh_source_compat_domain_model.md §「分岐前提」参照。
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+    # shellcheck disable=SC1083,SC2296
+    # zsh パラメータ展開（${(%):-%N}）は shellcheck（bash 前提）で警告となるが、ZSH_VERSION 判定下でのみ評価されるため安全
+    __RETRO_ISSUE_SCRIPT_DIR=$(cd -- "$(dirname -- "${(%):-%N}")" >/dev/null 2>&1 && pwd)
+else
+    __RETRO_ISSUE_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
+fi
 # shellcheck source=aidlc-paths.sh
 source "${__RETRO_ISSUE_SCRIPT_DIR}/aidlc-paths.sh"
 

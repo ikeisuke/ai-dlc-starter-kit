@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# Unit 004 (#659): helper の zsh source 互換性テスト
+# Unit 004 (#659) / Unit 002 (#661): helper の zsh source 互換性テスト
 # 各 helper を bash と zsh の両方で source して動作確認する。
 # SCRIPT_DIR を持つ helper（predecessor-issue.sh / retrospective-issue.sh）は
 # source 後の SCRIPT_DIR 系変数が空でない有効な絶対パスとして解決されることも検証する。
 #
-# DR-001: 修正対象は predecessor-issue.sh の 1 ファイルに限定。
-# retrospective-issue.sh は同種バグ（${BASH_SOURCE[0]} ベースの SCRIPT_DIR 解決）を
-# 持つ可能性があるが本 Unit のスコープ外のため、zsh 経路は OUT_OF_SCOPE で skip する。
+# v2.5.4 Unit 004 (#659) で predecessor-issue.sh の zsh 対応を実装、
+# v2.5.5 Unit 002 (#661) で retrospective-issue.sh も同パターンで対応済み。
+# 両 helper とも bash / zsh 両経路で SCRIPT_DIR 解決と動作を検証する。
 
 setup() {
   REPO_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
@@ -91,15 +91,22 @@ setup() {
   fi
 }
 
-@test "zsh-source: retrospective-issue.sh source 動作確認 + SCRIPT_DIR（bash 必須、zsh は OUT_OF_SCOPE）" {
-  # bash 経路: source + __RETRO_ISSUE_SCRIPT_DIR が有効な絶対パス
+@test "zsh-source: retrospective-issue.sh source 動作確認 + SCRIPT_DIR（bash / zsh 両対応）" {
+  # bash 経路: 独立契約 C1〜C4（status 0 / SCRIPT_DIR 非空 / 実在ディレクトリ / HELPER_LIB_DIR 一致）
   run bash -c "source '${HELPER_LIB_DIR}/retrospective-issue.sh' && printf '%s' \"\${__RETRO_ISSUE_SCRIPT_DIR}\""
   [ "$status" -eq 0 ]
   [ -n "$output" ]
   [ -d "$output" ]
   [ "$output" = "${HELPER_LIB_DIR}" ]
 
-  # zsh 経路: DR-001 不変条件により retrospective-issue.sh への構造変更は禁止のため OUT_OF_SCOPE 扱い
-  # （同種バグの可能性が高いため skip 化、修正は next-cycle 候補としてバックログ Issue 起票で対応）
-  skip "OUT_OF_SCOPE: see backlog #661"
+  if [ "$AIDLC_ZSH_AVAILABLE" = "true" ]; then
+    # zsh 経路: 同じく独立契約 C1〜C4（v2.5.5 Unit 002 修正対象）
+    run zsh -c "source '${HELPER_LIB_DIR}/retrospective-issue.sh' && printf '%s' \"\${__RETRO_ISSUE_SCRIPT_DIR}\""
+    [ "$status" -eq 0 ]
+    [ -n "$output" ]
+    [ -d "$output" ]
+    [ "$output" = "${HELPER_LIB_DIR}" ]
+  else
+    skip "zsh not available"
+  fi
 }
