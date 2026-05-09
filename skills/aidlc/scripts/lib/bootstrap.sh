@@ -35,13 +35,19 @@ AIDLC_LOCAL_CONFIG="${AIDLC_PROJECT_ROOT}/.aidlc/config.local.toml"
 AIDLC_LOCAL_CONFIG_LEGACY="${AIDLC_PROJECT_ROOT}/.aidlc/config.toml.local"
 AIDLC_CYCLES="${AIDLC_PROJECT_ROOT}/.aidlc/cycles"
 AIDLC_DEFAULTS="${AIDLC_PLUGIN_ROOT}/config/defaults.toml"
+# marketplace.json は version の正本（SoT）
+# AIDLC_PLUGIN_ROOT = .../skills/aidlc → リポジトリルートは2階層上
+AIDLC_MARKETPLACE_JSON="${AIDLC_PLUGIN_ROOT%/*/*}/.claude-plugin/marketplace.json"
 
 export AIDLC_PROJECT_ROOT AIDLC_PLUGIN_ROOT
 export AIDLC_CONFIG AIDLC_LOCAL_CONFIG AIDLC_LOCAL_CONFIG_LEGACY
-export AIDLC_CYCLES AIDLC_DEFAULTS
+export AIDLC_CYCLES AIDLC_DEFAULTS AIDLC_MARKETPLACE_JSON
 
 # --- toml-reader ライブラリ読み込み ---
 source "$(dirname "${BASH_SOURCE[0]}")/toml-reader.sh"
+
+# --- version ライブラリ読み込み（read_marketplace_version / read_starter_kit_version 等） ---
+source "$(dirname "${BASH_SOURCE[0]}")/version.sh"
 
 # --- 共通ユーティリティ関数 ---
 

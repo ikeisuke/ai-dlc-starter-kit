@@ -9,9 +9,17 @@
 # このファイルは関数定義のみを含む。トップレベルで実行されるコードはない。
 #
 
-# SemVer パターン定義（X.Y.Z + optional prerelease）
-# 例: 1.0.0, 2.3.1, 1.0.0-alpha.1, 2.0.0-rc.1
-readonly _SEMVER_PATTERN='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[a-zA-Z0-9.]+)?$'
+# SemVer 2.0.0 準拠パターン定義（X.Y.Z[-prerelease][+build]）
+# https://semver.org/spec/v2.0.0.html
+#   - 各数値部分は先行 0 禁止（0 単独は許可）
+#   - prerelease: dot-separated identifiers。各 identifier は数値（先行 0 禁止）または英数+ハイフン
+#   - build metadata: dot-separated identifiers。各 identifier は英数+ハイフン
+# 例（許容）: 1.0.0, 2.3.1, 1.0.0-alpha.1, 2.0.0-rc.1, 1.0.0-0.3.7, 1.0.0+build.123
+# 例（拒否）: 1.2.3-., 1.2.3-alpha..1, 01.0.0, 1.0.0-01
+# 多重 source 対応: 既に readonly 宣言済みなら再代入をスキップ
+if [[ -z "${_SEMVER_PATTERN:-}" ]]; then
+    readonly _SEMVER_PATTERN='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][a-zA-Z0-9-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][a-zA-Z0-9-]*))*))?(\+([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*))?$'
+fi
 
 # SemVer フォーマット検証
 #
@@ -44,7 +52,90 @@ strip_v_prefix() {
     echo "${1#v}"
 }
 
+# marketplace.json から metadata.version を読み取る（正本判定用）
+#
+# 本関数は version SoT である `.claude-plugin/marketplace.json` の
+# `metadata.version` を抽出する。dasel 優先 / jq フォールバックで動作し、
+# 両ツール不在時は実行環境エラーとして exit 2 を返す（grep+sed フォールバックは持たない）。
+#
+# 引数:
+#   $1 - marketplace.json のパス
+# 出力:
+#   stdout: バージョン文字列（取得成功時）
+#   stderr: エラー詳細（取得失敗時）
+# 戻り値:
+#   0: 取得成功
+#   1: コンテンツエラー（metadata.version キー不在 / 値が空 / 非 SemVer）
+#   2: 実行環境エラー（ファイル不在・読取権限なし・dasel/jq 双方不在）
+read_marketplace_version() {
+    local json_path="$1"
+
+    if [[ -z "$json_path" ]]; then
+        echo "error:missing-json-path" >&2
+        return 2
+    fi
+
+    if [[ ! -f "$json_path" ]]; then
+        echo "error:marketplace-json-not-found" >&2
+        return 2
+    fi
+
+    if [[ ! -r "$json_path" ]]; then
+        echo "error:marketplace-json-read-failed" >&2
+        return 2
+    fi
+
+    local version=""
+    # dasel v3 はセレクタの先頭ドットを許容しない（'metadata.version'）
+    # dasel v2 互換のため、まずドットなしで試行する
+    if command -v dasel >/dev/null 2>&1; then
+        version=$(dasel -i json 'metadata.version' < "$json_path" 2>/dev/null) || version=""
+        version=$(aidlc_strip_quotes_safe "$version")
+    elif command -v jq >/dev/null 2>&1; then
+        version=$(jq -r '.metadata.version' < "$json_path" 2>/dev/null) || version=""
+        if [[ "$version" == "null" ]]; then
+            version=""
+        fi
+    else
+        echo "error:dasel-and-jq-unavailable" >&2
+        return 2
+    fi
+
+    if [[ -z "$version" ]]; then
+        echo "error:metadata-version-missing-or-empty" >&2
+        return 1
+    fi
+
+    if ! validate_semver "$version"; then
+        echo "error:metadata-version-invalid-semver:${version}" >&2
+        return 1
+    fi
+
+    echo "$version"
+    return 0
+}
+
+# 内部ユーティリティ: 引用符除去（dasel 出力対応）
+# bootstrap.sh の aidlc_strip_quotes が利用可能ならそれを使い、未定義時は内蔵で処理
+aidlc_strip_quotes_safe() {
+    local value="$1"
+    if declare -F aidlc_strip_quotes >/dev/null 2>&1; then
+        aidlc_strip_quotes "$value"
+        return
+    fi
+    # フォールバック実装: 先頭末尾の " と ' を1組だけ除去
+    value="${value#\"}"
+    value="${value%\"}"
+    value="${value#\'}"
+    value="${value%\'}"
+    echo "$value"
+}
+
 # config.toml から starter_kit_version を読み取る（検証付き読み取り）
+#
+# 注意: 本関数の戻り値は config.toml の「ローカルキャッシュ値」であり、
+# version の正本ではない。version の正本判定には read_marketplace_version() を使うこと。
+# 本関数はアップグレード差分検出（aidlc-setup / aidlc-migrate）等のキャッシュ検証用途に限定する。
 #
 # キーの一意性（正確に1件存在すること）と値の存在を検証して返す。
 #

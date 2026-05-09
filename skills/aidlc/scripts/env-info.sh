@@ -137,37 +137,13 @@ get_latest_cycle() {
     ls -1 "${AIDLC_CYCLES}/" 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1 || echo ""
 }
 
-# .aidlc/config.toml からスターターキットのバージョンを取得
-# ファイル不存在/読み取りエラー時は空値を返す
-# dasel未インストール時はgrep+sedでフォールバック
+# marketplace.json (SoT) からスターターキットのバージョンを取得
+# 取得経路は lib/version.sh::read_marketplace_version に集約（dasel 優先 / jq フォールバック）
+# 取得失敗時は空文字を返す（出力契約 `starter_kit_version:` の互換維持）
 get_starter_kit_version() {
-    local toml_file="${AIDLC_CONFIG}"
-
-    if [[ ! -f "$toml_file" ]]; then
-        echo ""
-        return
-    fi
-
+    local json_path="${AIDLC_MARKETPLACE_JSON}"
     local version=""
-
-    # daselが利用可能な場合
-    if command -v dasel >/dev/null 2>&1; then
-        version=$(dasel -i toml 'starter_kit_version' < "$toml_file" 2>/dev/null) || version=""
-        version=$(aidlc_strip_quotes "$version")
-    else
-        # dasel未インストール時のフォールバック（grep+sed）
-        # 行頭の空白を許容、コメント行は無視、最初の定義のみ採用
-        local line
-        line=$(grep -E '^[[:space:]]*starter_kit_version[[:space:]]*=' "$toml_file" 2>/dev/null | grep -v '^[[:space:]]*#' | head -1) || line=""
-
-        if [[ -n "$line" ]]; then
-            # = の後の値部分を抽出し、インラインコメントを除去
-            version="${line#*=}"
-            version="${version%%#*}"
-            version=$(aidlc_strip_quotes "$version")
-        fi
-    fi
-
+    version=$(read_marketplace_version "$json_path" 2>/dev/null) || version=""
     echo "$version"
 }
 

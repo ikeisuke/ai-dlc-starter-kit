@@ -85,7 +85,7 @@ fi
 
 ```toml
 # ファイル先頭に追記
-starter_kit_version = "[version.txt の内容]"
+starter_kit_version = "[marketplace.json metadata.version の内容]"
 ```
 
 ---
@@ -280,7 +280,7 @@ templates/config.toml.template
 | プレースホルダー | 置換する値 | 取得元 |
 |------------------|-----------|--------|
 | `[現在日時]` | YYYY-MM-DD形式の日付 | `date +%Y-%m-%d` |
-| `[version.txt の内容]` | スターターキットバージョン | `scripts/read-version.sh` |
+| `[marketplace.json metadata.version の内容]` | スターターキットバージョン | `scripts/read-version.sh`（内部で `.claude-plugin/marketplace.json` の `metadata.version` を抽出） |
 | `[プロジェクト名]` | プロジェクト名 | セクション5で収集 |
 | `[プロジェクト概要]` | プロジェクト概要 | セクション5で収集 |
 | `[プロジェクトタイプ]` | プロジェクトタイプ | セクション6で選択 |

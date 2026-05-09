@@ -231,7 +231,7 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 
 `version` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
 
-1. スキルベースディレクトリの `version.txt` を読み込む
+1. version 正本（SoT）の `marketplace.json.metadata.version` を読み込む。スキルベースディレクトリ（SKILL.md と同じディレクトリ）から `../../.claude-plugin/marketplace.json` を解決し、`scripts/lib/version.sh::read_marketplace_version` を呼び出す（dasel 優先 / jq フォールバック）
 2. 値を正規化する: 前後の空白をトリムし、先頭の `v` プレフィックスがあれば除去する。空文字・不正値・読取不能の場合は不存在と同じ扱いとする
 3. 以下のフォーマットで表示:
 
@@ -239,7 +239,7 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 AI-DLC Starter Kit v{version}
 ```
 
-4. `version.txt` が存在しない、または正規化後の値が空の場合:
+4. `marketplace.json` が存在しない、または正規化後の値が空の場合:
 
 ```text
 AI-DLC Starter Kit (version unknown)

@@ -214,19 +214,21 @@ if [[ -f "$config_dest" ]]; then
   fi
 
   # starter_kit_version 更新（migrate-config.sh 成功時のみ）
-  # プラグインの version.txt を参照（AIDLC_PROJECT_ROOT は対象リポジトリを指すため使用しない）
-  _version_txt="${SCRIPT_DIR}/../../aidlc/version.txt"
+  # version 正本（SoT）は .claude-plugin/marketplace.json の metadata.version
+  # AIDLC_PROJECT_ROOT は対象リポジトリを指すため使用せず、プラグイン本体の marketplace.json を参照する
+  # コンテキスト独立性のため aidlc lib (skills/aidlc/scripts/lib/version.sh) は呼ばず、jq インライン抽出で完結
+  _marketplace_json="${SCRIPT_DIR}/../../../.claude-plugin/marketplace.json"
   if [[ "$migrate_script_exit_code" -ne 0 ]]; then
     echo "  Skipped: starter_kit_version update (config migration failed)" >&2
     _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "config migration failed, version update skipped", reason_code: "config_migration_failed"}')"
-  elif [[ ! -f "$_version_txt" ]]; then
-    echo "  Skipped: starter_kit_version update (version.txt not found)" >&2
-    _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "version.txt not found", reason_code: "canonical_version_unavailable"}')"
+  elif [[ ! -f "$_marketplace_json" ]]; then
+    echo "  Skipped: starter_kit_version update (marketplace.json not found)" >&2
+    _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "marketplace.json not found", reason_code: "canonical_version_unavailable"}')"
   else
-    _canonical_version=$(cat "$_version_txt" | tr -d '[:space:]')
+    _canonical_version=$(jq -r '.metadata.version // empty' "$_marketplace_json" 2>/dev/null | tr -d '[:space:]')
     if [[ -z "$_canonical_version" ]]; then
-      echo "  Skipped: starter_kit_version update (version.txt is empty)" >&2
-      _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "version.txt is empty", reason_code: "canonical_version_unavailable"}')"
+      echo "  Skipped: starter_kit_version update (marketplace.json metadata.version missing or empty)" >&2
+      _add_applied "$(jq -n '{resource_type: "version_update", path: ".aidlc/config.toml", status: "skipped", detail: "marketplace.json metadata.version missing or empty", reason_code: "canonical_version_unavailable"}')"
     else
       # sed で starter_kit_version を更新（dasel v2 互換性のため）
       if grep -q '^[[:space:]]*starter_kit_version[[:space:]]*=' "$config_dest"; then

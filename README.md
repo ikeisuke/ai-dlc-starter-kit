@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-2.5.6-blue.svg)](./version.txt)
+[![Version](https://img.shields.io/badge/version-2.6.0-blue.svg)](./.claude-plugin/marketplace.json)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 

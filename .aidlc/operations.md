@@ -15,7 +15,7 @@ Operations Phaseで決定した運用設定・方針をサイクル横断で引�
 ### リリース手順
 
 1. サイクルブランチで開発完了
-2. `version.txt` を新バージョンに更新（`bin/update-version.sh --version {{CYCLE}}` で一括更新）
+2. `.claude-plugin/marketplace.json` の `metadata.version` を新バージョンに更新（`bin/update-version.sh --version {{CYCLE}}` で更新。SoT は marketplace.json）
 3. `README.md`を更新
 4. Operations Phase完了コミット
 5. PRを作成（`gh pr create`）
@@ -25,8 +25,8 @@ Operations Phaseで決定した運用設定・方針をサイクル横断で引�
 
 ### CI/CDフロー要点
 
-- **自動タグ付け**: mainブランチへのpush時に `version.txt` からバージョンを読み取り、`v{VERSION}` タグを自動作成（`.github/workflows/auto-tag.yml`）
-- **PRチェック**: Markdownlint、Bash Substitution Check、defaults.toml同期チェックによる自動チェック（`.github/workflows/pr-check.yml`）
+- **自動タグ付け**: mainブランチへのpush時に `.claude-plugin/marketplace.json` の `metadata.version` を読み取り、`v{VERSION}` タグを自動作成（`.github/workflows/auto-tag.yml`）
+- **PRチェック**: Markdownlint、Bash Substitution Check、defaults.toml同期チェック、Marketplace Version Check（`CHANGELOG.md` / `.aidlc/operations.md` 編集時に marketplace.json の version 更新を強制）による自動チェック（`.github/workflows/pr-check.yml`）
 
 ### ロールバック方法
 
