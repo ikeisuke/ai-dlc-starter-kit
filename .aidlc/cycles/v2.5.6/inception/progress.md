@@ -9,11 +9,11 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-05-09 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md (4ファイル) | 2026-05-09 |
 | 5. PRFAQ作成 | スキップ | - | 2026-05-09 (理由: patch 規模、外部アナウンス不要、ユーザー方針) |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | - | 2026-05-09 (理由: 当リポジトリは Unit 単位で実装状態を追跡する形式、phase-level progress.md 不要) |
 
 ## 現在のステップ
 
-次回: 6. Construction用progress.md作成 → Inception 05-completion（履歴・意思決定・Issue 起票・PR・squash・コミット）
+**Inception Phase 完了**。次フェーズ: Construction Phase（`/aidlc construction` で開始）
 
 ## 完了済みステップ
 
@@ -22,10 +22,12 @@
 - 3. ユーザーストーリー作成（Round 1-2 codex、R2 で指摘 0 件、auto_approved）
 - 4. Unit定義（4 ファイル、Round 1-3 codex、R3 で指摘 0 件、auto_approved）
 - 5. PRFAQ作成（スキップ）
+- 6. Construction用progress.md作成（スキップ - Unit 単位追跡）
+- 7. 完了処理（Milestone v2.5.6/#12 作成・Issue 紐付け / DR-001..003 / Issue #674 起票 / commit 8a366bce / draft PR #675）
 
 ## 次回実行時の指示
 
-Construction 用 progress.md を作成し、Inception 05-completion（Milestone / 履歴 / 意思決定記録 / D 関連 Issue 起票 / ドラフト PR / squash / コミット / コンテキストリセット）へ進む。
+`/aidlc construction` で Construction Phase Phase 1（設計）から開始。Unit 順序は依存関係なし、やりやすい順（Intent 方針）。推奨開始 Unit は規模・リスクの小さい B (#670) または D (#674)、続いて C (#671)、A (#672) の順。
 
 ## 再開時に読み込むファイル
 
