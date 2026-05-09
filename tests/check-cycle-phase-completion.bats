@@ -103,6 +103,22 @@ setup() {
     [[ "$output" == *"slot=release_gate_ready"* ]]
 }
 
+# (m) Inception 構造的不正: セクション欠落（codex review Round 1 P1 対応）
+@test "Inception 構造的不正: ## ステップ一覧 セクション欠落で structurally_invalid:missing_section" {
+    run "${CLI}" inception-malformed-no-section --pr-number 668
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"inception:incomplete:reason=structurally_invalid"* ]]
+    [[ "$output" == *"detail=missing_section"* ]]
+}
+
+# (n) Inception 構造的不正: データ行 0 件（codex review Round 1 P1 対応）
+@test "Inception 構造的不正: セクション内データ行 0 件で structurally_invalid:no_data_rows" {
+    run "${CLI}" inception-malformed-no-rows --pr-number 668
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"inception:incomplete:reason=structurally_invalid"* ]]
+    [[ "$output" == *"detail=no_data_rows"* ]]
+}
+
 # fail-fast 否定アサーション（コードレビュー Round 1 低指摘 #3 対応）
 @test "fail-fast: Inception 未完時に Construction/Operations の complete メッセージが混入しない" {
     run "${CLI}" inception-incomplete --pr-number 668

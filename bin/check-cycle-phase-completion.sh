@@ -76,12 +76,15 @@ evaluate_inception() {
     # Single awk: enter `## ステップ一覧` section, exit on next `## ` heading.
     # Within the section, only data rows matching `^|<spaces><digits>.` are processed.
     # Status column = $3 of `|`-delimited row, trimmed.
+    # Structural validity: emit sentinel via END if section absent or no data rows
+    # (prevents malformed progress.md from being silently treated as complete).
     local first_pending
     first_pending="$(awk '
-        BEGIN { in_section = 0 }
-        /^## ステップ一覧/ { in_section = 1; next }
-        in_section && /^## / { exit }
+        BEGIN { in_section = 0; section_entered = 0; data_row_seen = 0; emitted = 0 }
+        /^## ステップ一覧/ { in_section = 1; section_entered = 1; next }
+        in_section && /^## / { in_section = 0 }
         in_section && /^\|[[:space:]]*[0-9]+\./ {
+            data_row_seen = 1
             n = split($0, fields, "|")
             if (n < 4) next
             status = fields[3]
@@ -98,20 +101,37 @@ evaluate_inception() {
                     step_num = step
                 }
                 printf "%s|%s\n", step_num, status
+                emitted = 1
                 exit
             }
         }
+        END {
+            if (emitted) exit
+            if (!section_entered) print "__MISSING_SECTION__"
+            else if (!data_row_seen) print "__NO_DATA_ROWS__"
+        }
     ' "${progress_md}")"
 
-    if [[ -n "${first_pending}" ]]; then
-        local step="${first_pending%%|*}"
-        local status="${first_pending#*|}"
-        echo "inception:incomplete:reason=step_incomplete:step=${step}:status=${status}"
-        return 1
-    fi
-
-    echo "inception:complete"
-    return 0
+    case "${first_pending}" in
+        __MISSING_SECTION__)
+            echo "inception:incomplete:reason=structurally_invalid:detail=missing_section"
+            return 1
+            ;;
+        __NO_DATA_ROWS__)
+            echo "inception:incomplete:reason=structurally_invalid:detail=no_data_rows"
+            return 1
+            ;;
+        "")
+            echo "inception:complete"
+            return 0
+            ;;
+        *)
+            local step="${first_pending%%|*}"
+            local status="${first_pending#*|}"
+            echo "inception:incomplete:reason=step_incomplete:step=${step}:status=${status}"
+            return 1
+            ;;
+    esac
 }
 
 # Evaluate Construction phase completion.
