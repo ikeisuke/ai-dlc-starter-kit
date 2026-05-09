@@ -104,7 +104,7 @@ Operations Phase ステップ7（リリース準備）の 7.7（Gitコミット�
 
 **ステップ1: セッション履歴分析**
 
-```
+```text
 /tools:suggest-permissions
 ```
 
@@ -119,7 +119,7 @@ Operations Phase ステップ7（リリース準備）の 7.7（Gitコミット�
 
 **ステップ2: 既存設定の監査**
 
-```
+```text
 /tools:suggest-permissions --review all
 ```
 
