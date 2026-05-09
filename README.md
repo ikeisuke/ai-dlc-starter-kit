@@ -187,6 +187,20 @@ skills/
 - リリース後の運用
 - 完了後に自動Gitコミット
 
+#### 振り返り（retrospective / v2.6.0+）
+
+Operations Phase 完了後、任意のタイミングで以下を実行してサイクルの振り返り（KPT / 主因切り分け / Issue 起票）を行います:
+
+```bash
+/aidlc retrospective [対象サイクル]
+# 短縮形: /aidlc r
+# 例: /aidlc r v2.6.0
+# 例: /aidlc r            （カレントブランチ / 直近完了サイクルから自動推定）
+```
+
+- v2.6.0 以前は Operations Phase §1 に組み込まれていましたが、**v2.6.0 で独立スキル `aidlc-retrospective` へ移転**（破壊的変更）
+- `[rules.retrospective] feedback_mode = "disabled"` 設定時は本コマンドが exit 0 で抜けます（opt-out）
+
 ### サイクル識別子について
 
 サイクル識別子（`CYCLE`）には2つの形式があります：
@@ -222,6 +236,9 @@ Operations Phase 完了後、新しい `CYCLE` で `/aidlc inception` を実行�
 |--------|------|
 | `aidlc` | AI-DLCオーケストレーター（メインスキル） |
 | `aidlc-setup` | 環境セットアップ・アップグレード・v1→v2移行 |
+| `aidlc-feedback` | AI-DLC Starter Kit へのフィードバック送信 |
+| `aidlc-migrate` | v1→v2 マイグレーション |
+| `aidlc-retrospective` | サイクル振り返り（KPT / Issue 起票 / mirror）— v2.6.0+ で Operations §1 から独立スキルへ分離 |
 | `reviewing-inception-*` | Inception成果物レビュー（intent/stories/units） |
 | `reviewing-construction-*` | Construction成果物レビュー（plan/design/code/integration） |
 | `reviewing-operations-*` | Operations成果物レビュー（deploy/premerge） |

@@ -41,6 +41,11 @@ v1→v2 移行が完了しました。
 - v1由来の不要ファイルを削除しました
 
 問題が発生した場合は git checkout . で変更を復元できます。
+
+【v2.6.0 以降の重要な変更】
+- 振り返り（retrospective）は Operations Phase §1 から独立スキル aidlc-retrospective へ移転されました（破壊的変更）
+- Operations Phase 完了後、振り返りを行うには `/aidlc retrospective`（短縮形 `/aidlc r`）を任意のタイミングで実行してください
+- 詳細は CHANGELOG.md の [2.6.0] セクションを参照してください
 ```
 
 ## 4. コミットとPR作成

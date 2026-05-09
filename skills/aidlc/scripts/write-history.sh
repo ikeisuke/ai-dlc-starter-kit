@@ -36,12 +36,15 @@
 #   0 = 成功
 #   1 = 引数不正（未指定値・不正値・排他違反 等）
 #   2 = I/O 失敗（ファイル作成失敗 等）
-#   3 = Operations Phase post-merge ガード拒否（Unit 002 / DR-001）
+#   3 = Operations Phase post-merge ガード拒否（Unit 002 / DR-001 / Unit 005 cross-check 強化）
 #       post-merge 判定は以下の順で評価される:
-#         (a) 第一条件: --phase operations --operations-stage post-merge
-#         (b) 第二条件: --phase operations AND completion_gate_ready=true
-#                      AND gh pr view で state=MERGED AND mergedAt!=null
-#                      AND number 一致
+#         (a) 第一条件: --phase operations --operations-stage post-merge → 即拒否（reason=explicit_stage）
+#         (b) 第二条件（実行コンテキスト導出）: --phase operations AND completion_gate_ready=true
+#                      AND gh pr view で state=MERGED AND mergedAt!=null AND number 一致 → 拒否
+#         (c) ヒント値 cross-check（v2.6.0 Unit 005）: --operations-stage pre-merge OR
+#                      AIDLC_OPERATIONS_STAGE=pre-merge を指定しても、第二条件が成立すれば
+#                      ヒント偽装として拒否（reason=hint_mismatch）
+#       --operations-stage 引数が未指定の場合は AIDLC_OPERATIONS_STAGE 環境変数を参照（fail-closed）。
 #       拒否時は機械可読メッセージ
 #         error:post-merge-history-write-forbidden:<reason_code>:<diagnostics>
 #       を stdout と stderr の両方に重複出力する（Unit 定義 / Story 1.2 準拠）
@@ -376,35 +379,49 @@ evaluate_post_merge_guard() {
         return 3
     fi
 
-    # 3. --operations-stage pre-merge は明示的に pass（第二条件をスキップ）
-    if [[ "$stage" == "pre-merge" ]]; then
-        return 0
-    fi
+    # 3. ヒント値と実行コンテキスト導出値の cross-check（v2.6.0 Unit 005 / fail-closed）
+    # --operations-stage pre-merge を即時 pass せず、第二条件で実態を再評価する。
+    # 実態が post-merge と判定されれば、ヒント偽装としてブロック（exit 3）。
+    # 「ヒント = 実態」の場合のみ pass する。
 
-    # 4. 第二条件（AND フォールバック）: stage 未指定時のみ評価
-    # a. completion_gate_ready が true でなければ pass
+    # 4. 第二条件（実行コンテキスト導出 AND ガード）の各サブ条件評価
+    local context_indicates_post_merge=true
+
+    # a. completion_gate_ready が true でなければ post-merge ではない
     if [[ "$completion_gate_ready" != "true" ]]; then
-        return 0
+        context_indicates_post_merge=false
     fi
 
-    # b. pr_number_from_progress が正整数でなければ pass
-    if ! [[ "$pr_number_from_progress" =~ ^[1-9][0-9]*$ ]]; then
-        return 0
+    # b. pr_number_from_progress が正整数でなければ post-merge ではない
+    if [[ "$context_indicates_post_merge" == "true" ]] && ! [[ "$pr_number_from_progress" =~ ^[1-9][0-9]*$ ]]; then
+        context_indicates_post_merge=false
     fi
 
     # c. GitHub 実態確認: state=MERGED AND mergedAt!=null AND number 一致
-    if [[ "$pr_state" != "MERGED" ]]; then
-        return 0
+    if [[ "$context_indicates_post_merge" == "true" ]] && [[ "$pr_state" != "MERGED" ]]; then
+        context_indicates_post_merge=false
     fi
-    if [[ -z "$pr_merged_at" || "$pr_merged_at" == "null" || "$pr_merged_at" == "undecidable" ]]; then
-        return 0
+    if [[ "$context_indicates_post_merge" == "true" ]] \
+        && { [[ -z "$pr_merged_at" ]] || [[ "$pr_merged_at" == "null" ]] || [[ "$pr_merged_at" == "undecidable" ]]; }; then
+        context_indicates_post_merge=false
     fi
-    if [[ "$pr_number_gh" != "$pr_number_from_progress" ]]; then
+    if [[ "$context_indicates_post_merge" == "true" ]] && [[ "$pr_number_gh" != "$pr_number_from_progress" ]]; then
+        context_indicates_post_merge=false
+    fi
+
+    # 5. 判定:
+    #    - 実態 = post-merge → reject（stage が pre-merge ヒントでも偽装と判定）
+    #    - 実態 ≠ post-merge → pass
+    if [[ "$context_indicates_post_merge" != "true" ]]; then
         return 0
     fi
 
-    # 全条件成立 → reject
-    emit_post_merge_rejection "fallback_merged_confirmed" "completion_gate_ready=true,pr=${pr_number_from_progress},state=MERGED"
+    # 全条件成立（実態 = post-merge）→ reject
+    if [[ "$stage" == "pre-merge" ]]; then
+        emit_post_merge_rejection "hint_mismatch" "hint=pre-merge,derived=post-merge,completion_gate_ready=true,pr=${pr_number_from_progress},state=MERGED"
+    else
+        emit_post_merge_rejection "fallback_merged_confirmed" "completion_gate_ready=true,pr=${pr_number_from_progress},state=MERGED"
+    fi
     return 3
 }
 
@@ -613,6 +630,10 @@ main() {
             --unit-slug)
                 if [[ -z "${2:-}" ]]; then
                     emit_error "missing-unit-slug-value" "--unit-slug requires a value"
+                    exit 1
+                fi
+                if ! validate_unit_slug "$2"; then
+                    emit_error "invalid-unit-slug" "--unit-slug must match ^[a-z0-9][a-z0-9-]{0,63}\$ (got: $2)"
                     exit 1
                 fi
                 UNIT_SLUG="$2"
@@ -890,11 +911,25 @@ main() {
     esac
 
     # ============================================================
-    # Operations Phase post-merge ガード判定（Unit 002 / DR-001）
+    # AIDLC_OPERATIONS_STAGE 環境変数フォールバック（v2.6.0 Unit 005）
+    # 引数 --operations-stage が未指定の場合のみ環境変数を参照
     # ============================================================
-    # 事前データ取得は第二条件フォールバック対象時のみ実施する
-    # （--operations-stage 明示時 / non-operations phase 時は gh を呼ばない）
-    if [[ "$PHASE" == "operations" && "$OPERATIONS_STAGE" != "post-merge" && "$OPERATIONS_STAGE" != "pre-merge" ]]; then
+    if [[ -z "$OPERATIONS_STAGE" && -n "${AIDLC_OPERATIONS_STAGE:-}" ]]; then
+        if validate_operations_stage "$AIDLC_OPERATIONS_STAGE"; then
+            OPERATIONS_STAGE="$AIDLC_OPERATIONS_STAGE"
+        else
+            emit_error "invalid-operations-stage-env" \
+                "AIDLC_OPERATIONS_STAGE must be pre-merge or post-merge (got: ${AIDLC_OPERATIONS_STAGE})"
+            exit 1
+        fi
+    fi
+
+    # ============================================================
+    # Operations Phase post-merge ガード判定（Unit 002 / DR-001）
+    # v2.6.0 Unit 005: pre-merge ヒントも cross-check 対象とするため
+    # 事前データは operations フェーズなら必ず取得（post-merge 明示時のみスキップ）
+    # ============================================================
+    if [[ "$PHASE" == "operations" && "$OPERATIONS_STAGE" != "post-merge" ]]; then
         GUARD_COMPLETION_GATE_READY=$(read_progress_slot "$CYCLE" "completion_gate_ready") || GUARD_COMPLETION_GATE_READY=""
         GUARD_PR_NUMBER_FROM_PROGRESS=$(read_progress_slot "$CYCLE" "pr_number") || GUARD_PR_NUMBER_FROM_PROGRESS=""
 

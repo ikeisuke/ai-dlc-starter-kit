@@ -46,14 +46,21 @@ EOF
 # - aidlc-migrate/: v1→v2マイグレーションスクリプト
 # - write-history/SKILL.md: 委譲スキルの注記
 # - steps/common/review-flow.md: 規範記述（Round 4+ 新領域判定の境界条件テーブル / 列の記述ガイダンスのパス例）
+# - aidlc-retrospective/: aidlc-retrospective スキル（v2.6.0 / Unit 005）。本体 aidlc プラグインの公開 API 層
+#   （retrospective-api.sh / cycle-resolver.sh）と templates/retrospective_template.md を `source` / 参照する設計上の単方向境界を持つ
+# - scripts/lib/retrospective-api.sh / scripts/lib/cycle-resolver.sh: AIDLC_BASE 解決の bootstrap で
+#   `skills/aidlc/scripts/lib` ディレクトリ存在チェックの文字列を含む（自己参照）
 EXCLUDE_PATTERNS=(
     "guides/"
     "steps/inception/01-setup.md"
     "steps/operations/04-completion.md"
     "steps/common/review-flow.md"
     "aidlc-migrate/"
+    "aidlc-retrospective/"
     "write-history/SKILL.md"
     "scripts/lib/bootstrap.sh"
+    "scripts/lib/retrospective-api.sh"
+    "scripts/lib/cycle-resolver.sh"
     "scripts/tests/"
     "scripts/ios-build-check.sh"
     "scripts/get-default-branch.sh"
@@ -67,8 +74,9 @@ is_excluded() {
     case "$rel_file" in
         */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
         */steps/common/review-flow.md|\
-        */aidlc-migrate/*|*/write-history/SKILL.md|\
-        */scripts/lib/bootstrap.sh|*/scripts/tests/*|\
+        */aidlc-migrate/*|*/aidlc-retrospective/*|*/write-history/SKILL.md|\
+        */scripts/lib/bootstrap.sh|*/scripts/lib/retrospective-api.sh|*/scripts/lib/cycle-resolver.sh|\
+        */scripts/tests/*|\
         */scripts/ios-build-check.sh|*/scripts/get-default-branch.sh|\
         */templates/review_summary_template.md|*/install-kiro-agent/SKILL.md)
             return 0

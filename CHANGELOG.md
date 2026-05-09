@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.0] - 2026-05-10
+
+### BREAKING CHANGES
+
+- **振り返り（retrospective）を Operations Phase から独立スキル `aidlc-retrospective` へ全量移転**: Operations Phase §1 の振り返り実行ロジック（feedback_mode 解決 / wizard / cap 判定 / 本文構築 / Issue 起票 / spool fallback / mirror_state ラベル化 / dialog token ガード）を完全に分離し、`/aidlc retrospective`（短縮形 `/aidlc r`）で起動する独立スキルとして再構成。Operations Phase は「リリース完了 + post-merge cleanup」までで完結する。互換アダプタ層は提供されない（#667 / Unit 005）
+    - **移行手順**: 既存の Operations Phase 完了フローを使用していた場合、Operations 完了後に `/aidlc r [対象サイクル]` を任意のタイミングで実行する。対象サイクルは引数で明示指定するか、カレントブランチ / 直近完了サイクルから自動推定される
+    - **互換維持**: `[rules.retrospective] feedback_mode` の正規系 5 値（`interactive` / `local-issue-only` / `mirror-only` / `local-and-mirror` / `disabled`）と旧値互換入力の正規化（`silent` → `interactive` / `mirror` → `mirror-only` / 未設定 → `interactive` fallback、`feedback_mode_normalize` 経由で変換）/ 振り返り Issue 本文の構造（KPT セクション + 主因切り分けマトリクス + 事実テーブル）/ Inception Phase の `predecessor_resolve_issue`（前サイクル振り返り参照）/ AskUserQuestion 対話必須ガード（Unit 001 / #647）はすべて不変
+
+### Added
+
+- `skills/aidlc-retrospective/` 独立スキル新設: `SKILL.md` + `steps/retrospective.md`。`aidlc-feedback` / `aidlc-migrate` / `aidlc-setup` と同じ独立スキル構造で、`/aidlc` parser から `retrospective` (`r`) アクションで委譲される（#667 / Unit 005）
+- `skills/aidlc/scripts/lib/retrospective-api.sh`（公開 API Facade 層）新設: 既存 `lib/retrospective-issue.sh` / `feedback-mode.sh` / `feedback-mode-wizard.sh` / `retrospective-llm-draft.sh` / `retrospective-human-review.sh` を内部 source し、`retrospective_api_*` プレフィックスで公開関数のみを再エクスポート。`aidlc-retrospective` から内部実装詳細への直接依存を遮断する単方向境界を確立（#667 / Unit 005）
+- `skills/aidlc/scripts/lib/cycle-resolver.sh`（独立公開コンポーネント）新設: 振り返り対象サイクル特定を 4 つの Strategy（引数 / カレントブランチ / git log / `.aidlc/cycles/` ディレクトリ）で解決し、`{candidate, source_id, confidence, evidence}` の構造化結果を返す。`confidence != high` かつ S3a/S3b 候補不一致時は呼出側で AskUserQuestion 確認を促す fail-safe ガード機構を内蔵（#667 / Unit 005）
+- `/aidlc` parser に `retrospective` アクション追加: 短縮形 `r`、引数ルーティング・独立フロー委譲・ヘルプ表示を更新（#667 / Unit 005）
+
+### Changed
+
+- `skills/aidlc/scripts/write-history.sh` の `--operations-stage` ヒント値検証を fail-closed cross-check に強化: 旧仕様では `--operations-stage pre-merge` を即時 pass していたが、ヒント値の偽装で post-merge ガードを迂回できる経路を遮断するため、ヒント値（`--operations-stage` 引数 / `AIDLC_OPERATIONS_STAGE` 環境変数）と実行コンテキスト導出値（`completion_gate_ready` + `gh pr view` の state/mergedAt/number 一致）を常に cross-check するよう変更。不一致時は `error:post-merge-history-write-forbidden:hint_mismatch:hint=pre-merge,derived=post-merge,...` で exit 3 ブロック。`AIDLC_OPERATIONS_STAGE` 環境変数のサポートを新規追加（許可値 `pre-merge|post-merge` のみ受容、不正値は exit 1）（#667 / Unit 005）
+- `skills/aidlc/steps/operations/04-completion.md` §1（振り返り）を約 440 行から約 25 行に縮退: 実行ロジックを完全削除し、`/aidlc r` への案内文のみ残す。§6「次のサイクル開始」付近に `/aidlc i` と並列で `/aidlc r` 案内を追加（#667 / Unit 005）
+
+---
+
 ## [2.5.6] - 2026-05-09
 
 ### Added
