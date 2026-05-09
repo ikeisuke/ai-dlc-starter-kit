@@ -1,0 +1,38 @@
+name: Cycle Phase Completion Check
+
+# Verify that 3 phases (Inception / Construction / Operations) of an AI-DLC
+# cycle are complete before merging a cycle/* PR to main.
+# Unit 001 / Issue #672 / v2.5.6
+#
+# Branch protection / Repository Ruleset enforcement is documented in
+# docs/cycle-phase-completion-check-ruleset.md (applied near Operations Phase
+# completion as part of A-2 deployment responsibility).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  cycle-phase-completion:
+    name: Cycle Phase Completion
+    runs-on: ubuntu-latest
+    # cycle/* 以外（chore/* / fix/* / feature/* 等）の PR では job ごとスキップ
+    # → CI checks 一覧で `Cycle Phase Completion` が `skipped` 表示になる
+    if: startsWith(github.head_ref, 'cycle/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify phase completion
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          # Strip the leading 'cycle/' prefix; the CLI requires a bare cycle ID.
+          CYCLE="${HEAD_REF#cycle/}"
+          bin/check-cycle-phase-completion.sh "${CYCLE}" --pr-number "${PR_NUMBER}"

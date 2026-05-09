@@ -71,9 +71,16 @@ High（Must、Intent A）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-09
+- **完了日**: 2026-05-09
+- **担当**: AI-DLC（Construction Phase 自動実行）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+
+### A-2 適用責務の扱い
+
+A-1 実装責務（CLI / workflow / bats / doc / CI wiring）は本 Unit で完了。A-2 適用責務（Repository Ruleset / Branch protection 必須化の実適用）は **Operations Phase 完了直前に実施予定**（`docs/cycle-phase-completion-check-ruleset.md` 参照）。
+
+- 通常完了経路: Operations Phase で `gh api` または UI 操作で適用、適用証跡（設定 JSON / スクリーンショット）を `docs/cycles/v2.5.6/` または PR description に保存
+- 暫定完了経路（管理者操作が UI のみで本サイクル中に間に合わない場合）: AskUserQuestion で「暫定完了承認」取得、follow-up Issue を起票して次サイクル v2.5.7 等で適用
