@@ -58,9 +58,27 @@ High（Must、Intent D）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-09
+- **完了日**: 2026-05-09
+- **担当**: AI（Construction Phase / Unit 004）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+
+### 完了条件達成サマリ（A-1〜A-4 / B-1〜B-2 / C-1〜C-2）
+
+- A-1（複数選択可明示文言）: ✓
+- A-2（AskUserQuestion 呼び出し例）: ✓
+- A-3（局所性 / §16 範囲内 + 対象ファイル唯一性）: ✓
+- A-4（Unit 関連 Issue #674 反映）: ✓
+- B-1（A-1 + A-2 合算）: ✓
+- B-2（A-3 と等価）: ✓
+- C-1（markdownlint 0 errors）: ✓
+- C-2（AI レビュー全ラウンド完了 / review-summary Set 1〜3 記録）: ✓
+
+### Operations Phase 引き継ぎ事項
+
+- 主要変更: `skills/aidlc/steps/inception/02-preparation.md` §16（+27 / -2）
+- 関連 Issue: #674
+- バックログ追加: なし（OUT_OF_SCOPE 指摘なし、全件修正済み）
+- 補助基準（観測対象）: v2.5.6 以降の Inception Phase 実行時の `AskUserQuestion(multiSelect)` 構築挙動。本サイクル DoD 外、後続サイクルの振り返り材料とする

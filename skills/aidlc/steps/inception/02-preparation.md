@@ -43,13 +43,38 @@ scripts/check-open-issues.sh
 [Issue一覧表示]
 
 これらのIssueを今回のサイクルで対応しますか？
-1. はい - 選択したIssueをユーザーストーリーとUnit定義に追加する
+1. はい - 選択したIssue（**複数可**）をユーザーストーリーとUnit定義に追加する
 2. いいえ - 今回は対応しない
 ```
 
-- **1を選択**: 対応するIssueを選択させ、ユーザーストーリーとUnit定義に追加することを案内
+- **1を選択**: 対応する Issue を**複数選択可で**選択させ、ユーザーストーリーとUnit定義に追加することを案内
 - **1を選択時の追加処理**: 選択した Issue 番号を改行区切りで `SELECTED_ISSUES` 変数として保持する（後続の Milestone 早期紐付けで `--issues "<SELECTED_ISSUES>"` に渡すため）
 - **2を選択**: 次のステップへ進行
+
+**`AskUserQuestion` 推奨パターン**（複数 Issue を 1 サイクルにまとめるユースケースが標準的）:
+
+- `multiSelect: true` を使用する（複数 Issue の選択が前提）
+- `options` は最大 4 件まで掲載（`AskUserQuestion` API の制約）。**5 件以上ある場合は重要度・関連度の高い 4 件を掲載し、それ以外は Other（自動付与）で受け付ける**
+- 推奨質問文: 「これらの Issue のうち本サイクルに含めるものをすべて選択してください（複数可）」
+- 各 `option.label` は Issue 番号 + 短いタイトル（例: `#674 Inception §16 複数選択前提化`）
+- 各 `option.description` は Issue 概要を 1〜2 文で要約
+
+呼び出し例（擬似コード、`AskUserQuestion` ツール引数の論理表現）:
+
+```text
+AskUserQuestion(
+  questions: [{
+    question: "これらの Issue のうち本サイクルに含めるものをすべて選択してください（複数可）",
+    header: "Issue 選択",
+    multiSelect: true,
+    options: [
+      { label: "#674 Inception §16 複数選択前提化", description: "..." },
+      { label: "#671 permissions audit 9 件解消", description: "..." },
+      ...
+    ]
+  }]
+)
+```
 
 **Milestone 機能 opt-in ガード（v2.4.0 以降、Unit 008 / #597 Unit G）**:
 
