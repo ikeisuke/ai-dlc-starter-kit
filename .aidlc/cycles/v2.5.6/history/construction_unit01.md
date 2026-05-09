@@ -159,3 +159,51 @@
 - Unit 完了承認推奨: Yes（統合レビュー観点での未解消事項なし）
 
 ---
+## 2026-05-09T12:36:21+09:00
+
+- **フェーズ**: Construction Phase
+- **Unit**: 01-cycle-phase-completion-check（cycle-phase-completion-check）
+- **ステップ**: Unit完了処理
+- **実行内容**: ## Unit 001 完了処理
+
+- **完了条件チェックリスト**: 全 24 項目達成
+- **残課題集約**: review-summary.md なし → 警告のみで OUT_OF_SCOPE 項目なし扱い
+- **設計・実装整合性**: 統合レビュー Round 2 で「良好」確認済み
+- **AI レビュー実施確認**: 履歴に記録あり（計画 5R / 設計 4R / コード 3R / 統合 2R）
+- **意思決定記録**: 対象なし（明確な選択肢からの分岐は本 Unit ではなし）
+- **Unit 定義「実装状態」**: 完了に更新（A-2 適用責務は Operations Phase で実施予定）
+- **markdownlint**: 全成果物 pass
+- **squash 実行**: 11 → 1 コミットに統合（b09c46aa）、`squash:success`
+- **push**: origin/cycle/v2.5.6 に fast-forward push 成功（force 不要）
+- **Issue #672**: status:in-progress → status:waiting-for-review
+
+## レビューラウンド集計
+
+| レビュー種別 | Round | 結果 |
+|-------------|-------|------|
+| 計画レビュー | 5R | R1: 高1中3低2 / R2: 中3低2 / R3: 中1低1 / R4: 中1低1 / R5: 低1（last_round_clean） |
+| 設計レビュー | 4R | R1: 高3中2 / R2: 高1中2 / R3: 中2低1 / R4: 指摘0（承認推奨Yes） |
+| コードレビュー | 3R | R1: 中2低1 / R2: 低1 / R3: 指摘0（承認推奨Yes） |
+| 統合レビュー | 2R | R1: 中2 / R2: 指摘0（Unit完了承認推奨Yes） |
+
+## 主要成果
+
+- cycle/* PR の 3 Phase 完了 CI ガード CLI（`bin/check-cycle-phase-completion.sh`）を新設
+- bash 3.2 互換、shellcheck clean、bats 14/14 PASS
+- grammar v1 awk パーサ（マーカー必須・コメント除去・カンマ併記・first-win・未知キー無視）
+- fail-fast 設計（最初の incomplete で early return）
+- cycle/* gating workflow（cycle/* 以外は job スキップ）
+- Repository Ruleset 必須化手順 doc（gh api / UI 両論併記）
+- migration-tests.yml CI wiring 追加（PATHS_REGEX + bats 実行行）
+- A-2 適用責務（Repository Ruleset 必須化）は Operations Phase 完了直前に実施予定（暫定完了経路も明記）
+- **成果物**:
+  - `bin/check-cycle-phase-completion.sh`
+  - `tests/check-cycle-phase-completion.bats` + 10 fixture
+  - `.github/workflows/cycle-phase-completion-check.yml`
+  - `docs/cycle-phase-completion-check-ruleset.md`
+  - `.github/workflows/migration-tests.yml`（改修）
+  - `.aidlc/cycles/v2.5.6/story-artifacts/units/001-cycle-phase-completion-check.md`
+  - `.aidlc/cycles/v2.5.6/plans/unit-001-plan.md`
+  - `.aidlc/cycles/v2.5.6/design-artifacts/{domain-models,logical-designs}/unit_001_*.md`
+
+---
