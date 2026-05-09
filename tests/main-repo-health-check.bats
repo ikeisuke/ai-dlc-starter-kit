@@ -2,8 +2,10 @@
 
 # tests/main-repo-health-check.bats
 #
-# Unit 002: メインリポジトリ Health Check helper の自動テスト
-# 4 シナリオ: 健全 / unmerged paths / MERGE_HEAD / コンフリクトマーカー残骸
+# メインリポジトリ Health Check helper の自動テスト
+# 主要シナリオ例: 健全 / unmerged paths / MERGE_HEAD / コンフリクトマーカー残骸 /
+#                 git context error / fixture-docs 除外 / 非除外 path 検出
+# 初版: v2.5.4 Unit 002（4 シナリオ）。v2.5.6 Unit 002 / #670 で fixture-docs 除外関連 2 件を追加
 
 setup() {
     export FIXTURE_REPO="${BATS_TEST_TMPDIR}/fake-main-repo"
@@ -119,4 +121,77 @@ EOF
     [ "$status" -eq 2 ]
     [[ "$output" =~ "status:error" ]]
     [[ "$output" =~ "error:git-path-resolve-failed" ]]
+}
+
+@test "exclusion: tests/.bats and design-artifacts paths are not flagged as warning (Unit 002 / #670)" {
+    cd "$FIXTURE_REPO"
+
+    # 除外対象 path 1: tests/main-repo-health-check.bats（fixture 自身として配置）
+    mkdir -p tests
+    cat > tests/main-repo-health-check.bats <<'EOF'
+some bats fixture content
+
+<<<<<<< Updated upstream
+local change for fixture test
+=======
+upstream change for fixture test
+>>>>>>> Stashed changes
+EOF
+
+    # 除外対象 path 2: .aidlc/cycles/**/design-artifacts/** 配下
+    mkdir -p .aidlc/cycles/v2.5.7/design-artifacts/logical-designs
+    cat > .aidlc/cycles/v2.5.7/design-artifacts/logical-designs/sample.md <<'EOF'
+some design doc content
+
+<<<<<<< Updated upstream
+historical design fixture
+=======
+historical design upstream
+>>>>>>> Stashed changes
+EOF
+
+    git add tests/main-repo-health-check.bats .aidlc/cycles/v2.5.7/design-artifacts/logical-designs/sample.md
+    git commit -m "fixture: excluded paths with conflict markers" >/dev/null
+
+    run bash "$HELPER"
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "status:ok" ]]
+    [[ "$output" =~ "health-check:conflict-marker:ok:count=0" ]]
+}
+
+@test "warning: conflict marker in non-excluded tracked path is still detected (Unit 002 / #670)" {
+    cd "$FIXTURE_REPO"
+
+    # 除外対象 path（無視されるべき）
+    mkdir -p tests
+    cat > tests/main-repo-health-check.bats <<'EOF'
+fixture sample with conflict markers
+
+<<<<<<< Updated upstream
+this should not count
+=======
+this should not count either
+>>>>>>> Stashed changes
+EOF
+
+    # 非除外 path（warning として検出されるべき）
+    mkdir -p docs
+    cat > docs/sample-conflict.md <<'EOF'
+documentation content
+
+<<<<<<< Updated upstream
+real conflict left over
+=======
+real upstream version
+>>>>>>> Stashed changes
+EOF
+
+    git add tests/main-repo-health-check.bats docs/sample-conflict.md
+    git commit -m "fixture: mixed excluded and non-excluded conflict markers" >/dev/null
+
+    run bash "$HELPER"
+    [ "$status" -eq 0 ]
+    [[ "$output" =~ "status:warning" ]]
+    [[ "$output" =~ "health-check:conflict-marker:warning" ]]
+    [[ "$output" =~ count=[1-9] ]]
 }

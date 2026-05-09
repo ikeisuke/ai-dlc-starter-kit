@@ -142,7 +142,10 @@ check_conflict_marker() {
 
     # git grep の exit code: 0=マッチあり / 1=マッチなし / >=2=エラー
     # set -e の状態を変更せず、|| で grep の戻り値をハンドル
-    matches=$(git -C "$main_repo_path" grep -I -n -E "^<<<<<<< |^>>>>>>> |^=======$" 2>/dev/null) && grep_ec=0 || grep_ec=$?
+    # pathspec :(exclude) で意図的に conflict marker を含む fixture/docs を除外（Unit 002 / #670）
+    matches=$(git -C "$main_repo_path" grep -I -n -E "^<<<<<<< |^>>>>>>> |^=======$" -- \
+        ':(exclude)tests/main-repo-health-check.bats' \
+        ':(exclude).aidlc/cycles/**/design-artifacts/**' 2>/dev/null) && grep_ec=0 || grep_ec=$?
 
     if [ "$grep_ec" -ge 2 ]; then
         echo "health-check:conflict-marker:error:git-grep-failed"

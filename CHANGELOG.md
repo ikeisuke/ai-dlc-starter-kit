@@ -7,6 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.5.6] - 2026-05-09
+
+### Added
+
+- `cycle/*` ブランチ PR の 3 Phase 完了 CI ガード追加: `bin/check-cycle-phase-completion.sh` を新設し、`cycle/X.Y.Z` ブランチで作成された PR が `inception/progress.md` / Construction Unit 全完了 / `operations/progress.md` の 3 phase 完了状態を満たすかチェック。`.github/workflows/cycle-phase-completion-check.yml` で PR 時に自動実行し、Repository Ruleset 適用手順を `guides/branch-protection.md` に追加。Phase 未完了の PR が誤って main にマージされる経路を CI レベルで構造的にブロック（#672 / Unit 001）
+
+### Changed
+
+- `main-repo-health-check.sh` の `check_conflict_marker()` で fixture / docs 引用の誤検出を解消: `git grep` に `:(exclude)tests/main-repo-health-check.bats` と `:(exclude).aidlc/cycles/**/design-artifacts/**` を追加し、v2.5.5 Operations 開始時に発生していた `count=12` の偽陽性を `count=0` に解消。受け入れテスト 2 種（除外サンプル検証 + 非除外パスの検出維持）を `tests/main-repo-health-check.bats` に追加し、`.github/workflows/migration-tests.yml` に CI 実行経路を組み込み（#670 / Unit 002）
+- permissions audit 9 件解消: HIGH/CRITICAL/MED 指摘について acknowledged 登録 + ask ガード追加で衛生化し、`tools:suggest-permissions` 監査結果の HIGH/CRITICAL/MED を 0 件達成（#671 / Unit 003）
+- Inception 02-preparation §16 の Issue 選択フローで複数選択前提を明示化: AI が単一 Issue しか選ばないバイアスを是正するため `skills/aidlc/steps/inception/02-preparation.md` §16 に「複数選択可」明示文言（2 件）と `AskUserQuestion` `multiSelect=true` 呼び出し例（2 件）を追加し、ユーザーが複数 Issue を一括処理できる UX に改善（#674 / Unit 004）
+
+---
+
 ## [2.5.5] - 2026-05-08
 
 ### Changed
