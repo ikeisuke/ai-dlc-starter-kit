@@ -75,9 +75,18 @@ High（Must、Intent C）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-09
+- **完了日**: 2026-05-09
+- **担当**: AI-DLC（Construction Phase 自動実行）+ ユーザー（user-global 編集）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+
+### Intent C 達成状況の引き継ぎ（Operations Phase 用）
+
+- **検出ベース達成**: HIGH/CRITICAL/MED の `--review all` 検出 0 件（acknowledgedFindings + 細粒度 allow 昇格 + 既存 user-global ask の組み合わせ）
+- **Intent §C 厳格ルール例外**: CRITICAL #1 `Bash(bash -n *)` のみ acknowledged 単独対処（parse-only 実害なし / ユーザースコープ保護確認済 / 恒久措置）
+- **follow-up Issue**: 不要（`docs/permissions-audit-v2.5.6.md` §5.3 参照）
+- **完了経路**: 通常完了経路（A-1 達成 + Intent C 達成判定はユーザー判断ベースで「達成」扱い）
+
+詳細は `docs/permissions-audit-v2.5.6.md` §6.4 / `.aidlc/cycles/v2.5.6/construction/units/003-review-summary.md` Unit 003 全体サマリ参照。

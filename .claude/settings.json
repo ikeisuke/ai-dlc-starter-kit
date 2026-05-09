@@ -109,5 +109,51 @@
       "Bash(git checkout . *)",
       "Bash(gh pr merge *)"
     ]
+  },
+  "suggestPermissions": {
+    "acknowledgedFindings": [
+      {
+        "pattern": "Bash(bash -n *)",
+        "severity": "CRITICAL",
+        "note": "シンタックスチェック専用（-n フラグは parse のみで実行しない）。user-global permissions.ask 追加と併用予定（§3 手順で別途実施、未適用時は本 acknowledged のみ機能）",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(rm /tmp/aidlc-*)",
+        "severity": "HIGH",
+        "note": "/tmp/aidlc- プレフィックス限定の意図的スコープ。user-global では細粒度 allow [Bash(rm /tmp/aidlc-:*)] へ昇格予定（§3 手順で別途実施）。ask 追加は不採用（Issue #671 受け入れ基準準拠）",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(gh issue list *)",
+        "severity": "MED",
+        "note": "list は read-only サブコマンド。本エントリは acknowledged 単独で対処（ask 追加なし）。create/close 等の書込み系は本サイクルで個別対処されないが、user-global allow のオーバーマッチで自動許可される可能性があり、次サイクル以降の継続監視対象",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(gh issue view *)",
+        "severity": "MED",
+        "note": "view は read-only サブコマンド。本エントリは acknowledged 単独で対処（ask 追加なし）。create/close 等の書込み系は本サイクルで個別対処されないが、user-global allow のオーバーマッチで自動許可される可能性があり、次サイクル以降の継続監視対象",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(gh pr view *)",
+        "severity": "MED",
+        "note": "view は read-only サブコマンド。本エントリは acknowledged 単独で対処（ask 追加なし）。create/close 等の書込み系は本サイクルで個別対処されないが、user-global allow のオーバーマッチで自動許可される可能性があり、次サイクル以降の継続監視対象",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(git push *)",
+        "severity": "MED",
+        "note": "--force / --force-with-lease ガードは project の ask（Bash(git push*--force *)）で対処済。user-global 追加 ask（Bash(git push --force *) 等）は §3 手順で別途実施予定。本エントリは残余抑制",
+        "acknowledgedAt": "2026-05-09"
+      },
+      {
+        "pattern": "Bash(git tag *)",
+        "severity": "MED",
+        "note": "-d ガードは project の ask（Bash(git tag*-d *)）で対処済。user-global 追加 ask（Bash(git tag -d *)）は §3 手順で別途実施予定。本エントリは残余抑制",
+        "acknowledgedAt": "2026-05-09"
+      }
+    ]
   }
 }
