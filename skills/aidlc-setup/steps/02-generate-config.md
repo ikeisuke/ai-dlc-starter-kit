@@ -9,8 +9,10 @@
 | 5. プロジェクト情報の収集 | ✓ | - | - |
 | 6. プロジェクトタイプの設定 | ✓ | - | - |
 | 7. aidlc.toml の生成 (7.1-7.2) | ✓ | - | - |
-| 7.3 starter_kit_version更新 | - | - | ✓ |
 | 7.4 設定マイグレーション | - | - | ✓ |
+| 7.4b 欠落キー検出 | - | - | ✓ |
+| 7.4c no-op 判定 | - | - | ✓ |
+| 7.3 starter_kit_version更新（条件実行） | - | - | ✓ |
 | 7.5 旧形式バックログ移行 | - | - | ✓ |
 | 8. 追加ファイルの配置 (8.1) | ✓ | ✓ | ✓ |
 | 8.2 プロジェクト固有ファイル配置 | ✓ | - | - |
@@ -296,39 +298,38 @@ templates/config.toml.template
 
 **手順**: AIがテンプレートファイルを読み込み、各プレースホルダーを収集した情報で置換して `.aidlc/config.toml` として保存してください。sedコマンドではなく、AIのWriteツールで直接生成します。
 
-### 7.3 starter_kit_versionの更新【アップグレードモードのみ】
-
-`.aidlc/config.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
-
-`.aidlc/config.toml` を開き、`starter_kit_version` の値を `[新バージョン]` に更新してください。
-
-`starter_kit_version` フィールドが存在しない場合は、ファイル先頭に以下を追加:
-
-```toml
-starter_kit_version = "[新バージョン]"
-```
-
-**更新確認**:
-
-更新後、以下のコマンドで正しく反映されたことを確認してください:
-
-```bash
-grep "^starter_kit_version" .aidlc/config.toml
-```
-
-期待される出力: `starter_kit_version = "[新バージョン]"`
-
-正しく更新されていない場合は、手動で `.aidlc/config.toml` を編集してください。
-
 ### 7.4 設定マイグレーション【アップグレードモードのみ】
 
 新しいバージョンで追加された設定セクションを既存の `.aidlc/config.toml` に追加し、廃止設定の移行も行います。
 
+> **ステップ順序の補足（v2.6.0 / Unit 004）**: アップグレードモードでは「7.4 → 7.4b → 7.4c (no-op 判定) → 7.3 (条件実行) → 7.5」の順で実行する。`starter_kit_version` の値更新（旧 7.3）は 7.4c の判定後にのみ実行され、適用変更が無い場合（no-op）はスキップされる。
+>
+> AI agent はステップ 7.4 / 7.4b の出力を後続ステップ 7.4c で参照するため、**`mktemp -d` で生成した一時ディレクトリ配下のファイル**に結果を書き出すこと（共有 `/tmp` での予測可能ファイル名は symlink/race 攻撃のリスクがあるため固定パスは使用しない）。AI agent はディレクトリパスを 7.4 / 7.4b / 7.4c の各 Bash 呼び出しで同一の文字列として渡すこと（ツール呼び出しを跨いで shell 変数は共有されないため、リテラル展開で受け渡す）。
+>
+> **セッションディレクトリの作成（7.4 開始時に 1 回のみ実行）**:
+>
+> ```bash
+> umask 077
+> AIDLC_SETUP_SESSION_DIR=$(mktemp -d "${TMPDIR:-/tmp}/aidlc-setup.XXXXXXXX")
+> echo "AIDLC_SETUP_SESSION_DIR=${AIDLC_SETUP_SESSION_DIR}"
+> ```
+>
+> - `umask 077`: 後続のファイル作成で他ユーザーの読み取り/書き換えを禁止
+> - `mktemp -d ... .XXXXXXXX`: ランダムサフィックス付きの一時ディレクトリを `0700` モードで生成（mktemp の標準動作）
+> - `echo` で出力されたパスを AI agent が記憶し、後続ステップで `${AIDLC_SETUP_SESSION_DIR}` を**リテラル展開済みの絶対パス文字列**として再利用する
+>
+> セッションディレクトリ配下で使用するファイル:
+>
+> - `${AIDLC_SETUP_SESSION_DIR}/migrate-config-result.txt`: ステップ 7.4 の `migrate-config.sh` stdout 全体（`result:` 行を含む）
+> - `${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt`: ステップ 7.4b の対話結果として `0` または `1` の 1 文字（追加が実行されたら `1`、それ以外は `0`）
+
 **マイグレーション実行**:
 
 ```bash
-scripts/migrate-config.sh
+scripts/migrate-config.sh | tee "${AIDLC_SETUP_SESSION_DIR}/migrate-config-result.txt"
 ```
+
+`tee` で stdout を一時ファイル（セッションディレクトリ配下、`0700` 親 + `umask 077` で他ユーザー読書禁止）に保存しつつ、ユーザーにも従来通り表示する。本ファイルはステップ 7.4c で `result:` 行抽出に使用される。
 
 出力例:
 ```text
@@ -415,11 +416,120 @@ config.toml に以下のキーが欠落しています（defaults.toml に存在
 2. 選択して追記する - 追記するキーを選択
 3. いいえ - スキップする
 
-- **「1. はい」**: 全キーを `config.toml` に追記する。AIが直接TOMLファイルを編集して追記する（Editツール等を使用。dasel v3では `put` サブコマンドが廃止されているため）。追記後に `追記完了: N 件のキーを追加しました` と表示する
-- **「2. 選択して追記する」**: ユーザーに追記するキーを選択させ、選択されたキーのみ追記する
-- **「3. いいえ」**: 「欠落キーの追記をスキップしました。」と表示して次のステップへ進む
+- **「1. はい」**: 全キーを `config.toml` に追記する。AIが直接TOMLファイルを編集して追記する（Editツール等を使用。dasel v3では `put` サブコマンドが廃止されているため）。追記後に `追記完了: N 件のキーを追加しました` と表示する。**追記完了後**、Bashツールで `printf '1' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"` を実行する
+- **「2. 選択して追記する」**: ユーザーに追記するキーを選択させ、選択されたキーのみ追記する。**選択追記が 1 件以上行われた場合**は `printf '1' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"`、**0 件選択（実質スキップ）の場合**は `printf '0' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"` を実行する
+- **「3. いいえ」**: 「欠落キーの追記をスキップしました。」と表示し、Bashツールで `printf '0' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"` を実行してから次のステップへ進む
 
-**エラー時**: 「⚠ 欠落キー検出でエラーが発生しました。スキップして次のステップへ進みます。」と表示してスキップする。
+**欠落キーが 0 件の場合の補足**: 上記の「欠落キーなし。config.toml は最新です。」表示と同時に `printf '0' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"` を実行する（7.4c で必ず読み取られるため）。
+
+**エラー時**: 「⚠ 欠落キー検出でエラーが発生しました。スキップして次のステップへ進みます。」と表示し、`printf '0' > "${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"` を実行してスキップする（追加が行われていないため `0`）。
+
+### 7.4c no-op 判定【アップグレードモードのみ】
+
+ステップ 7.4 と 7.4b の結果を集約し、`.aidlc/config.toml` の `starter_kit_version` 値更新（旧 7.3、後続の条件実行ブロック）の要否を判定します。
+
+**入力**:
+
+- `${AIDLC_SETUP_SESSION_DIR}/migrate-config-result.txt`: 7.4 の `migrate-config.sh` stdout（`result:` 行を含む）
+- `${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt`: 7.4b の対話結果集約値（`0` または `1`）
+
+**実行**:
+
+```bash
+RESULT_FILE="${AIDLC_SETUP_SESSION_DIR}/migrate-config-result.txt"
+APPLIED_FILE="${AIDLC_SETUP_SESSION_DIR}/detect-missing-applied.txt"
+
+# result: 行抽出（複数行ある場合は最初の 1 行）。grep が一致しない場合も後続のフォールバックで救済。
+RESULT_LINE=$(grep -E '^result:' "$RESULT_FILE" 2>/dev/null | head -1 || true)
+DETECT_APPLIED=$(cat "$APPLIED_FILE" 2>/dev/null || echo "")
+
+scripts/check-noop-upgrade.sh \
+    --migrate-config-result "$RESULT_LINE" \
+    --detect-missing-applied "$DETECT_APPLIED"
+NOOP_EXIT=$?
+```
+
+**出力解釈**:
+
+`check-noop-upgrade.sh` は stdout に必ず以下 3 行を出力する:
+
+```text
+noop=<true|false|>
+reason=<no-changes|migrate-config-changed|missing-keys-applied|>
+error=<error-detail|>
+```
+
+| 終了コード | noop / reason | アクション |
+|-----------|---------------|----------|
+| `0` + `noop=true` + `reason=no-changes` | 適用変更なし | 7.3（starter_kit_version 更新）を **スキップ** + 通知メッセージ表示 |
+| `0` + `noop=false` + `reason=migrate-config-changed` または `reason=missing-keys-applied` | 適用変更あり | 7.3 を **通常実行** |
+| `2` + `error=*` | 判定不能（フォールバック） | 警告表示 + 7.3 を **通常実行**（既存挙動維持） |
+
+AI agent は exit code を一次判定に使い、`noop=` の値を補助的に確認する。フラグ `should_update_starter_kit_version` を以下のように決定する:
+
+- exit 0 + `noop=true` → `should_update_starter_kit_version=false`（7.3 スキップ）
+- exit 0 + `noop=false` → `should_update_starter_kit_version=true`（7.3 実行）
+- exit 2（フォールバック） → `should_update_starter_kit_version=true`（7.3 実行 + 警告表示）
+
+**スキップ時の表示**:
+
+```text
+.aidlc/config.toml の starter_kit_version 更新をスキップしました（差分なし）
+- migrate-config: 適用変更なし
+- detect-missing-keys: 追加なし
+- 注意: .claude/settings.json (8.4) は別責務として通常通り適用されます
+```
+
+**フォールバック時の警告表示**:
+
+```text
+⚠ no-op 判定に失敗しました（{error の値}）。安全側として starter_kit_version を通常通り更新します。
+```
+
+**一時ファイルのクリーンアップ**: 7.4c の判定完了後（7.3 の条件実行終了後でも可）に以下を実行し、セッションディレクトリごと除去する。**変数受け渡しミスや空展開による誤削除を防ぐためのガードを必ず付ける**:
+
+```bash
+# ガード: 変数が空/未設定 / 想定プレフィックス外 / ディレクトリでない場合は何もしない
+_tmp_base="${TMPDIR:-/tmp}"
+if [[ -n "${AIDLC_SETUP_SESSION_DIR:-}" ]] \
+   && [[ -d "${AIDLC_SETUP_SESSION_DIR}" ]] \
+   && [[ "${AIDLC_SETUP_SESSION_DIR}" == "${_tmp_base%/}/aidlc-setup."* ]]; then
+    rm -rf -- "${AIDLC_SETUP_SESSION_DIR}"
+fi
+unset AIDLC_SETUP_SESSION_DIR _tmp_base
+```
+
+- ガード条件 (3 つすべて満たした場合のみ削除):
+  - `-n`: 変数が非空（未設定 / 空文字列での `rm -rf "/"` 級事故を防ぐ）
+  - `-d`: 実体がディレクトリ（シンボリックリンクや単体ファイルへの誤削除を防ぐ）
+  - プレフィックス一致: `${TMPDIR:-/tmp}/aidlc-setup.` で始まる（mktemp で生成した本セッション専用パスのみ）
+- セッションディレクトリは毎回異なるランダムサフィックス付き（mktemp -d）であるため、クリーンアップを忘れても他の setup 実行と衝突しない。明示削除により残置を防ぐ。
+
+### 7.3 starter_kit_version の更新【アップグレードモードのみ / 条件実行】
+
+> **実行条件（v2.6.0 / Unit 004 で追加）**: 直前の 7.4c 判定で `should_update_starter_kit_version=true` の場合のみ実行する。`false` の場合は本ステップ全体をスキップして 7.5 へ進む。
+
+`.aidlc/config.toml` の `starter_kit_version` フィールドを最新バージョンに更新:
+
+`.aidlc/config.toml` を開き、`starter_kit_version` の値を `[新バージョン]` に更新してください。
+
+`starter_kit_version` フィールドが存在しない場合は、ファイル先頭に以下を追加:
+
+```toml
+starter_kit_version = "[新バージョン]"
+```
+
+**更新確認**:
+
+更新後、以下のコマンドで正しく反映されたことを確認してください:
+
+```bash
+grep "^starter_kit_version" .aidlc/config.toml
+```
+
+期待される出力: `starter_kit_version = "[新バージョン]"`
+
+正しく更新されていない場合は、手動で `.aidlc/config.toml` を編集してください。
 
 ### 7.5 旧形式バックログ移行【アップグレードモードのみ】
 
