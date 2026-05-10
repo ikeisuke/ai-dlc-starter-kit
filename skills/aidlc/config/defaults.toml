@@ -10,6 +10,15 @@ enabled = true
 # - 形式: <owner>/<repo>（正規表現: ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ / `/` はちょうど 1 個）
 # - 不正値時は警告 + デフォルト（ikeisuke/ai-dlc-starter-kit）にフォールバック
 upstream_repo = "ikeisuke/ai-dlc-starter-kit"
+# /aidlc feedback のブラウザ自動起動（v2.6.1 で追加 / Unit 003 / #690）
+# - true: gh issue create --web 経路（GitHub Issue Form をブラウザ UI で表示）
+# - false: gh issue create --body-file 経路（直接起票、デフォルト）
+# 経路判定の優先順位: TTY 状態 > 設定 > フラグ
+# - 非 TTY 環境（CI 等）では設定・フラグに関わらず常に直接起票
+# - TTY で setting=true ならブラウザ、setting=false/未設定 + 環境変数 AIDLC_FEEDBACK_WEB=1 ならブラウザ
+# - それ以外は直接起票
+# 詳細真理値表は skills/aidlc-feedback/SKILL.md / steps/feedback.md 参照
+open_in_browser = false
 
 [rules.reviewing]
 mode = "recommend"

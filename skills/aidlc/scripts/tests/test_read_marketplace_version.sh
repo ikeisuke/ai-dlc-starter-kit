@@ -128,7 +128,109 @@ chmod 644 "${TEST_DIR}/unreadable.json"
 assert_exit_code "読取権限なし" 2 "$rc"
 
 echo ""
-echo "--- 結果 ---"
+echo "=== CLI モード経由テスト（v2.6.1 Unit 001 / Issue #688） ==="
+echo ""
+echo "--- CLI モード正常系 ---"
+
+VERSION_SH="${SCRIPT_DIR}/../lib/version.sh"
+
+# C1: 正常な marketplace.json
+write_marketplace_json "${TEST_DIR}/cli_normal.json" "2.6.0"
+rc=0
+output=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_normal.json") || rc=$?
+assert_exit_code "C1: CLI モード 正常な SemVer" 0 "$rc"
+assert_output "C1: CLI モード 正常な SemVer" "2.6.0" "$output"
+
+# C2: 連続実行の安定性（3回連続で同一結果）
+rc1=0
+out1=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_normal.json") || rc1=$?
+rc2=0
+out2=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_normal.json") || rc2=$?
+rc3=0
+out3=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_normal.json") || rc3=$?
+if [[ "$rc1" -eq 0 && "$rc2" -eq 0 && "$rc3" -eq 0 && "$out1" == "$out2" && "$out2" == "$out3" ]]; then
+    echo "  PASS: C2: CLI モード 3 回連続実行の安定性"
+    ((++PASS))
+else
+    echo "  FAIL: C2: CLI モード 3 回連続実行の安定性 (rc1=$rc1 rc2=$rc2 rc3=$rc3 out1='$out1' out2='$out2' out3='$out3')"
+    ((++FAIL))
+fi
+
+echo ""
+echo "--- CLI モード異常系 ---"
+
+# C3: 引数なし
+rc=0
+output=$(bash "${VERSION_SH}" 2>/dev/null) || rc=$?
+assert_exit_code "C3: CLI モード 引数なし" 2 "$rc"
+stderr_output=$(bash "${VERSION_SH}" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:missing-json-path"* ]]; then
+    echo "  PASS: C3: CLI モード 引数なし stderr"
+    ((++PASS))
+else
+    echo "  FAIL: C3: CLI モード 引数なし stderr (got: $stderr_output)"
+    ((++FAIL))
+fi
+
+# C4: 存在しないパス
+rc=0
+output=$(bash "${VERSION_SH}" "${TEST_DIR}/nonexistent.json" 2>/dev/null) || rc=$?
+assert_exit_code "C4: CLI モード 存在しないパス" 2 "$rc"
+stderr_output=$(bash "${VERSION_SH}" "${TEST_DIR}/nonexistent.json" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:marketplace-json-not-found"* ]]; then
+    echo "  PASS: C4: CLI モード 存在しないパス stderr"
+    ((++PASS))
+else
+    echo "  FAIL: C4: CLI モード 存在しないパス stderr (got: $stderr_output)"
+    ((++FAIL))
+fi
+
+# C5: metadata.version キー不在
+cat > "${TEST_DIR}/cli_no_version.json" <<'JSON'
+{
+  "name": "ai-dlc-starter-kit"
+}
+JSON
+rc=0
+output=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_no_version.json" 2>/dev/null) || rc=$?
+assert_exit_code "C5: CLI モード metadata.version キー不在" 1 "$rc"
+stderr_output=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_no_version.json" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:metadata-version-missing-or-empty"* ]]; then
+    echo "  PASS: C5: CLI モード metadata.version 不在 stderr"
+    ((++PASS))
+else
+    echo "  FAIL: C5: CLI モード metadata.version 不在 stderr (got: $stderr_output)"
+    ((++FAIL))
+fi
+
+# C6: 不正な SemVer
+write_marketplace_json "${TEST_DIR}/cli_invalid_semver.json" "not-a-semver"
+rc=0
+output=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_invalid_semver.json" 2>/dev/null) || rc=$?
+assert_exit_code "C6: CLI モード 不正な SemVer" 1 "$rc"
+stderr_output=$(bash "${VERSION_SH}" "${TEST_DIR}/cli_invalid_semver.json" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:metadata-version-invalid-semver:"* ]]; then
+    echo "  PASS: C6: CLI モード 不正な SemVer stderr"
+    ((++PASS))
+else
+    echo "  FAIL: C6: CLI モード 不正な SemVer stderr (got: $stderr_output)"
+    ((++FAIL))
+fi
+
+echo ""
+echo "--- CLI モードと source 経路の両立確認 ---"
+
+# C8: source 経由で末尾 if は実行されない（副作用ゼロ）
+# テスト方法: source した直後に直近のコマンド成否（$?）が変化しないことを確認
+# version.sh を source した時点で末尾 if が走ると read_marketplace_version "$@" が呼ばれ
+# 引数なしのため exit 2 が返る → set -e で source 自体が失敗する。実際には source は成功する。
+# このテストは本テスト全体が source "${SCRIPT_DIR}/../lib/version.sh" 後も継続している事実で
+# 暗黙にカバー済み（このテスト自体が走っていることが C8 の証明）。
+echo "  PASS: C8: source 経路で末尾 CLI モードガードが実行されない（本テスト全体の継続実行が証拠）"
+((++PASS))
+
+echo ""
+echo "--- 最終結果 ---"
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"
 

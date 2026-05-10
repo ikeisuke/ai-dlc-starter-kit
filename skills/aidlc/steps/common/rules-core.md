@@ -17,6 +17,50 @@ scripts/read-config.sh --keys <key1> [key2] ...
 - 終了コード: 0=値あり、1=キー不在、2=エラー
 - `.local` の値は上書き、配列は完全置換。詳細は `guides/config-merge.md` を参照
 
+### dasel 呼び出し規約（CLI v3）
+
+`.aidlc/config.toml` の TOML 値読取は **`scripts/read-config.sh` 経由を第一推奨** とする。
+
+**理由**:
+
+- 4 階層マージ（defaults / HOME / project / local）と key alias を一元的に処理
+- 終了コード規約（0=値あり、1=キー不在、2=エラー）が定義済み
+- AI エージェントが `dasel -f` のような不正フラグを誤生成するリスクを排除
+
+**公開 API スクリプト層としての位置付け**:
+
+`scripts/read-config.sh` は AI-DLC スターターキット内の **公開 API スクリプト** として位置付けられ、`.aidlc/rules.md` の「スキル間依存ルール」が禁じる「他スキル内部実装への依存」には該当しない（`.aidlc/rules.md` 本体に例外規定済み）。これにより、aidlc-feedback / aidlc-setup / aidlc-migrate / reviewing-* など全スキルから参照可。`scripts/lib/*` 等は引き続き内部実装として扱う。
+
+**呼び出し記法**:
+
+| 用途 | 記法 |
+|------|------|
+| AI 手順内コマンド（aidlc スキル内プロンプト `.md`） | `bash scripts/read-config.sh <key>`（SKILL.md パス解決でスキルベースディレクトリ相対を絶対化） |
+| AI 手順内コマンド（他スキル：aidlc-feedback / aidlc-setup / aidlc-migrate / reviewing-* など） | `bash skills/aidlc/scripts/read-config.sh <key>`（リポジトリルート相対の絶対参照。各スキル配下に `scripts/read-config.sh` は存在しないため、aidlc プラグイン内のパスを直接指定する） |
+| 検証コマンド（人間 / CI） | `bash skills/aidlc/scripts/read-config.sh <key>`（リポジトリルート相対の絶対参照） |
+
+**dasel 直接呼び出しの例外**:
+
+`read-config.sh` 自身が動作不能な低レイヤー（bootstrap 内部・stdlib 系）、または `read-config.sh` が必須前提とする `.aidlc/config.toml` 自身の存在検証段階（aidlc-setup の早期判定）でのみ、dasel CLI を直接呼んでよい。その場合、以下の **2 形式のみ許容** する:
+
+- `cat <file> | dasel -i toml '<key>'`
+- `dasel -i toml '<key>' < <file>`
+
+**dasel CLI v3 の制約**:
+
+- `-f <file>` フラグは **存在しない**（`unknown flag` エラー、exit 80）。これは v2 系の構文との混同による AI 誤生成パターンであり、絶対に使用してはならない
+
+### 禁止呼び出しパターン
+
+AI エージェントが誤生成しがちな anti-pattern を以下に列挙する。これらは絶対に使用してはならない。
+
+| パターン | エラー | 正しい代替 |
+|---------|-------|----------|
+| `dasel -f <file> '<key>'` | `unknown flag -f`（exit 80、dasel v3） | `bash scripts/read-config.sh <key>` または `cat <file> \| dasel -i toml '<key>'` |
+| `dasel -f <file> -r toml '<key>'` | 同上、`-r`/`-f` 混在 | 同上 |
+
+**拡張余地**: 将来の anti-pattern は別 Issue / Unit で追加（初版は dasel 関連 2 例に限定）。
+
 ## 実行前の検証
 
 - **指示の妥当性検証**: 実行前に指示が明確か、リスクはないか確認

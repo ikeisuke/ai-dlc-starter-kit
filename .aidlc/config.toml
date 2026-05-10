@@ -184,6 +184,19 @@ checks = ["gh", "review-tools", "config-validation"]
 # 本リポジトリは v2.3.6 試験運用 + v2.4.0 本採用継続のため明示有効化
 milestone_enabled = true
 
+[rules.squash.internal_ci_checks]
+# squash-unit.sh が Unit 完了時に opt-in で実行する CI 構造チェックスクリプト一覧
+# - リポジトリルート相対パスのみ許容（絶対パス・..traversal は警告して個別 skip）
+# - 設定リストの各エントリについて、ファイル存在チェック（opt-in シグナル）を維持
+# - 設定セクション不在 / 空配列の場合は集約 skip + info ログ
+#   （consumer プロジェクトのデフォルト挙動）
+# - 詳細: v2.6.1 Unit 005 / Issue #687
+scripts = [
+    "bin/check-skill-references.sh",
+    "bin/check-bash-substitution.sh",
+    "bin/check-test-isolation.sh",
+]
+
 [rules.retrospective]
 # 許容値（v2.5.1 / 5 値 enum）:
 #   - "interactive"        : 04-completion §1.5 直前に wizard を起動して 5 値のいずれかに確定（新規セットアップ既定）
