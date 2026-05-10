@@ -3,6 +3,9 @@ name: Cycle Phase Completion Check
 # Verify that 3 phases (Inception / Construction / Operations) of an AI-DLC
 # cycle are complete before merging a cycle/* PR to main.
 # Unit 001 / Issue #672 / v2.5.6
+# Unit 002 / Issue #686 / v2.6.1: draft PR skip (added converted_to_draft event
+#   type and draft state filter; Construction中の中間 push で当ジョブが fail
+#   することを防ぐため、draft PR では job ごとスキップする)
 #
 # Branch protection / Repository Ruleset enforcement is documented in
 # docs/cycle-phase-completion-check-ruleset.md (applied near Operations Phase
@@ -10,7 +13,7 @@ name: Cycle Phase Completion Check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     branches: [main]
 
 permissions:
@@ -20,12 +23,18 @@ jobs:
   cycle-phase-completion:
     name: Cycle Phase Completion
     runs-on: ubuntu-latest
-    # cycle/* 以外（chore/* / fix/* / feature/* 等）の PR では job ごとスキップ
+    # cycle/* 以外（chore/* / fix/* / feature/* 等）または draft PR では job ごとスキップ
     # → CI checks 一覧で `Cycle Phase Completion` が `skipped` 表示になる
-    if: startsWith(github.head_ref, 'cycle/')
+    # （v2.6.1 Unit 002 / Issue #686 で draft PR skip 条件を追加）
+    if: startsWith(github.head_ref, 'cycle/') && github.event.pull_request.draft == false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Defense in depth: PR 内コードが checkout 後に実行されるため、
+          # GITHUB_TOKEN の不要な credential 永続化を防ぐ（v2.6.1 Unit 002）。
+          # 本ジョブは read-only な phase 完了チェックのみで write 権限を必要としない。
+          persist-credentials: false
 
       - name: Verify phase completion
         env:
