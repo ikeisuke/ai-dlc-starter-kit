@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 #
-# version.sh - バージョン検証共通ライブラリ
+# version.sh - バージョン検証共通ライブラリ + CLI エントリポイント
 #
-# 使用方法:
-#   source "${SCRIPT_DIR}/../lib/version.sh"  (scripts/ 配下から)
-#   source "${LIB_DIR}/version.sh"            (lib/ のパスを持つ場合)
+# 使用方法（必須サポート / v2.6.1 Unit 001 以降）:
+#   - CLI モード（推奨、AI エージェント / Bash ツール経由）:
+#       bash <path>/version.sh <marketplace.json のパス>
+#   - subprocess source（互換）:
+#       bash -c "source <path>/version.sh; read_marketplace_version <args>"
+#   - 他 bash スクリプトからの source（互換）:
+#       source "${SCRIPT_DIR}/../lib/version.sh"
 #
-# このファイルは関数定義のみを含む。トップレベルで実行されるコードはない。
+# 非対象経路（zsh 対話シェルからの手動 source）:
+#   zsh command_not_found_handler 競合により OOM クラッシュリスクがあるため避ける。
+#   詳細は SKILL.md「バージョン表示」セクションを参照。
+#
+# 末尾の CLI モードガード（${BASH_SOURCE[0]} == $0）により、bash 直接実行時のみ
+# read_marketplace_version() を呼び出す。source 経由時は関数定義のみが取り込まれる。
 #
 
 # SemVer 2.0.0 準拠パターン定義（X.Y.Z[-prerelease][+build]）
@@ -180,3 +189,14 @@ read_starter_kit_version() {
     echo "$version"
     return 0
 }
+
+# CLI モードガード（v2.6.1 Unit 001 / Issue #688）:
+# `bash version.sh <json_path>` 形式での直接実行時のみ read_marketplace_version() を呼び出す。
+# `source` 経由呼び出し時は ${BASH_SOURCE[0]} != $0 となり実行されない（既存挙動を完全維持）。
+# zsh 対話シェルから手動 source した場合は zsh command_not_found_handler 競合のリスクがあるため
+# SKILL.md の注意書きで非対象経路として案内する（本ガードは関与しない）。
+# 引数契約: 第 1 引数のみ使用（marketplace.json のパス）。第 2 引数以降は read_marketplace_version()
+# が $1 のみ参照するため安全に無視される。
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    read_marketplace_version "$@"
+fi

@@ -235,7 +235,22 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 
 `version` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
 
-1. version 正本（SoT）の `marketplace.json.metadata.version` を読み込む。スキルベースディレクトリ（SKILL.md と同じディレクトリ）から `../../.claude-plugin/marketplace.json` を解決し、`scripts/lib/version.sh::read_marketplace_version` を呼び出す（dasel 優先 / jq フォールバック）
+#### 必須: 安全な呼び出し経路（CLI モード）
+
+AI エージェント（Claude Code Bash ツール / 同等の subprocess 経由）は **必ず以下の CLI モード経由で呼び出すこと**:
+
+```bash
+bash {SKILLベースディレクトリ}/scripts/lib/version.sh {marketplace.json のパス}
+```
+
+- `{SKILLベースディレクトリ}` は SKILL.md と同じディレクトリの絶対パス
+- `{marketplace.json のパス}` は `{SKILLベースディレクトリ}/../../.claude-plugin/marketplace.json` を絶対パス化したもの（後述「制約事項」の `..` 例外を参照）
+- 終了コード 0（成功）/ 1（コンテンツエラー）/ 2（実行環境エラー）と stderr メッセージは `read_marketplace_version()` 関数仕様に従う
+- 実装は `scripts/lib/version.sh` 末尾の CLI モードガード（v2.6.1 Unit 001 / Issue #688）で提供される
+
+#### 表示処理
+
+1. 上記 CLI モード呼び出しで version 文字列を取得（stdout）
 2. 値を正規化する: 前後の空白をトリムし、先頭の `v` プレフィックスがあれば除去する。空文字・不正値・読取不能の場合は不存在と同じ扱いとする
 3. 以下のフォーマットで表示:
 
@@ -243,15 +258,28 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 AI-DLC Starter Kit v{version}
 ```
 
-4. `marketplace.json` が存在しない、または正規化後の値が空の場合:
+4. `marketplace.json` が存在しない、または正規化後の値が空の場合（CLI モードコマンドが exit 非 0 を返した場合）:
 
 ```text
 AI-DLC Starter Kit (version unknown)
 ```
 
+#### 注意: 使用すべきでない呼び出し経路
+
+ユーザー対話の zsh シェルから以下のように手動で `source` した場合、zsh `command_not_found_handler` の無限再帰により OOM クラッシュする既知の制約があります（Issue #688）。AI エージェントはこの経路を使用しないこと:
+
+```text
+（非対象 / 危険 / 使用しない）
+source {SKILLベースディレクトリ}/scripts/lib/version.sh
+read_marketplace_version /path/to/marketplace.json
+```
+
+CLI モード（`bash <path>` 経由）/ subprocess source（`bash -c "source <path>; read_marketplace_version ..."`）/ 他の bash スクリプトからの `source` 経由は **すべて安全に動作します**。
+
 ## 制約事項
 
 - **ドキュメント読み込み制限**: `.aidlc/cycles/{{CYCLE}}/` 配下のファイルのみ読み込む。他サイクルのドキュメントは読まない
 - **テンプレート参照**: ドキュメント作成時は `templates/` を参照（スキルベースディレクトリからの相対パス）
-- **パス解決**: `steps/`、`scripts/`、`config/`、`templates/`、`guides/`、`references/` で始まるパスはスキルのベースディレクトリ（SKILL.mdと同じディレクトリ）からの相対パスとして解決する。`..` によるベースディレクトリ外への参照は無効とする。ステップファイル内の相互参照（例: `steps/common/rules-core.md` を読み込んで）も同じルールに従う。Bashコマンドで `scripts/` 配下のスクリプトを実行する場合は、解決した絶対パスを使用すること
+- **パス解決**: `steps/`、`scripts/`、`config/`、`templates/`、`guides/`、`references/` で始まるパスはスキルのベースディレクトリ（SKILL.mdと同じディレクトリ）からの相対パスとして解決する。`..` によるベースディレクトリ外への参照は **以下の例外を除き** 無効とする。ステップファイル内の相互参照（例: `steps/common/rules-core.md` を読み込んで）も同じルールに従う。Bashコマンドで `scripts/` 配下のスクリプトを実行する場合は、解決した絶対パスを使用すること
+  - **例外**（v2.6.1 Unit 001 / Issue #688）: `marketplace.json`（プラグインルート `.claude-plugin/marketplace.json`）への参照は `{SKILLベースディレクトリ}/../../.claude-plugin/marketplace.json` として解決する。これは `marketplace.json` が version SoT であり、スキルベースディレクトリ外に配置されているための限定的な例外である。「バージョン表示」アクション（`/aidlc v`）でのみ使用する
 - **SKILL.md本文制限**: 本文500行以内。詳細はステップファイルに分離
