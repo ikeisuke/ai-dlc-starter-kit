@@ -11,6 +11,13 @@ AI-DLC Starter Kit の変更履歴です。
 
 ### BREAKING CHANGES
 
+- **`squash-unit.sh` の Unit 完了時 CI 構造チェックを opt-in シグナル方式に変更**: `bin/check-skill-references.sh` / `bin/check-bash-substitution.sh` / `bin/check-test-isolation.sh` の存在自体を opt-in シグナルとして個別判定し、存在すれば実行 / 不在なら無音 skip（全 check 不在時のみ集約 info ログ + 安定トークン）に変更。本体スクリプトに「starter kit / consumer 判定」のドッグフーディング特殊処理は埋め込まない（`CLAUDE.md` 「設計原則」§ ドッグフーディング特殊処理を本体に埋めない 準拠）。これにより consumer プロジェクトで `squash-unit.sh` が `bin/check-*.sh` 不在で常時 fail する問題が解消される（Unit 007）
+    - **廃止トークン**: `squash:error:${check}-script-missing` を完全廃止（即時廃止 / 中間互換トークン併記なし）。チェックスクリプト不在は opt-in 不在として正常系扱いになるため出力されない
+    - **新設トークン**: 全 check 不在時のみ stdout に集約安定トークン `squash:info:internal-ci-checks-skipped`、stderr に `info: no internal CI check scripts present in bin/ (skipping)` を出力
+    - **代替トークン**: 実行失敗を検出したい場合は既存の `squash:error:${check}-failed` を引き続き利用
+    - **移行手順**: CI / 監視ルール / ドキュメントで `squash:error:${check}-script-missing` を grep / 検出している箇所があれば除去。全 skip シナリオ検出が必要な場合は新トークン `squash:info:internal-ci-checks-skipped` を監視対象に追加
+    - **starter kit 自身の挙動**: `bin/check-*.sh` 3 種は揃っているため自然に全実行される（既存挙動と完全互換）。3 種揃いの保証は `bin/tests/squash-unit/internal_ci_checks_optin.bats` の専用ケースで境界契約として担保
+    - **その他**: `squash-unit.sh` 末尾の `main "$@"` を `if/fi` でガードし、bats から `source` で関数定義のみ拾える構造に変更（直接実行時の挙動は既存と完全互換）
 - **振り返り（retrospective）を Operations Phase から独立スキル `aidlc-retrospective` へ全量移転**: Operations Phase §1 の振り返り実行ロジック（feedback_mode 解決 / wizard / cap 判定 / 本文構築 / Issue 起票 / spool fallback / mirror_state ラベル化 / dialog token ガード）を完全に分離し、`/aidlc retrospective`（短縮形 `/aidlc r`）で起動する独立スキルとして再構成。Operations Phase は「リリース完了 + post-merge cleanup」までで完結する。互換アダプタ層は提供されない（#667 / Unit 005）
     - **移行手順**: 既存の Operations Phase 完了フローを使用していた場合、Operations 完了後に `/aidlc r [対象サイクル]` を任意のタイミングで実行する。対象サイクルは引数で明示指定するか、カレントブランチ / 直近完了サイクルから自動推定される
     - **互換維持**: `[rules.retrospective] feedback_mode` の正規系 5 値（`interactive` / `local-issue-only` / `mirror-only` / `local-and-mirror` / `disabled`）と旧値互換入力の正規化（`silent` → `interactive` / `mirror` → `mirror-only` / 未設定 → `interactive` fallback、`feedback_mode_normalize` 経由で変換）/ 振り返り Issue 本文の構造（KPT セクション + 主因切り分けマトリクス + 事実テーブル）/ Inception Phase の `predecessor_resolve_issue`（前サイクル振り返り参照）/ AskUserQuestion 対話必須ガード（Unit 001 / #647）はすべて不変

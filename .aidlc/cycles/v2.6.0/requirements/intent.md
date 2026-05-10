@@ -87,6 +87,15 @@ AI-DLC スターターキットの **運用基盤を整備する minor サイク
 - `rules.md` L107 / L122 の fenced code block に言語指定を追加（既存テキストから推定: `text` または該当言語）
 - `markdownlint-cli2` で MD040 違反 0 件を確認
 
+### #(squash-unit.sh consumer fail-open): squash-unit.sh の CI 構造チェック fail-open 化（Unit 007 で追加 / Construction Phase 中に割り込み追加 / 分類2「別 Unit」）
+
+- `skills/aidlc/scripts/squash-unit.sh:985-996` の 3 種 CI 構造チェック（check-skill-references / check-bash-substitution / check-test-isolation）が consumer プロジェクトで「ファイル不在 → 即 exit 1」となり Unit 完了 squash が常時 fail する問題を修正
+- starter kit リポジトリ判定（リポジトリルート直下に `skills/aidlc/` ディレクトリが存在するか）で fail-closed / fail-open を切り替え
+- starter kit 自身: 従来どおり fail-closed 維持（3 種チェックを必須実行）
+- consumer プロジェクト: fail-open + info ログ（`info: skipping starter-kit internal CI checks (consumer project)`）でスキップ
+- bats テスト追加（starter kit 経路 / consumer 経路の両方）
+- 影響範囲: visitory v1.16.2 サイクル Unit 005 で発生した manual squash 回避を解消
+
 ### スコープ横断
 
 - `.aidlc/config.toml` の `starter_kit_version` を 2.6.0 にバンプ（リリース時）

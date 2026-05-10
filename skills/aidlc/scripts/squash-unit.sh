@@ -928,6 +928,35 @@ squash_retroactive_git() {
     echo "squash:success:${new_hash}"
 }
 
+# --- 内部 CI 構造チェック（opt-in シグナル方式）---
+# 各 bin/check-*.sh の存在自体を opt-in シグナルとして扱い、
+# 存在すれば実行 / 不在なら無音 skip する汎用論理。
+# 全 check が不在の場合のみ集約 info ログ + 安定トークンを出力する。
+# 本体スクリプトに「starter kit / consumer 判定」のドッグフーディング特殊処理は埋め込まない。
+# CLAUDE.md「設計原則」§ ドッグフーディング特殊処理を本体に埋めない 準拠。
+run_internal_ci_checks_or_skip() {
+    local repo_root="$1"
+    local check_script
+    local executed_count=0
+
+    for check_script in check-skill-references check-bash-substitution check-test-isolation; do
+        if [[ ! -f "${repo_root}/bin/${check_script}.sh" ]]; then
+            continue
+        fi
+        executed_count=$((executed_count + 1))
+        if ! bash "${repo_root}/bin/${check_script}.sh" >&2; then
+            echo "squash:error:${check_script}-failed"
+            return 2
+        fi
+    done
+
+    if [[ $executed_count -eq 0 ]]; then
+        echo "info: no internal CI check scripts present in bin/ (skipping)" >&2
+        echo "squash:info:internal-ci-checks-skipped"
+    fi
+    return 0
+}
+
 # --- メイン処理 ---
 
 main() {
@@ -980,20 +1009,12 @@ main() {
         echo "squash:error:not-a-repository"
         exit 1
     }
-    # 3 種チェックは必須実行（fail-closed）。実行権限ビット欠落でもスキップしない。
-    # ファイル不在は即 exit 1 で fail-closed
-    local check_script
-    for check_script in check-skill-references check-bash-substitution check-test-isolation; do
-        if [[ ! -f "${repo_root_for_checks}/bin/${check_script}.sh" ]]; then
-            echo "Error: required check script not found: bin/${check_script}.sh" >&2
-            echo "squash:error:${check_script}-script-missing"
-            exit 1
-        fi
-        if ! bash "${repo_root_for_checks}/bin/${check_script}.sh" >&2; then
-            echo "squash:error:${check_script}-failed"
-            exit 1
-        fi
-    done
+    # 3 種 CI 構造チェック（opt-in シグナル方式）
+    # 各 bin/check-*.sh の存在を opt-in シグナルとして個別判定する。
+    # 詳細は run_internal_ci_checks_or_skip() のヘッダコメント参照。
+    if ! run_internal_ci_checks_or_skip "${repo_root_for_checks}"; then
+        exit 1
+    fi
 
     # retroactive モード: 専用フローへ分岐
     if [[ "$RETROACTIVE" == "true" ]]; then
@@ -1058,4 +1079,11 @@ main() {
     squash_git "$BASE_COMMIT" "$MESSAGE" "$CO_AUTHORS" "$TARGET_COUNT"
 }
 
-main "$@"
+# bats テストから `source` で関数定義のみ拾えるようにガード
+# 直接実行時（`bash squash-unit.sh ...`）はガード true で main を起動
+# `source` 時はガード false で main を起動しない
+# 注: `set -e` 下では `[[ ]] && cmd` 形式は `[[ ]]` が false で全体が
+# 失敗扱いになるため、`if`/`fi` で明示的に条件分岐させる
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
