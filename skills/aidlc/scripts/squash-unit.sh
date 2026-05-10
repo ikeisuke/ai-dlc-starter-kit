@@ -928,31 +928,176 @@ squash_retroactive_git() {
     echo "squash:success:${new_hash}"
 }
 
-# --- 内部 CI 構造チェック（opt-in シグナル方式）---
-# 各 bin/check-*.sh の存在自体を opt-in シグナルとして扱い、
-# 存在すれば実行 / 不在なら無音 skip する汎用論理。
-# 全 check が不在の場合のみ集約 info ログ + 安定トークンを出力する。
-# 本体スクリプトに「starter kit / consumer 判定」のドッグフーディング特殊処理は埋め込まない。
+# --- 内部 CI 構造チェック（設定駆動 + opt-in シグナル方式）---
+# `.aidlc/config.toml` の [rules.squash.internal_ci_checks].scripts 設定キーから
+# `read-config.sh` 経由で実行対象スクリプトのリストを動的に解決する。
+# 本体スクリプトに starter kit 固有のチェックスクリプト名・配置の知識を持たない。
 # CLAUDE.md「設計原則」§ ドッグフーディング特殊処理を本体に埋めない 準拠。
-run_internal_ci_checks_or_skip() {
-    local repo_root="$1"
-    local check_script
-    local executed_count=0
+# 詳細: v2.6.1 Unit 005 / Issue #687
 
-    for check_script in check-skill-references check-bash-substitution check-test-isolation; do
-        if [[ ! -f "${repo_root}/bin/${check_script}.sh" ]]; then
-            continue
+# parse_config_array: read-config.sh の Python 風 list literal 出力 (`['a', 'b']`) を
+# 改行区切りの行配列にデコードする局所ヘルパ（純粋関数）。
+# 引数: $1 = read-config.sh の生 stdout
+# 出力: 改行区切り行配列（stdout）
+# 終了コード: 0 = 正常 / 1 = 想定外フォーマット入力
+# 将来 read-config.sh 側に --format=lines 等が追加されたら本ヘルパは削除可能
+parse_config_array() {
+    local raw="$1"
+    # 前後空白の trim
+    raw="${raw#"${raw%%[![:space:]]*}"}"
+    raw="${raw%"${raw##*[![:space:]]}"}"
+    # 空文字: 防御的に 0 行で正常終了
+    if [[ -z "$raw" ]]; then
+        return 0
+    fi
+    # 制御文字（NUL を除く 0x01-0x08, 0x0B-0x0C, 0x0E-0x1F）混入を拒否
+    # （\t/\n/\r は許容）。LC_ALL=C で 1-byte ロケールに固定して LANG 干渉を避ける
+    if LC_ALL=C printf '%s' "$raw" | LC_ALL=C grep -qE $'[\x01-\x08\x0b\x0c\x0e-\x1f]'; then
+        return 1
+    fi
+    # フォーマット検証: [ で始まり ] で終わること
+    if [[ "${raw:0:1}" != "[" || "${raw: -1}" != "]" ]]; then
+        return 1
+    fi
+    # 空配列
+    if [[ "$raw" == "[]" ]]; then
+        return 0
+    fi
+    # 厳密フォーマット検証（コードレビュー Round 1 指摘 #1 反映）:
+    # `read-config.sh` の正規出力は `[<quoted_elem>(, <quoted_elem>)*]` の形式。
+    # quoted_elem は `'<chars>'` または `"<chars>"`（クオート種類は要素ごとに混在可、
+    # 内部にクオート文字含まず）。区切りはカンマ + 任意空白。
+    # クオート欠落・区切り不正はフォーマットエラー（exit 1）として扱う。
+    local body="${raw#[}"
+    body="${body%]}"
+    # 前後空白の trim
+    body="${body#"${body%%[![:space:]]*}"}"
+    body="${body%"${body##*[![:space:]]}"}"
+    # 要素列の正規表現検証: 各要素は ' or " で囲まれ、カンマ + 任意空白で区切られる
+    local elem_re="('[^']*'|\"[^\"]*\")"
+    local list_re="^${elem_re}([[:space:]]*,[[:space:]]*${elem_re})*$"
+    if [[ ! "$body" =~ $list_re ]]; then
+        return 1
+    fi
+    # 各要素を取り出して出力
+    # 注: `for elem in $body` での glob 展開を避けるため `read -ra` を使用
+    local arr=()
+    IFS=',' read -ra arr <<< "$body"
+    local elem
+    for elem in "${arr[@]}"; do
+        # 前後空白 trim
+        elem="${elem#"${elem%%[![:space:]]*}"}"
+        elem="${elem%"${elem##*[![:space:]]}"}"
+        # 外側のクオート 1 文字を剥がす
+        if [[ "${elem:0:1}" == "'" || "${elem:0:1}" == '"' ]]; then
+            elem="${elem:1:${#elem}-2}"
         fi
-        executed_count=$((executed_count + 1))
-        if ! bash "${repo_root}/bin/${check_script}.sh" >&2; then
-            echo "squash:error:${check_script}-failed"
-            return 2
+        if [[ -n "$elem" ]]; then
+            printf '%s\n' "$elem"
         fi
     done
+    return 0
+}
 
-    if [[ $executed_count -eq 0 ]]; then
-        echo "info: no internal CI check scripts present in bin/ (skipping)" >&2
-        echo "squash:info:internal-ci-checks-skipped"
+# is_invalid_check_path: パス正規化バリデーション（4 条件 OR）
+# 引数: $1 = 設定リスト由来のパス文字列
+# 戻り値: 0 = 不正（reject）、1 = 妥当（accept）
+# 設計レビュー Round 1 指摘 #3 反映: 許容文字セット OR + 独立条件 4 個
+is_invalid_check_path() {
+    local entry="$1"
+    # (1) 空エントリ reject
+    [[ -z "$entry" ]] && return 0
+    # (2) 絶対パス reject
+    [[ "$entry" == /* ]] && return 0
+    # (3) traversal reject（'..' を含む）
+    [[ "$entry" == *".."* ]] && return 0
+    # (4) 許容文字セット外 reject
+    [[ ! "$entry" =~ ^[A-Za-z0-9_./-]+$ ]] && return 0
+    return 1
+}
+
+# emit_aggregate_skip: 集約 skip の 2 行契約出力（既存トークン互換 + reason 別行）
+# 引数: $1 = reason 値
+emit_aggregate_skip() {
+    local reason="$1"
+    echo "squash:info:internal-ci-checks-skipped"
+    echo "squash:info:internal-ci-checks-skipped:reason=${reason}"
+}
+
+run_internal_ci_checks_or_skip() {
+    local repo_root="$1"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # 設定読取（公開 API スクリプト層 / Unit 004 で確立）
+    local raw_value
+    local read_exit=0
+    raw_value=$(bash "${script_dir}/read-config.sh" rules.squash.internal_ci_checks.scripts 2>/dev/null) || read_exit=$?
+
+    case "$read_exit" in
+        0)
+            ;;
+        1)
+            # キー不在（consumer プロジェクト想定）
+            echo "info: [rules.squash.internal_ci_checks].scripts not configured (skipping)" >&2
+            emit_aggregate_skip "no-config"
+            return 0
+            ;;
+        *)
+            # 実行系エラー（dasel 未インストール / TOML 破損等）
+            echo "Warning: failed to read [rules.squash.internal_ci_checks].scripts (exit=${read_exit}); skipping internal CI checks" >&2
+            emit_aggregate_skip "config-read-error"
+            return 0
+            ;;
+    esac
+
+    # 配列パース
+    local entries_raw
+    local parse_exit=0
+    entries_raw=$(parse_config_array "$raw_value") || parse_exit=$?
+
+    if [[ "$parse_exit" -ne 0 ]]; then
+        echo "Warning: [rules.squash.internal_ci_checks].scripts has invalid format; skipping internal CI checks" >&2
+        emit_aggregate_skip "invalid-config-format"
+        return 0
+    fi
+
+    # 空配列チェック
+    if [[ -z "$entries_raw" ]]; then
+        echo "info: [rules.squash.internal_ci_checks].scripts is empty (skipping)" >&2
+        emit_aggregate_skip "empty-config"
+        return 0
+    fi
+
+    # エントリ評価ループ
+    local entry
+    local executed_count=0
+    while IFS= read -r entry; do
+        [[ -z "$entry" ]] && continue
+        # パス正規化チェック
+        if is_invalid_check_path "$entry"; then
+            echo "Warning: invalid script path in [rules.squash.internal_ci_checks].scripts: ${entry}" >&2
+            echo "squash:warn:internal-ci-check-skipped:reason=invalid-path:script=${entry}"
+            continue
+        fi
+        # 実体存在チェック（opt-in シグナル）
+        if [[ ! -f "${repo_root}/${entry}" ]]; then
+            echo "squash:info:internal-ci-check-skipped:reason=script-not-found:script=${entry}"
+            continue
+        fi
+        # 実行
+        local basename_no_ext
+        basename_no_ext=$(basename "$entry" .sh)
+        executed_count=$((executed_count + 1))
+        if ! bash "${repo_root}/${entry}" >&2; then
+            echo "squash:error:${basename_no_ext}-failed"
+            return 2
+        fi
+    done <<< "$entries_raw"
+
+    if [[ "$executed_count" -eq 0 ]]; then
+        echo "info: no executable internal CI check scripts present (all entries skipped)" >&2
+        emit_aggregate_skip "no-script-present"
     fi
     return 0
 }
@@ -1000,8 +1145,8 @@ main() {
         exit 1
     fi
 
-    # 3 種 CI 構造チェック（Unit 完了時必須実行 / cwd 非依存 / violation で squash 中止）
-    # 検査対象: skill-references / bash-substitution / test-isolation
+    # 内部 CI 構造チェック（Unit 完了時必須実行 / cwd 非依存 / violation で squash 中止）
+    # 検査対象は `.aidlc/config.toml` の [rules.squash.internal_ci_checks].scripts で動的解決
     # script dir 起点で repo root を解決し絶対パスで実行
     local repo_root_for_checks
     repo_root_for_checks=$(git rev-parse --show-toplevel 2>/dev/null) || {
@@ -1009,8 +1154,7 @@ main() {
         echo "squash:error:not-a-repository"
         exit 1
     }
-    # 3 種 CI 構造チェック（opt-in シグナル方式）
-    # 各 bin/check-*.sh の存在を opt-in シグナルとして個別判定する。
+    # 内部 CI 構造チェック（設定駆動 + opt-in シグナル方式）
     # 詳細は run_internal_ci_checks_or_skip() のヘッダコメント参照。
     if ! run_internal_ci_checks_or_skip "${repo_root_for_checks}"; then
         exit 1

@@ -43,10 +43,13 @@ v2.6.0 Unit 007 で opt-in シグナル方式にリファクタした `skills/ai
 
 ## 技術的考慮事項
 
-- 後方互換最優先: 設定不在 / セクション不在の場合に既存 3 種を fallback default で読み込む
-- `read-config.sh` が配列を返す方式（既存パターン）を踏襲し、新規パーサを追加しない
+- **設定不在時は集約 skip に統一**（CLAUDE.md「設計原則 § ドッグフーディング特殊処理を本体に埋めない」原則準拠 / 計画レビュー Round 1 確定）。本体スクリプトに 3 種の知識を残さない（fallback default は不採用）
+- starter kit リポジトリでは `.aidlc/config.toml` に明示設定を追加することで従来 3 種実行を継続（dogfood 確認で担保）
+- consumer プロジェクトは設定不在で集約 skip（既存トークン `squash:info:internal-ci-checks-skipped` を 1 行目に維持し、reason は別行で 2 行契約）
+- `read-config.sh` が配列を返す方式（既存パターン）を踏襲し、`squash-unit.sh` 内に局所ヘルパ `parse_config_array()` を実装。将来 `read-config.sh --format=lines` 移行時に削除可能な暫定 IF として配置
 - 既存の opt-in シグナル方式（ファイル存在チェック）は維持（設定にあるが実体が無いケースは個別 skip）
-- 空配列指定時は集約 skip + info ログ（`internal-ci-checks:skip:reason=empty-config`）
+- 空配列指定時は集約 skip + info ログ（reason=empty-config）
+- 設定読取エラー（`read-config.sh` exit 2）と設定不在は別 reason として分離（reason=config-read-error / reason=no-config）して可観測性を確保
 
 ## 関連Issue
 
@@ -66,9 +69,9 @@ Medium（設計原則準拠 / メンテナビリティ向上、影響範囲は s
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-10
+- **完了日**: 2026-05-11
+- **担当**: AI-DLC（Claude Code）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
