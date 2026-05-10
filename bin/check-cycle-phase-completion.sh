@@ -90,7 +90,12 @@ evaluate_inception() {
             status = fields[3]
             sub(/^[[:space:]]+/, "", status)
             sub(/[[:space:]]+$/, "", status)
-            if (status != "完了" && status != "スキップ") {
+            # Accept the canonical "完了" / "スキップ" or those followed by
+            # an annotation block delimited by "（" / "(" / whitespace
+            # (e.g. "完了（AIレビュー2R 0件→auto_approved）"). Rejects
+            # near-match values like "完了予定" or "スキップ検討中" so the
+            # release gate is not weakened.
+            if (status !~ /^完了([[:space:]（(]|$)/ && status !~ /^スキップ([[:space:]（(]|$)/) {
                 step = fields[2]
                 sub(/^[[:space:]]+/, "", step)
                 sub(/[[:space:]]+$/, "", step)
@@ -164,7 +169,18 @@ evaluate_construction() {
             }
         ' "${unit_file}")"
 
-        if [[ "${status}" != "完了" && "${status}" != "取り下げ" ]]; then
+        # Accept the canonical "完了" / "取り下げ" or those followed by an
+        # annotation block delimited by "（" / "(" / whitespace
+        # (e.g. "完了（AIレビュー2R 0件→auto_approved）"). Rejects
+        # near-match values like "完了予定" or "取り下げ検討中" so the
+        # release gate is not weakened.
+        case "${status}" in
+            "完了"|"取り下げ") status_ok=1 ;;
+            "完了（"*|"完了("*|"完了 "*) status_ok=1 ;;
+            "取り下げ（"*|"取り下げ("*|"取り下げ "*) status_ok=1 ;;
+            *) status_ok=0 ;;
+        esac
+        if [[ "${status_ok}" != "1" ]]; then
             first_pending="${unit_basename}|${status}"
             break
         fi

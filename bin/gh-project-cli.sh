@@ -155,10 +155,11 @@ _parse_common_opts() {
 }
 
 # 必須スコープ
-_REQUIRED_SCOPES="project read:org read:project"
+# 配列で保持する（IFS=$'\n\t' 環境下で空白区切りの未クォート変数展開は単一トークンになるため）
+_REQUIRED_SCOPES=(project read:org read:project)
 
 _check_scopes_or_exit() {
-    if ! gh_scope_check_require "--${_MODE}" $_REQUIRED_SCOPES; then
+    if ! gh_scope_check_require "--${_MODE}" "${_REQUIRED_SCOPES[@]}"; then
         exit 2
     fi
 }

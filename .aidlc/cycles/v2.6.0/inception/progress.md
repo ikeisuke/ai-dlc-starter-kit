@@ -9,7 +9,7 @@
 | 3. ユーザーストーリー作成 | 完了（AIレビュー2R 0件→auto_approved） | story-artifacts/user_stories.md | 2026-05-09 |
 | 4. Unit定義 | 完了（AIレビュー1R clean→auto_approved） | story-artifacts/units/*.md | 2026-05-09 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-05-09 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | - | 2026-05-09 (理由: 当リポジトリは Unit 単位で実装状態を追跡する形式、phase-level progress.md 不要) |
 
 ## 現在のステップ
 

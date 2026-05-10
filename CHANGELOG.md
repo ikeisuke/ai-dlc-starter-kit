@@ -35,6 +35,12 @@ AI-DLC Starter Kit の変更履歴です。
 - `skills/aidlc/scripts/write-history.sh` の `--operations-stage` ヒント値検証を fail-closed cross-check に強化: 旧仕様では `--operations-stage pre-merge` を即時 pass していたが、ヒント値の偽装で post-merge ガードを迂回できる経路を遮断するため、ヒント値（`--operations-stage` 引数 / `AIDLC_OPERATIONS_STAGE` 環境変数）と実行コンテキスト導出値（`completion_gate_ready` + `gh pr view` の state/mergedAt/number 一致）を常に cross-check するよう変更。不一致時は `error:post-merge-history-write-forbidden:hint_mismatch:hint=pre-merge,derived=post-merge,...` で exit 3 ブロック。`AIDLC_OPERATIONS_STAGE` 環境変数のサポートを新規追加（許可値 `pre-merge|post-merge` のみ受容、不正値は exit 1）（#667 / Unit 005）
 - `skills/aidlc/steps/operations/04-completion.md` §1（振り返り）を約 440 行から約 25 行に縮退: 実行ロジックを完全削除し、`/aidlc r` への案内文のみ残す。§6「次のサイクル開始」付近に `/aidlc i` と並列で `/aidlc r` 案内を追加（#667 / Unit 005）
 
+### Fixed
+
+- `bin/gh-project-cli.sh` の `_check_scopes_or_exit` で必須スコープを単一文字列で渡していた問題を修正: スクリプト先頭で `IFS=$'\n\t'` を設定しているため、空白区切り文字列の未クォート展開が単一トークンとなり、`gh_scope_check_require` が `"project read:org read:project"` をひとつのスコープ名として扱って strict モード下では常に scope_missing を返す回帰があった。`_REQUIRED_SCOPES` を bash 配列化し `"${_REQUIRED_SCOPES[@]}"` で展開することで 3 個の独立したスコープ引数として渡るよう修正（Operations Phase pre-merge codex review P1 指摘 / Unit 006 補修）
+- `bin/check-cycle-phase-completion.sh` が `inception/progress.md` / Unit 定義の状態セルを strict equality で評価していたため、`完了（AIレビュー2R 0件→auto_approved）` のような annotation 付き値を未完了と誤判定し v2.6.0 PR の Cycle Phase Completion check が常時 fail していた問題を修正: awk 比較を `^完了([[:space:]（(]|$)` / `^スキップ([[:space:]（(]|$)` 正規表現、bash 比較を `case` パターン（`完了` / `取り下げ` / `完了（...` / `完了(...` / `完了 ...` / `取り下げ（...` / `取り下げ(...` / `取り下げ ...`）に変更し、annotation を受容しつつ `完了予定` / `取り下げ検討中` のような近似値は引き続き未完了として扱う（Operations Phase pre-merge codex review P2 指摘反映）。同時に v2.6.0 `inception/progress.md` のステップ 6 (`Construction用progress.md作成`) を v2.5.6 と同様に「スキップ」へ訂正（当リポジトリは Unit 単位で実装状態を追跡する形式、phase-level progress.md 不要）
+- 旧 `tests/retrospective/step-integration.bats` (12 件) と `tests/retrospective-mirror/step-integration.bats` (5 件) を削除: Unit 005 で `04-completion.md` から削除された retrospective ロジックの存在を期待しており Migration Tests CI が常時 fail していた。新フォーマットの検証は `tests/operations-04-completion-section1-5.bats` (38 件) でカバー済（Closes #681）
+
 ---
 
 ## [2.5.6] - 2026-05-09
