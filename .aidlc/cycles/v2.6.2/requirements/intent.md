@@ -18,6 +18,8 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
    - **#683**: Unit 006 副作用 bats テスト整備（`gh` API モックフレームワーク + `setup-github-project.sh` / `migrate-issue-524.sh` / `probe-github-project.sh` / `audit-github-project.sh` の本体動作テスト）
 3. **振り返り分離（aidlc-migrate）周辺のセキュリティ強化（v2.6.0 Unit 003 R1〜R3 連続指摘 defer）**:
    - **#680**: `skills/aidlc-migrate/scripts/migrate-apply-config.sh::_apply_resource()` の manifest 由来パス（`path` / `dest`）の **トラバーサル検証**未実装。細工された fork の manifest により `AIDLC_PROJECT_ROOT` 配下外（例: `/etc/cron.d/evil`）への書き込みが理論上可能
+4. **AI エージェント運用周辺の zsh OOM クラス予防（#688 兄弟バグ / 一般化）**:
+   - **#697**: #688（v2.6.1 で `/aidlc v` 経路を CLI モード化で個別解決済）の **根本原因クラス** が AI エージェントの Bash ツール経由の long-text プロンプト構築全般に存在。プロンプト内 backtick / `$(...)` をきっかけに bash がコマンド置換を試み、未定義コマンドへの zsh `command_not_found_handler` 無限再帰で OOM クラッシュ。v2.6.2 Inception Phase 中（codex Round 2 レビュー時）に実発生
 
 ## ターゲットユーザー
 
@@ -43,6 +45,10 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
   - トラバーサル攻撃ケース（`../../../etc/cron.d/evil` / 絶対パス / シンボリックリンク経由）の bats テストが追加される
 - **#682 解消**: `bin/gh-project-cli.sh _subcmd_ensure_fields` の `field:exists` 分岐に options 差分同期ロジックが追加され、spec 側 `fields[*].options` と既存 field の options 差分が `bin/lib/gh-project-repo.sh::gh_project_repo_add_field_option` で追加される。dry-run / strict / soft モード対応
 - **#683 解消**: `gh` API モックフレームワーク（`bin/tests/gh-project/_helpers.bash` 等）が新設され、`setup-github-project.sh.bats` / `migrate-issue-524.bats` / `probe-github-project.bats` / `audit-github-project.bats` の副作用本体動作テストが追加される。既存 28 件の引数/エラー系テストとの並存
+- **#697 解消**: 以下 3 軸が完了する:
+  - **規約改訂（必須）**: CLAUDE.md「`$(...)` 絶対禁止」の対象範囲を「コマンド置換全般（`$(...)` および backtick `` ` ``）」「全 Bash ツール呼び出しの引数文字列」に拡張。AI エージェント向け「Bash ツール経由 long-text 渡し時の安全パターン」（一時ファイル + wrapper / `--content-file` / `--body-file` 推奨経路）を明文化
+  - **主要スクリプトの推奨経路明示**: `skills/aidlc/scripts/write-history.sh` 等の long-text 受領インターフェースで `--content` ではなく `--content-file` を AI エージェント向け第一推奨に位置付け（既存仕様の SKILL.md / docs 表現更新のみ、スクリプト本体動作は変更しない）
+  - **#688 注意書きの一般化**: SKILL.md の `/aidlc v` 経路の zsh OOM 注意書きを「Bash ツール経由のあらゆる外部スクリプト呼び出しに共通する zsh OOM 回避ルール」として一般化
 - **回帰なし（判定母集団を明示）**:
   - **CI 必須 checks（確定一覧の参照規約）**: 判定対象の確定一覧は **Repository Settings > Branch protection / Ruleset の現行定義を正（SoT）** とする。Construction Phase 着手時に `gh api repos/ikeisuke/ai-dlc-starter-kit/branches/main/protection` および `gh ruleset list / view` で取得した required check 名のスナップショットを `.aidlc/cycles/v2.6.2/operations/required-checks.md` に列挙し、本サイクル中は当該一覧を判定母集団として固定する
   - **対象 OS / シェル**: macOS（zsh / bash）+ Linux Ubuntu（bash）。WSL / 他ディストリは best-effort
@@ -52,7 +58,7 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 ## 期限とマイルストーン
 
 - **patch サイクル**: 短期完了を目標（破壊的変更なし）
-- **Unit 数: 5 件固定**（Issue 1 件 = 1 Unit のマッピング: #677 / #678 / #680 / #682 / #683）。例外的な追加・分割が必要な場合は Construction Phase で再計画し、Intent 改訂を伴う
+- **Unit 数: 6 件固定**（Issue 1 件 = 1 Unit のマッピング: #677 / #678 / #680 / #682 / #683 / #697）。v2.6.2 Inception Phase 中（codex Round 2 レビュー時）に #697 を実発生検出により本サイクル中で追加（初版 5 Unit + Inception 中 1 追加 = 6 Unit）。Construction Phase 中の例外的な追加・分割は引き続き Intent 改訂を伴う
 - Construction Phase は Unit ごと独立に進める
 - Operations Phase で v2.6.2 タグ付け・CHANGELOG 更新・post-merge-sync を経てリリース完了
 
@@ -60,7 +66,7 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 
 - **後方互換性**: patch リリースのため破壊的変更は禁止。すべての変更は default 値による fallback / opt-out 経路を持つこと
 - **設計原則準拠**: CLAUDE.md「ドッグフーディング特殊処理を本体に埋めない」を遵守。consumer プロジェクトで自然に skip / opt-in できる経路を選ぶ
-- **コマンド置換禁止**: CLAUDE.md「`$(...)` 絶対禁止」を遵守。すべての修正案・サンプルコード・テストでコマンド置換を新規導入しない
+- **コマンド置換禁止（強化）**: CLAUDE.md「`$(...)` 絶対禁止」の対象を **「`$(...)` および backtick `` ` `` を含むコマンド置換全般」** に拡張（Unit 006 / #697 で本サイクル中に規約改訂）。すべての修正案・サンプルコード・テスト・AI エージェント向け Bash ツール呼び出しでコマンド置換を新規導入しない
 - **依存ツール**: dasel v3 / jq / gh CLI / bash / shellcheck / shellharden を前提とする
 - **Project / API モック範囲**: #683 の bats モックは `gh project list` / `gh project create` / `gh project field-list` / `gh project item-add` 等の必要 API に限定し、`gh` 全 API のフルモックは構築しない（YAGNI）
 - **対象外項目**: v2.6.0 振り返り由来の他項目（#691/#692/#693/#694）、v2.6.0 以前由来の defer / feedback（#679/#684/#685 等）、振り返り Issue 分離検討（#664）、retrospective mirror 自動統合（#621）、振り返り3層検証 skill 化（#652）は本サイクルでは対応しない
@@ -89,6 +95,13 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 - **#682**: 利用者からは透明（spec.yaml に新 option を追加して `ensure-fields` 再実行した際に差分追加されるようになる、という機能追加方向）
 - **#683**: 利用者からは透明（テスト追加のみ、本体動作変更なし）
 
+### #697 の影響（規約・ドキュメント改訂）
+
+- **変更内容**: CLAUDE.md / SKILL.md / AGENTS.md の規約改訂（backtick 含むコマンド置換全般禁止の明文化、AI エージェント向け安全パターン追記、#688 注意書きの一般化）。スクリプト本体動作は変更しない
+- **互換性方針**: 既存ユーザーが backtick を含む Bash 呼び出しを行っていた場合、明示的にハッキング扱いとなる（規約レベル）。技術的なブロックは PreToolUse hook 経由の警告のみで、強制ブロックは追加しない（hook が許可ダイアログ後に実行される制約のため）
+- **移行案内**: CHANGELOG に「AI エージェント向け規約 / SKILL.md の zsh OOM 注意書きを一般化」旨を記載
+- **更新ドキュメント候補**: `CLAUDE.md` / `AGENTS.md` / `skills/aidlc/SKILL.md` / `skills/aidlc/steps/common/commit-flow.md` / `skills/aidlc/steps/common/review-flow.md` / `skills/write-history/SKILL.md` / `CHANGELOG.md`
+
 ### 共通更新範囲
 
 - `CHANGELOG.md` に v2.6.2 セクションを追加し、上記変更を patch 扱いで記載
@@ -103,7 +116,8 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 - #680 `migrate-apply-config.sh::_apply_resource()` の manifest 由来パスのトラバーサル検証。**許容形式 = `AIDLC_PROJECT_ROOT` からの相対パスのみ**、絶対パス / `..` 含有 / 配下外を拒否（cross-platform `realpath` 対応 + bats 攻撃ケーステスト）
 - #682 `bin/gh-project-cli.sh ensure-fields` の field options 差分同期実装（dry-run / strict / soft 対応）
 - #683 Unit 006 副作用 bats テスト整備（gh API モックヘルパー + 4 スクリプト本体動作テスト）
-- 上記 5 件に対応する bats / shellcheck テスト追加・更新
+- #697 AI エージェント Bash プロンプト経由の zsh OOM クラス予防（規約改訂 + 主要スクリプトの推奨経路明示 + #688 注意書きの一般化）
+- 上記 6 件に対応する bats / shellcheck テスト追加・更新（#697 はドキュメント中心のためテスト追加は CLAUDE.md / SKILL.md の lint 通過確認程度）
 - v2.6.2 リリース準備（CHANGELOG / version / Milestone / PR）
 
 ### 含まれないもの（明示的除外）
@@ -132,3 +146,6 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 
 [Question] #683 の bats モック整備範囲は v2.6.0 Unit 006 計画書の 4 スクリプト（setup/migrate/probe/audit）に限定し、AI モック対象 API は最小限（必要に応じて拡張）でよいか。
 [Answer] Issue 推奨範囲を前提とする。Construction Phase で必要なら再検討。
+
+[Question] #697 の対応軸は本文「成功基準」で確定した「規約改訂（必須）+ 主要スクリプトの推奨経路明示 + #688 注意書きの一般化」の 3 軸セットで進める想定でよいか。PreToolUse hook の動作実装（強制ブロック）は本サイクル対象外で、文書化のみとする。
+[Answer] 3 軸セットを本サイクル必須。PreToolUse hook の強制ブロック実装は対象外（hook の動作タイミング制約のため）。

@@ -1,8 +1,8 @@
 # ユーザーストーリー
 
-## Epic: v2.6.2 patch リリース - v2.6.0 関連調整（バグ修正 + defer 完成）
+## Epic: v2.6.2 patch リリース - v2.6.0 関連調整（バグ修正 + defer 完成 + AI 運用安全化）
 
-v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketplace.json への version SoT 一本化** / **GitHub Projects 移行**）の defer 完成と、**振り返り分離・Operations フロー周辺で表面化した致命的バグ** を patch リリースで一括解消し、v2.6 系の運用基盤を「機能完成版」に固定する。
+v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketplace.json への version SoT 一本化** / **GitHub Projects 移行**）の defer 完成と、**振り返り分離・Operations フロー周辺で表面化した致命的バグ**、加えて **v2.6.1 Issue #688 の根本原因クラス（AI エージェント Bash プロンプト経由の zsh OOM）の一般化予防** を patch リリースで一括解消し、v2.6 系の運用基盤を「機能完成版」に固定する。
 
 ---
 
@@ -10,24 +10,26 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 
 各ストーリーの受け入れ基準（AC）は振る舞い・出力・ログ・テストで定義する。以下の運用観点は AC ではなく Epic 共通の DoD（Definition of Done）として扱い、Operations Phase の完了処理で確認する:
 
-- 関連 Issue（#677 / #678 / #680 / #682 / #683）が PR マージ後に close されること
-- v2.6.2 Milestone に上記 5 Issue がすべて紐付いていること
-- CHANGELOG.md に v2.6.2 セクションが追加され、全 5 ストーリーの変更が patch 扱いで記載されていること
+- 関連 Issue（#677 / #678 / #680 / #682 / #683 / #697）が PR マージ後に close されること
+- v2.6.2 Milestone に上記 6 Issue がすべて紐付いていること
+- CHANGELOG.md に v2.6.2 セクションが追加され、全 6 ストーリーの変更が patch 扱いで記載されていること
 - Repository Settings > Branch protection / Ruleset の現行 required check 一覧（`.aidlc/cycles/v2.6.2/operations/required-checks.md` スナップショット）が CI で全件 green であること
+- **AI 運用安全規約の遵守**: ストーリー 6（#697）の規約改訂完了後、本サイクル中の Construction Phase / Operations Phase で実施する AI レビュー（codex / claude / gemini 呼び出し）は改訂後の推奨経路（一時ファイル + wrapper script / `--content-file` / `--body-file` 等の file-based interface）で実施すること（詳細はストーリー 6 §運用上の確認事項を参照）
 
 ## ストーリー間依存マトリクス
 
-5 ストーリー間の依存関係を以下に明示する。Construction Phase の Unit 実行順序判断および AI レビュー時の整合性検証に使用する:
+6 ストーリー間の依存関係を以下に明示する。Construction Phase の Unit 実行順序判断および AI レビュー時の整合性検証に使用する:
 
 | ストーリー | 依存先 | 依存理由 / 順序前提 |
 |----------|--------|------------------|
-| ストーリー 1（#677 squash-712 / write-history 整合）| なし | Operations フロー独立。他 4 件の前後どちらでも実装可 |
-| ストーリー 2（#678 pr-ready 空 body 検証）| なし | Operations フロー独立。他 4 件の前後どちらでも実装可 |
-| ストーリー 3（#680 migrate トラバーサル検証）| なし | aidlc-migrate スコープに閉じる。他 4 件と独立 |
+| ストーリー 1（#677 squash-712 / write-history 整合）| なし | Operations フロー独立。他 5 件の前後どちらでも実装可 |
+| ストーリー 2（#678 pr-ready 空 body 検証）| なし | Operations フロー独立。他 5 件の前後どちらでも実装可 |
+| ストーリー 3（#680 migrate トラバーサル検証）| なし | aidlc-migrate スコープに閉じる。他 5 件と独立 |
 | ストーリー 4（#682 ensure-fields options 差分同期）| なし（前提のみ）| GitHub Projects スクリプト本体は v2.6.0 Unit 006 で整備済み。本ストーリーは options 差分のみを追加する |
 | ストーリー 5（#683 副作用 bats テスト整備）| **ストーリー 4 を先に完了することを推奨**（同一サイクル内では順序前提）| Phase 2 で `setup-github-project.sh` / `gh-project-cli.sh` のテスト網羅性を上げる際、ストーリー 4 で追加された `ensure-fields` options 差分同期ロジックのテストも合わせて担保するのが効率的。順序前提が崩れた場合は Phase 2 完了時点で options 差分同期テストを追加する形で吸収する |
+| ストーリー 6（#697 AI エージェント Bash プロンプト OOM 予防 / 規約改訂）| なし | 規約・ドキュメント中心の改訂で他ストーリーのコードベース変更には依存しない。**早期実施を強く推奨**: 本ストーリーの規約が確立してから Construction Phase の AI レビューを進めると、本サイクル中の codex / claude / gemini 呼び出し全般の安全性が早期に担保される |
 
-ストーリー 1〜3 は完全独立、ストーリー 4 → ストーリー 5 のソフト順序のみ存在する（厳密な実装ブロッカーではない）。Construction Phase で `unit_branch_enabled=false` の現設定下では順次実装となる。
+ストーリー 1〜3 は完全独立、ストーリー 4 → ストーリー 5 のソフト順序のみ存在する。ストーリー 6 は他ストーリーと独立だが Construction Phase の AI レビュー安全性向上のため早期実施を推奨する。Construction Phase で `unit_branch_enabled=false` の現設定下では順次実装となる。
 
 **Unit ファイル番号と実装順序の対応**（`story-artifacts/units/` 配下）:
 
@@ -38,36 +40,38 @@ v2.6.0 で実施した3領域（**振り返りフロー独立化** / **marketpla
 | 003 | #677 | squash-712 / write-history 整合 | なし |
 | 004 | #682 | gh-project-cli options 差分同期 | なし（Unit 005 の前提） |
 | 005 | #683 | gh-project 副作用 bats テスト整備 | Unit 004 の後を推奨 |
+| 006 | #697 | AI エージェント Bash プロンプト OOM 予防（規約改訂） | なし（**早期実施推奨**） |
 
-**推奨実装順序**: 001 → 002 → 003 → 004 → 005（001〜003 の相互順序は任意、004 → 005 のソフト順序のみ守る）。順序前提が崩れた場合の吸収方法は各 Unit 定義ファイルに記載。
+**推奨実装順序**: **006（規約改訂を早期に確立）→ 001 → 002 → 003 → 004 → 005**（001〜003 の相互順序は任意、004 → 005 のソフト順序のみ守る）。Unit 006 を最初に完了することで、後続 Unit の Construction Phase AI レビュー（codex / claude / gemini 呼び出し）の安全性が担保される。順序前提が崩れた場合の吸収方法は各 Unit 定義ファイルに記載。
 
-**順次実行時の合算工数レンジ**:
+**順次実行時の合算工数レンジ**（推奨順序: 006 → 001 → 002 → 003 → 004 → 005）:
 
 | Unit | 単体見積もり | 累積（順次実行） |
 |------|------------|----------------|
-| 001（pr-ready 空 body 検証） | 0.5〜1 日 | 0.5〜1 日 |
-| 002（migrate トラバーサル検証） | 1〜1.5 日 | 1.5〜2.5 日 |
-| 003（squash-712 / write-history 整合） | 1〜2 日 | 2.5〜4.5 日 |
-| 004（gh-project options 差分同期） | 0.5〜1 日 | 3〜5.5 日 |
-| 005（gh-project bats テスト整備） | 2〜3 日 | 5〜8.5 日 |
+| 006（AI Bash プロンプト OOM 予防 / 規約改訂） | 0.5 日 | 0.5 日 |
+| 001（pr-ready 空 body 検証） | 0.5〜1 日 | 1〜1.5 日 |
+| 002（migrate トラバーサル検証） | 1〜1.5 日 | 2〜3 日 |
+| 003（squash-712 / write-history 整合） | 1〜2 日 | 3〜5 日 |
+| 004（gh-project options 差分同期） | 0.5〜1 日 | 3.5〜6 日 |
+| 005（gh-project bats テスト整備） | 2〜3 日 | 5.5〜9 日 |
 
-合算 **5〜8.5 日**（patch サイクル想定の短期完了レンジ）。`unit_branch_enabled=false` のため Construction Phase は順次実行となる。
+合算 **5.5〜9 日**（patch サイクル想定の短期完了レンジ、Unit 006 追加で 0.5 日増）。`unit_branch_enabled=false` のため Construction Phase は順次実行となる。
 
 **遅延時の圧縮方針**:
 
-通常時の Done 条件は **「Intent スコープ確認の 5 Issue（#677 / #678 / #680 / #682 / #683）すべて完遂」** であり、この条件を崩す圧縮（Issue defer / Unit 分離）は **Intent 改訂と再承認（automation_mode 関わらずユーザー確認必須）** を経て初めて実施可能。短期完了（5 日想定）に収まらないリスクが顕在化した場合、以下の順で検討する:
+通常時の Done 条件は **「Intent スコープ確認の 6 Issue（#677 / #678 / #680 / #682 / #683 / #697）すべて完遂」** であり、この条件を崩す圧縮（Issue defer / Unit 分離）は **Intent 改訂と再承認（automation_mode 関わらずユーザー確認必須）** を経て初めて実施可能。短期完了（5.5 日想定）に収まらないリスクが顕在化した場合、以下の順で検討する:
 
 1. **Unit 003 採用案の縮退（Intent 改訂不要）**: A+B 併用想定なら案 A 単独 / 案 B 単独に縮退する。これは Intent §成功基準 #677 の「案 A / B のいずれか必須」の枠内であり、スコープ縮退には該当しない（Construction 設計レビューで判断）
 2. **Unit 005 Phase 2 の段階完了 + 後半 defer（Intent 改訂・再承認が必須）**: 4 スクリプトを 2 グループ（setup + migrate / probe + audit）に分けて段階完了し、後グループを別 Issue で defer。**実施するには Intent §スコープ確認 §成功基準を改訂し、ユーザー再承認を得ること**
 3. **Unit 004 を別 patch（v2.6.3）に分離（Intent 改訂・再承認が必須）**: Unit 005 Phase 1 のモック基盤整備のみ本サイクルで実施し、options 差分同期実装は別 patch に分離。**実施するには Intent §スコープ確認 §成功基準を改訂し、ユーザー再承認を得ること**
 
-優先度 high の Unit 001 / 002 / 003（バグ修正・security）は本サイクルの最低必達範囲とし、これらの Issue defer / 分離は本サイクルでは認めない（patch リリースの存在意義が失われるため）。
+優先度 high の Unit 001 / 002 / 003 / 006（バグ修正・security・AI 運用安全化）は本サイクルの最低必達範囲とし、これらの Issue defer / 分離は本サイクルでは認めない（patch リリースの存在意義が失われるため）。
 
 ---
 
 ## リリース系タスクの責務分担（Construction / Operations 境界の明示）
 
-Intent「含まれるもの」のうち Issue 直結タスクは Unit 001〜005 で担当する。一方、以下のリリース系タスクは **個別 Unit ではなく Operations Phase で実施する** Epic 共通タスクとして扱う:
+Intent「含まれるもの」のうち Issue 直結タスクは Unit 001〜006 で担当する。一方、以下のリリース系タスクは **個別 Unit ではなく Operations Phase で実施する** Epic 共通タスクとして扱う:
 
 | リリース系タスク | 担当フェーズ | 担当ステップ |
 |----------------|-----------|------------|
@@ -288,3 +292,56 @@ So that 実際の GitHub API 呼び出しなしで CI 上で副作用ロジッ�
 - Issue #683 推奨対応: モックフレームワーク整備 + 4 スクリプトの副作用テスト追加
 - 関連設計: `.aidlc/cycles/v2.6.0/design-artifacts/logical-designs/unit_006_github_projects_migration_logical_design.md` §テスト整備
 - `gh` / `dasel` モックの実装方針（PATH override / function override / wrapper script）は Construction 設計レビューで確定する
+
+---
+
+### ストーリー 6: AI エージェント Bash プロンプト経由の zsh OOM クラス予防
+
+**優先順位**: Must-have（AI 運用安全化 / #688 兄弟バグ）
+
+As a Claude Code / Codex CLI 等の AI エージェントから AI-DLC Starter Kit を利用する開発者
+I want to AI エージェントが Bash ツール経由で codex / write-history / その他外部スクリプトに長文プロンプトを渡す際の安全規約と推奨経路が CLAUDE.md / AGENTS.md / SKILL.md 等で明文化されている
+So that #688（v2.6.1 で `/aidlc v` 経路を個別解決済）の根本原因クラスである「コマンド置換混入 → zsh `command_not_found_handler` 無限再帰 → OOM クラッシュ」が AI 運用全般で予防される
+
+**受け入れ基準（規約改訂）**:
+
+- [ ] CLAUDE.md「`$(...)` 絶対禁止」セクションが「コマンド置換全般（`$(...)` および backtick `` ` ``）絶対禁止」に拡張され、対象範囲が「コミットメッセージ」だけでなく **「Bash ツール呼び出しの全引数文字列」** に明文化される
+- [ ] CLAUDE.md / AGENTS.md に「AI エージェントが Bash ツール経由で長文プロンプトを渡す際の安全パターン」が追記される:
+  - 第一推奨: 一時ファイルに Write ツールで書き出し、wrapper script で読み込んで対象コマンドに渡す
+  - 第二推奨: 既存の `--content-file` / `--body-file` 等の file-based interface を優先使用
+  - 禁止: backtick / `$(...)` を含む文字列を Bash ツールの引数として直接渡す
+- [ ] CLAUDE.md / AGENTS.md の改訂が markdownlint-cli2 を通過する
+
+**受け入れ基準（主要スクリプトの推奨経路明示）**:
+
+- [ ] `skills/write-history/SKILL.md` の `--content` / `--content-file` 表現が **「AI エージェント向け第一推奨は `--content-file`」** に更新される（スクリプト本体動作は変更しない）
+- [ ] 他に同等の long-text 受領インターフェースを持つ aidlc 系スクリプト（`operations-release.sh` の `pr-ready --body-file` 等）も SKILL.md / 関連 docs で file-based 経路を第一推奨に位置付ける
+- [ ] 動作変更は伴わないため既存ユーザーへの破壊変更はない（CHANGELOG では「推奨経路の明文化」として案内）
+
+**受け入れ基準（#688 注意書きの一般化）**:
+
+- [ ] `skills/aidlc/SKILL.md` の `/aidlc v` 経路の zsh OOM 注意書きが、**「Bash ツール経由のあらゆる外部スクリプト呼び出しに共通する zsh OOM 回避ルール」** として一般化される
+- [ ] 関連箇所（`steps/common/commit-flow.md` / `steps/common/review-flow.md` 等）に「prompt 構築規約 / コマンドメッセージ規約」のクロスリファレンスが追加される
+- [ ] #688 自体は close 済のため Issue 再オープンは行わず、#697 を独立 Issue として処理し本 Story を Closes する
+
+**受け入れ基準（成果物検証）**:
+
+- [ ] 改訂された CLAUDE.md / AGENTS.md / 関連 SKILL.md / docs ファイルが markdownlint-cli2 で全件 pass する
+- [ ] 改訂後の規約文言に内部矛盾がないこと（成功基準・Unit 006 ファイル・user_stories の整合性が grep / 目視で確認できる）
+- [ ] 既存の `make test` 相当が引き続き全件 pass する（スクリプト本体動作変更なしのため非破壊性確認のみ）
+- [ ] 推奨経路（一時ファイル + wrapper / `--content-file` / `--body-file`）が CLAUDE.md / AGENTS.md / SKILL.md にクロスリファレンスで相互参照可能であること
+
+**運用上の確認事項（DoD 側 / AC 対象外）**:
+
+- 本 Unit の規約改訂内容に基づく運用ルールは Epic 共通 DoD（本ファイル冒頭「DoD」セクション末尾）に集約済。AC ではなく DoD 側で Operations Phase 完了処理時に確認する
+
+**受け入れ基準（境界・対象外）**:
+
+- [ ] PreToolUse hook での backtick / `$(...)` 強制ブロック実装は本サイクル対象外（hook が許可ダイアログ後に実行される制約のため、強制ブロックは技術的に不可能と既知）。文書化のみで運用する
+- [ ] スクリプト本体の API 動作変更（`--content` 引数廃止等）は本サイクル対象外（後方互換性維持）
+
+**技術的考慮事項**:
+
+- Issue #697 推奨対応: 規約改訂（必須）+ 主要スクリプトの推奨経路明示 + #688 注意書きの一般化
+- 本ストーリー実装で、本サイクル中の Construction Phase / Operations Phase での AI レビュー安全性が向上する（早期実施推奨）
+- v2.6.2 Inception Phase 中（codex Round 2 レビュー時）に実発生検出された経緯を rationale として `inception/decisions.md` に追記する

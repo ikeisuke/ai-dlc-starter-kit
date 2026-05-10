@@ -144,3 +144,34 @@ depth_level=standard では通常 Reverse Engineering（brownfield のため）�
 - **得たもの**: 短期完了に貢献。Issue 本文 / Unit 定義の「技術的考慮事項」「関連 Issue」「関連設計」セクションで影響範囲・該当ファイル・既存設計参照は十分に記録済。
 - **犠牲にしたもの**: depth_level=standard の手順厳格遵守からはやや外れる。
 - **判断根拠**: v2.6.1 同条件 patch サイクルの precedent。本サイクルは新規探索ではなく v2.6.0 で実施済の領域への調整であり、コードベース解析を Cycle 単位で再実施する追加価値は限定的。CONFIG 上の depth_level は次サイクル以降の minor / major で本来の使い方に戻す。
+
+---
+
+## DR-006: Inception 中に Unit 006（#697 / AI Bash プロンプト zsh OOM クラス予防）を追加（スコープ拡張）
+
+- **ステップ**: Inception 完了処理直後の追加対応決定（codex Round 2 レビュー時の実発生検出に起因）
+- **日時**: 2026-05-11
+
+### 背景
+
+v2.6.2 Inception Phase 中、codex Round 2 レビューを発行する際に、私（AI エージェント）が `codex exec resume <id> "...プロンプトに backtick が混入..."` を bash 経由で実行したところ、bash がプロンプト内 backtick をコマンド置換として解釈 → 未定義コマンド呼び出し → zsh `command_not_found_handler` 無限再帰により OOM クラッシュが発生。これは v2.6.1 で対応した #688 の **兄弟バグ**（同一根本原因クラス）であり、`/aidlc v` 経路だけでなく **「AI エージェントが Bash ツール経由で long-text を bash 引数文字列として直接渡す全経路」** に存在する。
+
+「Intent 改訂と再承認」のガードレール（user_stories §圧縮方針）に従い、ユーザーに判断を求めた結果、本サイクル内で対応することが選択された。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | v2.6.2 に Unit 006 として追加（Intent 改訂・再承認） | 同一サイクル内で予防策確立、本サイクル中の AI レビュー安全性向上、Operations フローのバグ Unit 群と一貫した品質改善 | サイクル工数 +0.5 日、Inception 完了処理を再実行する必要あり |
+| 2 | 新規 Issue を起票して v2.6.3 に defer | 現サイクルのスコープを膨らませずに済む | 本サイクル中の Construction / Operations Phase の AI レビュー安全性は次パッチまで担保されない |
+| 3 | CLAUDE.md ルール追記のみ（最小） | 最短期完了 | スクリプト本体改訂・SKILL.md 一般化が defer されるため改善が部分的 |
+
+### 決定
+
+**選択肢 1（v2.6.2 に Unit 006 として追加、Intent 改訂・再承認）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: 本サイクル内で AI 運用安全化の予防策を確立。Construction Phase / Operations Phase での codex / claude / gemini 呼び出しが改訂後の推奨経路（一時ファイル + wrapper / file-based interface）で安全実施できる。v2.6.0 関連調整の一貫した品質改善として位置付け可能。
+- **犠牲にしたもの**: サイクル工数 +0.5 日（5〜8.5 日 → 5.5〜9 日）。Inception 完了処理（commit / PR body / history / progress）の再走行が必要。
+- **判断根拠**: 「結構危険なエラー」とユーザー判断、かつ v2.6.2 Inception Phase 中に実発生（実害顕在化）したため、同サイクル内で予防策を確立するほうが運用上の整合性・安全性の点で勝る。スクリプト本体動作は変更しないため patch リリース性質を維持できる。Intent / user_stories / Unit 006 の改訂レビュー（codex / 3 ラウンド / unresolved=0 / defer=0 / resolved=4）で整合性検証済。

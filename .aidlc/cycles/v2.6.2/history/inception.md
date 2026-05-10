@@ -51,3 +51,44 @@ Unit 構成（推奨実装順序 001 → 002 → 003 → 004 → 005、001-003 �
   - `.aidlc/cycles/v2.6.2/inception/decisions.md`
 
 ---
+## 2026-05-11T08:27:12+09:00
+
+- **フェーズ**: Inception Phase
+- **ステップ**: Inception 完了後の Unit 006 追加（スコープ拡張）
+- **実行内容**: - **実行内容**: Inception Phase 完了後の追加対応として、Unit 006（#697 / AI エージェント Bash プロンプト経由の zsh OOM クラス予防）をサイクルに追加するスコープ拡張を実施。
+
+スコープ拡張の経緯（詳細は inception/decisions.md DR-006）:
+- v2.6.2 Inception Phase 中、codex Round 2 レビュー発行時に backtick 混入プロンプト経由で zsh OOM クラッシュが実発生（#688 兄弟バグ）
+- ユーザー判断（「結構危険なエラーなので対応入れた方がいい気がする」）に基づき v2.6.2 内で予防策確立を選択
+- 新規 Issue #697 起票（type:chore, priority:high, feedback）
+- Intent / user_stories / Unit 006 定義を 6 Unit 化に改訂
+
+改訂後レビュー結果（codex / focus=inception / review_mode=required）:
+- 改訂版 Intent / user_stories / Unit 006: 3 ラウンド / 高1+中1+低1+低1 → 0 件 / unresolved=0 / defer=0 / resolved=4 / auto_approved。codex session-id: 019e1433-ca30-7712-9897-5a4ba7f9dc6f
+
+主な改訂内容:
+- Intent §開発の目的に AI 運用周辺安全化（#697）を追加（4 つ目の対応領域）
+- Intent §成功基準に #697 解消（3 軸: 規約改訂 / 主要スクリプトの推奨経路明示 / #688 注意書きの一般化）追加
+- Intent §期限とマイルストーン Unit 数 5 → 6
+- Intent §既存機能影響に #697 の影響（規約・ドキュメント改訂、本体動作変更なし）追加
+- Intent §含まれるもの・[Question]/[Answer] に #697 追加
+- Intent §制約事項のコマンド置換禁止を「`$(...)` および backtick を含むコマンド置換全般禁止」に拡張
+- user_stories Epic 名・DoD・推奨実装順序・合算工数・圧縮方針・依存マトリクスを 6 ストーリー化に対応
+- user_stories Epic 共通 DoD に「AI 運用安全規約の遵守」項目追加
+- user_stories ストーリー 6 を追加（AC: 規約改訂 / 推奨経路明示 / 注意書き一般化、INVEST 準拠で成果物検証と運用要件を分離）
+- Unit 006 定義ファイル新規作成（責務 / 境界 / 依存関係 / NFR / 技術的考慮事項 / Unit 006 vs 他 Unit 責務境界 / Intent 制約適合 / 関連 Issue #697 / 見積 0.5 日）
+- 推奨実装順序: 006 → 001 → 002 → 003 → 004 → 005（Unit 006 早期実施で本サイクル中の AI レビュー安全性向上）
+- 合算工数: 5〜8.5 日 → 5.5〜9 日
+
+Milestone v2.6.2 (#15) に #697 紐付け済み（6 Issue 全紐付け）。
+
+- **承認**: automation_mode=semi_auto + フォールバック非該当 + ユーザー明示的スコープ拡張承認 = auto_approved
+- **発生した問題**: #697 の根本原因（AI Bash プロンプト経由 zsh OOM）が本サイクル中に実発生したため、wrapper script 経由（`/tmp/aidlc-v262-codex-r2.sh` 等の file-based prompt → bash 引数展開）で codex 呼び出しを継続実施。Unit 006 完了で本問題は本体規約レベルで予防される。
+- **成果物**:
+  - `.aidlc/cycles/v2.6.2/requirements/intent.md`
+  - `.aidlc/cycles/v2.6.2/story-artifacts/user_stories.md`
+  - `.aidlc/cycles/v2.6.2/story-artifacts/units/006-ai-prompt-zsh-oom-prevention.md`
+  - `.aidlc/cycles/v2.6.2/inception/decisions.md`
+  - `.aidlc/cycles/v2.6.2/inception/progress.md`
+
+---

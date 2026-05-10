@@ -29,7 +29,7 @@
 
 ## スコープ確定
 
-v2.6.0 で実施した3領域（振り返り分離 / marketplace.json SoT / GitHub Projects 移行）の defer 完成 + 関連致命的バグ修正:
+v2.6.0 で実施した3領域（振り返り分離 / marketplace.json SoT / GitHub Projects 移行）の defer 完成 + 関連致命的バグ修正 + AI 運用安全化:
 
 | Issue | priority | 担当 Unit | 概要 |
 |-------|---------|---------|------|
@@ -38,11 +38,15 @@ v2.6.0 で実施した3領域（振り返り分離 / marketplace.json SoT / GitH
 | #677 | high | Unit 003 | Operations §7.12.5 squash-712 / write-history operations-round 整合 |
 | #682 | medium | Unit 004 | gh-project-cli ensure-fields options 差分同期実装 |
 | #683 | medium | Unit 005 | Unit 006 副作用 bats テスト整備（gh API モック） |
+| #697 | high | Unit 006 | AI エージェント Bash プロンプト経由の zsh OOM クラス予防（規約改訂） |
 
-順次実行時の合算工数: 5〜8.5 日（patch サイクル想定の短期完了レンジ）。
+順次実行時の合算工数: 5.5〜9 日（patch サイクル想定の短期完了レンジ、Unit 006 追加で 0.5 日増）。推奨実装順序: 006 → 001 → 002 → 003 → 004 → 005（Unit 006 早期実施で AI レビュー安全性早期確立）。
 
 ## レビュー結果サマリ
 
-- Intent: 4 ラウンド / unresolved=0 / defer=0 / resolved=7 / auto_approved
-- user_stories: 3 ラウンド / unresolved=0 / defer=0 / resolved=6 / auto_approved
+- Intent: 4 ラウンド + 改訂 3 ラウンド / unresolved=0 / defer=0 / resolved=11 / auto_approved
+- user_stories: 3 ラウンド + 改訂 3 ラウンド / unresolved=0 / defer=0 / resolved=10 / auto_approved
 - Unit 定義 5 件: 3 ラウンド / unresolved=0 / defer=0 / resolved=6 / auto_approved
+- Unit 定義 6 件目（Unit 006）+ Intent/stories 改訂: 3 ラウンド / unresolved=0 / defer=0 / resolved=4 / auto_approved
+
+スコープ拡張（Unit 006 追加）の経緯と判断は inception/decisions.md DR-006 を参照。
