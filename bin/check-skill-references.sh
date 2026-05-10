@@ -50,6 +50,9 @@ EOF
 #   `skills/aidlc/scripts/read-config.sh` を全スキルから参照可能な公開 API として明文化する規約記述を含む
 # - aidlc-feedback/steps/feedback.md: 公開 API スクリプト層への正当な参照（v2.6.1 Unit 004 / Issue #689）。
 #   `bash skills/aidlc/scripts/read-config.sh` をリポジトリルート相対の絶対参照として呼び出す
+# - aidlc-feedback/SKILL.md: 公開 API スクリプト層への参照説明（v2.6.1 Unit 003 / Issue #690）。
+#   パス解決セクションで他スキル（aidlc プラグイン等）の scripts/ 参照例として
+#   `bash skills/aidlc/scripts/read-config.sh ...` を明示する
 # - aidlc-retrospective/: aidlc-retrospective スキル（v2.6.0 / Unit 005）。本体 aidlc プラグインの公開 API 層
 #   （retrospective-api.sh / cycle-resolver.sh）と templates/retrospective_template.md を `source` / 参照する設計上の単方向境界を持つ
 # - scripts/lib/retrospective-api.sh / scripts/lib/cycle-resolver.sh: AIDLC_BASE 解決の bootstrap で
@@ -61,6 +64,7 @@ EXCLUDE_PATTERNS=(
     "steps/common/review-flow.md"
     "steps/common/rules-core.md"
     "aidlc-feedback/steps/feedback.md"
+    "aidlc-feedback/SKILL.md"
     "aidlc-migrate/"
     "aidlc-retrospective/"
     "write-history/SKILL.md"
@@ -80,7 +84,7 @@ is_excluded() {
     case "$rel_file" in
         */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
         */steps/common/review-flow.md|*/steps/common/rules-core.md|\
-        */aidlc-feedback/steps/feedback.md|\
+        */aidlc-feedback/steps/feedback.md|*/aidlc-feedback/SKILL.md|\
         */aidlc-migrate/*|*/aidlc-retrospective/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/lib/retrospective-api.sh|*/scripts/lib/cycle-resolver.sh|\
         */scripts/tests/*|\
