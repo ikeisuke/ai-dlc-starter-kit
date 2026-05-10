@@ -7,12 +7,20 @@
 最初に `.aidlc/config.toml` の設定を確認する：
 
 ```bash
-cat .aidlc/config.toml | dasel -i toml 'rules.feedback.enabled'
+# .aidlc/config.toml が存在しない場合は true（デフォルト有効）として続行
+# read-config.sh は aidlc プラグイン側に存在するため、リポジトリルート相対の絶対参照で呼び出す
+if [[ ! -f .aidlc/config.toml ]]; then
+  echo "true"
+else
+  bash skills/aidlc/scripts/read-config.sh rules.feedback.enabled
+fi
 ```
 
 **エラーハンドリング**:
-- `.aidlc/config.toml` 不在: `true`（デフォルト有効）として続行。初回セットアップ前の正常ケース
-- `dasel` 未インストール / TOML破損・キー不在: ユーザーに送信可否を対話確認（自動判定しない）
+- `.aidlc/config.toml` 不在（事前 `[[ -f ]]` チェック）: `true`（デフォルト有効）として続行。初回セットアップ前の正常ケース
+- `read-config.sh` exit 0（標準出力に値あり）: 値が `false` なら無効化メッセージ表示で終了、それ以外は続行
+- `read-config.sh` exit 1（キー不在）: デフォルト値 `true` として続行（`[rules.feedback]` 未設定の正常ケース）
+- `read-config.sh` exit 2（エラー: dasel 未インストール / TOML 破損等）: ユーザーに送信可否を対話確認（自動判定しない）
 
 **`false` の場合**:
 

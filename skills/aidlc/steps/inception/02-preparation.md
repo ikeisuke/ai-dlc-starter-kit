@@ -132,16 +132,21 @@ stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
 
 **手順**:
 
-1. **runtime binding 取得**: AI エージェントは `dasel` で `.aidlc/config.toml` から以下 3 つの値を別ステップで取得し、内部変数に保持する:
+1. **runtime binding 取得**: AI エージェントは `bash scripts/read-config.sh` で `.aidlc/config.toml` から以下 3 つの値を別ステップで取得し、内部変数に保持する:
     - `github_projects.project_url`
     - `github_projects.project_number`
     - `github_projects.owner`（未設定時は `@me`）
 
    ```text
-   dasel -f .aidlc/config.toml github_projects.project_url
-   dasel -f .aidlc/config.toml github_projects.project_number
-   dasel -f .aidlc/config.toml github_projects.owner
+   bash scripts/read-config.sh github_projects.project_url
+   bash scripts/read-config.sh github_projects.project_number
+   bash scripts/read-config.sh github_projects.owner
    ```
+
+   各コマンドの終了コード（`read-config.sh` 仕様）:
+   - 0: 値あり（標準出力の値を内部変数に保持）
+   - 1: キー不在（未設定として扱う。`owner` 未設定時は `@me` をフォールバック）
+   - 2: エラー（dasel 未インストール / TOML 破損等）。フォールバック条件として扱い、後続の「フォールバック」節（`gh_status != available` 等）に従う
 
 2. **Project URL 表示と Item 抽出**: `project_number` が空でなければ、Project URL を表示し、`gh project item-list` で Backlog ステータスの Item を抽出する（プレースホルダ `{{PROJECT_NUMBER}}` / `{{PROJECT_OWNER}}` は AI エージェントが手順 1 の値で展開する）:
 

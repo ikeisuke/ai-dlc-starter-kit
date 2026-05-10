@@ -46,6 +46,10 @@ EOF
 # - aidlc-migrate/: v1→v2マイグレーションスクリプト
 # - write-history/SKILL.md: 委譲スキルの注記
 # - steps/common/review-flow.md: 規範記述（Round 4+ 新領域判定の境界条件テーブル / 列の記述ガイダンスのパス例）
+# - steps/common/rules-core.md: 公開 API スクリプト層の規約セクション（v2.6.1 Unit 004 / Issue #689）。
+#   `skills/aidlc/scripts/read-config.sh` を全スキルから参照可能な公開 API として明文化する規約記述を含む
+# - aidlc-feedback/steps/feedback.md: 公開 API スクリプト層への正当な参照（v2.6.1 Unit 004 / Issue #689）。
+#   `bash skills/aidlc/scripts/read-config.sh` をリポジトリルート相対の絶対参照として呼び出す
 # - aidlc-retrospective/: aidlc-retrospective スキル（v2.6.0 / Unit 005）。本体 aidlc プラグインの公開 API 層
 #   （retrospective-api.sh / cycle-resolver.sh）と templates/retrospective_template.md を `source` / 参照する設計上の単方向境界を持つ
 # - scripts/lib/retrospective-api.sh / scripts/lib/cycle-resolver.sh: AIDLC_BASE 解決の bootstrap で
@@ -55,6 +59,8 @@ EXCLUDE_PATTERNS=(
     "steps/inception/01-setup.md"
     "steps/operations/04-completion.md"
     "steps/common/review-flow.md"
+    "steps/common/rules-core.md"
+    "aidlc-feedback/steps/feedback.md"
     "aidlc-migrate/"
     "aidlc-retrospective/"
     "write-history/SKILL.md"
@@ -73,7 +79,8 @@ is_excluded() {
     local rel_file="$1"
     case "$rel_file" in
         */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
-        */steps/common/review-flow.md|\
+        */steps/common/review-flow.md|*/steps/common/rules-core.md|\
+        */aidlc-feedback/steps/feedback.md|\
         */aidlc-migrate/*|*/aidlc-retrospective/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/lib/retrospective-api.sh|*/scripts/lib/cycle-resolver.sh|\
         */scripts/tests/*|\

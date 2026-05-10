@@ -34,6 +34,7 @@
 
 - **禁止**: 他スキルの内部実装（`scripts/`, `steps/`, `templates/` 等の内部ファイルパス）への依存
 - **許可**: スキルの呼び出し名（`/aidlc`, `/reviewing-construction-code` 等）とSKILL.mdで定義された入出力引数への依存
+- **例外（公開 API スクリプト層）**: `skills/aidlc/scripts/read-config.sh` は AI-DLC スターターキット全体の公開 API スクリプトとして全スキルから参照可（詳細は `skills/aidlc/steps/common/rules-core.md` の「dasel 呼び出し規約（CLI v3）」セクション参照）。`scripts/lib/*` 等は引き続き内部実装として禁止対象
 - 内部ファイルパス参照はAPIと見なさない。スキル更新時の波及範囲を限定するため、公開された呼び出しインターフェイスのみに依存すること
 
 ### ファイル参照境界ルール【重要】
