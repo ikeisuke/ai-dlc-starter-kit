@@ -185,10 +185,12 @@ else
   # Determine expected version
   _expected_version="$_vu_expected"
   if [[ -z "$_expected_version" ]]; then
-    # Fallback to plugin's version.txt (not AIDLC_PROJECT_ROOT which points to the target repo)
-    _version_txt="${SCRIPT_DIR}/../../aidlc/version.txt"
-    if [[ -f "$_version_txt" ]]; then
-      _expected_version=$(cat "$_version_txt" | tr -d '[:space:]')
+    # Fallback to plugin's marketplace.json metadata.version (version SoT)
+    # AIDLC_PROJECT_ROOT points to the target repo, so use SCRIPT_DIR-relative path
+    # コンテキスト独立性のため aidlc lib は呼ばず、jq インライン抽出で完結
+    _marketplace_json="${SCRIPT_DIR}/../../../.claude-plugin/marketplace.json"
+    if [[ -f "$_marketplace_json" ]]; then
+      _expected_version=$(jq -r '.metadata.version // empty' "$_marketplace_json" 2>/dev/null | tr -d '[:space:]')
     fi
   fi
 
@@ -198,7 +200,7 @@ else
     echo "  FAIL: starter_kit_version_updated (read failed)" >&2
   elif [[ -z "$_expected_version" ]]; then
     _ver_status="fail"
-    _ver_detail="Could not determine expected version (no journal and no version.txt)"
+    _ver_detail="Could not determine expected version (no journal and no marketplace.json metadata.version)"
     echo "  FAIL: starter_kit_version_updated (no expected version)" >&2
   elif [[ "$_current_version" == "$_expected_version" ]]; then
     _ver_detail="starter_kit_version correctly set to $_current_version"

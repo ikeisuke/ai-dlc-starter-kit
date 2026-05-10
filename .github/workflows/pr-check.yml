@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|bin/check-marketplace-version\.sh|\.claude-plugin/marketplace\.json)$'
         run: |
           set -eu
           if [ "$PR_DRAFT" = "true" ]; then
@@ -65,7 +65,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|bin/check-marketplace-version\.sh|\.claude-plugin/marketplace\.json)$'
         run: |
           set -eu
           if [ "$PR_DRAFT" = "true" ]; then
@@ -103,7 +103,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|version\.txt|skills/(.+/)?version\.txt)$'
+          PATHS_REGEX: '^(.+\.md|.+\.toml|\.markdownlint\.json|\.github/workflows/pr-check\.yml|bin/check-bash-substitution\.sh|bin/check-defaults-sync\.sh|bin/check-marketplace-version\.sh|\.claude-plugin/marketplace\.json)$'
         run: |
           set -eu
           if [ "$PR_DRAFT" = "true" ]; then
@@ -127,3 +127,48 @@ jobs:
       - name: Check defaults.toml sync between aidlc and aidlc-setup
         if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-defaults-sync.sh
+
+  marketplace-version-check:
+    name: Marketplace Version Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Detect skip
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PATHS_REGEX: '^(CHANGELOG\.md|\.aidlc/operations\.md|\.claude-plugin/marketplace\.json|bin/check-marketplace-version\.sh|\.github/workflows/pr-check\.yml)$'
+        run: |
+          set -eu
+          if [ "$PR_DRAFT" = "true" ]; then
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: Draft PR"
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed-files.txt"
+          if grep -E "$PATHS_REGEX" "$RUNNER_TEMP/changed-files.txt" >/dev/null; then
+            printf 'should_skip=false\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: none (paths matched)"
+          else
+            printf 'should_skip=true\n' >> "$GITHUB_OUTPUT"
+            echo "Skip reason: paths not match"
+          fi
+
+      - name: Checkout
+        if: steps.detect.outputs.should_skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check marketplace.json metadata.version is updated when release-relevant files change
+        if: steps.detect.outputs.should_skip != 'true'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -eu
+          git fetch --no-tags origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+          bash bin/check-marketplace-version.sh --base "origin/${BASE_REF}" --current HEAD

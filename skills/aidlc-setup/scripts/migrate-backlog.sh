@@ -76,7 +76,7 @@ generate_slug() {
         tr ' ' '-' | \
         sed 's/--*/-/g' | \
         sed 's/^-//;s/-$//' | \
-        cut -c1-50
+        perl -CSD -Mutf8 -pe 'chomp; $_ = substr($_, 0, 50) if length($_) > 50; $_ .= "\n";'
 }
 
 # セクションからプレフィックスを決定
@@ -187,7 +187,7 @@ main() {
     # 最後のアイテムを処理
     if [[ -n "$item_title" ]]; then
         if ! process_item "$item_title" "$item_content" "$current_section"; then
-            ((error_count++))
+            (( ++error_count ))
         fi
     fi
 
@@ -283,4 +283,6 @@ EOF
     (( ++migrated_count ))
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

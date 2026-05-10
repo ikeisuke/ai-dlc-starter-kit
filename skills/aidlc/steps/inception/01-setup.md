@@ -123,13 +123,16 @@ stdout に NDJSON 1 行で結果が出力される（`{"resolution_path": "...",
 
 | ソース | 取得方法 | エラー時 |
 |--------|---------|---------|
-| リモート | `curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/version.txt` | available=false |
-| スキル | `skills/aidlc/SKILL.md` の親ディレクトリ直下の `version.txt` をReadツールで読み込み | available=false |
-| ローカル設定 | `scripts/read-config.sh starter_kit_version` | available=false |
+| リモート | `curl -s --max-time 5 https://raw.githubusercontent.com/ikeisuke/ai-dlc-starter-kit/main/.claude-plugin/marketplace.json` を取得し、`dasel -i json 'metadata.version'`（または `jq -r '.metadata.version'`）で値を抽出 | available=false |
+| スキル | `skills/aidlc/SKILL.md` の親ディレクトリから `../.claude-plugin/marketplace.json` を解決し、`scripts/lib/version.sh::read_marketplace_version` で読み込む | available=false |
+| ローカル設定 | `scripts/read-config.sh starter_kit_version`（`config.toml` のローカルキャッシュ値、正本ではない） | available=false |
 
 **正規化**: `v`プレフィックス除去、空白トリム、semverパース検証。パース不可は取得失敗扱い。
 
-**注意**: スキルバージョンは `skills/aidlc/version.txt`（SKILL.mdの親ディレクトリ）であり、リポジトリルートの `version.txt` ではない。
+**注意**:
+
+- version の正本（SoT）は `.claude-plugin/marketplace.json` の `metadata.version` である。`config.toml.starter_kit_version` は「アップグレード差分検出のためのローカルキャッシュ値」であり、正本判定には使わない（`scripts/lib/version.sh::read_marketplace_version` を経由して正本値を取得すること）。
+- リモート取得時は `dasel`/`jq` のいずれか利用可能なツールで JSON 抽出する（grep+sed フォールバックは使用しない）。両ツール不在時は available=false 扱い。
 
 #### 5b-5d. ComparisonMode判定・比較実行・確認手順
 

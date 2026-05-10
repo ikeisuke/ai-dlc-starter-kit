@@ -126,6 +126,45 @@ stdout 出力（1 行 / Issue 、または 1 行のスキップ理由）:
 
 #### 17-1. 共通バックログ
 
+##### 17-1a. GitHub Projects 参照（v2.6.0+）
+
+`gh_status` が `available` かつ `bin/lib/gh-scope-check.sh --soft project,read:org,read:project` が exit 0（ok / soft warn のみ）の場合、まず GitHub Projects を参照する。
+
+**手順**:
+
+1. **runtime binding 取得**: AI エージェントは `dasel` で `.aidlc/config.toml` から以下 3 つの値を別ステップで取得し、内部変数に保持する:
+    - `github_projects.project_url`
+    - `github_projects.project_number`
+    - `github_projects.owner`（未設定時は `@me`）
+
+   ```text
+   dasel -f .aidlc/config.toml github_projects.project_url
+   dasel -f .aidlc/config.toml github_projects.project_number
+   dasel -f .aidlc/config.toml github_projects.owner
+   ```
+
+2. **Project URL 表示と Item 抽出**: `project_number` が空でなければ、Project URL を表示し、`gh project item-list` で Backlog ステータスの Item を抽出する（プレースホルダ `{{PROJECT_NUMBER}}` / `{{PROJECT_OWNER}}` は AI エージェントが手順 1 の値で展開する）:
+
+   ```text
+   gh project item-list {{PROJECT_NUMBER}} --owner {{PROJECT_OWNER}} --format json --limit 100
+   ```
+
+   出力 JSON を `jq` で「Backlog ステータスの Item」のみフィルタし `#{number} {title} [{priority}]` 形式で表示する:
+
+   ```text
+   jq -r '.items[] | select(.status=="Backlog" or .status==null) | "#\(.content.number) \(.content.title) [\(.priority // "-")]"'
+   ```
+
+**フォールバック**: 以下のいずれかに該当する場合は `17-1b` の既存挙動（Issue 検索）に降格する:
+
+- `gh_status != available`
+- gh PAT に `project` / `read:org` / `read:project` スコープ不足（`gh-scope-check.sh --soft` で検出）
+- `.aidlc/config.toml` の `[github_projects].project_number` が未設定（Project 未作成）
+
+ガイド: `docs/development/github-projects-setup.md`
+
+##### 17-1b. Issue ベース（フォールバック / 後方互換）
+
 `gh_status` が `available` の場合のみ:
 ```bash
 gh issue list --label backlog --state open

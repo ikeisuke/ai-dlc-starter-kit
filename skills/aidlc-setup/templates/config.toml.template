@@ -1,7 +1,7 @@
 # AI-DLC プロジェクト設定
 # 生成日: [現在日時]
 
-starter_kit_version = "[version.txt の内容]"
+starter_kit_version = "[marketplace.json metadata.version の内容]"
 
 [project]
 name = "[プロジェクト名]"

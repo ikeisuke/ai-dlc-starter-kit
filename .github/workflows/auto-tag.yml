@@ -20,7 +20,11 @@ jobs:
       - name: Read version
         id: version
         run: |
-          VERSION=$(cat version.txt | tr -d '\n\r ')
+          VERSION=$(jq -r '.metadata.version' .claude-plugin/marketplace.json | tr -d '\n\r ')
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "Failed to extract metadata.version from .claude-plugin/marketplace.json" >&2
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 

@@ -106,16 +106,18 @@ assert_json "error→fail" "$output" \
     '.checks[] | select(.name == "starter_kit_version_updated") | .status' "fail"
 
 echo ""
-echo "--- テスト5: journal未指定時にプラグインのversion.txtからフォールバック ---"
+echo "--- テスト5: journal未指定時にプラグインの marketplace.json metadata.version からフォールバック ---"
 project_dir=$(_setup_project)
-# プラグインの version.txt を参照するため、config.toml の starter_kit_version を実際のプラグインバージョンに合わせる
-_plugin_version_txt="${SCRIPT_DIR}/../../../aidlc/version.txt"
-if [[ -f "$_plugin_version_txt" ]]; then
-    _plugin_version=$(cat "$_plugin_version_txt" | tr -d '[:space:]')
-    sed "s/starter_kit_version = \"2.1.0\"/starter_kit_version = \"${_plugin_version}\"/" "$project_dir/.aidlc/config.toml" > "$project_dir/.aidlc/config.toml.tmp" && mv "$project_dir/.aidlc/config.toml.tmp" "$project_dir/.aidlc/config.toml"
+# プラグインの marketplace.json を参照するため、config.toml の starter_kit_version を実際のプラグインバージョンに合わせる
+_plugin_marketplace="${SCRIPT_DIR}/../../../../.claude-plugin/marketplace.json"
+if [[ -f "$_plugin_marketplace" ]]; then
+    _plugin_version=$(jq -r '.metadata.version // empty' "$_plugin_marketplace" 2>/dev/null | tr -d '[:space:]')
+    if [[ -n "$_plugin_version" ]]; then
+        sed "s/starter_kit_version = \"2.1.0\"/starter_kit_version = \"${_plugin_version}\"/" "$project_dir/.aidlc/config.toml" > "$project_dir/.aidlc/config.toml.tmp" && mv "$project_dir/.aidlc/config.toml.tmp" "$project_dir/.aidlc/config.toml"
+    fi
 fi
 output=$(cd "$project_dir" && AIDLC_PROJECT_ROOT="$project_dir" bash "${SCRIPT_DIR}/../migrate-verify.sh" --manifest "$project_dir/manifest.json" 2>/dev/null) || true
-assert_json "journal未指定→プラグインversion.txtフォールバック→ok" "$output" \
+assert_json "journal未指定→プラグイン marketplace.json フォールバック→ok" "$output" \
     '.checks[] | select(.name == "starter_kit_version_updated") | .status' "ok"
 
 echo ""

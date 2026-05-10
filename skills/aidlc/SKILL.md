@@ -124,9 +124,9 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 2. ARGUMENTSが指定されている場合:
    - 先頭の空白区切りトークンを action として取得
-   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`, `v`→`version`
-   - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `help` / `version`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/help/version（短縮形: inc/con/ops/exp または i/c/o/e/h/v）のいずれかを指定してください」を表示して処理を中断
+   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`, `v`→`version`, `r`→`retrospective`
+   - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `retrospective` / `help` / `version`）でない場合:
+     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/retrospective/help/version（短縮形: inc/con/ops/exp/r または i/c/o/e/h/v）のいずれかを指定してください」を表示して処理を中断
    - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
 
 パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
@@ -142,6 +142,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 | `express` (`exp` / `e`) | Inception Phase（エクスプレスモード有効） |
 | `feedback` | `/aidlc-feedback` スキルに委譲 |
 | `migrate` | `/aidlc-migrate` スキルに委譲 |
+| `retrospective` (`r`) | `/aidlc-retrospective` スキルに委譲（v2.6.0+ / Operations §1 から分離） |
 | `help` (`h`) | ヘルプ表示（アクション一覧） |
 | `version` (`v`) | バージョン表示 |
 
@@ -151,7 +152,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 ### 独立フロー委譲
 
-`setup` / `migrate` / `feedback` は独立スキルに委譲する。親スキルは委譲指示の出力のみを行い、成功/失敗の検出はAIエージェント層の責務。
+`setup` / `migrate` / `feedback` / `retrospective` は独立スキルに委譲する。親スキルは委譲指示の出力のみを行い、成功/失敗の検出はAIエージェント層の責務。
 
 委譲手順:
 1. `additional_context` がある場合は引数として付加（単一の生文字列をそのまま透過）
@@ -162,6 +163,7 @@ ARGUMENTS文字列を以下のルールでパースする:
 | `setup` | `/aidlc-setup` |
 | `migrate` | `/aidlc-migrate` |
 | `feedback` | `/aidlc-feedback` |
+| `retrospective` | `/aidlc-retrospective` |
 
 ## 実行フロー
 
@@ -219,19 +221,21 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 | express | exp, e | エクスプレスモード（Inception→Construction自動遷移） |
 | feedback | - | AI-DLCへのフィードバック送信 |
 | migrate | - | v1→v2マイグレーション |
+| retrospective | r | サイクル振り返り（KPT / Issue 起票 / Operations §1 から分離 / v2.6.0+） |
 | help | h | このヘルプを表示 |
 | version | v | スキルバージョンを表示 |
 
 使い方: /aidlc <action> [追加コンテキスト]
 例: /aidlc ops   （Operations Phase開始）
 例: /aidlc con 前回のセッションで設計レビューまで完了
+例: /aidlc r v2.6.0   （v2.6.0 サイクルの振り返りを起動）
 ```
 
 ### バージョン表示
 
 `version` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
 
-1. スキルベースディレクトリの `version.txt` を読み込む
+1. version 正本（SoT）の `marketplace.json.metadata.version` を読み込む。スキルベースディレクトリ（SKILL.md と同じディレクトリ）から `../../.claude-plugin/marketplace.json` を解決し、`scripts/lib/version.sh::read_marketplace_version` を呼び出す（dasel 優先 / jq フォールバック）
 2. 値を正規化する: 前後の空白をトリムし、先頭の `v` プレフィックスがあれば除去する。空文字・不正値・読取不能の場合は不存在と同じ扱いとする
 3. 以下のフォーマットで表示:
 
@@ -239,7 +243,7 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 AI-DLC Starter Kit v{version}
 ```
 
-4. `version.txt` が存在しない、または正規化後の値が空の場合:
+4. `marketplace.json` が存在しない、または正規化後の値が空の場合:
 
 ```text
 AI-DLC Starter Kit (version unknown)

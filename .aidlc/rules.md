@@ -98,13 +98,15 @@ bin/update-version.sh --version {{CYCLE}} --dry-run
 
 **`starter_kit_version` の扱い**: `bin/update-version.sh` は v2.4.0 以降、`.aidlc/config.toml.starter_kit_version` を **更新対象から除外** する。`starter_kit_version` は「最後に実行した `aidlc-setup` / `aidlc-migrate` のバージョン」を表し、リリース時の上書きは行われない。書き換え経路は `aidlc-setup` / `aidlc-migrate` / 将来のアップグレード経路の正規フローに限定される。
 
+**バージョン参照の SoT（v2.6.0 以降）**: バージョンの正本（Source of Truth）は `.claude-plugin/marketplace.json` の `metadata.version` である。`config.toml.starter_kit_version` は **アップグレード差分検出のためのローカルキャッシュ値** であり、正本判定には使用しない（読み取りは `scripts/lib/version.sh::read_marketplace_version` を経由する）。`bin/update-version.sh` は `marketplace.json.metadata.version` を更新主体とし、リリース PR では `bin/check-marketplace-version.sh` が CI で `CHANGELOG.md` / `.aidlc/operations.md` 編集時の version 更新漏れを検出する。v2.6.0 で `version.txt` 系 3 ファイル（ルート / `skills/aidlc/version.txt` / `skills/aidlc-setup/version.txt`）は廃止された。
+
 ### パーミッション管理【重要】
 
 Operations Phase ステップ7（リリース準備）の 7.7（Gitコミット）完了後に以下の2ステップを順に実行すること：
 
 **ステップ1: セッション履歴分析**
 
-```
+```text
 /tools:suggest-permissions
 ```
 
@@ -119,7 +121,7 @@ Operations Phase ステップ7（リリース準備）の 7.7（Gitコミット�
 
 **ステップ2: 既存設定の監査**
 
-```
+```text
 /tools:suggest-permissions --review all
 ```
 

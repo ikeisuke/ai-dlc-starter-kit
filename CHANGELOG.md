@@ -7,6 +7,42 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.0] - 2026-05-10
+
+### BREAKING CHANGES
+
+- **`squash-unit.sh` の Unit 完了時 CI 構造チェックを opt-in シグナル方式に変更**: `bin/check-skill-references.sh` / `bin/check-bash-substitution.sh` / `bin/check-test-isolation.sh` の存在自体を opt-in シグナルとして個別判定し、存在すれば実行 / 不在なら無音 skip（全 check 不在時のみ集約 info ログ + 安定トークン）に変更。本体スクリプトに「starter kit / consumer 判定」のドッグフーディング特殊処理は埋め込まない（`CLAUDE.md` 「設計原則」§ ドッグフーディング特殊処理を本体に埋めない 準拠）。これにより consumer プロジェクトで `squash-unit.sh` が `bin/check-*.sh` 不在で常時 fail する問題が解消される（Unit 007）
+    - **廃止トークン**: `squash:error:${check}-script-missing` を完全廃止（即時廃止 / 中間互換トークン併記なし）。チェックスクリプト不在は opt-in 不在として正常系扱いになるため出力されない
+    - **新設トークン**: 全 check 不在時のみ stdout に集約安定トークン `squash:info:internal-ci-checks-skipped`、stderr に `info: no internal CI check scripts present in bin/ (skipping)` を出力
+    - **代替トークン**: 実行失敗を検出したい場合は既存の `squash:error:${check}-failed` を引き続き利用
+    - **移行手順**: CI / 監視ルール / ドキュメントで `squash:error:${check}-script-missing` を grep / 検出している箇所があれば除去。全 skip シナリオ検出が必要な場合は新トークン `squash:info:internal-ci-checks-skipped` を監視対象に追加
+    - **starter kit 自身の挙動**: `bin/check-*.sh` 3 種は揃っているため自然に全実行される（既存挙動と完全互換）。3 種揃いの保証は `bin/tests/squash-unit/internal_ci_checks_optin.bats` の専用ケースで境界契約として担保
+    - **その他**: `squash-unit.sh` 末尾の `main "$@"` を `if/fi` でガードし、bats から `source` で関数定義のみ拾える構造に変更（直接実行時の挙動は既存と完全互換）
+- **振り返り（retrospective）を Operations Phase から独立スキル `aidlc-retrospective` へ全量移転**: Operations Phase §1 の振り返り実行ロジック（feedback_mode 解決 / wizard / cap 判定 / 本文構築 / Issue 起票 / spool fallback / mirror_state ラベル化 / dialog token ガード）を完全に分離し、`/aidlc retrospective`（短縮形 `/aidlc r`）で起動する独立スキルとして再構成。Operations Phase は「リリース完了 + post-merge cleanup」までで完結する。互換アダプタ層は提供されない（#667 / Unit 005）
+    - **移行手順**: 既存の Operations Phase 完了フローを使用していた場合、Operations 完了後に `/aidlc r [対象サイクル]` を任意のタイミングで実行する。対象サイクルは引数で明示指定するか、カレントブランチ / 直近完了サイクルから自動推定される
+    - **互換維持**: `[rules.retrospective] feedback_mode` の正規系 5 値（`interactive` / `local-issue-only` / `mirror-only` / `local-and-mirror` / `disabled`）と旧値互換入力の正規化（`silent` → `interactive` / `mirror` → `mirror-only` / 未設定 → `interactive` fallback、`feedback_mode_normalize` 経由で変換）/ 振り返り Issue 本文の構造（KPT セクション + 主因切り分けマトリクス + 事実テーブル）/ Inception Phase の `predecessor_resolve_issue`（前サイクル振り返り参照）/ AskUserQuestion 対話必須ガード（Unit 001 / #647）はすべて不変
+
+### Added
+
+- **GitHub Projects (ProjectsV2) 移行基盤**: バックログ管理を Issue #524 の手動チェックリスト運用から GitHub Projects (ProjectsV2) へ移行。宣言的仕様（`config/github-project-spec.yaml`）+ 適用 CLI（`bin/gh-project-cli.sh` / サブコマンド分割: `ensure-project` / `ensure-fields` / `ensure-views` / `sync-items` / `audit`）+ orchestrator（`bin/setup-github-project.sh`）+ Issue #524 リダイレクト化（`bin/migrate-issue-524.sh`）+ probe-audit 2 段監査機構（`bin/probe-github-project.sh` + `bin/audit-github-project.sh`）+ 共通ライブラリ（`bin/lib/gh-project-{spec,state,repo,evidence}.sh` + `bin/lib/gh-scope-check.sh`）を新設。`apply` 系はデフォルト `--strict`、参照系（`audit` read-only）は `--soft`（CI で `--strict` 明示）の二系統モード。Inception ステップ17 のバックログ確認に GitHub Projects 参照を統合（gh PAT スコープ不足時は既存 Issue 検索にフォールバック）。詳細: `docs/development/github-projects-setup.md`（#673 / Unit 006）
+- `skills/aidlc-retrospective/` 独立スキル新設: `SKILL.md` + `steps/retrospective.md`。`aidlc-feedback` / `aidlc-migrate` / `aidlc-setup` と同じ独立スキル構造で、`/aidlc` parser から `retrospective` (`r`) アクションで委譲される（#667 / Unit 005）
+- `skills/aidlc/scripts/lib/retrospective-api.sh`（公開 API Facade 層）新設: 既存 `lib/retrospective-issue.sh` / `feedback-mode.sh` / `feedback-mode-wizard.sh` / `retrospective-llm-draft.sh` / `retrospective-human-review.sh` を内部 source し、`retrospective_api_*` プレフィックスで公開関数のみを再エクスポート。`aidlc-retrospective` から内部実装詳細への直接依存を遮断する単方向境界を確立（#667 / Unit 005）
+- `skills/aidlc/scripts/lib/cycle-resolver.sh`（独立公開コンポーネント）新設: 振り返り対象サイクル特定を 4 つの Strategy（引数 / カレントブランチ / git log / `.aidlc/cycles/` ディレクトリ）で解決し、`{candidate, source_id, confidence, evidence}` の構造化結果を返す。`confidence != high` かつ S3a/S3b 候補不一致時は呼出側で AskUserQuestion 確認を促す fail-safe ガード機構を内蔵（#667 / Unit 005）
+- `/aidlc` parser に `retrospective` アクション追加: 短縮形 `r`、引数ルーティング・独立フロー委譲・ヘルプ表示を更新（#667 / Unit 005）
+
+### Changed
+
+- `skills/aidlc/scripts/write-history.sh` の `--operations-stage` ヒント値検証を fail-closed cross-check に強化: 旧仕様では `--operations-stage pre-merge` を即時 pass していたが、ヒント値の偽装で post-merge ガードを迂回できる経路を遮断するため、ヒント値（`--operations-stage` 引数 / `AIDLC_OPERATIONS_STAGE` 環境変数）と実行コンテキスト導出値（`completion_gate_ready` + `gh pr view` の state/mergedAt/number 一致）を常に cross-check するよう変更。不一致時は `error:post-merge-history-write-forbidden:hint_mismatch:hint=pre-merge,derived=post-merge,...` で exit 3 ブロック。`AIDLC_OPERATIONS_STAGE` 環境変数のサポートを新規追加（許可値 `pre-merge|post-merge` のみ受容、不正値は exit 1）（#667 / Unit 005）
+- `skills/aidlc/steps/operations/04-completion.md` §1（振り返り）を約 440 行から約 25 行に縮退: 実行ロジックを完全削除し、`/aidlc r` への案内文のみ残す。§6「次のサイクル開始」付近に `/aidlc i` と並列で `/aidlc r` 案内を追加（#667 / Unit 005）
+
+### Fixed
+
+- `bin/gh-project-cli.sh` の `_check_scopes_or_exit` で必須スコープを単一文字列で渡していた問題を修正: スクリプト先頭で `IFS=$'\n\t'` を設定しているため、空白区切り文字列の未クォート展開が単一トークンとなり、`gh_scope_check_require` が `"project read:org read:project"` をひとつのスコープ名として扱って strict モード下では常に scope_missing を返す回帰があった。`_REQUIRED_SCOPES` を bash 配列化し `"${_REQUIRED_SCOPES[@]}"` で展開することで 3 個の独立したスコープ引数として渡るよう修正（Operations Phase pre-merge codex review P1 指摘 / Unit 006 補修）
+- `bin/check-cycle-phase-completion.sh` が `inception/progress.md` / Unit 定義の状態セルを strict equality で評価していたため、`完了（AIレビュー2R 0件→auto_approved）` のような annotation 付き値を未完了と誤判定し v2.6.0 PR の Cycle Phase Completion check が常時 fail していた問題を修正: awk 比較を `^完了([[:space:]（(]|$)` / `^スキップ([[:space:]（(]|$)` 正規表現、bash 比較を `case` パターン（`完了` / `取り下げ` / `完了（...` / `完了(...` / `完了 ...` / `取り下げ（...` / `取り下げ(...` / `取り下げ ...`）に変更し、annotation を受容しつつ `完了予定` / `取り下げ検討中` のような近似値は引き続き未完了として扱う（Operations Phase pre-merge codex review P2 指摘反映）。同時に v2.6.0 `inception/progress.md` のステップ 6 (`Construction用progress.md作成`) を v2.5.6 と同様に「スキップ」へ訂正（当リポジトリは Unit 単位で実装状態を追跡する形式、phase-level progress.md 不要）
+- 旧 `tests/retrospective/step-integration.bats` (12 件) と `tests/retrospective-mirror/step-integration.bats` (5 件) を削除: Unit 005 で `04-completion.md` から削除された retrospective ロジックの存在を期待しており Migration Tests CI が常時 fail していた。新フォーマットの検証は `tests/operations-04-completion-section1-5.bats` (38 件) でカバー済（Closes #681）
+
+---
+
 ## [2.5.6] - 2026-05-09
 
 ### Added
