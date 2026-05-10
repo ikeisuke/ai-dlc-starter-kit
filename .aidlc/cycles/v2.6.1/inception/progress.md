@@ -9,7 +9,7 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-05-10 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-05-10 |
 | 5. PRFAQ作成 | スキップ | requirements/prfaq.md | 2026-05-10（patch リリースのため、`depth_level=standard` でも PRFAQ 省略可と判断 / Intent と CHANGELOG で対外説明可能） |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | （Construction Phase は Unit 定義ファイルベースで自律進行、`construction/progress.md` 不要）| 2026-05-11 |
 
 ## 現在のステップ
 
@@ -25,6 +25,7 @@
 
 - 2. 既存コード分析: v2.6.0 までで brownfield 解析が蓄積済み、本サイクルは patch で影響範囲が既知ファイル群に限定（`scripts/lib/version.sh` / `skills/aidlc-feedback/` / `.github/workflows/cycle-phase-completion-check.yml` / `skills/aidlc/scripts/squash-unit.sh` / `.aidlc/config.toml`）
 - 5. PRFAQ作成: patch リリースのため対外向けプレスリリースは不要。CHANGELOG.md と Intent で十分
+- 6. Construction用progress.md作成: v2 構造（Unit 定義ファイル + history/construction_unit{NN}.md ベース）では `construction/progress.md` を作成せずに Unit 単位で自律進行する設計のため不要
 
 ## 次回実行時の指示
 

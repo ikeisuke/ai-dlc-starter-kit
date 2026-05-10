@@ -35,3 +35,17 @@
 - backlog ラベル付き Issue 30 件超 → `/aidlc r v2.6.1` 振り返りで優先度確認推奨
 
 ---
+## 2026-05-11T00:39:31+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: PR レビュー反映
+- **実行内容**: PR #695 マージ前 codex レビュー（reviewing-operations-premerge）で指摘 1 件（低 / focus=code）。CHANGELOG.md の Unit 003 環境変数名を AIDLC_FEEDBACK_OPEN_WEB → AIDLC_FEEDBACK_WEB に修正。コミット b3f36eb9。AIレビュー完了 / 対象タイミング: 統合とレビュー
+
+---
+## 2026-05-11T00:43:46+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: PR レビュー反映 (CI fix)
+- **実行内容**: PR #695 マージ前に CI 2 件 fail (Cycle Phase Completion / Defaults TOML Sync) を検出し修正。(1) .aidlc/cycles/v2.6.1/inception/progress.md ステップ6 を「スキップ」化（v2 構造で不要）、(2) skills/aidlc-setup/config/defaults.toml に open_in_browser = false を追加して正本と同期。コミット 18d19842。AIレビュー完了 / 対象タイミング: 統合とレビュー
+
+---
