@@ -1,0 +1,95 @@
+# config/github-project-spec.yaml
+#
+# AI-DLC Starter Kit GitHub Projects (ProjectsV2) Spec / SoT 単一系統
+# 詳細: docs/development/github-projects-setup.md
+#       .aidlc/cycles/v2.6.0/design-artifacts/logical-designs/unit_006_github_projects_migration_logical_design.md
+#
+# 注意:
+#   - 本ファイルは Project の desired state（理想状態）のみを宣言する。
+#   - 実環境 ID（project_url / project_number / owner login）は本ファイルには書かず、
+#     `.aidlc/config.toml` の `[github_projects]` セクションに `bin/gh-project-cli.sh ensure-project`
+#     成功時のみ自動書き込みされる（手編集禁止）。
+#   - 本ファイル改訂時は `bin/gh-project-cli.sh audit --check spec-conformance` で実環境との
+#     drift を確認すること。
+
+version: 1
+
+project:
+  title: AI-DLC Starter Kit Roadmap
+  owner: "@me"
+  visibility: public
+
+fields:
+  - name: Status
+    data_type: single_select
+    options:
+      - Backlog
+      - Next
+      - In Progress
+      - Review
+      - Done
+  - name: Priority
+    data_type: single_select
+    options:
+      - high
+      - medium
+      - low
+  - name: Cycle
+    data_type: single_select
+    options: dynamic  # cycle_map 経由で動的生成（既存 Milestone + "Later"）
+
+views:
+  # project_field_axes: Project field を表示軸として使う集合
+  # label_axes: Issue labels を表示軸として使う集合（Type は labels 派生軸として常に label_axes）
+  - name: Roadmap
+    layout: roadmap_layout
+    project_field_axes: [Cycle, Status]
+    label_axes: []
+    apply_strategy: graphql
+  - name: Backlog Board
+    layout: board_layout
+    group_by: Status
+    project_field_axes: [Status]
+    label_axes: []
+    apply_strategy: cli
+  - name: Priority Table
+    layout: table_layout
+    project_field_axes: [Priority, Status, Cycle]
+    label_axes:
+      - { name: Type, label_prefix: "type:" }
+    filter: "is:open"
+    apply_strategy: graphql
+  - name: Feedback View
+    layout: table_layout
+    project_field_axes: []
+    label_axes:
+      - { name: Type, label_prefix: "type:" }
+    filter: "label:type:feedback is:open"
+    apply_strategy: graphql
+
+workflows:
+  - id: item-closed-to-done
+    description: "Issue が close されたら Project Item の Status を Done に遷移"
+    trigger: item_closed
+    action: set_status_done
+    apply_strategy: manual  # GitHub UI で有効化（GraphQL enableProjectV2Workflow が GA 不安定のため）
+
+manual_actions:
+  - id: enable-item-closed-workflow
+    description: "GitHub Project の設定画面 → Workflows → 'Item closed' を有効化し、target を Status=Done に設定"
+    audit_check: workflow-item-closed
+
+cycle_map:
+  patterns:
+    - milestone_pattern: '^v\d+\.\d+\.\d+$'
+      cycle_label: "<milestone-title>"
+  fallback: Later
+  delete_handling: Later
+
+item_sources:
+  - source: issue-524-body
+    issue_number: 524
+    extract: github_issue_urls
+  - source: backlog-label
+    label: backlog
+    state: open

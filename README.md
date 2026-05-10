@@ -289,6 +289,10 @@ Phase 1（設計）ではコードを書かず構造・責務・インターフ�
 
 `skills/aidlc/scripts/` にユーティリティスクリプトを配置。環境情報取得、Issue操作、履歴書き込み、markdownlint実行等をスクリプト化し、AIエージェントの許可リスト運用を改善しています。
 
+### GitHub Projects 連携（v2.6.0+）
+
+バックログ管理を GitHub Projects (ProjectsV2) で動的管理化。`bin/setup-github-project.sh` で宣言的仕様（`config/github-project-spec.yaml`）に基づき Project / フィールド / ビュー / Item を冪等作成し、`bin/audit-github-project.sh` で `Item closed → Status=Done` workflow と spec 整合を監査します。Inception ステップ17 のバックログ確認で GitHub Projects を参照。詳細セットアップ手順は [docs/development/github-projects-setup.md](docs/development/github-projects-setup.md) を参照。
+
 ### バックトラック機能
 
 フェーズ間を柔軟に行き来可能：
