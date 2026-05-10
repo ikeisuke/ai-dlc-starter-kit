@@ -7,6 +7,36 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.1] - 2026-05-11
+
+v2.6.0 リリース後に検出された 5 件のクリティカル / UX / 設計原則 / CI ノイズ問題を一括解消する patch リリース。
+
+### Fixed
+
+- **`skills/aidlc/scripts/lib/version.sh` の zsh OOM クラッシュ修正（CLI モードガード追加）**: `version.sh` を CLI として直接実行した際に、bash 関数定義中のヒアドキュメント / 変数展開が zsh の `command_not_found_handler` で再帰展開され、out-of-memory crash に至る問題を修正。`SKILL.md` で「CLI モードでは bash 経由の明示実行を推奨」を明文化（Unit 001 / #688）
+- **Cycle Phase Completion Check の draft PR skip**: `cycle/<v>` ブランチへの draft PR 作成時に、`check-cycle-phase-completion` が `Phase完了` コミット不在で常時 fail する問題を修正。draft PR は実装中ブランチであり Phase 完了コミットを要求するのは過剰なため、draft 状態の PR では check 自体を skip する（Unit 002 / #686）
+- **`aidlc-feedback` の `--web` 強制起動解消（opt-in 化）**: `gh issue create` 実行時に `--web` フラグが常時付与され、ブラウザが必ず開いてしまう挙動を opt-in 化。デフォルトは CLI 完結（環境変数 `AIDLC_FEEDBACK_OPEN_WEB=1` または `--web` フラグ明示時のみブラウザ起動）（Unit 003 / #690）
+- **dasel 直接呼び出しを `read-config.sh` 経由に統一 + 規約追記**: AI プロンプト（`.md`）で `dasel -f <file> '<key>'`（dasel CLI v3 で `unknown flag` エラーになる不正フラグ）が誤生成されがちな問題に対し、(1) AI プロンプト内の dasel 直接呼び出しを `bash scripts/read-config.sh` 経由に置換、(2) `steps/common/rules-core.md` に dasel CLI v3 の制約と禁止呼び出しパターンを明文化、(3) `.aidlc/rules.md` の「スキル間依存ルール」に公開 API スクリプト層の例外を追記、の 3 軸で構造的予防を実施（Unit 004 / #689）
+- **`squash-unit.sh` の CI 構造チェックスクリプト設定駆動化**: v2.6.0 Unit 007 で opt-in シグナル方式にリファクタした CI 構造チェック（`bin/check-skill-references.sh` / `bin/check-bash-substitution.sh` / `bin/check-test-isolation.sh`）について、本体スクリプトに 3 種固定でハードコードされていた部分を `.aidlc/config.toml` の `[rules.squash.internal_ci_checks].scripts` 設定キー経由に変更。本体から starter kit 固有のチェックスクリプト名・配置の知識を完全排除し、CLAUDE.md「設計原則 § ドッグフーディング特殊処理を本体に埋めない」原則準拠を達成（Unit 005 / #687）
+    - **新設キー**: `[rules.squash.internal_ci_checks].scripts`（リポジトリルート相対パスの順序付きリスト）
+    - **挙動**: 設定不在 = 集約 skip（reason=no-config / consumer プロジェクト想定）/ 空配列 = reason=empty-config / 全エントリ実体不在 = reason=no-script-present / `read-config.sh` 実行系エラー = reason=config-read-error / `parse_config_array` 検証エラー = reason=invalid-config-format
+    - **後方互換**: 既存トークン `squash:info:internal-ci-checks-skipped` は集約 skip 時の 1 行目として常時出力（既存 grep ルール無改修で互換）。reason は別行 `squash:info:internal-ci-checks-skipped:reason=<reason>` で出力する 2 行契約
+    - **starter kit 自身**: `.aidlc/config.toml` に既存 3 種を明示設定（dogfood）。GATE-8 4 ケースで設定の存在を保証
+    - **テスト**: `bin/tests/squash-unit/internal_ci_checks_config_driven.bats`（28 ケース）を新規追加、旧 `internal_ci_checks_optin.bats` を削除（GATE-8 4 ケースは新規ファイルへ移植）
+
+### Changed
+
+- **`skills/aidlc/steps/common/rules-core.md` に「dasel 呼び出し規約（CLI v3）」「禁止呼び出しパターン」H3 サブセクションを追加**（Unit 004 / #689）
+- **`.aidlc/rules.md` の「スキル間依存ルール」に公開 API スクリプト層の例外を 1 行追記**（`scripts/read-config.sh` を全スキルから参照可と明示 / Unit 004 / #689）
+
+### Backward Compatibility
+
+- **starter kit 自身**: `.aidlc/config.toml` への明示設定追加で 3 種実行を継続（dogfood 確認済み）
+- **consumer プロジェクト**: 設定不在で集約 skip となる（既存トークン互換）。GitHub Actions 等の CI ログ集約は無改修で動作
+- **starter kit fork**: `.aidlc/config.toml` に明示設定が必要（README / docs での案内は v2.7.0 backlog）
+
+---
+
 ## [2.6.0] - 2026-05-10
 
 ### BREAKING CHANGES
