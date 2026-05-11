@@ -52,6 +52,18 @@ _emit_error() {
     fi
 }
 
+# v2.6.2 Unit 004: warn メッセージを _emit_error と同形式の JSON で stderr 出力する。
+# _emit_error と異なり exit せず、process は継続する。呼出側が rc を制御する。
+_emit_warn() {
+    local error_type="$1"; local details="$2"; local remediation="${3:-}"
+    if command -v jq >/dev/null 2>&1; then
+        jq -n --arg t "$error_type" --arg d "$details" --arg r "$remediation" \
+            '{error_type:$t, details:$d, remediation:$r}' >&2
+    else
+        printf '{"error_type":"%s","details":"jq_unavailable","remediation":""}\n' "$error_type" >&2
+    fi
+}
+
 _load_spec_or_exit() {
     # R1 #1: `if ! cmd; then exit $?` は失敗時 $? が 0 になるため使わず、`cmd || rc; exit $rc` の形式に統一
     local spec_json
@@ -219,6 +231,140 @@ _subcmd_ensure_project() {
 }
 
 # ====================================================================
+# v2.6.2 Unit 004: field options 差分同期ヘルパー
+# ====================================================================
+# _sync_field_options <field_id> <field_name> <existing_options_json> <spec_options_json> <owner> <number>
+#   既存 field の options と spec options の集合差分を計算し、追加方向の差分を API で同期する。
+#   _DRY_RUN / _MODE グローバル変数を参照してモード別 dispatch する。
+#   strict + extraneous 検出時は追加 API を呼ばずに fail-fast（return 3）する。
+#   集合演算は JSON 配列で完結し、CSV への変換は表示層（printf 直前）のみで実施する。
+#
+# 戻り値:
+#   0 = 成功（no-op / 追加成功 / soft で warn 出力）
+#   1 = 引数不正
+#   3 = strict 違反（extraneous / API 失敗）
+_sync_field_options() {
+    if [[ $# -ne 6 ]]; then
+        _emit_error "args_invalid" "sync_field_options:expected_6_args:got=$#"
+        return 1
+    fi
+    local field_id="$1"
+    local field_name="$2"
+    local existing_options_json="$3"
+    local spec_options_json="$4"
+    # owner / number: 本関数内では直接使わないが、後続の gh_project_repo_add_field_option
+    # 呼出に渡すために引数化して責務を明示する（pass-through / 設計レビュー R1 指摘 #2 整理）。
+    local owner="$5"
+    local number="$6"
+
+    # 引数検証: JSON 配列であること
+    if ! printf '%s' "$existing_options_json" | jq -e 'type=="array"' >/dev/null 2>&1; then
+        _emit_error "args_invalid" "options_json_invalid:field=${field_name}:source=existing"
+        return 1
+    fi
+    if ! printf '%s' "$spec_options_json" | jq -e 'type=="array"' >/dev/null 2>&1; then
+        _emit_error "args_invalid" "options_json_invalid:field=${field_name}:source=spec"
+        return 1
+    fi
+
+    # 各 option 名の制御文字 / カンマ / 引用符 / バックスラッシュチェック（stdout ログ注入対策 / コード R1 指摘 #1）。
+    # `field:<name>:options-added:<count>:names=<csv>` の境界を保護するため defense-in-depth で検証する。
+    # GitHub Projects 仕様上、これらの文字は option 名に通常含まれない。スペース（"In Progress" など）は許容する。
+    local _src _json _cnt _i _opt
+    for _src in existing spec; do
+        if [[ "$_src" == "existing" ]]; then _json="$existing_options_json"; else _json="$spec_options_json"; fi
+        _cnt="$(printf '%s' "$_json" | jq 'length')"
+        _i=0
+        while [[ "$_i" -lt "$_cnt" ]]; do
+            _opt="$(printf '%s' "$_json" | jq -r ".[$_i]")"
+            case "$_opt" in
+                *$'\n'*|*$'\r'*|*$'\t'*|*,*|*\"*|*\\*)
+                    _emit_error "args_invalid" "options_name_unsafe_chars:field=${field_name}:source=${_src}"
+                    return 1
+                    ;;
+            esac
+            _i=$((_i + 1))
+        done
+    done
+
+    # 集合差分の計算（順序は元配列の順を保持）
+    local to_add_json extraneous_json
+    to_add_json="$(jq -nc --argjson s "$spec_options_json" --argjson e "$existing_options_json" \
+        '$s | map(select(. as $x | $e | index($x) | not))')"
+    extraneous_json="$(jq -nc --argjson s "$spec_options_json" --argjson e "$existing_options_json" \
+        '$e | map(select(. as $x | $s | index($x) | not))')"
+
+    local extraneous_count
+    extraneous_count="$(printf '%s' "$extraneous_json" | jq 'length')"
+
+    # extraneous 検出 → warn 出力 + strict fail-fast 判定
+    if [[ "$extraneous_count" -gt 0 ]]; then
+        local extraneous_csv
+        extraneous_csv="$(printf '%s' "$extraneous_json" | jq -r 'join(",")')"
+        _emit_warn "options_extraneous" "field=${field_name}:names=${extraneous_csv}"
+        # strict + !dry_run: fail-fast（追加 API を呼ばず即 return 3）
+        if [[ "${_MODE}" == "strict" ]] && ! $_DRY_RUN; then
+            return 3
+        fi
+    fi
+
+    local to_add_count
+    to_add_count="$(printf '%s' "$to_add_json" | jq 'length')"
+
+    # to_add 空 → no-op
+    if [[ "$to_add_count" -eq 0 ]]; then
+        return 0
+    fi
+
+    # dry-run: options-would-add のみ出力
+    if $_DRY_RUN; then
+        local would_csv
+        would_csv="$(printf '%s' "$to_add_json" | jq -r 'join(",")')"
+        printf 'field:%s:options-would-add:%d:names=%s\n' "$field_name" "$to_add_count" "$would_csv"
+        return 0
+    fi
+
+    # 実行: to_add の各 option を順次追加
+    local added_names_json='[]'
+    local idx=0
+    local opt rc
+    while [[ $idx -lt $to_add_count ]]; do
+        opt="$(printf '%s' "$to_add_json" | jq -r ".[$idx]")"
+        rc=0
+        gh_project_repo_add_field_option "$owner" "$number" "$field_id" "$opt" >/dev/null 2>&1 || rc=$?
+        if [[ $rc -ne 0 ]]; then
+            if [[ "${_MODE}" == "strict" ]]; then
+                _emit_error "gh_api_error" "options_add_failed:field=${field_name}:option=${opt}"
+                # 追加済みの分だけ stdout 出力してから return 3（部分追加の可観測性確保）
+                local added_count_partial
+                added_count_partial="$(printf '%s' "$added_names_json" | jq 'length')"
+                if [[ "$added_count_partial" -gt 0 ]]; then
+                    local added_csv_partial
+                    added_csv_partial="$(printf '%s' "$added_names_json" | jq -r 'join(",")')"
+                    printf 'field:%s:options-added:%d:names=%s\n' "$field_name" "$added_count_partial" "$added_csv_partial"
+                fi
+                return 3
+            else
+                # soft: warn + 次の option へ継続
+                _emit_warn "gh_api_error" "options_add_failed:field=${field_name}:option=${opt}"
+            fi
+        else
+            added_names_json="$(jq -nc --argjson a "$added_names_json" --arg n "$opt" '$a + [$n]')"
+        fi
+        idx=$((idx + 1))
+    done
+
+    local added_count
+    added_count="$(printf '%s' "$added_names_json" | jq 'length')"
+    if [[ "$added_count" -gt 0 ]]; then
+        local added_csv
+        added_csv="$(printf '%s' "$added_names_json" | jq -r 'join(",")')"
+        printf 'field:%s:options-added:%d:names=%s\n' "$field_name" "$added_count" "$added_csv"
+    fi
+    return 0
+}
+
+# ====================================================================
 # サブコマンド: ensure-fields
 # ====================================================================
 _subcmd_ensure_fields() {
@@ -252,6 +398,19 @@ _subcmd_ensure_fields() {
 
         if [[ -n "$exists" ]]; then
             printf 'field:exists:%s\n' "$fname"
+            # v2.6.2 Unit 004: options 差分同期（spec.options が array 形式のみ。dynamic / null は除外）
+            local opts_kind
+            opts_kind="$(printf '%s' "$spec_json" | jq -r ".fields[$i].options | type")"
+            if [[ "$opts_kind" == "array" ]]; then
+                local spec_opts_json existing_opts_json sync_rc=0
+                spec_opts_json="$(printf '%s' "$spec_json" | jq -c ".fields[$i].options")"
+                existing_opts_json="$(printf '%s' "$existing_fields" \
+                    | jq -c --arg n "$fname" '.fields[] | select(.name==$n) | .options // [] | map(.name)')"
+                _sync_field_options "$exists" "$fname" "$existing_opts_json" "$spec_opts_json" "$owner" "$number" || sync_rc=$?
+                if [[ $sync_rc -ne 0 ]]; then
+                    exit "$sync_rc"
+                fi
+            fi
         else
             if $_DRY_RUN; then
                 printf 'field:would-create:%s\n' "$fname"
