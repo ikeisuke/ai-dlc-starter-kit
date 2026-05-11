@@ -81,6 +81,11 @@ SEVERITY_LOW=""
 RESOLVED_COUNT=""
 DEFERRED_COUNT=""
 
+# Unit 003 (#677): --mode operations-round の auto-commit 制御
+# - false (デフォルト): auto-commit 有効（append 後に git add + git commit）
+# - true: opt-out（append のみ、旧挙動維持）。--mode operations-round 以外で指定された場合は warning 出力（exit 0 維持）
+NO_COMMIT=false
+
 # ガード判定用のグローバル（main が事前取得、evaluate_post_merge_guard が参照）
 GUARD_COMPLETION_GATE_READY=""
 GUARD_PR_NUMBER_FROM_PROGRESS=""
@@ -120,6 +125,9 @@ OPTIONS:
   --critical / --high / --medium / --low <N> 重要度別件数（--mode operations-round 時必須、各非負整数）
   --resolved-count <N>    修正対応件数（--mode operations-round 時必須、非負整数）
   --deferred-count <N>    defer 化件数（--mode operations-round 時必須、非負整数）
+  --no-commit             auto-commit を skip し append のみ実行（--mode operations-round 時のみ意味を持つ。
+                          それ以外の mode で指定された場合は stderr に warning を出力し flag は無視。
+                          Unit 003 / #677）
   -h, --help              このヘルプを表示
   --dry-run               ファイル追記せず、状態のみ表示
 
@@ -586,6 +594,125 @@ check_history_staged_status() {
     return 0
 }
 
+# Unit 003 (#677): --mode operations-round の append 完了後に呼ばれ、
+# history ファイルを git add + git commit する auto-commit ヘルパー。
+#
+# 設計 SoT: .aidlc/cycles/v2.6.2/design-artifacts/logical-designs/unit_003_fix_squash712_history_integration_logical_design.md
+#
+# 環境ガード（破壊的変更を避けるための skip 条件）:
+#   1. git リポジトリ外: skip + stderr warning + return 0（テスト環境 / 非 git 利用の互換性保持）
+#   2. 事前 staged 状態: skip + stderr warning + return 0（呼び出し側の手動 commit 管理を尊重）
+#
+# 成功時 stdout 出力（main からの呼び出しで使用される return 値ではなく直接 echo）:
+#   history-commit:<sha>:operations-round-round-<round>
+#
+# dry-run 時 stdout 出力:
+#   history-commit:would-commit:operations-round-round-<round>
+#
+# 失敗時: emit_error 既存契約に従い stdout+stderr に error:failed-auto-commit-operations-round:<reason>
+#         および git index rollback（事前 unstaged だった場合のみ git reset HEAD -- <filepath>）
+#
+# 引数:
+#   $1 - filepath（履歴ファイル絶対パス、append 完了時点）
+#   $2 - cycle
+#   $3 - round
+# 戻り値:
+#   0: auto-commit 成功 / skip（ガード発火）
+#   1: auto-commit 失敗（emit_error 出力済み）
+_commit_operations_round_history() {
+    local filepath="$1"
+    local cycle="$2"
+    local round="$3"
+    local filepath_real_dir filepath_real repo_root rel_path
+
+    # ステップ 0: filepath の symlink 解決（check_history_staged_status と同じパターン）
+    if ! filepath_real_dir=$(cd "$(dirname -- "$filepath")" 2>/dev/null && pwd -P 2>/dev/null); then
+        echo "warning: cannot resolve history file directory, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+    if [ -z "$filepath_real_dir" ]; then
+        echo "warning: cannot resolve history file directory, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+    filepath_real="${filepath_real_dir}/$(basename -- "$filepath")"
+
+    # ガード 1: git リポジトリ外 → skip
+    if ! repo_root=$(git -C "$filepath_real_dir" rev-parse --show-toplevel 2>/dev/null); then
+        echo "warning: not inside a git repository, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+    if [ -z "$repo_root" ]; then
+        echo "warning: not inside a git repository, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+
+    # repo-root 相対パスへ正規化
+    rel_path="${filepath_real#${repo_root}/}"
+    if [ "$rel_path" = "$filepath_real" ]; then
+        echo "warning: history file is outside repository, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+
+    # ガード 2: 事前 staged 状態 → skip（呼び出し側の手動 commit 管理を尊重）
+    local pre_staged_files
+    if ! pre_staged_files=$(git -C "$repo_root" diff --cached --name-only -- "$filepath_real" 2>/dev/null); then
+        echo "warning: cannot inspect git index state, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+    if printf '%s\n' "$pre_staged_files" | grep -Fxq -- "$rel_path"; then
+        echo "warning: history file already staged, skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+
+    # dry-run 時は副作用なしで would-commit ログのみ
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "history-commit:would-commit:operations-round-round-${round}"
+        return 0
+    fi
+
+    # ステップ 1: git add
+    local add_output add_ec
+    set +e
+    add_output=$(git -C "$repo_root" add -- "$filepath_real" 2>&1)
+    add_ec=$?
+    set -e
+    if [[ "$add_ec" -ne 0 ]]; then
+        local first_line
+        first_line=$(printf '%s' "$add_output" | head -n 1 | tr -d '\n')
+        # Round 1 LOW #1 対応: emit_error 既存契約（stdout 出力 + 同関数内で stderr ミラー）に統一、
+        # 手動 stderr 再出力は削除（ノイズ抑制）
+        emit_error "failed-auto-commit-operations-round" "git add failed: ${first_line}"
+        return 1
+    fi
+
+    # ステップ 2: git commit
+    local commit_msg="chore: [${cycle}] §7.12 レビュー round ${round} 履歴記録"
+    local commit_output commit_ec
+    set +e
+    commit_output=$(git -C "$repo_root" commit -m "$commit_msg" 2>&1)
+    commit_ec=$?
+    set -e
+    if [[ "$commit_ec" -ne 0 ]]; then
+        # rollback: 事前 unstaged だった対象のみを巻き戻す（事前 staged の場合は既に上でガード発火している）
+        set +e
+        git -C "$repo_root" reset HEAD -- "$filepath_real" >/dev/null 2>&1
+        set -e
+        local first_line
+        first_line=$(printf '%s' "$commit_output" | head -n 1 | tr -d '\n')
+        # Round 1 LOW #1 対応: emit_error 既存契約に統一、手動 stderr 再出力は削除
+        emit_error "failed-auto-commit-operations-round" "git commit failed: ${first_line}"
+        return 1
+    fi
+
+    # ステップ 3: 成功出力
+    local new_sha
+    if ! new_sha=$(git -C "$repo_root" rev-parse HEAD 2>/dev/null); then
+        new_sha="unknown"
+    fi
+    echo "history-commit:${new_sha}:operations-round-round-${round}"
+    return 0
+}
+
 # メイン処理
 main() {
     # 引数解析
@@ -770,6 +897,11 @@ main() {
                 fi
                 DEFERRED_COUNT="$2"
                 shift 2
+                ;;
+            --no-commit)
+                # Unit 003 (#677): operations-round の auto-commit を skip する opt-out フラグ
+                NO_COMMIT=true
+                shift
                 ;;
             -*)
                 emit_error "unknown-option" "Unknown option: $1"
@@ -975,6 +1107,13 @@ main() {
         else
             echo "history:${filepath}:would-append"
         fi
+        # Unit 003 (#677 / v2.6.2): dry-run でも operations-round の auto-commit would-* ログを出力
+        # （実コミットは行わず would-commit ログのみ）
+        if [[ "$MODE" == "operations-round" && "$NO_COMMIT" != "true" ]]; then
+            echo "history-commit:would-commit:operations-round-round-${ROUND}"
+        elif [[ "$NO_COMMIT" == "true" && "$MODE" != "operations-round" ]]; then
+            echo "warning: --no-commit is only effective with --mode operations-round (got mode: ${MODE}); flag ignored" >&2
+        fi
         exit 0
     fi
 
@@ -1075,6 +1214,23 @@ main() {
     # step5↔step8 分裂の構造的予防（warning 契約は計画書 SoT、stderr 一本化 / exit 0 維持）
     if [[ "$MODE" == "base" ]]; then
         check_history_staged_status "$filepath"
+    fi
+
+    # Unit 003 (#677 / v2.6.2): --mode operations-round の auto-commit フック
+    # 設計 SoT: .aidlc/cycles/v2.6.2/design-artifacts/logical-designs/unit_003_fix_squash712_history_integration_logical_design.md
+    if [[ "$MODE" == "operations-round" ]]; then
+        if [[ "$NO_COMMIT" == "true" ]]; then
+            # opt-out: append のみで終了（既存挙動維持）
+            :
+        else
+            if ! _commit_operations_round_history "$filepath" "$CYCLE" "$ROUND"; then
+                # auto-commit 失敗時は emit_error 経由でエラー出力済み。exit 1
+                exit 1
+            fi
+        fi
+    elif [[ "$NO_COMMIT" == "true" ]]; then
+        # --no-commit の誤指定検知（Round 1 MEDIUM #1 対応）: warning + exit 0 維持
+        echo "warning: --no-commit is only effective with --mode operations-round (got mode: ${MODE}); flag ignored" >&2
     fi
 
     exit 0

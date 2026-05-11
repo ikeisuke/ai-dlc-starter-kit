@@ -834,6 +834,54 @@ __operations_release_progress_path() {
     printf '%s' ".aidlc/cycles/${cycle}/operations/progress.md"
 }
 
+# Unit 003 (#677): cmd_squash_712 の起動時に history/operations.md の dirty 状態を検出する fail-fast ガード。
+#
+# 設計 SoT: .aidlc/cycles/v2.6.2/design-artifacts/logical-designs/unit_003_fix_squash712_history_integration_logical_design.md
+#
+# 引数: $1 = cycle
+# 戻り値: 0 = clean / 1 = dirty（呼び出し元で exit 1 に変換）
+# 副作用（dirty 時のみ）:
+#   stderr: error\tsquash-712:uncommitted-history\t<path>
+#   stderr: recommended_command:git add <path> && git commit -m "<履歴記録メッセージ>" の後に <squash-712 起動コマンド> を再実行してください
+#   呼び出し元が stdout に squash:failed:reason=dirty_history を出力
+__squash_712_check_history_clean() {
+    local cycle="$1"
+
+    # Round 1 MEDIUM #1 部分対応 (Unit 003 / #677): 新規追加ガード経路として最小限のパストラバーサル拒否
+    # 包括的な cmd_squash_712 全体への validate_cycle 導入は本 Unit のスコープ外（別 Issue 起票）
+    if [[ "$cycle" == *..* ]] || [[ "$cycle" == /* ]] || [[ "$cycle" == *$'\n'* ]]; then
+        printf 'error\tsquash-712:invalid-cycle\t%s\n' "$cycle" >&2
+        return 1
+    fi
+
+    local history_path=".aidlc/cycles/${cycle}/history/operations.md"
+
+    # ファイル不在は dirty 対象外（squash-712 自体は対象 commit が無ければ既存経路で skip される）
+    if [[ ! -f "$history_path" ]]; then
+        return 0
+    fi
+
+    # git status --porcelain で staged / unstaged 双方を検出（任意の非空出力を dirty として扱う）
+    local status_output status_ec
+    set +e
+    status_output=$(git status --porcelain -- "$history_path" 2>&1)
+    status_ec=$?
+    set -e
+    if [[ "$status_ec" -ne 0 ]]; then
+        # git 自体が動作しない場合は判定不能とみなし clean 扱い（squash-712 後続経路で別途エラー）
+        return 0
+    fi
+
+    if [[ -z "$status_output" ]]; then
+        return 0
+    fi
+
+    # dirty 検出
+    printf 'error\tsquash-712:uncommitted-history\t%s\n' "$history_path" >&2
+    printf 'recommended_command:git add %s && git commit -m "<履歴記録メッセージ>" の後に <squash-712 起動コマンド> を再実行してください\n' "$history_path" >&2
+    return 1
+}
+
 # release_prep_commit slot をパース（DomainModel ParseResult 仕様準拠）
 # stdout: "missing" / "found:<SHA>" / "format_error:<rawValue>"
 # return: 0 (success / always; パース結果は stdout)
@@ -1014,6 +1062,13 @@ cmd_squash_712() {
         printf 'info\treason\tread-config.sh failed\n' >&2
         printf 'squash:skipped\n'
         return 0
+    fi
+    # Unit 003 (#677): history/operations.md の dirty 状態を検出する fail-fast ガード
+    # Step 1（squash_enabled 取得）直後・Step 2（release_prep_commit パース）前に配置
+    # dry-run 時もこのガードは実行する（実行前検証目的）
+    if ! __squash_712_check_history_clean "$cycle"; then
+        printf 'squash:failed:reason=dirty_history\n'
+        return 1
     fi
     # Step 2: release_prep_commit slot をパース
     local progress_file
