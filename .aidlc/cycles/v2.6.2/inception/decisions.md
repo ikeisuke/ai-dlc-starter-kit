@@ -175,3 +175,59 @@ v2.6.2 Inception Phase 中、codex Round 2 レビューを発行する際に、�
 - **得たもの**: 本サイクル内で AI 運用安全化の予防策を確立。Construction Phase / Operations Phase での codex / claude / gemini 呼び出しが改訂後の推奨経路（一時ファイル + wrapper / file-based interface）で安全実施できる。v2.6.0 関連調整の一貫した品質改善として位置付け可能。
 - **犠牲にしたもの**: サイクル工数 +0.5 日（5〜8.5 日 → 5.5〜9 日）。Inception 完了処理（commit / PR body / history / progress）の再走行が必要。
 - **判断根拠**: 「結構危険なエラー」とユーザー判断、かつ v2.6.2 Inception Phase 中に実発生（実害顕在化）したため、同サイクル内で予防策を確立するほうが運用上の整合性・安全性の点で勝る。スクリプト本体動作は変更しないため patch リリース性質を維持できる。Intent / user_stories / Unit 006 の改訂レビュー（codex / 3 ラウンド / unresolved=0 / defer=0 / resolved=4）で整合性検証済。
+
+---
+
+## DR-007: Unit 002 スコープを aidlc-migrate 書き込み系3ファイルに拡張
+
+- **ステップ**: Construction Phase / Unit 002 計画ファイル作成時
+- **日時**: 2026-05-11
+
+### 背景
+
+Unit 002（aidlc-migrate manifest 由来パスのトラバーサル検証 / Issue #680）の責務には「`migrate-apply-config.sh` の `_apply_resource()` 系」と書かれているが、実コードでは関数化されておらず、各ループ内に直接展開されている。実態調査の結果、同一脆弱パターンが書き込み系3ファイル（`migrate-apply-config.sh` / `migrate-apply-data.sh` / `migrate-cleanup.sh`）に存在することを確認した。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | aidlc-migrate 書き込み系3ファイルすべて | Issue #680 タイトル「aidlc-migrate: manifest 由来パスのトラバーサル検証」と整合、同質脆弱性の同時解消、defer 残骸ゼロ化、共通 lib で DRY 化 | 工数微増、Unit 定義§責務の「migrate-apply-config の `_apply_resource()` 系」表現とは厳密一致しない |
+| 2 | migrate-apply-config.sh のみに限定 | Unit 定義§責務と Issue #680 本文の言及範囲に厳密準拠、見積もり 1〜1.5 日内で確実 | apply-data / cleanup の同質脆弱性が defer 残骸として残る、新規 Issue 起票で別 Unit 化が必要 |
+
+### 決定
+
+**選択肢 1（書き込み系3ファイルすべて）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: 同質脆弱性の同時解消、`lib/path-guard.sh` の単一 SoT 化で DRY 確保、Issue #680 タイトルとの整合性
+- **犠牲にしたもの**: 工数微増（Unit 005 ほどではない / 既存パターン横展開で完結）
+- **判断根拠**: Unit 定義§境界「aidlc-migrate スコープに閉じる」と Issue #680 タイトルがスコープ拡張を許容。共通 lib に集約することで型崩れも防げる。`apply-data` / `cleanup` を defer すると同質バグの追跡コストが残るのを避ける
+
+---
+
+## DR-008: 全拒否ケースで exit 1 統一（exit-code-convention.md 準拠）
+
+- **ステップ**: Construction Phase / Unit 002 計画レビュー Round 1（codex 指摘 #3）対応
+- **日時**: 2026-05-11
+
+### 背景
+
+Unit 002 当初設計（Unit 定義§技術的考慮事項）では「exit code は全拒否ケースで `2` 固定」としていたが、codex 計画レビュー Round 1 で `guides/exit-code-convention.md`「exit 1=バリデーションエラー / exit 2=システムエラー」との乖離が指摘された。CLAUDE.md「設計レビュー時のガイド照合ルール」も既存ガイドとの整合性チェックを求めている。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | 規約準拠（exit 1）に修正 | exit-code-convention.md 準拠、他の参考実装（migrate-config.sh / squash-unit.sh）と同一ハンドリング、AI ガイド照合ルールに合致 | Unit 定義§技術的考慮事項の同期更新が必要 |
+| 2 | Unit 定義通り exit 2 を維持 | 当初設計通り、規約に例外規定を追加すれば説明可能 | 規約ドキュメント側の例外追加が必要、他参考実装と挙動が分散 |
+
+### 決定
+
+**選択肢 1（規約準拠 / exit 1）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: exit-code-convention.md 準拠、二層 exit code 契約（バリデーション拒否=1 / shim システムエラー=2）の明文化、他参考実装との一貫したハンドリング
+- **犠牲にしたもの**: Unit 定義§技術的考慮事項の同期更新（影響は文書のみ）
+- **判断根拠**: 規約ドキュメント側の例外追加よりも、参考実装側の規約準拠を選ぶほうが「規約はそのまま」の原則を維持できる。AI ガイド照合ルール（v1.27.3 経緯）の存在自体が、規約逸脱に倒さない判断を支持する

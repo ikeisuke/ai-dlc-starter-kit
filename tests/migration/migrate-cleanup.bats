@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+bats_require_minimum_version 1.5.0
+
 load helpers/setup
 
 setup() {
@@ -40,20 +42,37 @@ teardown() {
   [ "${status_val}" = "skipped" ]
 }
 
-@test "cleanup: absolute paths are rejected" {
+@test "cleanup: absolute paths are rejected (reason=absolute_path / Unit 002)" {
   jq '.resources = [{"resource_type": "file_kiro", "path": "/etc/passwd", "action": "delete", "ownership_evidence": null}]' \
     "${MANIFEST_FILE}" > "${MANIFEST_FILE}.tmp" && mv "${MANIFEST_FILE}.tmp" "${MANIFEST_FILE}"
-  result="$(run_cleanup "${MANIFEST_FILE}")"
-  status_val="$(echo "${result}" | jq -r '.applied[0].status')"
-  [ "${status_val}" = "error" ]
+  run --separate-stderr env AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-cleanup.sh" --manifest "${MANIFEST_FILE}"
+  [ "${status}" -eq 1 ]
+  [[ "${stderr}" == *"error	migrate-cleanup:path-traversal	/etc/passwd	reason=absolute_path;field=path"* ]]
 }
 
-@test "cleanup: path traversal is rejected" {
+@test "cleanup: parent traversal is rejected (reason=parent_traversal / Unit 002)" {
   jq '.resources = [{"resource_type": "file_kiro", "path": "../../../etc/passwd", "action": "delete", "ownership_evidence": null}]' \
     "${MANIFEST_FILE}" > "${MANIFEST_FILE}.tmp" && mv "${MANIFEST_FILE}.tmp" "${MANIFEST_FILE}"
-  result="$(run_cleanup "${MANIFEST_FILE}")"
-  status_val="$(echo "${result}" | jq -r '.applied[0].status')"
-  [ "${status_val}" = "error" ]
+  run --separate-stderr env AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-cleanup.sh" --manifest "${MANIFEST_FILE}"
+  [ "${status}" -eq 1 ]
+  [[ "${stderr}" == *"error	migrate-cleanup:path-traversal	../../../etc/passwd	reason=parent_traversal;field=path"* ]]
+}
+
+@test "cleanup: symlink escape is rejected (reason=symlink_escape / Unit 002)" {
+  # プロジェクトルート配下に外部を指す symlink を作成
+  mkdir -p "${TEST_TMPDIR}/outside-target"
+  ln -sf "${TEST_TMPDIR}/outside-target" "${TEST_TMPDIR}/escape-link"
+  # 物理解決後配下外になる外部ターゲットを別ディレクトリに用意
+  local outside_root
+  outside_root="$(mktemp -d /tmp/aidlc-outside-XXXXXX)"
+  ln -sfn "${outside_root}" "${TEST_TMPDIR}/escape-link"
+  jq '.resources = [{"resource_type": "file_kiro", "path": "escape-link/payload", "action": "delete", "ownership_evidence": null}]' \
+    "${MANIFEST_FILE}" > "${MANIFEST_FILE}.tmp" && mv "${MANIFEST_FILE}.tmp" "${MANIFEST_FILE}"
+  run --separate-stderr env AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-cleanup.sh" --manifest "${MANIFEST_FILE}"
+  cd "$BATS_TMPDIR" || true
+  rm -rf "${outside_root}"
+  [ "${status}" -eq 1 ]
+  [[ "${stderr}" == *"error	migrate-cleanup:path-traversal	escape-link/payload	reason=symlink_escape;field=path"* ]]
 }
 
 @test "cleanup: empty parent directories are auto-removed" {

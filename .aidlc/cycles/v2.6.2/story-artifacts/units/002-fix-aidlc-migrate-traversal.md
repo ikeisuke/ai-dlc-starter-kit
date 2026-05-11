@@ -36,17 +36,17 @@
 
 ## 非機能要件（NFR）
 
-- **セキュリティ**: トラバーサル攻撃 4 ケース（絶対パス / `..` / 配下外 / シンボリックリンク）すべてが exit 2 で停止（fail-closed）
+- **セキュリティ**: トラバーサル攻撃 4 ケース（絶対パス / `..` / 配下外 / シンボリックリンク）すべてが exit 1 で停止（fail-closed / バリデーションエラー扱い）。realpath shim 自体のシステムエラー（外部コマンド失敗等）のみ呼び出し元は exit 2 を返す二層契約
 - **パフォーマンス**: `realpath` 呼び出しのオーバーヘッドは manifest エントリあたり 10ms 未満
 - **可搬性**: macOS BSD `realpath`（古い macOS では `-m` / `--strict` 不在）と GNU `realpath` の双方で同じ判定結果
 
 ## 技術的考慮事項
 
-- `realpath` shim 実装方針: (a) `bin/lib/` 配下に shim 関数を新設、(b) `realpath -m` の存在確認 + フォールバック実装、(c) `python3` 等の他ツールへ委譲、のいずれか。Construction 設計レビューで採用方針を確定
+- `realpath` shim 実装方針: `realpath -m` 存在確認 + pure bash フォールバック（`cd -P` ループ）で実装する（unit-002-plan §「含まれるもの」項目 2 で確定）。`python3` / `perl` 委譲は依存追加回避のため不採用
 - シンボリックリンク経由のトラバーサル検出は物理パス解決（`realpath` の `-P` または相当）が必要。論理パス解決のみだと検出できない
 - 既存の正常な manifest（v2.6.x までの apply.json）が変更なしで動作することを検証する整合性テストを追加
-- エラーメッセージは tab 区切り 4 フィールド固定（`error\tmigrate-apply:path-traversal\t<offending_path>\treason=<code>`）
-- exit code は全拒否ケースで `2` 固定
+- エラーメッセージは tab 区切り 4 フィールド固定で、第2フィールドの識別子は呼び出し元スクリプト単位に分割、第4フィールドは `reason=<code>;field=<name>` 形式（フィールド数=4 を維持しつつ field 識別を内包）: `error\t<script_id>:path-traversal\t<offending_path>\treason=<code>;field=<name>`（`<script_id>` は `migrate-apply-config` / `migrate-apply-data` / `migrate-cleanup`、`<name>` は `path` / `destination` / `new_path` 等）
+- exit code は全拒否ケースで `1` 固定（`guides/exit-code-convention.md` 準拠 / バリデーションエラー扱い）。realpath shim 自体のシステムエラー（外部コマンド失敗等）のみ呼び出し元は `exit 2`
 
 ## Intent 制約適合
 
@@ -71,9 +71,9 @@ High（security:high）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-11
+- **完了日**: 2026-05-11
+- **担当**: Claude (AI-DLC)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
