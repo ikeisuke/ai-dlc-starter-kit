@@ -295,6 +295,35 @@ cmd_version_check() {
     return $?
 }
 
+# _pr_ready_validate_body_file - PR 本文ファイルの不在 / 0 バイトを検出する単一 SoT 検証ヘルパー
+#
+# Args:
+#   $1 body_file   検証対象のパス
+#
+# Returns:
+#   0  通常ファイルとして存在しサイズ >= 1
+#   1  不在 / 非 regular file（state=Missing）または 0 バイト（state=Empty）
+#
+# Side Effects:
+#   検証エラー時のみ stderr に機械可読メッセージ（error<TAB><code><TAB><path>）を出力。
+#   Empty 時は加えて人間可読の案内行を出力。ファイル内容は出力しない（情報リーク防止）。
+#
+# 関連 Issue: #678
+# 関連 Unit: v2.6.2 Unit 001
+_pr_ready_validate_body_file() {
+    local body_file="$1"
+    if [[ ! -f "$body_file" ]]; then
+        printf 'error\tpr-ready:body-file-missing\t%s\n' "$body_file" >&2
+        return 1
+    fi
+    if [[ ! -s "$body_file" ]]; then
+        printf 'error\tpr-ready:body-file-empty\t%s\n' "$body_file" >&2
+        printf '本文が空です。--body-file の中身を確認してから再実行してください\n' >&2
+        return 1
+    fi
+    return 0
+}
+
 # gh_pr_edit_body_with_fallback - gh pr edit のスコープ不足エラー時に gh api PATCH へ fallback する
 #
 # Args:
@@ -309,6 +338,10 @@ gh_pr_edit_body_with_fallback() {
     local stderr_file
     local stderr_capture=""
     local edit_ec=0
+
+    # 二重防御: cmd_pr_ready 経由を介さず直接呼び出される経路でも body_file の妥当性を検証する
+    # （Issue #678 / v2.6.2 Unit 001）
+    _pr_ready_validate_body_file "$body_file" || return 1
 
     # 1. gh CLI 経路を実行（stdout は呼び出し元へ透過、stderr のみ一時ファイルに捕捉して grep で判別する）
     stderr_file=$(mktemp -t aidlc-gh-pr-edit-stderr.XXXXXX)
@@ -378,6 +411,14 @@ cmd_pr_ready() {
                 ;;
         esac
     done
+
+    # 0. body-file 事前検証（Issue #678 / v2.6.2 Unit 001）:
+    # 引数パース直後・cycle 解決前に最早期で fail-fast する。
+    # --body-file 指定時は get-related-issues / find-draft / gh pr edit より前に検証エラーで停止し、
+    # 0 バイト / 不在 / 非 regular file 由来の PR 本文 null 上書き事故を構造的に防止する。
+    if [[ -n "$body_file" ]]; then
+        _pr_ready_validate_body_file "$body_file" || return 1
+    fi
 
     if [[ -z "$cycle" ]]; then
         cycle=$(resolve_cycle_from_branch)

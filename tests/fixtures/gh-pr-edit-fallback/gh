@@ -10,6 +10,11 @@
 #   pr-edit-scope-org       pr edit が read:org スコープ不足エラーで失敗
 #   pr-edit-graphql-error   pr edit が GraphQL field error で失敗
 #   pr-edit-network-error   pr edit が非スコープエラー（network）で失敗
+#
+# Call log (v2.6.2 Unit 001 追加):
+#   GH_MOCK_CALL_LOG が設定されていれば呼び出し引数列を 1 行ずつ追記する。
+#   未設定なら /dev/null へ流すため既存テストには無影響。
+printf '%s\n' "$*" >> "${GH_MOCK_CALL_LOG:-/dev/null}"
 
 case "$1" in
     pr)
