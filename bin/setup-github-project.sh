@@ -46,6 +46,14 @@ printf '\n== sync-items ==\n'
 "$_CLI" sync-items "${_OPTS[@]}"
 
 printf '\n== audit (spec-conformance) ==\n'
-"$_CLI" audit --check spec-conformance "${_OPTS[@]/--dry-run/}"
+# v2.6.2 Unit 005: audit は read-only のため --dry-run を除去して呼ぶ。
+# `${_OPTS[@]/--dry-run/}` のパラメータ展開は要素を空文字列で残し、
+# 下位 CLI が `unknown_option:` で exit 1 となるため、フィルタ配列で渡す。
+_AUDIT_OPTS=()
+for _opt in "${_OPTS[@]:-}"; do
+    [[ "$_opt" == "--dry-run" ]] && continue
+    _AUDIT_OPTS+=("$_opt")
+done
+"$_CLI" audit --check spec-conformance "${_AUDIT_OPTS[@]}"
 
 printf '\nsetup-github-project: completed\n'

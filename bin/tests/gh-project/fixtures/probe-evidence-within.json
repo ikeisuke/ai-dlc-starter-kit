@@ -1,0 +1,12 @@
+{
+  "probe": "workflow-item-closed",
+  "dry_run": false,
+  "sandbox_issue": 9999,
+  "sandbox_url": "https://github.com/ikeisuke/ai-dlc-starter-kit/issues/9999",
+  "project_item_id": "PVTI_TEST_999",
+  "project_owner": "@me",
+  "project_number": 123,
+  "closed_at": "__NOW_ISO__",
+  "cleanup_status": "succeeded",
+  "cleanup_evidence": {"action": "delete", "result": "succeeded"}
+}

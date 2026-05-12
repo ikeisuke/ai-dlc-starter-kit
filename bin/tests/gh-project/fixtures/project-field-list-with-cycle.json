@@ -1,0 +1,23 @@
+{
+  "fields": [
+    {
+      "id": "PVTF_AAA",
+      "name": "Status",
+      "type": "ProjectV2SingleSelectField",
+      "options": [
+        {"id": "OPT_TODO", "name": "Todo"},
+        {"id": "OPT_INPROG", "name": "In Progress"},
+        {"id": "OPT_DONE", "name": "Done"},
+        {"id": "OPT_BACKLOG", "name": "Backlog"}
+      ]
+    },
+    {
+      "id": "PVTF_BBB",
+      "name": "Cycle",
+      "type": "ProjectV2SingleSelectField",
+      "options": [
+        {"id": "OPT_V100", "name": "v1.0.0"}
+      ]
+    }
+  ]
+}

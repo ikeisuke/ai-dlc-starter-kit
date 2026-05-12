@@ -260,3 +260,35 @@ Unit 003（Issue #677、致命的バグ）の Unit 定義で「案 A（write-his
 - **得たもの**: 二層防御による Issue #677 致命的バグの構造的封じ込め。通常運用の自動化（案 A）+ 街道外入力・運用ミス・バグ回帰の検知（案 B）
 - **犠牲にしたもの**: 実装規模が最大（Unit 見積もり上限 1.5 日）。設計レビューと bats / integration テストの両面で網羅性を求めるため検証コスト増
 - **判断根拠**: Issue #677 が「致命的バグ」かつ「force push で手動復旧した」事例がある以上、再発を構造的に封じる多層防御が妥当。Unit 見積もり上限内に収まる範囲で最堅牢な解を選択。ユーザーが A+B 併用を明示選択（AskUserQuestion）
+
+---
+
+## DR-010: Unit 005 で bin/setup-github-project.sh の subject bug を即時 fix（Unit scope との緊張関係）
+
+- **ステップ**: Construction Phase / Unit 005 Phase 2 実装中
+- **日時**: 2026-05-12
+
+### 背景
+
+Unit 005 計画は「含まれるもの: テスト追加 + Unit 004 既存 bats のモック経由化」「含まれないもの: 4 スクリプト本体の挙動変更（設計上の不整合が見つかった場合は別 Issue / 別 Unit へ defer）」と明記。
+
+Phase 2 で `bin/setup-github-project.sh` の `setup-github-project.bats` Case 1 (`--dry-run で 5 subcommand 順次実行 + setup-github-project: completed`) を実装中、subject 内部の audit step 呼出 `"$_CLI" audit --check spec-conformance "${_OPTS[@]/--dry-run/}"` のパラメータ展開が空文字列要素を残し、下位 CLI が `unknown_option:` で exit 1 する bug を検出。設計書の Phase 2 ケース表 #1 を成立させるには、この bug を修正する必要があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | 即時 fix（配列フィルタに置換 / 5 行 + コメント） | 設計書ケース表どおりの bats が成立 / Issue #683 受け入れ基準達成可 / CLAUDE.md「即時実装優先ルール」に整合（同サイクル / 小規模 / ブロッカーでない他作業に影響なし） | Unit 005 plan「含まれないもの」との一見矛盾 |
+| 2 | 別 Issue へ defer + bats 期待を「exit 1 (現状 bug)」に書き換え | Unit 005 plan の文言を厳守 | 設計書ケース表が成立しない / Unit 完了マーカー未達 / 現状 bug を「期待挙動」として固定化する技術負債 |
+| 3 | 別 Issue へ defer + Case 1 のみスキップ | 他 3 ケースは成立 | 主要シナリオ（dry-run + 5 subcommand 完走）が未検証のまま Unit 完了 / Phase 2 完了マーカー未達 |
+
+### 決定
+
+**選択肢 1（即時 fix）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: 設計書 Phase 2 ケース表 18 ケース全件成立 / Issue #683 受け入れ基準達成 / 現状 bug の技術負債を発生させない
+- **犠牲にしたもの**: Unit 005 plan「含まれないもの」との表面上の矛盾（ただし「設計上の不整合」という defer 例外条件には該当しない / 単純な実装 bug）
+- **判断根拠**: CLAUDE.md「即時実装優先ルール」の 3 条件（現サイクルスコープ内 ✓ / 修正小規模 1 ファイル 5 行 ✓ / 他作業に影響なし ✓）を満たす。bats 追加によって発見された subject bug を defer すると bats 期待値が「現状 bug の固定化」になり、回帰検知の目的に反する。修正範囲は audit step 呼出 1 箇所、影響範囲は限定的。コード AI レビュー R1 / R2 / R3 で fix の妥当性を確認済み（auto_approved）。
+
