@@ -64,3 +64,13 @@ jobs:
       - name: Run migration tests
         if: steps.detect.outputs.should_skip != 'true'
         run: bats tests/migration/ tests/config-defaults/ tests/aidlc-setup/ tests/aidlc-migrate-prefs/ tests/retrospective/ tests/retrospective-mirror/ tests/retrospective-body-compose.bats tests/retrospective-spool.bats tests/retrospective-issue-create.bats tests/retrospective-resend.bats tests/retrospective-llm-draft.bats tests/retrospective-human-review.bats tests/retrospective-verify.bats tests/predecessor-issue-handoff.bats tests/operations-uncommitted-detection.bats tests/operations-04-completion-section1-5.bats tests/operations-release-pr-edit-fallback.bats tests/operations-release-pr-ready-body-validate.bats tests/main-repo-health-check.bats tests/check-cycle-phase-completion.bats
+
+      - name: Dump migration script stderr (debug)
+        if: always() && steps.detect.outputs.should_skip != 'true'
+        run: |
+          echo "=== /tmp/aidlc-migrate-debug-stderr.log ==="
+          if [ -f /tmp/aidlc-migrate-debug-stderr.log ]; then
+            head -200 /tmp/aidlc-migrate-debug-stderr.log
+          else
+            echo "(no stderr log captured)"
+          fi
