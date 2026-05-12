@@ -289,9 +289,11 @@ AI-DLC Starter Kit v{version}
 AI-DLC Starter Kit (version unknown)
 ```
 
-#### 注意: 使用すべきでない呼び出し経路
+#### 注意: Bash ツール経由の zsh OOM 回避ルール
 
-ユーザー対話の zsh シェルから以下のように手動で `source` した場合、zsh `command_not_found_handler` の無限再帰により OOM クラッシュする既知の制約があります（Issue #688）。AI エージェントはこの経路を使用しないこと:
+**一般化規約**: AI エージェントが Bash ツール経由で外部スクリプトを呼び出す際、引数文字列内のコマンド置換構文（`$(...)` および backtick `` ` ``）が zsh `command_not_found_handler` の無限再帰により OOM クラッシュを誘発する既知のクラスバグがある（Issue #697 / 関連クローズ済 #688）。本 SKILL.md の `/aidlc v` 経路を含む、Bash ツール経由のあらゆる外部スクリプト呼び出しに本ルールを適用する。規約本文は [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン) を Single Source of Truth とし、運用例・禁止パターンサンプル・実装スニペットは [`steps/common/bash-tool-safety.md`](./steps/common/bash-tool-safety.md) に集約する。
+
+**`/aidlc v` 経路固有の例**: ユーザー対話の zsh シェルから以下のように手動で `source` した場合、上記クラスバグの一例として OOM クラッシュする（Issue #688 で v2.6.1 Unit 001 として個別対応済）。AI エージェントはこの経路を使用しないこと:
 
 ```text
 （非対象 / 危険 / 使用しない）

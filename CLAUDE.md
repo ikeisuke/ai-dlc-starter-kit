@@ -33,3 +33,43 @@ ai-dlc-starter-kit は配布物自身で開発（ドッグフーディング）�
 #### 関連経緯
 
 - 2026-05-10 `skills/aidlc/scripts/squash-unit.sh` の CI 構造チェックで当初「starter kit 判定で fail-closed/fail-open 切替」を採用しかけたが、ドッグフーディング特殊処理に該当するため opt-in シグナル方式（チェックスクリプトの存在で自動分岐）に再設計した
+
+## AI エージェント Bash ツール経由の安全パターン
+
+AI エージェント（Claude Code / Codex CLI / Gemini CLI 等）が Bash ツール（subprocess 起動）を通じてシェルコマンドを実行する経路において、引数文字列内のコマンド置換が zsh `command_not_found_handler` の無限再帰を起こし `fatal error: out of memory` で AI セッションがクラッシュする既知のクラスバグがある（Issue #697 / 関連クローズ済 #688）。本リポジトリで活動する全ての AI エージェントは以下の規約に従う。
+
+### 規約
+
+- **コマンド置換禁止**: Bash ツール呼び出しの引数文字列に、コマンド置換構文（`$(...)` および backtick `` ` ``）を含めてはならない
+- **適用範囲**: 全ての Bash ツール呼び出しの引数文字列。コミットメッセージ・PR 本文・履歴記録・外部 CLI レビュープロンプト等を含む長文プロンプトも対象
+- **互換**: 個人グローバル `~/.claude/CLAUDE.md` 等でユーザーが独自に類似規約を持つ場合とは独立に、本リポジトリ規約は配布物 baseline として全 consumer プロジェクトに適用される
+
+### 背景
+
+zsh の `command_not_found_handler` フック内でフック自身が呼び出される（典型的には未定義関数名にマッチして自己再帰する）と、スタックフレームが無限増加して OOM クラッシュに至る。bash が引数文字列内の `$(...)` / backtick をコマンド置換として展開する際、内部に未定義コマンド（例: AI が Markdown inline code として書いた識別子）が含まれていると zsh `command_not_found_handler` が呼ばれ、ハンドラ内部で再帰展開が発生する経路が存在する。
+
+### 安全パターン（推奨度順）
+
+| 推奨度 | パターン | 例 |
+|--------|---------|---|
+| 第一推奨 | Write ツールで一時ファイルに書き出し、wrapper script で読み込んで対象コマンドに渡す | `Write` で `/tmp/foo.md` 作成 → `cmd < /tmp/foo.md` |
+| 第二推奨 | `--content-file` / `--body-file` 等の file-based interface を優先使用 | `gh pr edit --body-file <file>` |
+| 禁止 | コマンド置換（`$(...)` / backtick）を含む文字列を Bash ツールの引数として直接渡す | `cmd "...`backtick`..."` のような構成 |
+
+### file-based 経路の参考表
+
+| 用途 | file-based 経路 | 直接引数経路（非推奨） |
+|------|----------------|------------------------|
+| 履歴記録 | `write-history.sh --content-file <file>` | `--content "..."` |
+| PR 本文 | `gh pr create / edit --body-file <file>` | `--body "..."` |
+| PR Ready 化 | `operations-release.sh pr-ready --body-file <file>`（v2.6.2 Unit 001 整備済） | （該当なし） |
+| 外部 CLI レビュー | `codex exec - < <file>`（stdin 経由）/ `claude -p` の wrapper script 経由 | `codex exec "..."` |
+
+### 詳細運用ガイド
+
+具体的な禁止パターンサンプル・安全パターン実装スニペット・経路別の運用例は `skills/aidlc/steps/common/bash-tool-safety.md` を参照する。本セクションは規約本文の Single Source of Truth であり、他ドキュメント（AGENTS.md / SKILL.md / steps/common/* 等）は本セクションを参照する。
+
+### 関連 Issue
+
+- #697（primary / feedback / v2.6.2 で本規約セクション新設）
+- #688（CLOSED / v2.6.1 で `/aidlc v` 経路を CLI モード化で個別解決済 / 本規約はその一般化）

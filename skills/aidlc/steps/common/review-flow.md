@@ -118,7 +118,7 @@ Round 4 以降に発生した「新領域の指摘」は、千日手の予兆と
 
 ### 判定手順（再現可能、固定）
 
-0. **`内容` 列のパス記法（規約）**: review-summary の「内容」列に記載するパスは、必ず repo-relative の path を backtick で囲む（例: `` `skills/aidlc/scripts/lib/aidlc-paths.sh` ``）。複数パスを 1 件の指摘で記載する場合は、各パスを backtick で囲み `, ` で区切る（例: `` `a.sh`, `b.sh` ``）。コードブロック内のパスは抽出対象外。絶対パスは記載しない（規約違反、起票時に reject 対象）。
+0. **`内容` 列のパス記法（規約）**: review-summary の「内容」列に記載するパスは、必ず repo-relative の path を backtick で囲む（例: `` `skills/aidlc/scripts/lib/aidlc-paths.sh` ``）。複数パスを 1 件の指摘で記載する場合は、各パスを backtick で囲み `, ` で区切る（例: `` `a.sh`, `b.sh` ``）。コードブロック内のパスは抽出対象外。絶対パスは記載しない（規約違反、起票時に reject 対象）。**本規約は review-summary 引用パス記法を扱う。Bash ツール引数文字列内のコマンド置換禁止規約とは別観点であり、後者の詳細は [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン) を参照。**
 1. Round 1〜3 の review-summary 各行から指摘対象パスを抽出（`内容` 列に backtick で囲まれた repo-relative path を正規表現 `` `([^`]+)` `` でマッチさせ、区切りは `, ` を期待。マッチしない場合は warn 表示 + 当該指摘を除外）。
 2. 同じく Round 4 以降の review-summary 各行から指摘対象パスを抽出（手順 0 の規約と手順 1 の正規表現を適用、抽出不能時は warn + 除外）。
 3. 各パスを下記「境界条件」テーブルで領域キーに正規化。

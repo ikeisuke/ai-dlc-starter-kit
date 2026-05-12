@@ -292,3 +292,71 @@ Phase 2 で `bin/setup-github-project.sh` の `setup-github-project.bats` Case 1
 - **犠牲にしたもの**: Unit 005 plan「含まれないもの」との表面上の矛盾（ただし「設計上の不整合」という defer 例外条件には該当しない / 単純な実装 bug）
 - **判断根拠**: CLAUDE.md「即時実装優先ルール」の 3 条件（現サイクルスコープ内 ✓ / 修正小規模 1 ファイル 5 行 ✓ / 他作業に影響なし ✓）を満たす。bats 追加によって発見された subject bug を defer すると bats 期待値が「現状 bug の固定化」になり、回帰検知の目的に反する。修正範囲は audit step 呼出 1 箇所、影響範囲は限定的。コード AI レビュー R1 / R2 / R3 で fix の妥当性を確認済み（auto_approved）。
 
+
+
+---
+
+## DR-011: Unit 006 で SKILL.md 一般化の「案 b（共通ガイド分離）」を採用
+
+- **ステップ**: Construction Phase / Unit 006 Phase 1 設計
+- **日時**: 2026-05-12
+
+### 背景
+
+Issue #697 への対応で「`skills/aidlc/SKILL.md` §バージョン表示 §注意セクション」（v2.6.1 Unit 001 で導入された `/aidlc v` 経路固有の zsh OOM 注意書き）を Bash ツール経由全般の一般化規約に拡張する必要があった。一般化の実装形態として 2 つの選択肢が存在し、計画 §「案 a / b 選定基準」の 4 基準スコアリングで案 b 採用が確定した。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| a | SKILL.md 内で一般化（注意セクション自体を「Bash ツール経由の zsh OOM 回避ルール」として全文書き換え） | 参照ホップ数 1（SKILL.md 内完結） | 他 SKILL.md（write-history 等）から参照する場合に重複記述発生 / 将来拡張時に SKILL.md 編集範囲が広がる |
+| b | `skills/aidlc/steps/common/<新設>.md`（運用ガイド）を新設し、SKILL.md は一般化要約 1〜2 文 + 詳細参照 | 規約 SoT を CLAUDE.md ① に一本化 / 他 SKILL.md から再利用可能 / 将来拡張時に 1 ファイル編集 | 参照ホップ数 2 / 新規ファイル追加 |
+
+### 選定基準（4 軸スコアリング / 計画より）
+
+| 基準 | 本 Unit での判定 | 優位 |
+|------|----------------|------|
+| 参照経路の単純性 | skills/write-history からも参照したい / 他 skill_spec への再利用余地あり | b |
+| 重複記述量 | write-history / aidlc 両方から参照する設計 | b |
+| 責務分離 | Unit 006 の対象は「全 Bash ツール経由経路」で aidlc 固有でない | b |
+| 保守コスト | 将来 `codex exec` / `claude -p` 等への拡張余地が高い | b |
+
+**スコア**: 案 a 0 / 案 b 4 → 案 b 採用（4 基準すべてで案 b 優位）
+
+### 決定
+
+**選択肢 b（共通ガイド分離 / `skills/aidlc/steps/common/bash-tool-safety.md` 新設）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: 規約 SoT 一本化（CLAUDE.md ① / 重複ゼロ）/ 将来拡張時の編集範囲集約（1 ファイル）/ 複数 SKILL.md からの再利用性
+- **犠牲にしたもの**: 参照ホップ数が 2（SKILL.md → steps/common/bash-tool-safety.md → CLAUDE.md ①）に増えるが、各経路は実 Markdown リンクで連結されているため AI / 人間ともに辿りやすい
+- **判断根拠**: 4 基準すべてで案 b 優位。設計レビュー R1 指摘 #4 を反映して SKILL.md 内に一般化要約 1〜2 文を残し、Unit 定義「責務」のトレーサビリティを SKILL.md 内で直接充足する形に整えた。codex 設計レビュー 3R / コードレビュー 2R / 統合レビュー 2R すべて auto_approved
+
+---
+
+## DR-012: Unit 006 で AGENTS.md を最小骨格 + 参照リンクで新規作成（MUST 化）
+
+- **ステップ**: Construction Phase / Unit 006 Phase 1 設計（計画レビュー Round 1 反映時）
+- **日時**: 2026-05-12
+
+### 背景
+
+Unit 006 計画 Round 1 で codex 指摘 #1（高 / architecture）を受領。当初計画では AGENTS.md の取扱を「案 i: スコープ外」「案 ii: 最小作成」の 2 択で設計レビューに委ねる構成だったが、Unit 定義「責務」が「CLAUDE.md / AGENTS.md / 関連 SKILL.md への追記」を明示しており、Issue #697 受け入れ基準「案 A」とも整合する必要があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| i | AGENTS.md は本 Unit のスコープ外として明示（別 Issue 化） | スコープを絞れる | Unit 定義責務と矛盾 / 受け入れ基準「案 A」と矛盾 |
+| ii | 最小 AGENTS.md（最小骨格 + CLAUDE.md ① 参照リンク）を新規作成 | Unit 定義責務 + 受け入れ基準「案 A」に整合 / Codex CLI / Gemini CLI 等の AGENTS.md 参照 AI への配布物 baseline 規約も同時に整備 | 新規ファイル追加 |
+
+### 決定
+
+**選択肢 ii（最小 AGENTS.md 新規作成）** を採用
+
+### トレードオフと判断根拠
+
+- **得たもの**: Unit 定義 / Issue 受け入れ基準との整合性 / Codex CLI / Gemini CLI 等の AGENTS.md 参照 AI への配布規約整備 / リポジトリ baseline 規約の完備（CLAUDE.md + AGENTS.md）
+- **犠牲にしたもの**: 新規ファイル 1 件追加（最小骨格 / 14 行）。将来 AGENTS.md 固有規約が必要になった際は本 Unit の骨格に追記する形で拡張する（CLAUDE.md との重複防止）
+- **判断根拠**: codex 計画レビュー R1 指摘 #1（高）の「Unit 責務との整合が崩れる可能性」を解消する必要があった。最小構成（参照リンクのみ）であれば CLAUDE.md ① セクション SoT との重複は発生しない。codex 計画レビュー R2 / R3 で確定構成として承認済み

@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.2] - Unreleased
+
+v2.6.1 リリース後に検出されたフィードバック / レビュー指摘起点の改善を集約する patch リリース（Operations Phase で確定）。
+
+### Changed
+
+- **AI エージェント Bash ツール経由の zsh OOM クラス予防（規約改訂）**: AI エージェント（Claude Code / Codex CLI / Gemini CLI 等）が Bash ツール（subprocess 起動）を通じてシェルコマンドを実行する際、引数文字列内のコマンド置換構文（`$(...)` および backtick `` ` ``）が zsh `command_not_found_handler` の無限再帰により OOM クラッシュを誘発する根本原因クラスへの予防策を、リポジトリ配布規約として確立した（Unit 006 / #697）
+    - **新規セクション**: `CLAUDE.md` に「AI エージェント Bash ツール経由の安全パターン」セクションを追加（規約 SoT）。コマンド置換禁止 / 適用範囲（全 Bash ツール呼び出し引数文字列）/ 安全パターン（第一推奨: Write ツール + 一時ファイル / 第二推奨: file-based interface / 禁止: コマンド置換）/ file-based 経路参考表（履歴記録・PR 本文・PR Ready・外部 CLI レビューの 4 行）を明文化
+    - **新規ファイル**: `AGENTS.md` をリポジトリルートに新設。CLAUDE.md 規約 SoT への参照リンクと最低限 2 項目（コマンド置換禁止 / file-based 推奨）を配置
+    - **新規ガイド**: `skills/aidlc/steps/common/bash-tool-safety.md` を新設（運用ガイド）。規約本文は持たず、CLAUDE.md SoT を参照しつつ禁止パターンサンプル / 安全パターン実装スニペット / file-based interface 経路別一覧 / トラブルシューティングを提供
+    - **SKILL.md 改訂**: `skills/aidlc/SKILL.md` § バージョン表示 § 注意セクションを「Bash ツール経由 zsh OOM 回避ルール」として一般化。`/aidlc v` 経路固有の Issue #688 個別対応は本ルールの一例として位置付け、規約本文は CLAUDE.md / 運用詳細は `steps/common/bash-tool-safety.md` を参照する構造に変更
+    - **write-history 改訂**: `skills/write-history/SKILL.md` の `--content` / `--content-file` 使い分け記述を AI 第一推奨明示に更新。`--content-file` を AI エージェント向け第一推奨経路として明文化（既存 API 動作・引数仕様は無変更 / 後方互換完全維持）
+    - **クロスリファレンス**: `commit-flow.md` line 91 の「プロジェクトルール準拠」参照を CLAUDE.md 新規セクションへの明示リンクに格上げ。`review-flow.md` の review-summary パス記法規約と Bash ツール引数規約の責務分離注記を追加
+    - **互換性**: スクリプト本体動作・引数仕様は無変更（`--content` 引数の廃止予定なし / 既存 PR 本文・Issue 本文・コミットメッセージの記法に直接の影響なし）。本改訂は AI エージェント運用ガイドの整理と SoT 確立を目的とし、強制ブロック実装（PreToolUse hook での backtick / `$(...)` 検出）は技術的制約のため対象外
+    - **関連 Issue**: #697（primary / feedback / v2.6.1 Inception Phase 中に実発生）/ 関連クローズ済 #688（v2.6.1 Unit 001 で `/aidlc v` 経路を CLI モード化で個別解決済 / 本 Unit はその一般化）
+
+---
+
 ## [2.6.1] - 2026-05-11
 
 v2.6.0 リリース後に検出された 5 件のクリティカル / UX / 設計原則 / CI ノイズ問題を一括解消する patch リリース。
