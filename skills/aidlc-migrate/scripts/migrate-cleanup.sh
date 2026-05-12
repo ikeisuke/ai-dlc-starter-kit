@@ -30,6 +30,15 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 2
 fi
 
+# Unit 002 (Issue #680): manifest 由来パスのトラバーサル検証ライブラリ
+# shellcheck source=lib/path-guard.sh
+source "${SCRIPT_DIR}/lib/path-guard.sh"
+_aidlc_migrate_path_guard_init
+_init_rc=$?
+if [[ $_init_rc -ne 0 ]]; then
+  exit "$_init_rc"
+fi
+
 # 引数パース
 MANIFEST=""
 while [[ $# -gt 0 ]]; do
@@ -54,21 +63,8 @@ _add_applied() {
   APPLIED=$(echo "$APPLIED" | jq --argjson e "$1" '. + [$e]')
 }
 
-# パス安全性検証: プロジェクトルート配下の相対パスのみ許可
-_validate_path() {
-  local p="$1"
-  # 絶対パスを拒否
-  if [[ "$p" == /* ]]; then
-    echo "  ERROR: absolute path rejected: $p" >&2
-    return 1
-  fi
-  # .. を含むパスを拒否
-  if [[ "$p" == *..* ]]; then
-    echo "  ERROR: path traversal rejected: $p" >&2
-    return 1
-  fi
-  return 0
-}
+# Unit 002 (Issue #680): 旧 _validate_path 関数は lib/path-guard.sh の _aidlc_migrate_validate_path に統合
+# 旧仕様（continue でスキップ）は fail-closed 強化（即 exit 1）に変更。挙動変更は意図通り
 
 # symlink実体化（action=materialize）
 resource_count=$(jq '.resources | length' "$MANIFEST")
@@ -79,11 +75,10 @@ for i in $(seq 0 $((resource_count - 1))); do
   resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
   path=$(jq -r ".resources[$i].path" "$MANIFEST")
 
-  if ! _validate_path "$path"; then
-    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-      '{resource_type: $rt, path: $p, status: "error", detail: "path validation failed"}')"
-    continue
-  fi
+  # Unit 002 (Issue #680): trav 検証（materialize）
+  _aidlc_migrate_validate_path "$path" "path" "migrate-cleanup"
+  _vrc=$?
+  if [[ $_vrc -ne 0 ]]; then exit "$_vrc"; fi
 
   if [[ -L "$path" ]]; then
     # symlinkの実体を取得してコピーで差し替え
@@ -124,12 +119,12 @@ for i in $(seq 0 $((resource_count - 1))); do
   resource_type=$(jq -r ".resources[$i].resource_type" "$MANIFEST")
   path=$(jq -r ".resources[$i].path" "$MANIFEST")
 
-  # パス安全性検証
-  if ! _validate_path "$path"; then
-    _add_applied "$(jq -n --arg rt "$resource_type" --arg p "$path" \
-      '{resource_type: $rt, path: $p, status: "error", detail: "path validation failed"}')"
-    continue
-  fi
+  # Unit 002 (Issue #680): trav 検証（delete）
+  # 旧仕様の「末尾スラッシュでディレクトリ判定」は維持するため、検証用の path から末尾スラッシュは除去せず渡す
+  # _aidlc_migrate_validate_path は末尾スラッシュをそのまま扱える（末尾スラッシュは parent_traversal にも当たらない）
+  _aidlc_migrate_validate_path "$path" "path" "migrate-cleanup"
+  _vrc=$?
+  if [[ $_vrc -ne 0 ]]; then exit "$_vrc"; fi
 
   # ディレクトリの場合
   if [[ "$path" == */ ]]; then

@@ -37,7 +37,9 @@ aidlcスキルの `scripts/write-history.sh` を実行して、AI-DLCの履歴�
 | `--resolved-count` / `--deferred-count` | `--mode operations-round` 時必須 | 修正対応件数 / defer 化件数（各非負整数） |
 | `--dry-run` | No | 追記せず、状態のみ表示 |
 
-`--content` と `--content-file` は排他。長文の場合は一時ファイルに書き出して `--content-file` を使用する。
+`--content` と `--content-file` は排他。
+
+**AI エージェント第一推奨経路（v2.6.2 Unit 006 / Issue #697）**: AI エージェントが Bash ツール経由で本スクリプトを呼び出す際は **`--content-file` を第一推奨とする**。`--content` は短文（1〜2 行 / コマンド置換構文を含まないことが明らかな短い文字列）にのみ使用する。長文・Markdown inline code・backtick / `$(...)` が混入する可能性のある文字列は、Write ツールで一時ファイルに書き出して `--content-file` 経由で渡すこと。理由・規約本文・安全パターン詳細は [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン) および [`skills/aidlc/steps/common/bash-tool-safety.md`](../aidlc/steps/common/bash-tool-safety.md) を参照。
 
 `--operations-stage` は Unit 002 で追加された Operations Phase の post-merge ガード用引数。7.8〜7.13 以降の誤呼び出しは本引数または第二条件（`completion_gate_ready=true` AND `gh pr view` で `state=MERGED ∧ mergedAt!=null ∧ number 一致`）によって拒否される。
 

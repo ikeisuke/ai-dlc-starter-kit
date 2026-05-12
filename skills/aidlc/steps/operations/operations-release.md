@@ -139,7 +139,11 @@ progress.md・history は stash せずコミット。
 
 `git diff {DEFAULT_BRANCH}...HEAD` → `codex review --base {DEFAULT_BRANCH}`（利用可能時）→ `reviewing-operations-premerge` → `.aidlc/rules.md` のルール。GitHub PR レビュー実行時は `gh pr view --json reviewDecision` で判定（`APPROVED` → マージへ / `CHANGES_REQUESTED` → 修正・再レビュー / その他 → 待機またはスキップ）。
 
-**完了条件**（v2.5.1 Unit 005 / #616）: レビュー反映後の (2a) 修正コミット → (2b) `/write-history` で `history/operations.md` に AIレビュー完了を追記 → (2c) 履歴コミット（`history/*.md` のみ）が完了していること。`scripts/operations-release.sh verify-git` で `uncommitted=ok` を確認することを強く推奨（再実行案内）。**§7.13 `merge-pr` の pre-flight check が最終防衛線として機能する**ため、(2c) 未実施のままでもマージ実行時点で停止するが、§7.12 内で確認しておくと早期発見できる。
+**完了条件**（v2.5.1 Unit 005 / #616、v2.6.2 Unit 003 / #677 で auto-commit 既定化）: レビュー反映後の (2a) 修正コミット → (2b) `/write-history` で `history/operations.md` に AIレビュー完了を追記 → (2c) 履歴コミット（`history/*.md` のみ）が完了していること。
+
+**v2.6.2 Unit 003 / #677 以降**: `/write-history --mode operations-round` は **既定で auto-commit を行う**ため、(2b) を呼ぶだけで (2c) が同時に完了する。stdout に `history-commit:<sha>:operations-round-round-<N>` が出力されることを確認すること。`--no-commit` フラグで opt-out した場合（緊急時 / consumer プロジェクトの既存ワークフロー保護用）のみ (2c) を手動実行する必要がある。auto-commit が skip された場合（事前 staged / 非 git 環境）も同様に手動 commit が必要（stderr の warning を参照）。
+
+`scripts/operations-release.sh verify-git` で `uncommitted=ok` を確認することを強く推奨（再実行案内）。**§7.13 `merge-pr` の pre-flight check が最終防衛線として機能する**ため、(2c) 未実施のままでもマージ実行時点で停止するが、§7.12 内で確認しておくと早期発見できる。§7.12.5 `squash-712` も v2.6.2 以降で history dirty 状態を fail-fast 検出する（多層防御）。
 
 ## 7.12.5 PR レビュー反映コミット Squash 統合【Unit 004 / #639 追加】
 
@@ -157,6 +161,7 @@ scripts/operations-release.sh squash-712 --cycle {{CYCLE}}
 | `squash:skipped` | 0 | §7.13 へ進行（block しない）。stderr `info\treason\t<reason>` に skip 理由（`squash_enabled=false` / `release_prep_commit_missing` / `no_commits` 等） |
 | `squash:failed:reason=format_error` | 1 | Operations Phase block。`progress.md` の `release_prep_commit` slot 値が不正フォーマット |
 | `squash:failed:reason=git_op_failed:<exit_code>` | 1 | Operations Phase block。`git reset --soft` または `git commit` 失敗。`commit` 失敗時は `git reset --hard ORIG_HEAD` で rollback 実施済（DR-008） |
+| `squash:failed:reason=dirty_history` | 1 | Operations Phase block（v2.6.2 Unit 003 / #677）。`.aidlc/cycles/<cycle>/history/operations.md` に staged / unstaged 差分がある状態で `squash-712` を起動した。stderr に `error\tsquash-712:uncommitted-history\t<path>` と `recommended_command:git add <path> && git commit -m "<履歴記録メッセージ>" の後に <squash-712 起動コマンド> を再実行してください` が出力される。通常 §7.12 の `write-history --mode operations-round` が auto-commit するため発火しない（`--no-commit` opt-out / write-history 経由でない手動編集 / 事前 staged ガードで auto-commit skip された場合等が該当） |
 
 **§7.13 pre-flight check との整合**: `git reset --soft + git commit` の組み合わせは作業ツリー clean を維持するため、`validate-git.sh uncommitted` は `uncommitted=ok` を返す。`pre-merge-uncommitted-detected` は発火しない。
 

@@ -29,6 +29,15 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 2
 fi
 
+# Unit 002 (Issue #680): manifest 由来パスのトラバーサル検証ライブラリ
+# shellcheck source=lib/path-guard.sh
+source "${SCRIPT_DIR}/lib/path-guard.sh"
+_aidlc_migrate_path_guard_init
+_init_rc=$?
+if [[ $_init_rc -ne 0 ]]; then
+  exit "$_init_rc"
+fi
+
 # 引数パース
 MANIFEST=""
 while [[ $# -gt 0 ]]; do
@@ -61,6 +70,14 @@ for i in $(seq 0 $((resource_count - 1))); do
 
   path=$(jq -r ".resources[$i].path" "$MANIFEST")
   dest=$(jq -r ".resources[$i].destination" "$MANIFEST")
+
+  # Unit 002 (Issue #680): trav 検証（v1_config_move）
+  _aidlc_migrate_validate_path "$path" "path" "migrate-apply-config"
+  _vrc=$?
+  if [[ $_vrc -ne 0 ]]; then exit "$_vrc"; fi
+  _aidlc_migrate_validate_path "$dest" "destination" "migrate-apply-config"
+  _vrc=$?
+  if [[ $_vrc -ne 0 ]]; then exit "$_vrc"; fi
 
   if [[ -f "$dest" ]]; then
     # 宛先が存在する場合、ソースが残っていれば削除（中断リカバリ）
@@ -98,6 +115,11 @@ for i in $(seq 0 $((resource_count - 1))); do
   [[ "$resource_type" != "config_update" ]] && continue
 
   path=$(jq -r ".resources[$i].path" "$MANIFEST")
+
+  # Unit 002 (Issue #680): trav 検証（config_update）
+  _aidlc_migrate_validate_path "$path" "path" "migrate-apply-config"
+  _vrc=$?
+  if [[ $_vrc -ne 0 ]]; then exit "$_vrc"; fi
 
   if [[ ! -f "$path" ]]; then
     echo "  Config file not found: $path" >&2

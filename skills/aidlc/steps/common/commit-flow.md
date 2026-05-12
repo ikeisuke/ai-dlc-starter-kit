@@ -88,7 +88,7 @@ AIツールを自動検出し、`Co-Authored-By` trailerを付与する。
 
 **シグナル設計**: 既存の `squash:skipped` 文字列をそのまま使う（新シグナル文字列は導入しない）。呼び出し元（`04-completion.md` ステップ 7 / `inception/05-completion.md` ステップ 6）の既存 `squash:skipped` 分岐がそのまま機能する。`reason: ...` ログは前提チェック由来の `squash:skipped` でのみ出力され、`/squash-unit` 由来の `squash:skipped:no-commits` には付かない。
 
-**判定パターン例**（`$(...)` コマンド置換禁止のプロジェクトルール準拠、ファイル経由 + `grep -Fxq`）:
+**判定パターン例**（`$(...)` コマンド置換禁止のプロジェクトルール（[`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン)）準拠、ファイル経由 + `grep -Fxq`）:
 
 ```bash
 scripts/read-config.sh rules.git.squash_enabled > /tmp/aidlc-squash-enabled.out 2>/dev/null
