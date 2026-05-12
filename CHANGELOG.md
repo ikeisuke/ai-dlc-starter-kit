@@ -7,9 +7,20 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
-## [2.6.2] - Unreleased
+## [2.6.2] - 2026-05-12
 
-v2.6.1 リリース後に検出されたフィードバック / レビュー指摘起点の改善を集約する patch リリース（Operations Phase で確定）。
+v2.6.0 で実施した 3 領域（振り返りフロー独立化 / marketplace.json への version SoT 一本化 / GitHub Projects 移行）の defer 完成、振り返り分離・Operations フロー周辺で表面化した致命的バグ修正、加えて v2.6.1 Issue #688 の根本原因クラス（AI エージェント Bash プロンプト経由の zsh OOM）の一般化予防 を一括解消し、v2.6 系の運用基盤を機能完成版に固定する patch リリース。
+
+### Fixed
+
+- **pr-ready `--body-file` 空ファイル検証で PR 本文 null 上書き事故防止**: `scripts/operations-release.sh pr-ready --body-file <path>` および内部の `gh pr edit --body-file` / REST PATCH fallback 経路に、0 バイトファイル / 不在ファイルを実行前検証する処理を追加。AI エージェント運用時の `mktemp` 経由 0 バイトファイル誤渡しによる PR 本文 null 上書き事故を構造的に予防する（Unit 001 / #678 案 A + 案 B 併用）
+- **aidlc-migrate manifest 由来パスのトラバーサル検証**: `skills/aidlc-migrate/scripts/migrate-apply-config.sh` の `_apply_resource()` 系（`cp` / `rm` / `mkdir -p` / `mv` リソース処理）で manifest 由来の `path` / `dest` のトラバーサル検証を追加。細工された fork manifest によるリポジトリ外ファイル書き込み攻撃を構造的に予防する（Unit 002 / #680 / v2.6.0 Unit 003 R1〜R3 codex 連続指摘 defer）
+- **Operations §7.12.5 squash-712 と write-history operations-round の整合性**: Operations Phase §7.12 PR レビュー反映後の `squash-712` 統合 commit に `history/operations.md` の追記を確実に取り込ませる、または unstaged 差分を伴う `squash-712` 実行を fail-fast で検出して止める実装を追加。振り返り分離関連の致命的バグを案 A+B 併用で解消する（Unit 003 / #677）
+
+### Added
+
+- **gh-project-cli `ensure-fields` の options 差分同期**: `bin/gh-project-cli.sh _subcmd_ensure_fields` の `field:exists` 分岐に options 差分同期ロジックを追加。`spec.yaml` 改訂後の再実行で新 option が既存 field に追加される冪等同期動作を実現する（Unit 004 / #682 / v2.6.0 Unit 006 R1 codex 指摘 #2 defer 完成）
+- **gh-project 副作用 bats テスト整備（gh API モックフレームワーク）**: v2.6.0 Unit 006 で defer された 4 スクリプト（`setup-github-project.sh` / `migrate-issue-524.sh` / `probe-github-project.sh` / `audit-github-project.sh`）の本体動作（副作用）を bats でテストするための gh API モックフレームワークを整備。各スクリプトの正常系・異常系を網羅する（Unit 005 / #683 / v2.6.0 Unit 006 R1 codex 指摘 #3 defer 完成）
 
 ### Changed
 
