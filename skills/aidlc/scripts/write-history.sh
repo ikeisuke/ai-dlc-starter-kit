@@ -664,6 +664,27 @@ _commit_operations_round_history() {
         return 0
     fi
 
+    # ガード 3: 履歴ファイル以外の事前 staged 差分 → skip（巻き込み防止）
+    local other_staged
+    if ! other_staged=$(git -C "$repo_root" diff --cached --name-only 2>/dev/null); then
+        echo "warning: cannot inspect git index state (other files), skipping auto-commit: $filepath" >&2
+        return 0
+    fi
+    if [[ -n "$other_staged" ]]; then
+        local has_other=0
+        while IFS= read -r staged_path; do
+            [[ -z "$staged_path" ]] && continue
+            if [[ "$staged_path" != "$rel_path" ]]; then
+                has_other=1
+                break
+            fi
+        done <<< "$other_staged"
+        if [[ "$has_other" -eq 1 ]]; then
+            echo "warning: other staged changes detected, skipping auto-commit to avoid mixing: $filepath" >&2
+            return 0
+        fi
+    fi
+
     # dry-run 時は副作用なしで would-commit ログのみ
     if [[ "$DRY_RUN" == "true" ]]; then
         echo "history-commit:would-commit:operations-round-round-${round}"

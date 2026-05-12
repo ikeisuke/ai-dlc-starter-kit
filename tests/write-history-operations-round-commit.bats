@@ -145,6 +145,25 @@ EOF
   rm -rf "$non_git_tmp"
 }
 
+# ─── (d2) 他ファイル事前 staged ガード（ガード 3 / マージ前レビュー追加） ─────────
+
+@test "operations-round: 他ファイルが事前 staged → auto-commit skip + warning（巻き込み防止）" {
+  # 履歴ファイル以外を staged にする（巻き込み事故シナリオ）
+  printf 'unrelated\n' > "other.txt"
+  git add other.txt
+
+  run _call_op_round
+  [ "$status" -eq 0 ]
+  [[ "$output" == *":appended"* ]] || [[ "$output" == *":created"* ]]
+  # auto-commit skip
+  [[ "$output" != *"history-commit:"*":operations-round-round-1"* ]]
+  [[ "$output" == *"warning: other staged changes detected"* ]]
+
+  # 他ファイルの staged 状態は維持されている（巻き込まれていない）
+  run git diff --cached --name-only
+  [[ "$output" == *"other.txt"* ]]
+}
+
 # ─── (f) --no-commit 誤指定検知 ─────────
 
 @test "operations-round 以外で --no-commit → warning + exit 0、flag は無視" {
