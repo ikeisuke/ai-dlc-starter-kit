@@ -65,14 +65,19 @@ _aidlc_migrate_path_guard_detect_realpath_m() {
 _aidlc_migrate_path_guard_realpath_m_into() {
   local _result_var="$1"
   local _input="$2"
-  local _resolved=""
-  if ! IFS= read -r _resolved < <(realpath -m -- "$_input" 2>/dev/null); then
+  # NOTE: 呼出側 (`_aidlc_migrate_realpath` / `_aidlc_migrate_path_guard_init`) が
+  # `_resolved` というローカル名で結果を受けるため、本関数内で同名ローカルを宣言すると
+  # bash の dynamic scope で `printf -v "_resolved"` が**本関数のローカル**を書き換え、
+  # 呼出側の `_resolved` は空のままになる（v2.6.2 CI で表面化、Unit 002 / #680 残課題）。
+  # ローカルは別名 `_local_m_resolved` を使用し、shadowing を防ぐ。
+  local _local_m_resolved=""
+  if ! IFS= read -r _local_m_resolved < <(realpath -m -- "$_input" 2>/dev/null); then
     return 2
   fi
-  if [[ -z "$_resolved" ]]; then
+  if [[ -z "$_local_m_resolved" ]]; then
     return 2
   fi
-  printf -v "$_result_var" '%s' "$_resolved"
+  printf -v "$_result_var" '%s' "$_local_m_resolved"
   return 0
 }
 

@@ -70,25 +70,25 @@ run_detect_with_stderr() {
 run_apply_config() {
   local manifest="$1"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-apply-config.sh" \
-    --manifest "${manifest}" 2>>/tmp/aidlc-migrate-debug-stderr.log
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_apply_data() {
   local manifest="$1"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-apply-data.sh" \
-    --manifest "${manifest}" 2>>/tmp/aidlc-migrate-debug-stderr.log
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_cleanup() {
   local manifest="$1"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-cleanup.sh" \
-    --manifest "${manifest}" 2>>/tmp/aidlc-migrate-debug-stderr.log
+    --manifest "${manifest}" 2>/dev/null
 }
 
 run_verify() {
   local manifest="$1"
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-verify.sh" \
-    --manifest "${manifest}" 2>>/tmp/aidlc-migrate-debug-stderr.log
+    --manifest "${manifest}" 2>/dev/null
 }
 
 # --- JSON assertion helpers ---
