@@ -7,8 +7,10 @@
 ### Codex
 
 ```bash
-codex exec -s read-only -C . "<レビュー指示>"
+codex exec -s read-only -C . "<レビュー指示>" </dev/null
 ```
+
+`</dev/null` は非対話 subprocess 環境での stdin 待ちハング回避のため必須（後述「stdin 待ちガードルール」参照）。
 
 ### Claude Code
 
@@ -26,7 +28,7 @@ gemini -p "<レビュー指示>" --sandbox
 
 反復レビュー時は前回のセッションを継続する。
 
-- **Codex**: `codex exec resume <session-id> "<指示>"`
+- **Codex**: `codex exec resume <session-id> "<指示>" </dev/null`（`</dev/null` は必須 / 後述「stdin 待ちガードルール」参照）
 - **Claude**: `claude --session-id <uuid> -p --output-format stream-json "<指示>"`
 - **Gemini**: `gemini --resume <session_index> -p "<指示>"`
 
@@ -103,3 +105,33 @@ gemini -p "<レビュー指示>" --sandbox
 - ファイルの編集・コマンド実行・外部通信は行わない（読み取り専用）
 - 機密情報（秘密鍵・トークン・個人情報等）はレビュー出力に含めない
 - セルフレビューは外部ツールに比べて品質が劣る可能性がある
+
+## stdin 待ちガードルール
+
+非対話 subprocess 環境（Claude Code の Bash ツール / hooks / CI 等）で `codex exec` / `codex exec resume` を実行する場合、**`</dev/null` で stdin を閉じることを必須要件とする**（本セクションが codex 非対話実行運用の規約 SoT）。
+
+### 症状
+
+prompt を positional 引数として渡しているにもかかわらず、`Reading additional input from stdin...` の表示後に stdin EOF を待ち続けてハングする。
+
+```bash
+# ハング（非対話 subprocess 環境）
+codex exec -s read-only -C . "<レビュー指示>"
+
+# 正常動作（stdin を閉じる）
+codex exec -s read-only -C . "<レビュー指示>" </dev/null
+```
+
+### 原因
+
+codex-cli は positional 引数の prompt があっても stdin から追加入力を確認する設計のため、stdin が EOF にならない限り待ち続ける。短い prompt では偶然動作することがあり再現性に prompt 長依存があるように見えるが、根本原因は同一。jailrun shim 経由でも生 codex でも、`-s` フラグの値（`read-only` / `danger-full-access`）に関わらず、pipe の有無に関わらず再現する。
+
+### 必須要件
+
+- `codex exec` / `codex exec resume` の呼び出しには **常に `</dev/null` を付与する**（または `codex exec - < <file>` のように prompt 自体をファイル stdin から渡す。この場合もファイルが EOF になるため安全）
+- `</dev/null` 欠落時は AI エージェントが応答を得られず、結果として「セルフレビューへの無自覚な降格」を起こす
+- 横断ルールは `CLAUDE.md` / `AGENTS.md` の「Bash ツール経由の安全パターン」からも本セクションを参照する
+
+### 関連
+
+- v2.6.2 Unit 005 計画レビュー実行時に発見 / codex-cli 0.130.0 / Issue #703

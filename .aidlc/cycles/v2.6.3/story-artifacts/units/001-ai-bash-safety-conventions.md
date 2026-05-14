@@ -11,7 +11,7 @@ AI エージェントが Bash ツール経由でシェル/スクリプトを実�
 
 ## 責務
 
-- `printf -v "$result_var"` パターンを使う result-out 関数の local 命名規約を規約 SoT（CLAUDE.md または `bash-tool-safety.md`）に追記
+- `printf -v "$result_var"` パターンを使う result-out 関数の local 命名規約を規約 SoT である `CLAUDE.md`「AI エージェント Bash ツール経由の安全パターン」セクションに追記（正本）。`bash-tool-safety.md` は実装例・運用補助のみ（正本参照）
 - `skills/aidlc-migrate/scripts/lib/path-guard.sh` の result-out 関数群の内部 local を `_local_<関数省略名>_<名>` 形式で namespace 統一 + docstring メモ追加
 - `reviewing-common-base`（正本）の `codex exec` / `codex exec resume` コマンド例に `</dev/null` を追加し、「非対話 subprocess 環境では `</dev/null` 必須」セクションを新設
 - `CLAUDE.md` / `AGENTS.md` の Codex 連携記述に `</dev/null` 必須の横断ルールを追記
@@ -32,7 +32,7 @@ AI エージェントが Bash ツール経由でシェル/スクリプトを実�
 ### 外部依存
 
 - `tests/migration` の既存 bats（49 件）— 回帰確認に使用
-- reviewing-common-base 同期スクリプト / CI 同期 verify ジョブ
+- reviewing-common-base 同期スクリプト（`bin/sync-reviewing-common.sh`）/ ローカル・手動実行の同期 verify（`--verify` モード。同期 verify を実行する CI ジョブは存在しない — v2.6.3 Unit 001 Phase 1 設計調査で確定）
 
 ## 非機能要件（NFR）
 
@@ -66,9 +66,9 @@ High
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-14
+- **完了日**: 2026-05-15
+- **担当**: Claude（AI-DLC Construction Phase）
 - **エクスプレス適格性**: -
 - **適格性理由**: -
