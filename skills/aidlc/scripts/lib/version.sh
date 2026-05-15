@@ -2,17 +2,25 @@
 #
 # version.sh - バージョン検証共通ライブラリ + CLI エントリポイント
 #
-# 使用方法（必須サポート / v2.6.1 Unit 001 以降）:
-#   - CLI モード（推奨、AI エージェント / Bash ツール経由）:
-#       bash <path>/version.sh <marketplace.json のパス>
+# 使用方法（v2.6.3 Unit 003 以降）:
+#   - CLI モード推奨（AI エージェント / Bash ツール経由）:
+#       bash <path>/version.sh                  # 引数省略時はスクリプト位置から marketplace.json を自己解決
+#       bash <path>/version.sh <override>       # test override（後方互換）
 #   - subprocess source（互換）:
 #       bash -c "source <path>/version.sh; read_marketplace_version <args>"
 #   - 他 bash スクリプトからの source（互換）:
 #       source "${SCRIPT_DIR}/../lib/version.sh"
 #
+# 引数契約（CLI モード / v2.6.3 Unit 003）:
+#   - $1 任意: marketplace.json のパス。省略時は <script_dir>/../../../../.claude-plugin/marketplace.json
+#             を自己解決して read_marketplace_version へ委譲
+#   - $2 以降: 無視（read_marketplace_version は $1 のみ参照する設計に整合、後方互換維持）
+#
 # 非対象経路（zsh 対話シェルからの手動 source）:
 #   zsh command_not_found_handler 競合により OOM クラッシュリスクがあるため避ける。
-#   詳細は SKILL.md「バージョン表示」セクションを参照。
+#   規約本文の Single Source of Truth は CLAUDE.md「AI エージェント Bash ツール経由の安全パターン」
+#   およびスキルベース相対 `steps/common/bash-tool-safety.md`（運用例 SoT）。本コメントは運用メモであり、
+#   詳細経緯は Issue #688 / Issue #697 を参照。
 #
 # 末尾の CLI モードガード（${BASH_SOURCE[0]} == $0）により、bash 直接実行時のみ
 # read_marketplace_version() を呼び出す。source 経由時は関数定義のみが取り込まれる。
@@ -190,13 +198,22 @@ read_starter_kit_version() {
     return 0
 }
 
-# CLI モードガード（v2.6.1 Unit 001 / Issue #688）:
-# `bash version.sh <json_path>` 形式での直接実行時のみ read_marketplace_version() を呼び出す。
+# CLI モードガード（v2.6.1 Unit 001 / Issue #688、v2.6.3 Unit 003 / Issue #698 で自己解決追加）:
+# `bash version.sh [<json_path>]` 形式での直接実行時のみ read_marketplace_version() を呼び出す。
 # `source` 経由呼び出し時は ${BASH_SOURCE[0]} != $0 となり実行されない（既存挙動を完全維持）。
-# zsh 対話シェルから手動 source した場合は zsh command_not_found_handler 競合のリスクがあるため
-# SKILL.md の注意書きで非対象経路として案内する（本ガードは関与しない）。
-# 引数契約: 第 1 引数のみ使用（marketplace.json のパス）。第 2 引数以降は read_marketplace_version()
-# が $1 のみ参照するため安全に無視される。
+# 引数契約:
+#   - $1 任意: 指定時は test override として read_marketplace_version へそのまま渡す（後方互換）
+#   - $# -eq 0: スクリプト位置から marketplace.json を自己解決
+#       基点: 本スクリプト自身の SCRIPT_DIR（`${BASH_SOURCE[0]}` のディレクトリ）
+#       導出: ${SCRIPT_DIR}/../../../../.claude-plugin/marketplace.json
+#       （`..` を 4 段: lib → scripts → aidlc → スキル親 → リポジトリルート）
+#   - $2 以降: 無視（read_marketplace_version は $1 のみ参照、サイレント無視を正式契約として確定）
+# 非対象経路（zsh 対話シェル手動 source）の OOM リスク詳細は冒頭コメント参照（SoT: CLAUDE.md）。
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    read_marketplace_version "$@"
+    if [[ $# -eq 0 ]]; then
+        _AIDLC_VERSION_SH_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        read_marketplace_version "${_AIDLC_VERSION_SH_SCRIPT_DIR}/../../../../.claude-plugin/marketplace.json"
+    else
+        read_marketplace_version "$@"
+    fi
 fi
