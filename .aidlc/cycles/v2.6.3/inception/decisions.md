@@ -59,3 +59,90 @@
 - **得たもの**: 本サイクルで対応する全 7 Issue が v2.6.3 Milestone に揃い、進捗管理・Operations Phase での Milestone close が正しく機能する
 - **犠牲にしたもの**: v2.6.0 Milestone 上の #694 の紐付け履歴（ただし Issue 本文に「v2.6.0 振り返り由来」と明記済みのため起源は追跡可能）
 - **判断根拠**: Milestone は「実際に対応するサイクル」を表すべきであり、起票起源は Issue 本文・ラベルで別途追跡できる。実対応サイクルと一致させることを優先した
+
+---
+
+## DR-003: Unit 002 - `__squash_712_check_history_clean` のインライン拒否の扱い
+
+- **ステップ**: Construction Phase / Unit 002 計画レビュー（codex Round 1 指摘 #1）
+- **日時**: 2026-05-15
+
+### 背景
+
+`cmd_squash_712` 入口に `validate_cycle` を追加すると、既存の `__squash_712_check_history_clean` 関数冒頭にあるインライン・トラバーサル拒否（`*..*` / `/*` / 改行）が冗長になる。除去するか防御的に残すかを Phase 1 設計判断に委ねるか、先に方針を固定するかを決定する必要があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | インライン拒否を除去（入口層に集約） | コードの重複削除 / 単一防御 | 将来 `__squash_712_check_history_clean` に別の呼び出し経路が追加された場合、防御が漏れる |
+| 2 | インライン拒否を防御的に維持（二層防御） | 下位関数が単体で fail-closed を保つ。将来の経路追加に強い | コードの重複あり（コストは小さい） |
+
+### 決定
+
+**選択肢 2（インライン拒否を防御的に維持・二層防御）** を採用。
+
+### トレードオフと判断根拠
+
+- **得たもの**: 下位関数 `__squash_712_check_history_clean` が呼び出し元の検証有無に依存せず、単体で fail-closed を維持する。将来別経路から呼ばれた場合の防御漏れを防ぐ
+- **犠牲にしたもの**: `cmd_squash_712` 入口層と下位関数層で同種の拒否ロジックが重複（コストは小さい）
+- **判断根拠**: codex 設計レビュー指摘で「責務境界を先に固定すべき」と指摘された通り、サブコマンド入口層と下位関数層は役割が異なる。前者は「サブコマンド入口での包括的入力検証」、後者は「下位関数のローカル不変条件チェック」。二重防御のコストは小さく、防御漏れリスクの方が将来的に大きいと判断
+- **エビデンス**: Phase 1 設計時の codex Round 1 指摘 #1 とサブエージェント検証結果（妥当判定）。計画ファイル `.aidlc/cycles/v2.6.3/plans/unit-002-plan.md` § 実装方針 > 責務境界の確定方針（fixed）
+
+---
+
+## DR-004: Unit 002 - 下位層 `__squash_712_check_history_clean` の `return 1` 理由多義性の扱い
+
+- **ステップ**: Construction Phase / Unit 002 設計レビュー（codex Round 1 指摘 #3）
+- **日時**: 2026-05-15
+
+### 背景
+
+`__squash_712_check_history_clean` は invalid-cycle 拒否時も dirty-history 検出時も同じ `return 1` を返し、呼び出し元（`cmd_squash_712`）はこれを一律 stdout `squash:failed:reason=dirty_history` に丸めている（line 1069-1071）。そのため下位層の invalid-cycle 拒否では stderr（`invalid-cycle`）と stdout（`reason=dirty_history`）で理由が食い違う構造的曖昧さがある。本 Unit のスコープに含めて修正するか、既知の制約として残すかを決定する必要があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | 本 Unit で責務分割（下位関数の失敗理由を呼び出し元へ正確に伝播）| 既知の構造的曖昧さを解消 | #701 の受け入れ基準を超える変更。Unit スコープ（cmd_squash_712 への validate_cycle 導入）を逸脱 |
+| 2 | 既知の制約として残し、本 Unit のスコープ外とする | Unit スコープを維持。Unit 002 入口層追加後は正常経路で下位層 invalid-cycle 分岐へ到達することはほぼなくなるため実害が小さい | 構造的曖昧さは残る（将来別 Issue で対応） |
+
+### 決定
+
+**選択肢 2（既知の制約として残す）** を採用。
+
+### トレードオフと判断根拠
+
+- **得たもの**: Unit 002 のスコープ（`cmd_squash_712` への `validate_cycle` 導入）を維持。intent.md「分離判定基準」(a)（当該 Issue の受け入れ基準を満たすために必須でない変更）に沿う運用
+- **犠牲にしたもの**: 下位層 `return 1` の理由多義性は当面残る（将来別 Issue で対応の余地あり）
+- **判断根拠**: Unit 002 入口層に `validate_cycle` を追加した後は、正常な実行経路で下位層の invalid-cycle 分岐へ到達することはほぼなくなる（二層防御の下位層は防御的維持）。実害が小さく、責務分割は別 Issue で適切に扱うべき
+- **記録先**: 論理設計ファイル `.aidlc/cycles/v2.6.3/design-artifacts/logical-designs/unit_002_operations_release_cycle_validation_logical_design.md` §「実装上の注意事項」に「下位層 `return 1` の理由多義性（既知の制約・本 Unit のスコープ外）」として明記
+
+---
+
+## DR-005: Unit 002 - 他サブコマンド（`record-release-prep-commit` 等）への `--cycle` バリデーション導入の要否
+
+- **ステップ**: Construction Phase / Unit 002 完了処理
+- **日時**: 2026-05-15
+
+### 背景
+
+Unit 002 は `cmd_squash_712` への `validate_cycle` 導入のみを対象とするが、`operations-release.sh` には他にも `--cycle` を受け取るサブコマンドがある（特に `cmd_record_release_prep_commit` は `__operations_release_progress_path` で `.aidlc/cycles/<cycle>/operations/progress.md` を組み立てる経路を持ち、`cmd_squash_712` と同種のパストラバーサルリスクがある）。これらへの同種検証導入を本サイクルで扱うか、別 Issue 化するかを判断する必要があった。
+
+### 選択肢
+
+| # | 選択肢 | メリット | デメリット |
+|---|--------|---------|-----------|
+| 1 | 本サイクル v2.6.3 内で他サブコマンドにも `validate_cycle` を導入する | 同種リスクを一括解消。1 サイクルで対応完了 | #701 の受け入れ基準を超える変更。Unit スコープ（cmd_squash_712 のみ）を逸脱。intent.md「分離判定基準」(a) に該当 |
+| 2 | 別 Issue 化し、本サイクルでは扱わない | Unit スコープ・受け入れ基準を厳守。各 Issue を小さく保つ | 同種リスクが他サブコマンドで残存（次サイクルまで） |
+
+### 決定
+
+**選択肢 2（別 Issue 化）** を採用。Issue #708 を新規起票。
+
+### トレードオフと判断根拠
+
+- **得たもの**: Unit 002 のスコープ・受け入れ基準を厳守。Issue 単位の責務境界が明確になる
+- **犠牲にしたもの**: 他サブコマンドへの同種検証導入は別サイクルまで残存（実害は小さい — 利用文脈が AI-DLC 内部の制御された呼び出し経路に限定されるため）
+- **判断根拠**: intent.md「分離判定基準」(a)「当該 Issue の受け入れ基準を満たすために必須でない変更」に該当。`cmd_squash_712` への validate_cycle 導入で #701 の受け入れ基準は満たされる。他サブコマンドへの拡張は別 Issue で適切に扱うべき
+- **起票内容**: Issue #708（[Backlog] operations-release.sh の他サブコマンド（record-release-prep-commit / pr-ready）への --cycle バリデーション導入検討、ラベル: `backlog` / `type:security` / `priority:medium`）

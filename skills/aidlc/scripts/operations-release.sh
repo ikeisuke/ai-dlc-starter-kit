@@ -29,6 +29,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=0
 
+# Unit 002 (#701): cmd_squash_712 の --cycle 引数を validate_cycle で検証するため lib/validate.sh を取り込む。
+# validate.sh は関数定義のみ（トップレベル実行コードなし）。利用するのは validate_cycle のみだが、
+# 既存スクリプト（write-history.sh 等）の慣例に従いファイル全体を source する。
+# operations-release.sh 既存関数（23 個）と validate.sh 公開関数（6 個）に名前衝突がないことを確認済み。
+source "${SCRIPT_DIR}/lib/validate.sh"
+
 # --- ヘルプ ---
 
 print_help() {
@@ -1034,6 +1040,14 @@ cmd_squash_712() {
     done
     if [[ -z "$cycle" ]]; then
         printf 'squash-712:error:cycle-required\n' >&2
+        return 1
+    fi
+    # Unit 002 (#701): --cycle 引数の包括的バリデーション（パストラバーサル文字列・空白・制御文字・
+    # 先頭スラッシュ・Git ref 不正パターンの拒否）。--cycle が __operations_release_progress_path /
+    # __squash_712_check_history_clean のパス解決に使われる前に検証する。エラーフォーマットは
+    # __squash_712_check_history_clean のインライン拒否と同一。
+    if ! validate_cycle "$cycle"; then
+        printf 'error\tsquash-712:invalid-cycle\t%s\n' "$cycle" >&2
         return 1
     fi
     # Step 1: squash_enabled 取得 (commit-flow.md 既存契約準拠 / set -e 抑止で exit code を保持)
