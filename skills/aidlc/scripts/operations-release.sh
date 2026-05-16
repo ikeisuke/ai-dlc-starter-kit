@@ -430,6 +430,16 @@ cmd_pr_ready() {
         cycle=$(resolve_cycle_from_branch)
     fi
 
+    # Unit 002 (#708 / v2.6.4): --cycle 引数の包括的バリデーション。
+    # body-file 検証後・resolve_cycle_from_branch での解決直後・get-related-issues 呼び出し前に配置。
+    # cycle はこの後 pr-ops.sh get-related-issues "$cycle" に渡され、cmd_get_related_issues 内で
+    # ${AIDLC_CYCLES}/${cycle}/story-artifacts/units というパス展開に使われるため fail-fast する。
+    # エラーフォーマットは cmd_squash_712 のパターン（v2.6.3 Unit 002）と同形。
+    if ! validate_cycle "$cycle"; then
+        printf 'error\tpr-ready:invalid-cycle\t%s\n' "$cycle" >&2
+        return 1
+    fi
+
     # 1. get-related-issues（stdout・exit code を透過。非 0 なら即エラー返し）
     if [[ "$DRY_RUN" = "1" ]]; then
         log_dry_run "$SCRIPT_DIR/pr-ops.sh get-related-issues $cycle"
@@ -948,6 +958,13 @@ cmd_record_release_prep_commit() {
     done
     if [[ -z "$cycle" ]]; then
         printf 'record-release-prep-commit:error:cycle-required\n' >&2
+        return 1
+    fi
+    # Unit 002 (#708 / v2.6.4): --cycle 引数の包括的バリデーション。
+    # __operations_release_progress_path でパス展開に使われる前に fail-fast する。
+    # エラーフォーマットは cmd_squash_712 のパターン（v2.6.3 Unit 002）と同形。
+    if ! validate_cycle "$cycle"; then
+        printf 'error\trecord-release-prep-commit:invalid-cycle\t%s\n' "$cycle" >&2
         return 1
     fi
     local progress_file

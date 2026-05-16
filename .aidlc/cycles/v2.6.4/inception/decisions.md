@@ -92,10 +92,28 @@ Inception Phase で行った重要な意思決定を時系列で記録する。C
 
 ---
 
+## DR-007: Unit 002 `cmd_pr_ready` を同サイクル内で必須対応化（DR-003 の結論）
+
+- **日時**: 2026-05-17
+- **判断者**: AI 設計（Unit 002 Construction Phase 計画策定時の影響範囲調査結果）
+- **背景**: DR-003 で `cmd_pr_ready` の `--cycle` 対応を条件付きに分離し、Construction Phase での影響範囲調査結果に基づき同サイクル内対応 / 別 Issue 化を判定するとした
+- **意思決定**: `cmd_pr_ready` も同サイクル内で必須対応化し、`validate_cycle` 検証を導入する
+- **理由（調査結果）**:
+  - `cmd_pr_ready` の `--cycle` は `pr-ops.sh get-related-issues "$cycle"` に渡される（`skills/aidlc/scripts/operations-release.sh` L437）
+  - `pr-ops.sh` の `cmd_get_related_issues` 内で `local units_dir="${AIDLC_CYCLES}/${cycle}/story-artifacts/units"` というパス展開に使用される（`skills/aidlc/scripts/pr-ops.sh` L209）
+  - したがって `cmd_pr_ready` も `cmd_record_release_prep_commit` と同種のパストラバーサル経路を持つ（Issue 起票時点の「下流での扱いを要確認」という記述が同サイクル対応の妥当性を満たす）
+- **挿入位置の採用根拠**:
+  - body-file 検証（`_pr_ready_validate_body_file`）直後・`resolve_cycle_from_branch` での解決直後・`get-related-issues` 呼び出し直前を採用
+  - 理由: (1) body-file 検証は cycle 解決より前に位置しており既存契約を維持する、(2) `--cycle` 未指定時のブランチ解決経路もカバーする、(3) 下流のパス展開発火前で最も早い fail-fast ポイント
+  - `pr-ops.sh` 側ではなく呼び出し側（`cmd_pr_ready`）で検証する責務分担を採用。`pr-ops.sh` は他スクリプト（`cycle-pr-check.sh` 等）からも呼ばれる汎用ライブラリのため中立性を保つ
+- **影響**: Unit 002 の責務（必須対応 2: `cmd_pr_ready` への validate_cycle 検証導入）として実装。別 Issue 化は不要
+- **関連**: DR-003
+
+---
+
 ## 追記予定
 
 - **Construction Phase で追加されうる DR**:
-  - Unit 002: `cmd_pr_ready` の影響範囲調査結果と「同サイクル内対応 / 別 Issue 化」の判定（DR-003 の結論を本決定として追記）
   - Unit 004: 振り返り opt-in フラグの最終命名（`[rules.retrospective].auto_issue_creation` または同等）
   - 既存ガード（対話必須トークン / cap / mirror）の手動再現結果（DR として記録）
   - `predecessor_resolve_issue` 5 経路の手動再現結果（DR として記録）
