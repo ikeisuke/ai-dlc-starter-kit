@@ -62,9 +62,27 @@ High（v2.6.3 振り返り由来、status:in-progress）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 取り下げ
+- **開始日**: 2026-05-17
+- **完了日**: 2026-05-17
+- **担当**: AI Agent (Claude Code)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+
+### 取り下げ理由
+
+v2.6.3 Unit 004（`operations-premerge-ci-sot`、Issue #694）で本 Unit の責務全項目が完全実装済みであることが Construction Phase 着手時の差分突合で判明したため、取り下げる。
+
+**重複の根拠**（v2.6.3 Unit 004 の成果と v2.6.4 Unit 001 責務の対応）:
+
+| v2.6.4 Unit 001 責務 | v2.6.3 Unit 004 既存実装 |
+|---|---|
+| マージ前 CI 通過確認（`gh pr checks` / `gh run list`） | `operations-release.md §7.12.6.2` |
+| CI 失敗時 3 分岐修復経路（修復可 / 修復不能 / 構造的不整合） | `operations-release.md §7.12.6.4` / `§7.12.6.5` |
+| `check-cycle-phase-completion` 常時実行 SoT | `operations-release.md §7.12.6.3`（opt-in シグナル方式） |
+| `reviewing-operations-premerge` との重複・補完関係明示 | `operations-release.md §7.12.6.1` 観点分担マトリクス / `§7.12.6.6` 役割分担 |
+| 既存ステップ参照経路の破壊防止 | v2.6.3 Unit 004 完了時点で達成済み |
+
+該当セクション見出しに `【必須 / Unit 004 / #694 追加】` と明示記載あり、関連 Issue #694 も v2.6.3 で CLOSED 済み。
+
+**Inception 差分検出漏れの追跡**: v2.6.4 Inception Phase 時に v2.6.3 完了サイクルの実装内容との突合が漏れた事象は、振り返り改善として Issue #712 で追跡（本 Unit 取り下げ処理の範囲外）。
