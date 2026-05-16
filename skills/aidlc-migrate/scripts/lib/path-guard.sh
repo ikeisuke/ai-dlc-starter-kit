@@ -21,6 +21,15 @@
 #   - 新規導入の本ファイル内ではコマンド置換 $(...) を使用しない（Unit 002 Intent 制約）
 #   - 中間結果は process substitution <(...) + read で直接受信（一時ファイル不使用 / TOCTOU 回避 / CWE-59/CWE-377 対策）
 #   - エラー出力は tab 区切り 4 フィールド固定。第4フィールド内に `;field=<name>` を含めることで診断精度を上げる
+#
+# result-out 関数の local 命名規約（v2.6.3 Unit 001 / #706）:
+#   引数で結果書き込み先変数名を受け取り `printf -v "$_result_var"` で書き込む関数（result-out 関数）、
+#   および result-out 関数を呼んで結果を受け取る caller 側の結果受け取り用 local は、関数固有プレフィックス
+#   `_local_<関数省略名>_<名>` で namespace 化する。caller と同名 local を宣言すると bash の dynamic scope に
+#   より `printf -v` が内部 local を書き換え caller 変数が空のまま残る致命的バグを招く（v2.6.2 CI 停止の原因 /
+#   修正コミット da212aea）。標準パラメータバインディング `_result_var` / `_input` / `_base` 等は関数間で一貫し
+#   shadowing リスクがないため慣例名のまま許容する。規約 SoT: CLAUDE.md「printf -v 系 result-out 関数の
+#   local 命名規約」。
 
 # Guard against double source
 if [[ -n "${_AIDLC_MIGRATE_PATH_GUARD_SOURCED:-}" ]]; then
@@ -62,14 +71,17 @@ _aidlc_migrate_path_guard_detect_realpath_m() {
 # realpath shim 第一選択: realpath -m
 # 引数: $1=result_var_name, $2=input
 # 一時ファイル不使用（process substitution + read で直接受信 / TOCTOU 回避）
+#
+# result-out 関数: 内部 local は `_local_m_<名>` で namespace 化する（規約 SoT: CLAUDE.md
+# 「printf -v 系 result-out 関数の local 命名規約」）。
 _aidlc_migrate_path_guard_realpath_m_into() {
   local _result_var="$1"
   local _input="$2"
   # NOTE: 呼出側 (`_aidlc_migrate_realpath` / `_aidlc_migrate_path_guard_init`) が
-  # `_resolved` というローカル名で結果を受けるため、本関数内で同名ローカルを宣言すると
-  # bash の dynamic scope で `printf -v "_resolved"` が**本関数のローカル**を書き換え、
-  # 呼出側の `_resolved` は空のままになる（v2.6.2 CI で表面化、Unit 002 / #680 残課題）。
-  # ローカルは別名 `_local_m_resolved` を使用し、shadowing を防ぐ。
+  # 結果受け取り用ローカルを宣言するため、本関数内で同名ローカルを宣言すると bash の
+  # dynamic scope で `printf -v` が**本関数のローカル**を書き換え、呼出側の変数は空のまま
+  # になる（v2.6.2 CI で表面化、Unit 002 / #680）。ローカルは `_local_m_resolved` を使用し
+  # shadowing を防ぐ（規約: result-out 関数の local 命名規約 / 上記ファイルヘッダ参照）。
   local _local_m_resolved=""
   if ! IFS= read -r _local_m_resolved < <(realpath -m -- "$_input" 2>/dev/null); then
     return 2
@@ -83,104 +95,111 @@ _aidlc_migrate_path_guard_realpath_m_into() {
 
 # pure bash cd -P フォールバック
 # 引数: $1=result_var_name, $2=input, $3=base (絶対パス)
+#
+# result-out 関数: 内部 local は `_local_fb_<名>` で namespace 化する（規約 SoT: CLAUDE.md
+# 「printf -v 系 result-out 関数の local 命名規約」）。caller と同名 local を宣言すると
+# dynamic scope shadowing で `printf -v` の書き込み先が逸脱する。
 _aidlc_migrate_path_guard_realpath_fallback_into() {
   local _result_var="$1"
   local _input="$2"
   local _base="$3"
 
   # ステップ 1: 絶対化
-  local _candidate
+  local _local_fb_candidate
   if [[ "${_input:0:1}" == "/" ]]; then
-    _candidate="$_input"
+    _local_fb_candidate="$_input"
   else
-    _candidate="${_base%/}/${_input}"
+    _local_fb_candidate="${_base%/}/${_input}"
   fi
 
   # 末尾スラッシュ正規化（ルート以外は剥がす）
-  while [[ "${#_candidate}" -gt 1 && "${_candidate: -1}" == "/" ]]; do
-    _candidate="${_candidate%/}"
+  while [[ "${#_local_fb_candidate}" -gt 1 && "${_local_fb_candidate: -1}" == "/" ]]; do
+    _local_fb_candidate="${_local_fb_candidate%/}"
   done
 
   # ステップ 2: 末尾から実在ディレクトリを探す（実体不在 path も親方向に遡って解決）
-  local _probe="$_candidate"
-  local _tail=""
+  local _local_fb_probe="$_local_fb_candidate"
+  local _local_fb_tail=""
   while true; do
-    if [[ -d "$_probe" ]]; then
+    if [[ -d "$_local_fb_probe" ]]; then
       break
     fi
-    if [[ "$_probe" == "/" || -z "$_probe" ]]; then
-      _probe="/"
+    if [[ "$_local_fb_probe" == "/" || -z "$_local_fb_probe" ]]; then
+      _local_fb_probe="/"
       break
     fi
-    local _segment="${_probe##*/}"
-    _tail="/${_segment}${_tail}"
-    if [[ "$_probe" == */* ]]; then
-      _probe="${_probe%/*}"
-      if [[ -z "$_probe" ]]; then
-        _probe="/"
+    local _local_fb_segment="${_local_fb_probe##*/}"
+    _local_fb_tail="/${_local_fb_segment}${_local_fb_tail}"
+    if [[ "$_local_fb_probe" == */* ]]; then
+      _local_fb_probe="${_local_fb_probe%/*}"
+      if [[ -z "$_local_fb_probe" ]]; then
+        _local_fb_probe="/"
       fi
     else
-      _probe="/"
+      _local_fb_probe="/"
     fi
   done
 
   # ステップ 3: 物理解決（process substitution + read / TOCTOU 回避）
-  local _resolved_parent=""
-  if ! IFS= read -r _resolved_parent < <( cd -P "$_probe" 2>/dev/null && pwd -P ); then
+  local _local_fb_resolved_parent=""
+  if ! IFS= read -r _local_fb_resolved_parent < <( cd -P "$_local_fb_probe" 2>/dev/null && pwd -P ); then
     return 2
   fi
-  if [[ -z "$_resolved_parent" ]]; then
+  if [[ -z "$_local_fb_resolved_parent" ]]; then
     return 2
   fi
 
   # ステップ 4: tail を論理結合し、'.' / '..' を辞書的に解決
-  # _tail が空ならそのまま _resolved_parent
-  if [[ -z "$_tail" ]]; then
-    printf -v "$_result_var" '%s' "$_resolved_parent"
+  # _local_fb_tail が空ならそのまま _local_fb_resolved_parent
+  if [[ -z "$_local_fb_tail" ]]; then
+    printf -v "$_result_var" '%s' "$_local_fb_resolved_parent"
     return 0
   fi
 
-  # _tail を / で分割（先頭 / を除いた後）
-  local _normalized="$_resolved_parent"
-  local _rest="${_tail#/}"
-  local _segment=""
-  while [[ -n "$_rest" ]]; do
-    if [[ "$_rest" == */* ]]; then
-      _segment="${_rest%%/*}"
-      _rest="${_rest#*/}"
+  # _local_fb_tail を / で分割（先頭 / を除いた後）
+  local _local_fb_normalized="$_local_fb_resolved_parent"
+  local _local_fb_rest="${_local_fb_tail#/}"
+  local _local_fb_segment=""
+  while [[ -n "$_local_fb_rest" ]]; do
+    if [[ "$_local_fb_rest" == */* ]]; then
+      _local_fb_segment="${_local_fb_rest%%/*}"
+      _local_fb_rest="${_local_fb_rest#*/}"
     else
-      _segment="$_rest"
-      _rest=""
+      _local_fb_segment="$_local_fb_rest"
+      _local_fb_rest=""
     fi
-    case "$_segment" in
+    case "$_local_fb_segment" in
       ""|".") : ;;
       "..")
-        if [[ "$_normalized" == "/" ]]; then
+        if [[ "$_local_fb_normalized" == "/" ]]; then
           : # ルートで .. は no-op
         else
-          _normalized="${_normalized%/*}"
-          if [[ -z "$_normalized" ]]; then
-            _normalized="/"
+          _local_fb_normalized="${_local_fb_normalized%/*}"
+          if [[ -z "$_local_fb_normalized" ]]; then
+            _local_fb_normalized="/"
           fi
         fi
         ;;
       *)
-        if [[ "$_normalized" == "/" ]]; then
-          _normalized="/${_segment}"
+        if [[ "$_local_fb_normalized" == "/" ]]; then
+          _local_fb_normalized="/${_local_fb_segment}"
         else
-          _normalized="${_normalized}/${_segment}"
+          _local_fb_normalized="${_local_fb_normalized}/${_local_fb_segment}"
         fi
         ;;
     esac
   done
 
-  printf -v "$_result_var" '%s' "$_normalized"
+  printf -v "$_result_var" '%s' "$_local_fb_normalized"
   return 0
 }
 
 # 公開関数: realpath shim
 # 引数: $1=result_var_name (出力先), $2=input, $3=base (任意、デフォルトは現 PWD)
 # 戻り値: 0 成功 / 2 システムエラー
+#
+# result-out 関数: 内部 local は `_local_rp_<名>` で namespace 化する（規約 SoT: CLAUDE.md
+# 「printf -v 系 result-out 関数の local 命名規約」）。
 _aidlc_migrate_realpath() {
   local _result_var="$1"
   local _input="$2"
@@ -197,13 +216,13 @@ _aidlc_migrate_realpath() {
   _aidlc_migrate_path_guard_detect_realpath_m
   if [[ "$_AIDLC_MIGRATE_PATH_GUARD_REALPATH_M_SUPPORTED" == "1" ]]; then
     # realpath -m は base を考慮しないため、相対パスは先に絶対化する
-    local _abs_input
+    local _local_rp_abs_input
     if [[ "${_input:0:1}" == "/" ]]; then
-      _abs_input="$_input"
+      _local_rp_abs_input="$_input"
     else
-      _abs_input="${_base%/}/${_input}"
+      _local_rp_abs_input="${_base%/}/${_input}"
     fi
-    _aidlc_migrate_path_guard_realpath_m_into "$_result_var" "$_abs_input"
+    _aidlc_migrate_path_guard_realpath_m_into "$_result_var" "$_local_rp_abs_input"
     return $?
   fi
 
@@ -214,17 +233,21 @@ _aidlc_migrate_realpath() {
 # 公開関数: 初期化
 # AIDLC_PROJECT_ROOT 環境変数を物理解決し _AIDLC_MIGRATE_PATH_GUARD_ROOT に保持する
 # 戻り値: 0 成功 / 2 システムエラー
+#
+# result-out 関数の caller: `_aidlc_migrate_realpath` へ渡す結果受け取り用 local は
+# `_local_init_<名>` で namespace 化する（規約 SoT: CLAUDE.md「printf -v 系 result-out
+# 関数の local 命名規約」）。
 _aidlc_migrate_path_guard_init() {
   if [[ -z "${AIDLC_PROJECT_ROOT:-}" ]]; then
     _aidlc_migrate_path_guard_emit_error "init-failed" "path-guard" "(unset)" "aidlc_project_root_unset"
     return 2
   fi
-  local _resolved=""
-  if ! _aidlc_migrate_realpath _resolved "$AIDLC_PROJECT_ROOT" "/"; then
+  local _local_init_resolved=""
+  if ! _aidlc_migrate_realpath _local_init_resolved "$AIDLC_PROJECT_ROOT" "/"; then
     _aidlc_migrate_path_guard_emit_error "init-failed" "path-guard" "$AIDLC_PROJECT_ROOT" "aidlc_project_root_resolution_failed"
     return 2
   fi
-  _AIDLC_MIGRATE_PATH_GUARD_ROOT="$_resolved"
+  _AIDLC_MIGRATE_PATH_GUARD_ROOT="$_local_init_resolved"
   return 0
 }
 
@@ -255,6 +278,11 @@ _aidlc_migrate_path_guard_has_parent_segment() {
 # 公開関数: パス検証本体
 # 引数: $1=raw_path, $2=field_name, $3=script_id
 # 戻り値: 0 accepted / 1 rejected (validation) / 2 system error
+#
+# result-out 関数の caller: `_aidlc_migrate_realpath` /
+# `_aidlc_migrate_path_guard_normalize_logical_only` へ渡す結果受け取り用 local は
+# `_local_vp_<名>` で namespace 化する（規約 SoT: CLAUDE.md「printf -v 系 result-out
+# 関数の local 命名規約」）。
 _aidlc_migrate_validate_path() {
   local _raw_path="$1"
   local _field_name="$2"
@@ -279,23 +307,23 @@ _aidlc_migrate_validate_path() {
   fi
 
   # ステップ 4: 物理解決
-  local _resolved=""
-  if ! _aidlc_migrate_realpath _resolved "$_raw_path" "$_AIDLC_MIGRATE_PATH_GUARD_ROOT"; then
+  local _local_vp_resolved=""
+  if ! _aidlc_migrate_realpath _local_vp_resolved "$_raw_path" "$_AIDLC_MIGRATE_PATH_GUARD_ROOT"; then
     _aidlc_migrate_path_guard_emit_error "realpath-system-error" "$_script_id" "$_raw_path" "realpath_failed" "$_field_name"
     return 2
   fi
 
   # ステップ 5: 配下判定
-  local _root="$_AIDLC_MIGRATE_PATH_GUARD_ROOT"
-  if [[ "$_resolved" == "$_root" || "$_resolved" == "$_root"/* ]]; then
+  local _local_vp_root="$_AIDLC_MIGRATE_PATH_GUARD_ROOT"
+  if [[ "$_local_vp_resolved" == "$_local_vp_root" || "$_local_vp_resolved" == "$_local_vp_root"/* ]]; then
     return 0
   fi
 
   # 配下外: 論理パス（symlink 解決なし / '.' '..' のみ辞書解決）と物理パスの差で symlink_escape を判定
-  local _logical_only=""
-  _aidlc_migrate_path_guard_normalize_logical_only _logical_only "$_raw_path" "$_root"
+  local _local_vp_logical_only=""
+  _aidlc_migrate_path_guard_normalize_logical_only _local_vp_logical_only "$_raw_path" "$_local_vp_root"
 
-  if [[ "$_logical_only" == "$_root" || "$_logical_only" == "$_root"/* ]]; then
+  if [[ "$_local_vp_logical_only" == "$_local_vp_root" || "$_local_vp_logical_only" == "$_local_vp_root"/* ]]; then
     # 論理パスは配下、物理パスは配下外 → symlink 経由脱出
     _aidlc_migrate_path_guard_emit_error "path-traversal" "$_script_id" "$_raw_path" "symlink_escape" "$_field_name"
   else
@@ -309,48 +337,51 @@ _aidlc_migrate_validate_path() {
 
 # 内部: 純粋な論理パス正規化（symlink 解決なし / '.' '..' のみ辞書解決）
 # 引数: $1=result_var, $2=input, $3=base (絶対パス)
+#
+# result-out 関数: 内部 local は `_local_nlo_<名>` で namespace 化する（規約 SoT: CLAUDE.md
+# 「printf -v 系 result-out 関数の local 命名規約」）。
 _aidlc_migrate_path_guard_normalize_logical_only() {
   local _result_var="$1"
   local _input="$2"
   local _base="$3"
 
-  local _candidate
+  local _local_nlo_candidate
   if [[ "${_input:0:1}" == "/" ]]; then
-    _candidate="$_input"
+    _local_nlo_candidate="$_input"
   else
-    _candidate="${_base%/}/${_input}"
+    _local_nlo_candidate="${_base%/}/${_input}"
   fi
 
-  local _normalized="/"
-  local _rest="${_candidate#/}"
-  local _segment=""
-  while [[ -n "$_rest" ]]; do
-    if [[ "$_rest" == */* ]]; then
-      _segment="${_rest%%/*}"
-      _rest="${_rest#*/}"
+  local _local_nlo_normalized="/"
+  local _local_nlo_rest="${_local_nlo_candidate#/}"
+  local _local_nlo_segment=""
+  while [[ -n "$_local_nlo_rest" ]]; do
+    if [[ "$_local_nlo_rest" == */* ]]; then
+      _local_nlo_segment="${_local_nlo_rest%%/*}"
+      _local_nlo_rest="${_local_nlo_rest#*/}"
     else
-      _segment="$_rest"
-      _rest=""
+      _local_nlo_segment="$_local_nlo_rest"
+      _local_nlo_rest=""
     fi
-    case "$_segment" in
+    case "$_local_nlo_segment" in
       ""|".") : ;;
       "..")
-        if [[ "$_normalized" != "/" ]]; then
-          _normalized="${_normalized%/*}"
-          if [[ -z "$_normalized" ]]; then
-            _normalized="/"
+        if [[ "$_local_nlo_normalized" != "/" ]]; then
+          _local_nlo_normalized="${_local_nlo_normalized%/*}"
+          if [[ -z "$_local_nlo_normalized" ]]; then
+            _local_nlo_normalized="/"
           fi
         fi
         ;;
       *)
-        if [[ "$_normalized" == "/" ]]; then
-          _normalized="/${_segment}"
+        if [[ "$_local_nlo_normalized" == "/" ]]; then
+          _local_nlo_normalized="/${_local_nlo_segment}"
         else
-          _normalized="${_normalized}/${_segment}"
+          _local_nlo_normalized="${_local_nlo_normalized}/${_local_nlo_segment}"
         fi
         ;;
     esac
   done
 
-  printf -v "$_result_var" '%s' "$_normalized"
+  printf -v "$_result_var" '%s' "$_local_nlo_normalized"
 }

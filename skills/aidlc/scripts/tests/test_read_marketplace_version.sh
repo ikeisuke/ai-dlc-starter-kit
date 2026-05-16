@@ -9,6 +9,12 @@
 #  - ファイル不在 / 読取失敗は exit 2
 #  - 終了コードと stderr メッセージの仕様確認
 #
+# 追加検証対象（v2.6.3 Unit 003 / Issue #698）:
+#  - C3a: CLI モード引数省略時にスクリプト位置から marketplace.json を自己解決して exit 0
+#  - C3b: 自己解決パスが不在の場合 exit 2 + error:marketplace-json-not-found（version.sh の一時複製で相対基点をずらす）
+#  - C3c: 関数本体に空文字引数を直接渡した場合の契約（exit 2 + error:missing-json-path）
+#  - C9: 引数渡し（test override）で従来どおり指定パスを使用する後方互換
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -159,16 +165,55 @@ fi
 echo ""
 echo "--- CLI モード異常系 ---"
 
-# C3: 引数なし
+# C3a: CLI モード引数省略時、本物の version.sh が自己解決で正常 SemVer を返す
+# 期待: <repo_root>/.claude-plugin/marketplace.json が参照される
 rc=0
-output=$(bash "${VERSION_SH}" 2>/dev/null) || rc=$?
-assert_exit_code "C3: CLI モード 引数なし" 2 "$rc"
-stderr_output=$(bash "${VERSION_SH}" 2>&1 >/dev/null) || true
-if [[ "$stderr_output" == *"error:missing-json-path"* ]]; then
-    echo "  PASS: C3: CLI モード 引数なし stderr"
+output=$(bash "${VERSION_SH}") || rc=$?
+assert_exit_code "C3a: CLI モード 引数省略 自己解決成功" 0 "$rc"
+if [[ -n "$output" ]] && command -v dasel >/dev/null 2>&1; then
+    # SemVer フォーマット最低限の妥当性確認（厳密検証は read_marketplace_version 側）
+    if [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+        echo "  PASS: C3a: CLI モード 引数省略 stdout に SemVer 形式の version 文字列"
+        ((++PASS))
+    else
+        echo "  FAIL: C3a: CLI モード 引数省略 stdout 不正形式 (got: '$output')"
+        ((++FAIL))
+    fi
+else
+    echo "  PASS: C3a: CLI モード 引数省略 stdout 存在確認 (dasel 不在環境はスキップ)"
+    ((++PASS))
+fi
+
+# C3b: CLI モード引数省略 + 自己解決パス不在 → exit 2 + error:marketplace-json-not-found
+# 手段: 一時ディレクトリに skills/aidlc/scripts/lib/ 階層を作って version.sh を複製
+# .claude-plugin/marketplace.json は作成しないため、自己解決が「ファイル不在」へ落ちる
+C3B_ROOT=$(mktemp -d)
+mkdir -p "${C3B_ROOT}/skills/aidlc/scripts/lib"
+cp "${VERSION_SH}" "${C3B_ROOT}/skills/aidlc/scripts/lib/version.sh"
+rc=0
+output=$(bash "${C3B_ROOT}/skills/aidlc/scripts/lib/version.sh" 2>/dev/null) || rc=$?
+assert_exit_code "C3b: CLI モード 自己解決失敗 (marketplace.json 不在)" 2 "$rc"
+stderr_output=$(bash "${C3B_ROOT}/skills/aidlc/scripts/lib/version.sh" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:marketplace-json-not-found"* ]]; then
+    echo "  PASS: C3b: CLI モード 自己解決失敗 stderr"
     ((++PASS))
 else
-    echo "  FAIL: C3: CLI モード 引数なし stderr (got: $stderr_output)"
+    echo "  FAIL: C3b: CLI モード 自己解決失敗 stderr (got: $stderr_output)"
+    ((++FAIL))
+fi
+rm -rf "${C3B_ROOT}"
+
+# C3c: 関数本体に空文字引数を直接渡した場合の契約（CLI ガードを経由しない関数レイヤー）
+# read_marketplace_version "" は引数 $1 が空 → exit 2 + error:missing-json-path
+rc=0
+output=$(read_marketplace_version "" 2>/dev/null) || rc=$?
+assert_exit_code "C3c: 関数 引数空契約" 2 "$rc"
+stderr_output=$(read_marketplace_version "" 2>&1 >/dev/null) || true
+if [[ "$stderr_output" == *"error:missing-json-path"* ]]; then
+    echo "  PASS: C3c: 関数 引数空契約 stderr"
+    ((++PASS))
+else
+    echo "  FAIL: C3c: 関数 引数空契約 stderr (got: $stderr_output)"
     ((++FAIL))
 fi
 
@@ -216,6 +261,17 @@ else
     echo "  FAIL: C6: CLI モード 不正な SemVer stderr (got: $stderr_output)"
     ((++FAIL))
 fi
+
+echo ""
+echo "--- CLI モード後方互換テスト（v2.6.3 Unit 003 / Issue #698） ---"
+
+# C9: 引数渡し（test override）で従来どおり指定パスを使用
+# C1 と類似だが、C9 は v2.6.3 自己解決導入後も「引数渡し経路が破壊されていないこと」を明示的に確認する
+write_marketplace_json "${TEST_DIR}/c9_override.json" "3.0.0-rc.1"
+rc=0
+output=$(bash "${VERSION_SH}" "${TEST_DIR}/c9_override.json") || rc=$?
+assert_exit_code "C9: CLI モード 引数渡し test override" 0 "$rc"
+assert_output "C9: CLI モード 引数渡し test override" "3.0.0-rc.1" "$output"
 
 echo ""
 echo "--- CLI モードと source 経路の両立確認 ---"

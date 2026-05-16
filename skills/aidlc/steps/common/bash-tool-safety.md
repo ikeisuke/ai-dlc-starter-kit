@@ -97,6 +97,43 @@ codex exec -s read-only -C . --json - < /tmp/aidlc-review-prompt.md
 codex exec resume <session-id> --json - < /tmp/aidlc-review-prompt-r2.md
 ```
 
+## result-out 関数の local 命名規約（運用補助）
+
+規約本文は [`CLAUDE.md` § printf -v 系 result-out 関数の local 命名規約](../../../../CLAUDE.md#printf--v-系-result-out-関数の-local-命名規約)（Single Source of Truth）。本セクションは規範文を持たず、具体的な before/after スニペットのみを提供する。
+
+**result-out 関数**: 関数引数で結果書き込み先変数名を受け取り `printf -v "$result_var"` で呼出側変数へ書き込む関数。
+
+### NG: 内部 local が caller と同名（dynamic scope shadowing）
+
+```bash
+# 規約違反 - 内部 local _resolved が caller の _resolved を dynamic scope で shadowing し、
+# printf -v の書き込み先が caller ではなく本関数の内部 local になる（caller 変数は空のまま）
+resolve_into() {
+  local _result_var="$1"
+  local _resolved=""               # caller も _resolved を使うと衝突する
+  _resolved="..."
+  printf -v "$_result_var" '%s' "$_resolved"
+}
+caller() {
+  local _resolved=""
+  resolve_into _resolved "..."     # _resolved は空のまま残る
+}
+```
+
+### OK: 内部 local を関数固有プレフィックスで namespace 化
+
+```bash
+# 規約準拠 - 内部作業用 local を _local_<関数省略名>_<名> 形式で namespace 化
+resolve_into() {
+  local _result_var="$1"
+  local _local_ri_resolved=""      # 関数固有プレフィックスで shadowing を防ぐ
+  _local_ri_resolved="..."
+  printf -v "$_result_var" '%s' "$_local_ri_resolved"
+}
+```
+
+`_result_var` / `_input` / `_base` 等の標準パラメータバインディング名は関数間で一貫しており shadowing リスクがないため慣例名のまま許容する。実適用例は `skills/aidlc-migrate/scripts/lib/path-guard.sh` の result-out 関数群を参照。
+
 ## 経路別 file-based interface 一覧（CLAUDE.md ① 参考表の運用補足）
 
 CLAUDE.md ① セクション「file-based 経路の参考表」を経路ごとに具体化したもの。

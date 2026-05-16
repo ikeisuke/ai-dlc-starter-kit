@@ -104,6 +104,7 @@ Construction Phase 完了直後の Operations 新規開始は **bootstrap 分岐
 | 各対話形式ステップ（2/3/4/5/6）計画承認 | ゲート承認 | ユーザー確認 | auto_approved |
 | リリース準備計画承認（ステップ7開始時） | ゲート承認 | ユーザー確認 | auto_approved |
 | PR Ready 化承認 | ゲート承認 | ユーザー確認 | auto_approved |
+| マージ前 CI 通過確認 B 分岐（ステップ7.12.6 / Unit 004 / #694） | ユーザー選択 | ユーザー確認 | ユーザー確認 |
 | PRマージ実行（ステップ7.13） | ユーザー選択 | ユーザー確認 | ユーザー確認 |
 
 **注記**: 「ユーザー選択」は SKILL.md「AskUserQuestion使用ルール」に定義されたインタラクション種別であり、`automation_mode` に関わらず（`full_auto` を含む全モードで）常にユーザー確認が必要。PRマージは破壊的・不可逆操作であるためこの分類に該当する。上記マトリクスは `manual` / `semi_auto` を列挙しているが、PRマージ実行確認は全 `automation_mode` でユーザー確認必須。詳細手順は `operations-release.md` §7.13 を参照。
@@ -135,7 +136,13 @@ Construction Phase 完了直後の Operations 新規開始は **bootstrap 分岐
 
 `01-setup.md` ステップ11 内で `gh api PATCH` 個別呼び出しが失敗し `LINK_FAILED` が 1 件以上ある場合、ステップ11 末尾で **exit 1 で停止**（紐付け未達のまま 04-completion 4.5 を実施するとサイクル可視化が不完全になるため）。失敗対象を手動復旧してから再実行。`gh_status != available` 時は setup ステップ11 はスキップされ本契約は発動しない。**`[rules.github].milestone_enabled=false`（既定）時も setup ステップ11 自体がスキップされ本契約は発動しない**。
 
-### 2.9 AI レビュー分岐
+### 2.9 マージ前 CI 通過確認分岐【Unit 004 / #694 追加】
+
+`operations.03-release` 完了から §7.13 PR マージの間に「マージ前 CI 通過確認」サブステップ（§7.12.6）が必ず実行される。SoT は `steps/operations/operations-release.md` §7.12.6。失敗時は 3 分岐（C: 構造的不整合 → サイクル内修正再走 / B: 修復不能 → AskUserQuestion / A: 修復可能 → ローカル修正再走）でルーティングする。優先順位は **C > B > A**。詳細は SoT を参照。
+
+`gh_status != available` のときは §7.12.6 全体をスキップし、`ci_check_state=unknown` を `history/operations.md` に明示記録して §7.13 へ進む（最終判定権は §7.13 既存 `error:checks-status-unknown` セクションに一本化）。
+
+### 2.10 AI レビュー分岐
 
 各承認ポイントで AI レビューを実施する。**ルーティング判定（スキル名・focus・処理パス選択）は `steps/common/review-routing.md` 参照**、**反復・指摘対応・完了処理の手順は `steps/common/review-flow.md` 参照**。`review_mode=disabled` 時は `review-routing.md` のパス 3（ユーザーレビュー）へ直行。
 

@@ -167,7 +167,123 @@ scripts/operations-release.sh squash-712 --cycle {{CYCLE}}
 
 **Squash 後の force-push**: §7.9〜§7.11 の `verify-git` で `remote-sync=diverged` が検出されると、既存の `recommended_command:` 案内（`git push --force-with-lease ...`）がユーザーに表示される。本ステップで追加実装は不要。
 
+**次ステップ**: Squash 完了（および `diverged` 時の force-push）後、§7.12.6 でマージ前 CI 通過確認を実施する。`squash:skipped` の場合も同様に §7.12.6 へ進む。
+
+## 7.12.6 マージ前 CI 通過確認【必須 / Unit 004 / #694 追加】
+
+§7.13 PR マージ前に、PR の全 CI ジョブが通過していることを明示的に確認し、失敗時の修復経路を 3 分岐（C: 構造的不整合 / B: 修復不能 / A: 修復可能）でルーティングする。本ステップは v2.6.3 Unit 004 で「マージ前 CI 通過確認 + 修復」フローを SoT 化したものであり、サイクル横断で再現可能な手順としてここに集約する（v2.6.0 振り返り由来）。
+
+**責務範囲（片方向依存契約）**: 本ステップ §7.12.6 は「CI 状態の取得 + 失敗分類 + 修復経路 A/B/C ルーティング」に責務を限定する。取得不能ケース（gh CLI 不在 / API エラー）の最終判定権は §7.13 既存の `error:checks-status-unknown` セクションに一本化されており、§7.13 から §7.12.6 へ判断を巻き戻さない（依存方向は §7.12.6 → §7.13 のみ）。
+
+### 7.12.6.1 観点分担マトリクス
+
+PR マージ前の確認は以下 3 工程で観点を分担する。各観点の重複を避け補完関係を明確化する:
+
+| 観点 | §7.12 `reviewing-operations-premerge` | §7.12.6 マージ前 CI 通過確認 | §7.13 `merge-pr` |
+|------|-------------------------------------|----------------------------|-----------------|
+| PR 差分内容の妥当性 | ○ | - | - |
+| セキュリティ最終チェック | ○ | - | - |
+| CI ジョブ通過状態（明示確認） | - | ○ | - |
+| CI ジョブ通過状態（マージ直前の最終確認） | - | - | △ |
+| 構造整合性（サイクル横断 / opt-in） | - | ○ | - |
+| マージ実行 | - | - | ○ |
+
+`reviewing-operations-premerge` は PR 全体の差分とセキュリティを評価し、§7.12.6 は CI ジョブ通過状態の明示確認に集中する。多層防御として §7.13 内 `merge-pr` も実行時に最終フィルタとして機能するが、§7.12.6 で事前確認を済ませることで失敗の早期検出と修復ループを実現する。
+
+### 7.12.6.2 CI 通過確認コマンド
+
+`gh_status != available` のときは本ステップ全体を **スキップ** し、`ci_check_state=unknown` を `history/operations.md` に明示記録して §7.13 へ進む（最終判定は §7.13 が担う）。`gh_status = available` 時は以下を順に試す:
+
+1. **第一推奨**: `gh pr checks <PR番号>` — PR コンテキストで全 check の集約状態を取得（ブランチ命名に依存しない）
+2. **補助1**: `gh pr view <PR番号> --json statusCheckRollup` — 失敗詳細を JSON で取得
+3. **補助2**: `gh run list --commit <HEAD-SHA> --limit 5` — HEAD SHA 起点（PR 番号と独立）
+4. **フォールバック**: `gh run list --branch <cycle-branch> --limit 5` — ブランチ命名が `cycle/{{CYCLE}}` 規約準拠時のみ
+
+**命名規約不一致時の代替手順**: ブランチ名が `cycle/{{CYCLE}}` と異なる場合は、以下のいずれかに切り替える（取得情報と次アクションを整合させる）:
+
+- **A**: `gh pr view <PR番号> --json headRefName` で実ブランチ名を取得 → フォールバック（`gh run list --branch <実ブランチ名> --limit 5`）へ
+- **B**: `gh pr view <PR番号> --json headRefOid` で HEAD SHA を取得 → 補助2（`gh run list --commit <HEAD-SHA> --limit 5`）へ
+- **C**: ブランチ名 / SHA を取得せず、第一推奨（`gh pr checks <PR番号>`）または補助1（`gh pr view <PR番号> --json statusCheckRollup`）をそのまま使用
+
+`--branch` フォールバックは命名規約準拠時のみに限定する（規約準拠ならブランチ名取得を経由せずに使用可）。
+
+`--watch` フラグ（`gh pr checks <PR番号> --watch`）は進行中の CI 完了を待つ場合にユーザー判断で利用する（自動化フロー内では推奨しない / PR 番号を必ず明示）。
+
+### 7.12.6.3 構造整合性チェック（opt-in シグナル方式）
+
+リポジトリルートに `bin/check-cycle-phase-completion.sh` が存在する場合のみ実行する。consumer プロジェクトでは自然にスキップされる設計（CLAUDE.md「ドッグフーディング特殊処理を本体に埋めない」原則準拠 / opt-in シグナル方式）。
+
+判定式・実行例:
+
+```bash
+if [ -x bin/check-cycle-phase-completion.sh ]; then
+  bin/check-cycle-phase-completion.sh
+fi
+```
+
+- exit 0: 構造整合性 OK、通常フロー継続
+- exit 非 0: 構造的不整合あり → 失敗分類で `cross_unit_structural` を集合に追加（後述 §7.12.6.4）
+- スクリプト不在: opt-in シグナル非該当として **何も実行せず素通り**（情報メッセージ表示も不要）
+
+### 7.12.6.4 失敗分類基準テーブル
+
+失敗ジョブごとに以下の表で `classification_reason` キーを正規化する。複数失敗ジョブがある場合は各々で分類し、`reasons` 集合を構成する:
+
+| classification_reason | 再現性 | ログ根拠（例） | 再試行回数上限 | 環境要因判定条件 | 分岐 |
+|----------------------|--------|---------------|---------------|----------------|------|
+| `reproducible_local` | ローカルで再現可能 | テスト失敗 stack trace / lint error / type error | 0（即時修正） | 該当なし | A. 修復可能 |
+| `flaky_or_env` | 同 SHA リトライで pass する / ネットワーク / インフラ起因 | `timeout` / `connection refused` / `rate limit` / runner エラー | 1（同 SHA で 1 回まで `gh run rerun <run-id>`、再失敗で B 確定） | 失敗ログに環境系キーワード or 同 SHA リトライで pass する | B. 修復不能 |
+| `cross_unit_structural` | Unit 跨ぎで派生する依存破壊 / SoT 整合性チェック失敗 | `bin/check-cycle-phase-completion.sh` の exit 非 0 / `markdownlint` のサイクル横断違反 | 0（サイクル内で即時修正） | 失敗ジョブが構造整合性検証系 | C. 構造的不整合 |
+
+**分岐インターフェース契約**: 入力は `classification_reason` キー集合、出力は分岐 ID（`A` / `B` / `C`）。判定根拠（失敗ログの該当抜粋 + 表のどの列にマッチしたか）は `/write-history` で `history/operations.md` に記録する（同 SHA リトライ実施時はリトライ回数も併記）。
+
+**同 SHA リトライ運用ガード**: `flaky_or_env` 仮判定では `gh run rerun <run-id>` または `gh pr checks <PR番号> --watch` 後の再評価を **最大 1 回まで**実施する（`gh pr checks` には対象 PR 番号を必ず明示）。リトライ回数が上限を超えた場合は B 確定として §7.12.6.5 の AskUserQuestion へ進む。
+
+### 7.12.6.5 修復経路 3 分岐ルーティング（優先順位 C > B > A）
+
+`reasons` 集合から最も高位の分岐を選択する（優先順位 **C > B > A**）。`cross_unit_structural` が `reasons` に含まれる場合は、`flaky_or_env` が併存していても **B の AskUserQuestion には進まない**。C を先に収束させ、再走後の集合で再判定する（構造的不整合を未解決のままマージブロック解除する経路を構造的に閉じる）。
+
+```text
+CI 失敗検出
+  │
+  ├─ §7.12.6.4 で reasons 集合を構成
+  │
+  ├─ C. cross_unit_structural ∈ reasons → 構造的不整合
+  │    → サイクル内修正（新規 Issue 起票しない / 振り返りで Try として記録案内）
+  │    → 修正 + コミット + push 後、§7.12.6 冒頭から再実行
+  │
+  ├─ B. flaky_or_env ∈ reasons ∧ C 非含有 → 修復不能（環境依存）
+  │    → AskUserQuestion（automation_mode に関わらず常時必須）
+  │      question: 「CI 失敗の原因が環境依存と判断されました。
+  │                 マージブロック解除を承認しますか？」
+  │      header: 「CI修復」
+  │      options:
+  │        - 承認（マージ続行 / §7.13 へ進む）
+  │        - 中断（ユーザー判断で次のアクション決定）
+  │    → 「承認」選択時のみ §7.13 へ進む
+  │
+  └─ A. reproducible_local のみ → 修復可能
+       → ローカルで修正 + コミット + push、§7.12.6 冒頭から再実行
+```
+
+**AskUserQuestion 必須性の根拠**: B 分岐は「マージブロック解除」という破壊的決定を含むため、SKILL.md「AskUserQuestion 使用ルール」表の「ユーザー選択」種別に該当する。`automation_mode=semi_auto` / `full_auto` を含む全モードで自動化対象外（B 分岐確定時は必ずユーザー対話）。
+
+**C / A の対話有無**: いずれも修正ループ（破壊的決定なし）であり、対話は不要。AI / ユーザーが分類判断を共有してそのままループ再実行に進む。
+
+### 7.12.6.6 §7.13 既存ハンドリングとの役割分担
+
+§7.13 PR マージ内には既存の `error:checks-status-unknown`（`reason:no-checks-configured` / `reason:checks-query-failed`）ハンドリングが存在する。両者の役割分担は以下のとおり:
+
+| 工程 | タイミング | 責務 |
+|------|----------|------|
+| §7.12.6（本ステップ） | マージ実行 **前** の明示的事前確認 + 修復ループ | CI 状態取得 + 失敗分類 + A/B/C ルーティング |
+| §7.13 `merge-pr` 内 | マージスクリプト実行 **時** の最終フィルタ | `pass` / `fail` / `pending` の即時判定 + `unknown` 時のユーザー判断（最終マージ可否を一本化） |
+
+通常系では §7.12.6 で全 CI 通過確認済みのため §7.13 内 CI チェックは `pass` 確認のみで素通り。`gh_status != available` で §7.12.6 をスキップした場合（または取得失敗で `ci_check_state=unknown` 終了した場合）は §7.13 が最終防衛線として機能する。
+
 ## 7.13 PR マージ【重要】
+
+**前提**: §7.12.6（マージ前 CI 通過確認）で事前確認済みであること。`gh_status != available` で §7.12.6 をスキップした場合は、本ステップ内の `error:checks-status-unknown` ハンドリングが最終防衛線として機能する（§7.12.6.6 役割分担参照）。
 
 PR 本文の `Closes #XX` を最終確認。admin バイパスは案内しない（Branch protection 前提、未整備時は `guides/branch-protection.md`）。
 

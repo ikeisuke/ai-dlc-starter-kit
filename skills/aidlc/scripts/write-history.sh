@@ -534,48 +534,83 @@ format_entry() {
     echo "---"
 }
 
+# Unit 006 (#702): symlink 解決＋repo-root 取得ロジックの共通ヘルパ
+# v2.6.2 Unit 003 で check_history_staged_status と _commit_operations_round_history の双方に
+# 同一のパス解決ステップ（symlink 解決 / repo-root 取得 / 相対パス化）が重複していたため、
+# 本ヘルパで集約する。caller 側 warning 文言は exit code 別に caller が出力する。
+#
+# インターフェース契約:
+#   引数:
+#     $1 filepath           - 履歴ファイルパス（絶対 / 相対どちらでも可）
+#     $2 repo_root_out_var  - 成功時に repo-root の絶対パスを書き込む変数名
+#     $3 rel_path_out_var   - 成功時に repo-root 相対パスを書き込む変数名
+#   exit code:
+#     0 - 成功（result-out 変数書き込み済み）
+#     1 - symlink 解決失敗（cd "$(dirname filepath)" || pwd -P が失敗 / 空）
+#     2 - git リポジトリ外（git rev-parse --show-toplevel が失敗 / 空）
+#     3 - filepath が repo 配下でない（接頭辞除去失敗）
+#   副作用: なし（stdout / stderr 出力なし、result-out 変数のみ書き込み）
+#
+# CLAUDE.md「printf -v 系 result-out 関数の local 命名規約」準拠:
+#   - 内部作業用 local は _local_rhf_* プレフィックスで namespace 化（rhf = resolve history filepath）
+#   - caller の result-out 変数（$2 / $3）と shadowing しないことを保証
+_resolve_history_filepath_in_repo() {
+    # $1: filepath
+    # $2: repo_root_out_var
+    # $3: rel_path_out_var
+
+    local _local_rhf_dir _local_rhf_real
+    local _local_rhf_repo_root _local_rhf_rel
+
+    # ステップ 0: filepath の symlink 解決（macOS の /tmp → /private/tmp 等への対応）
+    if ! _local_rhf_dir=$(cd "$(dirname -- "$1")" 2>/dev/null && pwd -P 2>/dev/null); then
+        return 1
+    fi
+    if [ -z "$_local_rhf_dir" ]; then
+        return 1
+    fi
+    _local_rhf_real="${_local_rhf_dir}/$(basename -- "$1")"
+
+    # ステップ 1: 実体パスからリポジトリルートを取得
+    if ! _local_rhf_repo_root=$(git -C "$_local_rhf_dir" rev-parse --show-toplevel 2>/dev/null); then
+        return 2
+    fi
+    if [ -z "$_local_rhf_repo_root" ]; then
+        return 2
+    fi
+
+    # ステップ 2: filepath_real を repo-root 相対パスに正規化
+    _local_rhf_rel="${_local_rhf_real#${_local_rhf_repo_root}/}"
+    if [ "$_local_rhf_rel" = "$_local_rhf_real" ]; then
+        return 3
+    fi
+
+    # 成功: result-out 変数に書き込み（caller の repo_root / rel_path に dynamic scope で書き込み）
+    printf -v "$2" '%s' "$_local_rhf_repo_root"
+    printf -v "$3" '%s' "$_local_rhf_rel"
+    return 0
+}
+
 # Unit 003 (#654 / DR-002): 履歴ファイル staged 状態の自動判定 + 警告
 # step5↔step8 分裂（履歴ファイルが Unit 完了 commit に含まれない事故）の構造的予防として、
 # --mode base 経路の正常終了フックから呼び出される。
 # warning 契約は .aidlc/cycles/v2.5.5/plans/unit-003-plan.md § warning 契約 を SoT とする:
 #   - 出力先: stderr 一本化
-#   - 文言:   "warning: history file unstaged: <絶対パス>"
+#   - 文言:   "warning: history file unstaged: <呼び出し元が渡した filepath / 現運用では絶対パス>"
 #   - exit:   常に 0（後方互換性保護、git diff 失敗時も警告スキップで return 0）
 # パス比較は repo-root 相対へ正規化してから grep -Fxq で完全一致判定（部分マッチ防止）。
+# Unit 006 (#702): symlink 解決 + repo-root 取得 + 相対パス化は _resolve_history_filepath_in_repo
+# に集約。本関数の解決失敗は全て silent return 0（既存契約のまま）。
 check_history_staged_status() {
     local filepath="$1"
-    local filepath_real_dir filepath_real
-    local repo_root rel_path staged_files
+    local repo_root rel_path filepath_real staged_files
 
-    # ステップ 0: filepath の symlink 解決（macOS の /tmp → /private/tmp 等への対応）
-    # `pwd -P` で実体パス化することで、後続の git rev-parse --show-toplevel 出力との
-    # 接頭辞比較が成立するようにする（symlink 経由パスでの誤判定回避）。
-    # Round 1 指摘 #1 対応: || true 経由で $? が握りつぶされる挙動を避け、
-    # if ! ... の形で元の終了コードを保持して分岐する。
-    if ! filepath_real_dir=$(cd "$(dirname -- "$filepath")" 2>/dev/null && pwd -P 2>/dev/null); then
-        # 親ディレクトリにアクセス不能 → 判定不能 → warning スキップ
+    # ステップ 0-2: symlink 解決 + repo-root 取得 + 相対パス化（共通ヘルパに集約）
+    # いかなる解決失敗ケースでも silent return 0（既存挙動を維持）
+    if ! _resolve_history_filepath_in_repo "$filepath" repo_root rel_path; then
         return 0
     fi
-    if [ -z "$filepath_real_dir" ]; then
-        return 0
-    fi
-    filepath_real="${filepath_real_dir}/$(basename -- "$filepath")"
-
-    # ステップ 1: 実体パスからリポジトリルートを取得
-    if ! repo_root=$(git -C "$filepath_real_dir" rev-parse --show-toplevel 2>/dev/null); then
-        # 判定不能（git リポジトリ外 等）→ warning スキップ
-        return 0
-    fi
-    if [ -z "$repo_root" ]; then
-        return 0
-    fi
-
-    # ステップ 2: filepath_real を repo-root 相対パスに正規化
-    rel_path="${filepath_real#${repo_root}/}"
-    if [ "$rel_path" = "$filepath_real" ]; then
-        # 接頭辞除去に失敗（filepath が repo 配下でない）→ 判定不能 → warning スキップ
-        return 0
-    fi
+    filepath_real="${repo_root}/${rel_path}"
 
     # ステップ 3: git diff --cached の出力（既に repo-root 相対）と比較
     if ! staged_files=$(git -C "$repo_root" diff --cached --name-only -- "$filepath_real" 2>/dev/null); then
@@ -623,35 +658,26 @@ _commit_operations_round_history() {
     local filepath="$1"
     local cycle="$2"
     local round="$3"
-    local filepath_real_dir filepath_real repo_root rel_path
+    local repo_root rel_path filepath_real
+    local _rc
 
-    # ステップ 0: filepath の symlink 解決（check_history_staged_status と同じパターン）
-    if ! filepath_real_dir=$(cd "$(dirname -- "$filepath")" 2>/dev/null && pwd -P 2>/dev/null); then
-        echo "warning: cannot resolve history file directory, skipping auto-commit: $filepath" >&2
-        return 0
-    fi
-    if [ -z "$filepath_real_dir" ]; then
-        echo "warning: cannot resolve history file directory, skipping auto-commit: $filepath" >&2
-        return 0
-    fi
-    filepath_real="${filepath_real_dir}/$(basename -- "$filepath")"
-
-    # ガード 1: git リポジトリ外 → skip
-    if ! repo_root=$(git -C "$filepath_real_dir" rev-parse --show-toplevel 2>/dev/null); then
-        echo "warning: not inside a git repository, skipping auto-commit: $filepath" >&2
-        return 0
-    fi
-    if [ -z "$repo_root" ]; then
-        echo "warning: not inside a git repository, skipping auto-commit: $filepath" >&2
-        return 0
-    fi
-
-    # repo-root 相対パスへ正規化
-    rel_path="${filepath_real#${repo_root}/}"
-    if [ "$rel_path" = "$filepath_real" ]; then
-        echo "warning: history file is outside repository, skipping auto-commit: $filepath" >&2
-        return 0
-    fi
+    # ステップ 0-2: symlink 解決 + repo-root 取得 + 相対パス化（共通ヘルパに集約 / Unit 006 #702）
+    # exit code 別に既存の warning 文言を維持し、いずれも return 0（既存挙動を維持）。
+    _resolve_history_filepath_in_repo "$filepath" repo_root rel_path
+    _rc=$?
+    case "$_rc" in
+        0) : ;;
+        1) echo "warning: cannot resolve history file directory, skipping auto-commit: $filepath" >&2
+           return 0 ;;
+        2) echo "warning: not inside a git repository, skipping auto-commit: $filepath" >&2
+           return 0 ;;
+        3) echo "warning: history file is outside repository, skipping auto-commit: $filepath" >&2
+           return 0 ;;
+        *) # fail-safe: helper 契約逸脱（想定外 exit code）→ 未初期化値の使用を避けて skip
+           echo "warning: unexpected helper exit code ($_rc), skipping auto-commit: $filepath" >&2
+           return 0 ;;
+    esac
+    filepath_real="${repo_root}/${rel_path}"
 
     # ガード 2: 事前 staged 状態 → skip（呼び出し側の手動 commit 管理を尊重）
     local pre_staged_files
@@ -1257,4 +1283,9 @@ main() {
     exit 0
 }
 
-main "$@"
+# Unit 006 (#702): test 側で helper を単独 source 経由で呼ぶための execution guard。
+# 直接 `bash write-history.sh ...` で実行時は main を実行（既存挙動）、
+# source 経由で読み込まれた場合（bats テスト等）は main を実行しない。
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

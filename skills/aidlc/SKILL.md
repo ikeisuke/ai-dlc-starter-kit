@@ -258,50 +258,36 @@ AI-DLC オーケストレーター - 利用可能なアクション:
 
 ### バージョン表示
 
-`version` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
+`version` アクション時に以下を実行する。共通初期化フローは実行しない。
 
-#### 必須: 安全な呼び出し経路（CLI モード）
+#### 実行手順
 
-AI エージェント（Claude Code Bash ツール / 同等の subprocess 経由）は **必ず以下の CLI モード経由で呼び出すこと**:
+1. **base dir 解決**: SKILL.md 冒頭の `Base directory for this skill:` 行から `{base}` の絶対パスを取得する
+2. **CLI 実行**: `bash {base}/scripts/lib/version.sh` を引数省略で実行（v2.6.3 以降、引数省略時はスクリプト位置から marketplace.json を自己解決する）
+3. **正規化と表示**: stdout を取得し、前後空白トリム + 先頭 `v` プレフィックス除去後に以下を表示
 
-```bash
-bash {SKILLベースディレクトリ}/scripts/lib/version.sh {marketplace.json のパス}
-```
+   ```text
+   AI-DLC Starter Kit v{version}
+   ```
 
-- `{SKILLベースディレクトリ}` は SKILL.md と同じディレクトリの絶対パス
-- `{marketplace.json のパス}` は `{SKILLベースディレクトリ}/../../.claude-plugin/marketplace.json` を絶対パス化したもの（後述「制約事項」の `..` 例外を参照）
-- 終了コード 0（成功）/ 1（コンテンツエラー）/ 2（実行環境エラー）と stderr メッセージは `read_marketplace_version()` 関数仕様に従う
-- 実装は `scripts/lib/version.sh` 末尾の CLI モードガード（v2.6.1 Unit 001 / Issue #688）で提供される
+4. **フォールバック**: 上記コマンドが exit 非 0 を返した場合、または stdout が空文字の場合は以下を表示
 
-#### 表示処理
+   ```text
+   AI-DLC Starter Kit (version unknown)
+   ```
 
-1. 上記 CLI モード呼び出しで version 文字列を取得（stdout）
-2. 値を正規化する: 前後の空白をトリムし、先頭の `v` プレフィックスがあれば除去する。空文字・不正値・読取不能の場合は不存在と同じ扱いとする
-3. 以下のフォーマットで表示:
+#### 禁則【絶対遵守】
 
-```text
-AI-DLC Starter Kit v{version}
-```
-
-4. `marketplace.json` が存在しない、または正規化後の値が空の場合（CLI モードコマンドが exit 非 0 を返した場合）:
-
-```text
-AI-DLC Starter Kit (version unknown)
-```
+- **内部知識からの推測禁止**: AI エージェントは Bash ツール呼び出しを行わずに学習データ等から version 文字列を推測出力してはならない。CLI 実行が失敗した場合は必ず `(version unknown)` フォールバックを使用する
+- **base dir の組み立てミス防止**: `{base}` は SKILL.md 冒頭行から直接取得する。プラグインキャッシュパス（`~/.claude/plugins/...`）の構造を推測で再構築してはならない
 
 #### 注意: Bash ツール経由の zsh OOM 回避ルール
 
-**一般化規約**: AI エージェントが Bash ツール経由で外部スクリプトを呼び出す際、引数文字列内のコマンド置換構文（`$(...)` および backtick `` ` ``）が zsh `command_not_found_handler` の無限再帰により OOM クラッシュを誘発する既知のクラスバグがある（Issue #697 / 関連クローズ済 #688）。本 SKILL.md の `/aidlc v` 経路を含む、Bash ツール経由のあらゆる外部スクリプト呼び出しに本ルールを適用する。規約本文は [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン) を Single Source of Truth とし、運用例・禁止パターンサンプル・実装スニペットは [`steps/common/bash-tool-safety.md`](./steps/common/bash-tool-safety.md) に集約する。
+AI エージェントが Bash ツール引数文字列にコマンド置換構文（`$(...)` / backtick）を含めると、zsh `command_not_found_handler` の無限再帰により OOM クラッシュを誘発する既知のクラスバグがある（Issue #697 / 関連 #688）。本ルールは Bash ツール経由のあらゆる外部スクリプト呼び出しに適用される。
 
-**`/aidlc v` 経路固有の例**: ユーザー対話の zsh シェルから以下のように手動で `source` した場合、上記クラスバグの一例として OOM クラッシュする（Issue #688 で v2.6.1 Unit 001 として個別対応済）。AI エージェントはこの経路を使用しないこと:
-
-```text
-（非対象 / 危険 / 使用しない）
-source {SKILLベースディレクトリ}/scripts/lib/version.sh
-read_marketplace_version /path/to/marketplace.json
-```
-
-CLI モード（`bash <path>` 経由）/ subprocess source（`bash -c "source <path>; read_marketplace_version ..."`）/ 他の bash スクリプトからの `source` 経由は **すべて安全に動作します**。
+- **規約本文 SoT**: [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン)
+- **運用例 SoT**: [`steps/common/bash-tool-safety.md`](./steps/common/bash-tool-safety.md)
+- `/aidlc v` 経路固有の経緯（zsh 手動 source 等）は `scripts/lib/version.sh` 冒頭コメント + Issue #688 を参照
 
 ## 制約事項
 

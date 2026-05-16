@@ -1,5 +1,19 @@
 # プロジェクトルール（ai-dlc-starter-kit）
 
+## AI エージェント振る舞いルール
+
+### AI 自発のコンテキストリセット推奨を出さない
+
+AI エージェントは context window 使用量を直接観測できない。「長くなった」「品質確保のため」を理由にしたリセット・区切り推奨は推測ベースの定型句であり、ユーザーが必要としていない選択肢提示でフローを止める原因になるため、自発的に出さない。
+
+例外（提示してよい場合）:
+
+- ユーザーからの明示要請（「リセットしたい」「長くなってきた」「中断したい」等）
+- スキル / プロンプト側で明示的に規定された提示ステップ
+- 観測可能な根拠あり（tool 出力の切り詰め `... [truncated]` / context window エラー / 制限超過警告）。観測したログを根拠として併記する
+
+代わりに進行状況のサマリと次アクションを提示してメッセージを終え、続行可否はユーザーに委ねる。
+
 ## 設計原則
 
 ### ドッグフーディング特殊処理を本体に埋めない
@@ -65,6 +79,23 @@ zsh の `command_not_found_handler` フック内でフック自身が呼び出�
 | PR Ready 化 | `operations-release.sh pr-ready --body-file <file>`（v2.6.2 Unit 001 整備済） | （該当なし） |
 | 外部 CLI レビュー | `codex exec - < <file>`（stdin 経由）/ `claude -p` の wrapper script 経由 | `codex exec "..."` |
 
+### printf -v 系 result-out 関数の local 命名規約
+
+関数引数で結果書き込み先変数名を受け取り `printf -v "$result_var"` で書き込む関数（**result-out 関数**）は、関数内部の作業用 local 宣言を必ず関数固有プレフィックス（`_local_<関数省略名>_<名>` 形式）で namespace 化する。
+
+- **理由**: caller と同名の local を宣言すると、bash の dynamic scope により `printf -v "$result_var"` の書き込み先が caller の変数ではなく **本関数の内部 local** になり、caller の変数が空のまま残る致命的バグを引き起こす（v2.6.2 で CI Migration Tests を停止させた実例。修正コミット da212aea）
+- **検出困難性**: shellcheck SC2030 / SC2031 は subshell 由来の scope 問題には反応するが、`printf -v "$caller_var"` パターンの dynamic scope shadowing は捕捉しない。本命名規約が主防御線となる
+- **適用対象**: result-out 関数の内部作業用 local、および result-out 関数を呼び出して結果を受け取る caller 側の結果受け取り用 local。`_result_var` / `_input` / `_base` 等の標準パラメータバインディング名は、関数間で一貫しており shadowing リスクがないため慣例名のまま許容する
+- **適用例**: `skills/aidlc-migrate/scripts/lib/path-guard.sh` の result-out 関数群（`_aidlc_migrate_path_guard_realpath_m_into` の `_local_m_resolved` 等）
+
+本サブセクションは規約本文の Single Source of Truth である。具体的な before/after スニペット・運用補助は `skills/aidlc/steps/common/bash-tool-safety.md` を参照する。
+
+### codex exec の stdin 待ちガード
+
+`codex exec` / `codex exec resume` は非対話 subprocess 環境（Bash ツール / hooks / CI 等）では、positional 引数で prompt を渡していても stdin が EOF にならない限り `Reading additional input from stdin...` で待ち続けハングする（codex-cli の設計）。非対話環境では **`</dev/null` で stdin を閉じる**（または上の参考表のとおりファイルを stdin にリダイレクトする `codex exec - < <file>`）こと。これを怠ると AI エージェントが「セルフレビューへの無自覚な降格」を起こす。
+
+codex 非対話実行運用の規約 SoT は `skills/reviewing-common/reviewing-common-base.md` の「stdin 待ちガードルール」セクション。本記述はその横断参照である。
+
 ### 詳細運用ガイド
 
 具体的な禁止パターンサンプル・安全パターン実装スニペット・経路別の運用例は `skills/aidlc/steps/common/bash-tool-safety.md` を参照する。本セクションは規約本文の Single Source of Truth であり、他ドキュメント（AGENTS.md / SKILL.md / steps/common/* 等）は本セクションを参照する。
@@ -73,3 +104,5 @@ zsh の `command_not_found_handler` フック内でフック自身が呼び出�
 
 - #697（primary / feedback / v2.6.2 で本規約セクション新設）
 - #688（CLOSED / v2.6.1 で `/aidlc v` 経路を CLI モード化で個別解決済 / 本規約はその一般化）
+- #706（v2.6.3 / printf -v 系 result-out 関数の local 命名規約を追加）
+- #703（v2.6.3 / codex exec の stdin 待ちガード横断ルールを追加 / 運用 SoT は reviewing-common-base.md）
