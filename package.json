@@ -1,0 +1,7 @@
+{
+  "name": "ai-dlc-starter-kit",
+  "private": true,
+  "scripts": {
+    "lint:md": "npx markdownlint-cli2 \"docs/translations/**/*.md\" \"prompts/**/*.md\" \"*.md\""
+  }
+}

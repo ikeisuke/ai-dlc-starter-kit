@@ -21,3 +21,6 @@
 
 # AI-DLC runtime cache (gh project state cache, scope check results, audit evidence)
 .aidlc/cache/
+
+# Node modules (markdownlint-cli2 等の将来的なローカルインストール用)
+node_modules/

@@ -11,8 +11,8 @@ repo 全体の markdown lint 実行手段を `npm run lint:md` の統一エン�
 ## 責務
 
 - `package.json` の `scripts.lint:md` に統一エントリポイント定義を追加（正本）
-- AI レビュー手順書（`steps/common/review-flow.md` 等）への統一コマンド明記
-- 既存 `npx markdownlint-cli2` 呼び出しと同一動作（同一バイナリ・同一設定ファイル参照）の確認
+- AI レビュー外部 CLI 実行基盤の SoT である `skills/reviewing-common/reviewing-common-base.md` の 1 箇所に統一コマンド `npm run lint:md` を明記（散在防止のため反映先を 1 箇所に固定）
+- 既存 `npx markdownlint-cli2` 呼び出しと同一の設定ファイル参照（`.markdownlint-cli2.jsonc` / `.markdownlint.json` / `.markdownlintignore`）を確認
 - markdownlint で新規エラー 0 件
 
 ## 境界
@@ -64,9 +64,9 @@ Medium（chore / 開発体験改善）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-17
+- **完了日**: 2026-05-17
+- **担当**: AI Agent (Claude Code)
 - **エクスプレス適格性**: -
 - **適格性理由**: -

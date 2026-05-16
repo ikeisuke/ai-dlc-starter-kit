@@ -117,3 +117,23 @@ Inception Phase で行った重要な意思決定を時系列で記録する。C
   - Unit 004: 振り返り opt-in フラグの最終命名（`[rules.retrospective].auto_issue_creation` または同等）
   - 既存ガード（対話必須トークン / cap / mirror）の手動再現結果（DR として記録）
   - `predecessor_resolve_issue` 5 経路の手動再現結果（DR として記録）
+
+---
+
+## DR-008: `scripts.lint:md` の glob を `**/*.md` から CI と同一値に変更
+
+- **日時**: 2026-05-17
+- **判断者**: AI Agent（Construction Phase Unit 003 ビルド・テスト実行時に発見、整合性のため自主判断）
+- **背景**: 当初 `package.json` の `scripts.lint:md` に `npx markdownlint-cli2 "**/*.md" "#node_modules"` を採用したが、smoke 実行で過去サイクル成果物（`.aidlc/cycles/v1.0.1/` 等）の lint 違反を多数巻き込むことが判明。本 Unit の目的「AI レビュー / CI / ローカル開発で同一の lint 結果」と矛盾。
+- **意思決定**: glob を `.github/workflows/pr-check.yml` の `markdownlint-cli2-action` の `globs`（`docs/translations/**/*.md` / `prompts/**/*.md` / `*.md`）と同一値に変更
+- **理由**:
+  - DR-005「正本は `package.json` の `scripts.lint:md`」を満たしつつ、scope が CI と一致することで「同一の lint 結果」を担保
+  - 既存 `run-markdownlint.sh` は別 scope（`.aidlc/cycles/<current>/**/*.md` 含む）を持つが、これは AI-DLC サイクル作業の局所 lint 用途であり統一エントリポイントの責務とは分離
+  - 過去サイクル成果物の lint 違反は本 Unit のスコープ外（別途必要なら別 Issue）
+- **影響**:
+  - `npm run lint:md` は 14 ファイル lint で 0 errors を達成
+  - 計画 / ドメインモデル / 論理設計の該当箇所も同 glob で同期更新
+- **代替案と却下理由**:
+  - 過去サイクル成果物を全 lint 対応 → スコープクリープ。本 Unit の責務外
+  - `**/*.md` を採用し ignores を拡張 → ignores 配置の SoT が `.markdownlint-cli2.jsonc` に偏り、glob と ignores の二箇所 SoT 管理リスク
+- **関連**: DR-005（SoT 確定）、Unit 003、Issue #709、Issue #713（将来の版固定）
