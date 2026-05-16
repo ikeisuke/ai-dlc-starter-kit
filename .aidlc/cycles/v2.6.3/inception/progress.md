@@ -9,7 +9,7 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-05-14 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-05-14 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-05-14 |
-| 6. Construction用progress.md作成 | Construction Phaseで実施 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | - | 2026-05-14 (Construction Phase は Unit 定義ファイルベースで自律進行、`construction/progress.md` 不要) |
 
 ## 現在のステップ
 
