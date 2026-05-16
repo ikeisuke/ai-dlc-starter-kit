@@ -8,7 +8,7 @@
 | inception.02-preparation | 完了 |
 | inception.03-intent | 完了（Round 1-3 clean / auto_approved） |
 | inception.04-stories-units | 完了（Round 1-2 clean / 両ゲート auto_approved） |
-| inception.05-completion | 進行中（Milestone作成・Issue紐付け・PR作成完了 / squash待ち） |
+| inception.05-completion | 完了（Milestone v2.6.4 (#17) / Issue 紐付け / PR #711 / squash 7d9114a8） |
 
 ## メタ情報
 
