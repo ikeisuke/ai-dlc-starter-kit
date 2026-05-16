@@ -7,6 +7,28 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.3] - 2026-05-16
+
+v2.6.2 サイクルの振り返り・Codex レビュー指摘・実運用フィードバック由来の 7 件のバックログ Issue を解決する patch サイクル。規約 SoT の網羅性・AI 実行の再現性・セキュリティ・保守性を底上げする。新機能追加なし。
+
+### Fixed
+
+- **`review-flow.md` の MD038/no-space-in-code 違反 3 件の修正**: `skills/aidlc/steps/common/review-flow.md` の review-summary パス区切り規約説明箇所に存在する MD038 違反 3 件を、「複数パスは backtick で囲み区切る」という規約意図を維持したまま記法書き換えで解消。`review-flow.md` 単体の markdownlint MD038 エラー 0 件を達成（Unit 005 / #705）
+- **AI 自発のコンテキストリセット推奨禁止ルール追加**: AI エージェントが context window 使用量を直接観測できない前提で、「長くなった」「品質確保のため」を理由にした自発的リセット・区切り推奨が定型句化してフローを止める問題への対策として、`CLAUDE.md` に「AI 自発のコンテキストリセット推奨を出さない」ルールを追加。例外（ユーザー明示要請 / スキル規定 / 観測可能な根拠）を併記
+
+### Changed
+
+- **AI エージェント Bash 実行の安全規約整備（#706 + #703 統合 Unit）**: v2.6.2 Unit 003（#677 fix）の Codex レビューで顕在化した 2 つの規約不備を、「AI エージェント Bash 実行の安全規約」テーマで統合して解消する（Unit 001）
+    - **#706 / printf -v 系 result-out 関数の local 命名規約**: 関数引数で結果書き込み先変数名を受け取り `printf -v "$result_var"` で書き込む関数（result-out 関数）に対し、関数内部の作業用 local を必ず関数固有プレフィックス（`_local_<関数省略名>_<名>` 形式）で namespace 化する規約を `CLAUDE.md` の「AI エージェント Bash ツール経由の安全パターン」セクションに追加（規約本文 SoT）。あわせて `skills/aidlc-migrate/scripts/lib/path-guard.sh` の result-out 関数 6 つの内部 local を新命名規約に統一（予防リファクタ）。bash dynamic scope shadowing による「printf -v が caller 変数ではなく本関数の内部 local に書き込む」致命的バグ（v2.6.2 で CI Migration Tests を停止させた実例 / 修正コミット da212aea）の構造的再発防止
+    - **#703 / codex exec の stdin 待ちガード横断ルール**: `codex exec` / `codex exec resume` が非対話 subprocess 環境（Bash ツール / hooks / CI）で stdin EOF まで待ち続けハングする codex-cli の設計特性に対し、「非対話環境では `</dev/null` で stdin を閉じる」「ファイルを stdin にリダイレクトする `codex exec - < <file>`」運用を必須化する「stdin 待ちガードルール」を `skills/reviewing-common/reviewing-common-base.md` に新設（SoT）。`CLAUDE.md` / `AGENTS.md` に横断ルールとして追記し、9 同期コピーへ伝播。AI エージェントの「セルフレビューへの無自覚な降格」を構造的に予防
+    - **検証**: tests/migration bats 49/49 pass / sync verify 9/9 OK / markdownlint 0 / bash-substitution 0 / skill-reference 0。`path-guard.sh` の公開関数シグネチャは不変
+- **`operations-release.sh cmd_squash_712` への `--cycle` バリデーション導入（security）**: `skills/aidlc/scripts/operations-release.sh` の `cmd_squash_712` に対し、既存 `validate_cycle`（`skills/aidlc/scripts/lib/validate.sh`）を適用してパストラバーサル文字列による `.aidlc/cycles/<cycle>/...` 参照先逸脱を防止。不正値時は exit 1 + tab 区切り stderr `error\tsquash-712:invalid-cycle\t<value>` で停止。v2.6.2 Unit 003 で `__squash_712_check_history_clean` 経路に最小限のトラバーサル拒否を入れた範囲を `cmd_squash_712` 全体に拡張（Unit 002 / #701）
+- **`/aidlc v` 経路の再現性向上**: バージョン表示経路で AI エージェントがバージョンを内部知識から誤推測したり marketplace.json のパス組み立てを誤ったりする再現性問題を、SKILL.md「バージョン表示」節の文言追加（A 案）と `skills/aidlc/scripts/lib/version.sh` の自己解決化（C 案）の併用で構造的に解消。`version.sh` を引数なし CLI モードでスクリプト自身の位置から marketplace.json を内部解決するよう改修し、引数渡しは test override として後方互換維持。SKILL.md「バージョン表示」節の zsh OOM 経緯 / 関数仕様詳細 / Unit・Issue メタ情報を退避して本文を圧縮（Unit 003 / #698）
+- **Operations Phase マージ前 CI 通過確認フローの SoT 化**: `skills/aidlc/steps/operations/` 配下のマージ前ステップに「CI 通過確認 + 失敗時の修復経路」フローを Single Source of Truth として明文化。`gh pr checks <PR>` / `gh run list --branch <branch>` での全 CI ジョブ通過確認と、失敗時の 3 分岐（修復可能 / 修復不能 / 構造的不整合）を SoT 化。`check-cycle-phase-completion` の明示的呼び出しと `reviewing-operations-premerge` スキルとの重複観点・補完関係も記述。CI 設定（`.github/workflows/`）自体への変更はない（Unit 004 / #694）
+- **`write-history.sh` の symlink 解決＋repo-root 取得ロジックの共通ヘルパ化**: `skills/aidlc/scripts/write-history.sh` の `check_history_staged_status()` と `_commit_operations_round_history()` で重複していた「symlink 解決 → repo-root 取得 → repo-root 相対パス正規化」処理を共通ヘルパ関数に統一。caller 別の失敗時挙動（前者は silent return 0、後者は stderr warning + return 0）は従来どおり維持。v2.6.2 Unit 003 の Codex レビュー Round 1 LOW #2 指摘を起点とする予防リファクタ（Unit 006 / #702）
+
+---
+
 ## [2.6.2] - 2026-05-12
 
 v2.6.0 で実施した 3 領域（振り返りフロー独立化 / marketplace.json への version SoT 一本化 / GitHub Projects 移行）の defer 完成、振り返り分離・Operations フロー周辺で表面化した致命的バグ修正、加えて v2.6.1 Issue #688 の根本原因クラス（AI エージェント Bash プロンプト経由の zsh OOM）の一般化予防 を一括解消し、v2.6 系の運用基盤を機能完成版に固定する patch リリース。
