@@ -12,7 +12,9 @@
 
 - 共通ヘルパ関数（例: `_resolve_history_filepath_in_repo()`）を追加し、`(repo_root, rel_path)` を出力するインターフェースに統一
 - `check_history_staged_status()` と `_commit_operations_round_history()` の双方が共通ヘルパを使用するよう改修し重複コードを解消
-- パス解決失敗時のスキップ挙動（warning + return 0）を従来どおり維持
+- パス解決失敗時のスキップ挙動を **caller 別に従来どおり維持**:
+  - `check_history_staged_status()`: 失敗時は **silent return 0**（stderr warning なし、既存契約のまま）
+  - `_commit_operations_round_history()`: 失敗時は **stderr warning + return 0**（既存の 3 種類の warning 文言を維持）
 - 双方が同一ヘルパを呼ぶことを bats またはコード差分（静的確認）で検証
 
 ## 境界
@@ -61,9 +63,9 @@ Low
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-16
+- **完了日**: 2026-05-16
+- **担当**: Claude
 - **エクスプレス適格性**: -
 - **適格性理由**: -
