@@ -31,7 +31,7 @@
 
 - **gate 役割分離パターン**:
   - Phase 1 (行ベース diff、既存) は **diagnostic 降格**: 人間可読の補助表示のみ。**exit code 判定には使わない**
-  - Phase 2 (構造比較、新規) のみが **gate**: キー集合 + 型一致で exit code を決定する正規ガード
+  - Phase 2 (構造比較、新規) のみが **gate**: キー集合 + 値型 + 値そのものの三層比較で exit code を決定する正規ガード（同名キーで値だけ異なる drift も検出）
   - これによりコメント/整形差分由来の従来 false positive を完全排除（#714 の「構造的予防」設計意図と整合）
 - **後方互換維持**: exit code セマンティクス（0=ok / 1=mismatch / 2=error:not-found）を維持しつつ 3=parse-error / 4=tool-missing を拡張
 - **stderr 分離**: machine-readable な failure contract は stderr に出力し、人間可読 stdout と分離
@@ -53,18 +53,19 @@ bin/
 | 出力ストリーム | 形式 |
 |---------------|------|
 | stdout | `sync:ok` または `sync:mismatch` + Phase 1 (diagnostic) 人間可読差分 + 修復方法 + コマンド例 |
-| stderr | machine-readable failure contract（Phase 2 gate 検出時のみ）。形式: `error:key-missing-in-source:<path>` / `error:key-missing-in-copy:<path>` / `error:type-mismatch:<path>:<source_type>:<copy_type>` / `error:parse-error:<file>:<message>` / `error:tool-missing:<tool>` |
-| exit code | 0=ok / 1=mismatch (key-missing or type-mismatch) / 2=error:not-found (既存) / 3=error:parse-error (新規) / 4=error:tool-missing (新規) |
+| stderr | machine-readable failure contract（Phase 2 gate 検出時のみ）。形式: `error:key-missing-in-source:<path>` / `error:key-missing-in-copy:<path>` / `error:type-mismatch:<path>:<source_type>:<copy_type>` / `error:value-mismatch:<path>:<source_value_json>:<copy_value_json>` / `error:parse-error:<file>:<message>` / `error:tool-missing:<tool>` |
+| exit code | 0=ok / 1=mismatch (key-missing / type-mismatch / value-mismatch) / 2=error:not-found (既存) / 3=error:parse-error (新規) / 4=error:tool-missing (新規) |
 
 ### Phase 2 構造比較ロジック（gate / 正規判定）
 
 0. **依存ツール存在確認**: `command -v dasel` / `command -v jq` 不在時 → `error:tool-missing:<tool>` stderr 出力 + exit 4
-1. **パース**: `dasel` で正本 TOML を JSON 変換 → jq でキーパス + 値型を列挙。dasel エラー時 → `error:parse-error:<file>:<message>` stderr + exit 3
-2. 同様にコピー TOML をキーパス + 値型集合に展開
+1. **パース**: `dasel` で正本 TOML を JSON 変換 → jq の `tostream` で末端 scalar の `(path, type, value)` を列挙（値は `tojson` 形式の文字列化）。dasel エラー時 → `error:parse-error:<file>:<message>` stderr + exit 3
+2. 同様にコピー TOML を `(path, type, value)` 集合に展開
 3. 対称差を計算:
    - 正本にのみあるキー → `error:key-missing-in-copy:<path>` stderr 出力
    - コピーにのみあるキー → `error:key-missing-in-source:<path>` stderr 出力
-   - 両方にあるが型不一致 → `error:type-mismatch:<path>:<source_type>:<copy_type>` stderr 出力
+   - 両方にあるが型不一致 → `error:type-mismatch:<path>:<source_type>:<copy_type>` stderr 出力（型不一致の時点で値比較は skip）
+   - 型一致だが値不一致 → `error:value-mismatch:<path>:<source_value_json>:<copy_value_json>` stderr 出力（同名キーで値だけ異なる drift を検出）
 4. **gate 判定**: いずれか 1 件でも検出 → exit 1 / すべて一致 → exit 0（Phase 1 は diagnostic のため exit には影響しない）
 5. Phase 1 mismatch でも Phase 2 一致なら exit 0（コメント・整形差分由来の false positive を排除）
 

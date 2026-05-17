@@ -9,19 +9,24 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-05-17 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-05-17 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-05-17 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | 完了 | construction/units/（Unit 別 progress 管理に移行済み） | 2026-05-17 |
 
 ## 現在のステップ
 
-次回: 6. Construction用progress.md作成（Inception 完了処理）
+完了
 
 ## 完了済みステップ
 
-なし
+- 1. Intent明確化（2026-05-17）
+- 2. 既存コード分析（2026-05-17）
+- 3. ユーザーストーリー作成（2026-05-17）
+- 4. Unit定義（2026-05-17）
+- 5. PRFAQ作成（2026-05-17）
+- 6. Construction用progress.md作成（2026-05-17 / Unit 別 progress 管理に移行済み・物理ファイル不要）
 
 ## 次回実行時の指示
 
-Intent明確化から開始してください。
+Inception 完了済み。`/aidlc construction` で次フェーズへ。
 
 ## 再開時に読み込むファイル
 
