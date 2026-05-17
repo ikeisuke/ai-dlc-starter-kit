@@ -10,7 +10,7 @@ Construction Phase 1（設計フェーズ）の設計起草前に変更対象機
 
 ## 責務
 
-- `skills/aidlc/templates/construction_plan_template.md` に「## 事前コード読込み」セクション + 3 サブセクション（(a) Read 対象ファイル + 目的 / (b) 設計時に意識すべき挙動 / (c) 既存実装に基づく代替案検討）を追加
+- `skills/aidlc/steps/construction/02-design.md` のドメインモデル設計ステップ冒頭に「## 事前コード読込み」サブステップ + 3 観点（(a) Read 対象ファイル + 目的 / (b) 設計時に意識すべき挙動 / (c) 既存実装に基づく代替案検討）を追加（Intent §含まれるもの に基づくスコープ調整: 元責務の `templates/construction_plan_template.md` は v2.6.5 時点で非存在のため、`steps/construction/02-design.md` への直接記述に切り替え。Intent の「`steps/construction` 配下: design 起草前の事前コード Read 必須化」と整合）
 - `skills/aidlc/steps/construction/` の設計起草フローステップに「事前コード Read → 設計起草」の二段階分離を明示
 - `skills/reviewing-construction-design/SKILL.md` の `architecture` focus 観点に「事前コード読込みセクション存在 / 内容充足」チェックを追加
 - 判定条件（見出し不在 or サブセクション空）と失敗時アクション（設計レビュー不合格 / 修正されるまで反復）を SoT 化
@@ -63,9 +63,9 @@ High
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-17
+- **完了日**: 2026-05-17
+- **担当**: AI (Claude Code)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
