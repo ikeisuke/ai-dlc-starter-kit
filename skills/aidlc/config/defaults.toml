@@ -71,6 +71,17 @@ language = "日本語"
 [rules.github]
 milestone_enabled = false
 
+[rules.inception]
+# Inception Phase の Unit 定義承認前に実行する「直近サイクル完了 Unit との重複チェック」で
+# 参照する直近サイクル数（v2.6.5 / #712 / Unit 001）
+# - 既定 3。完了 Unit スラグ + 関連 Issue CLOSED 状態と新規候補スラグを突合し、重複候補があれば
+#   AskUserQuestion で「withdraw / continue_with_reason」を問う
+# - 0 を指定すると重複検出を完全スキップ（明示的な opt-out）
+# - 不正値（負数 / 非整数 / 文字列）時は read-config.sh ラッパー側で
+#   stderr に warn 出力 + デフォルト値 3 にフォールバック（fail-safe: 重複検出を継続）
+# - 詳細仕様は steps/inception/04-stories-units.md の「ステップ 4a」セクションを SoT として参照
+dedup_lookback_cycles = 3
+
 [rules.retrospective]
 # 許容値（v2.5.1 / 5 値 enum）:
 #   - "interactive"        : 04-completion §1.5 直前に wizard を起動して 5 値のいずれかに確定（新規セットアップ既定）
