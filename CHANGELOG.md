@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.4] - 2026-05-17
+
+v2.6.3 サイクル振り返り由来 Issue (#694) と直近の backlog Issue (#710 / #709 / #708) を解決する patch サイクル。`operations-release.sh` への `validate_cycle` 検証拡張、markdown lint 統一エントリポイント化、振り返りスキル `aidlc-retrospective` の opt-in 基盤導入を対象とする。Unit 001（マージ前 CI 通過確認 SoT 化）は v2.6.3 Unit 004 で完全実装済みのため取り下げ。
+
+### Changed
+
+- **`operations-release.sh` への `validate_cycle` 検証拡張**: `cmd_record_release_prep_commit` に `validate_cycle` を必須適用し、`cmd_pr_ready` の `--cycle` 引数が指定された場合も同検証を通すことで、サブコマンド全体で cycle 文字列のトラバーサル拒否契約を統一。v2.6.3 で `cmd_squash_712` に導入した拡張を Operations Phase ステップ7 全体に展開（Unit 002 / #708）
+- **markdown lint 実行手段の統一エントリポイント化**: `npm run lint:md` を SoT として確立し、`package.json` の `scripts.lint:md` を正本に据えて関連ドキュメント・スクリプトの呼び出しを統一。AI エージェント・人間ユーザー双方が同一コマンドで markdown lint を起動できるよう、ガイド類の参照を更新（Unit 003 / #709）
+- **振り返りスキル `aidlc-retrospective` の opt-in 基盤導入（patch サブセット）**: `aidlc-retrospective` スキルに opt-in フラグ基盤を導入し、振り返り Issue 起票方針見直し（#710）への段階的改修の前段として後方互換を確保。フラグ命名・5 経路後方互換は DR-009、既存ガード挙動維持は DR-010 で定義。新規 bats `tests/retrospective/opt-in-foundation.bats` 10/10 pass + 既存 retrospective 系 213 件全 pass + `predecessor-issue-handoff.bats` 17/17 pass で回帰なしを確認。完全廃止 / `Retrospective: {cycle}` タイトル運用見直し / 振り返り Issue API の破壊的変更は v2.7.0+ に明示除外（Unit 004 / #710）
+
+### Other
+
+- **Unit 001 取り下げ**: v2.6.4 Inception 時に切り出した「Operations Phase マージ前 CI 通過確認 + 修復フローの SoT 化」（#694）が v2.6.3 Unit 004 で完全実装済みであることを Construction Phase 着手時の差分突合で確認したため取り下げ。Inception 差分検出漏れは振り返り改善として Issue #712 で追跡
+
+---
+
 ## [2.6.3] - 2026-05-16
 
 v2.6.2 サイクルの振り返り・Codex レビュー指摘・実運用フィードバック由来の 7 件のバックログ Issue を解決する patch サイクル。規約 SoT の網羅性・AI 実行の再現性・セキュリティ・保守性を底上げする。新機能追加なし。
