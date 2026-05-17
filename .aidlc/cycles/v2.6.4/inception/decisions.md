@@ -114,9 +114,9 @@ Inception Phase で行った重要な意思決定を時系列で記録する。C
 ## 追記予定
 
 - **Construction Phase で追加されうる DR**:
-  - Unit 004: 振り返り opt-in フラグの最終命名（`[rules.retrospective].auto_issue_creation` または同等）
-  - 既存ガード（対話必須トークン / cap / mirror）の手動再現結果（DR として記録）
-  - `predecessor_resolve_issue` 5 経路の手動再現結果（DR として記録）
+  - Unit 004: 振り返り opt-in フラグの最終命名（**DR-009 で確定**: `[rules.retrospective].auto_issue_creation`）
+  - 既存ガード（対話必須トークン / cap / mirror）の挙動維持確認（**DR-010 で記録**: 既存 bats 全 pass で代替）
+  - `predecessor_resolve_issue` 5 経路の挙動維持確認（**DR-009 で記録**: 既存 bats `predecessor-issue-handoff.bats` で全 5 経路網羅 pass）
 
 ---
 
@@ -137,3 +137,76 @@ Inception Phase で行った重要な意思決定を時系列で記録する。C
   - 過去サイクル成果物を全 lint 対応 → スコープクリープ。本 Unit の責務外
   - `**/*.md` を採用し ignores を拡張 → ignores 配置の SoT が `.markdownlint-cli2.jsonc` に偏り、glob と ignores の二箇所 SoT 管理リスク
 - **関連**: DR-005（SoT 確定）、Unit 003、Issue #709、Issue #713（将来の版固定）
+
+---
+
+## DR-009: Unit 004 opt-in 基盤フラグ命名・挙動・`predecessor_resolve_issue` 5 経路後方互換確認
+
+- **日時**: 2026-05-17
+- **判断者**: AI 設計（Construction Phase Unit 004 設計時に確定 / 計画レビュー Round 1 指摘反映後の最終形）
+- **背景**: Unit 定義は「config フラグ名は Construction Phase 設計で確定」としていた。また 5 経路後方互換は bats か手動再現で確認する方針だった
+- **意思決定**:
+  1. **フラグ命名**: `[rules.retrospective].auto_issue_creation`（boolean、デフォルト `true`）
+  2. **配置**: `skills/aidlc/config/defaults.toml` の `[rules.retrospective]` セクション（既存 `feedback_mode` / `feedback_max_per_cycle` と同階層）
+  3. **失敗時の挙動**: `read-config.sh` exit 0=値あり / 1=キー不在（`true` fallback）/ 2+=取得失敗（warn + `true` fallback / fail-open）。診断可能性は warn ログで担保
+  4. **`predecessor_resolve_issue` 5 経路の後方互換確認**: 既存 bats `tests/predecessor-issue-handoff.bats` が 5 経路すべてを網羅しているため、手動再現は実施せず bats pass で代替確認
+- **理由**:
+  1. 命名は既存 `rules.retrospective.*` 体系との整合性を最優先（read-config.sh の key alias 追加不要）
+  2. fail-open は「集約 Issue 起票を既存通り継続」方向であり、後方互換性を最優先する v2.6.4 サイクル方針と一致
+  3. 既存 bats による網羅確認は手動再現より再現性が高く、CI でも継続的に保護される
+- **5 経路の bats カバレッジ（実測 / commit 7c935a5d 時点）**:
+
+  | 経路 | `resolution_path` | カバレッジ bats |
+  |------|-------------------|----------------|
+  | 1 | `milestone_and_label` | P1 / P2 / P3 / P15 |
+  | 1' | `label_fallback` | P18 / P15 |
+  | 2 | `spool_fallback` | P3 / P7 / P19 / P20 / P15 |
+  | 3 | `v2_5_0_compat` | P8 / P9 / P15 |
+  | 4 | `warn_continue` | P10 / P11 / P15 |
+
+  実行結果: `bats tests/predecessor-issue-handoff.bats` → 17/17 pass（Unit 004 commit 7c935a5d 時点の実測 / `/tmp/unit004-bats-predecessor.log` 参照）
+
+- **影響**:
+  - `skills/aidlc/config/defaults.toml` に新規キー追加
+  - `skills/aidlc-retrospective/steps/retrospective.md` §1.5 Step 2 末尾に opt-in 判定ブロック追加
+  - `skills/aidlc-retrospective/SKILL.md` 末尾に v2.6.4 サイクル対象外項目 / v2.7.0+ defer 記載追加
+  - 新規 bats `tests/retrospective/opt-in-foundation.bats` 10 件追加（OI1〜OI10）
+- **関連**: DR-002, DR-010
+
+---
+
+## DR-010: Unit 004 既存ガード（対話必須トークン / cap 判定 / mirror 送信判断）の挙動維持確認
+
+- **日時**: 2026-05-17
+- **判断者**: AI 設計（Construction Phase Unit 004 設計・実装時に確定）
+- **背景**: Unit 定義は既存ガードの挙動が破壊されていないことを「対話必須トークン / cap 判定 / mirror 送信判断」の 3 観点で確認する手順を規定していた
+- **意思決定**: 3 観点すべて、既存 bats による pass で代替確認とする（commit 7c935a5d 時点）
+- **確認結果**:
+
+  | ガード | 確認手段 | 結果 |
+  |--------|---------|------|
+  | 対話必須トークン | `tests/retrospective-dialog-token.bats` 全 pass + `tests/retrospective-issue-create.bats` 内の dialog-required exit 4 ケース全 pass | 挙動維持 |
+  | cap 判定 | `tests/retrospective-api-facade.bats` 内の `retrospective_api_check_cap` 関連ケース全 pass + `tests/retrospective-mirror/cap.bats` 全 pass | 挙動維持 |
+  | mirror 送信判断 | `tests/retrospective-mirror/send.bats` / `record.bats` / `detect.bats` / `dedup.bats` 全 pass | 挙動維持 |
+
+  実行結果総計（commit 7c935a5d 時点 / Unit 004 完了直前実測）:
+  - `predecessor-issue-handoff.bats`: 17/17 pass
+  - `retrospective-*.bats`（top-level 9 ファイル）: 123/123 pass
+  - `retrospective/*.bats` + `retrospective-mirror/*.bats`（subdir 10 ファイル）: 63/63 pass
+  - 新規 `tests/retrospective/opt-in-foundation.bats`: 10/10 pass
+  - **合計 213/213 pass / 0 failure**
+
+- **理由（手動再現を実施しない判断根拠）**:
+  - 既存 bats は CI で継続実行されるため、Unit 004 改修後も継続的に保護される（再現性が高い）
+  - 本 Unit の変更は §1.5 Step 2 末尾の opt-in 判定ブロック追加 + Step 3 直前のスキップ条件拡張のみで、既存ガード機構（§1.0 mode 確定 / Step 2 cap 判定 / Step 4 dialog token 検証 / Step 5 mirror 送信判断）の呼び出し経路自体に変更がない
+  - opt-out 経路は Step 4 / 5 をスキップするため、本来評価される token / mirror 経路には到達せず、ガード機構の評価ロジック自体には影響しない
+- **既存ガード機構と opt-out の関係（再掲）**:
+
+  | ガード | opt-out 経路での評価 | 説明 |
+  |--------|---------------------|------|
+  | 対話必須トークン | スキップ | Step 4 `retrospective_api_create_issue` 未呼び出しのため token 記録 / 検証経路に到達しない |
+  | cap 判定 | 評価される | Step 2 で既存通り評価。cap 超過と opt-out のいずれが先に成立しても Step 3-5 スキップに収束 |
+  | mirror 送信判断 | スキップ | Step 5 未到達のため mirror 送信 AskUserQuestion は呼ばれない |
+
+- **影響**: 本 DR は確認結果の記録のみ。コード変更は DR-009 で確定済
+- **関連**: DR-009, Unit 004 Plan §既存ガードへの影響 表

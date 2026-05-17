@@ -28,3 +28,14 @@ argument-hint: "[対象サイクル / 例: v2.6.0]"
 - 本スキルから `/aidlc` スラッシュコマンドを呼ばない
 - 本スキルから `skills/aidlc/steps/operations/**` を読まない
 - 内部 lib（`retrospective-issue.sh` / `feedback-mode.sh` 等）を直接 `source` しない（公開 API 層 `retrospective-api.sh` 経由のみ）
+
+## v2.6.4 サイクル対象外項目（v2.7.0+ で対応予定）
+
+本スキルは v2.6.4 / #710 / Unit 004 で **opt-in 基盤フラグ** (`rules.retrospective.auto_issue_creation`) と `predecessor_resolve_issue` の 5 経路後方互換確保までを実施した（デフォルト動作不変）。以下は v2.7.0+ で対応予定:
+
+- 振り返り Issue 自動起票の完全廃止（`auto_issue_creation` デフォルト値 `false` 化）
+- `Retrospective: {cycle}` タイトル運用の本格的見直し
+- `retrospective_api_*` の破壊的変更
+- Try/改善単位での個別 Issue 起票実装（1 Try = 1 Issue ループ）
+
+参照: Issue #710 / v2.6.3 サイクル振り返り議論

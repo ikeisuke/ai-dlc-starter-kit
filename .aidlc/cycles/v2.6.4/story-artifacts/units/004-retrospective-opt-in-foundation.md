@@ -20,7 +20,7 @@
     1. **経路 1（milestone+label）**: `gh available × milestone_enabled=true × Issue ヒット` の状況を再現（テスト用 cycle で gh CLI 経由で milestone + retrospective label 付き Issue を 1 件作成）→ `predecessor_resolve_issue "{{TEST_CYCLE}}"` を実行 → `resolution_path: "milestone_and_label"` および `issue_url` が想定 Issue を指すことを確認
     2. **経路 1' (label fallback)**: 同条件で `milestone_enabled=false` に変更 → `resolution_path: "label_fallback"` を確認
     3. **経路 2（spool fallback）**: gh 不可 + spool 存在の状況を再現 → `resolution_path: "spool_fallback"` を確認
-    4. **経路 3（v2.5.0 互換）**: 経路 1/1'/2 すべて 0 件 + `cycles/{{TEST_CYCLE}}/operations/retrospective.md` 存在 → `resolution_path: "v250_compat"` を確認
+    4. **経路 3（v2.5.0 互換）**: 経路 1/1'/2 すべて 0 件 + `cycles/{{TEST_CYCLE}}/operations/retrospective.md` 存在 → `resolution_path: "v2_5_0_compat"` を確認（正式値は `predecessor-issue.sh` 実装に準拠 / 計画ファイルおよび DR 記録もすべて `v2_5_0_compat` に統一する）
     5. **経路 4（warn+continue）**: すべて 0 件 → `resolution_path: "warn_continue"` を確認
   - 既存 bats テストがあれば pass、なければ上記 5 経路の手動再現結果（実行コマンド・期待出力・実出力・判定結果）を `inception/decisions.md` に DR として残す
 - **既存ガードの動作維持**:
@@ -87,9 +87,20 @@ Medium（refactor / 将来基盤）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-17
+- **完了日**: 2026-05-17
+- **担当**: AI Agent (Claude Code) + codex (review)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+
+### 完了確認
+
+- 計画レビュー: codex 2R（Round 1 で 3 件指摘 → 全 resolve / Round 2 で 0 件）→ auto_approved
+- 設計レビュー: codex 1R clean → auto_approved
+- コードレビュー: codex 1R clean → auto_approved
+- 統合レビュー: codex Round 1 で本指摘 1 件（Unit 定義の状態更新）→ 本コミットで resolve / Round 2 で再確認
+- 関連 DR: DR-009（フラグ命名・5 経路後方互換）/ DR-010（既存ガード挙動維持確認）
+- テスト: 新規 bats `tests/retrospective/opt-in-foundation.bats` 10/10 pass + 既存 retrospective 系 213 件全 pass + `predecessor-issue-handoff.bats` 17/17 pass
+- markdownlint: 14 ファイル lint で 0 errors
+- shellcheck: 新規 bats clean
