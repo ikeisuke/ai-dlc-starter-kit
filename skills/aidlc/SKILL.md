@@ -177,11 +177,31 @@ ARGUMENTS文字列を以下のルールでパースする:
 
 ### 独立フロー委譲
 
-`setup` / `migrate` / `feedback` / `retrospective` は独立スキルに委譲する。親スキルは委譲指示の出力のみを行い、成功/失敗の検出はAIエージェント層の責務。
+`setup` / `migrate` / `feedback` / `retrospective` は独立スキルに委譲する。AI エージェントが Skill ツールで委譲先スキルを直接 invoke し、テキスト案内を介さず自動継続実行する（v2.6.5 / #717 / Unit 005 で規約化）。
 
-委譲手順:
-1. `additional_context` がある場合は引数として付加（単一の生文字列をそのまま透過）
-2. 「`/aidlc-{action} {additional_context}` を実行してください。」と出力して処理を終了
+#### ブロック A: Skill ツール経由 invoke 規約 (primary)
+
+- **適用範囲（検証状況）**:
+  - **Claude Code**: 実証済み（必須適用）
+  - **Codex CLI**: Operations Phase 振り返り前段で検証予定（任意適用 / 検証結果は記録）
+  - **Gemini CLI**: 環境未整備、検証範囲外（記録のみ、規約の必須適用対象外）
+- AI エージェントは `/aidlc {action}`（`action ∈ {setup, migrate, feedback, retrospective}`）受信時、テキスト案内を介さず Skill ツールで `aidlc-{action}` スキルを invoke する
+- `additional_context`（`/aidlc {action} {ctx}` の `{ctx}` 部分）は委譲先スキルに **単一の生文字列としてそのまま透過渡し** する
+- **成功時出力契約（責務境界 固定）**:
+  - 最終応答主体: 委譲先スキル単独 (`aidlc-{action}` の出力)
+  - 親スキル責務: 委譲先 invoke のみ。invoke 後の追加メッセージ出力は禁止（二重応答抑止）
+  - 順序: 親スキル invoke → 委譲先応答（1 順序のみ / 「実行済み報告」も出力しない）
+
+#### ブロック B: フォールバック仕様 (Skill ツール利用不可時)
+
+- **発火条件**: (a) Skill ツール未提供 / (b) 1 回目呼び出しが構造的失敗（ツール not found / 権限エラー / 即時エラー応答）
+- **親スキル責務**: 1 回目呼び出し試行のみ。失敗時は再試行せず即フォールバックに降格
+- **fallback 出力**:
+  - `additional_context` 非空時: `「/aidlc-{action} {additional_context}」を実行してください。`（半角スペース 1 個区切り）
+  - `additional_context` 空時: `「/aidlc-{action}」を実行してください。`（余分なスペース / 末尾空白なし）
+- **復帰条件・タイミング**: 次ターン以降、ユーザーが再度 `/aidlc {action}` を入力した場合は通常通り `skill_tool` モード（ブロック A）から開始する。フォールバック降格は **その 1 ターン内のみの局所的判定**
+
+#### ブロック C: 委譲先テーブル
 
 | action | 委譲先スキル |
 |--------|------------|

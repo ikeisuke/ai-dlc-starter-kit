@@ -440,6 +440,34 @@ git status --porcelain .aidlc/config.toml
 
 **終了条件**: `.aidlc/config.toml` の未コミット差分なし（`git status --porcelain` で空行）→「マージ実行確認」へ進む
 
+**マージ前完結契約最終確認【ユーザー選択: automation_mode 非依存・例外なし】**:
+
+PR マージ実行前に、マージ前完結契約（progress.md ステップ7「完了」確定・修正コミット記録完了）の最終確認を `AskUserQuestion` で行う。本確認は SKILL.md「AskUserQuestion 使用ルール」の「ユーザー選択」種別であり、`automation_mode` に関わらず（`full_auto` を含む全モードで）自動化対象外。**例外なし常時実行**（修正コミット欠落 / 空 PR / 緊急マージ等の例外も非対象として扱い、必ず 1 回提示する）。
+
+**挿入順序の不変条件**: 既存「マージ方法確定 → 設定保存フロー → 未コミット差分検出ガード」のすべての完了後・「マージ実行確認」の直前で発動する。
+
+- **header**: `マージ前完結契約最終確認`
+- **question**:
+
+  ```text
+  PR #{pr_number} のマージ前に、マージ前完結契約（progress.md ステップ7「完了」確定・修正コミット記録完了）を最終確認します。
+
+  凍結対象ファイル（マージ後 write-history.sh exit 3 で編集ガードされます）:
+  - .aidlc/cycles/{cycle}/operations/progress.md
+  - 当該サイクル成果物全般（plans / story-artifacts / design-artifacts / construction / history）
+
+  記録漏れ（修正コミット未追加、レビューサマリ未追記、history 未追記等）がないことを確認してください。
+  ```
+
+- **選択肢（`choice_id` 固定）**:
+
+  | choice_id | label | 動作 |
+  |-----------|-------|------|
+  | `proceed_to_merge` | 記録漏れなし、マージに進む | 後続「マージ実行確認」へ進む |
+  | `back_to_record` | 記録を追加する（§7.6 / §7.7 に戻る） | §7.6/§7.7 へ戻り履歴・記録を追記 → §7.8〜§7.12.6 を**再通過** → 本ゲートに再到達（再入契約: 段階依存維持のため途中工程スキップ禁止） |
+
+**役割分担**: 本確認 = 「記録完了 / 凍結対象確認」、直後の「マージ実行確認」 = 「マージ方法と PR 番号の最終承認」。責務直交のため両者は必ず連続提示する（v2.6.5 / #641 / Unit 003 で導入）。
+
 **マージ実行確認【ユーザー選択: automation_mode に関わらず常にユーザー確認必須】**:
 
 マージ方法の確定後、マージスクリプト実行前に `AskUserQuestion` でマージ実行の可否をユーザーに確認する。PRマージは破壊的・不可逆操作であり、SKILL.md「AskUserQuestion使用ルール」の「ユーザー選択」に分類されるため、`automation_mode` に関わらず（`full_auto` を含む全モードで）自動化対象外。

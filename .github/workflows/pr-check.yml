@@ -124,6 +124,29 @@ jobs:
         if: steps.detect.outputs.should_skip != 'true'
         uses: actions/checkout@v4
 
+      - name: Install dasel and jq (v2.6.5 Unit 004 - Phase 2 structural comparison deps)
+        if: steps.detect.outputs.should_skip != 'true'
+        env:
+          # SECURITY-10 supply-chain: バージョン pin + sha256 検証必須 (mutable latest 禁止)
+          # 更新時は dasel リリースページ <https://github.com/TomWright/dasel/releases> から
+          # 該当バージョンの dasel_linux_amd64.sha256 値をコピーする
+          DASEL_VERSION: "v3.10.1"
+          DASEL_SHA256: "e35d899a846828c87884e1834ac1f58df2d4d03b32af0d6ee12c8d207b81b1fb"
+        run: |
+          set -eu
+          # jq is preinstalled on ubuntu-latest, dasel needs explicit install
+          if ! command -v dasel >/dev/null 2>&1; then
+            tmp_dir=$(mktemp -d)
+            trap 'rm -rf "$tmp_dir"' EXIT
+            curl -sSLf "https://github.com/TomWright/dasel/releases/download/${DASEL_VERSION}/dasel_linux_amd64" -o "$tmp_dir/dasel"
+            # SECURITY-10: sha256 整合性検証 (CI で失敗時はバージョンまたは hash の同期忘れ)
+            echo "${DASEL_SHA256}  $tmp_dir/dasel" | sha256sum -c -
+            sudo install -m 0755 "$tmp_dir/dasel" /usr/local/bin/dasel
+          fi
+          command -v dasel
+          command -v jq
+          dasel --help >/dev/null 2>&1 || dasel version
+
       - name: Check defaults.toml sync between aidlc and aidlc-setup
         if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-defaults-sync.sh
