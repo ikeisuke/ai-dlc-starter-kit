@@ -185,11 +185,49 @@ retrospective_api_check_cap "$mode" "$current_count" "$limit" > /tmp/aidlc-cap.t
 grep '^over=true$' /tmp/aidlc-cap.txt > /tmp/aidlc-over.txt 2>/dev/null || : > /tmp/aidlc-over.txt
 ```
 
-`/tmp/aidlc-over.txt` が非空（cap 超過）の場合は Step 3 / Step 4 / Step 5 をすべてスキップして §1.6 へ進む。
+#### opt-in 基盤フラグ（v2.6.4 / #710 / Unit 004）
+
+`auto_issue_creation = false` が設定されている場合、集約 Issue 起票（Step 3/4/5）をスキップする。
+`read-config.sh` の終了コードを区別して、未設定キーと取得失敗を fail-open で扱う:
 
 ```bash
-# prefill フック呼び出し（cap 超過時はスキップ）
-if [[ ! -s /tmp/aidlc-over.txt ]]; then
+# read-config.sh の終了コード: 0=値あり / 1=キー不在（→ true fallback）/ 2+=取得失敗（→ true fallback + warn）
+set +e
+scripts/read-config.sh rules.retrospective.auto_issue_creation > /tmp/aidlc-auto-issue.txt 2>/tmp/aidlc-auto-issue.err
+rc_auto_issue=$?
+set -e
+case "$rc_auto_issue" in
+    0)
+        read auto_issue < /tmp/aidlc-auto-issue.txt
+        ;;
+    1)
+        # キー不在: defaults.toml の値（true）に解決されていないケースは通常発生しないが、保険として true fallback
+        auto_issue="true"
+        ;;
+    *)
+        # 取得失敗: warn 表示 + 既定（既存動作）として true を採用（fail-open）
+        echo "[warn] auto_issue_creation の読み取りに失敗しました（rc=$rc_auto_issue）。既定動作（auto_issue_creation=true 相当）で続行します。" >&2
+        cat /tmp/aidlc-auto-issue.err >&2 2>/dev/null || :
+        auto_issue="true"
+        ;;
+esac
+if [[ "$auto_issue" == "false" ]]; then
+    echo "opt-out=true" > /tmp/aidlc-opt-out.txt
+else
+    : > /tmp/aidlc-opt-out.txt
+fi
+```
+
+`/tmp/aidlc-over.txt` が非空（cap 超過）**または** `/tmp/aidlc-opt-out.txt` が非空（auto_issue_creation=false / opt-out）の場合は Step 3 / Step 4 / Step 5 をすべてスキップして §1.6 へ進む。opt-out 経路では以下のメッセージを info 表示する:
+
+```text
+集約 Issue 起票をスキップしました（auto_issue_creation=false / v2.6.4 / #710 opt-in 基盤）。
+KPT は振り返りローカル記録として保持されます。Try/改善が必要な場合は個別 Issue 起票を検討してください。
+```
+
+```bash
+# prefill フック呼び出し（cap 超過 / opt-out 時はスキップ）
+if [[ ! -s /tmp/aidlc-over.txt && ! -s /tmp/aidlc-opt-out.txt ]]; then
     draft_yaml_path=/tmp/aidlc-retro-draft.yml
     : > "$draft_yaml_path"
     retrospective_api_prefill "$cycle" "$kpt_md_path" > "$draft_yaml_path" || : > "$draft_yaml_path"

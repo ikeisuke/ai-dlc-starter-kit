@@ -106,6 +106,12 @@ gemini -p "<レビュー指示>" --sandbox
 - 機密情報（秘密鍵・トークン・個人情報等）はレビュー出力に含めない
 - セルフレビューは外部ツールに比べて品質が劣る可能性がある
 
+## markdown lint 標準実行コマンド
+
+starter kit 内 AI レビュー導線で markdown lint を実行する標準コマンドは `npm run lint:md`（SoT: repo ルート `package.json` の `scripts.lint:md`）。AI レビュー / CI / ローカル開発が同一エントリポイントから markdownlint-cli2 を起動できる（v2.6.4 Unit 003 / Issue #709）。
+
+**適用境界**: 本ルールは starter kit 内 AI レビュー導線（reviewing-common 系スキル経由）に限定する。consumer プロジェクト一般向け導線・上位スキル横断 docs（README.md など）には適用しない（consumer が `package.json` 不在でも誤って `npm run lint:md` を要求されないため）。既存 `npx markdownlint-cli2` 直接呼び出し経路は後方互換のため残存する。
+
 ## stdin 待ちガードルール
 
 非対話 subprocess 環境（Claude Code の Bash ツール / hooks / CI 等）で `codex exec` / `codex exec resume` を実行する場合、**`</dev/null` で stdin を閉じることを必須要件とする**（本セクションが codex 非対話実行運用の規約 SoT）。
