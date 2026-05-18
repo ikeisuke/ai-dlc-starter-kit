@@ -123,6 +123,62 @@ retrospective_api_prefill() {
     fi
 }
 
+# retrospective_api_aggregate_enabled
+# v2.6.6 / #710 / Unit 001
+# 集約 Issue 起票 opt-in フラグ (rules.retrospective.aggregate_issue_enabled) の値を返す。
+# stdout: 常に "true" または "false" を 1 行
+# exit:   常に 0 (hard fail させない / fail-safe)
+# fail-safe フォールバック:
+#   - read-config.sh exit 1 (キー不在 / 既定動作)            : stdout="false" / warn なし
+#   - read-config.sh exit 0 + 不正値 (true|false 以外)       : stdout="false" / stderr warn
+#   - read-config.sh exit 2+ (読み取り層エラー)              : stdout="false" / stderr warn
+retrospective_api_aggregate_enabled() {
+    local _local_aggregate_enabled_value=""
+    local _local_aggregate_enabled_rc=0
+    local _local_aggregate_enabled_stderr_file
+    _local_aggregate_enabled_stderr_file="${TMPDIR:-/tmp}/aidlc-aggregate-enabled-stderr.$$"
+
+    # caller の errexit 状態を変更しないよう、command substitution を if で評価し
+    # exit code を直接捕捉する（set +e / set -e で caller 状態を上書きしない）
+    if _local_aggregate_enabled_value=$(
+        "$_RETROSPECTIVE_API_BASE/scripts/read-config.sh" rules.retrospective.aggregate_issue_enabled 2>"$_local_aggregate_enabled_stderr_file"
+    ); then
+        _local_aggregate_enabled_rc=0
+    else
+        _local_aggregate_enabled_rc=$?
+    fi
+
+    rm -f "$_local_aggregate_enabled_stderr_file" 2>/dev/null || true
+
+    case "$_local_aggregate_enabled_rc" in
+        0)
+            case "$_local_aggregate_enabled_value" in
+                true|false)
+                    printf '%s\n' "$_local_aggregate_enabled_value"
+                    return 0
+                    ;;
+                *)
+                    printf '[warn] retrospective_api_aggregate_enabled: read-config.sh が不正値 "%s" を返したため既定 false にフォールバックします\n' \
+                        "$_local_aggregate_enabled_value" >&2
+                    printf 'false\n'
+                    return 0
+                    ;;
+            esac
+            ;;
+        1)
+            # キー不在 / defaults.toml fallback 失敗時 = 既定動作扱い
+            printf 'false\n'
+            return 0
+            ;;
+        *)
+            printf '[warn] retrospective_api_aggregate_enabled: read-config.sh が rc=%s を返したため既定 false にフォールバックします\n' \
+                "$_local_aggregate_enabled_rc" >&2
+            printf 'false\n'
+            return 0
+            ;;
+    esac
+}
+
 # ─── 公開 API（タイプ A / 副作用あり）────────────────────────────────
 
 # retrospective_api_record_response <cycle> <response>

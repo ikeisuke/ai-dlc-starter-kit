@@ -20,11 +20,12 @@ aidlc-retrospective skill の出力契約を「T 中心」に再定義し、`rul
 - skill 内に「`aggregate_issue_enabled` 仕様節」を新設し、`true` / `false` 時の動作差分（集約 vs T ループ）と cap 判定意味の連動を SoT として記述
 - `skills/aidlc/scripts/lib/retrospective-api.sh` への `retrospective_api_aggregate_enabled` 判定 helper 追加（既存関数シグネチャ不変）
 - `tests/fixtures/retrospective_v265_aggregate.json` 新規追加（SC-04 同等性オラクル fixture）
-- `aggregate_issue_enabled = true` 明示時の出力が上記 fixture と差分 0 で一致する bats テスト追加（**SC-04 の一次責務 = 同等性ロジック実装 / fixture 整備 / 同等性テスト実装は本 Unit に集約**、Unit 004 は最終 CI ジョブでの再 pass 確認のみの検証責務）
+- fixture スキーマ + 正規化規則 SoT + 公開契約 helper を整備し、構造検証 bats（fixture スキーマ存在 / 正規化 helper 動作 / helper 公開契約）を Unit 001 段階で完了（**SC-04 二段階基準の Unit 001 段階責務 = fixture スキーマ + 正規化 SoT + helper + 構造検証 bats まで / `fixture_status="schema-only"` 状態で完了 / 差分 0 同等性 bats は Unit 004 finalize 責務**）
 
 ## 境界
 
-- 本 Unit は仕様 SoT 定義と fixture 整備までを担う
+- 本 Unit は仕様 SoT 定義と fixture **スキーマ整備 + 公開契約 helper + 正規化規則 SoT** までを担う
+- **fixture 実値 finalize（SC-04 フル同等性 bats）は Unit 004 統合フェーズへ委譲**（v2.6.5 集約 Issue 実起票不在のため、Unit 004 で「v2.6.6 リリース時点 aggregate path コード生成 output」を SoT として実値確定 / 詳細は計画書「リスク」の二段階基準参照）
 - §1.5 Issue 起票ループの実装本体は Unit 004 (ストーリー 4A) に委譲
 - §1.2.5 セルフレビュー追加は Unit 002 に委譲
 - 三層検証 helper の追加は Unit 003 に委譲
@@ -68,9 +69,9 @@ High（Unit 004 の前提となる）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
-- **エクスプレス適格性**: -
-- **適格性理由**: -
+- **状態**: 完了
+- **開始日**: 2026-05-18
+- **完了日**: 2026-05-18
+- **担当**: AI-DLC (Claude Code / codex)
+- **エクスプレス適格性**: 適格
+- **適格性理由**: depth_level=standard / 設計レビュー 3R clean / 統合レビュー 3R clean / bats 22 件 (21 pass + 1 skip) / 二重 SoT sync ガード pass

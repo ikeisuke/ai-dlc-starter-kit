@@ -110,3 +110,27 @@
   - #704 / #652 は本サイクルで対応スコープが完結
 - **影響**: Operations Phase §7 リリース準備で PR 本文に上記記載を確認
 - **関連**: Intent「関連 Issue」、Unit 004 サブ責務 4C
+
+---
+
+## DR-009: SC-04 を「Unit 001 段階 = schema-only / Unit 004 finalize 段階 = 差分 0 同等性 bats」の二段階基準として確定
+
+- **日付**: 2026-05-18（Construction Phase / Unit 001 統合レビュー時）
+- **背景**:
+  - Unit 001 統合レビューで `gh issue list --milestone v2.6.5 --label retrospective` を確認した結果、v2.6.5 サイクルでは集約 retrospective Issue（`Retrospective: v2.6.5` タイトル）が **実起票されていない**ことが判明（v2.6.5 retrospective は #714 / #712 / #722 / #723 / #724 の個別 backlog / T Issue 単位で散発化されていた）
+  - Intent SC-04「`aggregate_issue_enabled = true` opt-in で旧 v2.6.5 と完全に同等の集約 Issue 起票結果が得られる」は v2.6.5 実起票実績不在のため、起草時点で前提誤りを含んでいた
+  - 計画書では「実起票取得不可なら blocked 扱い」としていたが、blocked にすると次サイクルでも同じ問題が発生し永遠に進まないリスク
+  - codex 統合レビュー Round 1 指摘 #2: SC-04 SoT が plan / domain / logical / 実装で不整合
+- **意思決定**: SC-04 を以下の二段階基準として確定:
+  - **Unit 001 段階基準**: fixture スキーマ + 正規化規則 SoT + 公開契約 helper + 構造検証 bats まで完了（`fixture_status="schema-only"` 状態を許容 / HLP4 等 read-config exit 1 直接モック困難系は skip 許容）
+  - **Unit 004 finalize 基準**: Unit 004 統合フェーズで aggregate path フル実起票テスト経由で fixture 実値確定（`fixture_status="finalized"`）+ 差分 0 同等性 bats を追加
+  - **fixture 生成元の置換**: Intent SC-04「v2.6.5 と完全同等」は v2.6.5 実起票実績不在のため「v2.6.5 リリース時点 aggregate path コード生成 output と等価」に運用上置換される
+- **理由**:
+  - v2.6.5 実起票不在の事実は変更不能（fixture 生成元として唯一の現実解が「v2.6.6 リリース時点コード生成 output の固定スナップショット」）
+  - 二段階化により Unit 001 は schema-only で完了し、Unit 004 統合フェーズに aggregate path 実起票テストと組み合わせて finalize を委譲する責務分担が明確化
+  - Intent の SC-04 達成基準そのものは Unit 004 完了時点で評価される（最終達成基準は維持 / 段階分割のみ）
+- **影響**:
+  - Unit 001 計画書 / Unit 定義 / ドメインモデル / 論理設計の 4 ドキュメントで二段階基準を統一明記
+  - Unit 004 計画書（未作成 / Construction Phase 後半で起草）に「fixture 実値 finalize + 差分 0 同等性 bats」を Unit 004 統合フェーズの完了条件として追加する必要あり
+  - fixture meta に `fixture_status` フィールドを設け、`schema-only` → `finalized` の遷移点を追跡可能にする
+- **関連**: Intent SC-04、Unit 001 統合レビュー Set 2 指摘 #2、Unit 004 計画書（Construction Phase 後半で起草予定）

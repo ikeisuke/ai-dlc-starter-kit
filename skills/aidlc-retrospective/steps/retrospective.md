@@ -1,5 +1,7 @@
 # /aidlc-retrospective 実行ステップ
 
+> **目的**: T を Issue 化して実行に繋げること。KPT は T を導くための手段です（v2.6.6 / #710 / Unit 001 / SC-01）。
+
 サイクルを振り返り、Keep（継続したい良い点）/ Problem（顕在化した課題）/ Try（次サイクル以降で試す改善）を整理する。Operations Phase §1（v2.5.x）から v2.6.0 で本スキルへ全量移転された。
 
 ## 0. bootstrap
@@ -160,6 +162,30 @@ fi
 ## 1.5 Issue 起票フロー（v2.5.1+ / Unit 002）
 
 分岐 (a) マージ前を選択した場合、以下の Issue 起票フローで retrospective Issue を作成する。
+
+### 1.5 前置き: `aggregate_issue_enabled` 仕様（v2.6.6 / #710 / Unit 001 / SC-04）
+
+本ステップの動作は `rules.retrospective.aggregate_issue_enabled`（既定 `false`）で切り替わる:
+
+| 値 | 動作 | cap 判定対象 |
+|----|------|-------------|
+| `false`（既定 / v2.6.6+） | T ループ起票（Unit 004 で実装予定 / v2.6.6 時点では `false` 設定時の本体動作は未実装 / 既存 §1.5 Step 3/4/5 を実行せず opt-in 経路にフォール） | サイクル内 T Issue 起票合計 |
+| `true`（opt-in / v2.6.5 互換） | 集約 retrospective Issue を 1 件起票（既存 Step 3/4/5 を実行） | 集約 Issue 1 件 |
+
+値解決は `retrospective_api_aggregate_enabled` helper 経由。
+
+**helper 公開契約（単一・固定）**:
+
+- stdout: 常に `true` または `false` の 1 行
+- exit code: 常に `0`（hard fail させない）
+- fail-safe フォールバック:
+  - `read-config.sh` exit 1（キー不在）: stdout=`false` / warn なし
+  - `read-config.sh` exit 0 + 不正値（`true|false` 以外）: stdout=`false` + stderr warn
+  - `read-config.sh` exit 2 以上（読み取り層エラー）: stdout=`false` + stderr warn
+
+cap 判定（`feedback_max_per_cycle`）の対象は本フラグで連動切り替え（`true`: 集約 Issue 1 件 / `false`: T Issue 起票合計）。
+
+> **v2.6.6 patch スコープ**: `false` 経路の T ループ起票本体は Unit 004 に委譲（v2.7.0+ で完全実装）。本 Unit 001 では仕様 SoT + フラグ + helper + 同等性 fixture までを担う。
 
 ### Step 1: feedback_mode の確定（§1.0 で完了済 / 復元）
 
