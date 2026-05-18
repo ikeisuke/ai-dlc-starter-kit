@@ -137,6 +137,59 @@ fi
 
 主因切り分けは markdown マトリクス記載（自由記述）で、機械判定は実施しない。
 
+## 1.2.5 Try 構造性セルフレビュー【必須・v2.6.6 / #704 / Unit 002 / SC-05】
+
+§1.2 主因切り分け完了後・§1.3 格納先選択前に、各 Try について「次回から気をつける / 個別チェック追加で済む表面的振り返り」になっていないかをユーザー自身が必須確認するセルフレビューを実施する。本ステップは `skills/aidlc/SKILL.md` の「ユーザー選択（振り返り内容の決定）」種別仕様に基づき、AI エージェントの auto mode 動作に**関わらず** `AskUserQuestion` を必須使用する。
+
+判別の参考情報として [判別ガイド（3 問固定: 再発性 / 対象レイヤ / 再入余地）](../templates/try_classification_guide.md) を参照すること。
+
+### 適用順序制約
+
+- §1.2.5 完了 → §1.3 格納先選択 → §1.5 Step 1〜3 → **§1.5 Step 4 直前で dialog token 発行** → 起票確認 AskUserQuestion → token verify → 起票
+- §1.2.5 の AskUserQuestion は **dialog token 発行前** に完了させる（TTL 300 秒の枠外で実施）
+
+### Step 1: 3 観点必須確認
+
+各 Try ごとに 1 回の `AskUserQuestion`（multiSelect=true）で以下 3 観点について「該当する観点」を選択させる。「該当しない」場合は何も選択しない（multiSelect で空選択を許容）。
+
+- **観点 A（気をつける逃げ）**: Try が「次回から気をつける / チェックを 1 項目追加する」で済んでいないか
+- **観点 B（個別 → 構造昇格）**: Problem を個別事象から構造課題（プロセス / 設計 / 規約 / SoT）に昇格できているか（**該当する = 昇格できていない**）
+- **観点 C（再発防止チェック逃げ）**: P → T が再発防止チェックの追加で逃げていないか
+
+AskUserQuestion 失敗時（ツール起動失敗 / 応答取得不能 / timeout）は `verdict=undecidable` 確定として Step 2 に進む（再試行しない / dialog token TTL 整合）。
+
+### Step 2: 判定 + 差し戻しループ
+
+`retrospective_api_evaluate_selfreview_verdict <a_yes> <b_yes> <c_yes> <rebuttal_count>` で `verdict` を取得し、以下のように分岐する（判定論理は SoT として helper 内に集約）:
+
+- `verdict=pass` → ループ終了、`selfreview_capped=false` 確定 → Step 3 へ
+- `verdict=rebuttal` → ユーザーに **Try 起草差し戻し** を提示し、`try_classification_guide.md` を再読してから Try を構造改善寄りに書き直す。差し戻し回数 `rebuttal_count` を `++` してから Step 1 に戻る（上限 3 回）
+- `verdict=capped` → ループ終了、`selfreview_capped=true` 確定 → Step 3 へ（**`retrospective_api_ensure_label` 呼び出しと T Issue 起票 payload へのラベル組み込みは §1.5 Step 4 直前で Unit 004 が実行する**）
+- `verdict=undecidable` → ループ終了、起票保留として §1.3 へ進む（§1.5 起票時は Unit 004 側で skip + warn 記録）
+
+### Step 3: 履歴記録
+
+`retrospective_api_record_selfreview <cycle> <try_id> <verdict> <selfreview_capped> <responses_json>` で `history/operations.md` に追記する。記録フォーマットは計画書「公開契約 §2」を SoT とする（以下構造）:
+
+```text
+- イベント: AIDLC retrospective セルフレビュー実行
+- サイクル: {{CYCLE}}
+- Try ID: try-<N>
+- 観点 A 応答: yes | no
+- 観点 B 応答: yes | no
+- 観点 C 応答: yes | no
+- 差し戻し回数: <0-3>
+- 確定 verdict: pass | rebuttal | capped | undecidable
+- selfreview_capped: true | false
+- 構造課題昇格根拠: <ユーザー追記テキスト / 未記入時は "-">
+```
+
+`selfreview_capped` 値は Unit 004（§1.5 起票本体）が読み取り、`true` の Try について `retrospective_api_ensure_label selfreview-capped` を呼び出してラベル付与 + T Issue 起票する。
+
+### Step 4: §1.3 格納先選択へ進む
+
+全 Try のセルフレビュー完了後、§1.3 格納先選択に進む。`verdict=undecidable` の Try は §1.5 起票時 Unit 004 が skip するため、ユーザーは別途その Try を再起草するか取り下げるかを判断する。
+
 ## 1.3 格納先の選択【必須・3 分岐から選ぶ】
 
 実施タイミングと output の性質に応じて AskUserQuestion で選択する:
