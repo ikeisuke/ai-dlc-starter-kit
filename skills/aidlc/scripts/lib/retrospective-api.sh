@@ -23,6 +23,8 @@
 #       retrospective_api_compose_body / retrospective_api_is_interactive_env
 #       retrospective_api_prefill / retrospective_api_update_issue
 #       retrospective_api_aggregate_enabled / retrospective_api_evaluate_selfreview_verdict
+#   タイプ B'（raw text 複数行 / 純粋値）:
+#       retrospective_api_extract_facts (v2.6.6 / #652 / Unit 003)
 #
 # 終了コード規約（呼出側で統一解釈）:
 #   0=成功 / 1=warn(recoverable) / 2=fatal / 3=マージ前完結契約違反 / 4=dialog-required
@@ -78,6 +80,8 @@ _RETROSPECTIVE_API_BASE=$(_retrospective_api_resolve_base) || {
 . "$_RETROSPECTIVE_API_BASE/scripts/lib/retrospective-llm-draft.sh" 2>/dev/null || true
 # shellcheck source=/dev/null
 . "$_RETROSPECTIVE_API_BASE/scripts/lib/retrospective-human-review.sh" 2>/dev/null || true
+# shellcheck source=/dev/null
+. "$_RETROSPECTIVE_API_BASE/scripts/lib/retrospective-fact-extract.sh" 2>/dev/null || true
 
 # ─── 公開 API（タイプ B / 純粋値）───────────────────────────────────
 
@@ -126,6 +130,83 @@ retrospective_api_prefill() {
         # フック未定義時は空 YAML フォールバック
         printf ''
     fi
+}
+
+# retrospective_api_extract_facts <cycle_id> [<jsonl_path>]
+# v2.6.6 / #652 / Unit 003
+# 1 cycle 分の事実テーブルを §1.1.5 互換 markdown 表として stdout に出力する。
+# jsonl_path 引数指定時のみ jsonl source を追加抽出する。
+#
+# 設計参照:
+#   .aidlc/cycles/v2.6.6/design-artifacts/domain-models/unit_003_fact_extract_helper_domain_model.md
+#   .aidlc/cycles/v2.6.6/design-artifacts/logical-designs/unit_003_fact_extract_helper_logical_design.md
+#
+# 引数:
+#   cycle_id   - 必須 / 例: v2.6.5 / .aidlc/cycles/{cycle_id}/ を base
+#   jsonl_path - 任意 / 指定時のみ jsonl source を追加抽出
+#
+# stdout: §1.1.5 互換 markdown 表（複数行）
+# stderr: warn メッセージ
+# exit:   0 = 成功 / 2 = fatal（引数不正 / cycle_dir 不在）
+#
+# 役割: L3 orchestrator。L1 extractors (private lib) を順次起動し、
+#       L2 renderer (private lib) に渡して stdout に出力するのみ。
+#       抽出ロジック・表示整形ロジックは持たない。
+retrospective_api_extract_facts() {
+    local _local_extract_facts_cycle="${1:-}"
+    local _local_extract_facts_jsonl="${2:-}"
+
+    if [[ -z "$_local_extract_facts_cycle" ]]; then
+        printf '[error] retrospective_api_extract_facts: cycle_id 必須引数が空です\n' >&2
+        return 2
+    fi
+
+    # cycle_id 形式バリデーション: v{major}.{minor}.{patch} を期待（厳格すぎないよう英数字 + . + - を許容）
+    if [[ ! "$_local_extract_facts_cycle" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        printf '[error] retrospective_api_extract_facts: cycle_id 形式不正 ("%s")\n' \
+            "$_local_extract_facts_cycle" >&2
+        return 2
+    fi
+
+    # cycle_dir 解決: AIDLC_BASE の親（リポジトリルート） + .aidlc/cycles/{cycle_id}
+    local _local_extract_facts_repo_root
+    _local_extract_facts_repo_root=$(cd "$_RETROSPECTIVE_API_BASE/../.." 2>/dev/null && pwd) || {
+        printf '[error] retrospective_api_extract_facts: repo root 解決失敗 (AIDLC_BASE=%s)\n' \
+            "$_RETROSPECTIVE_API_BASE" >&2
+        return 2
+    }
+    local _local_extract_facts_cycle_dir="$_local_extract_facts_repo_root/.aidlc/cycles/$_local_extract_facts_cycle"
+
+    if [[ ! -d "$_local_extract_facts_cycle_dir" ]]; then
+        printf '[error] retrospective_api_extract_facts: cycle ディレクトリ不在 (%s)\n' \
+            "$_local_extract_facts_cycle_dir" >&2
+        return 2
+    fi
+
+    # L1 extractors を順次起動 → 中間形式行群を一時ファイルに集約
+    local _local_extract_facts_intermediate
+    local _local_extract_facts_prev_umask
+    _local_extract_facts_prev_umask=$(umask)
+    umask 077
+    if ! _local_extract_facts_intermediate=$(mktemp "${TMPDIR:-/tmp}/aidlc-extract-facts.XXXXXX" 2>/dev/null); then
+        umask "$_local_extract_facts_prev_umask"
+        printf '[error] retrospective_api_extract_facts: mktemp 失敗\n' >&2
+        return 2
+    fi
+    umask "$_local_extract_facts_prev_umask"
+
+    {
+        _retrospective_fact_extract_decisions "$_local_extract_facts_cycle_dir"
+        _retrospective_fact_extract_review_summary "$_local_extract_facts_cycle_dir"
+        _retrospective_fact_extract_history "$_local_extract_facts_cycle_dir"
+        _retrospective_fact_extract_jsonl_optional "$_local_extract_facts_jsonl"
+    } > "$_local_extract_facts_intermediate"
+
+    # L2 renderer で markdown 表に整形して stdout
+    _retrospective_fact_extract_render_markdown < "$_local_extract_facts_intermediate"
+
+    rm -f "$_local_extract_facts_intermediate" 2>/dev/null || true
+    return 0
 }
 
 # retrospective_api_aggregate_enabled
