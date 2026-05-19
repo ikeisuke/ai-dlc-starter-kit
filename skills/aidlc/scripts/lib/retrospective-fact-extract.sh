@@ -222,6 +222,8 @@ _retrospective_fact_extract_history() {
     local _local_feh_events=()
     for _local_feh_file in "${_local_feh_files[@]}"; do
         # awk で「## 」行から始まる timestamp を取得、次の `- **ステップ**:` または `- **実行内容**:` から summary 抽出
+        # 優先順位: 同一 ts スコープ内で先に出現した方を採用（既存テストの「ステップ」優先動作維持）。
+        # ステップ不在で実行内容のみの history も拾えるよう両ラベル対応（コード review Round 1 指摘 #2 反映）。
         local _local_feh_extracted
         _local_feh_extracted=$(LC_ALL=C awk '
             /^## [0-9]{4}-[0-9]{2}-[0-9]{2}/ {
@@ -231,9 +233,9 @@ _retrospective_fact_extract_history() {
                 summary_captured = 0
                 next
             }
-            /^- \*\*ステップ\*\*:/ && ts != "" && summary_captured == 0 {
+            /^- \*\*(ステップ|実行内容)\*\*:/ && ts != "" && summary_captured == 0 {
                 step = $0
-                sub(/^- \*\*ステップ\*\*:[ ]*/, "", step)
+                sub(/^- \*\*(ステップ|実行内容)\*\*:[ ]*/, "", step)
                 next_step = step
                 summary_captured = 1
                 print ts " - " next_step
@@ -411,12 +413,22 @@ _retrospective_fact_extract_render_markdown() {
     )
 
     # stdin から FactRow を読み込み、item_id をキーに value / source_path を格納
+    # コード review Round 1 指摘 #1 反映: 上流の extractor が value / source_path 内の literal `|` を
+    # `\|` にエスケープしているため、`IFS='|' read` で直接分割すると `\|` も区切り文字として
+    # 誤分割される。NUL 不可・control char 競合最小の `\x01` を一時 placeholder として使い、
+    # 分割後に `\|` を復元する（後段 §439 行で `\|` → 半角空白に統一置換される設計を維持）。
     local -A _local_fer_render_value=()
     local -A _local_fer_render_source=()
-    local _local_fer_render_line
+    local _local_fer_render_line _local_fer_render_escaped
     local _local_fer_render_kind _local_fer_render_item _local_fer_render_val _local_fer_render_src
-    while IFS='|' read -r _local_fer_render_kind _local_fer_render_item _local_fer_render_val _local_fer_render_src; do
+    while IFS= read -r _local_fer_render_line; do
+        [[ -z "$_local_fer_render_line" ]] && continue
+        _local_fer_render_escaped="${_local_fer_render_line//\\|/$'\x01'}"
+        IFS='|' read -r _local_fer_render_kind _local_fer_render_item _local_fer_render_val _local_fer_render_src <<< "$_local_fer_render_escaped"
         [[ -z "$_local_fer_render_item" ]] && continue
+        # placeholder を `\|` に復元（後段の表示時 `\|` → 半角空白置換に揃える）
+        _local_fer_render_val="${_local_fer_render_val//$'\x01'/\\|}"
+        _local_fer_render_src="${_local_fer_render_src//$'\x01'/\\|}"
         # 同一 item_id が複数行ある場合は最後の行を採用（history のように 1 行集約済 / 通常は 1 件）
         _local_fer_render_value["$_local_fer_render_item"]="$_local_fer_render_val"
         _local_fer_render_source["$_local_fer_render_item"]="$_local_fer_render_src"
