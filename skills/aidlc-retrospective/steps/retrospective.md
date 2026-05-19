@@ -222,7 +222,7 @@ AskUserQuestion 失敗時（ツール起動失敗 / 応答取得不能 / timeout
 
 | 値 | 動作 | cap 判定対象 |
 |----|------|-------------|
-| `false`（既定 / v2.6.6+） | T ループ起票（Unit 004 で実装予定 / v2.6.6 時点では `false` 設定時の本体動作は未実装 / 既存 §1.5 Step 3/4/5 を実行せず opt-in 経路にフォール） | サイクル内 T Issue 起票合計 |
+| `false`（既定 / v2.6.6+） | **T ループ起票**（Unit 004 / v2.6.6 で実装）。Try 件数分ループで個別 T Issue を起票（タイトル `[Retrospective: {cycle}] {Try 1 行要約}` / 本文 5 必須見出し非空保証 / cap 到達 or dialog token 失敗で `break`、5 セクション validate 失敗で当該のみ `continue`） | サイクル内 T Issue 起票合計 |
 | `true`（opt-in / v2.6.5 互換） | 集約 retrospective Issue を 1 件起票（既存 Step 3/4/5 を実行） | 集約 Issue 1 件 |
 
 値解決は `retrospective_api_aggregate_enabled` helper 経由。
@@ -238,7 +238,7 @@ AskUserQuestion 失敗時（ツール起動失敗 / 応答取得不能 / timeout
 
 cap 判定（`feedback_max_per_cycle`）の対象は本フラグで連動切り替え（`true`: 集約 Issue 1 件 / `false`: T Issue 起票合計）。
 
-> **v2.6.6 patch スコープ**: `false` 経路の T ループ起票本体は Unit 004 に委譲（v2.7.0+ で完全実装）。本 Unit 001 では仕様 SoT + フラグ + helper + 同等性 fixture までを担う。
+> **v2.6.6 patch スコープ**: `false` 経路の T ループ起票本体は Unit 004（本サイクル）で実装完了。Unit 001 では仕様 SoT + フラグ + helper + 同等性 fixture を担当した。
 
 ### Step 1: feedback_mode の確定（§1.0 で完了済 / 復元）
 
@@ -321,7 +321,81 @@ body_path=/tmp/aidlc-retro-body.md
 retrospective_api_compose_body "$draft_yaml_path" "$kpt_md_path" "$cycle" > "$body_path"
 ```
 
-### Step 4: Issue 起票
+### Step 4: Issue 起票（Unit 004 / v2.6.6 / `aggregate_issue_enabled` で分岐）
+
+Step 4 冒頭で `aggregate_issue_enabled` フラグ値に応じて以下 2 経路に分岐する:
+
+| `aggregate_issue_enabled` | 経路 | 説明 |
+|---------------------------|------|------|
+| `false`（既定 / v2.6.6+） | **Step 4-A: TryLoopCreationStrategy** | Try 件数分ループで個別 T Issue を起票（テンプレ `try_loop_block` 採用） |
+| `true`（opt-in / v2.6.5 互換） | **Step 4-B: AggregatedCreationStrategy** | 集約 retrospective Issue を 1 件起票（テンプレ `aggregate_block` 採用 / v2.6.5 と diff 0） |
+
+```bash
+# 分岐判定（Step 4 冒頭で実行）
+aggregate_enabled=$(retrospective_api_aggregate_enabled)    # "true" | "false" 1 行 / exit 0 固定
+```
+
+#### Step 4-A: TryLoopCreationStrategy（`aggregate_enabled = false` / 既定）
+
+Try 件数分のループで個別 T Issue を起票する。各 T Issue 本文は 5 必須見出し（背景 / 主因切り分け / 構造課題昇格根拠 / 想定対策 / 関連）を非空で含む。
+
+**事前準備**:
+
+- KPT テンプレ `kpt_md_path`（Step 2 で展開済）から Try セクション（`try_loop_block` ブロック内 `### Try N: ...` の繰り返し）を抽出
+- §1.2 主因切り分け結果と §1.2.5 セルフレビュー verdict_map（Try 単位 verdict 集合 / `history/operations.md` の最新 selfreview ログから read）を取得
+
+**ループフロー**:
+
+```text
+INPUT  : cycle, try_drafts (List<TryDraft>), verdict_map (Map<try_id, SelfReviewVerdict>)
+OUTPUT : creation_summary { created_count, skipped_count: { cap_reached, dialog_required, section_invalid }, cap_reached: bool }
+
+1. AskUserQuestion: cycle 単位 1 回の対話確認（起票実行可否を確認 / auto mode 下でも省略禁止）
+2. retrospective_api_record_response "$cycle" "$response"   # 対話確認トークン発行
+3. for each try in try_drafts:
+     3.1 retrospective_api_check_cap t_issue_loop <current_count> <limit>  # cap 再判定
+         if over=true:
+           warn(cap_reached) + skipped_count.cap_reached += 残 Try 件数
+           break    # 残 Try 一括停止
+     3.2 retrospective_api_create_issue 内部で retrospective_dialog_token_verify を呼ぶ
+         (exit 4 検出時): warn(dialog_required) + skipped_count.dialog_required += 残 Try 件数 + break
+     3.3 verdict := verdict_map[try.try_id]
+     3.4 5 必須見出し本文を SectionComposer 手順で組み立てる:
+         ## 背景         <- try.related_kp 要旨 / 補完不能 → "該当なし（関連 KP 未指定）"
+         ## 主因切り分け  <- §1.2 マトリクスの該当行 / 補完不能 → "該当なし（主因切り分け未記録）"
+         ## 構造課題昇格根拠 <- verdict.responses (A/B/C yes|no) + verdict.verdict をラベル列挙
+         ## 想定対策     <- try.summary_line + priority + target
+         ## 関連         <- cycle / milestone link / (aggregate_enabled=true のみ Relates: #<集約>)
+     3.5 validateSectionsNonEmpty: 5 見出しすべてに最低 1 行非空テキスト
+         （「該当なし」明示記載は非空扱い / 空白行・コメントのみは空扱い）
+         if 不合格:
+           warn(section_invalid) + retrospective_api_ensure_label selfreview-incomplete
+           skipped_count.section_invalid += 1
+           continue    # 当該 1 件のみ skip
+     3.6 retrospective_api_create_issue "$ti_body_path" "t_issue_loop" "$cycle"
+         (返り値 exit 0 = created / 1 = spooled / 4 = dialog-required で break)
+     3.7 if verdict.verdict == "capped":
+           retrospective_api_ensure_label selfreview-capped (当該 Issue に付与)
+     3.8 retrospective_api_update_issue "$ti_url" "$cycle"  # 既存 update フック
+4. return creation_summary
+```
+
+**制御フロー仕様（設計レビュー R1 指摘 #3 確定）**:
+
+| 中断要因 | 制御 | skipped_count 計上規則 |
+|---------|------|---------------------|
+| cap 到達 | `break`（残 Try 一括停止） | `cap_reached += 残 Try 件数` |
+| dialog token 失敗（exit 4） | `break`（残 Try 一括停止） | `dialog_required += 残 Try 件数` |
+| 5 セクション validate 失敗 | `continue`（当該 1 件のみ skip） | `section_invalid += 1` |
+
+**ループ完了後の出力**:
+
+```text
+T Issue 起票完了: created=N / skipped(cap_reached)=X / skipped(dialog_required)=Y / skipped(section_invalid)=Z
+cap_reached=true|false
+```
+
+#### Step 4-B: AggregatedCreationStrategy（`aggregate_enabled = true` / opt-in）
 
 > **対話必須ガード（Unit 001 / #647）**: §1.0.5 必須事項に従い、起票実行直前に AskUserQuestion で「この内容で Issue を起票してよいか」をユーザーに確認すること（auto mode 動作下でも省略禁止）。応答が `approved` の場合のみ次の `retrospective_api_record_response` 呼出に進む。応答が `denied` の場合は同関数に `denied` を渡す（実行時ガードが起票をブロックする明示的な意思表示として記録される）。
 
@@ -370,7 +444,7 @@ case "$rc" in
 esac
 ```
 
-### Step 5: update フック（起票成功時のみ）
+### Step 5: update フック（Step 4-B / 集約 Issue 起票成功時のみ）
 
 ```bash
 if [[ -n "${issue_url:-}" ]]; then
@@ -381,14 +455,20 @@ fi
 
 `retrospective_api_update_issue` 内部の `retrospective_update_hook` は `gh issue edit` で `human_reviewed: false → true` 更新と差分コメント追記を行う。フック失敗時は警告のみで処理は継続する。
 
+> **Step 4-A（T ループ起票）の update フック**: Step 4-A は各 T 起票成功直後に `retrospective_api_update_issue` を呼ぶ（手順 3.8）。本 Step 5 は集約 Issue 起票用の単独 update フックであり、T ループ経路では Step 5 を実行しない（T 経路は loop 内で完結）。
+
 ## 1.6 次サイクル Intent への反映
 
-Try のうちプロダクト固有事項は、次サイクル Inception の `requirements/intent.md` 前置きで「前サイクル振り返り由来の前提」として参照する。次サイクル Inception 開始時、`steps/inception/01-setup.md §4a` の `predecessor_resolve_issue` が以下 5 経路で前サイクル振り返りを解決する（v2.5.1 Unit 004 / 本スキルの起票結果も Issue として参照可能）:
+Try のうちプロダクト固有事項は、次サイクル Inception の `requirements/intent.md` 前置きで「前サイクル振り返り由来の前提」として参照する。次サイクル Inception 開始時、`steps/inception/01-setup.md §4a` の `predecessor_resolve_issue` が以下 7 経路で前サイクル振り返りを解決する（v2.5.1 Unit 004 + v2.6.6 Unit 004 / 本スキルの起票結果も Issue として参照可能）:
 
-- 経路 1/1': 分岐 (a)/(b) 採用時 GitHub Issue（`retrospective` ラベル + Milestone or title 一致）
+- 経路 1/1': 分岐 (a)/(b) 採用時 集約 retrospective Issue（`retrospective` ラベル + Milestone or canonical title `Retrospective: <cycle>` 一致）
 - 経路 2: spool fallback（`gh` 不可時に履歴 spool から URL 抽出）
 - 経路 3: v2.5.0 互換 fallback（`cycles/{{PREV_CYCLE}}/operations/retrospective.md` 存在時）
+- 経路 5a (v2.6.6 / Unit 004 新規): `t_issue_milestone_scope` — 既存 5 経路すべて 0 件 + 同 milestone 内に T Issue（`[Retrospective: <cycle>]` prefix）≥ 1 件
+- 経路 5b (v2.6.6 / Unit 004 新規): `t_issue_label_fallback` — 既存 5 経路すべて 0 件 + milestone 集計 0 件 + label 単独で T Issue（`[Retrospective: <cycle>]` prefix）≥ 1 件
 - 経路 4: 全経路 0 件 → warn + continue
+
+経路 5a/5b は候補集合（`candidates` 配列）のみを返し、単一 issue_url の自動採用は行わない（AI agent 側で `AskUserQuestion` を起動して候補から選択する責務）。
 
 参照手順は `skills/aidlc/steps/inception/01-setup.md §4a` を参照。
 

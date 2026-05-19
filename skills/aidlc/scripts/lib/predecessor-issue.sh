@@ -7,11 +7,16 @@
 #       -> exit 0=成功（warn 含む / 経路 4 でも 0） / 1=継続不能エラー / 2=引数エラー
 #
 # 出力 NDJSON フォーマット:
-#   {"resolution_path": "milestone_and_label|label_fallback|spool_fallback|v2_5_0_compat|warn_continue",
+#   {"resolution_path": "milestone_and_label|label_fallback|spool_fallback|v2_5_0_compat|t_issue_milestone_scope|t_issue_label_fallback|warn_continue",
 #    "issue_url": "https://...|null",
 #    "file_path": "cycles/.../retrospective.md|null",
 #    "source_milestone": "v2.5.0|null",
 #    "candidates": [{"url": "...", "title": "...", "closedAt": "..."}, ...]}
+#
+# 新動作経路（v2.6.6 / Unit 004）:
+#   t_issue_milestone_scope: 既存 5 経路すべて 0 件 + 同 milestone 内 retrospective ラベル付き T Issue ≥ 1
+#   t_issue_label_fallback : 既存 5 経路すべて 0 件 + milestone 無 retrospective ラベル付き T Issue ≥ 1
+#   いずれも候補集合のみ返す（issue_url 確定しない / AI agent 側で AskUserQuestion 起動）
 #
 # stderr フォーマット: <level>\t<code>\t<detail>  (level=info|warn|error)
 #
@@ -63,13 +68,22 @@ __pred_diag() {
 #   $3=query_count (Issue 検索ヒット数 / gh 不可時は -1)
 #   $4=spool_exists (true|false)
 #   $5=compat_file_exists (true|false)
-# stdout: ResolutionPath (milestone_and_label|label_fallback|spool_fallback|v2_5_0_compat|warn_continue)
+#   $6=t_milestone_count (Unit 004 新経路 / T Issue milestone 集計ヒット数 / 未指定=0 = 既存挙動互換)
+#   $7=t_label_count (Unit 004 新経路 / T Issue label 集計ヒット数 / 未指定=0 = 既存挙動互換)
+# stdout: ResolutionPath (milestone_and_label|label_fallback|spool_fallback|v2_5_0_compat|t_issue_milestone_scope|t_issue_label_fallback|warn_continue)
+#
+# Unit 004 / v2.6.6:
+#   既存 5 経路の判定式・戻り値文字列は完全不変
+#   新経路 2 サブ分岐は warn_continue 直前に評価される後段追加
+#   $6 / $7 未指定（既存呼出元）は 0 として扱われ、新経路は発火せず warn_continue へ落ちる
 _pure_classify_resolution_path() {
     local gh_status="$1"
     local milestone_enabled="$2"
     local query_count="$3"
     local spool_exists="$4"
     local compat_file_exists="$5"
+    local t_milestone_count="${6:-0}"
+    local t_label_count="${7:-0}"
 
     # 経路 1: gh × milestone 検索ヒット
     if [[ "$gh_status" == "available" && "$milestone_enabled" == "true" && "$query_count" -ge 1 ]]; then
@@ -92,6 +106,18 @@ _pure_classify_resolution_path() {
     # 経路 3: 1/1'/2 すべて 0 件 AND 互換ファイル存在
     if [[ "$compat_file_exists" == "true" ]]; then
         printf 'v2_5_0_compat\n'
+        return 0
+    fi
+
+    # 経路 5a (v2.6.6 / Unit 004 新規): 既存 5 経路 0 件 AND gh × T Issue milestone 集計ヒット
+    if [[ "$gh_status" == "available" && "$t_milestone_count" -ge 1 ]]; then
+        printf 't_issue_milestone_scope\n'
+        return 0
+    fi
+
+    # 経路 5b (v2.6.6 / Unit 004 新規): 既存 5 経路 0 件 AND gh × T Issue label 集計ヒット
+    if [[ "$gh_status" == "available" && "$t_label_count" -ge 1 ]]; then
+        printf 't_issue_label_fallback\n'
         return 0
     fi
 
@@ -119,6 +145,16 @@ _pure_sort_by_closed_at_desc() {
     jq 'sort_by(.closedAt) | reverse'
 }
 
+# ─── 純粋関数: closedAt 降順ソート（null 末尾安全 / Unit 004 / v2.6.6 新規）─────────
+# 入力（stdin）: gh issue list --json url,title,closedAt の出力 JSON 配列
+# stdout: closedAt 降順 / closedAt=null（OPEN Issue）は末尾配置
+#
+# OPEN な T Issue（closedAt=null）が混入し得る T Issue 集計経路で使用する。
+# null → 空文字置換で昇順時に先頭、reverse 後に末尾配置（設計レビュー R1 指摘 #2 対応）
+_pure_sort_by_closed_at_desc_null_safe() {
+    jq 'sort_by(.closedAt // "") | reverse'
+}
+
 # ─── 内部関数: gh issue list 実行 ─────────
 # 入力: $1=prev_cycle / $2=milestone_enabled
 # stdout: gh issue list --json url,title,closedAt の JSON 配列（closedAt 降順ソート済）
@@ -137,7 +173,10 @@ __pred_gh_query() {
             __pred_diag "warn" "predecessor_gh_error" "gh issue list (milestone) failed: $json"
             return 1
         }
-        printf '%s\n' "$json" | _pure_sort_by_closed_at_desc
+        # Unit 004 (v2.6.6): T Issue (`[Retrospective:` prefix) を除外し集約 Issue のみを判別
+        # 集約 Issue title canonical: "Retrospective: <cycle>" / T Issue: "[Retrospective: <cycle>] <summary>"
+        # T Issue を含む cycle では既存 5 経路を 0 件として後段の新動作経路 (t_issue_*) 評価へ委譲する
+        printf '%s\n' "$json" | jq --arg cycle "$prev_cycle" '[ .[] | select(.title == "Retrospective: " + $cycle or (.title | startswith("Retrospective: " + $cycle + " "))) ]' | _pure_sort_by_closed_at_desc
     else
         json=$(gh issue list --label retrospective --state all --limit 50 --json url,title,closedAt 2>&1) || {
             __pred_diag "warn" "predecessor_gh_error" "gh issue list (label fallback) failed: $json"
@@ -147,6 +186,46 @@ __pred_gh_query() {
         # canonical title format: "Retrospective: <cycle>"（lib/retrospective-issue.sh L41）
         printf '%s\n' "$json" | jq --arg cycle "$prev_cycle" '[ .[] | select(.title == "Retrospective: " + $cycle or (.title | startswith("Retrospective: " + $cycle + " "))) ]' | _pure_sort_by_closed_at_desc
     fi
+}
+
+# ─── 内部関数: T Issue 用 gh issue list 実行（Unit 004 / v2.6.6 新規）─────────
+# 入力: $1=prev_cycle / $2=milestone_scope (true=milestone 限定 / false=label のみ)
+# stdout: T Issue title prefix "[Retrospective: <cycle>]" でフィルタした JSON 配列
+#         (closedAt 降順 / null は末尾)
+# 戻り値: 0=成功 / 1=gh エラー
+#
+# T Issue タイトル canonical:
+#   [Retrospective: <cycle>] <Try 内容を 1 行で>
+# 既存 5 経路で扱う集約 Issue title "Retrospective: <cycle>" とは prefix で区別される
+# （[ で始まるか否か / startswith マッチで安全）。
+__pred_gh_query_t_issue() {
+    local prev_cycle="$1"
+    local milestone_scope="$2"
+
+    local json
+    # --json は既存 5 経路と一致する 3 フィールド (url/title/closedAt) のみ取得し
+    # candidates スキーマを統一する（コードレビュー R1 指摘 #1 対応 / NDJSON 下流互換維持）
+    if [[ "$milestone_scope" == "true" ]]; then
+        json=$(gh issue list --milestone "$prev_cycle" --label retrospective --state all --limit 50 --json url,title,closedAt 2>&1) || {
+            __pred_diag "warn" "predecessor_t_issue_gh_error" "gh issue list (t_milestone) failed: $json"
+            return 1
+        }
+    else
+        json=$(gh issue list --label retrospective --state all --limit 50 --json url,title,closedAt 2>&1) || {
+            __pred_diag "warn" "predecessor_t_issue_gh_error" "gh issue list (t_label) failed: $json"
+            return 1
+        }
+    fi
+    # T Issue title canonical: "[Retrospective: <cycle>]" 完全一致 または "[Retrospective: <cycle>] " で始まる
+    # （末尾が ] の単独 / ] + 半角スペース + summary に限定し、"[Retrospective: <cycle>]foo" 等の
+    #  cycle id 偽装・ノイズ混入を排除する / コードレビュー R1 指摘 #2 対応）
+    printf '%s\n' "$json" | jq --arg cycle "$prev_cycle" '
+        [ .[]
+          | select(
+              .title == "[Retrospective: " + $cycle + "]"
+              or (.title | startswith("[Retrospective: " + $cycle + "] "))
+            )
+        ]' | _pure_sort_by_closed_at_desc_null_safe
 }
 
 # ─── 内部関数: spool ファイルから issue_url を抽出 ─────────
@@ -282,9 +361,39 @@ predecessor_resolve_issue() {
         fi
     fi
 
-    # 解決経路を分類
+    # 解決経路を分類（既存 5 経路 / 引数 5 個 = 既存挙動）
     local resolution_path
     resolution_path=$(_pure_classify_resolution_path "$gh_status" "$milestone_enabled" "$query_count" "$spool_exists" "$compat_file_exists")
+
+    # ───── Unit 004 (v2.6.6) 新動作経路: 既存 5 経路すべて 0 件のときのみ評価 ─────
+    # warn_continue 直前に T Issue 集計経路を試行する。
+    # 既存 5 経路 (milestone_and_label / label_fallback / spool_fallback / v2_5_0_compat) のいずれかが
+    # ヒットした場合は新経路を評価せず既存挙動を維持（後方互換保護）。
+    local t_query_json="[]"
+    local t_milestone_count=0
+    local t_label_count=0
+    if [[ "$resolution_path" == "warn_continue" && "$gh_status" == "available" ]]; then
+        local t_query_milestone="[]"
+        local t_query_label="[]"
+        if t_query_milestone=$(__pred_gh_query_t_issue "$prev_cycle" "true"); then
+            t_milestone_count=$(printf '%s' "$t_query_milestone" | jq 'length')
+        else
+            t_milestone_count=0
+        fi
+        if [[ "$t_milestone_count" -eq 0 ]]; then
+            if t_query_label=$(__pred_gh_query_t_issue "$prev_cycle" "false"); then
+                t_label_count=$(printf '%s' "$t_query_label" | jq 'length')
+            else
+                t_label_count=0
+            fi
+        fi
+        # 純粋関数を再評価（新経路 2 サブ分岐を含む）
+        resolution_path=$(_pure_classify_resolution_path "$gh_status" "$milestone_enabled" "$query_count" "$spool_exists" "$compat_file_exists" "$t_milestone_count" "$t_label_count")
+        case "$resolution_path" in
+            t_issue_milestone_scope) t_query_json="$t_query_milestone" ;;
+            t_issue_label_fallback)  t_query_json="$t_query_label" ;;
+        esac
+    fi
 
     # 経路ごとの処理
     case "$resolution_path" in
@@ -334,6 +443,17 @@ predecessor_resolve_issue() {
         v2_5_0_compat)
             __pred_diag "info" "predecessor_resolved_compat" "file_path=$compat_path"
             __pred_emit_result "v2_5_0_compat" "" "$compat_path" "" "[]"
+            return 0
+            ;;
+        t_issue_milestone_scope|t_issue_label_fallback)
+            # Unit 004 (v2.6.6) 新動作経路: T Issue 群候補集合のみ返す
+            # issue_url は確定しない（候補集合からの選択は AI agent 側責務 / AskUserQuestion 起動）
+            local source_milestone=""
+            [[ "$resolution_path" == "t_issue_milestone_scope" ]] && source_milestone="$prev_cycle"
+            local t_count
+            t_count=$(printf '%s' "$t_query_json" | jq 'length')
+            __pred_diag "info" "predecessor_resolved_${resolution_path}" "t_candidates=$t_count (AI agent should AskUserQuestion)"
+            __pred_emit_result "$resolution_path" "" "" "$source_milestone" "$t_query_json"
             return 0
             ;;
         warn_continue)

@@ -141,9 +141,10 @@ High（リリース判定の最終 Unit）
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-05-19
+- **完了日**: 2026-05-19
+- **担当**: AI-DLC (Claude Code) / codex review
 - **エクスプレス適格性**: -
 - **適格性理由**: -
+- **備考**: 4A / 4B は Construction Phase で完了。4C（dogfooding / CI green / PR 記載 / CHANGELOG）は Operations Phase §1 retrospective ステップおよび release PR 作成時に委譲（plan.md 4C 完了ゲート参照）
