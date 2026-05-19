@@ -122,4 +122,36 @@
 | 重要度: medium | 0 |
 | 重要度: low | 0 |
 | 修正対応 | 0 |
-| defer 化 | 0 |
+| defer 化 | 0 |## 2026-05-20T01:28:46+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: §7.12.6 マージ前 CI 通過確認 - C 分岐対応 (inception/progress.md スキップ表記修正)
+- **実行内容**: ## §7.12.6 マージ前 CI 通過確認 - C 分岐対応
+
+**CI 検出**: `gh pr checks 725` で「Cycle Phase Completion」が fail。
+
+- 失敗ジョブ: `bin/check-cycle-phase-completion.sh` (`Verify phase completion` step)
+- 失敗ログ: `inception:incomplete:reason=step_incomplete:step=2:status=未着手`
+
+**失敗分類** (§7.12.6.4): `cross_unit_structural`（CI 構造整合性検証系の exit 非 0）
+
+**分岐判定** (§7.12.6.5 / 優先順位 C > B > A): C. 構造的不整合 → サイクル内修正再走
+
+**根本原因**: `.aidlc/cycles/v2.6.6/inception/progress.md` のステップ表で「2. 既存コード分析」が「未着手」のままだが、完了済みステップ欄では「スキップ / brownfield 解析対象外」と記載済み。状態欄と本文の不整合を `bin/check-cycle-phase-completion.sh` が strict に検出した。
+
+**対応**: 修正コミット `97f03aa9`。
+
+- 状態欄: 「未着手」→「スキップ」
+- 完了日: 「-」→「2026-05-18」
+- 完了済みステップ欄との整合性確保
+- ローカル確認: `bin/check-cycle-phase-completion.sh v2.6.6` → `inception:complete` / `construction:complete` / `operations:complete` (exit 0)
+
+**CI 再走結果**: 全 9 ジョブ pass
+
+- Analyze (actions): pass / Bash Substitution Check: pass / CodeQL: pass / Cycle Phase Completion: pass / Defaults TOML Sync Check: pass / Markdown Lint: pass / Marketplace Version Check: pass / Migration Script Tests: pass / Skill Reference Check: pass
+
+**振り返り Try 記録案内** (§7.12.6.5 C 分岐): inception/progress.md の状態表と完了済みステップ欄の整合性チェックを `bin/check-cycle-phase-completion.sh` が strict 検証するルールが、Inception Phase ステップスキップ時の運用に未浸透。振り返りで Try として「Inception Phase ステップスキップ時の progress.md 表記規約 SoT 化」を検討候補にする。
+- **成果物**:
+  - `.aidlc/cycles/v2.6.6/inception/progress.md`
+
+---
