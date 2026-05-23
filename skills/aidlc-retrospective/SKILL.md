@@ -9,6 +9,8 @@ argument-hint: "[対象サイクル / 例: v2.6.0]"
 
 # AI-DLC 振り返り（retrospective）
 
+> **目的**: T を Issue 化して実行に繋げること。KPT は T を導くための手段です（v2.6.6 / #710 / Unit 001 / SC-01）。
+
 サイクル完了後の振り返り（Keep / Problem / Try）を整理し、必要に応じて GitHub Issue として起票する独立スキル。
 
 > **v2.6.0 破壊的変更**: 本スキルは Operations Phase §1 から振り返り実行ロジックを移転して新設された。Operations Phase は「リリース完了 + post-merge cleanup」までで完結し、振り返りは本スキルで任意のタイミングで実行する。

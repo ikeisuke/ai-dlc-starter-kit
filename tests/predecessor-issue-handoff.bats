@@ -110,7 +110,10 @@ make_compat_file() {
 @test "P2: 経路 1 / 複数件で candidates 配列を closedAt 降順で出力 / 関数本体は対話起動しない" {
   source "$HOOK_LIB"
 
-  GH_MOCK_LIST_RESULT='[{"url":"https://github.com/owner/repo/issues/100","title":"old","closedAt":"2026-03-01T00:00:00Z"},{"url":"https://github.com/owner/repo/issues/200","title":"new","closedAt":"2026-04-01T00:00:00Z"}]'
+  # Unit 004 (v2.6.6): __pred_gh_query milestone_enabled=true 経路で集約 Issue title canonical
+  # (Retrospective: <cycle>) prefix フィルタを適用するため、fixture も canonical title に揃える
+  # (実運用での集約 Issue title format は SoT で固定)
+  GH_MOCK_LIST_RESULT='[{"url":"https://github.com/owner/repo/issues/100","title":"Retrospective: v2.5.0","closedAt":"2026-03-01T00:00:00Z"},{"url":"https://github.com/owner/repo/issues/200","title":"Retrospective: v2.5.0 (reissue)","closedAt":"2026-04-01T00:00:00Z"}]'
   export GH_MOCK_LIST_RESULT
 
   run --separate-stderr predecessor_resolve_issue "$PREV_CYCLE"

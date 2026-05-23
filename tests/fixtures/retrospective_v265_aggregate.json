@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "source": "v2.6.5 サイクルでは集約 retrospective Issue (Retrospective: v2.6.5) が実起票されておらず、v2.6.5 retrospective は #722 / #723 / #724 の T Issue 単位で散発化されていた。本 fixture は v2.6.6 リリース時点コード (aggregate_issue_enabled = true 経路) で生成される集約 Issue 本文の固定スナップショットとして定義し、将来 aggregate path 実装が変更された場合の回帰検出オラクルとして機能する。Intent SC-04「v2.6.5 と完全同等」の厳密解釈からは緩和されているが、v2.6.5 実起票実績不在を踏まえた現実的な SoT 化。fixture 実値（タイトル / 見出し / hash / ラベル / cap）の本格生成は Unit 004 統合フェーズで aggregate path フル実起票テストを通じて確定する。",
+    "captured_at": "2026-05-18",
+    "fixture_version": "1.0.0",
+    "fixture_status": "schema-only",
+    "notes": "fixture_status='schema-only' は実値が未確定であり、bats テストはスキーマ存在検証 + 正規化 helper 動作検証のみを行うことを示す。fixture_status='finalized' に切り替わるのは Unit 004 統合フェーズで aggregate path 実起票結果を反映した時点。"
+  },
+  "expected_title": "Retrospective: <CYCLE_PLACEHOLDER>",
+  "expected_heading_set": [
+    "## 振り返り",
+    "## Keep",
+    "## Problem",
+    "## Try"
+  ],
+  "expected_normalized_body_hash": "<PLACEHOLDER_HASH_PENDING_UNIT_004>",
+  "expected_labels": [
+    "backlog",
+    "retrospective"
+  ],
+  "expected_cap": {
+    "current_count": 0,
+    "over": false
+  }
+}

@@ -7,6 +7,19 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [2.6.6] - 2026-05-20
+
+`aidlc-retrospective` skill の T 中心リファクタ + 本質的振り返り化を実装する patch サイクル。集約 Issue 起票を既定で廃止し T 件数分のループ起票に切り替えつつ、`aggregate_issue_enabled` フラグ（既定 `false`）で旧動作を保持する後方互換構造で patch リリース妥当性を担保。あわせてセルフレビュー観点（表面的 Try 起票防止）と一次情報三層検証 helper を skill 内に組み込む。
+
+### Changed
+
+- **T 中心アウトプット仕様 + `aggregate_issue_enabled` フラグ + cap 仕様 SoT 定義**: `aidlc-retrospective` skill の出力契約を「振り返りは T を Issue 化して実行に繋げることが目的、KPT は T を導くための手段」という構造に焼き直し、`skills/aidlc-retrospective/SKILL.md` / `steps/retrospective.md` 冒頭に SoT として明記。`rules.retrospective.aggregate_issue_enabled` フラグ（既定 `false`）を新設し、未設定時は T 件数分の個別 Issue ループ起票、`true` 明示時は v2.6.5 と同等の集約 Issue 起票が得られる後方互換動作を確立。cap 判定（per-cycle Issue 起票上限）の意味も本 Unit で SoT 化（Unit 001 / #710 minor 想定の patch サブセット適用）
+- **§1.2.5 セルフレビュー観点新ステップ + 3 問固定判別ガイド**: `steps/retrospective.md` に新ステップ §1.2.5「Try 構造性セルフレビュー」を追加。AskUserQuestion 経由で 3 観点（個別チェック追加で逃げていないか / Problem を構造課題に昇格させたか / SoT 整合性）を必須確認し、表面的判定時は最大 3 回まで Try 起草に差し戻す。上限到達時は `selfreview-capped` ラベルを T Issue に付与して起票許可することで、表面的振り返りを構造的に防ぎつつフロー停止を防止。あわせて `templates/try_classification_guide.md` に 3 問固定の判別質問テンプレを追加（Unit 002 / Closes #704）
+- **一次情報三層検証 helper (3 source MVP + jsonl 引数 opt-in)**: `skills/aidlc/scripts/lib/retrospective-fact-extract.sh` を新規追加し、(a) `decisions.md` / (b) `construction/units/*-review-summary.md` / (c) `history/*.md` の 3 source 横断で事実テーブルを構造化抽出する helper を opt-in 提供。推測ベース KPT を予防する一次情報根拠提示を支援する。セッションログ jsonl は file path 引数渡しの opt-in のみ（自動検出は対象外）とし、既存 §1.1.5 手動 Read 経路は破壊せず後方互換維持（Unit 003 / Closes #652）
+- **§1.5 Issue 起票フロー Try ループ化 + predecessor 互換 + dogfooding 検証**: §1.5 Issue 起票フローを Try ループ化し、各 T Issue 本文に 5 セクション（背景 / 主因切り分け / 構造課題昇格根拠 / 想定対策 / 関連）を必須化。`predecessor_resolve_issue` の既存 5 経路を破壊せず、集約 Issue 不在時に retrospective ラベル付き T Issue 群を milestone 単位で集計する経路を経路 1/1' に追加。本サイクル自身の振り返り（v2.6.6 retrospective）を新フローで dogfooding 検証することで Intent SC-10 を充足（Unit 004 / Comment #710 #715）
+
+---
+
 ## [2.6.5] - 2026-05-17
 
 v2.6.3 / v2.6.4 サイクルの運用課題（Unit 重複起案 / 設計レビュー反復 / マージ後の cycle 成果物改変違反 / defaults.toml 同期漏れ / `/aidlc` 委譲フロー UX 摩擦）を、スターターキット本体のフロー・テンプレ・CI ガード・委譲規約に構造的に組み込み、再発を予防する patch サイクル。5 OPEN Issue 集約。

@@ -111,3 +111,14 @@ feedback_max_per_cycle = 3
 # false 経路では Step 3/4/5 をスキップする（cap 超過と同じ収束点）。
 # 取得失敗時は fail-open（既定動作の起票継続）で warn 出力する。
 auto_issue_creation = true
+
+# 振り返り出力モードの集約 Issue opt-in フラグ（v2.6.6 / #710 / Unit 001）
+# - false（デフォルト / v2.6.6 新既定）: 集約 Issue 起票を行わず、T Issue ループ起票（Unit 004 で実装予定）を実行
+# - true（v2.6.5 互換 opt-in）        : 既存 §1.5 Step 3/4/5 を実行して集約 retrospective Issue を 1 件起票
+# auto_issue_creation（起票 ON/OFF 軸）とは独立の opt-in 軸（起票形態軸 / 集約 vs T ループ）。
+# 値解決失敗時は scripts/lib/retrospective-api.sh の retrospective_api_aggregate_enabled が
+# 既定 false にフォールバックする（fail-safe）。
+# cap 判定（feedback_max_per_cycle）の対象は本フラグで連動切り替え:
+#   - true: 集約 Issue 1 件の上限 / - false: サイクル内 T Issue 起票合計の上限
+# 詳細仕様は skills/aidlc-retrospective/steps/retrospective.md §1.5 前置き仕様節を SoT として参照。
+aggregate_issue_enabled = false

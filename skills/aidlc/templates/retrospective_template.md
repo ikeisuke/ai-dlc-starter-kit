@@ -24,11 +24,66 @@
 
 ## Try（次サイクル以降で試す）
 
+<!--
+Unit 004 (v2.6.6 / SC-02 / SC-03 / #710): Try セクションは `aggregate_issue_enabled` 設定で
+2 つの表現形式に分岐する。以下 2 ブロックを HTML コメントマーカーで明示分離する。
+ブロック選択は §1.5 Step 4 が `retrospective_api_aggregate_enabled` 解決値で行う:
+  - false (既定 / v2.6.6+): try_loop_block を採用（1 Try = 1 Issue, 5 必須見出し）
+  - true (opt-in / v2.6.5 互換): aggregate_block を採用（単一表、既存 v2.6.5 構造維持）
+両ブロックは常時共存（マーカー文字列は固定 / 改名禁止 / 設計レビュー R1 指摘 #4 対応）。
+-->
+
+<!-- BEGIN: try_loop_block -->
+<!--
+1 Try = 1 GitHub Issue の単位で起票する形式（既定）。
+各 Try について以下 5 必須見出しすべてに非空本文を記載する（空ブロックは禁止 /
+明示的に「該当なし」と書けば非空扱い）。
+Try 件数分このセクションを複製する（### Try N: ... を増やして並べる）。
+-->
+
+### Try 1: {{Try 内容を 1 行で記載 / Issue タイトル 1 行要約に使用される}}
+
+**優先度**: {{高 | 中 | 低}}
+
+**反映先**: {{プロダクト GitHub Issue / AI-DLC feedback Issue / 次サイクル Intent}}
+
+#### 背景
+
+<!-- 該当する Keep または Problem の要旨 / 関連 K-N / P-N の番号を明記 -->
+
+#### 主因切り分け
+
+<!-- §1.2 の 3 分類（プロダクト固有 / AI-DLC Starter Kit 固有 / 両方）のいずれか + 根拠 -->
+
+#### 構造課題昇格根拠
+
+<!-- §1.2.5 セルフレビューで「個別チェック追加で逃げていない」と判定した根拠
+     (再発性 / 対象レイヤ / 再入余地 3 観点の選択肢ラベルから自動転記される) -->
+
+#### 想定対策
+
+<!-- Try の具体内容（実施手順 / 影響範囲 / 完了条件） -->
+
+#### 関連
+
+<!-- サイクル番号: {{CYCLE}} / 関連 Issue 番号 / Milestone リンク
+     aggregate_issue_enabled=true 時のみ Relates: #<集約 Issue 番号> を追加 -->
+
+<!-- END: try_loop_block -->
+
+<!-- BEGIN: aggregate_block -->
+<!--
+集約 retrospective Issue 1 件に Try 表を内包する形式（opt-in / aggregate_issue_enabled=true）。
+v2.6.5 以前のフォーマットを完全互換維持（同等性 fixture と diff 0）。
+-->
+
 | 優先度 | 施策 | 反映先 |
 |--------|------|-------|
 | | | |
 
 <!-- Problem への対策として次サイクル以降で試す施策を優先度付きで記載。なしの場合は「特になし」と明示 -->
+
+<!-- END: aggregate_block -->
 
 ## 問題項目（Problem）
 
