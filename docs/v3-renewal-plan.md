@@ -656,7 +656,7 @@ enabled = true                 # core config（extension ではなく基本設�
 
 残り 22 キーの扱い:
 - 7 キーは動作に影響しない情報フィールド（project_name 等） → intent.md に記述
-- 8 キーは AI が文脈から自動判断可能（branch_mode, pr_labels 等） → 廃止、AI 判断に委ねる
+- 4 キーは AI が文脈から自動判断可能（branch_mode, pr_labels 等） → 廃止、AI 判断に委ねる
 - 6 キーは使用頻度が極めて低い → 廃止（必要なユーザーは rules.md で自然言語指示）
 - 5 キーは他キーに統合 → depth_level や automation に吸収
 
