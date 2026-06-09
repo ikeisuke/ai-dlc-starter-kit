@@ -654,7 +654,7 @@ early_pr = false               # true の場合、define 完了時に Draft PR �
 enabled = true                 # core config（extension ではなく基本設定）
 ```
 
-残り 26 キーの扱い:
+残り 22 キーの扱い:
 - 7 キーは動作に影響しない情報フィールド（project_name 等） → intent.md に記述
 - 8 キーは AI が文脈から自動判断可能（branch_mode, pr_labels 等） → 廃止、AI 判断に委ねる
 - 6 キーは使用頻度が極めて低い → 廃止（必要なユーザーは rules.md で自然言語指示）
@@ -821,14 +821,12 @@ Step 2: PR 整備
   - release review を実行（aidlc-review perspective=premerge）
   ★ 承認ゲート: PR ready を人間が確認
 
-Step 3: Merge
+Step 3: Merge 承認 + 実行
   - PR を ready 状態にする
   - CI パス確認
   ★ 承認ゲート: merge を人間が承認（automation: manual/semi_auto の場合）
+  - state.json 更新: release.merge_approved: true を書き込み + commit + push（merge 後はブランチが消えるため、merge 前の最終コミットで記録する）
   - merge 実行
-
-Step 3.5: Pre-merge 最終コミット
-  - state.json 更新: release.merge_approved: true（merge 後はブランチが消えるため、merge 前の最終コミットで書き込む。これは merge 承認の記録であり、実際の merge 完了は PR 状態で判定する）
 
 Step 4: Post-merge
   - ローカル branch 更新（main に switch、feature branch 削除）
