@@ -14,4 +14,11 @@
 | inception.02-preparation | 完了 (2026-06-10) |
 | inception.03-intent | 完了 (2026-06-10) AIレビュー2R合格・auto_approved |
 | inception.04-stories-units | 完了 (2026-06-10) stories 3R/units 2R 合格・auto_approved |
-| inception.05-completion | 進行中（squash・PR 前） |
+| inception.05-completion | 完了 (2026-06-10) squash 済・Draft PR #729 (→ v3.0.0) |
+
+## 完了情報
+
+- Inception Phase 完了
+- Draft PR: #729 (cycle/v3.0.0-alpha.1 → v3.0.0)
+- Milestone: スキップ（ユーザー選択 / 関連 Issue なし）
+- 次フェーズ: Construction（Unit 001 v3-rfc-core から）
