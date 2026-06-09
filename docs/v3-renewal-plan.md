@@ -279,7 +279,7 @@ schema:
   "release": {
     "pr_number": null,
     "ready": false,
-    "merged": false
+    "merge_approved": false
   },
   "updated_at": "2026-06-04T00:00:00Z"
 }
@@ -292,9 +292,9 @@ schema:
 | define_completed | define の Step 4 完了時 | define 実行者 |
 | release.pr_number | PR 作成時 | release 実行者 |
 | release.ready | PR ready 化時 | release 実行者 |
-| release.merged | merge 直前の最終コミット | release 実行者 |
+| release.merge_approved | merge 承認時（merge 直前の最終コミット） | release 実行者 |
 
-**release.merged の書き込みタイミング**: merge 後はブランチが消えるため書き換え不可。release.merged: true は merge 前の最終コミットで書き込む。
+**release.merge_approved の意味**: 人間が merge を承認したことを記録する。merge 後はブランチが消えるため、merge 前の最終コミットで書き込む。実際の merge 完了は PR の状態（merged / closed）で判定する。release.merge_approved: true は「merge してよい」という承認であり、merge 済みを意味しない。
 
 #### Work Item Frontmatter
 
@@ -357,9 +357,9 @@ high      前例なし、または失敗時の復旧コストが高い
 | define_completed: false | define |
 | define_completed: true かつ work item に done/withdrawn 以外がある | build |
 | define_completed: true かつ全 work item が done/withdrawn | release 可能 |
-| release.merged: true | complete（reflect 可能） |
+| release.merge_approved: true かつ PR が merged 状態 | complete（reflect 可能） |
 
-この導出により、build → release のフェーズ遷移で「誰が変えるか」問題が発生しない。最後の work item を done にした作業者が、自動的に release 可能状態を作る。
+この導出により、build → release のフェーズ遷移で「誰が変えるか」問題が発生しない。最後の work item を done にした作業者が、自動的に release 可能状態を作る。complete の判定には merge_approved（ブランチ上の承認記録）と PR の実態（実際に merge されたか）の両方が必要。
 
 ### size と depth_level の関係
 
@@ -566,7 +566,7 @@ ArtifactsState の fileExistenceMap + progressMarks + progressFlags を組み合
   define_completed: false                              → define
   define_completed: true かつ未完了 work item あり       → build
   define_completed: true かつ全 work item done/withdrawn → release 可能
-  release.merged: true                                 → complete（reflect 可能）
+  release.merge_approved: true かつ PR merged            → complete（reflect 可能）
 
 復帰時はフェーズを導出し、フェーズ内の進捗は成果物の存在で判定する。
 state.json が存在しない場合は define の Step 1 から開始する。
@@ -579,7 +579,7 @@ state.json が壊れている場合は doctor を実行するよう案内する�
   - 上記いずれにも該当しない → define（最初から）
 ```
 
-推論の複雑さを「フェーズ導出 + frontmatter」に移す。state.json への書き込みは define 完了時と release 時のみ（single-actor moment）。work item の状態更新は各 work-items/*.md の frontmatter を直接編集する。state.json 書き込みはスクリプト（state-write.sh）経由で atomic 性を担保する。
+推論の複雑さを「フェーズ導出 + frontmatter」に移す。state.json への書き込みは define 完了時と release 時のみ（single-actor moment）。work item の状態更新は work-item-state.sh 経由で行う（YAML frontmatter の schema validation と atomic write を担保するため）。state.json 書き込みはスクリプト（state-write.sh）経由で atomic 性を担保する。
 
 ### スクリプト構成: 138 本 30,303 行 → ~40 本 ~12,000 行
 
@@ -589,6 +589,7 @@ state.json が壊れている場合は doctor を実行するよう案内する�
 |---------|------|------|
 | lib/ コア (bootstrap, validate, toml-reader, version) | 5 | 全スクリプトの基盤 |
 | state-read.sh / state-write.sh / state-validate.sh | 3 | state.json の atomic 操作 + schema validation |
+| work-item-state.sh | 1 | work item frontmatter の schema validation + atomic write |
 | work-item-next.sh | 1 | 依存グラフ解決 + 次 work item 選定 |
 | operations-release.sh | 1 | PR/merge/tag の atomic 操作チェーン |
 | write-history.sh (→ write-journal.sh) | 1 | journal ファイルの structured 書き込み |
@@ -621,7 +622,7 @@ state.json が壊れている場合は doctor を実行するよう案内する�
 | milestone-ops.sh | 1 | extension 化 |
 | テストの一部 | ~20 | 廃止スクリプトのテスト |
 
-### 設定構成: 34 キー → 8 キー
+### 設定構成: 34 キー → 12 キー
 
 **v3 defaults.toml**:
 
@@ -681,7 +682,7 @@ perspective: intent | stories | units | plan | design | code | integration | dep
 2. reviewing-common-base の共通フローを実行
 3. perspective 固有の観点でレビュー
 
-perspective が省略された場合は、state.json の current_phase と current_work_item から自動判定する。
+perspective が省略された場合は、state.json と work item frontmatter からフェーズと作業状況を導出し、適切な perspective を自動判定する。
 ```
 
 **v2 → v3 review 対応**:
@@ -809,7 +810,7 @@ Step 6: 完了
 
 ```text
 Step 1: リリース準備
-  - work item frontmatter で全 work item 完了を確認（blocked/withdrawn は理由付き許容）
+  - work item frontmatter で全 work item 完了を確認（done/withdrawn のみ許容。blocked がある場合は done または withdrawn に解決してから release する）
   - git status 確認
   - test / CI 状態確認
 
@@ -827,7 +828,7 @@ Step 3: Merge
   - merge 実行
 
 Step 3.5: Pre-merge 最終コミット
-  - state.json 更新: release.merged: true（merge 後はブランチが消えるため、merge 前の最終コミットで書き込む）
+  - state.json 更新: release.merge_approved: true（merge 後はブランチが消えるため、merge 前の最終コミットで書き込む。これは merge 承認の記録であり、実際の merge 完了は PR 状態で判定する）
 
 Step 4: Post-merge
   - ローカル branch 更新（main に switch、feature branch 削除）
@@ -922,7 +923,7 @@ doctor は修正を自動実行しない。診断と推奨だけ出す。
 
 ```text
 [config]      OK
-[state]       OK (define_completed: true, release.merged: false)
+[state]       OK (define_completed: true, release.merge_approved: false)
 [cycle]       OK
 [work-items]  WARN: 002-normalize-state has status: in_progress but no recent commits
 [phase]       build (derived: define_completed=true, 2 items remaining)
@@ -1197,12 +1198,12 @@ marketplace version を v3.0.0 に更新
 - next work item 選定（work-item-next.sh）
 - tiny 判定
 - 実装 + テスト + journal
-- state.json status update
+- work item frontmatter status を done に更新
 
 受け入れ基準:
 
 - tiny work item が design なしで完了できる
-- state.json の status が done になる
+- work item frontmatter の status が done になる
 - journal に完了記録が追記される
 - status が次の work item を正しく表示する
 
@@ -1236,6 +1237,7 @@ JSON のパースエラーやフィールド欠損で状態が読めなくなる
 - doctor で schema validation
 - journal.md と work-items/*.md から best-effort repair 可能にする
 - state.json 更新は state-write.sh 経由のみ（直接編集禁止）
+- work item frontmatter 更新は work-item-state.sh 経由のみ（直接編集禁止）
 - git に commit されているので git restore で最終 commit 時点に復元可能
 
 ### 中リスク: consumer プロジェクトの移行コスト
@@ -1317,7 +1319,7 @@ Express は inception + construction + operations のチェーン。v3 でも維
 - **案 A**: JSON（state.json）
 - **案 B**: TOML（state.toml）
 - **案 C**: Markdown frontmatter（progress.md 改良）
-- **推奨**: 案 A。JSON は schema validation が容易で、jq でのクエリも標準的
+- **採用**: ハイブリッド。cycle state は JSON（state.json）、work item state は Markdown frontmatter（work-items/*.md）。cycle-level の書き込みが少なくコンフリクトしにくいものは JSON で schema validation + jq クエリ、per-item で並行編集が起きるものは分散 frontmatter
 
 ---
 
