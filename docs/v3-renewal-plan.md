@@ -8,7 +8,7 @@
 
 ### 1. Claude 3.5 時代の防御ロジックが全体の 60% を占める
 
-ステップ Markdown 6,436 行のうち約 3,900 行は、旧モデル向けの「やってはいけない」「こうしろ」「こうするな」型の防御的指示。Opus 4.x ではこれらの大部分が不要。
+ステップ Markdown 6,436 行のうち約 3,900 行は、旧モデル向けの「やってはいけない」「こうしろ」「こうするな」型の防御的指示。モダン AI モデル（Opus 4.x 等）ではこれらの大部分は冗長であり、簡潔な記述に置き換えられる。
 
 - review-flow.md: 366 行中 74% が防御ロジック。本質的フローは ~20 行
 - 03-implementation.md: 166 行中 64% が Self-Healing Loop 防御
@@ -25,7 +25,7 @@ reviewing-common-base.md を 10 箇所に sync-reviewing-common.sh で同期す�
 
 ### 4. リーフスクリプトの肥大化
 
-138 スクリプト（30,303 行）のうち、ステップから呼ばれるエントリーポイントは 15 本。20 本のリーフスクリプトはステップから一度も参照されない。Opus 4.x が inline で実行できる処理（git 操作、config 読み取り、validation）をスクリプト化している。
+138 スクリプト（30,303 行）のうち、ステップから呼ばれるエントリーポイントは 15 本。20 本のリーフスクリプトはステップから一度も参照されない。安全境界が不要な単純処理（ディレクトリ作成、ブランチ作成、環境情報取得等）までスクリプト化している。
 
 ### 5. ステップファイルに 4 つの責務が混在
 
@@ -96,7 +96,21 @@ v2 の 60% を占める「防御ロジック」と、AI-DLC 固有の「方法�
 - Self-Healing Loop の「テスト失敗時にテストを書き換えるな」の多重警告
 
 **維持する方法論ロジック（AI-DLC 固有）**:
-- 承認ゲート: Intent 承認 → Stories 承認 → Unit 定義承認 → Plan 承認 → Design 承認 → Code Review → Integration Review
+
+承認ゲート v2 → v3 対応:
+
+| v2 ゲート | v3 ゲート | 変更 |
+|----------|----------|------|
+| Intent 承認 | Intent 承認 | 維持 |
+| Stories 承認 | (廃止) | work item 分割に吸収 |
+| Unit 定義承認 | Work Item 承認 | 名称変更、承認は維持 |
+| Plan 承認 | Design 承認に統合 | normal: 簡易 design 承認、risky: design + risk analysis 承認 |
+| Design 承認 | Design 承認 | 維持（normal/risky で厚みが変わる） |
+| Code Review | Code Review | 維持（normal/risky で実行） |
+| Integration Review | Integration Review | 条件付き（複数 work item 完了時のみ） |
+| Deploy Review | Deploy Review | 条件付き（risky のみ） |
+| (なし) | Pre-merge Review | 新設（常に実行） |
+
 - レビュー上限: 最大 5 ラウンド、未解決なら人間にエスカレーション
 - Defer 戦略: OUT_OF_SCOPE / TECHNICAL_BLOCKER を明示理由付きで defer → 自動 Issue 化
 - スコープ保護: Intent 要件を defer する場合は人間確認必須（破壊的変更検出）
@@ -112,17 +126,17 @@ v2 の 60% を占める「防御ロジック」と、AI-DLC 固有の「方法�
 
 AI-DLC の 7 Principles を実装の判断基準とする。特に「会話の逆転」（AI 提案 → 人間承認）と「Minimize Stages, Maximize Flow」（承認ゲートは本質的な判断ポイントのみ）を両立させる。技術的簡素化で方法論を毀損しない。
 
-### P2: Opus 4.x ファーストで書く
+### P2: 防御ロジックを簡潔に書き直す
 
-Claude 3.5 Sonnet 用の防御ロジックを全廃する。Opus 4.x は「何をすべきか」を書けば十分で、「何をするな」は例外的ケースだけ。ただし方法論ロジック（承認ゲート・レビュー上限・Defer 戦略等）は防御ロジックではないので維持する。
+Claude 3.5 Sonnet 用の冗長な防御ロジックを簡潔に書き直す。ルールの数ではなく記述量を削る。モダン AI モデルは「何をすべきか」を簡潔に書けば十分で、同じ警告の多重繰り返しや冗長な説明は不要。ただし安全ルール自体は残す — rules.md ~80 行に集約し、モデル差し替え・軽量モデル利用時にも workflow correctness を維持できる最低限の safety rules は保持する。方法論ロジック（承認ゲート・レビュー上限・Defer 戦略等）は防御ロジックではないので維持する。
 
 ### P3: 明示状態 > 推論
 
 復帰判定はファイル存在の推論ではなく、state.json への明示的ステータス書き込みで行う。仕様を 819 行 → ~50 行に削減。AI 向け状態は JSON、人間向け成果物は Markdown と責務を分離する。
 
-### P4: AI にできることはスクリプトにしない
+### P4: 安全境界が必要な操作はスクリプトに残す
 
-git 操作、config 読み取り、validation、PR 操作など Opus 4.x が inline で正確に実行できる処理はスクリプト化しない。スクリプトは「AI が苦手な処理」（複雑な文字列処理、atomic なファイル操作、CI gate）に限定する。
+スクリプトの要否は「AI にできるか」ではなく「安全境界が必要か」で判断する。CLAUDE.md / AGENTS.md で確立された安全パターン（file-based interface、read-config.sh 経由の TOML パース、state-write.sh 経由の atomic 書き込み、コマンド置換禁止のための wrapper）はスクリプトとして維持する。スクリプト化しないのは、安全境界が不要かつ AI が inline で正確に実行できる処理（mkdir -p、git checkout -b、uname 等の単純コマンド）に限る。
 
 ### P5: スキルは最小数
 
@@ -152,6 +166,8 @@ v2 → v3 のマイグレーションパスを用意する。v2 の config.toml 
 /aidlc express   define + build + release を連続実行する（小規模変更用）
 ```
 
+**コマンド名変更の理由**: v2 では「名前変更は不要」という判断があった。これは v2 が漸進的改善であり、既存ユーザーへの認知コストに見合う価値がなかったため。v3 はワークフロー自体をゼロから再設計しており、define / build / release / reflect という名前はフェーズの実際の行為をより直接的に表現する。新規ユーザーが「何をするフェーズか」を名前から即座に理解できることを優先した。継続性のために旧名称（inception / construction / operations / retrospective）はエイリアスとして維持する。
+
 ### v2 との対応
 
 | v2 コマンド | v3 コマンド | 備考 |
@@ -166,7 +182,7 @@ v2 → v3 のマイグレーションパスを用意する。v2 の config.toml 
 
 ### 引数なし実行
 
-`/aidlc`（引数なし）は state.json の current_phase を読み、適切なコマンドに自動ルーティングする。state.json が存在しない場合は define に遷移する。
+`/aidlc`（引数なし）は state.json と work item frontmatter からフェーズを導出し、適切なコマンドに自動ルーティングする。state.json が存在しない場合は define に遷移する。
 
 ---
 
@@ -197,29 +213,9 @@ intent.md
 - **Verification**: どのテスト・確認で完了を判断するか
 - **Release note impact**: release に書く必要があるか
 
-### state.json の trace summary
+### Traceability の正本
 
-state.json は詳細本文を持たず、機械判定に必要な trace summary のみ保持する。
-
-```json
-{
-  "work_items": [
-    {
-      "id": "001",
-      "slug": "example",
-      "intent_refs": ["scope:core-workflow"],
-      "acceptance_refs": ["AC-001", "AC-002"],
-      "verification": {
-        "status": "pending",
-        "commands": ["npm test"]
-      },
-      "release_note_required": false
-    }
-  ]
-}
-```
-
-詳細な判断理由は Markdown に置き、state.json は状態と参照だけを持つ。
+state.json はサイクルレベルの状態（define 完了、release 状態）のみ保持する。work item の trace 情報（intent_refs、acceptance criteria、verification status 等）は各 work-items/*.md の frontmatter と本文に正本を置く。フェーズは state.json と work item 状態から導出する（後述の「フェーズ導出ロジック」参照）。
 
 ### define への反映
 
@@ -256,13 +252,21 @@ state.json は詳細本文を持たず、機械判定に必要な trace summary 
       reflect.md             (任意)
 ```
 
-### state.json
+### 分散状態モデル
+
+v3 は状態を 2 箇所に分散して管理する。
+
+- **state.json**: サイクルレベルの状態（define 完了フラグ、release 状態）。書き込みタイミングは define 完了時と release 時のみ（single-actor moment）
+- **work-items/*.md frontmatter**: 各 work item の個別状態。作業者がそれぞれの work item ファイルを更新する
+
+この分散により、複数人が異なる work item を並行作業しても state.json がコンフリクトしない。
+
+#### state.json
 
 目的:
 
-- AI / script が現在地を機械的に判定する
-- Markdown の表パースに依存しない
-- recovery spec を通常手順から分離する
+- AI / script がサイクルレベルの状態を機械的に判定する
+- フェーズを導出するための最小限の入力を提供する
 - doctor で schema validation 可能にする
 
 schema:
@@ -271,28 +275,7 @@ schema:
 {
   "schema_version": "3.0",
   "current_cycle": "v3.0.0",
-  "current_phase": "define",
-  "current_work_item": null,
-  "last_completed_step": null,
-  "next_action": "define.intent",
-  "work_items": [
-    {
-      "id": "001",
-      "slug": "example",
-      "title": "Example work item",
-      "status": "pending",
-      "size": "normal",
-      "risk": "medium",
-      "dependencies": [],
-      "intent_refs": ["scope:example"],
-      "acceptance_refs": ["AC-001", "AC-002"],
-      "verification": {
-        "status": "pending",
-        "commands": []
-      },
-      "release_note_required": false
-    }
-  ],
+  "define_completed": false,
   "release": {
     "pr_number": null,
     "ready": false,
@@ -301,6 +284,43 @@ schema:
   "updated_at": "2026-06-04T00:00:00Z"
 }
 ```
+
+書き込みタイミング:
+
+| フィールド | 書き込みタイミング | 書き込み主体 |
+|-----------|------------------|------------|
+| define_completed | define の Step 4 完了時 | define 実行者 |
+| release.pr_number | PR 作成時 | release 実行者 |
+| release.ready | PR ready 化時 | release 実行者 |
+| release.merged | merge 直前の最終コミット | release 実行者 |
+
+**release.merged の書き込みタイミング**: merge 後はブランチが消えるため書き換え不可。release.merged: true は merge 前の最終コミットで書き込む。
+
+#### Work Item Frontmatter
+
+各 work-items/*.md の YAML frontmatter で work item 個別の状態を管理する。
+
+```yaml
+---
+id: "001"
+status: pending
+size: normal
+risk: medium
+assigned: null
+dependencies: []
+---
+```
+
+frontmatter fields:
+
+| フィールド | 型 | 説明 |
+|-----------|---|------|
+| id | string | work item 識別子 |
+| status | enum | pending / in_progress / blocked / done / withdrawn |
+| size | enum | tiny / normal / risky |
+| risk | enum | low / medium / high |
+| assigned | string or null | 担当者（複数人並行作業時） |
+| dependencies | array | 依存する work item ID のリスト |
 
 status enum:
 
@@ -328,6 +348,19 @@ medium    一部新規、テストで担保可能
 high      前例なし、または失敗時の復旧コストが高い
 ```
 
+#### フェーズ導出ロジック
+
+フェーズは state.json と work item frontmatter から導出する。state.json に current_phase は保持しない。
+
+| 条件 | 導出フェーズ |
+|-----|-----------|
+| define_completed: false | define |
+| define_completed: true かつ work item に done/withdrawn 以外がある | build |
+| define_completed: true かつ全 work item が done/withdrawn | release 可能 |
+| release.merged: true | complete（reflect 可能） |
+
+この導出により、build → release のフェーズ遷移で「誰が変えるか」問題が発生しない。最後の work item を done にした作業者が、自動的に release 可能状態を作る。
+
 ### size と depth_level の関係
 
 size は per-work-item、depth_level は per-cycle のグローバル設定。両者は独立だが組み合わせで実際の作業量が決まる。
@@ -341,6 +374,15 @@ size は per-work-item、depth_level は per-cycle のグローバル設定。�
 ### Work Item テンプレート
 
 ```markdown
+---
+id: "001"
+status: pending
+size: normal
+risk: medium
+assigned: null
+dependencies: []
+---
+
 # Work Item 001: Example
 
 ## Goal
@@ -438,7 +480,7 @@ journal.md は追記型の軽量記録。v2 の history より簡素にする。
 
 | Extension | v2 での位置 | v3 での扱い |
 |-----------|------------|------------|
-| GitHub ProjectsV2 | gh-project-* scripts (~10本) | 廃止。Opus 4.x が gh CLI を直接操作可能 |
+| GitHub ProjectsV2 | gh-project-* scripts (~10本) | 廃止。core の責務ではない（ProjectsV2 は GraphQL / field option / view / workflow が絡み、プロジェクト管理ツールの責務） |
 | GitHub Milestone 自動管理 | milestone-ops.sh | aidlc-milestone extension（opt-in） |
 | GitHub Release 自動作成 | operations-release.sh の一部 | config.toml の version_tag で opt-in |
 | Retrospective mirror | retrospective-mirror.sh | aidlc-retrospective extension 内 |
@@ -479,6 +521,7 @@ skills/
       code.md
       integration.md
       deploy.md
+      security.md
       premerge.md
 
   aidlc-setup/                 初期設定（維持）
@@ -514,29 +557,29 @@ skills/
 ArtifactsState の fileExistenceMap + progressMarks + progressFlags を組み合わせて推論
 ```
 
-**v3（明示状態ベース）**:
+**v3（分散状態 + フェーズ導出）**:
 ```markdown
 # Recovery Rules
 
-state.json の以下のフィールドから現在地を判定する:
+フェーズ導出ロジック（state.json + work item frontmatter から導出）:
 
-  current_phase: define | build | release
-  current_work_item: work item ID or null
-  last_completed_step: step 名 or null
-  next_action: phase.step 形式の次アクション
+  define_completed: false                              → define
+  define_completed: true かつ未完了 work item あり       → build
+  define_completed: true かつ全 work item done/withdrawn → release 可能
+  release.merged: true                                 → complete（reflect 可能）
 
-復帰時は next_action のステップから再開する。
+復帰時はフェーズを導出し、フェーズ内の進捗は成果物の存在で判定する。
 state.json が存在しない場合は define の Step 1 から開始する。
 state.json が壊れている場合は doctor を実行するよう案内する。
 
 フォールバック推論（state.json 破損時）:
-  - intent.md が存在し work-items/ が空 → define.work_items
-  - work-items/ が存在し designs/ 配下に作業中ファイル → build
-  - release.md が存在 → release
-  - 上記いずれにも該当しない → define.intent
+  - intent.md が存在し work-items/ が空 → define（work item 分割から）
+  - work-items/ が存在し未完了 item あり → build
+  - work-items/ が存在し全 item done/withdrawn → release
+  - 上記いずれにも該当しない → define（最初から）
 ```
 
-推論の複雑さを「書き込み時の明示化」に移す。代償は state.json への書き込みが増えることだが、これは AI が自然にできる操作。state.json 書き込みはスクリプト（state-write.sh）経由で atomic 性を担保する。
+推論の複雑さを「フェーズ導出 + frontmatter」に移す。state.json への書き込みは define 完了時と release 時のみ（single-actor moment）。work item の状態更新は各 work-items/*.md の frontmatter を直接編集する。state.json 書き込みはスクリプト（state-write.sh）経由で atomic 性を担保する。
 
 ### スクリプト構成: 138 本 30,303 行 → ~40 本 ~12,000 行
 
@@ -601,8 +644,13 @@ language = "ja"              # ja | en
 [rules.milestone]
 enabled = false
 
+[rules.release]
+version_tag = false            # true の場合、merge 後に git tag を作成
+changelog = false              # true の場合、merge 後に changelog を追記
+early_pr = false               # true の場合、define 完了時に Draft PR を作成（デフォルトは release で作成）
+
 [rules.retrospective]
-enabled = true
+enabled = true                 # core config（extension ではなく基本設定）
 ```
 
 残り 26 キーの扱い:
@@ -625,7 +673,7 @@ description: AI-DLC unified review skill
 
 ## 引数
 
-perspective: intent | stories | units | plan | design | code | integration | deploy | premerge
+perspective: intent | stories | units | plan | design | code | integration | deploy | security | premerge
 
 ## 実行
 
@@ -693,11 +741,11 @@ Step 4: 初期化
   - cycle ディレクトリ作成
   - journal.md に define 完了を追記
   - git branch 作成 + 初回 commit
-  - Draft PR 作成（automation: semi_auto/full_auto の場合）
+  - Draft PR 作成（config.toml で early_pr: true の場合のみ。デフォルトは release フェーズで PR を作成）
 
 state.json 更新:
-  current_phase: "define" → 完了後 "build"
-  next_action: "define.intent" → "define.work_items" → "build.select"
+  define_completed: false → 完了後 true
+  （フェーズは define_completed + work item 状態から自動導出）
 ```
 
 v2 から削るもの:
@@ -713,10 +761,10 @@ v2 から削るもの:
 
 ```text
 Step 1: Work Item 選定
-  - state.json から次の work item を選ぶ（work-item-next.sh）
+  - work-items/*.md の frontmatter から次の work item を選ぶ（work-item-next.sh）
   - 依存関係を確認（blocked なら次の候補を提示）
   - 選定した work item の size / risk を確認
-  - state.json 更新: current_work_item, status: in_progress
+  - work item frontmatter 更新: status: in_progress
 
 Step 2: 計画 + 設計（normal / risky のみ）
   - tiny: スキップ
@@ -742,14 +790,16 @@ Step 5: レビュー（normal / risky のみ）
   - Defer 戦略: OUT_OF_SCOPE / TECHNICAL_BLOCKER → 自動 Issue 化
 
 Step 6: 完了
-  - state.json 更新: work item status: done
+  - work item frontmatter 更新: status: done
   - journal.md に完了記録を追記
   - squash commit（設定に応じて）
   - 次の work item がある場合は Step 1 に戻る
-  - 全 work item が done の場合は release を案内
+  - 全 work item が done/withdrawn の場合は release を案内
 ```
 
-**work item ループ**: build は 1 回の実行で 1 work item を完了する。全 work item の完了まで `/aidlc build` を繰り返す。state.json の work_items 全体が done / withdrawn になったら release フェーズへの遷移を提案する。
+**work item ループ**: build は 1 回の実行で 1 work item を完了する。全 work item の完了まで `/aidlc build` を繰り返す。全 work item の frontmatter status が done / withdrawn になったら release フェーズへの遷移を提案する（フェーズ導出ロジックにより自動判定）。
+
+**express の実行単位**: express は単一 work item サイクル専用。define で作成される work item が 1 つ（tiny または normal）の場合のみ、define + build + release を連続実行する。define の結果 work item が複数になった場合、express は define 完了後に終了し、build / release を個別に実行するよう案内する。
 
 **依存解決**: work-item-next.sh が依存グラフを走査し、dependencies がすべて done の work item から次の候補を選ぶ。候補が複数ある場合は AI が優先度を提案し、人間が選択する。
 
@@ -759,11 +809,12 @@ Step 6: 完了
 
 ```text
 Step 1: リリース準備
-  - state.json で全 work item 完了を確認（blocked/withdrawn は理由付き許容）
+  - work item frontmatter で全 work item 完了を確認（blocked/withdrawn は理由付き許容）
   - git status 確認
   - test / CI 状態確認
 
 Step 2: PR 整備
+  - PR が未作成の場合は作成する（デフォルトパス。early_pr: true で define 時に作成済みの場合は更新のみ）
   - PR 本文を作成または更新
   - release.md を作成
   - release review を実行（aidlc-review perspective=premerge）
@@ -775,11 +826,13 @@ Step 3: Merge
   ★ 承認ゲート: merge を人間が承認（automation: manual/semi_auto の場合）
   - merge 実行
 
+Step 3.5: Pre-merge 最終コミット
+  - state.json 更新: release.merged: true（merge 後はブランチが消えるため、merge 前の最終コミットで書き込む）
+
 Step 4: Post-merge
   - ローカル branch 更新（main に switch、feature branch 削除）
   - tag 作成（config.toml で version_tag: true の場合）
   - changelog 追記（config.toml で changelog: true の場合）
-  - state.json 更新: release.merged: true
   - journal.md に release 完了を追記
 ```
 
@@ -810,7 +863,6 @@ Step 3: 行動化
   - reflect.md に記録
 
 Step 4: 完了
-  - state.json 更新（任意: reflect 済みフラグ）
   - journal.md に reflect 完了を追記
 ```
 
@@ -824,18 +876,17 @@ core から外すもの:
 
 目的: ユーザーと AI が「今どこか」を即座に把握する。
 
-state.json を読み取り、以下を表示する。読み取り専用。
+state.json と work item frontmatter を読み取り、フェーズを導出して表示する。読み取り専用。
 
 出力例:
 
 ```text
 Cycle: v3.0.0
-Phase: build
-Current work item: 002-normalize-state (size: normal, risk: medium)
-Completed: 1/4 (001-example done)
+Phase: build (derived: define_completed=true, 2/4 items remaining)
+Current work item: 002-normalize-state (size: normal, risk: medium, status: in_progress)
+Completed: 2/4 (001-example done, 003-cleanup withdrawn)
 Blocked: none
-Withdrawn: none
-Next action: implement work item 002
+Remaining: 002-normalize-state, 004-review-merge
 Suggested command: /aidlc build
 ```
 
@@ -854,9 +905,10 @@ Suggested command: /aidlc define
 
 ```text
 [config]     .aidlc/config.toml 存在 + 必須キー確認
-[state]      .aidlc/state.json 存在 + schema validation
+[state]      .aidlc/state.json 存在 + schema validation（define_completed, release のみ）
 [cycle]      current_cycle のディレクトリパス存在確認
-[work-items] work item status の一貫性（done なのに acceptance 未達など）
+[work-items] work item frontmatter の整合性（status / size / risk / dependencies の妥当性）
+[phase]      フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ）
 [git]        git status (clean/dirty), default branch, remote
 [gh]         gh auth status
 [pr]         active PR の存在・状態確認
@@ -870,9 +922,10 @@ doctor は修正を自動実行しない。診断と推奨だけ出す。
 
 ```text
 [config]      OK
-[state]       WARN: work_item 002 is in_progress but no current_work_item set
+[state]       OK (define_completed: true, release.merged: false)
 [cycle]       OK
-[work-items]  OK
+[work-items]  WARN: 002-normalize-state has status: in_progress but no recent commits
+[phase]       build (derived: define_completed=true, 2 items remaining)
 [git]         OK (branch: cycle/v3.0.0, clean)
 [gh]          OK (authenticated as user)
 [pr]          OK (PR #123, draft)
@@ -880,7 +933,7 @@ doctor は修正を自動実行しない。診断と推奨だけ出す。
 [trace]       WARN: work_item 003 has no design file (size: normal, expected)
 
 Recommendations:
-  1. Run: /aidlc build (to fix state inconsistency)
+  1. Continue: /aidlc build (work item 002 is in_progress)
   2. Create designs/003-*.md before completing work item 003
 ```
 
@@ -1157,20 +1210,20 @@ marketplace version を v3.0.0 に更新
 
 ## リスクと対策
 
-### 高リスク: Opus 4.x 前提が外れた場合
+### 高リスク: モデル差し替え時の workflow correctness
 
-防御ロジック全廃は Opus 4.x の精度に賭けている。Sonnet 4.x や将来の軽量モデルで動かしたとき、精度が落ちる可能性。
+防御ロジックの記述量を大幅に削減しているため、軽量モデルや将来のモデルで精度が落ちる可能性。
 
-**対策**: Phase 3 の define + build tiny で実動作を検証する。必要なら「最低限の防御ロジック」を rules.md に残す。完全廃止 vs 最小限保持は実測で判断。
+**対策**: rules.md ~80 行に最低限の safety rules を集約し、モデル非依存で workflow correctness を維持する。Phase 3 の define + build tiny で実動作を検証する。rules.md の記述は「モデル最適化ガイダンス」ではなく「最低限の安全ルール」として書く。
 
-### 中リスク: state.json の書き込み漏れ
+### 中リスク: 状態書き込み漏れ
 
-AI が state.json への状態書き込みを忘れる可能性。推論ベースは「書き込まなくても復帰できる」のが利点だった。
+AI が state.json や work item frontmatter への状態書き込みを忘れる可能性。推論ベースは「書き込まなくても復帰できる」のが利点だった。
 
 **対策**:
-- 各ステップの冒頭で「state.json を更新」を明記
+- state.json の書き込みは define 完了時と release 時のみ（頻度が低く忘れにくい）
+- work item frontmatter の更新は各ステップの冒頭で明記
 - state-write.sh でバリデーション付き書き込み（不正状態遷移の検出）
-- commit-flow に state.json の更新を含める
 - recovery.md にファイル存在からの簡易フォールバック（~10 行の推論ルール）を残す
 
 ### 中リスク: state.json 破損で復帰不能
@@ -1178,6 +1231,8 @@ AI が state.json への状態書き込みを忘れる可能性。推論ベー�
 JSON のパースエラーやフィールド欠損で状態が読めなくなる可能性。
 
 **対策**:
+- state.json はフィールドが 4 つだけ（schema_version, current_cycle, define_completed, release）なので破損リスクが低い
+- work item の状態は各ファイルの frontmatter に分散しているため、state.json 破損時も work item 情報は失われない
 - doctor で schema validation
 - journal.md と work-items/*.md から best-effort repair 可能にする
 - state.json 更新は state-write.sh 経由のみ（直接編集禁止）
@@ -1237,8 +1292,11 @@ Express は inception + construction + operations のチェーン。v3 でも維
 ### 3. v2 サポート期間
 
 - **案 A**: v3 リリースと同時に v2 EOL
-- **案 B**: v3 リリース後 3 ヶ月間 v2 にセキュリティ修正のみ
-- **推奨**: 案 A。consumer プロジェクトは少数で、マイグレーションスクリプトで移行可能
+- **案 B**: v3 リリース後、移行条件充足まで v2 メンテナンスモード（セキュリティ / クリティカル修正のみ）
+- **推奨**: 案 B（条件付き）。以下の移行信頼性基準をすべて満たした時点で v2 EOL とする:
+  1. マイグレーションスクリプトが最低 2 つの consumer プロジェクトでテスト済み
+  2. v3 で 1 cycle のドッグフーディングが完了済み
+  3. EOL 告知が README / CHANGELOG に 1 バージョン前から掲載済み
 
 ### 4. review 統合粒度
 
@@ -1287,7 +1345,7 @@ Express は inception + construction + operations のチェーン。v3 でも維
 6. **recovery 動作**: ファイル存在推論 → state.json 明示状態。v2 の progress.md は v3 で認識されない（マイグレーション対象）
 7. **コマンド名**: 旧名称（inception 等）はエイリアスとして維持するが、ヘルプ・ドキュメントは新名称（define 等）が主
 8. **成果物構造**: history/*.md → journal.md（単一ファイル追記型）
-9. **GitHub Projects 連携**: 廃止（AI が gh CLI を直接操作）
+9. **GitHub Projects 連携**: 廃止（core の責務ではない。プロジェクト管理ツールとして外部で運用）
 10. **Milestone 自動管理**: core から extension 化（opt-in）
 
 ---
