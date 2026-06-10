@@ -8,7 +8,7 @@ ai-dlc-starter-kit / v3.0.0-alpha.1（Phase 1: RFC・data model 固定）
 
 AI-DLC を v2 の漸進的改善ではなく、モダン AI モデル（Opus 4.x 等）を前提に **v3 としてゼロから再設計** する。その第一歩として、設計判断を確定する RFC 群（`docs/v3/`）と、後続実装の土台となる **state.json schema 初版**・**work item template 初版**を文書化する。
 
-本サイクル（alpha.1）は v3 リニューアル全体（7〜8 サイクル）の **Phase 1** に相当し、成果物は実行可能物ではなく設計文書である。ここで固定する設計判断が Phase 2 以降（skeleton → define/build → release → reflect/doctor）の全実装の土台になる。
+本サイクル（alpha.1）は v3 リニューアル全体（7〜8 サイクル）の **Phase 1** に相当し、成果物は実行可能物ではなく設計文書である。ここで固定する設計判断が Phase 2 以降（skeleton → define/develop → release → reflect/doctor）の全実装の土台になる。
 
 なぜ必要か:
 
@@ -33,7 +33,7 @@ AI-DLC を v2 の漸進的改善ではなく、モダン AI モデル（Opus 4.x
 ### 含まれるもの（このサイクルの成果物）
 
 - `docs/v3/rfc.md` — v3 全体設計の正本（principles / core・extension 境界 / アーキテクチャ / 削減目標）
-- `docs/v3/workflow.md` — コマンド設計（define/build/release/reflect/status/doctor）、v2 対応、引数なし実行、フェーズ詳細設計
+- `docs/v3/workflow.md` — コマンド設計（define/develop/release/reflect/status/doctor）、v2 対応、引数なし実行、フェーズ詳細設計
 - `docs/v3/data-model.md` — ディレクトリ構造、state.json schema、work item frontmatter、フェーズ導出ロジック、journal、size×depth マトリクス
 - `docs/v3/migration.md` — v2 → v3 移行方針・移行モード・データ変換・非互換点
 - **state.json schema 初版**（data-model.md 内に確定例示として記載）
@@ -43,7 +43,7 @@ AI-DLC を v2 の漸進的改善ではなく、モダン AI モデル（Opus 4.x
 
 - 既存 `skills/aidlc`（v2）の変更（クリーンカット、v3 は別系統で構築）
 - `skills/aidlc-v3/` skeleton 実装（Phase 2 / alpha.2）
-- define / build / release フロー実装（Phase 3〜5）
+- define / develop / release フロー実装（Phase 3〜5）
 - aidlc-review への 10 スキル統合の実装（Phase 4 以降。RFC では方針のみ）
 - v2 → v3 migration スクリプト実装（migration.md は方針のみ、実装は別フェーズ）
 - reflect / doctor 実装（Phase 6）
@@ -52,7 +52,7 @@ AI-DLC を v2 の漸進的改善ではなく、モダン AI モデル（Opus 4.x
 ## 成功基準（受け入れ基準）
 
 - [ ] v3 core / extension 境界が `docs/v3/rfc.md` に明記されている
-- [ ] define / build / release / reflect / status / doctor の責務が `docs/v3/workflow.md` に明記されている
+- [ ] define / develop / release / reflect / status / doctor の責務が `docs/v3/workflow.md` に明記されている
 - [ ] state.json schema が `docs/v3/data-model.md` に確定例示され、**必須フィールド集合・各フィールドの型・`schema_version` の値・各 enum の取りうる値**が明示されている（validator 実装は本サイクル対象外）
 - [ ] work item Markdown template が `docs/v3/data-model.md` に確定例示され、**必須 frontmatter キー（id/status/size/risk/assigned/dependencies）・各 enum の取りうる値・本文必須セクション**が明示されている
 - [ ] v2 から v3 への移行方針が `docs/v3/migration.md` に明記されている
@@ -78,7 +78,7 @@ AI-DLC を v2 の漸進的改善ではなく、モダン AI モデル（Opus 4.x
 
 ## 期限とマイルストーン
 
-- 本サイクル（alpha.1）= Phase 1。後続は alpha.2（skeleton）, alpha.3（define+build tiny）... と段階進行
+- 本サイクル（alpha.1）= Phase 1。後続は alpha.2（skeleton）, alpha.3（define+develop tiny）... と段階進行
 - 全 alpha 完走後に統合ブランチ `v3.0.0` を `main` へマージ
 
 ## 制約事項

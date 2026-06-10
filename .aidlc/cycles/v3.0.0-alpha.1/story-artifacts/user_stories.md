@@ -30,14 +30,14 @@ So that Phase 2 以降の全実装が一貫した設計判断の上で進めら�
 **優先順位**: Must-have
 
 As a AI-DLC starter kit の開発者
-I want to 4 フェーズコマンド（define/build/release/reflect）と 2 補助コマンド（status/doctor）の責務とコマンド設計を文書化する
+I want to 4 フェーズコマンド（define/develop/release/reflect）と 2 補助コマンド（status/doctor）の責務とコマンド設計を文書化する
 So that Phase 2 の skeleton 実装が、各コマンドの責務とフェーズ遷移を明確な仕様として参照できる
 
 **受け入れ基準**:
-- [ ] `docs/v3/workflow.md` に 6 コマンドの責務が明記されている。うち define/build/release/reflect は**フェーズコマンド**、status/doctor は**補助コマンド（読み取り専用 / 診断）**として区別されている
+- [ ] `docs/v3/workflow.md` に 6 コマンドの責務が明記されている。うち define/develop/release/reflect は**フェーズコマンド**、status/doctor は**補助コマンド（読み取り専用 / 診断）**として区別されている
 - [ ] v2 コマンド（inception/construction/operations/retrospective）との対応・エイリアス方針が記載されている
 - [ ] 引数なし実行時のフェーズ自動ルーティング仕様が記載されている
-- [ ] 各コマンド（define/build/release/reflect/status/doctor）の Step レベル詳細設計が記載されている
+- [ ] 各コマンド（define/develop/release/reflect/status/doctor）の Step レベル詳細設計が記載されている
 - [ ] Express モードの扱いが記載されている
 
 **技術的考慮事項**:

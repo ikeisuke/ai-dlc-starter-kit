@@ -2,17 +2,17 @@
 
 ## 概要
 
-`docs/v3/workflow.md` を作成する。define / build / release / reflect / status / doctor の責務、v2 コマンド対応、引数なし実行ルーティング、各フェーズの Step レベル詳細設計を文書化する。
+`docs/v3/workflow.md` を作成する。define / develop / release / reflect / status / doctor の責務、v2 コマンド対応、引数なし実行ルーティング、各フェーズの Step レベル詳細設計を文書化する。
 
 ## 含まれるユーザーストーリー
 - ストーリー 2: ワークフロー設計を文書化する
 
 ## 責務
 - `docs/v3/workflow.md` の作成
-- 6 コマンドの責務定義（define/build/release/reflect = フェーズコマンド、status/doctor = 補助コマンド（読み取り専用 / 診断）として区別）
+- 6 コマンドの責務定義（define/develop/release/reflect = フェーズコマンド、status/doctor = 補助コマンド（読み取り専用 / 診断）として区別）
 - v2 コマンドとの対応・エイリアス方針
 - 引数なし実行時のフェーズ自動ルーティング仕様
-- 各フェーズ（define/build/release/reflect/status/doctor）の Step 詳細設計
+- 各フェーズ（define/develop/release/reflect/status/doctor）の Step 詳細設計
 - Express モードの扱い
 
 ## 境界

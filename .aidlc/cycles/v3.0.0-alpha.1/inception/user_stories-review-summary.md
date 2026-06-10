@@ -19,7 +19,7 @@
 
 | # | 重要度 | 内容 | 対応 | バックログ |
 |---|--------|------|------|-----------|
-| 1 | 高 | `.aidlc/cycles/v3.0.0-alpha.1/story-artifacts/user_stories.md` - status/doctor が「6 コマンド」かつ「各フェーズ」と混同記載 | 修正済み（ストーリー2: define/build/release/reflect=フェーズコマンド、status/doctor=補助コマンドと区別） | - |
+| 1 | 高 | `.aidlc/cycles/v3.0.0-alpha.1/story-artifacts/user_stories.md` - status/doctor が「6 コマンド」かつ「各フェーズ」と混同記載 | 修正済み（ストーリー2: define/develop/release/reflect=フェーズコマンド、status/doctor=補助コマンドと区別） | - |
 | 2 | 中 | `.aidlc/cycles/v3.0.0-alpha.1/story-artifacts/user_stories.md` - 承認ゲート確認の記録の判定基準・記録場所が未定義 | 修正済み（ストーリー1: 分岐論点・承認結果・採用判断が rfc.md の Decision Gate Log に実際に記録されている、と Round 2/3 で精緻化） | - |
 | 3 | 中 | `.aidlc/cycles/v3.0.0-alpha.1/story-artifacts/user_stories.md` - 文書間整合性が受け入れ基準に未明示 | 修正済み（共通受け入れ基準: rfc.md の設計判断と workflow/data-model/migration が矛盾しない、を追加） | - |
 | 4 | 中 | `.aidlc/cycles/v3.0.0-alpha.1/story-artifacts/user_stories.md` - フェーズ導出の異常系仕様（破損/不正/矛盾時）が未記載 | 修正済み（ストーリー3: 破損・不正・矛盾時の扱いを方針レベルで記載、を追加。validator は対象外） | - |

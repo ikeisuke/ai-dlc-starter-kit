@@ -26,7 +26,7 @@
 
 ### ブランチ・バージョニング戦略
 
-- 段階的進行: alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + build tiny）… と進め、全 alpha 完走後に `v3.0.0` を `main` へマージする
+- 段階的進行: alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + develop tiny）… と進め、全 alpha 完走後に `v3.0.0` を `main` へマージする
 - 本 PR のマージ先は統合ベースブランチ `v3.0.0` であり `main` ではないため、`auto-tag.yml`（main push 時タグ付け）は発火しない。`v3.0.0-alpha.1` のリリースタグは自動付与されない
 
 ### CI / チェック

@@ -9,7 +9,7 @@ AI-DLC Starter Kit の変更履歴です。
 
 ## [3.0.0-alpha.1] - 2026-06-10
 
-AI-DLC v3 フルリニューアルの **Phase 1（RFC / data model 固定）**。`docs/v3-renewal-plan.md` を入力に、v3 の設計判断を確定する RFC 群と state schema・work item template の初版を `docs/v3/` 配下に文書化する docs-only サイクル。実行可能コードは生成せず、配布物（`skills/` / `bin/` / `scripts/` / `config/`）への変更も行わない。本 alpha.1 は v3 リニューアル全体の最初の段階であり、alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + build tiny）… と段階的に進め、全 alpha 完走後に `v3.0.0` を `main` へマージする。
+AI-DLC v3 フルリニューアルの **Phase 1（RFC / data model 固定）**。`docs/v3-renewal-plan.md` を入力に、v3 の設計判断を確定する RFC 群と state schema・work item template の初版を `docs/v3/` 配下に文書化する docs-only サイクル。実行可能コードは生成せず、配布物（`skills/` / `bin/` / `scripts/` / `config/`）への変更も行わない。本 alpha.1 は v3 リニューアル全体の最初の段階であり、alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + develop tiny）… と段階的に進め、全 alpha 完走後に `v3.0.0` を `main` へマージする。
 
 > **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.1` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.1` に更新する。
 
