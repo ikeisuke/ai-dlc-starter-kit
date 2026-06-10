@@ -288,16 +288,16 @@ v2 の perspective を持つ `reviewing-*` レビュースキル（**9 個**）�
 
 ### 7.1 フェーズ導出ロジックの参照
 
-**フェーズ導出ロジックの正本は `docs/v3/data-model.md`（Unit 003）**。本書（§2.3 ルーティング / §3.5 status / §3.6 doctor）は導出**結果**を参照する形で記述し、導出規則本体を再定義しない。現時点の導出形（**参考。正本は data-model.md**）:
+**フェーズ導出ロジックの正本は `docs/v3/data-model.md`（Unit 003）§5（Unit 003 で確定済み）**。本書（§2.3 ルーティング / §3.5 status / §3.6 doctor）は導出**結果**を参照する形で記述し、導出規則本体を再定義しない。以下は条件の**非規範スナップショット**であり、**評価順序は表さない**（first-match の評価順序・`complete` 最優先は data-model.md §5.1 が正本）:
 
-| 条件 | 導出フェーズ |
+| 条件（非規範 / 順不同） | 導出フェーズ |
 |-----|-----------|
+| `release.merge_approved: true` かつ PR が merged 状態 | complete（reflect 可能） |
 | `define_completed: false` | define |
 | `define_completed: true` かつ work item に done / withdrawn 以外がある | develop |
 | `define_completed: true` かつ全 work item が done / withdrawn | release 可能 |
-| `release.merge_approved: true` かつ PR が merged 状態 | complete（reflect 可能） |
 
-上表は data-model.md 確定時に正本化される。develop → release のフェーズ遷移は「最後の work item を done にした作業者が自動的に release 可能状態を作る」ため、「誰が変えるか」問題が発生しない。`complete` 判定には merge_approved（ブランチ上の承認記録）と PR の実態（実際に merged か）の両方が必要。
+**規則の解釈は data-model.md §5 を参照すること**（本表は参考であり、評価順序・排他関係を含む正確な導出規則は data-model.md §5.1 で確定済み）。develop → release のフェーズ遷移は「最後の work item を done にした作業者が自動的に release 可能状態を作る」ため、「誰が変えるか」問題が発生しない。`complete` 判定には merge_approved（ブランチ上の承認記録）と PR の実態（実際に merged か）の両方が必要。
 
 ### 7.2 GitHub 前提（RFC DG-5 整合）
 
