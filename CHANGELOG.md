@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.1] - 2026-06-10
+
+AI-DLC v3 フルリニューアルの **Phase 1（RFC / data model 固定）**。`docs/v3-renewal-plan.md` を入力に、v3 の設計判断を確定する RFC 群と state schema・work item template の初版を `docs/v3/` 配下に文書化する docs-only サイクル。実行可能コードは生成せず、配布物（`skills/` / `bin/` / `scripts/` / `config/`）への変更も行わない。本 alpha.1 は v3 リニューアル全体の最初の段階であり、alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + build tiny）… と段階的に進め、全 alpha 完走後に `v3.0.0` を `main` へマージする。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.1` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.1` に更新する。
+
+### Added
+
+- **v3 RFC（`docs/v3/rfc.md`）**: v3 の設計原則 7 件、core / extension 境界、削減目標、設計判断 6 件を確定（Unit 001 / DG-1 コマンド名 `develop` 統一含む）
+- **v3 ワークフロー（`docs/v3/workflow.md`）**: 6 コマンド体系・各フェーズ詳細・引数なしルーティング・フェーズ導出ロジックのスナップショットを文書化（Unit 002）
+- **v3 データモデル（`docs/v3/data-model.md`）**: ディレクトリ構造・`state.json` schema 初版・frontmatter 規約・フェーズ導出ロジック SoT（§5）・work item template を確定（Unit 003）
+- **v3 移行方針（`docs/v3/migration.md`）**: 移行モード・v2 → v3 データ変換方針・非互換点・GitHub Release 統合・EOL 条件を文書化（Unit 004）
+
+---
+
 ## [2.6.6] - 2026-05-20
 
 `aidlc-retrospective` skill の T 中心リファクタ + 本質的振り返り化を実装する patch サイクル。集約 Issue 起票を既定で廃止し T 件数分のループ起票に切り替えつつ、`aggregate_issue_enabled` フラグ（既定 `false`）で旧動作を保持する後方互換構造で patch リリース妥当性を担保。あわせてセルフレビュー観点（表面的 Try 起票防止）と一次情報三層検証 helper を skill 内に組み込む。
