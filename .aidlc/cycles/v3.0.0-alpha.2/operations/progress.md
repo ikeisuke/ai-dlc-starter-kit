@@ -20,7 +20,7 @@ release_gate_ready=true
 completion_gate_ready=true
 pr_number=730
 
-<!-- release_prep_commit: -->
+<!-- release_prep_commit: 73e0190d579690055f05fe25625341dec270be56 -->
 
 ## 現在のステップ
 
