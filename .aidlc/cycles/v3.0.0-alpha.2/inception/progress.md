@@ -34,4 +34,4 @@
 - AIレビュー: Intent 3R / Stories 2R / Units 1R すべて auto_approved（semi_auto）
 - Milestone: スキップ（関連 Issue なし / alpha.1 precedent 踏襲）
 - 次フェーズ: Construction（Unit 001 v3-state-scripts から）
-- Draft PR: 作成予定（cycle/v3.0.0-alpha.2 → v3.0.0）
+- Draft PR: #730（cycle/v3.0.0-alpha.2 → v3.0.0）
