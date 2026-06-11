@@ -7,6 +7,21 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.2] - 2026-06-11
+
+AI-DLC v3 フルリニューアルの **Phase 2（aidlc-v3 skeleton）**。alpha.1 で `docs/v3/*.md` に確定した設計を、v2 (`skills/aidlc`) と共存する `skills/aidlc-v3/` の最初の骨組みとして具現化する。SKILL.md ルーティング・define/status のステップ手順書・`state.json` 操作スクリプト・成果物テンプレートを整備し、各フローの実行ロジック実装は Phase 3 以降へ defer する。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.2` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.2` に更新する。
+
+### Added
+
+- **aidlc-v3 SKILL.md（`skills/aidlc-v3/SKILL.md`）**: define/develop/release/reflect/status/doctor の 6 コマンドルーティング、express モード、旧名エイリアス、引数なし実行のスケルトンを定義（Unit 003）
+- **define / status ステップ手順書（`skills/aidlc-v3/steps/define.md` / `steps/status.md`）**: define フロー手順と status 出力仕様を文書化（Unit 003）
+- **state 操作スクリプト（`skills/aidlc-v3/scripts/state-read.sh` / `state-write.sh` / `state-validate.sh`）**: `state.json` の読み取り・書き込み・検証スクリプト基盤とテスト（`tests/test-state-scripts.sh`）を整備（Unit 001）
+- **v3 成果物テンプレート（`skills/aidlc-v3/templates/intent.md` / `work-item.md` / `journal.md`）**: Intent・work item・journal の成果物テンプレートを追加（Unit 002）
+
+---
+
 ## [3.0.0-alpha.1] - 2026-06-10
 
 AI-DLC v3 フルリニューアルの **Phase 1（RFC / data model 固定）**。`docs/v3-renewal-plan.md` を入力に、v3 の設計判断を確定する RFC 群と state schema・work item template の初版を `docs/v3/` 配下に文書化する docs-only サイクル。実行可能コードは生成せず、配布物（`skills/` / `bin/` / `scripts/` / `config/`）への変更も行わない。本 alpha.1 は v3 リニューアル全体の最初の段階であり、alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + develop tiny）… と段階的に進め、全 alpha 完走後に `v3.0.0` を `main` へマージする。
