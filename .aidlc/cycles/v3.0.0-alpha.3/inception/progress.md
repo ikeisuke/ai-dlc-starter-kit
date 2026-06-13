@@ -25,7 +25,7 @@
 | inception.02-preparation | 完了 (2026-06-12) express=false / depth=standard / #731 を本サイクルに採用 |
 | inception.03-intent | 完了 (2026-06-12) AIレビュー3R合格・auto_approved (semi_auto) |
 | inception.04-stories-units | 完了 (2026-06-12) stories 5R / units 2R 合格・auto_approved (semi_auto)。重複チェック: 重複なし。express 無効 |
-| inception.05-completion | 進行中 (2026-06-12) |
+| inception.05-completion | 完了 (2026-06-12) Draft PR #732 / squash 5→1 / Milestone v3.0.0-alpha.3 |
 
 ## 完了情報
 
@@ -33,4 +33,5 @@
 - AIレビュー: Intent 3R / Stories 5R / Units 2R すべて auto_approved（semi_auto）
 - Milestone: v3.0.0-alpha.3（number=22）作成、#731 紐付け済み
 - 関連 Issue: #731（Unit 004 で対応）
+- Draft PR: #732（cycle/v3.0.0-alpha.3 → v3.0.0）
 - 次フェーズ: Construction（Unit 001 v3-define-flow から / 依存順 001,002 → 003 → 004 → 005）
