@@ -5,8 +5,8 @@ description: >-
   define / develop / release / reflect の 4 フェーズコマンドと status / doctor の
   補助コマンド、連続実行ラッパ express、旧名エイリアス（inception / construction /
   operations / retrospective）を統一的にルーティングする。
-  本サイクル（v3.0.0-alpha.2 / Phase 2）は skeleton であり、define 手順と status
-  出力仕様のみを読める形で確定する。フロー実行実装は Phase 3 以降。
+  Phase 3（v3.0.0-alpha.3）時点で define フロー・status 出力仕様・develop tiny フローを
+  実装済み。develop の normal / risky 分岐、release / reflect / doctor は後続 Phase。
 ---
 
 # AI-DLC v3 オーケストレーター（skeleton）
@@ -14,11 +14,12 @@ description: >-
 AI-DLC v3 は、フェーズ進行を会話履歴の推論ではなく、リポジトリ内の `state.json` +
 work item frontmatter への**明示的な状態書き込みから導出**する（RFC DG-6）。
 
-> **本ファイルの位置づけ（v3.0.0-alpha.2 / Phase 2 skeleton）**: 本 SKILL.md は
-> ルーティングの骨組みである。実体の手順ファイルとして存在するのは `steps/define.md`
-> と `steps/status.md` のみ。`develop` / `release` / `reflect` / `doctor` は**予約
-> コマンド**であり、手順ファイルは後続 Phase で実装する（未作成ファイルへの参照は作らない）。
-> `/aidlc-v3` 起動の有効化（`marketplace.json` 登録）も Phase 3 以降。
+> **本ファイルの位置づけ（v3.0.0-alpha.3 / Phase 3）**: 本 SKILL.md は
+> ルーティングの骨組みである。実体の手順ファイルとして存在するのは `steps/define.md`、
+> `steps/status.md`、`steps/develop.md`（**tiny フローのみ** / 本 Unit で作成）。
+> `develop` の `normal` / `risky` フロー、および `release` / `reflect` / `doctor` は
+> **予約**であり、手順ファイル（または分岐）は後続 Phase で実装する（未作成ファイルへの参照は作らない）。
+> `/aidlc-v3` 起動の有効化（`marketplace.json` 登録）は Unit 005（aidlc-v3-activation）で行う。
 
 ## コマンド表記について（`/aidlc` と `/aidlc-v3` の区別）
 
@@ -39,7 +40,7 @@ defer している。そのため**現時点の起動表面は `/aidlc-v3`** で
 | コマンド | 責務 | 旧フェーズ | 本 skeleton での扱い |
 |---------|------|-----------|--------------------|
 | `define` | 目的・スコープ・完了条件・作業単位（work item）を決める | Inception | `steps/define.md`（実在 / 本 Unit で作成） |
-| `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | 予約（後続 Phase で実装） |
+| `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | `steps/develop.md`（**tiny フロー実在** / 本 Unit で作成。normal/risky は Phase 4） |
 | `release` | main に安全に取り込む（PR 整備・merge） | Operations | 予約（後続 Phase で実装） |
 | `reflect` | 振り返り、改善 Issue を作る（任意実行） | Retrospective | 予約（後続 Phase で実装） |
 
@@ -111,6 +112,6 @@ v3 専用の rules 実体（`steps/rules.md` 等）は後続 Phase で追加す�
 `templates/work-item.md`、`steps/define.md`）。step ファイルからの単純相対参照
 （`steps/templates/...` のような解釈）は行わない。
 
-- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh`（state.json 操作）
+- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）
 - `templates/`: `intent.md` / `work-item.md` / `journal.md`（成果物テンプレート）
-- `steps/`: `define.md` / `status.md`（本 Unit で作成）
+- `steps/`: `define.md` / `status.md` / `develop.md`（tiny フロー）
