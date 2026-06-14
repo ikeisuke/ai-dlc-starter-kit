@@ -11,7 +11,7 @@
 | ステップ | 状態 | 成果物 | 完了日 |
 |---------|------|--------|--------|
 | 1. Intent明確化 | 完了 | requirements/intent.md | 2026-06-12 |
-| 2. 既存コード分析 | 未着手 | - | - |
+| 2. 既存コード分析 | スキップ | inception.02-preparation に内包（docs/v3-renewal-plan.md Phase 3 / docs/v3/*.md / skills/aidlc-v3/* skeleton の読込で代替 / 専用 existing_analysis.md 不作成） | 2026-06-12 |
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-06-12 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md（001-005） | 2026-06-12 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-06-12 |
