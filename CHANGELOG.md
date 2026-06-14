@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.3] - 2026-06-14
+
+AI-DLC v3 フルリニューアルの **Phase 3（define + develop tiny フロー実行実装）**。alpha.2 で「読める手順」として固定した `skills/aidlc-v3/` を実行実装へ進める。`/aidlc-v3 define` で v3 cycle（intent / work-items / `.aidlc/state.json` / journal）を実生成し、`develop` の tiny フローを実装。依存解決 `work-item-next.sh`、state safety hardening（schema_version 互換性検証 + writer ガード / #731 解消）、`/aidlc-v3` 起動有効化（marketplace 登録）を含む。v2 (`skills/aidlc`) には非影響。本流化（v3→v2 置換）・marketplace version の v3.0.0 化は Phase 7 へ defer する。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.3` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.3` に更新する。
+
+### Added
+
+- **v3 define フロー実行実装（`skills/aidlc-v3/steps/define.md` / `scripts/state-init.sh` 等）**: `/aidlc-v3 define` で intent / work-items / `.aidlc/state.json` / journal を実生成するフローを実装（Unit 001）
+- **work item 依存解決（`skills/aidlc-v3/scripts/work-item-next.sh`）**: 依存関係を解決して次に着手する work item を選定するスクリプトとテストを追加（Unit 002）
+- **v3 develop tiny フロー実行実装（`skills/aidlc-v3/steps/develop.md` / `scripts/work-item-status.sh` 等）**: `/aidlc-v3 develop` の tiny フロー（work item の実装・状態遷移）を実装（Unit 003）
+- **`/aidlc-v3` 起動有効化（`.claude-plugin/marketplace.json`）**: plugins に `./skills/aidlc-v3` を追加して `/aidlc-v3` 起動を有効化し、起動構造を統合検証（`scripts/tests/test-activation.sh`）（Unit 005）
+
+### Changed
+
+- **state-validate.sh / state-write.sh の schema_version 互換性ガード（#731）**: 未知 `schema_version` を WARN 化し、state-write.sh に未知バージョンへの更新防止ガードを追加（Unit 004）
+
+---
+
 ## [3.0.0-alpha.2] - 2026-06-11
 
 AI-DLC v3 フルリニューアルの **Phase 2（aidlc-v3 skeleton）**。alpha.1 で `docs/v3/*.md` に確定した設計を、v2 (`skills/aidlc`) と共存する `skills/aidlc-v3/` の最初の骨組みとして具現化する。SKILL.md ルーティング・define/status のステップ手順書・`state.json` 操作スクリプト・成果物テンプレートを整備し、各フローの実行ロジック実装は Phase 3 以降へ defer する。v2 (`skills/aidlc`) には非影響。

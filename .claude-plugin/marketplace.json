@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "AI-DLC (AI-Driven Development Lifecycle) skills for Claude Code",
-    "version": "3.0.0-alpha.2"
+    "version": "3.0.0-alpha.3"
   },
   "plugins": [
     {
@@ -29,7 +29,8 @@
         "./skills/reviewing-operations-deploy",
         "./skills/reviewing-operations-premerge",
         "./skills/squash-unit",
-        "./skills/write-history"
+        "./skills/write-history",
+        "./skills/aidlc-v3"
       ]
     }
   ]

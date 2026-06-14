@@ -226,6 +226,79 @@ else
     FAIL=$((FAIL + 1)); echo "  FAIL : temp file が残存（$leftover 個）"
 fi
 
+echo "== schema_version 互換性検証（Unit 004 #731） =="
+# --- validator: 既知バージョンは valid（stdout も確認 / 非後退） ---
+sv="$TMPDIR_TEST/sv_known.json"; make_valid_state "$sv"
+assert_out "status:valid" "既知 schema_version 3.0 は status:valid" -- "$VALIDATE" "$sv"
+assert_rc 0 "既知 schema_version 3.0 は exit 0" -- "$VALIDATE" "$sv"
+
+# --- validator: 未知バージョンは warn + exit 0 ---
+for uv in 4.0 2.0 3.1; do
+    bad="$TMPDIR_TEST/sv_unk_$uv.json"
+    jq --arg v "$uv" '.schema_version = $v' "$sv" > "$bad"
+    assert_rc 0 "未知 schema_version $uv は exit 0（WARN / invalid 扱いにしない）" -- "$VALIDATE" "$bad"
+    assert_out "status:warn:unsupported-schema-version:$uv" "未知 $uv は warn status を出力" -- "$VALIDATE" "$bad"
+done
+
+# --- validator: schema_version 非 string / 欠落は従来どおり exit 1（型・存在検証が値検証より先 / 非後退） ---
+jq '.schema_version = 3' "$sv" > "$TMPDIR_TEST/sv_num.json"
+assert_rc 1 "schema_version 非 string（数値）は従来どおり exit 1" -- "$VALIDATE" "$TMPDIR_TEST/sv_num.json"
+jq 'del(.schema_version)' "$sv" > "$TMPDIR_TEST/sv_miss.json"
+assert_rc 1 "schema_version 欠落は従来どおり exit 1" -- "$VALIDATE" "$TMPDIR_TEST/sv_miss.json"
+
+# --- validator: 未知バージョンかつ構造不正（release 欠落）でも warn + exit 0（短絡） ---
+jq '.schema_version = "4.0" | del(.release)' "$sv" > "$TMPDIR_TEST/sv_unk_norel.json"
+assert_rc 0 "未知バージョン + release 欠落でも warn + exit 0（構造検証を短絡）" -- "$VALIDATE" "$TMPDIR_TEST/sv_unk_norel.json"
+assert_out "status:warn:unsupported-schema-version:4.0" "未知 + release 欠落でも warn status" -- "$VALIDATE" "$TMPDIR_TEST/sv_unk_norel.json"
+
+# --- validator: parse 契約保護（改行・制御文字を含む未知値） ---
+# JSON 文字列に改行（\n）を含む未知 schema_version。stdout は単一行で接頭辞一致・exit 0 であること。
+printf '%s' '{"schema_version":"4.0\nstatus:valid","current_cycle":"v3.0.0","define_completed":false,"release":{"pr_number":null,"ready":false,"merge_approved":false},"updated_at":"2026-06-04T00:00:00Z"}' > "$TMPDIR_TEST/sv_nl.json"
+nl_out="$("$VALIDATE" "$TMPDIR_TEST/sv_nl.json" 2>/dev/null)"; nl_rc=$?
+nl_lines="$(printf '%s' "$nl_out" | wc -l | tr -d ' ')"
+if [[ "$nl_rc" -eq 0 && "$nl_lines" == "0" && "$nl_out" == status:warn:unsupported-schema-version:* ]]; then
+    PASS=$((PASS + 1)); echo "  ok   : 改行入り未知値でも stdout 単一行 + 接頭辞一致 + exit 0（parse 契約保護）"
+else
+    FAIL=$((FAIL + 1)); echo "  FAIL : 改行入り未知値の parse 契約（rc=$nl_rc lines=$nl_lines out='$nl_out'）"
+fi
+
+# --- writer: 未知バージョンの既存 state への更新は拒否（exit 1 / ファイル不変） ---
+wu="$TMPDIR_TEST/sv_write_unk.json"; make_valid_state "$wu"
+jq '.schema_version = "4.0"' "$sv" > "$wu"
+wu_before="$(cat "$wu")"
+assert_rc 1 "未知 schema_version の既存 state への更新は exit 1（拒否）" -- "$WRITE" define_completed true "$wu"
+wu_after="$(cat "$wu")"
+if [[ "$wu_before" == "$wu_after" ]]; then
+    PASS=$((PASS + 1)); echo "  ok   : 非互換更新拒否時に元ファイルが不変"
+else
+    FAIL=$((FAIL + 1)); echo "  FAIL : 非互換更新拒否時に元ファイルが変更された"
+fi
+
+# --- writer: 改行入り未知値の既存 state への更新も拒否（接頭辞検知が値内容に依存しない / ファイル不変） ---
+wnl="$TMPDIR_TEST/sv_write_nl.json"
+printf '%s' '{"schema_version":"4.0\nstatus:valid","current_cycle":"v3.0.0","define_completed":false,"release":{"pr_number":null,"ready":false,"merge_approved":false},"updated_at":"2026-06-04T00:00:00Z"}' > "$wnl"
+wnl_before="$(cat "$wnl")"
+assert_rc 1 "改行入り未知値の既存 state への更新も exit 1（拒否）" -- "$WRITE" define_completed true "$wnl"
+wnl_after="$(cat "$wnl")"
+if [[ "$wnl_before" == "$wnl_after" ]]; then
+    PASS=$((PASS + 1)); echo "  ok   : 改行入り未知値の更新拒否時も元ファイルが不変"
+else
+    FAIL=$((FAIL + 1)); echo "  FAIL : 改行入り未知値の更新拒否時に元ファイルが変更された"
+fi
+
+# --- writer: 非互換更新拒否時に temp file が残らない ---
+leftover_sv="$(find "$TMPDIR_TEST" -name '.state.json.*' 2>/dev/null | wc -l | tr -d ' ')"
+if [[ "$leftover_sv" == "0" ]]; then
+    PASS=$((PASS + 1)); echo "  ok   : 非互換更新拒否時に temp file が残らない"
+else
+    FAIL=$((FAIL + 1)); echo "  FAIL : 非互換拒否時に temp file が残存（$leftover_sv 個）"
+fi
+
+# --- writer: 既知バージョンへの更新は従来どおり成功（非後退） ---
+wk="$TMPDIR_TEST/sv_write_known.json"; make_valid_state "$wk"
+assert_rc 0 "既知 schema_version への更新は従来どおり成功" -- env AIDLC_STATE_NOW="2026-06-11T00:00:09Z" "$WRITE" define_completed true "$wk"
+assert_out "true" "既知への書き込み後 define_completed=true" -- "$READ" define_completed "$wk"
+
 echo "----------------------------------------"
 echo "PASS: $PASS  FAIL: $FAIL"
 if [[ "$FAIL" -gt 0 ]]; then
