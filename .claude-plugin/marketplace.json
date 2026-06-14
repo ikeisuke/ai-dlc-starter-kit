@@ -29,7 +29,8 @@
         "./skills/reviewing-operations-deploy",
         "./skills/reviewing-operations-premerge",
         "./skills/squash-unit",
-        "./skills/write-history"
+        "./skills/write-history",
+        "./skills/aidlc-v3"
       ]
     }
   ]

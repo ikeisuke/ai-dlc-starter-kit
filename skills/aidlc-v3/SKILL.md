@@ -15,22 +15,24 @@ AI-DLC v3 は、フェーズ進行を会話履歴の推論ではなく、リポ�
 work item frontmatter への**明示的な状態書き込みから導出**する（RFC DG-6）。
 
 > **本ファイルの位置づけ（v3.0.0-alpha.3 / Phase 3）**: 本 SKILL.md は
-> ルーティングの骨組みである。実体の手順ファイルとして存在するのは `steps/define.md`、
-> `steps/status.md`、`steps/develop.md`（**tiny フローのみ** / 本 Unit で作成）。
+> ルーティングの骨組みである。実体の手順ファイルとして存在するのは `steps/define.md`
+> （Unit 001 で実装）、`steps/status.md`（Unit 001 で実装）、`steps/develop.md`
+> （**tiny フローのみ** / Unit 003 で実装）。
 > `develop` の `normal` / `risky` フロー、および `release` / `reflect` / `doctor` は
 > **予約**であり、手順ファイル（または分岐）は後続 Phase で実装する（未作成ファイルへの参照は作らない）。
-> `/aidlc-v3` 起動の有効化（`marketplace.json` 登録）は Unit 005（aidlc-v3-activation）で行う。
+> `/aidlc-v3` 起動は `marketplace.json` 登録済みで有効（Unit 005 / aidlc-v3-activation で有効化）。
 
 ## コマンド表記について（`/aidlc` と `/aidlc-v3` の区別）
 
 設計正本 `docs/v3/workflow.md` は v3 の**最終的なコマンド表面**を `/aidlc`（例:
 `/aidlc define`）で記述する。これは v3 が v2 を置き換えた後の end-state である。
 
-一方、本 skeleton（v3.0.0-alpha.2 / Phase 2）は v2（`skills/aidlc` = `/aidlc`）と
-**共存**し、`marketplace.json` への登録（`/aidlc-v3` 起動有効化）も Phase 3 以降へ
-defer している。そのため**現時点の起動表面は `/aidlc-v3`** であり、本 skeleton 内の
+一方、本 skeleton（v3.0.0-alpha.3 / Phase 3）は v2（`skills/aidlc` = `/aidlc`）と
+**共存**し、`marketplace.json` へ登録済み（`/aidlc-v3` 起動有効化済み / Unit 005）。
+そのため**現時点の起動表面は `/aidlc-v3`** であり、本 skeleton 内の
 手順・出力例は `/aidlc-v3` 表記を用いる（現状の共存を反映）。最終表面 `/aidlc` への
-切替は migration / 起動有効化フェーズで行う（正本のコマンド**名**（`define` / `develop`
+切替（本流化 = `skills/aidlc-v3 → skills/aidlc` 置換）は後続 Phase（Phase 7）で行う
+（正本のコマンド**名**（`define` / `develop`
 等）は workflow.md / RFC DG-1 に準拠し、本区別は起動 prefix のみに関する）。
 
 ## コマンド体系
@@ -39,8 +41,8 @@ defer している。そのため**現時点の起動表面は `/aidlc-v3`** で
 
 | コマンド | 責務 | 旧フェーズ | 本 skeleton での扱い |
 |---------|------|-----------|--------------------|
-| `define` | 目的・スコープ・完了条件・作業単位（work item）を決める | Inception | `steps/define.md`（実在 / 本 Unit で作成） |
-| `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | `steps/develop.md`（**tiny フロー実在** / 本 Unit で作成。normal/risky は Phase 4） |
+| `define` | 目的・スコープ・完了条件・作業単位（work item）を決める | Inception | `steps/define.md`（実在 / Unit 001 で実装） |
+| `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | `steps/develop.md`（**tiny フロー実在** / Unit 003 で実装。normal/risky は Phase 4） |
 | `release` | main に安全に取り込む（PR 整備・merge） | Operations | 予約（後続 Phase で実装） |
 | `reflect` | 振り返り、改善 Issue を作る（任意実行） | Retrospective | 予約（後続 Phase で実装） |
 
@@ -48,7 +50,7 @@ defer している。そのため**現時点の起動表面は `/aidlc-v3`** で
 
 | コマンド | 責務 | 本 skeleton での扱い |
 |---------|------|--------------------|
-| `status` | `state.json` + frontmatter からフェーズを導出し現在地・次アクションを表示（**読み取り専用**） | `steps/status.md`（実在 / 本 Unit で作成） |
+| `status` | `state.json` + frontmatter からフェーズを導出し現在地・次アクションを表示（**読み取り専用**） | `steps/status.md`（実在 / Unit 001 で実装） |
 | `doctor` | config / git / gh / state / work-items / trace の問題を診断（**自動修正しない**） | 予約（後続 Phase で実装） |
 
 ### コマンド名規約（RFC DG-1）
