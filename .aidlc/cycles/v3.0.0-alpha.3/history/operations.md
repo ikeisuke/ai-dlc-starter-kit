@@ -30,3 +30,20 @@
   - `.claude-plugin/marketplace.json`
 
 ---
+## 2026-06-14T21:15:00+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: AIレビュー完了（マージ前 / codex 8R）
+- **実行内容**: PR #732 マージ前レビュー（7.12 / codex / reviewing-operations-premerge）完了。base=v3.0.0 差分を codex review で 8 ラウンド実施し収束（R8 clean）。
+- R1: P2x2 work-item-validate.sh 重複 frontmatter キー / 重複 work item ID → 修正（exactly-one-occurrence + duplicate-id 検出）。
+- R2: P2x1 work-item-status.sh 片側引用符 status → 偽陽性（実測で "pending / pending" は既に exit 1）。回帰テスト追加で契約明文化。
+- R3: P2x1 work-item-validate.sh body 抽出が本文水平線 --- で打ち切り → c==2 を c>=2 に修正。
+- R4: P2x1 work-item-next.sh malformed/欠落 dependencies を空依存誤認 → wi_deps を fail-closed（array shape 検証）。
+- R5: P2x1 work-item-next.sh 依存要素構文（[001-002] / [001 002]）が緩く通過 → validator (8) 同等の厳密要素検証。
+- R6: P2x2 develop.md に Step 0（clean-worktree 前提 + state-read.sh で current_cycle 解決）追加。
+- R7: P2x1 閉じ frontmatter delimiter 欠落の malformed file 受理 → status/next/validate の3スクリプトに終端ガード一括追加（flag 方式 awk）。
+- R8: 指摘0件（clean）。
+- 全 v3 テスト緑（define 79 / develop 49 / state 88 / next 33 / activation 19）。bash -n / shellcheck / markdownlint 0 error。v2（skills/aidlc/）非影響。
+- ローカル差分レビュー（git diff）を各修正前に実施。修正コミット計 7 件は 7.12.5 squash-712 で集約予定。
+
+---

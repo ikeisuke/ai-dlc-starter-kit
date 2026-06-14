@@ -68,11 +68,32 @@ wi_scalar() {
 }
 
 # wi_deps <frontmatter> : dependencies 配列の ID を空白区切りで stdout 出力（空配列は空）。
+#   dependencies 行が不在 / array 形式 [...] でない / 要素構文が不正（ハイフン結合 [001-002]・
+#   空白区切り [001 002]・片側引用符等）の場合は return 1（fail-closed）。
+#   develop は work-item-validate.sh を経由せず本スクリプトを直接呼ぶため、破損依存行を
+#   「空依存」と誤認して pending を unblocked 選定する out-of-order 実行を防ぐ
+#   （codex premerge R4/R5 P2）。要素検証は work-item-validate.sh の (8) と同等。
 wi_deps() {
-    local _wid_fm="$1" _wid_line _wid_inner
+    local _wid_fm="$1" _wid_line _wid_inner _wid_compact _wid_raw _wid_elem _wid_ifs
+    local -a _wid_out=() _wid_raws=()
     _wid_line="$(echo "$_wid_fm" | grep -E '^dependencies:' | head -n1)"
+    [[ -n "$_wid_line" ]] || return 1
+    echo "$_wid_line" | grep -Eq '^dependencies:[[:space:]]*\[[^]]*\][[:space:]]*(#.*)?$' || return 1
     _wid_inner="$(echo "$_wid_line" | sed -nE 's/^dependencies:[[:space:]]*\[([^]]*)\].*/\1/p')"
-    echo "$_wid_inner" | grep -oE '[0-9A-Za-z]+' | tr '\n' ' ' || true
+    _wid_compact="$(echo "$_wid_inner" | tr -d '[:space:]')"
+    if [[ -n "$_wid_compact" ]]; then
+        _wid_ifs="$IFS"; IFS=','; read -ra _wid_raws <<< "$_wid_inner"; IFS="$_wid_ifs"
+        for _wid_raw in "${_wid_raws[@]}"; do
+            _wid_elem="$(echo "$_wid_raw" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+            # 引用符なし or 両端引用符付きの ID トークンのみ許容（内部空白・ハイフン・片側引用符は弾く）
+            [[ "$_wid_elem" =~ ^([A-Za-z0-9]+|\"[A-Za-z0-9]+\")$ ]] || return 1
+            _wid_elem="${_wid_elem#\"}"; _wid_elem="${_wid_elem%\"}"
+            _wid_out+=("$_wid_elem")
+        done
+    fi
+    if [[ "${#_wid_out[@]}" -gt 0 ]]; then
+        printf '%s ' "${_wid_out[@]}"
+    fi
 }
 
 # --- 引数チェック ---
@@ -112,11 +133,21 @@ for f in "${files[@]}"; do
         exit 2
     fi
     base="$(basename "$f" .md)"
+    # frontmatter ブロック終端ガード（先頭 --- + 閉じ --- 必須 / malformed file を fail-closed）。
+    # 閉じ delimiter が無いとファイル末尾までを frontmatter とみなし誤選定し得るため弾く（codex premerge R7 P2）。
+    if ! awk 'NR==1 && $0!="---"{exit 1} NR>1 && $0=="---"{f=1; exit 0} END{exit f?0:1}' "$f"; then
+        err "invalid: malformed frontmatter (missing closing '---') in ${base%%-*} ($f)"
+        exit 1
+    fi
     fm="$(awk 'NR==1 && $0=="---"{f=1; next} f && $0=="---"{exit} f{print}' "$f")"
+    if ! deps_val="$(wi_deps "$fm")"; then
+        err "invalid: malformed or missing dependencies in ${base%%-*} ($f)"
+        exit 1
+    fi
     ids+=("${base%%-*}")
     statuses+=("$(wi_scalar "$fm" status)")
     sizes+=("$(wi_scalar "$fm" size)")
-    deps_list+=("$(wi_deps "$fm")")
+    deps_list+=("$deps_val")
     paths+=("$dir/$base.md")
 done
 

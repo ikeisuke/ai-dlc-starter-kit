@@ -42,6 +42,14 @@ in_list() {
     return 1
 }
 
+# has_closing_frontmatter <file> : 先頭行が --- かつ 2 つ目の --- が存在すれば return 0。
+#   先頭が --- でない / 閉じ --- が無い（frontmatter ブロック未終端）malformed は return 1。
+#   extract_frontmatter は閉じ delimiter が無いとファイル末尾までを frontmatter とみなすため、
+#   read/write の前段でブロック終端を必須化して malformed file の改変を防ぐ（codex premerge R7 P2）。
+has_closing_frontmatter() {
+    awk 'NR==1 && $0!="---"{exit 1} NR>1 && $0=="---"{f=1; exit 0} END{exit f?0:1}' "$1"
+}
+
 # extract_frontmatter <file> : 先頭 --- 〜 次の --- を stdout 出力（work-item-validate.sh と同方式）
 extract_frontmatter() {
     awk 'NR==1 && $0=="---"{f=1; next} f && $0=="---"{exit} f{print}' "$1"
@@ -95,6 +103,12 @@ fi
 if [[ ! -r "$file" ]]; then
     err "error: work item not readable: $file"
     exit 2
+fi
+
+# --- frontmatter ブロック終端ガード（閉じ --- 必須 / malformed file の改変防止） ---
+if ! has_closing_frontmatter "$file"; then
+    err "error: malformed frontmatter (missing closing '---'): $file"
+    exit 1
 fi
 
 # --- frontmatter 抽出 + status 行一意性ガード ---

@@ -94,9 +94,18 @@ if [[ "${#files[@]}" -eq 0 ]]; then
 fi
 
 declare -a ids=()
+declare -a seen_ids=()
 for f in "${files[@]}"; do
     base="$(basename "$f" .md)"
-    ids+=("${base%%-*}")
+    id_prefix="${base%%-*}"
+    # 重複 id 検出（依存は ID 参照のみ / §6）。同一 ID prefix のファイルが複数あると
+    # work-item-next.sh の status_of_id が先頭一致で曖昧解決するため、検証ゲートで弾く。
+    if in_list "$id_prefix" "${seen_ids[*]}"; then
+        err "invalid: duplicate work item id '$id_prefix' (multiple files share this id)"
+        exit 1
+    fi
+    seen_ids+=("$id_prefix")
+    ids+=("$id_prefix")
 done
 
 # --- 各 work item の検証 ---
@@ -108,13 +117,30 @@ for f in "${files[@]}"; do
         exit 2
     fi
 
+    # frontmatter ブロック終端ガード（先頭 --- + 閉じ --- 必須）。閉じ delimiter が無いと
+    # ファイル末尾までを frontmatter とみなすため、明示的に malformed として弾く（codex premerge R7 P2）。
+    if ! awk 'NR==1 && $0!="---"{exit 1} NR>1 && $0=="---"{f=1; exit 0} END{exit f?0:1}' "$f"; then
+        err "invalid: malformed frontmatter (missing closing '---') in $base"
+        exit 1
+    fi
+
     # frontmatter（先頭 --- 〜 次の ---）と本文を抽出
     fm="$(awk 'NR==1 && $0=="---"{f=1; next} f && $0=="---"{exit} f{print}' "$f")"
-    body="$(awk 'c==2{print} $0=="---"{c++}' "$f")"
+    # body は 2 番目の区切り（frontmatter 終端）以降を全て出力する。本文中の水平線 `---`
+    # で打ち切らないよう c>=2 で判定する（c==2 だと本文 `---` で c=3 となり以降が欠落し、
+    # 後続必須セクションを誤って欠落判定する / codex premerge R3 P2）。
+    body="$(awk 'c>=2{print} $0=="---"{c++}' "$f")"
 
-    # (1) 必須 6 キー
+    # (1) 必須 6 キー（各キーは「ちょうど 1 回」出現を要求）。
+    #     重複出現（例: status: pending / status: done の二重指定）は read_scalar / status.sh --read が
+    #     先頭一致で黙って曖昧解決するため、検証ゲートで弾いて非決定的 state を防ぐ。
     for k in id status size risk assigned dependencies; do
-        echo "$fm" | grep -Eq "^${k}:" || { err "invalid: missing frontmatter key '$k' in $base"; exit 1; }
+        kc="$(echo "$fm" | grep -Ec "^${k}:" || true)"
+        if [[ "$kc" -eq 0 ]]; then
+            err "invalid: missing frontmatter key '$k' in $base"; exit 1
+        elif [[ "$kc" -gt 1 ]]; then
+            err "invalid: duplicate frontmatter key '$k' ($kc occurrences) in $base"; exit 1
+        fi
     done
 
     # (2) enum（read_scalar で値トークン抽出 = 引用符なし/両端引用符のみ許容・prefix 偽陽性排除・

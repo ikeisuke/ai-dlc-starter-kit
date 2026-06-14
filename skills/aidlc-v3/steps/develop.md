@@ -33,9 +33,32 @@ develop tiny は Step 1 / 3 / 4 / 6 を実行する。Step 2（設計）と Step
 （`state.json` はリポジトリ直下 `.aidlc/state.json`、cycle 成果物は `.aidlc/cycles/<cycle>/`）。
 データモデル・フェーズ導出の正本は `docs/v3/data-model.md`。
 
+## Step 0: 前提確認（clean-worktree + cycle 解決）
+
+Step 1 以降に進む前に必ず実行する。
+
+1. **clean-worktree 確認**: git のワーキングツリーが clean かを確認する（`git status --porcelain` が空 /
+   define.md Step 1 と同じ）。dirty の場合はコミット / stash をユーザーに促してから進む。develop は
+   Step 6 で work item 単位に `git add -A` するため、事前の未コミット差分が混入しないよう本チェックを必須とする。
+
+   ```bash
+   git status --porcelain
+   ```
+
+2. **current_cycle 解決**: 永続化された active cycle は `state.json` のみが保持する。`<cycle>` プレースホルダを
+   推測・手動置換せず、`state-read.sh` で `current_cycle` を解決して以降の `.aidlc/cycles/<cycle>/...` パスに使う:
+
+   ```bash
+   scripts/state-read.sh current_cycle
+   ```
+
+   - exit 0 + 値出力 → その値を `<cycle>` として Step 1 以降で使用する。
+   - exit 1（`state.json` 不在 / `current_cycle` 欠落 = active cycle なし）→ 「先に `/aidlc-v3 define` を実行してください」と案内して**終了**（mutation なし）。
+   - exit 2（jq 不在 / 読取不可）→ エラーを提示して**終了**。
+
 ## Step 1: Work Item 選定 + 現在 status 読取
 
-1. 次 work item を選定する（依存解決 + resume 優先 / Unit 002）:
+1. 次 work item を選定する（依存解決 + resume 優先 / Unit 002 / Step 0 で解決した `<cycle>` を使用）:
 
    ```bash
    scripts/work-item-next.sh ".aidlc/cycles/<cycle>/work-items"
@@ -112,7 +135,9 @@ tiny は design / risk analysis を行わない（`docs/v3/workflow.md` §6.2）
 
 3. **work item 単位で最終 commit を 1 つに集約する**（計画 D4）。実装変更 + 検証後の `status: done` +
    journal 追記をまとめて 1 commit にする。Step 3 で中間 commit を作っている場合は `git commit --amend`
-   または squash で最終 commit 単体に集約し、追加 commit を残さない:
+   または squash で最終 commit 単体に集約し、追加 commit を残さない。`git add -A` は Step 0 で
+   clean-worktree を確認済みである前提に成立する（事前の未コミット差分が無いため、ステージされる差分は
+   本 work item の実装・状態遷移・journal に限定される）:
 
    ```bash
    git add -A

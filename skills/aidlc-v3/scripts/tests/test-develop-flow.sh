@@ -243,6 +243,32 @@ put_work_item "$sq/work-items" 001 q pending tiny ""
 sed -i.bak 's/^status: pending$/status: "pending" # note/' "$sq/work-items/001-q.md" && rm -f "$sq/work-items/001-q.md.bak"
 assert_out "status:pending" "read: 引用符 + inline コメント" -- "$WISTATUS" --read "$sq/work-items/001-q.md"
 assert_out "status:written" "write: 引用符付き現在値でも遷移" -- "$WISTATUS" "$sq/work-items/001-q.md" pending in_progress
+# 片側引用符（balanced quote のみ許容 / 開き・閉じ単独は enum 不一致で exit 1）。
+# read 異常 = 副作用なしの契約を明文化（codex premerge R2 偽陽性に対する回帰防止テスト）。
+oq="$TMPROOT/status-openquote"; mkdir -p "$oq/work-items"
+put_work_item "$oq/work-items" 001 oq pending tiny ""
+sed -i.bak 's/^status: pending$/status: "pending/' "$oq/work-items/001-oq.md" && rm -f "$oq/work-items/001-oq.md.bak"
+assert_rc 1 "read: 片側引用符（開き）status: \"pending は exit 1" -- "$WISTATUS" --read "$oq/work-items/001-oq.md"
+assert_rc 1 "write: 片側引用符（開き）は遷移せず exit 1" -- "$WISTATUS" "$oq/work-items/001-oq.md" pending in_progress
+cq="$TMPROOT/status-closequote"; mkdir -p "$cq/work-items"
+put_work_item "$cq/work-items" 001 cq pending tiny ""
+sed -i.bak 's/^status: pending$/status: pending"/' "$cq/work-items/001-cq.md" && rm -f "$cq/work-items/001-cq.md.bak"
+assert_rc 1 "read: 片側引用符（閉じ）status: pending\" は exit 1" -- "$WISTATUS" --read "$cq/work-items/001-cq.md"
+# 閉じ frontmatter delimiter 欠落（先頭 --- のみ）は read/write とも exit 1（malformed file 改変防止 / codex R7）
+ncd="$TMPROOT/status-noclose"; mkdir -p "$ncd/work-items"
+cat > "$ncd/work-items/001-nc.md" <<'EOF'
+---
+id: "001"
+status: pending
+size: tiny
+risk: low
+assigned: null
+dependencies: []
+
+# body without closing frontmatter delimiter
+EOF
+assert_rc 1 "read: 閉じ --- 欠落は exit 1" -- "$WISTATUS" --read "$ncd/work-items/001-nc.md"
+assert_rc 1 "write: 閉じ --- 欠落は遷移せず exit 1" -- "$WISTATUS" "$ncd/work-items/001-nc.md" pending in_progress
 
 echo "== work-item-status.sh: 本文 status: 非変更 =="
 sb="$TMPROOT/status-body"; mkdir -p "$sb/work-items"

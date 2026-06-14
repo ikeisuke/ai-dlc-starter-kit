@@ -230,6 +230,70 @@ put_wi "$dm2" 003 c pending tiny '"001", "002"'
 # 003 は 002 が未 done で除外。002 は依存なし pending で選定（id 昇順）。
 assert_out "next:002:tiny:$dm2/002-b.md" "複数依存の一部未 done item は除外され依存なし item が選定" -- "$NEXT" "$dm2"
 
+echo "== malformed dependencies は fail-closed（空依存と誤認した out-of-order 選定を防ぐ / codex premerge R4）=="
+# 壊れた配列（閉じ括弧なし）の pending を直接 next にかけると exit 1（validate を経由しない develop 防御）
+dmal="$(new_dir malformed_deps)"
+mkdir -p "$dmal"
+cat > "$dmal/001-broken.md" <<'EOF'
+---
+id: "001"
+status: pending
+size: tiny
+risk: low
+assigned: null
+dependencies: [002
+---
+
+# Work Item 001 broken
+EOF
+assert_rc 1 "壊れた dependencies 配列（閉じ括弧なし）は exit 1" -- "$NEXT" "$dmal"
+assert_stderr_has "malformed or missing dependencies" "malformed 依存で診断を出す" -- "$NEXT" "$dmal"
+# dependencies 行欠落も fail-closed
+dmiss="$(new_dir missing_deps)"
+mkdir -p "$dmiss"
+cat > "$dmiss/001-nodeps.md" <<'EOF'
+---
+id: "001"
+status: pending
+size: tiny
+risk: low
+assigned: null
+---
+
+# Work Item 001 nodeps
+EOF
+assert_rc 1 "dependencies 行欠落は exit 1" -- "$NEXT" "$dmiss"
+# 要素構文不正（array shape は満たすが要素が malformed）も fail-closed（validator (8) と同等 / codex R5）
+# ハイフン結合 [001-002]
+dhyp="$(new_dir mal_hyphen)"
+put_wi "$dhyp" 001 a "done" tiny ""
+put_wi "$dhyp" 002 b "done" tiny ""
+put_wi "$dhyp" 003 c pending tiny ""
+sed -i.bak 's/^dependencies: \[\]$/dependencies: [001-002]/' "$dhyp/003-c.md" && rm -f "$dhyp/003-c.md.bak"
+assert_rc 1 "ハイフン結合依存 [001-002] は exit 1（全 done でも空依存誤認しない）" -- "$NEXT" "$dhyp"
+# 空白区切り [001 002]
+dspc="$(new_dir mal_space)"
+put_wi "$dspc" 001 a "done" tiny ""
+put_wi "$dspc" 002 b "done" tiny ""
+put_wi "$dspc" 003 c pending tiny ""
+sed -i.bak 's/^dependencies: \[\]$/dependencies: [001 002]/' "$dspc/003-c.md" && rm -f "$dspc/003-c.md.bak"
+assert_rc 1 "空白区切り依存 [001 002] は exit 1" -- "$NEXT" "$dspc"
+# 閉じ frontmatter delimiter 欠落（先頭 --- のみ）は fail-closed（codex R7）
+dncd="$(new_dir noclose_fm)"
+mkdir -p "$dncd"
+cat > "$dncd/001-nc.md" <<'EOF'
+---
+id: "001"
+status: pending
+size: tiny
+risk: low
+assigned: null
+dependencies: []
+
+# body without closing delimiter
+EOF
+assert_rc 1 "閉じ --- 欠落は exit 1" -- "$NEXT" "$dncd"
+
 echo "----------------------------------------"
 echo "PASS: $PASS  FAIL: $FAIL"
 if [[ "$FAIL" -gt 0 ]]; then

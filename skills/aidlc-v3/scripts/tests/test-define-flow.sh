@@ -411,6 +411,32 @@ put_valid_work_item "$TMPROOT/gate_assignedstr" v3.0.0 001 example ""
 sed 's/^assigned: null/assigned: "alice"/' "$astr/001-example.md" > "$astr/001-example.md.tmp" \
     && mv "$astr/001-example.md.tmp" "$astr/001-example.md"
 assert_gate_pass "assigned 文字列値（\"alice\"）は通過" "$astr"
+# 重複 frontmatter キー（status を 2 回指定）はゲート失敗（presence-only → 曖昧解決防止 / codex premerge P2）
+dupk="$TMPROOT/gate_dupkey/.aidlc/cycles/v3.0.0/work-items"; mkdir -p "$dupk"
+put_valid_work_item "$TMPROOT/gate_dupkey" v3.0.0 001 example ""
+# status 行の直後に status: done を挿入（先頭一致では pending、reader は曖昧拒否）
+awk '{print} /^status: pending/ && !done {print "status: done"; done=1}' \
+    "$dupk/001-example.md" > "$dupk/001-example.md.tmp" && mv "$dupk/001-example.md.tmp" "$dupk/001-example.md"
+assert_gate_fail "重複 frontmatter キー（status 2 回）はゲート失敗" "$dupk"
+# 重複 work item ID（001-a.md / 001-b.md が同一 id prefix）はゲート失敗（依存解決の非決定性防止 / codex premerge P2）
+dupid="$TMPROOT/gate_dupid/.aidlc/cycles/v3.0.0/work-items"; mkdir -p "$dupid"
+put_valid_work_item "$TMPROOT/gate_dupid" v3.0.0 001 alpha ""
+put_valid_work_item "$TMPROOT/gate_dupid" v3.0.0 001 beta ""
+assert_gate_fail "重複 work item ID（001 が複数ファイル）はゲート失敗" "$dupid"
+# 本文に水平線 `---` を含んでも必須セクションを誤欠落判定しない（body 抽出を打ち切らない / codex premerge R3 P2）
+hr="$TMPROOT/gate_bodyhr/.aidlc/cycles/v3.0.0/work-items"; mkdir -p "$hr"
+put_valid_work_item "$TMPROOT/gate_bodyhr" v3.0.0 001 example ""
+# 先頭セクション（## Goal）直後に水平線 --- を挿入（後続必須セクションが --- の後ろに来る）
+awk '{print} /^## Goal$/ && !ins {print ""; print "---"; ins=1}' \
+    "$hr/001-example.md" > "$hr/001-example.md.tmp" && mv "$hr/001-example.md.tmp" "$hr/001-example.md"
+assert_gate_pass "本文中の水平線 --- があっても通過（後続セクション欠落判定しない）" "$hr"
+# 閉じ frontmatter delimiter 欠落（先頭 --- のみ）はゲート失敗（codex R7）
+ncf="$TMPROOT/gate_noclose/.aidlc/cycles/v3.0.0/work-items"; mkdir -p "$ncf"
+put_valid_work_item "$TMPROOT/gate_noclose" v3.0.0 001 example ""
+# 2 つ目の --- を削除して frontmatter を未終端にする
+awk 'BEGIN{c=0} /^---$/{c++; if(c==2) next} {print}' \
+    "$ncf/001-example.md" > "$ncf/001-example.md.tmp" && mv "$ncf/001-example.md.tmp" "$ncf/001-example.md"
+assert_gate_fail "閉じ frontmatter delimiter 欠落はゲート失敗" "$ncf"
 # work item 0 件（空ディレクトリ）
 empty="$TMPROOT/gate_empty/.aidlc/cycles/v3.0.0/work-items"; mkdir -p "$empty"
 assert_gate_fail "work item 0 件はゲート失敗" "$empty"
