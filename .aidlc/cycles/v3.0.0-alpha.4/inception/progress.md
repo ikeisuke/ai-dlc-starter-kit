@@ -13,18 +13,23 @@
 
 ## 現在のステップ
 
-次回: 1. Intent明確化
+Inception Phase 完了。次フェーズ: Construction（Unit 001 から / step 6 Construction用progress.md は Construction 開始時に作成）。
 
 ## 完了済みステップ
 
-なし
+ステップ 1〜5 完了。AIレビュー全ゲート auto_approved。
+
+## ドラフトPR
+
+- PR #734（base=v3.0.0 / head=cycle/v3.0.0 / Draft）
+- Milestone: v3.0.0-alpha.4（#23）/ 関連 Issue: #733（部分対応）
 
 ## 次回実行時の指示
 
-Intent明確化から開始してください。
+Construction Phase を開始してください（`/aidlc construction`）。Unit 001（shared-frontmatter-parser）から着手。依存順: 001 →（002）/ 003 は独立。
 
 ## 再開時に読み込むファイル
 
 コンパクション後やセッション再開時は、以下のコマンドを実行してください：
 
-- `/aidlc inception`
+- `/aidlc construction`
