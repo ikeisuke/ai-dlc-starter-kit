@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PATHS_REGEX: '^(skills/.+|bin/check-skill-references\.sh|bin/check-bash-substitution\.sh|bin/check-test-isolation\.sh|bin/check-test-isolation\.allowlist|bin/tests/check-test-isolation/.*\.bats|tests/.*\.bats|\.github/workflows/skill-reference-check\.yml)$'
+          PATHS_REGEX: '^(skills/.+|bin/check-skill-references\.sh|bin/check-bash-substitution\.sh|bin/check-test-isolation\.sh|bin/check-test-isolation\.allowlist|bin/tests/check-test-isolation/.*\.bats|bin/check-frontmatter-parse-guard\.sh|bin/tests/check-frontmatter-parse-guard\.sh|tests/.*\.bats|\.github/workflows/skill-reference-check\.yml)$'
         run: |
           set -eu
           if [ "$PR_DRAFT" = "true" ]; then
@@ -54,3 +54,11 @@ jobs:
       - name: Check test isolation (BATS cwd dependency patterns)
         if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-test-isolation.sh
+
+      - name: Check frontmatter parse guard (forbidden parse patterns in aidlc-v3 consumers)
+        if: steps.detect.outputs.should_skip != 'true'
+        run: bash bin/check-frontmatter-parse-guard.sh
+
+      - name: Run frontmatter parse guard tests
+        if: steps.detect.outputs.should_skip != 'true'
+        run: bash bin/tests/check-frontmatter-parse-guard.sh

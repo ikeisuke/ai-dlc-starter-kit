@@ -147,6 +147,7 @@ trap 'rm -f "$tmp"' EXIT
 
 # 先頭 --- 〜 次の --- の frontmatter 領域内の status 行のみを置換する。
 # frontmatter 外（本文）の status: 行は変更しない。status 一意性は上で保証済み。
+# parse-guard: allow=atomic frontmatter status write (not a parse/read) (issue: #733, ref: Unit 001 frontmatter.sh:20 atomic-write carve-out)
 if ! awk -v newstatus="$next_status" '
     BEGIN { infm = 0; seen_open = 0 }
     NR == 1 && $0 == "---" { infm = 1; seen_open = 1; print; next }
