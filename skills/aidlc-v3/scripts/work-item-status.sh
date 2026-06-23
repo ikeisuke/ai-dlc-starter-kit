@@ -6,6 +6,10 @@
 # frontmatter status のパース責務を本スクリプト 1 箇所に集約し、呼び出し側（develop.md /
 # テスト）に脆弱なパースを残さない（docs/v3/data-model.md §4 / RFC P4）。
 #
+# frontmatter の構造解釈（ブロック抽出 / スカラー抽出 / malformed guard）は共有ライブラリ
+# lib/frontmatter.sh に集約済み（#733 T1）。本スクリプトは構造解釈を共有 parser へ委譲し、
+# status 行一意性 / status enum 検証 / 期待現在 status 検証 / atomic write（意味判定・状態遷移）を担う。
+#
 # 2 モード:
 #   read  : work-item-status.sh --read <work-item-path>
 #           現在 status を堅牢に読取り `status:<value>` を stdout 出力（状態変更なし）。
@@ -16,8 +20,8 @@
 # 両モード共通の堅牢性ガード:
 #   - frontmatter（先頭 --- 〜 次の ---）内の `^status:` 行が「ちょうど 1 行」でなければ exit 1
 #     （0 行 = status 不在 / 2 行以上 = 曖昧）。本文側・frontmatter 外の `status:` は対象外。
-#   - status 値は read_scalar 同等に抽出（前後空白・inline コメント・両端引用符を考慮）し
-#     status enum（pending/in_progress/blocked/done/withdrawn）に一致しなければ exit 1。
+#   - status 値は共有 parser（fm_scalar loose）で抽出（前後空白・inline コメント・両端引用符を考慮）し
+#     非空であること + status enum（pending/in_progress/blocked/done/withdrawn）に一致しなければ exit 1。
 #
 # 終了コード（AI-DLC 終了コード規約準拠 / 既存 state-*.sh・work-item-validate.sh と一致）:
 #   0 = 正常（read: status 出力 / write: 書き込み完了）
@@ -28,6 +32,11 @@
 # updated_at 等のタイムスタンプは frontmatter に持たないため本スクリプトでは扱わない。
 #
 set -uo pipefail
+
+# 共有 frontmatter parser ライブラリを source（スクリプト配置基準 / cwd 非依存 / bash 3.2 互換）
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/frontmatter.sh disable=SC1091
+. "$_SCRIPT_DIR/lib/frontmatter.sh"
 
 readonly STATUS_ENUM='pending in_progress blocked done withdrawn'
 
@@ -40,32 +49,6 @@ in_list() {
         [[ "$_il_item" == "$_il_needle" ]] && return 0
     done
     return 1
-}
-
-# has_closing_frontmatter <file> : 先頭行が --- かつ 2 つ目の --- が存在すれば return 0。
-#   先頭が --- でない / 閉じ --- が無い（frontmatter ブロック未終端）malformed は return 1。
-#   extract_frontmatter は閉じ delimiter が無いとファイル末尾までを frontmatter とみなすため、
-#   read/write の前段でブロック終端を必須化して malformed file の改変を防ぐ（codex premerge R7 P2）。
-has_closing_frontmatter() {
-    awk 'NR==1 && $0!="---"{exit 1} NR>1 && $0=="---"{f=1; exit 0} END{exit f?0:1}' "$1"
-}
-
-# extract_frontmatter <file> : 先頭 --- 〜 次の --- を stdout 出力（work-item-validate.sh と同方式）
-extract_frontmatter() {
-    awk 'NR==1 && $0=="---"{f=1; next} f && $0=="---"{exit} f{print}' "$1"
-}
-
-# read_status_value <frontmatter> : status 行のスカラー値を抽出（前後空白・inline コメント・両端引用符）。
-#   抽出不能（malformed）は return 1。dynamic scope shadowing 回避のため内部 local は _rsv_ プレフィックス。
-read_status_value() {
-    local _rsv_fm="$1" _rsv_line _rsv_val
-    _rsv_line="$(printf '%s\n' "$_rsv_fm" | grep -E '^status:' | head -n1)"
-    _rsv_val="$(printf '%s\n' "$_rsv_line" | sed -nE 's/^status:[[:space:]]*([^#]*[^#[:space:]])[[:space:]]*(#.*)?$/\1/p')"
-    if [[ "$_rsv_val" == \"*\" ]]; then
-        _rsv_val="${_rsv_val#\"}"; _rsv_val="${_rsv_val%\"}"
-    fi
-    [[ -n "$_rsv_val" ]] || return 1
-    printf '%s' "$_rsv_val"
 }
 
 # --- 引数パース（モード判定） ---
@@ -105,16 +88,16 @@ if [[ ! -r "$file" ]]; then
     exit 2
 fi
 
-# --- frontmatter ブロック終端ガード（閉じ --- 必須 / malformed file の改変防止） ---
-if ! has_closing_frontmatter "$file"; then
+# --- frontmatter ブロック終端ガード（閉じ --- 必須 / malformed file の改変防止 / 共有 parser） ---
+if ! fm_has_closing_frontmatter "$file"; then
     err "error: malformed frontmatter (missing closing '---'): $file"
     exit 1
 fi
 
-# --- frontmatter 抽出 + status 行一意性ガード ---
-fm="$(extract_frontmatter "$file")"
-status_line_count="$(printf '%s\n' "$fm" | grep -cE '^status:')"
-# grep -c は末尾改行有無で空入力時も 0 を返す。数値として比較する。
+# --- frontmatter 抽出 + status 行一意性ガード（抽出・カウントは共有 parser） ---
+fm="$(fm_extract_block "$file")"
+status_line_count="$(fm_key_count "$fm" status)"
+# fm_key_count は不在時も "0" を返す。数値として比較する。
 if [[ "$status_line_count" -eq 0 ]]; then
     err "error: no 'status:' line in frontmatter: $file"
     exit 1
@@ -124,8 +107,9 @@ if [[ "$status_line_count" -gt 1 ]]; then
     exit 1
 fi
 
-# --- 現在 status の抽出 + enum 検証 ---
-if ! current_status="$(read_status_value "$fm")"; then
+# --- 現在 status の抽出（共有 parser fm_scalar loose） + 非空ガード + enum 検証（consumer 責務） ---
+current_status="$(fm_scalar "$fm" status)"
+if [[ -z "$current_status" ]]; then
     err "error: malformed status value in frontmatter: $file"
     exit 1
 fi
