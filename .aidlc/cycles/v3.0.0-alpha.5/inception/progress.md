@@ -9,11 +9,13 @@
 | 3. ユーザーストーリー作成 | 完了 | story-artifacts/user_stories.md | 2026-06-25 |
 | 4. Unit定義 | 完了 | story-artifacts/units/*.md | 2026-06-25 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-06-25 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | construction/progress.md | - |
+
+> Inception Phase 完了（2026-06-25）。Milestone #24 / ドラフトPR #737（base: v3.0.0）。step6 は Construction Phase 開始時に作成するためスキップ。
 
 ## 現在のステップ
 
-次回: 完了処理（意思決定記録 → Milestone → 履歴 → squash → コミット → ドラフトPR）
+Inception Phase 完了。次回は Construction Phase（`/aidlc construction`）。
 
 ## 完了済みステップ
 
