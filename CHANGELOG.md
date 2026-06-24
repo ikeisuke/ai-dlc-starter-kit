@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.4] - 2026-06-24
+
+AI-DLC v3 フルリニューアルの **frontmatter パース安全境界の共有ライブラリ集約**。振り返り #733 の T1/T2'/T4/T6 に対応し、`skills/aidlc-v3/` の frontmatter パース（スカラー抽出 / dependencies 配列 / frontmatter ブロック抽出 + malformed guard）を `scripts/lib/` の単一共有ライブラリへ集約。寛容な line ベース regex が malformed YAML を通すバリデーションクラスバグの反復再発を構造的に断つ。conformance test による受理/拒否境界の固定、禁止パースパターンの CI 機械検出、CycleResolver 明示指定優先の回帰テストを含む。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.4` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.4` に更新する。
+
+### Added
+
+- **共有 frontmatter parser ライブラリ（`skills/aidlc-v3/scripts/lib/`）**: スカラー抽出 / dependencies 配列パース / frontmatter ブロック抽出 + malformed guard / 拒否理由標準化を単一ライブラリに集約（Unit 001 / T1）
+- **conformance test suite（受理/拒否 fixture）**: 移行が既存の受理/拒否境界を壊さないことを保証するテストを追加し、3 consumer を同一 fixture で検証。#733 既知 malformed クラスを拒否 fixture として明示固定（Unit 001 / T2'）
+- **禁止パースパターンの CI 機械検出（`skills/aidlc-v3/scripts/`）**: 個別 consumer スクリプトへの frontmatter 構造解釈の禁止パターン（`grep`/`sed`/`awk`/permissive `jq`）混入を機械検出し、GitHub Actions のジョブで PR を fail させる。`lib/` / `tests/` は allowlist 除外、`state-*.sh` の JSON/jq は検出対象外（Unit 002 / T4）
+- **CycleResolver 明示指定優先の回帰テスト（`skills/aidlc-v3/scripts/tests/`）**: `state.json` の `current_cycle`（明示指定）が git 履歴・周辺ファイル名・ディレクトリ走査順に影響されないことを固定し、#733 P4 クラスの再発を防止（Unit 003 / T6）
+
+### Changed
+
+- **3 consumer の共有 parser 移行（`work-item-validate.sh` / `work-item-next.sh` / `work-item-status.sh`）**: 個別パース実装を撤去し共有ライブラリ source へ移行。「個別 consumer での frontmatter 構造解釈禁止」規約を文書化（Unit 001 / T1）
+
+---
+
 ## [3.0.0-alpha.3] - 2026-06-14
 
 AI-DLC v3 フルリニューアルの **Phase 3（define + develop tiny フロー実行実装）**。alpha.2 で「読める手順」として固定した `skills/aidlc-v3/` を実行実装へ進める。`/aidlc-v3 define` で v3 cycle（intent / work-items / `.aidlc/state.json` / journal）を実生成し、`develop` の tiny フローを実装。依存解決 `work-item-next.sh`、state safety hardening（schema_version 互換性検証 + writer ガード / #731 解消）、`/aidlc-v3` 起動有効化（marketplace 登録）を含む。v2 (`skills/aidlc`) には非影響。本流化（v3→v2 置換）・marketplace version の v3.0.0 化は Phase 7 へ defer する。
