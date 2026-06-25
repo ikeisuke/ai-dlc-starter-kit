@@ -155,11 +155,56 @@ derive_phase() {
     if [[ "$all_done" == "1" ]]; then echo "release"; else echo "develop"; fi
 }
 
-# ---- develop tiny フロードライバ（develop.md Step1/3/4/6 の決定的 mutation を模擬） ----
-# AI 判断（実装内容そのもの）はテストせず、status 遷移・journal 追記・commit を再現する。
-# 戻り値: 0=tiny 完了 / 20=next:none(停止) / 21=size!=tiny(停止) / 22=read異常/想定外(停止)
-run_develop_tiny() {
-    local repo="$1" cycle="$2"
+# ---- §8 マトリクス写像（docs/v3/data-model.md §8 の materialized view / develop.md Step1 step4 の表と一致） ----
+# decide_matrix <size> <depth> -> stdout:
+#   matrix_case|design_required|design_mode|risk_analysis|test_plan|rollback_note|review_required|review_mode|reason_record|error
+#   bool フィールドは 0/1。error ∈ {none, invalid_size, risky_minimal, unknown_depth}
+# 設計（ドメインモデル MatrixDecision）の論理フィールド対応:
+#   - matrix_case = <normalized_size>_<normalized_depth_level>（正規化済み入力）
+#   - error       = §8 size×depth 写像由来の error_reason（is_error = (error != none) を導出）
+#   - 残りの列     = 同名の派生要件（design_mode / review_mode 等）
+# 注: invalid_artifact_path は §8 写像由来ではなく Step 1 の成果物パス導出ガードに由来する別系統の
+#     error_reason のため、本純粋写像（decide_matrix）の error enum には含めない。run_develop 側の
+#     path 検証で別段の停止コード（rc 25）として扱う。
+# 純粋関数（mutation なし）。run_develop と 9 セル assert の双方が本関数を単一の真実として参照する。
+# 注: assert/間接呼び出しのため shellcheck からは未使用に見える。
+# shellcheck disable=SC2329
+decide_matrix() {
+    local size="$1" depth="$2"
+    case "$size" in tiny|normal|risky) ;; *) echo "invalid|0|none|0|0|0|0|none|0|invalid_size"; return 0 ;; esac
+    if [[ "$size" == "risky" && "$depth" == "minimal" ]]; then
+        echo "risky_minimal|0|none|0|0|0|0|none|0|risky_minimal"; return 0
+    fi
+    case "${size}_${depth}" in
+        tiny_minimal)         echo "tiny_minimal|0|none|0|0|0|0|none|0|none" ;;
+        tiny_standard)        echo "tiny_standard|0|none|0|0|0|0|none|0|none" ;;
+        tiny_comprehensive)   echo "tiny_comprehensive|0|none|0|0|0|0|none|1|none" ;;
+        normal_minimal)       echo "normal_minimal|0|none|0|0|0|0|none|0|none" ;;
+        normal_standard)      echo "normal_standard|1|simple|0|0|0|1|code|0|none" ;;
+        normal_comprehensive) echo "normal_comprehensive|1|full|1|0|0|1|code|0|none" ;;
+        risky_standard)       echo "risky_standard|1|full|0|0|1|1|code_security|0|none" ;;
+        risky_comprehensive)  echo "risky_comprehensive|1|full|1|1|1|1|code_security_design|0|none" ;;
+        *)                    echo "unknown|0|none|0|0|0|0|none|0|unknown_depth" ;;
+    esac
+}
+
+# ---- develop フロードライバ（develop.md Step1-6 の決定的 mutation を模擬 / size×depth_level 分岐） ----
+# AI 判断（実装内容そのもの）はテストせず、§8 判定・status 遷移・journal 追記・commit を再現する。
+# §8 判定は decide_matrix（単一の真実）に委譲する。depth_level は引数で与える（実フローは
+# read-config.sh で config.toml から解決する。本ハーネスは外部依存 dasel を避けるため
+# 「解決済み depth_level」を入力とする。depth_level 解決の正規化契約の網羅検証は Unit 004 の範囲）。
+# 戻り値:
+#   0  = 完了（design/review 不要セル: tiny_* / normal_minimal。tiny_comprehensive は理由記録付き）
+#   20 = next:none（停止）
+#   21 = design または review が必要（normal/risky standard 以上 = Unit 002/003 未実装 / 副作用なし停止）
+#   22 = read 異常 / 想定外（副作用なし停止）
+#   23 = invalid_size（size enum 外 / 副作用なし停止）
+#   24 = risky_minimal（risky+minimal 不可 / 副作用なし停止）
+#   25 = invalid_artifact_path（成果物ファイル名が <id>- prefix 不一致 / 副作用なし停止）
+# 注: assert 経由で間接呼び出しされるため shellcheck からは未使用に見える。
+# shellcheck disable=SC2329
+run_develop() {
+    local repo="$1" cycle="$2" depth="$3"
     local widir=".aidlc/cycles/$cycle/work-items"
     (
         cd "$repo" || exit 9
@@ -170,9 +215,28 @@ run_develop_tiny() {
         id="$(printf '%s' "$nx" | cut -d: -f2)"
         size="$(printf '%s' "$nx" | cut -d: -f3)"
         path="$(printf '%s' "$nx" | cut -d: -f4-)"
-        # Step1-2: size 判定（tiny 以外は副作用なし停止）
-        if [[ "$size" != "tiny" ]]; then exit 21; fi
-        # Step1-3: 現在 status 読取
+        # Step1-2 〜 1-4: §8 写像（decide_matrix）。判定は mutation を伴わない
+        # 本ドライバが消費するのは design_required / review_required / reason_record / error のみ。
+        # 他の派生フィールド（design_mode / risk_analysis / test_plan / rollback_note / review_mode）は
+        # decide_matrix の 9 セル assert 側で検証する（ここでは `_` で読み捨てる）。
+        local dec d_req r_req rrec err
+        dec="$(decide_matrix "$size" "$depth")"
+        IFS='|' read -r _ d_req _ _ _ _ r_req _ rrec err <<<"$dec"
+        case "$err" in
+            invalid_size) exit 23 ;;
+            risky_minimal) exit 24 ;;
+            none) ;;
+            *) exit 22 ;;  # unknown_depth 等（実フローは解決契約で standard へ正規化済みのはず）
+        esac
+        # design/review 必須セル: 成果物パス導出 + invalid_artifact_path 検証 → スコープ境界ガード
+        # （いずれも status 遷移より前 = 副作用なし。生成本体は Unit 002/003）
+        if [[ "$d_req" == "1" || "$r_req" == "1" ]]; then
+            local fname; fname="$(basename "$path")"
+            case "$fname" in "${id}-"*) ;; *) exit 25 ;; esac
+            exit 21
+        fi
+        # ここに到達するのは design/review 不要セル（tiny_* / normal_minimal）= end-to-end 完走
+        # Step1-5: 現在 status 読取 + 遷移
         st="$("$WISTATUS" --read "$path" 2>/dev/null)" || exit 22
         st="${st#status:}"
         case "$st" in
@@ -184,13 +248,16 @@ run_develop_tiny() {
         mkdir -p "src"
         printf 'done by %s\n' "$id" > "src/${id}.txt"
         # Step4: 検証（ここでは省略 / 実フローは AC チェック）
-        # Step6: done 遷移 + journal 追記 + work item 単位 commit 集約
+        # Step6: done 遷移 + journal 追記 + （条件付き）理由記録 + work item 単位 commit 集約
         "$WISTATUS" "$path" in_progress "done" >/dev/null 2>&1 || exit 22
         local journal=".aidlc/cycles/$cycle/journal.md"
         if [[ ! -f "$journal" ]]; then
             printf '# Journal: %s\n\n## 2026-06-14\n\n' "$cycle" > "$journal"
         fi
         printf -- '- develop completed: %s\n' "$id" >> "$journal"
+        if [[ "$rrec" == "1" ]]; then
+            printf -- '- develop reason (tiny+comprehensive): %s\n' "$id" >> "$journal"
+        fi
         git add -A >/dev/null 2>&1
         git -c user.email=t@example.com -c user.name=t commit -q -m "develop: $id 完了" || exit 9
     )
@@ -315,71 +382,181 @@ size: tiny
 EOF
 assert_rc 1 "frontmatter に status 行 2 つは exit 1（曖昧）" -- "$WISTATUS" --read "$dupstatus"
 
-echo "== develop tiny e2e: 単一 tiny → 完了 → release 可能 =="
+echo "== develop e2e: 単一 tiny+standard → 完了 → release 可能 =="
 r1="$TMPROOT/e2e-single"; make_sandbox "$r1" v3.0.0-alpha.t
 put_work_item "$r1/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 only pending tiny ""
 ( cd "$r1" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-run_develop_tiny "$r1" v3.0.0-alpha.t; assert_cond "run_develop_tiny tiny 完了（rc=0）" "$?"
+run_develop "$r1" v3.0.0-alpha.t standard; assert_cond "run_develop tiny+standard 完了（rc=0）" "$?"
 assert_out "status:done" "完了後 status=done" -- "$WISTATUS" --read "$r1/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-only.md"
 grep -q '^- develop completed: 001$' "$r1/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; assert_cond "journal に完了追記" "$?"
 assert_out "release" "完了後フェーズ導出 = release 可能（全 done）" -- derive_phase "$r1" v3.0.0-alpha.t
 
-echo "== develop tiny e2e: 複数 tiny → 1 件完了で develop 継続 =="
+echo "== develop e2e: 複数 tiny → 1 件完了で develop 継続 =="
 r2="$TMPROOT/e2e-multi"; make_sandbox "$r2" v3.0.0-alpha.t
 put_work_item "$r2/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 a pending tiny ""
 put_work_item "$r2/.aidlc/cycles/v3.0.0-alpha.t/work-items" 002 b pending tiny ""
 ( cd "$r2" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-run_develop_tiny "$r2" v3.0.0-alpha.t; assert_cond "1 件目 tiny 完了（rc=0）" "$?"
+run_develop "$r2" v3.0.0-alpha.t standard; assert_cond "1 件目 tiny 完了（rc=0）" "$?"
 assert_out "status:done" "001 done" -- "$WISTATUS" --read "$r2/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-a.md"
 assert_out "status:pending" "002 は未着手のまま" -- "$WISTATUS" --read "$r2/.aidlc/cycles/v3.0.0-alpha.t/work-items/002-b.md"
 assert_out "develop" "1 件残でフェーズ導出 = develop 継続" -- derive_phase "$r2" v3.0.0-alpha.t
 
-echo "== develop tiny e2e: resume（in_progress tiny）継続 =="
+echo "== develop e2e: resume（in_progress tiny）継続 =="
 r3="$TMPROOT/e2e-resume"; make_sandbox "$r3" v3.0.0-alpha.t
 put_work_item "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 res in_progress tiny ""
 ( cd "$r3" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-run_develop_tiny "$r3" v3.0.0-alpha.t; assert_cond "resume tiny 完了（rc=0 / 二重遷移せず done）" "$?"
+run_develop "$r3" v3.0.0-alpha.t standard; assert_cond "resume tiny 完了（rc=0 / 二重遷移せず done）" "$?"
 assert_out "status:done" "resume 後 status=done" -- "$WISTATUS" --read "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-res.md"
 
-echo "== 副作用なし停止: normal（新規 pending） =="
+echo "== 副作用なし停止: normal+standard（design/review 必須 = Unit 002/003 未実装 / 新規 pending） =="
 r4="$TMPROOT/noop-normal"; make_sandbox "$r4" v3.0.0-alpha.t
 put_work_item "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 n pending normal ""
 ( cd "$r4" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 snap_before="$(snapshot "$r4" v3.0.0-alpha.t)"
-run_develop_tiny "$r4" v3.0.0-alpha.t; rc=$?
-assert_cond "normal は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
+run_develop "$r4" v3.0.0-alpha.t standard; rc=$?
+assert_cond "normal+standard は design/review 必須で停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
 snap_after="$(snapshot "$r4" v3.0.0-alpha.t)"
-assert_cond "normal 選定で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "normal+standard 選定で副作用なし（status 遷移前停止 / 状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
-echo "== 副作用なし停止: resume された in_progress normal =="
+echo "== 副作用なし停止: resume された in_progress normal+standard =="
 r5="$TMPROOT/noop-resume-normal"; make_sandbox "$r5" v3.0.0-alpha.t
 put_work_item "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rn in_progress normal ""
 ( cd "$r5" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 snap_before="$(snapshot "$r5" v3.0.0-alpha.t)"
-run_develop_tiny "$r5" v3.0.0-alpha.t; rc=$?
-assert_cond "resume normal は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
+run_develop "$r5" v3.0.0-alpha.t standard; rc=$?
+assert_cond "resume normal+standard は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
 snap_after="$(snapshot "$r5" v3.0.0-alpha.t)"
-assert_cond "resume normal で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "resume normal+standard で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
-echo "== 副作用なし停止: risky（新規 pending） =="
+echo "== 副作用なし停止: risky+standard（design/review 必須 = Unit 002/003 未実装 / 新規 pending） =="
 r4b="$TMPROOT/noop-risky"; make_sandbox "$r4b" v3.0.0-alpha.t
 put_work_item "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rk pending risky ""
 ( cd "$r4b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 snap_before="$(snapshot "$r4b" v3.0.0-alpha.t)"
-run_develop_tiny "$r4b" v3.0.0-alpha.t; rc=$?
-assert_cond "risky は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
+run_develop "$r4b" v3.0.0-alpha.t standard; rc=$?
+assert_cond "risky+standard は design/review 必須で停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
 snap_after="$(snapshot "$r4b" v3.0.0-alpha.t)"
-assert_cond "risky 選定で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "risky+standard 選定で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
-echo "== 副作用なし停止: resume された in_progress risky =="
+echo "== 副作用なし停止: resume された in_progress risky+standard =="
 r5b="$TMPROOT/noop-resume-risky"; make_sandbox "$r5b" v3.0.0-alpha.t
 put_work_item "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rrk in_progress risky ""
 ( cd "$r5b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 snap_before="$(snapshot "$r5b" v3.0.0-alpha.t)"
-run_develop_tiny "$r5b" v3.0.0-alpha.t; rc=$?
-assert_cond "resume risky は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
+run_develop "$r5b" v3.0.0-alpha.t standard; rc=$?
+assert_cond "resume risky+standard は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
 snap_after="$(snapshot "$r5b" v3.0.0-alpha.t)"
-assert_cond "resume risky で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "resume risky+standard で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+
+echo "== Unit 001 e2e: normal+minimal → end-to-end 完走（design/review 不要） =="
+r8="$TMPROOT/e2e-normal-minimal"; make_sandbox "$r8" v3.0.0-alpha.t
+put_work_item "$r8/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nm pending normal ""
+( cd "$r8" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r8" v3.0.0-alpha.t minimal; assert_cond "normal+minimal 完走（rc=0）" "$?"
+assert_out "status:done" "normal+minimal 完了後 status=done" -- "$WISTATUS" --read "$r8/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-nm.md"
+grep -q '^- develop completed: 001$' "$r8/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; assert_cond "normal+minimal journal に完了追記" "$?"
+assert_out "release" "normal+minimal 完了後フェーズ導出 = release 可能" -- derive_phase "$r8" v3.0.0-alpha.t
+
+echo "== Unit 001 エラー停止: risky+minimal（不可）→ 副作用なし =="
+r9="$TMPROOT/risky-minimal"; make_sandbox "$r9" v3.0.0-alpha.t
+put_work_item "$r9/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rm pending risky ""
+( cd "$r9" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+snap_before="$(snapshot "$r9" v3.0.0-alpha.t)"
+run_develop "$r9" v3.0.0-alpha.t minimal; rc=$?
+assert_cond "risky+minimal は不可で停止コード 24" "$([[ "$rc" == "24" ]] && echo 0 || echo 1)"
+snap_after="$(snapshot "$r9" v3.0.0-alpha.t)"
+assert_cond "risky+minimal で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+
+echo "== Unit 001 非回帰: tiny+comprehensive → 完走 + 理由記録 / tiny+minimal は理由記録なし =="
+r10="$TMPROOT/tiny-comp"; make_sandbox "$r10" v3.0.0-alpha.t
+put_work_item "$r10/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 tc pending tiny ""
+( cd "$r10" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r10" v3.0.0-alpha.t comprehensive; assert_cond "tiny+comprehensive 完走（rc=0）" "$?"
+grep -q '^- develop reason (tiny+comprehensive): 001$' "$r10/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; assert_cond "tiny+comprehensive は理由記録を追記" "$?"
+r10b="$TMPROOT/tiny-min"; make_sandbox "$r10b" v3.0.0-alpha.t
+put_work_item "$r10b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 tm pending tiny ""
+( cd "$r10b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r10b" v3.0.0-alpha.t minimal; assert_cond "tiny+minimal 完走（rc=0 / Phase 3 非回帰）" "$?"
+if grep -q 'develop reason' "$r10b/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; then rr_min=1; else rr_min=0; fi
+assert_cond "tiny+minimal は理由記録を追記しない（非回帰）" "$rr_min"
+
+echo "== Unit 001 エラー停止: invalid size（enum 外）→ 副作用なし =="
+r11="$TMPROOT/invalid-size"; make_sandbox "$r11" v3.0.0-alpha.t
+put_work_item "$r11/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 iv pending bogus ""
+( cd "$r11" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+snap_before="$(snapshot "$r11" v3.0.0-alpha.t)"
+run_develop "$r11" v3.0.0-alpha.t standard; rc=$?
+assert_cond "invalid size は停止コード 23" "$([[ "$rc" == "23" ]] && echo 0 || echo 1)"
+snap_after="$(snapshot "$r11" v3.0.0-alpha.t)"
+assert_cond "invalid size で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+
+echo "== §8 マトリクス写像（decide_matrix の 9 有効セル + エラーセル） =="
+# docs/v3/data-model.md §8 / develop.md Step1 step4 の表と一致することを全フィールドで固定する。
+# review_mode の risky_standard=code_security と risky_comprehensive=code_security_design の差分を含む。
+assert_out "tiny_minimal|0|none|0|0|0|0|none|0|none" "§8 tiny+minimal" -- decide_matrix tiny minimal
+assert_out "tiny_standard|0|none|0|0|0|0|none|0|none" "§8 tiny+standard" -- decide_matrix tiny standard
+assert_out "tiny_comprehensive|0|none|0|0|0|0|none|1|none" "§8 tiny+comprehensive（理由記録）" -- decide_matrix tiny comprehensive
+assert_out "normal_minimal|0|none|0|0|0|0|none|0|none" "§8 normal+minimal（実装+テストのみ）" -- decide_matrix normal minimal
+assert_out "normal_standard|1|simple|0|0|0|1|code|0|none" "§8 normal+standard（簡易 design + code review）" -- decide_matrix normal standard
+assert_out "normal_comprehensive|1|full|1|0|0|1|code|0|none" "§8 normal+comprehensive（design + risk + code review）" -- decide_matrix normal comprehensive
+assert_out "risky_standard|1|full|0|0|1|1|code_security|0|none" "§8 risky+standard（design + rollback + code(security)）" -- decide_matrix risky standard
+assert_out "risky_comprehensive|1|full|1|1|1|1|code_security_design|0|none" "§8 risky+comprehensive（複数 review = code(security)+design）" -- decide_matrix risky comprehensive
+assert_out "risky_minimal|0|none|0|0|0|0|none|0|risky_minimal" "§8 risky+minimal（不可）" -- decide_matrix risky minimal
+assert_out "invalid|0|none|0|0|0|0|none|0|invalid_size" "§8 invalid size（enum 外）" -- decide_matrix bogus standard
+
+echo "== Unit 001 エラー停止: invalid_artifact_path（ファイル名が <id>- prefix 不一致 / design 必須セル）→ 副作用なし =="
+# work-item-next は id をファイル名から導出する（<id>-<slug>.md の <id> 部）。ハイフン無しの
+# `001.md` は id=001 だが basename `001.md` は `001-` で始まらないため invalid_artifact_path 経路に到達する。
+# normal+standard は design 必須セル = 成果物パス導出が走る経路。
+r12="$TMPROOT/invalid-path"; make_sandbox "$r12" v3.0.0-alpha.t
+mkdir -p "$r12/.aidlc/cycles/v3.0.0-alpha.t/work-items"
+cat > "$r12/.aidlc/cycles/v3.0.0-alpha.t/work-items/001.md" <<'EOF'
+---
+id: "001"
+status: pending
+size: normal
+risk: low
+assigned: null
+dependencies: []
+---
+
+# Work Item 001: noslug
+
+## Goal
+
+g
+
+## Scope
+
+- x
+
+## Acceptance Criteria
+
+- [ ] c
+
+## Traceability
+
+- Intent refs: scope:x
+- Acceptance refs: AC-001
+- Verification: manual
+- Release note required: no
+
+## Size / Risk
+
+- Size: normal
+- Risk: low
+- Reason: r
+
+## Dependencies
+
+- none
+EOF
+( cd "$r12" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+snap_before="$(snapshot "$r12" v3.0.0-alpha.t)"
+run_develop "$r12" v3.0.0-alpha.t standard; rc=$?
+assert_cond "invalid_artifact_path（001.md）は停止コード 25" "$([[ "$rc" == "25" ]] && echo 0 || echo 1)"
+snap_after="$(snapshot "$r12" v3.0.0-alpha.t)"
+assert_cond "invalid_artifact_path で副作用なし（status 遷移前停止 / 状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
 echo "== release 誤判定防止: blocked 残存 + next:none → develop 継続 =="
 r6="$TMPROOT/blocked"; make_sandbox "$r6" v3.0.0-alpha.t
@@ -438,7 +615,7 @@ g
 EOF
 ( cd "$r7" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 snap_before="$(snapshot "$r7" v3.0.0-alpha.t)"
-run_develop_tiny "$r7" v3.0.0-alpha.t; rc=$?
+run_develop "$r7" v3.0.0-alpha.t standard; rc=$?
 assert_cond "read 異常（status 重複）で停止コード 22" "$([[ "$rc" == "22" ]] && echo 0 || echo 1)"
 snap_after="$(snapshot "$r7" v3.0.0-alpha.t)"
 assert_cond "read 異常で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
