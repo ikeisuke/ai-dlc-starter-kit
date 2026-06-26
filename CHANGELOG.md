@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.5] - 2026-06-27
+
+AI-DLC v3 フルリニューアルの **Phase 4（develop normal/risky 分岐）**。`/aidlc-v3 develop` を tiny 専用から、work item の `size`（tiny/normal/risky）× cycle の `depth_level` に応じて設計・レビュー・テストプラン・rollback note の厚みを変える分岐へ拡張。`develop.md` の「normal/risky 未サポート停止」を解除し、`data-model.md` §8 マトリクスを単一の判定結果として後続 Step（設計・レビュー）の実行可否を決める分岐基盤・design テンプレート生成・review routing・全マトリクス回帰テストを実装。tiny フローは非回帰。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.5` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.5` に更新する。
+
+### Added
+
+- **size×depth_level 分岐基盤（`skills/aidlc-v3/steps/develop.md`）**: `size != tiny` 停止ブロックを分岐に置換し、`depth_level`（未設定時 `standard`）を解決して §8 マトリクスから成果物・レビュー要否を決定。`normal + minimal` が実装 + テストで end-to-end 完走、`risky + minimal` はエラー停止（mutation/副作用なし）、`tiny + comprehensive` は短い理由記録を追加（tiny + {minimal,standard} は非回帰）（Unit 001 / ストーリー 1）
+- **design テンプレート + Step 2 設計生成（`skills/aidlc-v3/templates/design.md` / `steps/develop.md`）**: design 本体 + 条件付きセクション（`## Risk Analysis` / `## Test Plan` / `## Rollback Note`）を depth_level 別に生成し `designs/<id>-<slug>.md` へ出力。Design 承認ゲートを発火（Unit 002 / ストーリー 2）
+- **review routing + Step 5 レビュー実行（`skills/aidlc-v3/steps/develop.md`）**: size×depth_level に応じて既存 `reviewing-construction-code` / `reviewing-construction-design` へルーティングし、結果を `reviews/<id>-<slug>.md` に perspective 別セクションで記録。5R 上限・Defer 戦略（`OUT_OF_SCOPE` / `TECHNICAL_BLOCKER` の自動 Issue 起票）を適用（Unit 003 / ストーリー 3）
+- **全マトリクス回帰テスト（`skills/aidlc-v3/scripts/tests/test-develop-flow.sh`）**: §8 全有効組合せ（tiny/normal × {minimal,standard,comprehensive} + risky × {standard,comprehensive}）の検証、`risky + minimal` エラー停止検証、design/review の生成・スキップ検証、外部レビュー CLI のモック化、既存テスト緑の確認（Unit 004 / ストーリー 4）
+
+### Changed
+
+- **develop ワークフロー記述更新（`docs/v3/workflow.md`）**: develop フローの size 分岐に関する記述を Phase 4 実装に整合（Unit 001–003）
+
+---
+
 ## [3.0.0-alpha.4] - 2026-06-24
 
 AI-DLC v3 フルリニューアルの **frontmatter パース安全境界の共有ライブラリ集約**。振り返り #733 の T1/T2'/T4/T6 に対応し、`skills/aidlc-v3/` の frontmatter パース（スカラー抽出 / dependencies 配列 / frontmatter ブロック抽出 + malformed guard）を `scripts/lib/` の単一共有ライブラリへ集約。寛容な line ベース regex が malformed YAML を通すバリデーションクラスバグの反復再発を構造的に断つ。conformance test による受理/拒否境界の固定、禁止パースパターンの CI 機械検出、CycleResolver 明示指定優先の回帰テストを含む。v2 (`skills/aidlc`) には非影響。
