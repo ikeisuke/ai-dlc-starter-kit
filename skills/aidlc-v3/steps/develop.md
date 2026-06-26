@@ -5,12 +5,14 @@
 > commit・`journal.md` 追記を実際に行う。frontmatter status の読取／遷移のような atomic 性・
 > パース安全性が必要な処理は `scripts/work-item-status.sh` を経由する（RFC P4）。
 >
-> **Phase 4（本サイクル / Unit 001）の対象**: work item の `size`（tiny/normal/risky）と cycle の
+> **Phase 4 の対象（Unit 001 + Unit 002 実装済み）**: work item の `size`（tiny/normal/risky）と cycle の
 > `depth_level`（minimal/standard/comprehensive）を解決し、`docs/v3/data-model.md` §8 マトリクスへ
-> 写像して後続 Step の実行可否を決める分岐基盤を確立する。`normal + minimal`（実装 + テストのみ）は
-> 本 Unit 単体で end-to-end 完走する。design 成果物の生成（Step 2）と review の実行（Step 5）は
-> 後続 Unit 002 / 003 の責務であり、それらを要する組合せ（design_required / review_required = true）は
-> 本 Unit の時点では「Unit 002 / 003 で実装予定」として副作用なしで停止する。
+> 写像して後続 Step の実行可否を決める（Unit 001）。`normal + minimal`（実装 + テストのみ）は
+> end-to-end 完走する。design 成果物の生成（Step 2）は Unit 002 で実装済み。review の実行（Step 5）は
+> 後続 Unit 003 の責務である。`design_required = true` の組合せ（normal/risky の standard 以上）は Step 2 で
+> design 成果物を生成し Design 承認ゲートを発火するが、**全 design 必須セルは `review_required = true`** であり
+> review（Unit 003）が未実装のため、Step 2 完了直後（Step 3 実装に進む前）で停止する（status は `in_progress`
+> 維持 / `done` 遷移なし）。Unit 003 実装時にこの review 境界ガードを解除し Step 3-6 まで完走させる。
 
 ## 目的
 
@@ -27,10 +29,10 @@
 | Step | 内容 | 実行可否 |
 |------|------|---------|
 | 1 Work Item 選定 + 判定 | 次 item 選定 + size enum 検証 + depth_level 解決 + §8 写像（MatrixDecision 構築）+ status 読取 + in_progress 化 | 常に実行 |
-| 2 計画 + 設計 | design / risk analysis 生成 | `design_required` で分岐（生成本体は Unit 002） |
-| 3 実装 | acceptance criteria に沿って実装 | 常に実行 |
-| 4 検証 | acceptance criteria チェック | 常に実行 |
-| 5 レビュー | code / security / design review | `review_required` で分岐（実行本体は Unit 003） |
+| 2 計画 + 設計 | design 成果物生成（条件付きセクション）+ Design 承認ゲート発火 | `design_required` で分岐（Unit 002 実装済み） |
+| 3 実装 | acceptance criteria に沿って実装 | 常に実行（design 必須セルは Step 2 後の review 境界で停止し未到達） |
+| 4 検証 | acceptance criteria チェック | 常に実行（同上） |
+| 5 レビュー | code / security / design review | `review_required` で分岐（実行本体は Unit 003 / 未実装） |
 | 6 完了 | status done + journal 追記 + 理由記録（条件付き）+ work item 単位 commit + 次アクション案内 | 常に実行 |
 
 ## パス解決
@@ -143,17 +145,18 @@ Step 1 以降に進む前に必ず実行する。
 
      3. `designs_path = .aidlc/cycles/<cycle>/designs/<artifact_filename>` / `reviews_path = .aidlc/cycles/<cycle>/reviews/<artifact_filename>`
 
+   - **design preflight（`design_required = true` のみ / status 遷移前）**: design 生成（Step 2）には design テンプレート（`templates/design.md`）が必要である。`design_required = true` の組合せは、status 遷移（次の 5）を行う前に design テンプレートの存在を検証する。**不在**（環境設定不備）→ 以下を案内して**終了**（副作用なし＝ frontmatter / journal / commit 不変。work item 状態を進めない）:
+
+     ```text
+     design テンプレート（templates/design.md）が見つかりません。
+     work item <id>（matrix_case: <matrix_case>）の design 生成には design テンプレートが必要です。
+     ```
+
+     > design テンプレート存在検証を status 遷移前に行うことで、テンプレート不在だけで status が `in_progress` に進む部分状態を排除する（`invalid_artifact_path` と同じ「Step 2 前提条件を status 遷移前に検証」する配置）。
+
    - 正常（エラー停止しない）→ MatrixDecision（`matrix_case` + 派生要件 + 該当時の `designs_path` / `reviews_path`）を確定する。
 
-   **本 Unit（001）スコープ境界ガード**: design 生成（Step 2 / Unit 002）・review 実行（Step 5 / Unit 003）は本サイクル時点で未実装である。`design_required = true` または `review_required = true` の組合せ（`normal_standard` / `normal_comprehensive` / `risky_standard` / `risky_comprehensive`）は、**status 遷移（次の 5）を行う前にここで案内して終了**する（副作用なし＝ frontmatter / journal / commit 不変）:
-
-   ```text
-   選定された work item <id>（matrix_case: <matrix_case>）は design / review を要します。
-   develop Step 2（設計生成 / Unit 002）・Step 5（レビュー実行 / Unit 003）は未実装です。
-   生成先: <designs_path> / 記録先: <reviews_path>
-   ```
-
-   - `design_required = false` かつ `review_required = false`（`tiny_minimal` / `tiny_standard` / `tiny_comprehensive` / `normal_minimal`）→ 本 Unit 単体で end-to-end 完走可能。次の 5 に進む。
+   > **後続 Step への分岐**: `design_required = false` かつ `review_required = false`（`tiny_*` / `normal_minimal`）は Step 2/5 をスキップして end-to-end 完走する。`design_required = true`（normal/risky の standard 以上 = 全て `review_required = true`）は Step 1-5 で in_progress 化し、Step 2 で design を生成後、Step 2 末尾の review 境界ガード（後述）で停止する。いずれも次の 5（status 読取/遷移）に進む。
 
 5. **現在 status を読取り、必要なら遷移する**（`work-item-next.sh` 出力に status は含まれないため別途読取 / パースは安全境界スクリプトに集約。**判定が正常完了した場合のみ実行**）:
 
@@ -180,9 +183,53 @@ Step 1 以降に進む前に必ず実行する。
 Step 1 の MatrixDecision を参照する:
 
 - `design_required = false`（`tiny_*` / `normal_minimal`）→ 本 Step は実行しない（**repo への追記なし** / 実行ログ・会話通知のみ）。Step 3 へ進む。
-- `design_required = true`（`normal_standard` / `normal_comprehensive` / `risky_standard` / `risky_comprehensive`）→ `designs_path` に design 成果物を生成する（`design_mode` / `risk_analysis_required` / `test_plan_required` / `rollback_note_required` を消費 / 生成本体は **Unit 002 の責務**）。
+- `design_required = true`（`normal_standard` / `normal_comprehensive` / `risky_standard` / `risky_comprehensive`）→ 以下の手順で design 成果物を生成する。
 
-  > **本 Unit（001）時点**: `design_required = true` の組合せは Step 1 のスコープ境界ガードで status 遷移前に副作用なし停止済みのため、本フローが Step 2 に到達するのは `design_required = false` の場合のみである。Unit 002 が Step 2 の生成本体を実装した時点で、Step 1 ガードを解除し本分岐（design 生成）が実行される。
+### 2.1 design 成果物の生成
+
+design テンプレート（`templates/design.md` / Step 1 preflight で存在保証済み）を起点に、MatrixDecision の派生要件に従って `designs_path` に design 成果物を生成する。条件付きセクションは対応フラグに従って充足/省略する（§8 成果物要件を増やさない）:
+
+| 派生要件フィールド | design への反映 |
+|-------------------|----------------|
+| `design_mode`（`simple` / `full`） | design 本体（`## Design`）の詳細度。`simple`: 簡易（要点と方針）/ `full`: 詳細 |
+| `risk_analysis`（bool） | `true` → `## Risk Analysis` を含める / `false` → 出力しない |
+| `test_plan`（bool） | `true` → `## Test Plan` を含める / `false` → 出力しない |
+| `rollback_note`（bool） | `true` → `## Rollback Note` を**非空**で含める / `false` → 出力しない |
+
+- 必須セクション（`## Goal` / `## Context` / `## Design`）は常に含める。`comprehensive` ではシーケンス図を `## Design` 内の任意要素として追加してよい（別セクションを増やさない）。
+- design 文書に機密情報（秘密鍵・トークン・認証情報等）を含めない（`review-flow.md` のマスク方針を準用）。
+- 生成先は Step 1 で確定済みの `designs_path`（`.aidlc/cycles/<cycle>/designs/<id>-<slug>.md`）。
+
+matrix_case 別の生成内容（§8 由来 / MatrixDecision のフラグと厳密一致）:
+
+| matrix_case | design_mode | Risk Analysis | Test Plan | Rollback Note |
+|-------------|-------------|---------------|-----------|---------------|
+| `normal_standard` | simple | 省略 | 省略 | 省略 |
+| `normal_comprehensive` | full | 含む | 省略 | 省略 |
+| `risky_standard` | full | 省略 | 省略 | 含む（非空） |
+| `risky_comprehensive` | full | 含む | 含む | 含む（非空） |
+
+### 2.2 Design 承認ゲート
+
+design 成果物の生成後、Design 承認ゲートを発火する（`docs/v3/workflow.md` §5.1 / `automation_mode` に従う）:
+
+- `manual`: ユーザーに design を提示し承認を求める。`approved` → 2.3 へ / `needs_changes`（修正要求）→ 2.1 に戻り design を修正・再生成して再ゲート / `pending` → ユーザー応答を待つ
+- `semi_auto`: フォールバック非該当なら auto 承認（`approved` 相当）→ 2.3 へ。フォールバック該当時は `manual` と同じくユーザー確認
+
+### 2.3 review 境界ガード（Step 3 に進む前 / Unit 003 未実装）
+
+Design ゲートが `approved`（`semi_auto` の auto 承認を含む）の後、MatrixDecision の `review_required` を参照する:
+
+- `review_required = true`（design 必須セルは**全て**該当）→ review 実行（Step 5）は Unit 003 で未実装のため、**Step 3（実装）に進まず停止**する。status は `done` に遷移させず `in_progress` のまま留める（design ファイル生成のみが副作用 / 実装・検証の副作用なし）。以下を案内して終了:
+
+  ```text
+  work item <id>（matrix_case: <matrix_case>）の design を生成・承認しました: <designs_path>
+  review（Step 5 / Unit 003）は未実装のため、ここで停止します（status: in_progress）。
+  ```
+
+- `review_required = false`（§8 上、design_required=true ∧ review_required=false のセルは現状存在しない / 将来の拡張用）→ Step 3 へ進む。
+
+  > **Unit 003 実装時**: 本 review 境界ガードを解除し、design 必須セルが Step 3（実装）→ Step 4（検証）→ Step 5（レビュー）→ Step 6（完了）まで完走できるようにする（Unit 001 のスコープ境界ガードを後続 Unit が解除するパターンと一貫）。
 
 ## Step 3: 実装
 
@@ -204,7 +251,7 @@ Step 1 の MatrixDecision を参照する:
 - `review_required = false`（`tiny_*` / `normal_minimal`）→ 本 Step は実行しない（**repo への追記なし** / 実行ログ・会話通知のみ）。Step 6 へ進む。
 - `review_required = true`（`normal_*` / `risky_*` の standard 以上）→ `review_mode`（`code` / `code_security` / `code_security_design`）に従い、`reviews_path` に perspective 別セクションでレビューを記録する（実行本体は **Unit 003 の責務**）。
 
-  > **本 Unit（001）時点**: `review_required = true` の組合せは Step 1 のスコープ境界ガードで status 遷移前に副作用なし停止済みのため、本フローが Step 5 に到達するのは `review_required = false` の場合のみである。Unit 003 が Step 5 の routing / 実行本体（既存 `reviewing-construction-*` への配線・5R 上限・Defer 戦略）を実装した時点で、Step 1 ガードを解除し本分岐（review 実行）が実行される。
+  > **現時点（Unit 002 まで実装済み）**: `review_required = true` の組合せ（design 必須セル）は **Step 2.3 の review 境界ガード**で停止済み（design 生成 + Design 承認後、Step 3 に進まず in_progress 維持）のため、本フローが Step 5 に到達するのは `review_required = false` の場合のみである。Unit 003 が Step 5 の routing / 実行本体（既存 `reviewing-construction-*` への配線・5R 上限・Defer 戦略）を実装した時点で、Step 2.3 の review 境界ガードを解除し、design 必須セルが Step 3-6 まで完走できるようにする。
   >
   > 注: `normal + minimal` は `review_required = false` のため本 Step をスキップし、Step 6 まで完走する（Unit 001 の end-to-end 対象）。
 

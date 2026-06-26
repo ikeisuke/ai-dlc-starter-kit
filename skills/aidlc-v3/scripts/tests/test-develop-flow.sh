@@ -25,6 +25,8 @@ readonly SCRIPT_DIR SCRIPTS_DIR
 readonly WISTATUS="$SCRIPTS_DIR/work-item-status.sh"
 readonly WINEXT="$SCRIPTS_DIR/work-item-next.sh"
 readonly WIVALIDATE="$SCRIPTS_DIR/work-item-validate.sh"
+# design テンプレート（Unit 002 / Step 2 生成の起点 / Step 1 preflight の存在検証対象）
+readonly DESIGN_TMPL="$SCRIPTS_DIR/../templates/design.md"
 
 if ! command -v git >/dev/null 2>&1; then
     echo "SKIP: git not found (前提不備)" >&2
@@ -72,6 +74,12 @@ assert_cond() {
     else
         FAIL=$((FAIL + 1)); echo "  FAIL : $desc"
     fi
+}
+
+# section_nonempty <file> <heading> : 指定見出しから次の `## ` 見出し（または EOF）までに
+# 非空行が 1 行以上あれば exit 0、なければ exit 1（design の条件付きセクション非空検証用 / 罫線・空行のみは空扱い）。
+section_nonempty() {
+    awk -v h="$2" '$0==h{f=1;next} /^## /{f=0} f&&NF{c=1} END{exit !c}' "$1"
 }
 
 # ---- フィクスチャ: work item を任意の status / size / deps で配置 ----
@@ -189,22 +197,25 @@ decide_matrix() {
 }
 
 # ---- develop フロードライバ（develop.md Step1-6 の決定的 mutation を模擬 / size×depth_level 分岐） ----
-# AI 判断（実装内容そのもの）はテストせず、§8 判定・status 遷移・journal 追記・commit を再現する。
-# §8 判定は decide_matrix（単一の真実）に委譲する。depth_level は引数で与える（実フローは
-# read-config.sh で config.toml から解決する。本ハーネスは外部依存 dasel を避けるため
+# AI 判断（実装内容そのもの・Design 承認ゲートの対話）はテストせず、§8 判定・status 遷移・design 生成・
+# journal 追記・commit を再現する。§8 判定は decide_matrix（単一の真実）に委譲する。depth_level は引数で
+# 与える（実フローは read-config.sh で config.toml から解決。本ハーネスは外部依存 dasel を避けるため
 # 「解決済み depth_level」を入力とする。depth_level 解決の正規化契約の網羅検証は Unit 004 の範囲）。
+# design テンプレートは第 4 引数で与える（既定 = 実テンプレート $DESIGN_TMPL / 不在検証は専用パスを渡す）。
 # 戻り値:
 #   0  = 完了（design/review 不要セル: tiny_* / normal_minimal。tiny_comprehensive は理由記録付き）
 #   20 = next:none（停止）
-#   21 = design または review が必要（normal/risky standard 以上 = Unit 002/003 未実装 / 副作用なし停止）
 #   22 = read 異常 / 想定外（副作用なし停止）
 #   23 = invalid_size（size enum 外 / 副作用なし停止）
 #   24 = risky_minimal（risky+minimal 不可 / 副作用なし停止）
 #   25 = invalid_artifact_path（成果物ファイル名が <id>- prefix 不一致 / 副作用なし停止）
+#   26 = design 生成済み + review 境界で停止（Unit 003 未実装 / status=in_progress / Unit 002）
+#        承認ゲートは harness では模擬しない（生成済み境界として扱う）
+#   27 = design テンプレート不在（Step 1 preflight / 副作用なし停止 / status 未遷移 / Unit 002）
 # 注: assert 経由で間接呼び出しされるため shellcheck からは未使用に見える。
 # shellcheck disable=SC2329
 run_develop() {
-    local repo="$1" cycle="$2" depth="$3"
+    local repo="$1" cycle="$2" depth="$3" tmpl="${4:-$DESIGN_TMPL}"
     local widir=".aidlc/cycles/$cycle/work-items"
     (
         cd "$repo" || exit 9
@@ -215,27 +226,49 @@ run_develop() {
         id="$(printf '%s' "$nx" | cut -d: -f2)"
         size="$(printf '%s' "$nx" | cut -d: -f3)"
         path="$(printf '%s' "$nx" | cut -d: -f4-)"
-        # Step1-2 〜 1-4: §8 写像（decide_matrix）。判定は mutation を伴わない
-        # 本ドライバが消費するのは design_required / review_required / reason_record / error のみ。
-        # 他の派生フィールド（design_mode / risk_analysis / test_plan / rollback_note / review_mode）は
-        # decide_matrix の 9 セル assert 側で検証する（ここでは `_` で読み捨てる）。
-        local dec d_req r_req rrec err
+        # Step1-2 〜 1-4: §8 写像（decide_matrix）。判定は mutation を伴わない。
+        # design 生成（Unit 002）で design_mode / risk_analysis / test_plan / rollback_note を消費する。
+        local dec mcase d_req dmode ra tp rn r_req rrec err
         dec="$(decide_matrix "$size" "$depth")"
-        IFS='|' read -r _ d_req _ _ _ _ r_req _ rrec err <<<"$dec"
+        IFS='|' read -r mcase d_req dmode ra tp rn r_req _ rrec err <<<"$dec"
         case "$err" in
             invalid_size) exit 23 ;;
             risky_minimal) exit 24 ;;
             none) ;;
             *) exit 22 ;;  # unknown_depth 等（実フローは解決契約で standard へ正規化済みのはず）
         esac
-        # design/review 必須セル: 成果物パス導出 + invalid_artifact_path 検証 → スコープ境界ガード
-        # （いずれも status 遷移より前 = 副作用なし。生成本体は Unit 002/003）
-        if [[ "$d_req" == "1" || "$r_req" == "1" ]]; then
+        # design 必須セル（Unit 002）: 成果物パス導出 + invalid_artifact_path(25) → design preflight(27)
+        # → status 遷移 → Step 2 design 生成 → Step 2.3 review 境界ガード(26)。
+        # 25/27 は status 遷移より前 = 副作用なし。26 は design 生成 + in_progress 化（副作用あり / done 非遷移）。
+        if [[ "$d_req" == "1" ]]; then
             local fname; fname="$(basename "$path")"
             case "$fname" in "${id}-"*) ;; *) exit 25 ;; esac
-            exit 21
+            # design preflight（status 遷移前 / テンプレート不在は副作用なし停止）
+            [[ -f "$tmpl" ]] || exit 27
+            # Step1-5: status 読取 + 遷移（pending→in_progress / resume は in_progress 維持）
+            st="$("$WISTATUS" --read "$path" 2>/dev/null)" || exit 22
+            st="${st#status:}"
+            case "$st" in
+                pending) "$WISTATUS" "$path" pending in_progress >/dev/null 2>&1 || exit 22 ;;
+                in_progress) : ;;  # resume: 遷移せず継続
+                *) exit 22 ;;
+            esac
+            # Step2: designs_path に design 生成（条件付きセクションをフラグ通り充足/省略）
+            local designs_dir=".aidlc/cycles/$cycle/designs"
+            mkdir -p "$designs_dir"
+            {
+                printf '# Design %s\n\n- matrix_case: %s\n- design_mode: %s\n\n' "$id" "$mcase" "$dmode"
+                printf '## Goal\n\ng\n\n## Context\n\nc\n\n## Design\n\nd\n'
+                [[ "$ra" == "1" ]] && printf '\n## Risk Analysis\n\nra\n'
+                [[ "$tp" == "1" ]] && printf '\n## Test Plan\n\ntp\n'
+                [[ "$rn" == "1" ]] && printf '\n## Rollback Note\n\nrollback steps\n'
+            } > "$designs_dir/$fname"
+            # Step2.2: Design 承認ゲートは harness では模擬しない（approved 前提）
+            # Step2.3: review 境界ガード（review_required=true → Step 3 に進まず停止 / status は in_progress 維持）
+            if [[ "$r_req" == "1" ]]; then exit 26; fi
+            # design_required=1 ∧ review_required=0 のセルは §8 上現状なし。将来は以下 Step 3 へ fall-through。
         fi
-        # ここに到達するのは design/review 不要セル（tiny_* / normal_minimal）= end-to-end 完走
+        # design 不要セル（tiny_* / normal_minimal）= end-to-end 完走
         # Step1-5: 現在 status 読取 + 遷移
         st="$("$WISTATUS" --read "$path" 2>/dev/null)" || exit 22
         st="${st#status:}"
@@ -408,45 +441,87 @@ put_work_item "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 res in_progress 
 run_develop "$r3" v3.0.0-alpha.t standard; assert_cond "resume tiny 完了（rc=0 / 二重遷移せず done）" "$?"
 assert_out "status:done" "resume 後 status=done" -- "$WISTATUS" --read "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-res.md"
 
-echo "== 副作用なし停止: normal+standard（design/review 必須 = Unit 002/003 未実装 / 新規 pending） =="
-r4="$TMPROOT/noop-normal"; make_sandbox "$r4" v3.0.0-alpha.t
+echo "== Unit 002: normal+standard → 簡易 design 生成 + review 境界停止（rc=26 / 新規 pending） =="
+r4="$TMPROOT/design-normal-std"; make_sandbox "$r4" v3.0.0-alpha.t
 put_work_item "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 n pending normal ""
 ( cd "$r4" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-snap_before="$(snapshot "$r4" v3.0.0-alpha.t)"
 run_develop "$r4" v3.0.0-alpha.t standard; rc=$?
-assert_cond "normal+standard は design/review 必須で停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
-snap_after="$(snapshot "$r4" v3.0.0-alpha.t)"
-assert_cond "normal+standard 選定で副作用なし（status 遷移前停止 / 状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "normal+standard は design 生成後 review 境界で停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+d4="$r4/.aidlc/cycles/v3.0.0-alpha.t/designs/001-n.md"
+assert_cond "normal+standard で design 成果物が生成される" "$([[ -f "$d4" ]] && echo 0 || echo 1)"
+assert_out "status:in_progress" "normal+standard 停止時 status=in_progress（done 非遷移）" -- "$WISTATUS" --read "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-n.md"
+assert_cond "normal+standard で実装副作用なし（src/001.txt 非生成 = Step 3 未到達）" "$([[ ! -f "$r4/src/001.txt" ]] && echo 0 || echo 1)"
+assert_cond "normal+standard は design_mode: simple" "$(grep -q 'design_mode: simple' "$d4" && echo 0 || echo 1)"
+assert_cond "normal+standard(simple) は Risk Analysis を含まない" "$(grep -q '## Risk Analysis' "$d4" && echo 1 || echo 0)"
+assert_cond "normal+standard は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4" && echo 1 || echo 0)"
+assert_cond "normal+standard は Rollback Note を含まない" "$(grep -q '## Rollback Note' "$d4" && echo 1 || echo 0)"
 
-echo "== 副作用なし停止: resume された in_progress normal+standard =="
-r5="$TMPROOT/noop-resume-normal"; make_sandbox "$r5" v3.0.0-alpha.t
+echo "== Unit 002: resume された in_progress normal+standard → design 生成 + 停止（status 維持） =="
+r5="$TMPROOT/design-resume-normal"; make_sandbox "$r5" v3.0.0-alpha.t
 put_work_item "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rn in_progress normal ""
 ( cd "$r5" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-snap_before="$(snapshot "$r5" v3.0.0-alpha.t)"
 run_develop "$r5" v3.0.0-alpha.t standard; rc=$?
-assert_cond "resume normal+standard は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
-snap_after="$(snapshot "$r5" v3.0.0-alpha.t)"
-assert_cond "resume normal+standard で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "resume normal+standard は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_out "status:in_progress" "resume normal+standard は status=in_progress 維持（二重遷移なし）" -- "$WISTATUS" --read "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rn.md"
+assert_cond "resume normal+standard で design 成果物が生成される" "$([[ -f "$r5/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rn.md" ]] && echo 0 || echo 1)"
 
-echo "== 副作用なし停止: risky+standard（design/review 必須 = Unit 002/003 未実装 / 新規 pending） =="
-r4b="$TMPROOT/noop-risky"; make_sandbox "$r4b" v3.0.0-alpha.t
+echo "== Unit 002: risky+standard → design + rollback note 生成 + 停止（rc=26 / 新規 pending） =="
+r4b="$TMPROOT/design-risky-std"; make_sandbox "$r4b" v3.0.0-alpha.t
 put_work_item "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rk pending risky ""
 ( cd "$r4b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-snap_before="$(snapshot "$r4b" v3.0.0-alpha.t)"
 run_develop "$r4b" v3.0.0-alpha.t standard; rc=$?
-assert_cond "risky+standard は design/review 必須で停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
-snap_after="$(snapshot "$r4b" v3.0.0-alpha.t)"
-assert_cond "risky+standard 選定で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "risky+standard は design 生成後 review 境界で停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+d4b="$r4b/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rk.md"
+assert_out "status:in_progress" "risky+standard 停止時 status=in_progress（done 非遷移）" -- "$WISTATUS" --read "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rk.md"
+assert_cond "risky+standard は design_mode: full" "$(grep -q 'design_mode: full' "$d4b" && echo 0 || echo 1)"
+assert_cond "risky+standard は Rollback Note 見出しを含む" "$(grep -q '## Rollback Note' "$d4b" && echo 0 || echo 1)"
+assert_cond "risky+standard の Rollback Note は非空（次見出しまでに非空行あり）" "$(section_nonempty "$d4b" '## Rollback Note'; echo $?)"
+assert_cond "risky+standard は Risk Analysis を含まない" "$(grep -q '## Risk Analysis' "$d4b" && echo 1 || echo 0)"
+assert_cond "risky+standard は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4b" && echo 1 || echo 0)"
 
-echo "== 副作用なし停止: resume された in_progress risky+standard =="
-r5b="$TMPROOT/noop-resume-risky"; make_sandbox "$r5b" v3.0.0-alpha.t
+echo "== Unit 002: resume された in_progress risky+standard → design 生成 + 停止（status 維持） =="
+r5b="$TMPROOT/design-resume-risky"; make_sandbox "$r5b" v3.0.0-alpha.t
 put_work_item "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rrk in_progress risky ""
 ( cd "$r5b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
-snap_before="$(snapshot "$r5b" v3.0.0-alpha.t)"
 run_develop "$r5b" v3.0.0-alpha.t standard; rc=$?
-assert_cond "resume risky+standard は停止コード 21" "$([[ "$rc" == "21" ]] && echo 0 || echo 1)"
-snap_after="$(snapshot "$r5b" v3.0.0-alpha.t)"
-assert_cond "resume risky+standard で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
+assert_cond "resume risky+standard は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_out "status:in_progress" "resume risky+standard は status=in_progress 維持" -- "$WISTATUS" --read "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rrk.md"
+
+echo "== Unit 002: normal+comprehensive → design + Risk Analysis（Test Plan/Rollback なし） =="
+r4c="$TMPROOT/design-normal-comp"; make_sandbox "$r4c" v3.0.0-alpha.t
+put_work_item "$r4c/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nc pending normal ""
+( cd "$r4c" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r4c" v3.0.0-alpha.t comprehensive; rc=$?
+assert_cond "normal+comprehensive は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+d4c="$r4c/.aidlc/cycles/v3.0.0-alpha.t/designs/001-nc.md"
+assert_cond "normal+comprehensive は design_mode: full" "$(grep -q 'design_mode: full' "$d4c" && echo 0 || echo 1)"
+assert_cond "normal+comprehensive は Risk Analysis を含む" "$(grep -q '## Risk Analysis' "$d4c" && echo 0 || echo 1)"
+assert_cond "normal+comprehensive は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4c" && echo 1 || echo 0)"
+assert_cond "normal+comprehensive は Rollback Note を含まない" "$(grep -q '## Rollback Note' "$d4c" && echo 1 || echo 0)"
+
+echo "== Unit 002: risky+comprehensive → design + Risk Analysis + Test Plan + Rollback Note（全て） =="
+r4d="$TMPROOT/design-risky-comp"; make_sandbox "$r4d" v3.0.0-alpha.t
+put_work_item "$r4d/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rc2 pending risky ""
+( cd "$r4d" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r4d" v3.0.0-alpha.t comprehensive; rc=$?
+assert_cond "risky+comprehensive は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+d4d="$r4d/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rc2.md"
+assert_cond "risky+comprehensive は Risk Analysis を含む" "$(grep -q '## Risk Analysis' "$d4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive は Test Plan を含む" "$(grep -q '## Test Plan' "$d4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive は Rollback Note を含む" "$(grep -q '## Rollback Note' "$d4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive の Rollback Note は非空" "$(section_nonempty "$d4d" '## Rollback Note'; echo $?)"
+
+echo "== Unit 002: design テンプレート不在 → rc=27 副作用なし（status 未遷移 / design 未生成） =="
+r4e="$TMPROOT/design-no-tmpl"; make_sandbox "$r4e" v3.0.0-alpha.t
+put_work_item "$r4e/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nt pending normal ""
+( cd "$r4e" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+snap_before="$(snapshot "$r4e" v3.0.0-alpha.t)"
+run_develop "$r4e" v3.0.0-alpha.t standard "$TMPROOT/no-such-design-template.md"; rc=$?
+assert_cond "design テンプレート不在は停止コード 27" "$([[ "$rc" == "27" ]] && echo 0 || echo 1)"
+assert_out "status:pending" "テンプレート不在時 status=pending（status 未遷移 / preflight）" -- "$WISTATUS" --read "$r4e/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-nt.md"
+assert_cond "テンプレート不在時は design 未生成" "$([[ ! -f "$r4e/.aidlc/cycles/v3.0.0-alpha.t/designs/001-nt.md" ]] && echo 0 || echo 1)"
+snap_after="$(snapshot "$r4e" v3.0.0-alpha.t)"
+assert_cond "テンプレート不在で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
 echo "== Unit 001 e2e: normal+minimal → end-to-end 完走（design/review 不要） =="
 r8="$TMPROOT/e2e-normal-minimal"; make_sandbox "$r8" v3.0.0-alpha.t
