@@ -832,6 +832,110 @@ assert_cond "read 異常（status 重複）で停止コード 22" "$([[ "$rc" ==
 snap_after="$(snapshot "$r7" v3.0.0-alpha.t)"
 assert_cond "read 異常で副作用なし（状態不変）" "$([[ "$snap_before" == "$snap_after" ]] && echo 0 || echo 1)"
 
+# ---- Unit 004: §8 全マトリクス conformance（データ駆動 / run_develop 観測結果を §8 期待値ビューと照合） ----
+# conformance_case <size> <depth> <exp_rc> <exp_status> <exp_design(0/1)> <exp_reviews(0/1)> <exp_persp(-/Code/Code+Design)>
+#   run_develop を隔離 sandbox で実行し、観測 rc / status / design 生成有無 / reviews 生成有無 / perspective を assert。
+#   期待値は docs/v3/data-model.md §8 / decide_matrix のビュー（テスト内で §8 を再判定しない / 二重定義回避）。
+# 注: while ループから間接呼び出しされるため shellcheck からは未使用に見える。
+# shellcheck disable=SC2329
+conformance_case() {
+    local size="$1" depth="$2" exp_rc="$3" exp_status="$4" exp_design="$5" exp_reviews="$6" exp_persp="$7"
+    local slug="${size}-${depth}" repo="$TMPROOT/conf-${size}-${depth}"
+    make_sandbox "$repo" v3.0.0-alpha.t
+    put_work_item "$repo/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 "$slug" pending "$size" ""
+    ( cd "$repo" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+    run_develop "$repo" v3.0.0-alpha.t "$depth"; local rc=$?
+    local cbase="$repo/.aidlc/cycles/v3.0.0-alpha.t"
+    assert_cond "[§8 $size+$depth] rc=$exp_rc" "$([[ "$rc" == "$exp_rc" ]] && echo 0 || echo 1)"
+    local st; st="$("$WISTATUS" --read "$cbase/work-items/001-$slug.md" 2>/dev/null)"; st="${st#status:}"
+    assert_cond "[§8 $size+$depth] status=$exp_status" "$([[ "$st" == "$exp_status" ]] && echo 0 || echo 1)"
+    # design 生成有無
+    if [[ "$exp_design" == "1" ]]; then
+        assert_cond "[§8 $size+$depth] design 生成" "$([[ -f "$cbase/designs/001-$slug.md" ]] && echo 0 || echo 1)"
+    else
+        assert_cond "[§8 $size+$depth] design 非生成" "$([[ ! -f "$cbase/designs/001-$slug.md" ]] && echo 0 || echo 1)"
+    fi
+    # reviews 生成有無（非生成は reviews/ ディレクトリ不存在まで確認 = 空ディレクトリ副作用も検出 / 設計レビュー #1）
+    if [[ "$exp_reviews" == "1" ]]; then
+        local rf="$cbase/reviews/001-$slug.md"
+        assert_cond "[§8 $size+$depth] reviews 生成" "$([[ -f "$rf" ]] && echo 0 || echo 1)"
+        local has_code=1 has_design=1
+        grep -q '^## Code Review' "$rf" 2>/dev/null || has_code=0
+        grep -q '^## Design Review' "$rf" 2>/dev/null || has_design=0
+        case "$exp_persp" in
+            Code)        assert_cond "[§8 $size+$depth] reviews perspective=Code のみ" "$([[ "$has_code" == "1" && "$has_design" == "0" ]] && echo 0 || echo 1)" ;;
+            Code+Design) assert_cond "[§8 $size+$depth] reviews perspective=Code+Design" "$([[ "$has_code" == "1" && "$has_design" == "1" ]] && echo 0 || echo 1)" ;;
+        esac
+    else
+        assert_cond "[§8 $size+$depth] reviews ディレクトリ非生成" "$([[ ! -d "$cbase/reviews" ]] && echo 0 || echo 1)"
+    fi
+}
+
+echo "== Unit 004: §8 全マトリクス conformance（全 8 有効 + risky_minimal / データ駆動） =="
+# size depth exp_rc exp_status exp_design exp_reviews exp_persp（期待値は §8 / decide_matrix のビュー）
+# c_overflow はテーブル破損検出用（8 列目以降が入ったら非空になる / コードレビュー #1）。
+while read -r c_size c_depth c_rc c_status c_design c_reviews c_persp c_overflow; do
+    [[ -z "$c_size" || "$c_size" == \#* ]] && continue
+    # テーブル整合性: 必須 7 列ちょうど（余剰列なし / exp_persp 非空）+ perspective enum 整合
+    assert_cond "[CONFTABLE $c_size+$c_depth] 行は 7 列ちょうど（余剰列なし / exp_persp 充足）" "$([[ -z "$c_overflow" && -n "$c_persp" ]] && echo 0 || echo 1)"
+    # persp_ok: 0=整合（assert_cond の pass）/ 1=不整合（fail）
+    persp_ok=0
+    if [[ "$c_reviews" == "1" ]]; then
+        [[ "$c_persp" == "Code" || "$c_persp" == "Code+Design" ]] || persp_ok=1
+    else
+        [[ "$c_persp" == "-" ]] || persp_ok=1
+    fi
+    assert_cond "[CONFTABLE $c_size+$c_depth] exp_persp enum 整合（reviews=${c_reviews}）" "$persp_ok"
+    conformance_case "$c_size" "$c_depth" "$c_rc" "$c_status" "$c_design" "$c_reviews" "$c_persp"
+done <<'CONFTABLE'
+tiny minimal 0 done 0 0 -
+tiny standard 0 done 0 0 -
+tiny comprehensive 0 done 0 0 -
+normal minimal 0 done 0 0 -
+normal standard 0 done 1 1 Code
+normal comprehensive 0 done 1 1 Code
+risky standard 0 done 1 1 Code
+risky comprehensive 0 done 1 1 Code+Design
+risky minimal 24 pending 0 0 -
+CONFTABLE
+
+echo "== Unit 004: 外部レビュー CLI 非依存（poison PATH 回帰アンカー / 全 conformance 行を poison PATH 下で実行） =="
+# 現状 run_develop は実 CLI 呼び出し経路を持たず review も upsert_review_section で模擬する。本ガードは
+# 「模擬 run_develop が実 CLI に依存しない（将来 codex/claude/gemini 呼び出しがハーネスに混入したら検出する）」
+# ことを保証する poison PATH 回帰アンカーである。スタブ・PATH 変更は TMPROOT sandbox に閉じ実行後に PATH を復元する。
+poison_bin="$TMPROOT/poison-bin"; mkdir -p "$poison_bin"
+poison_trace="$TMPROOT/poison-trace"
+for cli in codex claude gemini; do
+    {
+        printf '#!/usr/bin/env bash\n'
+        printf 'echo %s >> "%s"\n' "$cli" "$poison_trace"
+        printf 'exit 0\n'
+    } > "$poison_bin/$cli"
+    chmod +x "$poison_bin/$cli"
+done
+saved_path="$PATH"
+PATH="$poison_bin:$PATH"
+while read -r p_size p_depth; do
+    [[ -z "$p_size" || "$p_size" == \#* ]] && continue
+    prepo="$TMPROOT/poison-${p_size}-${p_depth}"
+    make_sandbox "$prepo" v3.0.0-alpha.t
+    put_work_item "$prepo/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 "${p_size}-${p_depth}" pending "$p_size" ""
+    ( cd "$prepo" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+    run_develop "$prepo" v3.0.0-alpha.t "$p_depth" >/dev/null 2>&1 || true
+done <<'POISONTABLE'
+tiny minimal
+tiny standard
+tiny comprehensive
+normal minimal
+normal standard
+normal comprehensive
+risky standard
+risky comprehensive
+risky minimal
+POISONTABLE
+PATH="$saved_path"
+assert_cond "poison PATH 下の全 conformance 実行で実 CLI（codex/claude/gemini）未呼出（痕跡空）" "$([[ ! -s "$poison_trace" ]] && echo 0 || echo 1)"
+
 echo ""
 echo "== 結果 =="
 echo "PASS=$PASS FAIL=$FAIL"
