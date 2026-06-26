@@ -5,14 +5,15 @@
 > commit・`journal.md` 追記を実際に行う。frontmatter status の読取／遷移のような atomic 性・
 > パース安全性が必要な処理は `scripts/work-item-status.sh` を経由する（RFC P4）。
 >
-> **Phase 4 の対象（Unit 001 + Unit 002 実装済み）**: work item の `size`（tiny/normal/risky）と cycle の
+> **Phase 4 の対象（Unit 001 + Unit 002 + Unit 003 実装済み）**: work item の `size`（tiny/normal/risky）と cycle の
 > `depth_level`（minimal/standard/comprehensive）を解決し、`docs/v3/data-model.md` §8 マトリクスへ
 > 写像して後続 Step の実行可否を決める（Unit 001）。`normal + minimal`（実装 + テストのみ）は
 > end-to-end 完走する。design 成果物の生成（Step 2）は Unit 002 で実装済み。review の実行（Step 5）は
-> 後続 Unit 003 の責務である。`design_required = true` の組合せ（normal/risky の standard 以上）は Step 2 で
-> design 成果物を生成し Design 承認ゲートを発火するが、**全 design 必須セルは `review_required = true`** であり
-> review（Unit 003）が未実装のため、Step 2 完了直後（Step 3 実装に進む前）で停止する（status は `in_progress`
-> 維持 / `done` 遷移なし）。Unit 003 実装時にこの review 境界ガードを解除し Step 3-6 まで完走させる。
+> Unit 003 で実装済みであり、`matrix_review_mode`（`code` / `code_security` / `code_security_design`）に応じて既存
+> `reviewing-construction-*` スキルへルーティングして `reviews/<id>-<slug>.md` に perspective 別セクションで記録する。
+> **これにより `design_required = true`（= `review_required = true`）の組合せ（normal/risky の standard 以上）も Step 2
+> （design 生成 + 承認）→ Step 3（実装）→ Step 4（検証）→ Step 5（レビュー）→ Step 6（完了）まで end-to-end 完走する**
+> （Unit 002 まで存在した Step 2.3 の review 境界ガードは Unit 003 で解除済み）。
 
 ## 目的
 
@@ -30,9 +31,9 @@
 |------|------|---------|
 | 1 Work Item 選定 + 判定 | 次 item 選定 + size enum 検証 + depth_level 解決 + §8 写像（MatrixDecision 構築）+ status 読取 + in_progress 化 | 常に実行 |
 | 2 計画 + 設計 | design 成果物生成（条件付きセクション）+ Design 承認ゲート発火 | `design_required` で分岐（Unit 002 実装済み） |
-| 3 実装 | acceptance criteria に沿って実装 | 常に実行（design 必須セルは Step 2 後の review 境界で停止し未到達） |
-| 4 検証 | acceptance criteria チェック | 常に実行（同上） |
-| 5 レビュー | code / security / design review | `review_required` で分岐（実行本体は Unit 003 / 未実装） |
+| 3 実装 | acceptance criteria に沿って実装 | 常に実行 |
+| 4 検証 | acceptance criteria チェック | 常に実行 |
+| 5 レビュー | code / security / design review を既存 `reviewing-construction-*` へルーティング + `reviews/` 記録 | `review_required` で分岐（Unit 003 実装済み） |
 | 6 完了 | status done + journal 追記 + 理由記録（条件付き）+ work item 単位 commit + 次アクション案内 | 常に実行 |
 
 ## パス解決
@@ -156,7 +157,7 @@ Step 1 以降に進む前に必ず実行する。
 
    - 正常（エラー停止しない）→ MatrixDecision（`matrix_case` + 派生要件 + 該当時の `designs_path` / `reviews_path`）を確定する。
 
-   > **後続 Step への分岐**: `design_required = false` かつ `review_required = false`（`tiny_*` / `normal_minimal`）は Step 2/5 をスキップして end-to-end 完走する。`design_required = true`（normal/risky の standard 以上 = 全て `review_required = true`）は Step 1-5 で in_progress 化し、Step 2 で design を生成後、Step 2 末尾の review 境界ガード（後述）で停止する。いずれも次の 5（status 読取/遷移）に進む。
+   > **後続 Step への分岐**: `design_required = false` かつ `review_required = false`（`tiny_*` / `normal_minimal`）は Step 2/5 をスキップして end-to-end 完走する。`design_required = true`（normal/risky の standard 以上 = 全て `review_required = true`）は in_progress 化し、Step 2 で design を生成・承認後、Step 3（実装）→ Step 4（検証）→ Step 5（レビュー実行 / Unit 003）→ Step 6（完了）まで完走する。いずれも次の 5（status 読取/遷移）に進む。
 
 5. **現在 status を読取り、必要なら遷移する**（`work-item-next.sh` 出力に status は含まれないため別途読取 / パースは安全境界スクリプトに集約。**判定が正常完了した場合のみ実行**）:
 
@@ -216,20 +217,15 @@ design 成果物の生成後、Design 承認ゲートを発火する（`docs/v3/
 - `manual`: ユーザーに design を提示し承認を求める。`approved` → 2.3 へ / `needs_changes`（修正要求）→ 2.1 に戻り design を修正・再生成して再ゲート / `pending` → ユーザー応答を待つ
 - `semi_auto`: フォールバック非該当なら auto 承認（`approved` 相当）→ 2.3 へ。フォールバック該当時は `manual` と同じくユーザー確認
 
-### 2.3 review 境界ガード（Step 3 に進む前 / Unit 003 未実装）
+### 2.3 Step 3 への遷移（review 境界ガードは Unit 003 で解除済み）
 
-Design ゲートが `approved`（`semi_auto` の auto 承認を含む）の後、MatrixDecision の `review_required` を参照する:
+Design ゲートが `approved`（`semi_auto` の auto 承認を含む）の後は **Step 3（実装）へ進む**。
 
-- `review_required = true`（design 必須セルは**全て**該当）→ review 実行（Step 5）は Unit 003 で未実装のため、**Step 3（実装）に進まず停止**する。status は `done` に遷移させず `in_progress` のまま留める（design ファイル生成のみが副作用 / 実装・検証の副作用なし）。以下を案内して終了:
+Unit 002 まで存在した「review 未実装中は Step 2 完了直後で停止する時限ガード」は **Unit 003 で解除済み**である
+（Unit 001 のスコープ境界ガードを後続 Unit が解除するパターンと一貫）。`review_required = true` の組合せ（design 必須
+セルは**全て**該当）は Step 3（実装）→ Step 4（検証）→ Step 5（レビュー実行 / Unit 003）→ Step 6（完了）まで完走する。
 
-  ```text
-  work item <id>（matrix_case: <matrix_case>）の design を生成・承認しました: <designs_path>
-  review（Step 5 / Unit 003）は未実装のため、ここで停止します（status: in_progress）。
-  ```
-
-- `review_required = false`（§8 上、design_required=true ∧ review_required=false のセルは現状存在しない / 将来の拡張用）→ Step 3 へ進む。
-
-  > **Unit 003 実装時**: 本 review 境界ガードを解除し、design 必須セルが Step 3（実装）→ Step 4（検証）→ Step 5（レビュー）→ Step 6（完了）まで完走できるようにする（Unit 001 のスコープ境界ガードを後続 Unit が解除するパターンと一貫）。
+> design ファイル生成（Step 2）は中間副作用であり、最終 commit は Step 6 で work item 単位に 1 つへ集約する。
 
 ## Step 3: 実装
 
@@ -244,16 +240,92 @@ Design ゲートが `approved`（`semi_auto` の auto 承認を含む）の後�
 3. 検証が通らない場合は Step 3 に戻って修正する（解決困難なら work item を `blocked` 等に
    する判断は本フロー外 = 中断してユーザーに相談）。
 
-## Step 5: レビュー（`review_required` で分岐）
+## Step 5: レビュー（`review_required` で分岐 / review routing）
 
-Step 1 の MatrixDecision を参照する:
+Step 1 の MatrixDecision（`review_required` / `matrix_review_mode` / `reviews_path` / `designs_path`）を参照する。
 
-- `review_required = false`（`tiny_*` / `normal_minimal`）→ 本 Step は実行しない（**repo への追記なし** / 実行ログ・会話通知のみ）。Step 6 へ進む。
-- `review_required = true`（`normal_*` / `risky_*` の standard 以上）→ `review_mode`（`code` / `code_security` / `code_security_design`）に従い、`reviews_path` に perspective 別セクションでレビューを記録する（実行本体は **Unit 003 の責務**）。
+- `review_required = false`（`tiny_*` / `normal_minimal`）→ 本 Step は実行しない（**repo への追記なし** / 実行ログ・会話通知のみ）。Step 6 へ進む（`normal + minimal` は Unit 001 の end-to-end 対象）。
+- `review_required = true`（`normal_*` / `risky_*` の standard 以上）→ 以下 5.1〜5.4 を実行する。
 
-  > **現時点（Unit 002 まで実装済み）**: `review_required = true` の組合せ（design 必須セル）は **Step 2.3 の review 境界ガード**で停止済み（design 生成 + Design 承認後、Step 3 に進まず in_progress 維持）のため、本フローが Step 5 に到達するのは `review_required = false` の場合のみである。Unit 003 が Step 5 の routing / 実行本体（既存 `reviewing-construction-*` への配線・5R 上限・Defer 戦略）を実装した時点で、Step 2.3 の review 境界ガードを解除し、design 必須セルが Step 3-6 まで完走できるようにする。
-  >
-  > 注: `normal + minimal` は `review_required = false` のため本 Step をスキップし、Step 6 まで完走する（Unit 001 の end-to-end 対象）。
+> **判定の正本**: ルーティングのツール選択・処理パス・フォールバックは `skills/aidlc/steps/common/review-routing.md`、
+> 反復・指摘対応・Defer の手順は `skills/aidlc/steps/common/review-flow.md` を正本とする。本 Step はこれらに委譲し、
+> ルーティング/反復ロジックを再定義しない（SoT 二重定義回避）。
+
+### 5.0 用語の区別【重要】
+
+`review_mode` は 2 概念で衝突するため区別する（混同して routing に不正値を渡さない）:
+
+- **`matrix_review_mode`**（= MatrixDecision の値 / `none` / `code` / `code_security` / `code_security_design`）:
+  §8 由来の **review 実行制御**（どの perspective / focus を実行するか）
+- **`routing_review_mode`**（= `[rules.reviewing].mode` / `required` / `recommend` / `disabled`）: config 由来の
+  **処理パス選択制御**（外部CLI / セルフ / ユーザーのどのパスでレビューするか）
+
+review-routing.md の `ReviewRoutingInput.review_mode` には **`routing_review_mode`（config 値）** を渡す。
+`matrix_review_mode` の値（`code` 等）をこの引数に渡してはならない。
+
+### 5.1 ルーティング決定（`matrix_review_mode` → perspective / focus）
+
+`matrix_review_mode` を以下の写像表で route 群へ変換する（§8 / `docs/v3/workflow.md` §6.2 / review-routing.md §3 と
+厳密一致。`reviewing-construction-code` は code 品質 + security の複合スキルであり、`code_security` を security-only に
+**縮約しない**）:
+
+| matrix_review_mode | caller_context | skill_name | focus | 対象ファイル | 記録セクション |
+|--------------------|----------------|------------|-------|------------|---------------|
+| `code` | コード生成後 | `reviewing-construction-code` | code, security | work item の実装変更ファイル群 | `## Code Review` |
+| `code_security` | コード生成後 | `reviewing-construction-code` | code, security（security 重点） | work item の実装変更ファイル群 | `## Code Review` |
+| `code_security_design` | コード生成後 + 設計レビュー | `reviewing-construction-code` + `reviewing-construction-design` | code, security（security 重点）/ architecture | 実装変更ファイル群 / `designs_path` | `## Code Review` + `## Design Review` |
+
+> `plan` perspective は review-routing.md に `caller_context`（計画承認前）として存在するが、§8 review マトリクスが
+> develop で plan review を出力しないため **本 Step では実行しない**（capability は既存資産 / execution は code/design のみ）。
+> `integration` / `deploy` / `premerge` は release 用であり develop では実行しない。
+
+### 5.2 レビュー実行（review-flow.md へ委譲 / 委譲範囲を限定）
+
+各 route について、`skills/aidlc/steps/common/review-flow.md` の手順を呼び出してレビューを実行する。
+処理パス選択に必要な入力（`routing_review_mode` / `automation_mode` / `[rules.reviewing].tools` / 利用可能ツール検出 /
+runtime status）は config（`bash skills/aidlc/scripts/read-config.sh <key>`）とツール検出から取得する。
+
+**委譲範囲の限定【重要】**: review-flow.md は v2 系の commit / 成果物配置規約を含むが、本 develop フローでは以下に限定する:
+
+| review-flow.md のサブ手順 | develop Step 5 での扱い |
+|--------------------------|------------------------|
+| パス選択（外部CLI / セルフ / ユーザー直行 / review-routing.md §4-§7） | **利用する** |
+| 反復レビュー実行 + 5R 完了判定（`is_completed()` / 1R clean 特例） | **利用する** |
+| 指摘対応判断フロー（千日手検出 / スコープ保護確認 / 設計レビュー早期 defer ガイド） | **利用する** |
+| Defer 自動 Issue 起票（`OUT_OF_SCOPE` / `TECHNICAL_BLOCKER` 確定指摘） | **利用する** |
+| 機密マスク（focus=security 特例含む） | **利用する** |
+| レビュー前コミット / レビュー後コミット三段階 | **使わない**: 最終 commit は Step 6 で work item 単位 1 つに集約する |
+| review-summary 更新（`construction/units/*.md`）/ `history/*.md` 配置 | **使わない**: 本フローは下記 5.3 の `reviews_path` に記録する |
+
+> security focus レビュー結果の公開記録は review-flow.md の機密マスク方針（focus=security は脆弱性種類の要約のみ）に従い、
+> `reviews_path` に再現手順・機密を残さない。レビュー CLI 不在時は review-routing.md の SelfBackcompatShim / fallback に従う。
+
+### 5.3 レビュー結果の記録（`reviews_path` に perspective 別セクション / 冪等 upsert）
+
+レビュー完了後、結果を `reviews_path`（`.aidlc/cycles/<cycle>/reviews/<id>-<slug>.md`）に perspective 別セクションで
+記録する。セクションは状態マーカー区間で管理し、resume（再 develop）でも二重追記しない:
+
+```text
+<!-- aidlc-review:code:start status=complete -->
+## Code Review
+
+（レビュー結果 / 機密マスク済み）
+
+<!-- aidlc-review:code:end -->
+```
+
+- マーカーの `status=` は `complete`（反復完了 = `unresolved_count=0` または全 defer 化）/ `in_progress`（反復未完了）
+- **upsert 規則**: 対象 perspective の区間が既存かつ `status=complete` → スキップ（再追記・上書きしない）/
+  既存かつ `status=in_progress`（または status 欠落・不正） → 同一区間を**まるごと置換** / 区間なし → 末尾に新規追加
+- **マーカー検出の限定（injection 無害化 / 必須）**: マーカーの検出・区間判定は **行頭完全一致**（`^<!-- aidlc-review:<perspective>:(start|end)` の構造）かつ **recorder が生成した構造のみ**を対象とする。レビュー本文（外部 CLI / セルフレビューの出力やレビュー対象 Markdown 由来）に `<!-- aidlc-review:` 文字列が混入し得るため、**本文を区間へ書き込む前に当該トークンを無害化する**（例: 行頭の `<!-- aidlc-review:` を `<!-- aidlc-review​:` 等へエスケープ、またはコードフェンス内に退避）。これにより本文混入マーカーが次回 upsert の区間判定を撹乱して意図しない置換・上書き・記録欠落を起こすことを防ぐ
+- **異常系**: duplicate marker / start-end 不整合は破損とみなし警告して区間を再生成する
+- **markdownlint 整合**: マーカー HTML コメントと見出し（`## ...`）の前後に空行を 1 行入れる（MD022 等）
+- design review（`code_security_design` のみ）は `## Design Review` セクションに同様に記録する。それ以外は `## Code Review` のみ
+
+### 5.4 セミオートゲート判定
+
+レビュー完了後、`steps/construction/index.md` §2.4 のセミオートゲート判定（`unresolved_count == 0` かつフォールバック
+非該当 → `auto_approved`）に従い Step 6 へ進む。残指摘ありは review-flow.md の指摘対応判断フローで処理する。
 
 ## Step 6: 完了
 

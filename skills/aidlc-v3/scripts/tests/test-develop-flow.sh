@@ -10,8 +10,12 @@
 #     status 行 0・重複 / 引用符・inline コメント / 本文 status: 非変更 / atomic / 終了コード 0/1/2）
 #   - develop tiny e2e: 選定 → in_progress → 実装模擬 → done → journal → work item 単位 commit、
 #     完了後フェーズ導出（develop 継続 / release 可能 / 全 status 走査）
-#   - 副作用なし停止: normal/risky 選定（新規 pending / resume in_progress）、Step1 read 異常
-#   - resume: in_progress tiny の継続（status 二重遷移しない）
+#   - 副作用なし停止: invalid_size(23) / risky_minimal(24) / invalid_artifact_path(25) / テンプレート不在(27) / Step1 read 異常(22)
+#   - design 必須セル（Unit 002/003）: design 生成 + review routing（Step 5）+ 完走（rc=0 / done / reviews 生成）
+#     - decide_review_routing 写像（matrix_review_mode → perspective:focus:section / code,code_security,code_security_design,none）
+#     - reviews_path の perspective 別セクション（## Code Review / ## Design Review）と status=complete マーカー
+#     - review_required=false（tiny_* / normal+minimal）は reviews 非生成
+#   - resume: in_progress の継続（status 二重遷移しない / design・review 必須セル含む）
 #   - release 誤判定防止: blocked + next:none で release 可能としない（develop 継続）
 #
 # Usage: test-develop-flow.sh
@@ -196,6 +200,60 @@ decide_matrix() {
     esac
 }
 
+# ---- review routing 写像（Unit 003 / develop.md Step 5.1 の materialized view） ----
+# decide_review_routing <matrix_review_mode> -> stdout:
+#   route を `;` 区切りで列挙。各 route = `<perspective>:<focus>:<記録セクション見出し>`
+#   route なし（none）は空行。未知値は `unknown`（純粋写像 / decide_matrix と同様に停止しない）
+# 設計（ドメインモデル ReviewRoutingDecision）の不変条件と厳密一致:
+#   - reviewing-construction-code は code+security 複合スキル。code_security を security-only に縮約しない
+#     （code / code_security はいずれも focus=code,security。security 重点は呼び出しコンテキストの質的注記）
+#   - code_security_design のみ design review（focus=architecture / 対象 designs_path）を追加
+# 純粋関数（mutation なし）。run_develop の Step 5 模擬と routing assert の双方が本関数を単一の真実として参照する。
+# 注: assert/間接呼び出しのため shellcheck からは未使用に見える。
+# shellcheck disable=SC2329
+decide_review_routing() {
+    local rmode="$1"
+    case "$rmode" in
+        none)                 echo "" ;;
+        code)                 echo "code:code,security:## Code Review" ;;
+        code_security)        echo "code:code,security:## Code Review" ;;
+        code_security_design) echo "code:code,security:## Code Review;design:architecture:## Design Review" ;;
+        *)                    echo "unknown" ;;
+    esac
+}
+
+# ---- reviews_path セクション冪等 upsert（Unit 003 / develop.md Step 5.3 の upsert 規則の materialized 実装） ----
+# upsert_review_section <file> <perspective> <status> <body>
+#   既存区間が status=complete → スキップ（保持 / 再追記・上書きしない）
+#   既存区間が status!=complete（in_progress 等）→ 行頭 start〜end をまるごと置換
+#   区間なし → 末尾に新規追加
+# マーカー検出は行頭完全一致のみ（^<!-- aidlc-review:<persp>:(start|end)）。本文混入マーカーは region 判定に使わない
+# （develop.md Step 5.3 の injection 無害化契約と一致）。冪等性の単一の真実として upsert テストが本関数を参照する。
+# 注: assert 経由で間接呼び出しされるため shellcheck からは未使用に見える。
+# shellcheck disable=SC2329
+upsert_review_section() {
+    local file="$1" persp="$2" status="$3" body="$4" heading
+    case "$persp" in code) heading="## Code Review" ;; design) heading="## Design Review" ;; *) heading="## Review" ;; esac
+    [[ -f "$file" ]] || : > "$file"
+    local existing
+    existing="$(awk -v p="$persp" '
+        $0 ~ ("^<!-- aidlc-review:" p ":start status=") {
+            match($0, /status=[a-z_]+/); print substr($0, RSTART+7, RLENGTH-7); exit }' "$file")"
+    if [[ "$existing" == "complete" ]]; then return 0; fi
+    if [[ -n "$existing" ]]; then
+        awk -v p="$persp" '
+            $0 ~ ("^<!-- aidlc-review:" p ":start status=") {drop=1; next}
+            drop && $0 ~ ("^<!-- aidlc-review:" p ":end -->$") {drop=0; next}
+            drop {next}
+            {print}' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+    fi
+    {
+        printf -- '<!-- aidlc-review:%s:start status=%s -->\n\n' "$persp" "$status"
+        printf -- '%s\n\n%s\n\n' "$heading" "$body"
+        printf -- '<!-- aidlc-review:%s:end -->\n' "$persp"
+    } >> "$file"
+}
+
 # ---- develop フロードライバ（develop.md Step1-6 の決定的 mutation を模擬 / size×depth_level 分岐） ----
 # AI 判断（実装内容そのもの・Design 承認ゲートの対話）はテストせず、§8 判定・status 遷移・design 生成・
 # journal 追記・commit を再現する。§8 判定は decide_matrix（単一の真実）に委譲する。depth_level は引数で
@@ -209,9 +267,9 @@ decide_matrix() {
 #   23 = invalid_size（size enum 外 / 副作用なし停止）
 #   24 = risky_minimal（risky+minimal 不可 / 副作用なし停止）
 #   25 = invalid_artifact_path（成果物ファイル名が <id>- prefix 不一致 / 副作用なし停止）
-#   26 = design 生成済み + review 境界で停止（Unit 003 未実装 / status=in_progress / Unit 002）
-#        承認ゲートは harness では模擬しない（生成済み境界として扱う）
 #   27 = design テンプレート不在（Step 1 preflight / 副作用なし停止 / status 未遷移 / Unit 002）
+#   注: rc=26（Unit 002 の review 境界停止）は Unit 003 で解除済み。design 必須セルは Step 3-6 まで完走（rc=0）し
+#       Step 5 で reviews_path に perspective 別セクションを生成する（AI レビュー実行・反復・承認は非模擬 = approved 前提）
 # 注: assert 経由で間接呼び出しされるため shellcheck からは未使用に見える。
 # shellcheck disable=SC2329
 run_develop() {
@@ -228,21 +286,26 @@ run_develop() {
         path="$(printf '%s' "$nx" | cut -d: -f4-)"
         # Step1-2 〜 1-4: §8 写像（decide_matrix）。判定は mutation を伴わない。
         # design 生成（Unit 002）で design_mode / risk_analysis / test_plan / rollback_note を消費する。
-        local dec mcase d_req dmode ra tp rn r_req rrec err
+        local dec mcase d_req dmode ra tp rn r_req rmode rrec err
         dec="$(decide_matrix "$size" "$depth")"
-        IFS='|' read -r mcase d_req dmode ra tp rn r_req _ rrec err <<<"$dec"
+        IFS='|' read -r mcase d_req dmode ra tp rn r_req rmode rrec err <<<"$dec"
         case "$err" in
             invalid_size) exit 23 ;;
             risky_minimal) exit 24 ;;
             none) ;;
             *) exit 22 ;;  # unknown_depth 等（実フローは解決契約で standard へ正規化済みのはず）
         esac
-        # design 必須セル（Unit 002）: 成果物パス導出 + invalid_artifact_path(25) → design preflight(27)
-        # → status 遷移 → Step 2 design 生成 → Step 2.3 review 境界ガード(26)。
-        # 25/27 は status 遷移より前 = 副作用なし。26 は design 生成 + in_progress 化（副作用あり / done 非遷移）。
-        if [[ "$d_req" == "1" ]]; then
-            local fname; fname="$(basename "$path")"
+        # 成果物パス導出 + invalid_artifact_path(25)（design または review が必要なセルで実行 / status 遷移前 = 副作用なし）。
+        # review_required=1 は現行 §8 上 design_required=1 を含意するが、将来 review 単独セルが追加されても
+        # Step 5 で fname が未定義（set -u unbound）にならないよう d_req||r_req の共通ブロックで初期化する。
+        local fname=""
+        if [[ "$d_req" == "1" || "$r_req" == "1" ]]; then
+            fname="$(basename "$path")"
             case "$fname" in "${id}-"*) ;; *) exit 25 ;; esac
+        fi
+        # design 必須セル（Unit 002）: design preflight(27) → status 遷移 → Step 2 design 生成。
+        # 27 は status 遷移より前 = 副作用なし。design 生成は in_progress 化（副作用あり）。
+        if [[ "$d_req" == "1" ]]; then
             # design preflight（status 遷移前 / テンプレート不在は副作用なし停止）
             [[ -f "$tmpl" ]] || exit 27
             # Step1-5: status 読取 + 遷移（pending→in_progress / resume は in_progress 維持）
@@ -264,11 +327,10 @@ run_develop() {
                 [[ "$rn" == "1" ]] && printf '\n## Rollback Note\n\nrollback steps\n'
             } > "$designs_dir/$fname"
             # Step2.2: Design 承認ゲートは harness では模擬しない（approved 前提）
-            # Step2.3: review 境界ガード（review_required=true → Step 3 に進まず停止 / status は in_progress 維持）
-            if [[ "$r_req" == "1" ]]; then exit 26; fi
-            # design_required=1 ∧ review_required=0 のセルは §8 上現状なし。将来は以下 Step 3 へ fall-through。
+            # Step2.3: review 境界ガードは Unit 003 で解除済み → Step 3 へ fall-through（design 必須セルも完走）。
+            #          status は in_progress 化済みのため、以下共通パスの status 読取では in_progress（resume）扱いとなる。
         fi
-        # design 不要セル（tiny_* / normal_minimal）= end-to-end 完走
+        # design 不要セル（tiny_* / normal_minimal）= end-to-end 完走 / design 必須セル（Unit 003）も以下を完走
         # Step1-5: 現在 status 読取 + 遷移
         st="$("$WISTATUS" --read "$path" 2>/dev/null)" || exit 22
         st="${st#status:}"
@@ -281,6 +343,23 @@ run_develop() {
         mkdir -p "src"
         printf 'done by %s\n' "$id" > "src/${id}.txt"
         # Step4: 検証（ここでは省略 / 実フローは AC チェック）
+        # Step5: review routing 模擬（review_required=1 のみ / AI レビュー実行・反復・承認は非模擬 = approved 前提 / Unit 003）。
+        #        fname は上の d_req||r_req 共通ブロックで初期化済み（review 単独セル将来追加時も set -u 安全）。
+        #        decide_review_routing（単一の真実）の route に従い reviews_path に perspective 別セクション（status=complete
+        #        マーカー区間）を生成する。冪等 upsert（complete スキップ / incomplete 置換）は実フロー責務 / 本模擬は初回生成を検証。
+        if [[ "$r_req" == "1" ]]; then
+            local reviews_dir=".aidlc/cycles/$cycle/reviews" routes route persp
+            mkdir -p "$reviews_dir"
+            routes="$(decide_review_routing "$rmode")"
+            local oldifs="$IFS"; IFS=';'
+            for route in $routes; do
+                [[ -z "$route" ]] && continue
+                persp="${route%%:*}"
+                # 冪等 upsert（develop.md Step 5.3）。初回 develop はファイル不在 → 新規追加。
+                upsert_review_section "$reviews_dir/$fname" "$persp" complete "review result for $id ($persp)"
+            done
+            IFS="$oldifs"
+        fi
         # Step6: done 遷移 + journal 追記 + （条件付き）理由記録 + work item 単位 commit 集約
         "$WISTATUS" "$path" in_progress "done" >/dev/null 2>&1 || exit 22
         local journal=".aidlc/cycles/$cycle/journal.md"
@@ -441,75 +520,94 @@ put_work_item "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 res in_progress 
 run_develop "$r3" v3.0.0-alpha.t standard; assert_cond "resume tiny 完了（rc=0 / 二重遷移せず done）" "$?"
 assert_out "status:done" "resume 後 status=done" -- "$WISTATUS" --read "$r3/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-res.md"
 
-echo "== Unit 002: normal+standard → 簡易 design 生成 + review 境界停止（rc=26 / 新規 pending） =="
+echo "== Unit 003: normal+standard → design 生成 + review(code) + 完走（rc=0 / done / reviews 生成） =="
 r4="$TMPROOT/design-normal-std"; make_sandbox "$r4" v3.0.0-alpha.t
 put_work_item "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 n pending normal ""
 ( cd "$r4" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r4" v3.0.0-alpha.t standard; rc=$?
-assert_cond "normal+standard は design 生成後 review 境界で停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_cond "normal+standard は Step 3-6 まで完走（rc=0 / 境界ガード解除）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
 d4="$r4/.aidlc/cycles/v3.0.0-alpha.t/designs/001-n.md"
+rv4="$r4/.aidlc/cycles/v3.0.0-alpha.t/reviews/001-n.md"
 assert_cond "normal+standard で design 成果物が生成される" "$([[ -f "$d4" ]] && echo 0 || echo 1)"
-assert_out "status:in_progress" "normal+standard 停止時 status=in_progress（done 非遷移）" -- "$WISTATUS" --read "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-n.md"
-assert_cond "normal+standard で実装副作用なし（src/001.txt 非生成 = Step 3 未到達）" "$([[ ! -f "$r4/src/001.txt" ]] && echo 0 || echo 1)"
+assert_out "status:done" "normal+standard 完走後 status=done" -- "$WISTATUS" --read "$r4/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-n.md"
+assert_cond "normal+standard で実装副作用あり（src/001.txt 生成 = Step 3 到達）" "$([[ -f "$r4/src/001.txt" ]] && echo 0 || echo 1)"
 assert_cond "normal+standard は design_mode: simple" "$(grep -q 'design_mode: simple' "$d4" && echo 0 || echo 1)"
 assert_cond "normal+standard(simple) は Risk Analysis を含まない" "$(grep -q '## Risk Analysis' "$d4" && echo 1 || echo 0)"
 assert_cond "normal+standard は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4" && echo 1 || echo 0)"
 assert_cond "normal+standard は Rollback Note を含まない" "$(grep -q '## Rollback Note' "$d4" && echo 1 || echo 0)"
+assert_cond "normal+standard は reviews/001-n.md を生成（Step 5）" "$([[ -f "$rv4" ]] && echo 0 || echo 1)"
+assert_cond "normal+standard reviews は ## Code Review を含む" "$(grep -q '^## Code Review' "$rv4" && echo 0 || echo 1)"
+assert_cond "normal+standard reviews は ## Design Review を含まない（code のみ）" "$(grep -q '^## Design Review' "$rv4" && echo 1 || echo 0)"
+assert_cond "normal+standard reviews の code マーカーは行頭 + status=complete（検出は行頭完全一致契約）" "$(grep -q '^<!-- aidlc-review:code:start status=complete -->$' "$rv4" && echo 0 || echo 1)"
+assert_cond "normal+standard reviews の code end マーカーが行頭に存在（区間 start-end 整合）" "$(grep -q '^<!-- aidlc-review:code:end -->$' "$rv4" && echo 0 || echo 1)"
+grep -q '^- develop completed: 001$' "$r4/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; assert_cond "normal+standard journal に完了追記" "$?"
 
-echo "== Unit 002: resume された in_progress normal+standard → design 生成 + 停止（status 維持） =="
+echo "== Unit 003: resume された in_progress normal+standard → design + review + 完走（二重遷移なし） =="
 r5="$TMPROOT/design-resume-normal"; make_sandbox "$r5" v3.0.0-alpha.t
 put_work_item "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rn in_progress normal ""
 ( cd "$r5" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r5" v3.0.0-alpha.t standard; rc=$?
-assert_cond "resume normal+standard は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
-assert_out "status:in_progress" "resume normal+standard は status=in_progress 維持（二重遷移なし）" -- "$WISTATUS" --read "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rn.md"
+assert_cond "resume normal+standard は完走（rc=0）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
+assert_out "status:done" "resume normal+standard 完走後 status=done（二重遷移なし）" -- "$WISTATUS" --read "$r5/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rn.md"
 assert_cond "resume normal+standard で design 成果物が生成される" "$([[ -f "$r5/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rn.md" ]] && echo 0 || echo 1)"
+assert_cond "resume normal+standard で reviews 成果物が生成される" "$([[ -f "$r5/.aidlc/cycles/v3.0.0-alpha.t/reviews/001-rn.md" ]] && echo 0 || echo 1)"
 
-echo "== Unit 002: risky+standard → design + rollback note 生成 + 停止（rc=26 / 新規 pending） =="
+echo "== Unit 003: risky+standard → design + rollback + review(code,security) + 完走（rc=0） =="
 r4b="$TMPROOT/design-risky-std"; make_sandbox "$r4b" v3.0.0-alpha.t
 put_work_item "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rk pending risky ""
 ( cd "$r4b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r4b" v3.0.0-alpha.t standard; rc=$?
-assert_cond "risky+standard は design 生成後 review 境界で停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_cond "risky+standard は完走（rc=0）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
 d4b="$r4b/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rk.md"
-assert_out "status:in_progress" "risky+standard 停止時 status=in_progress（done 非遷移）" -- "$WISTATUS" --read "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rk.md"
+rv4b="$r4b/.aidlc/cycles/v3.0.0-alpha.t/reviews/001-rk.md"
+assert_out "status:done" "risky+standard 完走後 status=done" -- "$WISTATUS" --read "$r4b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rk.md"
 assert_cond "risky+standard は design_mode: full" "$(grep -q 'design_mode: full' "$d4b" && echo 0 || echo 1)"
 assert_cond "risky+standard は Rollback Note 見出しを含む" "$(grep -q '## Rollback Note' "$d4b" && echo 0 || echo 1)"
 assert_cond "risky+standard の Rollback Note は非空（次見出しまでに非空行あり）" "$(section_nonempty "$d4b" '## Rollback Note'; echo $?)"
 assert_cond "risky+standard は Risk Analysis を含まない" "$(grep -q '## Risk Analysis' "$d4b" && echo 1 || echo 0)"
 assert_cond "risky+standard は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4b" && echo 1 || echo 0)"
+assert_cond "risky+standard reviews は ## Code Review を含む（code_security）" "$(grep -q '^## Code Review' "$rv4b" && echo 0 || echo 1)"
+assert_cond "risky+standard reviews は ## Design Review を含まない（code_security は design なし）" "$(grep -q '^## Design Review' "$rv4b" && echo 1 || echo 0)"
 
-echo "== Unit 002: resume された in_progress risky+standard → design 生成 + 停止（status 維持） =="
+echo "== Unit 003: resume された in_progress risky+standard → design + review + 完走 =="
 r5b="$TMPROOT/design-resume-risky"; make_sandbox "$r5b" v3.0.0-alpha.t
 put_work_item "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rrk in_progress risky ""
 ( cd "$r5b" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r5b" v3.0.0-alpha.t standard; rc=$?
-assert_cond "resume risky+standard は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
-assert_out "status:in_progress" "resume risky+standard は status=in_progress 維持" -- "$WISTATUS" --read "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rrk.md"
+assert_cond "resume risky+standard は完走（rc=0）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
+assert_out "status:done" "resume risky+standard 完走後 status=done" -- "$WISTATUS" --read "$r5b/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-rrk.md"
 
-echo "== Unit 002: normal+comprehensive → design + Risk Analysis（Test Plan/Rollback なし） =="
+echo "== Unit 003: normal+comprehensive → design + Risk Analysis + review(code) + 完走 =="
 r4c="$TMPROOT/design-normal-comp"; make_sandbox "$r4c" v3.0.0-alpha.t
 put_work_item "$r4c/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nc pending normal ""
 ( cd "$r4c" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r4c" v3.0.0-alpha.t comprehensive; rc=$?
-assert_cond "normal+comprehensive は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_cond "normal+comprehensive は完走（rc=0）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
 d4c="$r4c/.aidlc/cycles/v3.0.0-alpha.t/designs/001-nc.md"
+rv4c="$r4c/.aidlc/cycles/v3.0.0-alpha.t/reviews/001-nc.md"
 assert_cond "normal+comprehensive は design_mode: full" "$(grep -q 'design_mode: full' "$d4c" && echo 0 || echo 1)"
 assert_cond "normal+comprehensive は Risk Analysis を含む" "$(grep -q '## Risk Analysis' "$d4c" && echo 0 || echo 1)"
 assert_cond "normal+comprehensive は Test Plan を含まない" "$(grep -q '## Test Plan' "$d4c" && echo 1 || echo 0)"
 assert_cond "normal+comprehensive は Rollback Note を含まない" "$(grep -q '## Rollback Note' "$d4c" && echo 1 || echo 0)"
+assert_cond "normal+comprehensive reviews は ## Code Review を含む（code）" "$(grep -q '^## Code Review' "$rv4c" && echo 0 || echo 1)"
+assert_cond "normal+comprehensive reviews は ## Design Review を含まない" "$(grep -q '^## Design Review' "$rv4c" && echo 1 || echo 0)"
 
-echo "== Unit 002: risky+comprehensive → design + Risk Analysis + Test Plan + Rollback Note（全て） =="
+echo "== Unit 003: risky+comprehensive → design 全部 + review(code,security)+design + 完走 =="
 r4d="$TMPROOT/design-risky-comp"; make_sandbox "$r4d" v3.0.0-alpha.t
 put_work_item "$r4d/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 rc2 pending risky ""
 ( cd "$r4d" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
 run_develop "$r4d" v3.0.0-alpha.t comprehensive; rc=$?
-assert_cond "risky+comprehensive は design 生成後停止（rc=26）" "$([[ "$rc" == "26" ]] && echo 0 || echo 1)"
+assert_cond "risky+comprehensive は完走（rc=0）" "$([[ "$rc" == "0" ]] && echo 0 || echo 1)"
 d4d="$r4d/.aidlc/cycles/v3.0.0-alpha.t/designs/001-rc2.md"
+rv4d="$r4d/.aidlc/cycles/v3.0.0-alpha.t/reviews/001-rc2.md"
 assert_cond "risky+comprehensive は Risk Analysis を含む" "$(grep -q '## Risk Analysis' "$d4d" && echo 0 || echo 1)"
 assert_cond "risky+comprehensive は Test Plan を含む" "$(grep -q '## Test Plan' "$d4d" && echo 0 || echo 1)"
 assert_cond "risky+comprehensive は Rollback Note を含む" "$(grep -q '## Rollback Note' "$d4d" && echo 0 || echo 1)"
 assert_cond "risky+comprehensive の Rollback Note は非空" "$(section_nonempty "$d4d" '## Rollback Note'; echo $?)"
+assert_cond "risky+comprehensive reviews は ## Code Review を含む（code_security_design）" "$(grep -q '^## Code Review' "$rv4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive reviews は ## Design Review を含む（code_security_design のみ design 追加）" "$(grep -q '^## Design Review' "$rv4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive の design マーカーは行頭 start + status=complete" "$(grep -q '^<!-- aidlc-review:design:start status=complete -->$' "$rv4d" && echo 0 || echo 1)"
+assert_cond "risky+comprehensive の design end マーカーが行頭に存在（区間整合）" "$(grep -q '^<!-- aidlc-review:design:end -->$' "$rv4d" && echo 0 || echo 1)"
 
 echo "== Unit 002: design テンプレート不在 → rc=27 副作用なし（status 未遷移 / design 未生成） =="
 r4e="$TMPROOT/design-no-tmpl"; make_sandbox "$r4e" v3.0.0-alpha.t
@@ -530,6 +628,7 @@ put_work_item "$r8/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nm pending norma
 run_develop "$r8" v3.0.0-alpha.t minimal; assert_cond "normal+minimal 完走（rc=0）" "$?"
 assert_out "status:done" "normal+minimal 完了後 status=done" -- "$WISTATUS" --read "$r8/.aidlc/cycles/v3.0.0-alpha.t/work-items/001-nm.md"
 grep -q '^- develop completed: 001$' "$r8/.aidlc/cycles/v3.0.0-alpha.t/journal.md"; assert_cond "normal+minimal journal に完了追記" "$?"
+assert_cond "normal+minimal は reviews 非生成（review_required=false）" "$([[ ! -d "$r8/.aidlc/cycles/v3.0.0-alpha.t/reviews" ]] && echo 0 || echo 1)"
 assert_out "release" "normal+minimal 完了後フェーズ導出 = release 可能" -- derive_phase "$r8" v3.0.0-alpha.t
 
 echo "== Unit 001 エラー停止: risky+minimal（不可）→ 副作用なし =="
@@ -578,6 +677,44 @@ assert_out "risky_standard|1|full|0|0|1|1|code_security|0|none" "§8 risky+stand
 assert_out "risky_comprehensive|1|full|1|1|1|1|code_security_design|0|none" "§8 risky+comprehensive（複数 review = code(security)+design）" -- decide_matrix risky comprehensive
 assert_out "risky_minimal|0|none|0|0|0|0|none|0|risky_minimal" "§8 risky+minimal（不可）" -- decide_matrix risky minimal
 assert_out "invalid|0|none|0|0|0|0|none|0|invalid_size" "§8 invalid size（enum 外）" -- decide_matrix bogus standard
+
+echo "== review routing 写像（decide_review_routing / Unit 003 / develop.md Step 5.1 と一致） =="
+# matrix_review_mode → route（perspective:focus:section）。code/code_security は同一 routing（code 複合スキル / security-only に縮約しない）、
+# code_security_design のみ design route を追加。none は空、未知値は unknown（純粋写像 / 停止しない）。
+assert_out "" "routing none → route なし（Step 5 スキップ）" -- decide_review_routing none
+assert_out "code:code,security:## Code Review" "routing code → code review（focus code,security）" -- decide_review_routing code
+assert_out "code:code,security:## Code Review" "routing code_security → code review（security 重点 / focus 同一 / security-only 非縮約）" -- decide_review_routing code_security
+assert_out "code:code,security:## Code Review;design:architecture:## Design Review" "routing code_security_design → code + design review" -- decide_review_routing code_security_design
+assert_out "unknown" "routing 未知値 → unknown（停止しない）" -- decide_review_routing bogus
+
+echo "== Unit 003: reviews セクション冪等 upsert（complete 保持 / in_progress 置換 / 区間なし追加） =="
+up="$TMPROOT/upsert"; mkdir -p "$up"
+# 1. 区間なし → 新規追加
+uf="$up/001-x.md"; : > "$uf"
+upsert_review_section "$uf" code in_progress "first body"
+assert_cond "upsert: 新規 code 区間が追加される（start 行頭）" "$(grep -q '^<!-- aidlc-review:code:start status=in_progress -->$' "$uf" && echo 0 || echo 1)"
+assert_cond "upsert: 新規 code 区間に本文が入る" "$(grep -q '^first body$' "$uf" && echo 0 || echo 1)"
+# 2. in_progress → 置換（complete 化 + 本文差し替え）
+upsert_review_section "$uf" code complete "second body"
+assert_cond "upsert: in_progress は置換され status=complete になる" "$(grep -q '^<!-- aidlc-review:code:start status=complete -->$' "$uf" && echo 0 || echo 1)"
+assert_cond "upsert: 置換後は新本文" "$(grep -q '^second body$' "$uf" && echo 0 || echo 1)"
+assert_cond "upsert: 置換後は旧本文を残さない" "$(grep -q '^first body$' "$uf" && echo 1 || echo 0)"
+assert_cond "upsert: 置換後も code 区間は 1 つ（duplicate なし）" "$([[ "$(grep -c '^<!-- aidlc-review:code:start' "$uf")" == "1" ]] && echo 0 || echo 1)"
+# 3. complete → スキップ（保持 / 再upsert で本文不変）
+upsert_review_section "$uf" code complete "third body should be ignored"
+assert_cond "upsert: complete は保持され再追記しない（本文不変）" "$(grep -q '^second body$' "$uf" && echo 0 || echo 1)"
+assert_cond "upsert: complete スキップで third body は入らない" "$(grep -q 'third body' "$uf" && echo 1 || echo 0)"
+# 4. 別 perspective（design）は独立に追加される
+upsert_review_section "$uf" design complete "design body"
+assert_cond "upsert: design 区間が独立に追加（code は保持）" "$(grep -q '^<!-- aidlc-review:design:start status=complete -->$' "$uf" && echo 0 || echo 1)"
+assert_cond "upsert: code 区間は依然 1 つ（design 追加で増えない）" "$([[ "$(grep -c '^<!-- aidlc-review:code:start' "$uf")" == "1" ]] && echo 0 || echo 1)"
+
+echo "== Unit 003: review_required=false（tiny_* / normal+minimal）は reviews 非生成 =="
+r13="$TMPROOT/no-review-tiny"; make_sandbox "$r13" v3.0.0-alpha.t
+put_work_item "$r13/.aidlc/cycles/v3.0.0-alpha.t/work-items" 001 nrt pending tiny ""
+( cd "$r13" && git add -A && git -c user.email=t@example.com -c user.name=t commit -q -m "init wi" )
+run_develop "$r13" v3.0.0-alpha.t standard; assert_cond "tiny+standard 完走（rc=0）" "$?"
+assert_cond "tiny+standard は reviews ディレクトリ非生成（review_required=false）" "$([[ ! -d "$r13/.aidlc/cycles/v3.0.0-alpha.t/reviews" ]] && echo 0 || echo 1)"
 
 echo "== Unit 001 エラー停止: invalid_artifact_path（ファイル名が <id>- prefix 不一致 / design 必須セル）→ 副作用なし =="
 # work-item-next は id をファイル名から導出する（<id>-<slug>.md の <id> 部）。ハイフン無しの
