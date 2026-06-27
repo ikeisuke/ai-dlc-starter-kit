@@ -5,11 +5,10 @@
 > `state.json` 操作や frontmatter status の読取のような atomic 性・パース安全性が必要な処理は
 > `scripts/state-*.sh` / `scripts/work-item-*.sh` を経由する（RFC P4）。
 >
-> **本 Unit（001）の対象**: release フローの骨格（Step 1–4 の章立て・ゲート(★)・成果物・スクリプト契約の書式）と
-> **Step 1「リリース準備」を実装**する。**Step 2–4 は骨格（プレースホルダ）のみ**であり、PR 整備（Unit 002）/
-> merge 承認・実行・post-merge（Unit 003）/ `SKILL.md` の `release` コマンド公開フリップ・express 整合（Unit 004）は
-> 後続 Unit で実装する。Step 1 は **read-only**（aidlc 管理状態 = `state.json` / work item frontmatter / journal /
-> commit を変更しない）である。
+> **実装範囲（v3.0.0-alpha.6 時点）**: Step 1「リリース準備」（Unit 001 / read-only）と Step 2「PR 整備」（Unit 002）を
+> 実装済み。**Step 3–4 は骨格（プレースホルダ）のみ**であり、merge 承認・実行・post-merge（Unit 003）/ `SKILL.md` の
+> `release` コマンド公開フリップ・express 整合（Unit 004）は後続 Unit で実装する。Step 1 は read-only、Step 2 は
+> `release.pr_number` のみ state 書き込み（schema 不変 / `release.ready`・`release.merge_approved` の書き込みは Step 3 = Unit 003）。
 
 ## 目的
 
@@ -177,12 +176,99 @@ git status --porcelain
 > **本 Unit のスコープ境界**: Step 1 が完了して Step 2 に進める状態でも、Step 2 以降は未実装（後続 Unit）である。
 > 本 Unit では Step 1 の判定までを実装し、Step 2 の手順は下記プレースホルダに留める。
 
-## Step 2: PR 整備 ★ PR ready 確認（Unit 002 で実装）
+## Step 2: PR 整備 ★ PR ready 確認
 
-> **プレースホルダ（未実装 / Unit 002）**。PR 未作成なら作成・既存（`early_pr: true`）なら本文更新、`release.pr_number` の
-> `state-write.sh` 書き込み、`templates/release.md` からの `release.md` 生成、release-level review（premerge 常時 /
-> integration 複数完了時 / deploy risky 時）の perspective ルーティングを担う。ゲートは「PR ready 確認」（ready 化操作は
-> Step 3）。詳細は `docs/v3/workflow.md` §3.3（Step 2）/ §6、`docs/v3/data-model.md` §3・§8 を参照。
+Step 1 を通過したら、PR を整備し `release.md` 成果物と release-level review を用意する。**state 書き込みは `release.pr_number`
+のみ**（schema 不変 / `release.ready`・`release.merge_approved` は Step 3 = Unit 003）。ready 化操作そのものは Step 3 で行い、
+本 Step のゲートは「PR ready 確認」に留める。手順は 2-0 → 2-5 の順で実行する。
+
+### 2-0. gh 可用性確認（停止条件）
+
+PR・`release.pr_number` は release の必須成果物であり Step 3（merge）の入力でもあるため、`gh` が使えない場合は**停止**する
+（warn-continue にしない）:
+
+- `gh_status == available` → 2-1 へ進む。
+- `gh_status != available` → 「`gh` が利用できないため PR を整備できません。`gh auth status` を確認してください」と案内して**終了**。
+  - 例外: ユーザーが既存 PR 番号を手動提示した場合に限り、`gh pr view <N> --json state,isDraft,headRefName,baseRefName` で **`state == OPEN` かつ `headRefName` が現在のブランチと一致かつ `baseRefName` が統合先ブランチ `<integration-branch>` と一致**（2-1 と同じ fail-closed 条件）を確認できた場合のみ `release.pr_number` を書き込んで（2-2）続行してよい。`CLOSED`/`MERGED`・別 head ブランチ・別 base ブランチ・取得不能は停止。PR 番号が未確定のまま Step 2 を完了してはならない。
+
+### 2-1. PR 解決（fail-closed / 重複作成防止）
+
+`release.pr_number` と同一 head branch の open PR から、PR を一意に解決する:
+
+```bash
+scripts/state-read.sh release.pr_number
+```
+
+- exit 1（`release.pr_number` 欠落 / `state.json` 不正 / JSON parse 不能）/ exit 2（jq 不在・読取不可）→ **fail-closed で停止**（state 不整合のまま PR 作成 / adopt に進まない）。
+- exit 0 + **整数値**（PR 番号記録済み）→ その PR を `gh pr view` で検証する:
+
+  ```bash
+  gh pr view <N> --json state,isDraft,headRefName,baseRefName
+  ```
+
+  - `state == OPEN`（draft PR も gh では `state=OPEN` / `isDraft=true` なので含まれる）かつ `headRefName` が現在のブランチと一致かつ `baseRefName` が統合先ブランチ `<integration-branch>` と一致 → **update**（2-2 はスキップし 2-3 へ。PR 本文更新は 2-4 で release.md 生成後に行う）。
+  - `state` が `CLOSED` / `MERGED`、`headRefName` 不一致（別 head ブランチ）、`baseRefName` 不一致（別 base への PR）、または取得不能 → **停止**（stale な番号・別ブランチ PR・別 base PR・closed/merged PR の誤採用を防ぐ）。ユーザーに番号の見直しを促す。
+- exit 0 + **`null`**（未記録）→ 同一 head branch の open PR を探索する:
+
+  ```bash
+  gh pr list --head <current-branch> --base <integration-branch> --state open --json number
+  ```
+
+  - open PR が **1 件** → その番号を採用（**adopt**）。`gh pr view <number> --json state,headRefName,baseRefName` で `state == OPEN` かつ `headRefName` 一致かつ `baseRefName == <integration-branch>` を確認（`--base` フィルタの二重確認）したうえで、2-2 で `release.pr_number` に書き込み、2-3 へ。
+  - open PR が **0 件** → **create**。`gh pr create --draft --base <integration-branch> --title "[Release] <cycle>" --body-file <一時ファイル>` で作成する。`gh pr create` の標準出力は PR **URL**（番号そのものではない）ため、作成後に `gh pr view --json number,state,headRefName,baseRefName` で**番号を再取得**し、`state == OPEN` かつ `headRefName` 一致かつ `baseRefName == <integration-branch>` を確認したうえで、その `number` を 2-2 で `release.pr_number` に書き込む。
+  - open PR が **複数** → **fail-closed で停止**（どの PR を対象にするかをユーザーが解決）。
+
+> `early_pr: true`（define 時に Draft PR を作成済み）の場合も、上記「値あり→検証」または「null→adopt」の経路で番号を確定し、**重複 PR を作らない**。
+
+### 2-2. release.pr_number 書き込み（create / adopt 時）
+
+PR を新規作成した場合、または adopt で番号を確定した場合のみ、`release.pr_number` を書き込み検証する（update 経路はスキップ）:
+
+```bash
+scripts/state-write.sh release.pr_number <N>
+```
+
+- exit 0（`status:written`）→ `scripts/state-validate.sh` で `status:valid` を確認し 2-3 へ。
+- exit 1（値型不正 / 書込後 invalid / 未知 schema_version 拒否）→ 検証エラーを提示して**終了**。
+- exit 2（jq 不在 / 依存不備）→ システムエラーとして提示して**終了**。
+
+### 2-3. release-level review ルーティング
+
+work item の完了状況に応じて release-level review を実行する。**集計の安全境界**: `status` は `work-item-status.sh --read`
+で読み（`status:done` のみカウント、`withdrawn` は数えない）、deploy 条件用の `size` は Step 1-2 の `work-item-validate.sh` が
+exit 0（schema 健全 = `size` enum を検証済み）を返した検証済み frontmatter から参照する。`work-item-validate.sh` が
+exit 1/2（schema 不正・読取不可）の場合は集計せず**停止**（fail-closed / release.md 本体で `size` を生パースしない）。
+perspective→caller_context→skill の写像は以下（正本: `docs/v3/workflow.md` §6 /
+`aidlc` スキルの `review-routing.md` §3（CallerContext マッピング）。本ファイルは再定義せず参照）:
+
+| perspective | 実行条件 | caller_context | skill_name | focus |
+|-------------|---------|----------------|-----------|-------|
+| premerge | 常時 | PR マージ前 | `reviewing-operations-premerge` | code, security |
+| integration | `status:done` の work item が 2 件以上 | 統合とレビュー | `reviewing-construction-integration` | code |
+| deploy | `size:risky` かつ `status:done` の work item が 1 件以上 | デプロイ計画承認前 | `reviewing-operations-deploy` | architecture |
+
+- 反復・指摘対応・機密マスク・パス選択は `aidlc` スキルの `review-flow.md` / `review-routing.md` に委譲する。
+  `review-routing.md` には `routing_review_mode = [rules.reviewing].mode`（config 値）を渡し、**perspective 名を `review_mode`
+  引数に渡さない**（混同回避 / review-flow.md §5.0）。
+- 各 perspective の結果（`status` / `unresolved_count` / `max_severity` / `merge_blocker` / `skip_reason`）を正規化し、2-4 の
+  release.md 生成で review 結果サマリ（純 YAML）に埋め込む。条件未該当の perspective は `status: skipped` + `skip_reason` を記録する。
+- review 結果は **release.md に集約**し、`reviews/*.md` は生成しない（`docs/v3/data-model.md` §8 / §10）。
+
+### 2-4. release.md 成果物の生成
+
+`templates/release.md` を起点に `.aidlc/cycles/<cycle>/release.md` を生成する（review を確定してから生成し placeholder 残留を防ぐ）:
+
+- テンプレート不在 → 「`templates/release.md` が見つかりません」と案内して**終了**。
+- セクションを埋める: PR 概要 / work item 完了一覧（done・withdrawn）/ **review 結果サマリ（固定マーカー純 YAML / 2-3 の結果）** /
+  CI 状態 / merge 記録（Step 3/4 で追記する枠）。
+- review 結果サマリは `<!-- aidlc-release-review:start -->` と `<!-- aidlc-release-review:end -->` のマーカー間に**純 YAML のみ**を
+  配置する（Unit 003 がそのまま parse する入力契約。マーカー間にコードフェンス・見出し等を置かない）。
+- PR 本文は file-based（`gh pr edit <N> --body-file <一時ファイル>` / 2-1 で update/adopt/create のいずれでも本文を更新）。機密情報を含めない。
+
+### 2-5. Step 2 ゲート（PR ready 確認）
+
+PR が ready 化可能な状態（必須情報が揃い、CI 状態が把握済み）であることを確認する。**ready 化操作（`gh pr ready` /
+`release.ready` 書き込み）は Step 3（Unit 003）で行う**ため、本 Step では ready 確認に留めて Step 3 へ進む。
 
 ## Step 3: Merge 承認 + 実行 ★ merge 承認（Unit 003 で実装）
 
