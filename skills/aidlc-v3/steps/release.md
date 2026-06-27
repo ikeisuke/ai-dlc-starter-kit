@@ -376,12 +376,15 @@ remote の merge commit を取り込んでから後片付けする（stale な�
 git fetch <remote>
 git switch <integration-branch>
 git pull --ff-only
-git branch -d <feature-branch>
+gh pr view <N> --json state,mergedAt   # state=MERGED ∧ mergedAt != null を確認
+# merge_method に応じて feature branch を削除:
+#   merge           → git branch -d <feature-branch>   （merge commit が feature tip を親に持ち ancestry 成立 / 安全削除）
+#   squash / rebase → git branch -D <feature-branch>   （上の gh pr view で merged 実態を確認済みを前提に force 削除）
 ```
 
 - `git pull --ff-only` で統合先が PR の merge commit を含むことを確認する（ff できない = 統合先が未取込/分岐なら停止し remote 状態を確認）。
-- feature branch が merged であることを確認してから削除する（`-d` は未 merge を拒否）。本リポジトリの git 運用規約
-  （カレントディレクトリ実行）に整合させる。ブランチ判定等の自リポジトリ特殊処理は埋め込まない。
+- **feature branch 削除は merge_method で分岐する**: `merge`（merge commit 方式）では feature branch tip が統合先の ancestor になるため `git branch -d`（未 merge を拒否する安全削除）で削除できる。一方 `squash` / `rebase`（Step 3-5 で許容）では統合先に作られるコミットが feature branch tip を親に持たず ancestor 関係が成立しないため `-d` は「未 merge」と判定して**必ず削除を拒否する**。この場合は上の `gh pr view` で **PR が merged 実態（state=MERGED ∧ mergedAt != null）であることを確認したうえで** `git branch -D`（force 削除）を使う。**merged 実態が確認できない場合は force 削除せず停止**して remote / PR 状態を確認する。
+- 本リポジトリの git 運用規約（カレントディレクトリ実行）に整合させる。ブランチ判定等の自リポジトリ特殊処理は埋め込まない。
 - 後続の tag / changelog（4-3）は、この同期済みの統合先に対して行う。
 
 ### 4-2. journal.md に release 完了追記
