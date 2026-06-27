@@ -9,11 +9,13 @@
 | 3. ユーザーストーリー作成 | 完了（codex 2R / auto_approved） | story-artifacts/user_stories.md | 2026-06-27 |
 | 4. Unit定義 | 完了（4 Unit / codex 2R / dedup clean / auto_approved） | story-artifacts/units/*.md | 2026-06-27 |
 | 5. PRFAQ作成 | 完了 | requirements/prfaq.md | 2026-06-27 |
-| 6. Construction用progress.md作成 | 未着手 | construction/progress.md | - |
+| 6. Construction用progress.md作成 | スキップ | construction/progress.md | - |
+
+> Inception Phase 完了（2026-06-27）。Milestone #25 / ドラフトPR #738（base: v3.0.0）。step6 は Construction Phase 開始時に作成するためスキップ。
 
 ## 現在のステップ
 
-次回: 5. PRFAQ作成
+Inception Phase 完了。次回は Construction Phase（`/aidlc construction`）。
 
 ## 完了済みステップ
 
@@ -24,7 +26,7 @@
 
 ## 次回実行時の指示
 
-PRFAQ作成から開始してください。
+Construction Phase（`/aidlc construction`）を開始してください。Unit 001 から着手。
 
 ## 再開時に読み込むファイル
 
