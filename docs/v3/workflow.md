@@ -92,10 +92,10 @@ v3 のワークフローは、**4 つのフェーズコマンド**（`define` / 
 | Step | 内容 | ゲート / 成果物 |
 |------|------|--------------|
 | 1 Work Item 選定 | frontmatter から次 item を選定（依存解決: dependencies が全て done の候補）/ status: in_progress に更新 | - |
-| 2 計画 + 設計（normal / risky のみ） | tiny: スキップ / normal: 簡易 design / risky: design + risk analysis + test plan（comprehensive でシーケンス図追加） | ★ Design 承認（normal/risky）/ `designs/*.md` |
+| 2 計画 + 設計（normal / risky のみ） | tiny: スキップ / normal: 簡易 design / risky: design + risk analysis + test plan（comprehensive でシーケンス図追加）。**実際の design 要否・含むセクションは depth_level により異なる（正本は `docs/v3/data-model.md` §8）。本列は概要であり、`risky+standard` は risk analysis / test plan を含まない等の差分は §8 を参照** | ★ Design 承認（normal/risky）/ `designs/*.md` |
 | 3 実装 | acceptance criteria に沿って実装 / Self-Healing Loop（テスト → 失敗 → 自動修正 → リトライ）/ work item 単位 commit | 実装コード + commit |
 | 4 検証 | テスト / lint / ビルド検証（コンパイル等）/ acceptance criteria チェック | 検証結果 |
-| 5 レビュー（normal / risky のみ） | tiny: スキップ / normal: perspective=code / risky: perspective=code（security focus を含む）/ 上限 5R / Defer 戦略（OUT_OF_SCOPE・TECHNICAL_BLOCKER → 自動 Issue）。integration / deploy / premerge は **develop では実行せず release で実行**（§3.3 / §6） | `reviews/*.md` |
+| 5 レビュー（normal / risky のみ） | tiny: スキップ / normal: perspective=code / risky: perspective=code（security focus を含む）/ 上限 5R / Defer 戦略（OUT_OF_SCOPE・TECHNICAL_BLOCKER → 自動 Issue）。integration / deploy / premerge は **develop では実行せず release で実行**（§3.3 / §6）。**実際の review 要否・review_mode は depth_level により異なる（正本は `docs/v3/data-model.md` §8）。`normal+minimal` は review 不要、`risky+standard` は code（security focus）、`risky+comprehensive` は code（security）+ design** | `reviews/*.md` |
 | 6 完了 | status: done に更新 / journal.md に完了記録追記 / squash commit（設定に応じて）/ 次 item あれば Step 1 へ、全 item が done・withdrawn で release を案内 | frontmatter(done)・journal.md |
 
 **work item ループ**: develop は 1 実行で 1 work item を完了する。全 work item の frontmatter が done / withdrawn になったら release フェーズへの遷移を提案する（フェーズ導出で自動判定 / §7）。**依存解決**: 依存グラフを走査し dependencies が全て done の work item から次候補を選定。候補が複数なら AI が優先度を提案し人間が選択する。
@@ -245,14 +245,16 @@ v2 の perspective を持つ `reviewing-*` レビュースキル（**9 個**）�
 | reviewing-inception-intent | `intent` | define 完了時 |
 | reviewing-inception-stories | `stories` | define 完了時（depth_level: comprehensive） |
 | reviewing-inception-units | `units` | define 完了時 |
-| reviewing-construction-plan | `plan` | develop 開始時（normal/risky） |
+| reviewing-construction-plan | `plan` | develop 開始時（normal/risky）※develop の §8 自動 review 実行マトリクスには含まれない（下記注記参照） |
 | reviewing-construction-design | `design` | design 完了時（normal/risky） |
 | reviewing-construction-code | `code` | 実装完了時（normal/risky） |
 | reviewing-construction-integration | `integration` | 複数 work item 完了時（release） |
 | reviewing-operations-deploy | `deploy` | release 時（risky のみ） |
 | reviewing-operations-premerge | `premerge` | merge 前（常時） |
 
-**実行タイミングは上表の「実行条件」列を正本とする。**
+**実行タイミングは上表の「実行条件」列を正本とする。** ただし上表は `aidlc-review`（9→1 統合）に向けた **perspective カタログ** であり、`develop` フローで size×depth_level に応じて自動実行される review の**実行マトリクスの正本は §6.2 / `docs/v3/data-model.md` §8**（`matrix_review_mode`）である（両者は別レイヤ）。
+
+**`plan` perspective の develop での扱い（SoT 整合 / Unit 003 確定）**: 上表の `plan` 行（実行条件「develop 開始時」）は perspective カタログ上の項目であり、**§8 の develop review 実行マトリクス（`matrix_review_mode` = `code` / `code_security` / `code_security_design`）には plan review が含まれない**。したがって `develop` Step 5 が size×depth_level に応じて自動実行するのは **`code` / `design` perspective のみ**であり、`plan` review は develop フローで自動実行されない。`plan` のルーティング能力（`reviewing-construction-plan` / `caller_context` = 計画承認前）は既存 `review-routing.md` §3 に存在するが、その develop 内での自動実行は §8 マトリクスが制御する（capability ≠ execution）。本注記は §6.1（カタログ）と §6.2/§8（実行マトリクス）の不整合を §6.2/§8 正本で確定するものである。
 
 **perspective と focus の区別**: `security` は独立 perspective ではなく、`code`（develop Step 5）/ `premerge`（release Step 2）perspective 内の **focus** として扱う（v2 の `reviewing-construction-code` / `reviewing-operations-premerge` の `code + security` focus を継承）。`integration` / `deploy` / `premerge` perspective は **release で実行**し、develop では実行しない。
 
@@ -273,6 +275,8 @@ v2 の perspective を持つ `reviewing-*` レビュースキル（**9 個**）�
 > **size 非依存の release review**: `premerge` は size に関係なく **常時**実行する。`integration` は複数 work item 完了時に実行する（§3.3 / §6.1）。本表は size 由来で追加される review を示すものであり、release-level の `premerge` / `integration` を除外する意味ではない。
 
 ### 6.3 size × depth_level マトリクス
+
+> **非正本ビュー**: 本表は `docs/v3/data-model.md` §8 の参照用ビューである。**成果物要否の唯一の正本は data-model.md §8**。両者に差異が生じた場合は §8 を優先し、本表を §8 に合わせて更新する（SoT 二重定義回避）。
 
 | | depth_level: minimal | depth_level: standard | depth_level: comprehensive |
 |---|---|---|---|
