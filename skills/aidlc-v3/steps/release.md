@@ -1,14 +1,13 @@
-# release フロー（実行手順 / 骨格 + Step 1）
+# release フロー（実行手順）
 
 > **位置づけ（v3.0.0-alpha.6 / Phase 5）**: 本ファイルは release フローの**実行手順**である。
 > AI エージェントは各 Step を順に実行し、リリース準備の確認・PR 整備・merge・post-merge 処理を実際に行う。
 > `state.json` 操作や frontmatter status の読取のような atomic 性・パース安全性が必要な処理は
 > `scripts/state-*.sh` / `scripts/work-item-*.sh` を経由する（RFC P4）。
 >
-> **実装範囲（v3.0.0-alpha.6 時点）**: Step 1「リリース準備」（Unit 001 / read-only）/ Step 2「PR 整備」（Unit 002）/
-> Step 3「Merge 承認 + 実行」・Step 4「Post-merge」（Unit 003）を実装済み。`SKILL.md` の `release` コマンド公開フリップ・
-> express 整合（Unit 004）は後続 Unit で実装する。state 書き込みは Step 2 が `release.pr_number`、Step 3 が `release.ready` /
-> `release.merge_approved` のみ（schema 不変）。
+> **実装範囲**: Step 1「リリース準備」（read-only）/ Step 2「PR 整備」/ Step 3「Merge 承認 + 実行」/ Step 4「Post-merge」を
+> 実装済みで、`SKILL.md` の `release` コマンドが本フローを指す。state 書き込みは Step 2 が `release.pr_number`、Step 3 が
+> `release.ready` / `release.merge_approved` のみ（schema 不変 / 既存 `state-write.sh` を利用）。
 
 ## 目的
 
@@ -157,7 +156,7 @@ git status --porcelain
 
 2. **CI 状態確認**: `gh` が利用可能な場合のみ、対象ブランチ/コミットの最新 CI の conclusion を参照する（`gh run list` 系）:
 
-   - `success` → リリース準備 OK。Step 2（PR 整備 / 後続 Unit）へ進む。
+   - `success` → リリース準備 OK。Step 2（PR 整備）へ進む。
    - `failure` → 「CI が失敗しています。修正してから release してください」と案内して**終了**。
    - `pending` / 未実行 / 取得不能 / `gh` 不在 / CI 未設定 → 警告を表示して**継続**（停止しない / 可用性のため）:
 
@@ -173,13 +172,10 @@ git status --porcelain
 
 3. すべて充足（または CI が警告継続）→ **Step 2 へ進む**。
 
-> **本 Unit のスコープ境界**: Step 1 が完了して Step 2 に進める状態でも、Step 2 以降は未実装（後続 Unit）である。
-> 本 Unit では Step 1 の判定までを実装し、Step 2 の手順は下記プレースホルダに留める。
-
 ## Step 2: PR 整備 ★ PR ready 確認
 
 Step 1 を通過したら、PR を整備し `release.md` 成果物と release-level review を用意する。**state 書き込みは `release.pr_number`
-のみ**（schema 不変 / `release.ready`・`release.merge_approved` は Step 3 = Unit 003）。ready 化操作そのものは Step 3 で行い、
+のみ**（schema 不変 / `release.ready`・`release.merge_approved` の書き込みは Step 3）。ready 化操作そのものは Step 3 で行い、
 本 Step のゲートは「PR ready 確認」に留める。手順は 2-0 → 2-5 の順で実行する。
 
 ### 2-0. gh 可用性確認（停止条件）
@@ -262,13 +258,14 @@ perspective→caller_context→skill の写像は以下（正本: `docs/v3/workf
 - セクションを埋める: PR 概要 / work item 完了一覧（done・withdrawn）/ **review 結果サマリ（固定マーカー純 YAML / 2-3 の結果）** /
   CI 状態 / merge 記録（Step 3/4 で追記する枠）。
 - review 結果サマリは `<!-- aidlc-release-review:start -->` と `<!-- aidlc-release-review:end -->` のマーカー間に**純 YAML のみ**を
-  配置する（Unit 003 がそのまま parse する入力契約。マーカー間にコードフェンス・見出し等を置かない）。
+  配置する（Step 3 がそのまま parse する入力契約。マーカー間にコードフェンス・見出し等を置かない）。
 - PR 本文は file-based（`gh pr edit <N> --body-file <一時ファイル>` / 2-1 で update/adopt/create のいずれでも本文を更新）。機密情報を含めない。
+- **release.md を PR に含める**: 生成した `.aidlc/cycles/<cycle>/release.md` を **PR の head branch（feature branch）に commit + push** する。`release.md` は release の必須成果物（`docs/v3/data-model.md` §10）であり、PR に含めることで merge により統合先へ取り込まれる。base/統合先へ直接 push しない。
 
 ### 2-5. Step 2 ゲート（PR ready 確認）
 
 PR が ready 化可能な状態（必須情報が揃い、CI 状態が把握済み）であることを確認する。**ready 化操作（`gh pr ready` /
-`release.ready` 書き込み）は Step 3（Unit 003）で行う**ため、本 Step では ready 確認に留めて Step 3 へ進む。
+`release.ready` 書き込み）は Step 3 で行う**ため、本 Step では ready 確認に留めて Step 3 へ進む。
 
 ## Step 3: Merge 承認 + 実行 ★ merge 承認
 
@@ -302,7 +299,7 @@ scripts/state-write.sh release.ready true
 
 ### 3-2. approval gate（承認判断 / ユーザー確認で解決し得る）
 
-「高重要度未解決指摘なし」の承認判断を行う（CI/PR 健全性は 3-4 の hard gate が担う）。Unit 002 が `release.md` に記録した
+「高重要度未解決指摘なし」の承認判断を行う（CI/PR 健全性は 3-4 の hard gate が担う）。Step 2 が `release.md` に記録した
 review 結果サマリ（固定マーカー間の純 YAML）を parse し、`merge_blocker_any` を読む:
 
 - `automation_mode == manual` → ユーザーに明示確認（承認を得てから 3-3）。
@@ -318,7 +315,7 @@ review 結果サマリ（固定マーカー間の純 YAML）を parse し、`mer
 scripts/state-write.sh release.merge_approved true
 ```
 
-- exit 0 → `state-validate.sh` で `status:valid` 確認後、state.json の変更を commit し、**現在のブランチ（PR の head branch = feature branch）の remote へ push** する。base/統合先ブランチへ直接 push しない（PR の merge ゲートを迂回しないため）。
+- exit 0 → `state-validate.sh` で `status:valid` 確認後、`release.md` の「Merge 記録」セクションの `merge_approved` 行も合わせて更新し、**state.json + release.md の変更を 1 つの commit** にまとめて、**現在のブランチ（PR の head branch = feature branch）の remote へ push** する。base/統合先ブランチへ直接 push しない（PR の merge ゲートを迂回しないため）。これにより必須成果物 `release.md`（`docs/v3/data-model.md` §10）と承認記録が PR に含まれ、merge により統合先へ取り込まれる。
 - exit 1/2 → 提示して**終了**。
 - push に失敗（remote 同期不可 / 未コミット差分）→ 解消を促して**終了**。
 
@@ -395,7 +392,7 @@ git branch -d <feature-branch>
 - release completed: <cycle> (PR #<N> merged)
 ```
 
-当日の日付見出しが無ければ追加する。追記後、`journal.md` を統合先ブランチで commit + push する（上記「Step 4 の commit/push 方針」に従う / 保護ブランチ時は follow-up PR）。
+当日の日付見出しが無ければ追加する。あわせて、統合先に取り込まれた `release.md` の「Merge 記録」セクションの `merged` 行を更新する。追記後、`journal.md`（および `release.md`）を統合先ブランチで commit + push する（上記「Step 4 の commit/push 方針」に従う / 保護ブランチ時は follow-up PR）。
 
 ### 4-3. tag / changelog の opt-in 実行
 

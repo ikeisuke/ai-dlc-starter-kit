@@ -4,7 +4,7 @@
 release フェーズ Step 2「PR 整備」で生成する成果物。
 PR 概要 / work item 完了一覧 / review 結果サマリ（機械可読）/ CI 状態 / merge 記録を集約する。
 release-level review（premerge / integration / deploy）の結果は本ファイルに集約し reviews/*.md は生成しない
-（docs/v3/data-model.md §8 / §10）。merge 記録は Step 3/4（Unit 003）で追記する。
+（docs/v3/data-model.md §8 / §10）。merge 記録は Step 3/4 で追記する。
 -->
 
 ## PR 概要
@@ -28,13 +28,13 @@ release-level review（premerge / integration / deploy）の結果は本ファ�
 ## Review 結果サマリ
 
 <!--
-固定マーカー間（start の次行から end の前行まで）は純 YAML のみ。Unit 003 の merge ゲートがこの範囲を
+固定マーカー間（start の次行から end の前行まで）は純 YAML のみ。release Step 3 の merge ゲートがこの範囲を
 そのまま YAML として parse する（入力契約）。マーカー間に markdown コードフェンス・見出し・装飾を置かないこと。
 status: passed | failed | skipped / max_severity: high | medium | low | none。
 status=skipped は skip_reason を非 null にする（実行条件未該当の理由）。
 merge_blocker は当該 perspective に高重要度（high）の未解決指摘があれば true。
 merge_blocker_any はいずれかの perspective が merge_blocker=true なら true。
-マーカー不在・純 YAML として parse 不能・必須フィールド欠落・enum 外は Unit 003 側で fail-closed。
+マーカー不在・純 YAML として parse 不能・必須フィールド欠落・enum 外は release Step 3 側で fail-closed。
 -->
 
 <!-- aidlc-release-review:start -->
@@ -68,7 +68,7 @@ merge_blocker_any: false
 
 ## Merge 記録
 
-<!-- Step 3/4（Unit 003）で追記する。本 Unit（002）では枠のみ。 -->
+<!-- merge 記録は release Step 3/4 で追記する（テンプレート生成時点では未記録）。 -->
 
 - merge_approved: {{未記録（Step 3 で記録）}}
 - merged: {{未記録（Step 4 で記録）}}
