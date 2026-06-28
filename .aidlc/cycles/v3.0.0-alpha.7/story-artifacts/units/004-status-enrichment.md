@@ -9,7 +9,7 @@
 
 ## 責務
 - `skills/aidlc-v3/steps/status.md` の拡充: active cycle 時に `Cycle` / `Phase`（導出根拠併記）/ `Current work item`（size・risk・status）/ `Completed`（done・withdrawn 内訳）/ `Blocked` / `Remaining` / `Suggested command` を出力する仕様に更新。
-- state.json 不在時に `No active cycle found.` + `Suggested command: /aidlc define` を出力する仕様を明記。
+- state.json 不在時に `No active cycle found.` + `Suggested command: /aidlc-v3 define` を出力する仕様を明記（skeleton 統一 prefix `/aidlc-v3` / SKILL.md「コマンド表記について」準拠。§3.5 の end-state 表記 `/aidlc` は Phase 7 で統一）。
 - 出力整合の検証（テストまたは再現可能なドライ検証）を追加。
 
 ## 境界
@@ -50,9 +50,9 @@ High
 
 有効値: 未着手 | 進行中 | 完了 | 取り下げ
 
-- **状態**: 未着手
-- **開始日**: -
-- **完了日**: -
-- **担当**: -
+- **状態**: 完了
+- **開始日**: 2026-06-29
+- **完了日**: 2026-06-29
+- **担当**: Claude (Construction Phase)
 - **エクスプレス適格性**: -
 - **適格性理由**: -
