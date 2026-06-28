@@ -5,8 +5,8 @@ description: >-
   define / develop / release / reflect の 4 フェーズコマンドと status / doctor の
   補助コマンド、連続実行ラッパ express、旧名エイリアス（inception / construction /
   operations / retrospective）を統一的にルーティングする。
-  define / develop（normal / risky 含む）/ release / reflect の各フェーズフローと status 出力を
-  実装済み。doctor は後続 Phase（Phase 6）。
+  define / develop（normal / risky 含む）/ release / reflect の各フェーズフローと
+  status / doctor の補助コマンドを実装済み（doctor は alpha.7 で shallow scope）。
 ---
 
 # AI-DLC v3 オーケストレーター（skeleton）
@@ -16,9 +16,10 @@ work item frontmatter への**明示的な状態書き込みから導出**する
 
 > **本ファイルの位置づけ（v3.0.0-alpha.7 / Phase 6）**: 本 SKILL.md は
 > ルーティングの骨組みである。実体の手順ファイルとして `steps/define.md` / `steps/status.md` /
-> `steps/develop.md`（`tiny` / `normal` / `risky`）/ `steps/release.md`（Step 1–4）/ `steps/reflect.md`（Step 0–4）が存在する。
-> `doctor` は **予約**であり、手順ファイルは後続 Phase（Phase 6）で実装する
-> （未作成ファイルへの参照は作らない）。`/aidlc-v3` 起動は `marketplace.json` 登録済みで有効。
+> `steps/develop.md`（`tiny` / `normal` / `risky`）/ `steps/release.md`（Step 1–4）/ `steps/reflect.md`（Step 0–4）/
+> `steps/doctor.md`（出力仕様 / `scripts/doctor.sh` が実行実装）が存在する。
+> doctor は alpha.7 で shallow scope（8 領域 + parse-guard）を実装済みで、`[phase]` / `[trace]` は alpha.8 へ defer する。
+> `/aidlc-v3` 起動は `marketplace.json` 登録済みで有効。
 
 ## コマンド表記について（`/aidlc` と `/aidlc-v3` の区別）
 
@@ -52,7 +53,7 @@ work item frontmatter への**明示的な状態書き込みから導出**する
 | コマンド | 責務 | 本 skeleton での扱い |
 |---------|------|--------------------|
 | `status` | `state.json` + frontmatter からフェーズを導出し現在地・次アクションを表示（**読み取り専用**） | `steps/status.md`（実在 / Unit 001 で実装） |
-| `doctor` | config / git / gh / state / work-items / trace の問題を診断（**自動修正しない**） | 予約（後続 Phase で実装） |
+| `doctor` | config / state / cycle / work-items / git / gh / pr / scripts / parse-guard の問題を診断（**自動修正しない**） | `steps/doctor.md` + `scripts/doctor.sh`（実在 / Unit 003 で実装 / alpha.7 shallow scope。`[phase]` / `[trace]` は alpha.8 defer） |
 
 ### コマンド名規約（RFC DG-1）
 
@@ -115,6 +116,6 @@ v3 専用の rules 実体（`steps/rules.md` 等）は後続 Phase で追加す�
 `templates/work-item.md`、`steps/define.md`）。step ファイルからの単純相対参照
 （`steps/templates/...` のような解釈）は行わない。
 
-- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）
+- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh` / `state-init.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）/ `lib/frontmatter.sh`（frontmatter パース安全境界）/ `doctor.sh`（環境診断 / 9 領域）
 - `templates/`: `intent.md` / `work-item.md` / `journal.md` / `release.md` / `reflect.md`（成果物テンプレート）
-- `steps/`: `define.md` / `status.md` / `develop.md` / `release.md` / `reflect.md`
+- `steps/`: `define.md` / `status.md` / `develop.md` / `release.md` / `reflect.md` / `doctor.md`

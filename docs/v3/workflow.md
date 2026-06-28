@@ -157,38 +157,46 @@ Suggested command: /aidlc define
 
 preflight と recovery を通常フローから分離した診断コマンド。**自動修正しない**（診断と推奨のみ）。
 
+**段階スコープ**: alpha.7 では shallow scope（8 領域 + `[parse-guard]`）を実装する。`[phase]` / `[trace]` は
+**alpha.8 の必須 follow-up** へ defer する（フェーズ導出 code 化・trace 整合チェックの実装は alpha.8）。
+
 チェック項目:
 
-| 項目 | 内容 |
-|------|------|
-| `[config]` | `.aidlc/config.toml` 存在 + 必須キー確認 |
-| `[state]` | `.aidlc/state.json` 存在 + schema validation（`define_completed` / `release` のみ） |
-| `[cycle]` | `current_cycle` のディレクトリパス存在確認 |
-| `[work-items]` | work item frontmatter の整合性（status / size / risk / dependencies の妥当性） |
-| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ） |
-| `[git]` | git status（clean / dirty）/ default branch / remote |
-| `[gh]` | gh auth status |
-| `[pr]` | active PR の存在・状態確認 |
-| `[scripts]` | 必須スクリプトの存在確認 |
-| `[trace]` | trace chain の整合性（intent → work items → designs の参照チェック） |
+| 項目 | 内容 | 段階 |
+|------|------|------|
+| `[config]` | `.aidlc/config.toml` 存在 + 必須キー確認 | alpha.7 |
+| `[state]` | `.aidlc/state.json` 存在 + schema validation（`define_completed` / `release` のみ） | alpha.7 |
+| `[cycle]` | `current_cycle` のディレクトリパス存在確認 | alpha.7 |
+| `[work-items]` | work item frontmatter の整合性（status / size / risk / dependencies の妥当性） | alpha.7 |
+| `[git]` | git status（clean / dirty）（default branch / remote の診断は alpha.8+） | alpha.7 |
+| `[gh]` | gh auth status | alpha.7 |
+| `[pr]` | active PR の存在・状態確認 | alpha.7 |
+| `[scripts]` | 必須スクリプトの存在確認 | alpha.7 |
+| `[parse-guard]` | frontmatter パース禁止パターンの検出（`bin/check-frontmatter-parse-guard.sh` を wrap） | alpha.7 |
+| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ） | **alpha.8 defer** |
+| `[trace]` | trace chain の整合性（intent → work items → designs の参照チェック） | **alpha.8 defer** |
 
 出力例:
+
+alpha.7（shallow scope）の出力例:
 
 ```text
 [config]      OK
 [state]       OK (define_completed: true, release.merge_approved: false)
 [cycle]       OK
-[work-items]  WARN: 002-normalize-state has status: in_progress but no recent commits
-[phase]       develop (derived: define_completed=true, 2 items remaining)
-[git]         OK (branch: cycle/v3.0.0, clean)
+[work-items]  OK 3 item(s) valid
+[git]         OK (clean)
 [gh]          OK (authenticated as user)
 [pr]          OK (PR #123, draft)
 [scripts]     OK
-[trace]       WARN: work_item 003 has no design file (size: normal, expected)
+[parse-guard] OK
+```
 
-Recommendations:
-  1. Continue: /aidlc develop (work item 002 is in_progress)
-  2. Create designs/003-*.md before completing work item 003
+alpha.8 で追加予定（defer）:
+
+```text
+[phase]       develop (derived: define_completed=true, 2 items remaining)   # alpha.8
+[trace]       WARN: work_item 003 has no design file (size: normal, expected)  # alpha.8
 ```
 
 ---
