@@ -28,7 +28,7 @@ v3 のワークフローは、**4 つのフェーズコマンド**（`define` / 
 | `release` | フェーズコマンド | main に安全に取り込む（PR 整備・merge） | Operations |
 | `reflect` | フェーズコマンド（任意実行） | 振り返り、改善 Issue を作る | Retrospective |
 | `status` | 補助コマンド（**読み取り専用**） | state.json + frontmatter からフェーズを導出し現在地・次アクションを表示 | （v2 で preflight に内包） |
-| `doctor` | 補助コマンド（**診断**） | config / git / gh / state / work-items / trace の問題を診断（**自動修正しない**） | （v2 で preflight + recovery に分散） |
+| `doctor` | 補助コマンド（**診断**） | config / state / cycle / work-items / git / gh / pr / scripts の問題を診断（alpha.7 shallow scope。`[phase]` / `[trace]` は alpha.8 defer / §3.6 参照）（**自動修正しない**） | （v2 で preflight + recovery に分散） |
 
 フェーズコマンドは状態を進行させ承認ゲートを持つ。補助コマンドは状態を変更せず、フェーズ進行ゲートを持たない（`status` は読み取り専用、`doctor` は診断のみで自動修正しない）。`express` は独立コマンドではなくフェーズコマンドの連続実行ラッパである（§4）。
 

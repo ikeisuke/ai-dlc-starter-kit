@@ -26,7 +26,7 @@ work item frontmatter への**明示的な状態書き込みから導出**する
 設計正本 `docs/v3/workflow.md` は v3 の**最終的なコマンド表面**を `/aidlc`（例:
 `/aidlc define`）で記述する。これは v3 が v2 を置き換えた後の end-state である。
 
-一方、本 skeleton（v3.0.0-alpha.6 / Phase 5）は v2（`skills/aidlc` = `/aidlc`）と
+一方、本 skeleton（v3.0.0-alpha.7 / Phase 6）は v2（`skills/aidlc` = `/aidlc`）と
 **共存**し、`marketplace.json` へ登録済み（`/aidlc-v3` 起動有効化済み）。
 そのため**現時点の起動表面は `/aidlc-v3`** であり、本 skeleton 内の
 手順・出力例は `/aidlc-v3` 表記を用いる（現状の共存を反映）。最終表面 `/aidlc` への
