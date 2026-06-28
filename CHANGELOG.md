@@ -7,6 +7,25 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.6] - 2026-06-27
+
+AI-DLC v3 フルリニューアルの **Phase 5（release フロー）**。`skills/aidlc-v3` に release フェーズを実装し、`define → develop` 済みサイクルを統合ブランチへ安全に取り込めるようにする。`steps/release.md`（Step 1–4: リリース準備ゲート / PR 整備 / Merge 承認・実行 / Post-merge cleanup）、`templates/release.md`、release-level review ルーティング、release state 書き込み、全 Step の回帰テストを実装。`SKILL.md` の `release` コマンドを「予約」から「実装済み」に公開フリップ。設計 SoT: `docs/v3/workflow.md §3.3` / `docs/v3/data-model.md §3・§5・§8`。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.6` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.6` に更新する。
+
+### Added
+
+- **release フロー骨格 + リリース準備ゲート（`skills/aidlc-v3/steps/release.md`）**: release フェーズの Step 1–4 章立て骨格を新規作成し、Step 1「リリース準備」を実装。全 work item の frontmatter `status` が `done` / `withdrawn` であることを `state-read.sh` / `work-item-validate.sh`（read-only）で検出し、未完了が残る場合は一覧提示して停止。`define_completed: false` / state.json 不在時は release に入らず define/develop へ案内。git status / CI・test 状態確認の挙動（dirty/test 失敗/CI 失敗=停止、CI 未実行=警告継続）を明記（Unit 001 / ストーリー 1）
+- **PR 整備 + release.md テンプレート + review ルーティング（`skills/aidlc-v3/steps/release.md` / `templates/release.md`）**: Step 2「PR 整備」を実装。PR 未作成時は作成・`early_pr` 時は本文更新のみの分岐、`release.pr_number` の state.json 書き込み・検証。`templates/release.md` を新規作成（PR 概要 / work item 完了一覧 / review 結果サマリ / CI 状態 / merge 記録）。review 結果サマリは perspective ごと（premerge / integration / deploy）の未解決指摘数・最高重要度・merge blocker 有無を機械可読に記録（Unit 002→003 データ契約）。release-level review ルーティング（premerge 常時 / integration: done 2 件以上 / deploy: risky done 1 件以上）を既存 reviewing スキルへ委譲（Unit 002 / ストーリー 2・3）
+- **Merge 承認・実行 + Post-merge cleanup（`skills/aidlc-v3/steps/release.md`）**: Step 3「Merge 承認 + 実行」を実装。PR ready 化 + `release.ready` 書き込み、`release.merge_approved` を merge 前の最終コミットで記録し commit + push 後に `gh pr merge`。merge 承認ゲート（manual=明示確認 / semi_auto=CI green・高重要度未解決指摘なし・未 merged 充足で自動）。Step 4「Post-merge」で統合先ブランチへ switch・merge 済み feature branch 削除・`journal.md` 追記・tag/changelog（opt-in）を実装（Unit 003 / ストーリー 4・5）
+- **release フロー回帰テスト（`skills/aidlc-v3/scripts/tests/`）**: state 書き込み契約・Step 1 ゲート・review ルーティング条件・post-merge opt-in 分岐の検証を追加。既存 v3 テストの green 維持を確認（Unit 004 / ストーリー 6）
+
+### Changed
+
+- **`release` コマンド公開フリップ（`skills/aidlc-v3/SKILL.md`）**: `release` コマンドを「予約」から「実装済み」に更新し、ルーティング先を `steps/release.md` に設定。express ラッパ（work item 1 つ・risky なし時の `define → develop → release` 連続実行）が release まで到達する記述を整合（Unit 004 / ストーリー 6）
+
+---
+
 ## [3.0.0-alpha.5] - 2026-06-27
 
 AI-DLC v3 フルリニューアルの **Phase 4（develop normal/risky 分岐）**。`/aidlc-v3 develop` を tiny 専用から、work item の `size`（tiny/normal/risky）× cycle の `depth_level` に応じて設計・レビュー・テストプラン・rollback note の厚みを変える分岐へ拡張。`develop.md` の「normal/risky 未サポート停止」を解除し、`data-model.md` §8 マトリクスを単一の判定結果として後続 Step（設計・レビュー）の実行可否を決める分岐基盤・design テンプレート生成・review routing・全マトリクス回帰テストを実装。tiny フローは非回帰。v2 (`skills/aidlc`) には非影響。
