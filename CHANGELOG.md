@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.7] - 2026-06-29
+
+AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）。`skills/aidlc-v3` に reflect（振り返り）と doctor（診断）を実装し status を拡充して、`define → develop → release → reflect` の v3 単独フルサイクル完走を可能にする。あわせて #735（`squash-unit.sh` の複数 `--message` footgun）を修正し、alpha.4 で実装済みの #733 をクローズ。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.7` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.7` に更新する。
+
+### Added
+
+- **reflect フロー実装（`skills/aidlc-v3/steps/reflect.md` / `templates/reflect.md` / `SKILL.md`）**: v3 の振り返りフェーズを新規実装。`define → develop → release` 済みサイクルに対し KPT ベースの振り返りと Try の Issue 化（`gh issue create` / `gh_status=available` 時のみ）を行う。frontmatter の生パースは `lib/frontmatter.sh` に委譲（grep/sed/awk 直書き禁止）。`reflect` コマンドを公開し、回帰テストを追加。設計 SoT: `docs/v3/workflow.md §3.4` / `docs/v3/data-model.md §7・§10`（Unit 002 / ストーリー 2）
+- **doctor v1 実装（`skills/aidlc-v3/steps/doctor.md` ほか）**: v3 環境の shallow 診断コマンドを新規実装。9 領域（config / state / cycle / work-items / git / gh / pr / scripts + parse-guard）を診断し、`[phase]` / `[trace]` 領域は alpha.8 へ defer（follow-up #741）。段階スコープを SoT に反映し、alpha.4 で実装済みの #733 をクローズ（Unit 003 / ストーリー 4）
+
+### Changed
+
+- **`squash-unit.sh` 複数 `--message` 段落結合修正（#735）**: 複数 `--message` 指定時に subject が失われる footgun を修正。複数メッセージを段落結合し、Co-Authored-By を重複排除する挙動に変更（Unit 001 / ストーリー 1）
+- **`status` 出力拡充（`skills/aidlc-v3/steps/status.md`）**: `/aidlc-v3 status` の出力を `docs/v3/workflow.md §3.5` の出力例に揃え、残作業・次の推奨コマンド・導出根拠を含む現在地表示に拡充。実行手順化と回帰テスト（`test-status.sh`）を追加（Unit 004 / ストーリー 3）
+
+---
+
 ## [3.0.0-alpha.6] - 2026-06-27
 
 AI-DLC v3 フルリニューアルの **Phase 5（release フロー）**。`skills/aidlc-v3` に release フェーズを実装し、`define → develop` 済みサイクルを統合ブランチへ安全に取り込めるようにする。`steps/release.md`（Step 1–4: リリース準備ゲート / PR 整備 / Merge 承認・実行 / Post-merge cleanup）、`templates/release.md`、release-level review ルーティング、release state 書き込み、全 Step の回帰テストを実装。`SKILL.md` の `release` コマンドを「予約」から「実装済み」に公開フリップ。設計 SoT: `docs/v3/workflow.md §3.3` / `docs/v3/data-model.md §3・§5・§8`。v2 (`skills/aidlc`) には非影響。
