@@ -57,6 +57,9 @@ EOF
 #   aidlc-v3 は config.toml 読取手段を持たないため、depth_level 解決に
 #   `bash skills/aidlc/scripts/read-config.sh rules.depth_level.level` をリポジトリルート相対の絶対参照として呼び出す
 #   （rules-core.md の公開 API スクリプト層の規約に準拠 / aidlc-feedback と同パターン）
+# - aidlc-v3/steps/doctor.md: 公開 API スクリプト層への正当な参照（v3.0.0-alpha.7 / Unit 003 / #733）。
+#   doctor の `[config]` 領域が `skills/aidlc/scripts/read-config.sh rules.depth_level.level` を
+#   wrap する出力仕様記述（develop.md と同じ公開 API スクリプト層パターン）
 # - aidlc-retrospective/: aidlc-retrospective スキル（v2.6.0 / Unit 005）。本体 aidlc プラグインの公開 API 層
 #   （retrospective-api.sh / cycle-resolver.sh）と templates/retrospective_template.md を `source` / 参照する設計上の単方向境界を持つ
 # - scripts/lib/retrospective-api.sh / scripts/lib/cycle-resolver.sh: AIDLC_BASE 解決の bootstrap で
@@ -70,6 +73,7 @@ EXCLUDE_PATTERNS=(
     "aidlc-feedback/steps/feedback.md"
     "aidlc-feedback/SKILL.md"
     "aidlc-v3/steps/develop.md"
+    "aidlc-v3/steps/doctor.md"
     "aidlc-migrate/"
     "aidlc-retrospective/"
     "write-history/SKILL.md"
@@ -90,7 +94,7 @@ is_excluded() {
         */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
         */steps/common/review-flow.md|*/steps/common/rules-core.md|\
         */aidlc-feedback/steps/feedback.md|*/aidlc-feedback/SKILL.md|\
-        */aidlc-v3/steps/develop.md|\
+        */aidlc-v3/steps/develop.md|*/aidlc-v3/steps/doctor.md|\
         */aidlc-migrate/*|*/aidlc-retrospective/*|*/write-history/SKILL.md|\
         */scripts/lib/bootstrap.sh|*/scripts/lib/retrospective-api.sh|*/scripts/lib/cycle-resolver.sh|\
         */scripts/tests/*|\

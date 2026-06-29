@@ -28,7 +28,7 @@ v3 のワークフローは、**4 つのフェーズコマンド**（`define` / 
 | `release` | フェーズコマンド | main に安全に取り込む（PR 整備・merge） | Operations |
 | `reflect` | フェーズコマンド（任意実行） | 振り返り、改善 Issue を作る | Retrospective |
 | `status` | 補助コマンド（**読み取り専用**） | state.json + frontmatter からフェーズを導出し現在地・次アクションを表示 | （v2 で preflight に内包） |
-| `doctor` | 補助コマンド（**診断**） | config / git / gh / state / work-items / trace の問題を診断（**自動修正しない**） | （v2 で preflight + recovery に分散） |
+| `doctor` | 補助コマンド（**診断**） | config / state / cycle / work-items / git / gh / pr / scripts の問題を診断（alpha.7 shallow scope。`[phase]` / `[trace]` は alpha.8 defer / §3.6 参照）（**自動修正しない**） | （v2 で preflight + recovery に分散） |
 
 フェーズコマンドは状態を進行させ承認ゲートを持つ。補助コマンドは状態を変更せず、フェーズ進行ゲートを持たない（`status` は読み取り専用、`doctor` は診断のみで自動修正しない）。`express` は独立コマンドではなくフェーズコマンドの連続実行ラッパである（§4）。
 
@@ -157,38 +157,46 @@ Suggested command: /aidlc define
 
 preflight と recovery を通常フローから分離した診断コマンド。**自動修正しない**（診断と推奨のみ）。
 
+**段階スコープ**: alpha.7 では shallow scope（8 領域 + `[parse-guard]`）を実装する。`[phase]` / `[trace]` は
+**alpha.8 の必須 follow-up** へ defer する（フェーズ導出 code 化・trace 整合チェックの実装は alpha.8）。
+
 チェック項目:
 
-| 項目 | 内容 |
-|------|------|
-| `[config]` | `.aidlc/config.toml` 存在 + 必須キー確認 |
-| `[state]` | `.aidlc/state.json` 存在 + schema validation（`define_completed` / `release` のみ） |
-| `[cycle]` | `current_cycle` のディレクトリパス存在確認 |
-| `[work-items]` | work item frontmatter の整合性（status / size / risk / dependencies の妥当性） |
-| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ） |
-| `[git]` | git status（clean / dirty）/ default branch / remote |
-| `[gh]` | gh auth status |
-| `[pr]` | active PR の存在・状態確認 |
-| `[scripts]` | 必須スクリプトの存在確認 |
-| `[trace]` | trace chain の整合性（intent → work items → designs の参照チェック） |
+| 項目 | 内容 | 段階 |
+|------|------|------|
+| `[config]` | `.aidlc/config.toml` 存在 + 必須キー確認 | alpha.7 |
+| `[state]` | `.aidlc/state.json` 存在 + schema validation（`define_completed` / `release` のみ） | alpha.7 |
+| `[cycle]` | `current_cycle` のディレクトリパス存在確認 | alpha.7 |
+| `[work-items]` | work item frontmatter の整合性（status / size / risk / dependencies の妥当性） | alpha.7 |
+| `[git]` | git status（clean / dirty）（default branch / remote の診断は alpha.8+） | alpha.7 |
+| `[gh]` | gh auth status | alpha.7 |
+| `[pr]` | active PR の存在・状態確認 | alpha.7 |
+| `[scripts]` | 必須スクリプトの存在確認 | alpha.7 |
+| `[parse-guard]` | frontmatter パース禁止パターンの検出（`bin/check-frontmatter-parse-guard.sh` を wrap） | alpha.7 |
+| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ） | **alpha.8 defer** |
+| `[trace]` | trace chain の整合性（intent → work items → designs の参照チェック） | **alpha.8 defer** |
 
 出力例:
+
+alpha.7（shallow scope）の出力例:
 
 ```text
 [config]      OK
 [state]       OK (define_completed: true, release.merge_approved: false)
 [cycle]       OK
-[work-items]  WARN: 002-normalize-state has status: in_progress but no recent commits
-[phase]       develop (derived: define_completed=true, 2 items remaining)
-[git]         OK (branch: cycle/v3.0.0, clean)
+[work-items]  OK 3 item(s) valid
+[git]         OK (clean)
 [gh]          OK (authenticated as user)
 [pr]          OK (PR #123, draft)
 [scripts]     OK
-[trace]       WARN: work_item 003 has no design file (size: normal, expected)
+[parse-guard] OK
+```
 
-Recommendations:
-  1. Continue: /aidlc develop (work item 002 is in_progress)
-  2. Create designs/003-*.md before completing work item 003
+alpha.8 で追加予定（defer）:
+
+```text
+[phase]       develop (derived: define_completed=true, 2 items remaining)   # alpha.8
+[trace]       WARN: work_item 003 has no design file (size: normal, expected)  # alpha.8
 ```
 
 ---

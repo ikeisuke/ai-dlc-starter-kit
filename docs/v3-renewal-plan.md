@@ -902,38 +902,46 @@ Suggested command: /aidlc define
 
 チェック項目:
 
+**段階スコープ**: alpha.7 = shallow scope（8 領域 + `[parse-guard]`）。`[phase]` / `[trace]` は alpha.8 必須 follow-up へ defer。
+
 ```text
-[config]     .aidlc/config.toml 存在 + 必須キー確認
-[state]      .aidlc/state.json 存在 + schema validation（define_completed, release のみ）
-[cycle]      current_cycle のディレクトリパス存在確認
-[work-items] work item frontmatter の整合性（status / size / risk / dependencies の妥当性）
-[phase]      フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ）
-[git]        git status (clean/dirty), default branch, remote
-[gh]         gh auth status
-[pr]         active PR の存在・状態確認
-[scripts]    必須スクリプトの存在確認
-[trace]      trace chain の整合性（intent → work items → designs の参照チェック）
+[config]      .aidlc/config.toml 存在 + 必須キー確認                              # alpha.7
+[state]       .aidlc/state.json 存在 + schema validation（define_completed, release のみ）  # alpha.7
+[cycle]       current_cycle のディレクトリパス存在確認                            # alpha.7
+[work-items]  work item frontmatter の整合性（status / size / risk / dependencies の妥当性）  # alpha.7
+[git]         git status (clean/dirty)（default branch / remote は alpha.8+）     # alpha.7
+[gh]          gh auth status                                                    # alpha.7
+[pr]          active PR の存在・状態確認                                          # alpha.7
+[scripts]     必須スクリプトの存在確認                                            # alpha.7
+[parse-guard] frontmatter パース禁止パターン検出（bin/check-frontmatter-parse-guard.sh wrap）  # alpha.7
+[phase]       フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ）   # alpha.8 defer
+[trace]       trace chain の整合性（intent → work items → designs の参照チェック）  # alpha.8 defer
 ```
 
 doctor は修正を自動実行しない。診断と推奨だけ出す。
 
-出力例:
+出力例（alpha.7 / shallow scope）:
 
 ```text
 [config]      OK
 [state]       OK (define_completed: true, release.merge_approved: false)
 [cycle]       OK
-[work-items]  WARN: 002-normalize-state has status: in_progress but no recent commits
-[phase]       build (derived: define_completed=true, 2 items remaining)
-[git]         OK (branch: cycle/v3.0.0, clean)
+[work-items]  OK 3 item(s) valid
+[git]         OK (clean)
 [gh]          OK (authenticated as user)
 [pr]          OK (PR #123, draft)
 [scripts]     OK
-[trace]       WARN: work_item 003 has no design file (size: normal, expected)
+[parse-guard] OK
 
 Recommendations:
-  1. Continue: /aidlc build (work item 002 is in_progress)
-  2. Create designs/003-*.md before completing work item 003
+  1. Continue: /aidlc develop
+```
+
+alpha.8 で追加予定（defer）:
+
+```text
+[phase]       develop (derived: define_completed=true, 2 items remaining)   # alpha.8
+[trace]       WARN: work_item 003 has no design file (size: normal, expected)  # alpha.8
 ```
 
 ---
@@ -1081,7 +1089,7 @@ aidlc-migrate スキルが以下を実行:
 
 - Try を必要な分だけ Issue 化できる
 - mirror なしで完結する
-- doctor が全チェック項目を診断できる
+- doctor が alpha.7 の shallow scope（8 領域 + `[parse-guard]`）を診断できる（`[phase]` / `[trace]` は alpha.8 必須 follow-up へ defer）
 - status が正しい現在地を表示する
 
 ### Phase 7: dogfooding + 本流化（1-2 サイクル）

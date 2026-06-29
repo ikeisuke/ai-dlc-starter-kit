@@ -5,8 +5,8 @@ description: >-
   define / develop / release / reflect の 4 フェーズコマンドと status / doctor の
   補助コマンド、連続実行ラッパ express、旧名エイリアス（inception / construction /
   operations / retrospective）を統一的にルーティングする。
-  define / develop（normal / risky 含む）/ release の各フェーズフローと status 出力を
-  実装済み。reflect / doctor は後続 Phase（Phase 6）。
+  define / develop（normal / risky 含む）/ release / reflect の各フェーズフローと
+  status / doctor の補助コマンドを実装済み（doctor は alpha.7 で shallow scope）。
 ---
 
 # AI-DLC v3 オーケストレーター（skeleton）
@@ -14,18 +14,19 @@ description: >-
 AI-DLC v3 は、フェーズ進行を会話履歴の推論ではなく、リポジトリ内の `state.json` +
 work item frontmatter への**明示的な状態書き込みから導出**する（RFC DG-6）。
 
-> **本ファイルの位置づけ（v3.0.0-alpha.6 / Phase 5）**: 本 SKILL.md は
+> **本ファイルの位置づけ（v3.0.0-alpha.7 / Phase 6）**: 本 SKILL.md は
 > ルーティングの骨組みである。実体の手順ファイルとして `steps/define.md` / `steps/status.md` /
-> `steps/develop.md`（`tiny` / `normal` / `risky`）/ `steps/release.md`（Step 1–4）が存在する。
-> `reflect` / `doctor` は **予約**であり、手順ファイルは後続 Phase（Phase 6）で実装する
-> （未作成ファイルへの参照は作らない）。`/aidlc-v3` 起動は `marketplace.json` 登録済みで有効。
+> `steps/develop.md`（`tiny` / `normal` / `risky`）/ `steps/release.md`（Step 1–4）/ `steps/reflect.md`（Step 0–4）/
+> `steps/doctor.md`（出力仕様 / `scripts/doctor.sh` が実行実装）が存在する。
+> doctor は alpha.7 で shallow scope（8 領域 + parse-guard）を実装済みで、`[phase]` / `[trace]` は alpha.8 へ defer する。
+> `/aidlc-v3` 起動は `marketplace.json` 登録済みで有効。
 
 ## コマンド表記について（`/aidlc` と `/aidlc-v3` の区別）
 
 設計正本 `docs/v3/workflow.md` は v3 の**最終的なコマンド表面**を `/aidlc`（例:
 `/aidlc define`）で記述する。これは v3 が v2 を置き換えた後の end-state である。
 
-一方、本 skeleton（v3.0.0-alpha.6 / Phase 5）は v2（`skills/aidlc` = `/aidlc`）と
+一方、本 skeleton（v3.0.0-alpha.7 / Phase 6）は v2（`skills/aidlc` = `/aidlc`）と
 **共存**し、`marketplace.json` へ登録済み（`/aidlc-v3` 起動有効化済み）。
 そのため**現時点の起動表面は `/aidlc-v3`** であり、本 skeleton 内の
 手順・出力例は `/aidlc-v3` 表記を用いる（現状の共存を反映）。最終表面 `/aidlc` への
@@ -35,21 +36,24 @@ work item frontmatter への**明示的な状態書き込みから導出**する
 
 ## コマンド体系
 
-### フェーズコマンド（状態を進行させ、承認ゲートを持つ）
+### フェーズコマンド
+
+`define` / `develop` / `release` は状態を進行させ承認ゲートを持つ。`reflect` は例外で、**状態を変更せず
+（`state.json` 非変更）明示の承認ゲートを持たない**（任意実行 / 人間関与は Step 2 KPT 編集・Step 3 Issue 化確認）。
 
 | コマンド | 責務 | 旧フェーズ | 本 skeleton での扱い |
 |---------|------|-----------|--------------------|
 | `define` | 目的・スコープ・完了条件・作業単位（work item）を決める | Inception | `steps/define.md`（実在 / Unit 001 で実装） |
 | `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | `steps/develop.md`（実在 / `tiny` / `normal` / `risky`） |
 | `release` | main に安全に取り込む（PR 整備・merge） | Operations | `steps/release.md`（実在 / Step 1–4） |
-| `reflect` | 振り返り、改善 Issue を作る（任意実行） | Retrospective | 予約（後続 Phase で実装） |
+| `reflect` | 振り返り、改善 Issue を作る（任意実行 / state 非変更・ゲートなし） | Retrospective | `steps/reflect.md`（実在 / Unit 002 で実装） |
 
 ### 補助コマンド（状態を変更しない）
 
 | コマンド | 責務 | 本 skeleton での扱い |
 |---------|------|--------------------|
 | `status` | `state.json` + frontmatter からフェーズを導出し現在地・次アクションを表示（**読み取り専用**） | `steps/status.md`（実在 / Unit 001 で実装） |
-| `doctor` | config / git / gh / state / work-items / trace の問題を診断（**自動修正しない**） | 予約（後続 Phase で実装） |
+| `doctor` | config / state / cycle / work-items / git / gh / pr / scripts / parse-guard の問題を診断（**自動修正しない**） | `steps/doctor.md` + `scripts/doctor.sh`（実在 / Unit 003 で実装 / alpha.7 shallow scope。`[phase]` / `[trace]` は alpha.8 defer） |
 
 ### コマンド名規約（RFC DG-1）
 
@@ -112,6 +116,6 @@ v3 専用の rules 実体（`steps/rules.md` 等）は後続 Phase で追加す�
 `templates/work-item.md`、`steps/define.md`）。step ファイルからの単純相対参照
 （`steps/templates/...` のような解釈）は行わない。
 
-- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）
-- `templates/`: `intent.md` / `work-item.md` / `journal.md` / `release.md`（成果物テンプレート）
-- `steps/`: `define.md` / `status.md` / `develop.md` / `release.md`
+- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh` / `state-init.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）/ `lib/frontmatter.sh`（frontmatter パース安全境界）/ `doctor.sh`（環境診断 / 9 領域）
+- `templates/`: `intent.md` / `work-item.md` / `journal.md` / `release.md` / `reflect.md`（成果物テンプレート）
+- `steps/`: `define.md` / `status.md` / `develop.md` / `release.md` / `reflect.md` / `doctor.md`
