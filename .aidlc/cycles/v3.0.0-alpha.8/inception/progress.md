@@ -13,7 +13,7 @@
 
 ## 現在のステップ
 
-5. PRFAQ作成（04-stories-units ステップ5）→ 05-completion
+Inception Phase 完了。次は Construction Phase（`/aidlc construction`）。Unit 001（doctor [phase]/[trace] 実装 + 契約テスト）から着手。
 
 ## 完了済みステップ
 
@@ -21,6 +21,8 @@
 - 2. 既存コード分析（doctor.sh / data-model §5/§8/§9 / workflow §3.6 を精査）
 - 3. ユーザーストーリー作成（4 ストーリー / codex 2R / 中2 → resolved / auto_approved）
 - 4. Unit定義（2 Unit / dedup clean / codex 2R / 中2 → resolved / auto_approved）
+- 5. PRFAQ作成
+- 完了処理: Milestone v3.0.0-alpha.8 (#27) / #741 紐付け / decisions(DR-001/002) / squash(7→1) / Draft PR #742（base v3.0.0）
 
 ## サイクル情報
 
