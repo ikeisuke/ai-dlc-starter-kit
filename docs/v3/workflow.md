@@ -28,7 +28,7 @@ v3 のワークフローは、**4 つのフェーズコマンド**（`define` / 
 | `release` | フェーズコマンド | main に安全に取り込む（PR 整備・merge） | Operations |
 | `reflect` | フェーズコマンド（任意実行） | 振り返り、改善 Issue を作る | Retrospective |
 | `status` | 補助コマンド（**読み取り専用**） | state.json + frontmatter からフェーズを導出し現在地・次アクションを表示 | （v2 で preflight に内包） |
-| `doctor` | 補助コマンド（**診断**） | config / state / cycle / work-items / git / gh / pr / scripts の問題を診断（alpha.7 shallow scope。`[phase]` / `[trace]` は alpha.8 defer / §3.6 参照）（**自動修正しない**） | （v2 で preflight + recovery に分散） |
+| `doctor` | 補助コマンド（**診断**） | 11 領域（config / state / cycle / work-items / git / gh / pr / phase / trace / scripts / parse-guard）の問題を診断（§3.6 参照）（**自動修正しない**） | （v2 で preflight + recovery に分散） |
 
 フェーズコマンドは状態を進行させ承認ゲートを持つ。補助コマンドは状態を変更せず、フェーズ進行ゲートを持たない（`status` は読み取り専用、`doctor` は診断のみで自動修正しない）。`express` は独立コマンドではなくフェーズコマンドの連続実行ラッパである（§4）。
 
@@ -157,8 +157,9 @@ Suggested command: /aidlc define
 
 preflight と recovery を通常フローから分離した診断コマンド。**自動修正しない**（診断と推奨のみ）。
 
-**段階スコープ**: alpha.7 では shallow scope（8 領域 + `[parse-guard]`）を実装する。`[phase]` / `[trace]` は
-**alpha.8 の必須 follow-up** へ defer する（フェーズ導出 code 化・trace 整合チェックの実装は alpha.8）。
+**スコープ**: doctor は 11 領域（`config` / `state` / `cycle` / `work-items` / `git` / `gh` / `pr` /
+`phase` / `trace` / `scripts` / `parse-guard`）を診断する。alpha.7 で defer していた `[phase]` /
+`[trace]`（フェーズ導出 code 化・trace 整合チェック）は **alpha.8 で実装済み**。
 
 チェック項目:
 
@@ -171,33 +172,29 @@ preflight と recovery を通常フローから分離した診断コマンド。
 | `[git]` | git status（clean / dirty）（default branch / remote の診断は alpha.8+） | alpha.7 |
 | `[gh]` | gh auth status | alpha.7 |
 | `[pr]` | active PR の存在・状態確認 | alpha.7 |
+| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ / 導出規則の正本は `data-model.md` §5） | 実装済み |
+| `[trace]` | design 必須 work item と `designs/<id>-<slug>.md` の存在整合（要否の正本は `data-model.md` §8） | 実装済み |
 | `[scripts]` | 必須スクリプトの存在確認 | alpha.7 |
 | `[parse-guard]` | frontmatter パース禁止パターンの検出（`bin/check-frontmatter-parse-guard.sh` を wrap） | alpha.7 |
-| `[phase]` | フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ） | **alpha.8 defer** |
-| `[trace]` | trace chain の整合性（intent → work items → designs の参照チェック） | **alpha.8 defer** |
 
-出力例:
-
-alpha.7（shallow scope）の出力例:
+出力例（define_completed=true / develop シナリオ / 実出力形式は `doctor.sh` に準拠 / 正本は `steps/doctor.md`）:
 
 ```text
-[config]      OK
-[state]       OK (define_completed: true, release.merge_approved: false)
-[cycle]       OK
-[work-items]  OK 3 item(s) valid
-[git]         OK (clean)
-[gh]          OK (authenticated as user)
-[pr]          OK (PR #123, draft)
-[scripts]     OK
-[parse-guard] OK
+[config]      OK    rules.depth_level.level 取得 OK
+[state]       OK    state.json は valid
+[cycle]       OK    v3.0.0
+[work-items]  OK    3 item(s) valid
+[git]         OK    clean
+[gh]          OK    認証済み
+[pr]          OK    open PR: #123
+[phase]       OK    develop
+[trace]       OK    design 要否充足（3 item(s)）
+[scripts]     OK    8/8 present
+[parse-guard] OK    違反なし
 ```
 
-alpha.8 で追加予定（defer）:
-
-```text
-[phase]       develop (derived: define_completed=true, 2 items remaining)   # alpha.8
-[trace]       WARN: work_item 003 has no design file (size: normal, expected)  # alpha.8
-```
+`[phase]` は導出フェーズを表示する（`complete` は `merge_approved=true` かつ PR merged 確認成功時のみ /
+確認不能・矛盾は WARN）。`[trace]` は design 必須 work item に design ファイルが欠落していれば WARN。
 
 ---
 
