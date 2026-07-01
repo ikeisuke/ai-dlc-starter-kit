@@ -7,6 +7,22 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.8] - 2026-07-02
+
+AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）必須 follow-up。v3 診断コマンド `doctor`（`skills/aidlc-v3/scripts/doctor.sh`）に `[phase]`（フェーズ導出の整合診断）と `[trace]`（design 必須 work item の design ファイル存在診断）の 2 領域を追加し、shallow 9 領域から完全 11 領域へ拡張。read-only / 自動修正なしを維持。#741 をクローズ。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.8` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.8` に更新する。
+
+### Added
+
+- **doctor `[phase]` / `[trace]` 領域実装 + 契約テスト（#741）**: `doctor.sh` に `diagnose_phase`（`data-model.md §5.1` の first-match フェーズ導出を code 化し、導出フェーズと根拠を出力。`complete` は `release.merge_approved=true` かつ gh による read-only PR merged 確認成功時のみ導出、確認不能時はフォールバック + WARN 併記）と `diagnose_trace`（`data-model.md §8` の size×depth_level マトリクスで design 要否を判定し、design 必須 work item の `designs/<id>-<slug>.md` 存在を確認。欠落 / 不正組み合わせは WARN で exit 0 維持）を追加。両領域を順序実行ブロックに組み込み、9 領域 → 11 領域へ拡張。`test-doctor.sh` を各導出ケース・異常系 WARN 分岐・trace 各ケースで拡張（Unit 001 / ストーリー 1・2・3）
+
+### Changed
+
+- **doctor 完全診断の SoT ドキュメント反映（#741）**: `docs/v3/doctor.md` / `workflow.md` / `v3-renewal-plan.md` の doctor 診断領域記述を shallow 9 領域から完全 11 領域構成へ更新し、`[phase]` / `[trace]` の診断内容・severity・exit code 集約規則を SoT に反映（Unit 002）
+
+---
+
 ## [3.0.0-alpha.7] - 2026-06-29
 
 AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）。`skills/aidlc-v3` に reflect（振り返り）と doctor（診断）を実装し status を拡充して、`define → develop → release → reflect` の v3 単独フルサイクル完走を可能にする。あわせて #735（`squash-unit.sh` の複数 `--message` footgun）を修正し、alpha.4 で実装済みの #733 をクローズ。v2 (`skills/aidlc`) には非影響。
