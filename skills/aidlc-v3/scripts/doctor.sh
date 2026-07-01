@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# doctor.sh - v3 環境の診断（9 領域 / 診断のみ・自動修正しない）
+# doctor.sh - v3 環境の診断（11 領域 / 診断のみ・自動修正しない）
 #
-# v3 環境の 9 領域（config / state / cycle / work-items / git / gh / pr / scripts /
-# parse-guard）を順に診断し、各領域の severity（OK / WARN / ERROR / SKIP）を stdout に
-# 表示する。最後に総合 exit code を導出して終了する。
+# v3 環境の 11 領域（config / state / cycle / work-items / git / gh / pr / phase /
+# trace / scripts / parse-guard）を順に診断し、各領域の severity（OK / WARN / ERROR /
+# SKIP）を stdout に表示する。最後に総合 exit code を導出して終了する。
 #
 # 本スクリプトは **診断のみ** を行う:
 #   - state.json / work item / config を一切変更しない（read-only）。
@@ -29,6 +29,13 @@
 #   [git]         git status --porcelain clean→OK / dirty→WARN / repo 外→exit2
 #   [gh]          gh auth status 認証→OK / 未認証・gh 不在→WARN（[pr] を skip）
 #   [pr]          gh 不可→SKIP / open PR あり→OK（番号表示）/ 0件→OK（未作成）
+#   [phase]       data-model §5.1 first-match 導出（complete→define→develop→release 可能）。
+#                 state なし→OK（define フォールバック）/ work-items invalid→WARN /
+#                 complete は merge_approved=true + pr_number 非 null + gh で PR merged 確認成功時のみ→OK /
+#                 矛盾・確認不能（merge_approved×未 merged / define_completed 矛盾 等）→安全側導出 + WARN
+#   [trace]       data-model §8 size×depth_level で design 要否判定 + designs/<id>-<slug>.md 存在確認。
+#                 state/cycle/work-items 前提不足→SKIP / work-items invalid→WARN /
+#                 design 欠落・risky×minimal・depth_level enum 外→WARN（exit 0 維持）/ 充足→OK
 #   [scripts]     必須集合 全存在→OK / 欠落→ERROR
 #   [parse-guard] check-frontmatter-parse-guard.sh rc0→OK / rc1→ERROR / rc2→exit2
 #
@@ -68,6 +75,12 @@ readonly REQUIRED_SCRIPTS=(
     "work-item-status.sh"
     "lib/frontmatter.sh"
 )
+
+# frontmatter パーサ（[phase]/[trace] が work item の status/size を新規パースせず読むために source）。
+# 不在時は [scripts] が ERROR を出す。set -e 無効のため source 失敗しても継続し、[phase]/[trace]
+# 側が declare -f fm_scalar で不在を検知して WARN に degrade する（新規 grep/sed 禁止規約: frontmatter.sh:24-30）。
+# shellcheck source=lib/frontmatter.sh disable=SC1091
+[[ -f "$SCRIPT_DIR/lib/frontmatter.sh" ]] && . "$SCRIPT_DIR/lib/frontmatter.sh"
 
 # --- 総合 exit code 集計フラグ ---
 HAS_UNDIAGNOSABLE=0   # 2 系（診断不能）
@@ -192,7 +205,9 @@ diagnose_cycle() {
 # [work-items]
 # 前提ゲート（state・cycle・dir）を doctor 側で判定してから validator を呼ぶ。
 # dir 不在・0件は validator に渡さず WARN にする（validator はそれを rc1 にするため）。
+# ERROR（rc1/rc2）時は WORK_ITEMS_INVALID=1 を立て、後段 [phase]/[trace] のゲートに使う。
 # ============================================================
+WORK_ITEMS_INVALID=0
 diagnose_work_items() {
     if [[ "$STATE_PRESENT" -eq 0 ]]; then
         report work-items SKIP "（state なし / define 前）"
@@ -227,10 +242,12 @@ diagnose_work_items() {
         1)
             report work-items ERROR "work item の検証に失敗（schema 違反 / 詳細は work-item-validate.sh を直接実行）"
             HAS_ERROR=1
+            WORK_ITEMS_INVALID=1
             ;;
         *)
             report work-items ERROR "work-items ディレクトリ読み取りエラー（診断不能）"
             HAS_UNDIAGNOSABLE=1
+            WORK_ITEMS_INVALID=1
             ;;
     esac
 }
@@ -306,6 +323,196 @@ diagnose_pr() {
 }
 
 # ============================================================
+# [phase]
+# data-model.md §5.1 の first-match 導出（complete → define → develop → release 可能）。
+# 前段の STATE_PRESENT / CYCLE_DIR / WORK_ITEMS_INVALID / GH_AVAILABLE を参照する。
+# read-only。complete は merge_approved=true + pr_number 非 null + gh で PR merged 確認成功時のみ。
+# 矛盾・確認不能は安全側（define/develop 継続側）に倒して WARN（§6）。ERROR/診断不能は立てない。
+# ============================================================
+diagnose_phase() {
+    if ! declare -f fm_scalar >/dev/null 2>&1; then
+        report phase WARN "lib/frontmatter.sh 不在のため phase 判定不能"
+        return
+    fi
+    # work-items invalid ゲート（壊れた入力で導出しない）。
+    if [[ "$WORK_ITEMS_INVALID" -eq 1 ]]; then
+        report phase WARN "work item が invalid のため phase 導出不能（[work-items] を解消してください）"
+        return
+    fi
+    # state 不在 → define フォールバック（§5.1 評価順 2 / §6）。
+    if [[ "$STATE_PRESENT" -eq 0 ]]; then
+        report phase OK "define（state.json 不在 → define フォールバック）"
+        return
+    fi
+    # state フィールド取得（read-only / 欠落は空文字扱い = 安全側）。
+    local define_completed merge_approved pr_number warn_note=""
+    define_completed="$("$STATE_READ" define_completed "$STATE_FILE" 2>/dev/null)" || define_completed=""
+    merge_approved="$("$STATE_READ" release.merge_approved "$STATE_FILE" 2>/dev/null)" || merge_approved=""
+    pr_number="$("$STATE_READ" release.pr_number "$STATE_FILE" 2>/dev/null)" || pr_number=""
+
+    # work item status 集合の走査（done / withdrawn 以外を open とみなす）。
+    local has_open=0 has_done=0 wi_count=0
+    if [[ -n "$CYCLE_DIR" && -d "$CYCLE_DIR/work-items" ]]; then
+        shopt -s nullglob
+        local wi_files=("$CYCLE_DIR"/work-items/*.md)
+        shopt -u nullglob
+        local f fm st
+        for f in "${wi_files[@]}"; do
+            [[ -e "$f" ]] || continue
+            wi_count=$((wi_count + 1))
+            fm="$(fm_extract_block "$f")" || continue
+            st="$(fm_scalar "$fm" status)" || st=""
+            case "$st" in
+                done) has_done=1 ;;
+                withdrawn|"") : ;;
+                *) has_open=1 ;;
+            esac
+        done
+    fi
+
+    # 評価順 1: complete（merge_approved=true + pr_number が正整数 + PR merged 確認成功）。
+    # pr_number は既知 schema では integer/null だが、doctor は state 破損時も継続するため gh へ
+    # 渡す前に正整数を必須検証する（gh 引数注入余地の排除 / 不一致は complete 非導出 + WARN）。
+    if [[ "$merge_approved" == "true" ]]; then
+        if [[ "$pr_number" =~ ^[1-9][0-9]*$ && "$GH_AVAILABLE" -eq 1 ]]; then
+            local merged
+            merged="$(gh pr view "$pr_number" --json merged --jq '.merged' 2>/dev/null)" || merged=""
+            if [[ "$merged" == "true" ]]; then
+                report phase OK "complete（merge_approved=true + PR #${pr_number} merged）"
+                return
+            fi
+        fi
+        # complete 非導出（§6）。実フェーズを導出しつつ WARN 併記。
+        warn_note="merge_approved=true だが PR merged 未確認（pr_number 非正整数/gh 不可/未 merged）"
+    fi
+
+    # 評価順 2: define（define_completed != true / 取得不能）。
+    if [[ "$define_completed" != "true" ]]; then
+        if [[ "$has_done" -eq 1 ]]; then
+            report phase WARN "矛盾: define_completed!=true だが done の work item あり → 安全側 define 継続（§6）"
+            return
+        fi
+        if [[ -z "$define_completed" ]]; then
+            report phase WARN "define（define_completed 取得不能 → 安全側 define）"
+            return
+        fi
+        if [[ -n "$warn_note" ]]; then
+            report phase WARN "define（${warn_note}）"
+        else
+            report phase OK "define"
+        fi
+        return
+    fi
+
+    # define_completed == true。
+    # work item 集合を確認できない（cycle dir 未解決 / work-items 未作成 / 0 件）のに
+    # define_completed=true は矛盾。work item 全件を確認できない状態を release 可能扱いしない（§6 安全側）。
+    if [[ "$wi_count" -eq 0 ]]; then
+        report phase WARN "矛盾: define_completed=true だが work item を確認できず（0 件 / 未解決）→ phase 導出不能（[work-items] を確認 / §6）"
+        return
+    fi
+    # 評価順 3: develop（done/withdrawn 以外の work item がある）。
+    if [[ "$has_open" -eq 1 ]]; then
+        if [[ -n "$warn_note" ]]; then
+            report phase WARN "develop（${warn_note}）"
+        else
+            report phase OK "develop"
+        fi
+        return
+    fi
+    # 評価順 4: release 可能（全 work item が done/withdrawn）。
+    if [[ -n "$warn_note" ]]; then
+        report phase WARN "release 可能（${warn_note}）"
+    else
+        report phase OK "release 可能"
+    fi
+}
+
+# ============================================================
+# [trace]
+# data-model.md §8 の size×depth_level マトリクスで design 要否を判定し、design 必須 work item に
+# 対応する designs/<id>-<slug>.md の存在を確認する（read-only）。
+# 欠落 / risky×minimal / depth_level enum 外は WARN（exit 0 維持）。ERROR/診断不能は立てない。
+# size enum 不正は上流 work-item-validate が ERROR 化 → WORK_ITEMS_INVALID ゲートで捕捉済み。
+# ============================================================
+diagnose_trace() {
+    if ! declare -f fm_scalar >/dev/null 2>&1; then
+        report trace WARN "lib/frontmatter.sh 不在のため trace 判定不能"
+        return
+    fi
+    if [[ "$STATE_PRESENT" -eq 0 ]]; then
+        report trace SKIP "（state なし）"
+        return
+    fi
+    if [[ -z "$CYCLE_DIR" ]]; then
+        report trace SKIP "（cycle ディレクトリ未解決）"
+        return
+    fi
+    if [[ "$WORK_ITEMS_INVALID" -eq 1 ]]; then
+        report trace WARN "work item が invalid のため trace 判定不能（[work-items] を解消してください）"
+        return
+    fi
+    local wi_dir="$CYCLE_DIR/work-items"
+    if [[ ! -d "$wi_dir" ]]; then
+        report trace SKIP "（work-items 未作成）"
+        return
+    fi
+    shopt -s nullglob
+    local wi_files=("$wi_dir"/*.md)
+    shopt -u nullglob
+    if [[ "${#wi_files[@]}" -eq 0 ]]; then
+        report trace SKIP "（work item 0 件）"
+        return
+    fi
+    # depth_level 取得（rc1/rc2 → standard フォールバック / enum 外 → standard + WARN）。
+    local depth rc=0 warn_depth=0
+    depth="$("$READ_CONFIG" rules.depth_level.level 2>/dev/null)" || rc=$?
+    if [[ "$rc" -ne 0 || -z "$depth" ]]; then
+        depth="standard"
+    fi
+    case "$depth" in
+        minimal|standard|comprehensive) ;;
+        *) warn_depth=1; depth="standard" ;;
+    esac
+    # 各 work item の design 要否判定（design ファイルは work item と同じ basename）。
+    local designs_dir="$CYCLE_DIR/designs"
+    local f base fm size required invalid_combo checked=0
+    local missing_list="" invalid_list=""
+    for f in "${wi_files[@]}"; do
+        [[ -e "$f" ]] || continue
+        checked=$((checked + 1))
+        base="$(basename "$f")"
+        fm="$(fm_extract_block "$f")" || continue
+        size="$(fm_scalar "$fm" size)" || size=""
+        required=0
+        invalid_combo=0
+        case "$size" in
+            risky)
+                if [[ "$depth" == "minimal" ]]; then invalid_combo=1; else required=1; fi
+                ;;
+            normal)
+                if [[ "$depth" == "standard" || "$depth" == "comprehensive" ]]; then required=1; fi
+                ;;
+            *) : ;;  # tiny は design 不要 / size は上流 gate で valid 前提
+        esac
+        if [[ "$invalid_combo" -eq 1 ]]; then
+            invalid_list="$invalid_list $base"
+        elif [[ "$required" -eq 1 && ! -f "$designs_dir/$base" ]]; then
+            missing_list="$missing_list $base"
+        fi
+    done
+    if [[ -n "$missing_list" || -n "$invalid_list" || "$warn_depth" -eq 1 ]]; then
+        local detail="design 整合 WARN:"
+        [[ -n "$missing_list" ]] && detail="$detail design 欠落[${missing_list# }]"
+        [[ -n "$invalid_list" ]] && detail="$detail risky×minimal[${invalid_list# }]"
+        [[ "$warn_depth" -eq 1 ]] && detail="$detail depth_level enum 外→standard"
+        report trace WARN "$detail"
+    else
+        report trace OK "design 要否充足（${checked} item(s)）"
+    fi
+}
+
+# ============================================================
 # [scripts]
 # 必須集合の存在確認。全存在 → OK / 欠落 → ERROR。
 # ============================================================
@@ -352,7 +559,8 @@ diagnose_parse_guard() {
     esac
 }
 
-# --- 9 領域を順に診断 ---
+# --- 11 領域を順に診断 ---
+# [phase] は complete 確認で GH_AVAILABLE を参照するため diagnose_gh/diagnose_pr の後に配置する。
 diagnose_config
 diagnose_state
 diagnose_cycle
@@ -360,6 +568,8 @@ diagnose_work_items
 diagnose_git
 diagnose_gh
 diagnose_pr
+diagnose_phase
+diagnose_trace
 diagnose_scripts
 diagnose_parse_guard
 
