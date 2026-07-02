@@ -33,9 +33,10 @@
 #                 state なし→OK（define フォールバック）/ work-items invalid→WARN /
 #                 complete は merge_approved=true + pr_number 非 null + gh で PR merged 確認成功時のみ→OK /
 #                 矛盾・確認不能（merge_approved×未 merged / define_completed 矛盾 等）→安全側導出 + WARN
-#   [trace]       data-model §8 size×depth_level で design 要否判定 + designs/<id>-<slug>.md 存在確認。
+#   [trace]       data-model §8 size×depth_level で design 要否判定 + designs/<id>-<slug>.md 存在確認、
+#                 加えて trace chain 後段（intent.md 存在 / work item Traceability 健全性 / journal 整合）を検証。
 #                 state/cycle/work-items 前提不足→SKIP / work-items invalid→WARN /
-#                 design 欠落・risky×minimal・depth_level enum 外→WARN（exit 0 維持）/ 充足→OK
+#                 design 欠落・risky×minimal・depth_level enum 外・後段不備→WARN（exit 0 維持）/ 充足→OK
 #   [scripts]     必須集合 全存在→OK / 欠落→ERROR
 #   [parse-guard] check-frontmatter-parse-guard.sh rc0→OK / rc1→ERROR / rc2→exit2
 #
@@ -445,11 +446,64 @@ diagnose_phase() {
 # ============================================================
 # [trace]
 # data-model.md §8 の size×depth_level マトリクスで design 要否を判定し、design 必須 work item に
-# 対応する designs/<id>-<slug>.md の存在を確認する（read-only）。
-# 欠落 / risky×minimal / depth_level enum 外は WARN（exit 0 維持）。ERROR/診断不能は立てない。
+# 対応する designs/<id>-<slug>.md の存在を確認する（read-only）。加えて trace chain 後段の 3 検証
+# （intent.md 存在 / work item Traceability の健全性 / journal 整合）を行い、chain の破断を WARN 化する。
+# 欠落 / risky×minimal / depth_level enum 外 / 後段不備は WARN（exit 0 維持）。ERROR/診断不能は立てない。
 # size enum 不正は上流 work-item-validate が ERROR 化 → WORK_ITEMS_INVALID ゲートで捕捉済み。
 # state が構造検証未通過（STATE_DERIVABLE!=1）のときは cycle コンテキストが信頼できないため導出不能。
+# 本文（Traceability）解析は共有パーサ（fm_extract_body）+ bash 組込みのみで行い、raw grep/sed/awk を
+# 使わない（parse-guard 規約 / lib/frontmatter.sh:24-30）。
 # ============================================================
+
+# _trace_field_ok <val> : 値が空白除去後に非空、かつ {{ プレースホルダを含まないなら return 0。
+_trace_field_ok() {
+    local _v="$1"
+    _v="${_v#"${_v%%[![:space:]]*}"}"   # 先頭空白除去
+    _v="${_v%"${_v##*[![:space:]]}"}"   # 末尾空白除去
+    [[ -n "$_v" && "$_v" != *"{{"* ]]
+}
+
+# _trace_traceability_healthy <body> : 本文の ## Traceability セクション内の
+#   Intent refs: / Acceptance refs: / Verification: が 3 つとも健全（_trace_field_ok）なら return 0。
+#   1 つでも欠ければ return 1。raw grep/sed/awk 不使用（bash case / パラメータ展開のみ / parse-guard 回避）。
+#   開始条件は正規見出しの完全一致（`## Traceability`）に限定し、`## Traceability Notes` 等の別セクションを
+#   本物として集計しない。正規セクション再入時はフラグをリセットし、前段セクションの値で false OK にしない。
+_trace_traceability_healthy() {
+    local _body="$1" _line _in=0 _intent=0 _accept=0 _verify=0
+    while IFS= read -r _line; do
+        case "$_line" in
+            "## Traceability") _in=1; _intent=0; _accept=0; _verify=0; continue ;;  # 正規見出し完全一致 / 再入でリセット
+            "## "*) _in=0 ;;                                                        # 次の h2 見出しで区間終了（h3 ### は非該当）
+        esac
+        [[ "$_in" -eq 1 ]] || continue
+        case "$_line" in
+            *"Intent refs:"*)     _trace_field_ok "${_line#*Intent refs:}"     && _intent=1 ;;
+            *"Acceptance refs:"*) _trace_field_ok "${_line#*Acceptance refs:}" && _accept=1 ;;
+            *"Verification:"*)    _trace_field_ok "${_line#*Verification:}"    && _verify=1 ;;
+        esac
+    done <<< "$_body"
+    [[ "$_intent" -eq 1 && "$_accept" -eq 1 && "$_verify" -eq 1 ]]
+}
+
+# _trace_journal_has_record <journal_txt> <name> : journal 本文に develop 完了記録行
+#   （"- develop completed: <name>"）が値完全一致で存在すれば return 0。記録行から値を抽出して
+#   完全一致比較し、部分一致（001-foo が 001-foobar に誤マッチ）による記録漏れ見逃しを防ぐ。
+#   raw grep/sed/awk 不使用（bash case / パラメータ展開のみ / parse-guard 回避）。
+_trace_journal_has_record() {
+    local _txt="$1" _name="$2" _line _rec
+    while IFS= read -r _line; do
+        case "$_line" in
+            *"develop completed:"*)
+                _rec="${_line#*develop completed:}"
+                _rec="${_rec#"${_rec%%[![:space:]]*}"}"   # 先頭空白除去
+                _rec="${_rec%"${_rec##*[![:space:]]}"}"   # 末尾空白除去
+                [[ "$_rec" == "$_name" ]] && return 0
+                ;;
+        esac
+    done <<< "$_txt"
+    return 1
+}
+
 diagnose_trace() {
     if ! declare -f fm_scalar >/dev/null 2>&1; then
         report trace WARN "lib/frontmatter.sh 不在のため trace 判定不能"
@@ -494,16 +548,19 @@ diagnose_trace() {
         minimal|standard|comprehensive) ;;
         *) warn_depth=1; depth="standard" ;;
     esac
-    # 各 work item の design 要否判定（design ファイルは work item と同じ basename）。
+    # 各 work item の design 要否判定（design ファイルは work item と同じ basename）+
+    # 後段: Traceability 健全性 / done 集約（journal 整合用）。
     local designs_dir="$CYCLE_DIR/designs"
-    local f base fm size required invalid_combo checked=0
-    local missing_list="" invalid_list=""
+    local f base fm size st body required invalid_combo checked=0
+    local missing_list="" invalid_list="" trace_bad_list=""
+    local -a done_arr=()
     for f in "${wi_files[@]}"; do
         [[ -e "$f" ]] || continue
         checked=$((checked + 1))
         base="$(basename "$f")"
         fm="$(fm_extract_block "$f")" || continue
         size="$(fm_scalar "$fm" size)" || size=""
+        st="$(fm_scalar "$fm" status)" || st=""
         required=0
         invalid_combo=0
         case "$size" in
@@ -520,15 +577,46 @@ diagnose_trace() {
         elif [[ "$required" -eq 1 && ! -f "$designs_dir/$base" ]]; then
             missing_list="$missing_list $base"
         fi
+        # 後段: Traceability 健全性（本文 ## Traceability の必須 3 フィールド）。
+        body="$(fm_extract_body "$f")" || body=""
+        if ! _trace_traceability_healthy "$body"; then
+            trace_bad_list="$trace_bad_list $base"
+        fi
+        # 後段: done work item を集約（journal 整合検証で使用）。
+        [[ "$st" == "done" ]] && done_arr+=("$base")
     done
-    if [[ -n "$missing_list" || -n "$invalid_list" || "$warn_depth" -eq 1 ]]; then
-        local detail="design 整合 WARN:"
+    # 後段: intent.md 存在（define deliverable / 欠落は trace chain 破断）。
+    local intent_missing=0
+    [[ -f "$CYCLE_DIR/intent.md" ]] || intent_missing=1
+    # 後段: journal 整合（journal.md 存在 + done work item の記録確認）。
+    local journal_missing=0 journal_uncovered_list="" journal_txt="" d name
+    local journal_file="$CYCLE_DIR/journal.md"
+    if [[ -f "$journal_file" ]]; then
+        journal_txt="$(<"$journal_file")"
+        if [[ "${#done_arr[@]}" -gt 0 ]]; then
+            for d in "${done_arr[@]}"; do
+                name="${d%.md}"
+                _trace_journal_has_record "$journal_txt" "$name" || journal_uncovered_list="$journal_uncovered_list $d"
+            done
+        fi
+    else
+        journal_missing=1
+    fi
+    # 結果集約（design 要否 + 後段 3 検証 / いずれか非空なら単一 WARN / read-only・exit 0 維持）。
+    if [[ -n "$missing_list" || -n "$invalid_list" || "$warn_depth" -eq 1 \
+          || -n "$trace_bad_list" || "$intent_missing" -eq 1 \
+          || "$journal_missing" -eq 1 || -n "$journal_uncovered_list" ]]; then
+        local detail="trace 整合 WARN:"
         [[ -n "$missing_list" ]] && detail="$detail design 欠落[${missing_list# }]"
         [[ -n "$invalid_list" ]] && detail="$detail risky×minimal[${invalid_list# }]"
         [[ "$warn_depth" -eq 1 ]] && detail="$detail depth_level enum 外→standard"
+        [[ "$intent_missing" -eq 1 ]] && detail="$detail intent.md 欠落"
+        [[ -n "$trace_bad_list" ]] && detail="$detail Traceability 不備[${trace_bad_list# }]"
+        [[ "$journal_missing" -eq 1 ]] && detail="$detail journal.md 欠落"
+        [[ -n "$journal_uncovered_list" ]] && detail="$detail journal 未記録[${journal_uncovered_list# }]"
         report trace WARN "$detail"
     else
-        report trace OK "design 要否充足（${checked} item(s)）"
+        report trace OK "trace 整合 OK（design 要否 + intent/Traceability/journal 充足 / ${checked} item(s)）"
     fi
 }
 

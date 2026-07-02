@@ -160,7 +160,10 @@ scope
 
 ## Traceability
 
-- trace
+- Intent refs: scope:example
+- Acceptance refs: AC-001
+- Verification: test command
+- Release note required: no
 
 ## Size / Risk
 
@@ -170,6 +173,68 @@ size/risk
 
 none
 EOF
+}
+
+# Traceability フィールド値を指定して valid work item を生成する（[trace] 後段 Traceability 検証用）。
+#   make_work_item_trace <path> <id> <size> <status> <intent_val> <accept_val> <verify_val>
+# frontmatter・必須 6 セクションは work-item-validate valid を満たす。Traceability 3 フィールドのみ可変。
+make_work_item_trace() {
+    local path="$1" id="$2" size="$3" status="$4" iv="$5" av="$6" vv="$7"
+    cat > "$path" <<EOF
+---
+id: $id
+status: $status
+size: $size
+risk: low
+assigned: null
+dependencies: []
+---
+
+# work item $id
+
+## Goal
+
+goal
+
+## Scope
+
+scope
+
+## Acceptance Criteria
+
+- ac
+
+## Traceability
+
+- Intent refs: $iv
+- Acceptance refs: $av
+- Verification: $vv
+- Release note required: no
+
+## Size / Risk
+
+size/risk
+
+## Dependencies
+
+none
+EOF
+}
+
+# cycle メタ成果物（intent.md / journal.md）を seed する（[trace] 後段検証の充足用）。
+#   seed_cycle_meta <cycle_dir> [done_basename ...]
+# intent.md を作成し、journal.md に指定 done work item basename（.md 除去）の
+# develop completed 行を記録する（intent 存在 + journal 整合を満たす健全なメタ状態を作る）。
+seed_cycle_meta() {
+    local cycle_dir="$1"; shift
+    printf '%s\n' "# Intent" "" "目的" > "$cycle_dir/intent.md"
+    {
+        printf '%s\n' "# Journal" "" "## 2026-06-04" "" "- define completed"
+        local b
+        for b in "$@"; do
+            printf '%s\n' "- develop completed: ${b%.md}"
+        done
+    } > "$cycle_dir/journal.md"
 }
 
 # doctor を fixture 内で実行し、stdout を OUT / 終了コードを RC に格納する。
@@ -770,6 +835,7 @@ make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items" "$ROOT/.aidlc/cycles/v3.0.0/designs"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
 : > "$ROOT/.aidlc/cycles/v3.0.0/designs/001-foo.md"
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
 assert_area trace OK "design 必須 × 存在は [trace] OK"
@@ -780,6 +846,7 @@ mk trace_required_missing
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
 assert_area trace WARN "design 必須 × 欠落は [trace] WARN"
@@ -790,6 +857,7 @@ mk trace_not_required
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
 assert_area trace OK "tiny は design 不要で [trace] OK"
@@ -800,6 +868,7 @@ mk trace_comprehensive
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=comprehensive
 assert_area trace WARN "normal × comprehensive は design 必須（欠落で WARN）"
@@ -810,6 +879,7 @@ mk trace_risky_minimal
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 risky pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=minimal
 assert_area trace WARN "risky × minimal は [trace] WARN（不正組み合わせ）"
@@ -820,6 +890,7 @@ mk trace_depth_unset
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_RC=1
 assert_area trace WARN "depth_level 未設定は standard フォールバック（normal 欠落で WARN）"
@@ -830,6 +901,7 @@ mk trace_depth_enum_bad
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=deep
 assert_area trace WARN "depth_level enum 外は [trace] WARN（standard フォールバック + 警告）"
@@ -837,11 +909,154 @@ assert_area_detail trace "enum 外" "enum 外の警告根拠"
 assert_rc 0 "depth_level enum 外は総合 exit 0"
 
 # ------------------------------------------------------------
+echo "== [trace] 後段: intent 存在 / Traceability 健全性 / journal 整合 =="
+
+echo "-- 後段: intent.md 欠落 → WARN --"
+mk trace_intent_missing
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+rm -f "$ROOT/.aidlc/cycles/v3.0.0/intent.md"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "intent.md 欠落は [trace] WARN"
+assert_area_detail trace "intent.md 欠落" "intent 欠落の根拠"
+assert_rc 0 "intent.md 欠落は総合 exit 0"
+
+echo "-- 後段: Traceability プレースホルダ残存 → WARN --"
+mk trace_traceability_placeholder
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_work_item_trace "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending "{{scope:example}}" "AC-001" "test command"
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "Traceability プレースホルダ残存は [trace] WARN"
+assert_area_detail trace "Traceability 不備" "Traceability 不備の根拠"
+assert_rc 0 "Traceability 不備は総合 exit 0"
+
+echo "-- 後段: Traceability フィールド空 → WARN --"
+mk trace_traceability_empty
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_work_item_trace "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending "scope:x" "AC-001" ""
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "Traceability フィールド空は [trace] WARN"
+assert_rc 0 "Traceability フィールド空は総合 exit 0"
+
+echo "-- 後段: journal.md 欠落 → WARN --"
+mk trace_journal_missing
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+rm -f "$ROOT/.aidlc/cycles/v3.0.0/journal.md"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "journal.md 欠落は [trace] WARN"
+assert_area_detail trace "journal.md 欠落" "journal 欠落の根拠"
+assert_rc 0 "journal.md 欠落は総合 exit 0"
+
+echo "-- 後段: done work item が journal 未記録 → WARN --"
+mk trace_journal_uncovered
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "done work item の journal 未記録は [trace] WARN"
+assert_area_detail trace "journal 未記録" "journal 未記録の根拠"
+assert_rc 0 "journal 未記録は総合 exit 0"
+
+echo "-- 後段: すべて健全（done を journal 記録）→ OK --"
+mk trace_downstream_ok
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0" "001-foo.md"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace OK "後段すべて健全は [trace] OK"
+assert_rc 0 "後段健全は総合 exit 0"
+
+echo "-- 後段: ## Traceability Notes デコイ + 正規 Traceability 不備 → WARN（完全一致・リセット / codex#2） --"
+mk trace_traceability_notes_decoy
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+cat > "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" <<'EOF'
+---
+id: 001
+status: pending
+size: tiny
+risk: low
+assigned: null
+dependencies: []
+---
+
+# work item 001
+
+## Goal
+
+goal
+
+## Scope
+
+scope
+
+## Acceptance Criteria
+
+- ac
+
+## Traceability Notes
+
+- Intent refs: decoy-value
+- Acceptance refs: decoy-value
+- Verification: decoy-value
+
+## Traceability
+
+- Intent refs: {{unfilled}}
+- Acceptance refs: AC-1
+- Verification: check
+
+## Size / Risk
+
+size/risk
+
+## Dependencies
+
+none
+EOF
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "Traceability Notes デコイ後の正規セクション不備は [trace] WARN"
+assert_area_detail trace "Traceability 不備" "デコイに惑わされず正規セクションで不備検出"
+assert_rc 0 "デコイ + 正規不備は総合 exit 0"
+
+echo "-- 後段: journal に類似名記録のみ → done 未記録として WARN（完全一致 / codex#1） --"
+mk trace_journal_partial
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0" "001-foobar.md"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "類似名記録のみは done 未記録として [trace] WARN（完全一致）"
+assert_area_detail trace "journal 未記録" "部分一致で誤検出せず未記録判定"
+assert_rc 0 "類似名記録のみは総合 exit 0"
+
+# ------------------------------------------------------------
 echo "== 全領域 OK 正常系 → exit 0 =="
 mk all_ok
 make_valid_state "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001
+seed_cycle_meta "$ROOT/.aidlc/cycles/v3.0.0"
 install_gh_stub "$ROOT" 0 "7"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_RC=0 DOCTOR_TEST_PARSEGUARD_RC=0
