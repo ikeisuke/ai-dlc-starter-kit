@@ -734,6 +734,33 @@ assert_area phase WARN "size enum 不正で [phase] WARN（ゲート）"
 assert_area trace WARN "size enum 不正で [trace] WARN（ゲート）"
 assert_rc 1 "size enum 不正は総合 exit 1"
 
+echo "-- 領域間ゲート: state invalid（破損/schema 不正）→ [state] ERROR + [phase]/[trace] WARN + exit 1（codex premerge / STATE_DERIVABLE gate） --"
+mk phase_state_invalid_gate
+make_valid_state "$ROOT/.aidlc/state.json"
+# schema_version を削除 → state-validate rc1（invalid）だが define_completed 等は読める状態にする。
+# 修正前は [phase] が破損 state から OK define を導出してしまう（[state] ERROR と矛盾）。
+jq 'del(.schema_version)' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area state ERROR "schema_version 欠落は [state] ERROR"
+assert_area phase WARN "state invalid で [phase] WARN（STATE_DERIVABLE ゲート / 破損 state から phase 導出しない）"
+assert_area trace WARN "state invalid で [trace] WARN（STATE_DERIVABLE ゲート）"
+assert_rc 1 "state invalid は総合 exit 1（state ERROR）"
+
+echo "-- 領域間ゲート: 未対応 schema_version（warn:*）→ [state] WARN + [phase]/[trace] WARN + exit 0（codex premerge R2 / STATE_DERIVABLE gate） --"
+mk phase_state_unsupported_schema_gate
+make_valid_state "$ROOT/.aidlc/state.json"
+# 未対応 schema_version（構造検証は短絡）→ state WARN。define_completed 等は読めるが構造未保証のため導出不可。
+jq '.schema_version = "9.9"' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area state WARN "未対応 schema_version は [state] WARN"
+assert_area phase WARN "未対応 schema で [phase] WARN（STATE_DERIVABLE ゲート / 未検証 schema から導出しない）"
+assert_area trace WARN "未対応 schema で [trace] WARN（STATE_DERIVABLE ゲート）"
+assert_rc 0 "未対応 schema_version は総合 exit 0（ERROR ではない）"
+
 # ------------------------------------------------------------
 echo "== [trace]: design 要否整合（data-model §8 size×depth_level） =="
 

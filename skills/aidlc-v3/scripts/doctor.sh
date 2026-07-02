@@ -132,8 +132,13 @@ diagnose_config() {
 # state.json 不在 → WARN。あり → state-validate.sh の stdout prefix で分岐
 # （rc だけで判定しない: warn:* は rc0 のため）。
 # 戻り値で「state あり/なし」を後続領域へ伝える: 0=state あり / 1=state なし。
+# STATE_DERIVABLE: state.json が構造検証を通過した（status:valid）ことを後続領域へ伝える。
+#   status:valid のときのみ 1。ERROR（破損/schema 不正）・診断不能・未対応 schema_version（warn:*）は
+#   構造が保証されないため 0 のまま。[work-items] の WORK_ITEMS_INVALID と対称の「導出可否ゲート」で、
+#   state フィールドを消費する [phase] / [trace] が未検証 state から phase/design を導出するのを防ぐ。
 # ============================================================
 STATE_PRESENT=0
+STATE_DERIVABLE=0
 diagnose_state() {
     if [[ ! -f "$STATE_FILE" ]]; then
         report state WARN "No active cycle（/aidlc-v3 define で開始）"
@@ -151,8 +156,10 @@ diagnose_state() {
     case "$out" in
         status:valid)
             report state OK "state.json は valid"
+            STATE_DERIVABLE=1
             ;;
         status:warn:*)
+            # 未対応 schema_version は構造検証前に短絡（exit 0 / WARN）。構造未保証のため導出不可。
             report state WARN "未対応 schema_version（migration / 手動対応が必要 / data-model.md §6）"
             ;;
         *)
@@ -325,13 +332,20 @@ diagnose_pr() {
 # ============================================================
 # [phase]
 # data-model.md §5.1 の first-match 導出（complete → define → develop → release 可能）。
-# 前段の STATE_PRESENT / CYCLE_DIR / WORK_ITEMS_INVALID / GH_AVAILABLE を参照する。
+# 前段の STATE_PRESENT / STATE_DERIVABLE / CYCLE_DIR / WORK_ITEMS_INVALID / GH_AVAILABLE を参照する。
 # read-only。complete は merge_approved=true + pr_number 非 null + gh で PR merged 確認成功時のみ。
 # 矛盾・確認不能は安全側（define/develop 継続側）に倒して WARN（§6）。ERROR/診断不能は立てない。
 # ============================================================
 diagnose_phase() {
     if ! declare -f fm_scalar >/dev/null 2>&1; then
         report phase WARN "lib/frontmatter.sh 不在のため phase 判定不能"
+        return
+    fi
+    # state 導出可否ゲート（state はあるが構造検証未通過 = 破損/schema 不正/未対応 schema_version）。
+    # WORK_ITEMS_INVALID と対称。state フィールドが読めても値の意味が保証されないため phase を導出しない。
+    # state 不在（STATE_PRESENT=0）は define フォールバックの正常系なので本ゲート対象外（後続で処理）。
+    if [[ "$STATE_PRESENT" -eq 1 && "$STATE_DERIVABLE" -ne 1 ]]; then
+        report phase WARN "state.json が構造検証未通過（破損 / 未対応 schema）のため phase 導出不能（[state] を解消してください）"
         return
     fi
     # work-items invalid ゲート（壊れた入力で導出しない）。
@@ -434,6 +448,7 @@ diagnose_phase() {
 # 対応する designs/<id>-<slug>.md の存在を確認する（read-only）。
 # 欠落 / risky×minimal / depth_level enum 外は WARN（exit 0 維持）。ERROR/診断不能は立てない。
 # size enum 不正は上流 work-item-validate が ERROR 化 → WORK_ITEMS_INVALID ゲートで捕捉済み。
+# state が構造検証未通過（STATE_DERIVABLE!=1）のときは cycle コンテキストが信頼できないため導出不能。
 # ============================================================
 diagnose_trace() {
     if ! declare -f fm_scalar >/dev/null 2>&1; then
@@ -442,6 +457,11 @@ diagnose_trace() {
     fi
     if [[ "$STATE_PRESENT" -eq 0 ]]; then
         report trace SKIP "（state なし）"
+        return
+    fi
+    # state 導出可否ゲート（[phase] と対称 / 構造検証未通過の state からは trace 判定しない）。
+    if [[ "$STATE_DERIVABLE" -ne 1 ]]; then
+        report trace WARN "state.json が構造検証未通過（破損 / 未対応 schema）のため trace 判定不能（[state] を解消してください）"
         return
     fi
     if [[ -z "$CYCLE_DIR" ]]; then

@@ -9,3 +9,28 @@
   - `.aidlc/cycles/v3.0.0-alpha.8/operations/post_release_operations.md`
 
 ---
+## 2026-07-02T09:13:20+09:00
+
+- **フェーズ**: Operations Phase
+- **ステップ**: PRマージ前レビュー（reviewing-operations-premerge / codex）
+- **実行内容**: PR #742 マージ前レビュー（reviewing-operations-premerge / focus: code, security / codex）完了。3 round で resolve。
+
+- Round 1（指摘 1 件 / P2 medium）: doctor.sh `diagnose_phase` が `[state] ERROR`（破損/schema 不正）でも state フィールドを読み OK phase を導出しうる（state invalid gate 欠如）。→ サブエージェントで実バグと検証。
+- Round 2（指摘 1 件 / P2 medium）: 未対応 schema_version（`status:warn:*`）でも phase/trace が未検証 schema から導出しうる。→ ERROR のみのゲートでは不足。
+- Round 3（指摘 0 件 / clean）: 修正確認。No actionable correctness issues。
+
+対応: `STATE_DERIVABLE`（`status:valid` のときのみ 1）を導入し、構造検証未通過（破損/schema 不正/未対応 schema_version）の state からは `[phase]`/`[trace]` を導出しない対称ゲートを追加。契約テスト 5 件追加（139 PASS / shellcheck clean）。修正コミット 6f6571ba。
+
+---
+
+## Round 3: 2026-07-02 09:13:20
+
+| 項目 | 値 |
+|------|-----|
+| 指摘総数 | 2 |
+| 重要度: critical | 0 |
+| 重要度: high | 0 |
+| 重要度: medium | 2 |
+| 重要度: low | 0 |
+| 修正対応 | 2 |
+| defer 化 | 0 |
