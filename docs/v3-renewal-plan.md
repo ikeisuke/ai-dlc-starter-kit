@@ -902,7 +902,7 @@ Suggested command: /aidlc define
 
 チェック項目:
 
-**段階スコープ**: alpha.7 = shallow scope（8 領域 + `[parse-guard]`）。`[phase]` / `[trace]` は alpha.8 必須 follow-up へ defer。
+**スコープ**: doctor は 11 領域を診断する（alpha.7 で defer していた `[phase]` / `[trace]` は alpha.8 で実装済み）。
 
 ```text
 [config]      .aidlc/config.toml 存在 + 必須キー確認                              # alpha.7
@@ -912,36 +912,31 @@ Suggested command: /aidlc define
 [git]         git status (clean/dirty)（default branch / remote は alpha.8+）     # alpha.7
 [gh]          gh auth status                                                    # alpha.7
 [pr]          active PR の存在・状態確認                                          # alpha.7
+[phase]       フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ / 正本 data-model §5）   # alpha.8 実装済み
+[trace]       design 必須 work item と designs/<id>-<slug>.md の存在整合（正本 data-model §8）  # alpha.8 実装済み
 [scripts]     必須スクリプトの存在確認                                            # alpha.7
 [parse-guard] frontmatter パース禁止パターン検出（bin/check-frontmatter-parse-guard.sh wrap）  # alpha.7
-[phase]       フェーズ導出結果の表示（state.json + frontmatter → 導出フェーズ）   # alpha.8 defer
-[trace]       trace chain の整合性（intent → work items → designs の参照チェック）  # alpha.8 defer
 ```
 
 doctor は修正を自動実行しない。診断と推奨だけ出す。
 
-出力例（alpha.7 / shallow scope）:
+出力例（define_completed=true / develop シナリオ / 実出力形式は `doctor.sh` 準拠 / 正本は `skills/aidlc-v3/steps/doctor.md`）:
 
 ```text
-[config]      OK
-[state]       OK (define_completed: true, release.merge_approved: false)
-[cycle]       OK
-[work-items]  OK 3 item(s) valid
-[git]         OK (clean)
-[gh]          OK (authenticated as user)
-[pr]          OK (PR #123, draft)
-[scripts]     OK
-[parse-guard] OK
+[config]      OK    rules.depth_level.level 取得 OK
+[state]       OK    state.json は valid
+[cycle]       OK    v3.0.0
+[work-items]  OK    3 item(s) valid
+[git]         OK    clean
+[gh]          OK    認証済み
+[pr]          OK    open PR: #123
+[phase]       OK    develop
+[trace]       OK    design 要否充足（3 item(s)）
+[scripts]     OK    8/8 present
+[parse-guard] OK    違反なし
 
 Recommendations:
   1. Continue: /aidlc develop
-```
-
-alpha.8 で追加予定（defer）:
-
-```text
-[phase]       develop (derived: define_completed=true, 2 items remaining)   # alpha.8
-[trace]       WARN: work_item 003 has no design file (size: normal, expected)  # alpha.8
 ```
 
 ---
@@ -1089,7 +1084,7 @@ aidlc-migrate スキルが以下を実行:
 
 - Try を必要な分だけ Issue 化できる
 - mirror なしで完結する
-- doctor が alpha.7 の shallow scope（8 領域 + `[parse-guard]`）を診断できる（`[phase]` / `[trace]` は alpha.8 必須 follow-up へ defer）
+- doctor が 11 領域（config / state / cycle / work-items / git / gh / pr / `[phase]` / `[trace]` / scripts / parse-guard）を診断できる
 - status が正しい現在地を表示する
 
 ### Phase 7: dogfooding + 本流化（1-2 サイクル）

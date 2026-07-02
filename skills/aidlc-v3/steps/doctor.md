@@ -1,8 +1,8 @@
 # doctor 出力仕様（環境診断）
 
-> **位置づけ（v3.0.0-alpha.7 / Phase 6）**: 本ファイルは doctor コマンドの**出力仕様**である。
-> 実行実装は `scripts/doctor.sh`。doctor は v3 環境の 9 領域を診断し、各領域の
-> severity（OK / WARN / ERROR / SKIP）を表示して総合終了コードを返す。
+> **位置づけ（Phase 6 / doctor v1 = alpha.7 の 9 領域 → alpha.8 で `[phase]` / `[trace]` を追加し 11 領域完全診断）**:
+> 本ファイルは doctor コマンドの**出力仕様**である。実行実装は `scripts/doctor.sh`。doctor は v3 環境の
+> 11 領域を診断し、各領域の severity（OK / WARN / ERROR / SKIP）を表示して総合終了コードを返す。
 >
 > **診断のみ（重要）**: doctor は問題を検出・案内するが、**状態を変更せず・自動修正しない**
 > （`state.json` / work item / config を書き換えない / read-only）。検出した問題の解決は
@@ -23,9 +23,9 @@ v3 環境が健全かを「既存の安全境界スクリプトの wrap + 軽診
 `.aidlc/cycles/<cycle>/`）。`[config]` は `skills/aidlc/scripts/read-config.sh` を、
 `[parse-guard]` は `bin/check-frontmatter-parse-guard.sh` を wrap する。
 
-## 診断領域（9 領域 / alpha.7 = shallow scope）
+## 診断領域（11 領域）
 
-doctor は以下 9 領域を順に診断する。各 severity の意味:
+doctor は以下 11 領域を順に診断する。各 severity の意味:
 
 - **OK**: 健全。
 - **WARN**: 問題の可能性はあるが失敗ではない（未開始・未認証・未コミット 等）。総合 exit に影響しない。
@@ -41,6 +41,8 @@ doctor は以下 9 領域を順に診断する。各 severity の意味:
 | `[git]` | `git status --porcelain` | clean→OK / dirty→**WARN** / repo 外→**ERROR**（診断不能） |
 | `[gh]` | `gh auth status` | 認証→OK / 未認証・gh 不在→**WARN**（`[pr]` を skip） |
 | `[pr]` | `gh pr list`（gh 可用時のみ） | gh 不可→**SKIP** / open PR あり→OK（番号表示）/ 0 件→OK（未作成） |
+| `[phase]` | 導出フェーズの表示（導出規則の正本は `data-model.md §5`）。`complete` は PR merged 確認を要する | state なし→OK（define フォールバック）/ work-items invalid→**WARN** / 導出成功→OK / 矛盾・確認不能（`merge_approved`×PR 未 merged 等）→**WARN** |
+| `[trace]` | design 必須 work item と `designs/<id>-<slug>.md` の存在整合（要否の正本は `data-model.md §8`） | state/cycle/work-items 前提不足→**SKIP** / work-items invalid→**WARN** / 充足→OK / design 欠落・`risky×minimal`・depth_level enum 外→**WARN**（exit 0 維持） |
 | `[scripts]` | 必須スクリプト集合の存在（`[[ -f ]]`） | 全存在→OK / 欠落→**ERROR** |
 | `[parse-guard]` | `bin/check-frontmatter-parse-guard.sh` | スクリプト不在→**SKIP**（opt-in シグナル / consumer 想定）/ rc0→OK / rc1→**ERROR** / rc2→ERROR（診断不能） |
 
@@ -95,16 +97,31 @@ doctor は先頭で jq の存在を確認し、欠落していれば診断不能
 [git]         OK    clean
 [gh]          WARN  未認証（gh auth status を確認 / [pr] を skip）
 [pr]          SKIP  （gh 不可用）
+[phase]       OK    define（state.json 不在 → define フォールバック）
+[trace]       SKIP  （state なし）
 [scripts]     OK    8/8 present
 [parse-guard] OK    違反なし
 ```
 
-## alpha.8 defer（本 Unit では未実装）
+## `[phase]` / `[trace]`（v3.0.0-alpha.8 で実装済み）
 
-以下 2 領域は **v3.0.0-alpha.8 へ defer** する（alpha.7 の doctor では診断しない）:
+以下 2 領域は **v3.0.0-alpha.8 で実装済み**（alpha.7 で defer していた必須 follow-up を解消し、
+doctor を 11 領域の完全診断とした）:
 
-- **`[phase]`**: フェーズ導出（define → develop → release → complete）の code 化による整合診断。
-- **`[trace]`**: intent → work items → designs のトレーサビリティ整合チェック。
+- **`[phase]`**: フェーズ導出（define → develop → release 可能 → complete）の整合診断。導出規則の
+  正本は `docs/v3/data-model.md` §5（first-match）。doctor は導出結果を表示し、矛盾（`define_completed`
+  と work item status の不整合等）・確認不能（`merge_approved=true` だが PR merged 未確認）は安全側に
+  倒して WARN で報告する（read-only / 自動修正しない）。
+- **`[trace]`**: design 必須 work item に対応する `designs/<id>-<slug>.md` の存在整合。design 要否の
+  正本は `docs/v3/data-model.md` §8（size × depth_level）。欠落・`risky × minimal`・depth_level enum 外は
+  WARN（exit 0 維持）。
 
-alpha.7 の doctor は shallow scope（上記 9 領域）に限定し、`[phase]` / `[trace]` は alpha.8 の
-follow-up で追加する。フェーズ導出の正本は `docs/v3/data-model.md` §5 を参照。
+### `[trace]` と `[work-items]` の役割分担
+
+両領域は work item を対象とするが責務が異なる:
+
+- **`[work-items]`**: work item frontmatter の **schema 検証**（必須キー・enum 値域・id 整合・依存実在
+  等 / `work-item-validate.sh` wrap）。破損は ERROR（総合 exit 1）。
+- **`[trace]`**: schema が valid な work item に対する **design トレーサビリティ整合**（size × depth_level の
+  design 要否と design ファイル存在）。欠落等は WARN（exit 0）。work item が invalid（`[work-items]` ERROR）
+  の場合、`[trace]` は壊れた入力で判定せず WARN（判定不能）に倒す。

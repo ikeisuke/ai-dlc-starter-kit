@@ -84,11 +84,13 @@ build_fixture() {
     chmod +x "$v3"/*.sh
 
     # read-config.sh 契約 stub（rc を DOCTOR_TEST_READCONFIG_RC で制御 / rc0 は値を出力）。
+    # 出力値は DOCTOR_TEST_READCONFIG_OUT で制御（既定 standard = 有効 depth_level enum）。
+    # [trace] の depth_level enum 検証テストで enum 外値（例 deep）を注入するために可変化する。
     cat > "$aidlc/read-config.sh" <<'STUB'
 #!/usr/bin/env bash
 rc="${DOCTOR_TEST_READCONFIG_RC:-0}"
 if [ "$rc" -eq 0 ]; then
-    echo "deep"
+    echo "${DOCTOR_TEST_READCONFIG_OUT:-standard}"
 fi
 exit "$rc"
 STUB
@@ -127,13 +129,16 @@ JSON
 }
 
 # 有効な work item を生成する（work-item-validate.sh が status:valid を返す最小構成）。
+#   make_valid_work_item <path> <id> [size] [status]
+#   size 既定 tiny / status 既定 pending（既存呼び出しは 2 引数のまま従来動作）。
+#   [phase]（status 別導出）/ [trace]（size 別 design 要否）テスト用に size/status を可変化。
 make_valid_work_item() {
-    local path="$1" id="$2"
+    local path="$1" id="$2" size="${3:-tiny}" status="${4:-pending}"
     cat > "$path" <<EOF
 ---
 id: $id
-status: pending
-size: tiny
+status: $status
+size: $size
 risk: low
 assigned: null
 dependencies: []
@@ -248,6 +253,52 @@ case "\$1" in
 esac
 STUB
     chmod +x "$root/bin/gh"
+}
+
+# gh stub（[phase] complete 確認用 / auth + pr list + pr view --json merged を制御）。
+#   install_gh_stub_full <root> <auth_rc> <pr_numbers> <pr_view_merged>
+#     pr_view_merged: `gh pr view <n> --json merged --jq '.merged'` が返す値（true/false 等）
+install_gh_stub_full() {
+    local root="$1" auth_rc="$2" pr_numbers="$3" pr_view_merged="$4"
+    cat > "$root/bin/gh" <<STUB
+#!/usr/bin/env bash
+case "\$1" in
+  auth)
+    exit $auth_rc
+    ;;
+  pr)
+    if [ "\$2" = "view" ]; then
+      # gh pr view <n> --json merged --jq '.merged'
+      echo "$pr_view_merged"
+      exit 0
+    fi
+    # gh pr list --state open --json number --jq '...'
+    echo "$pr_numbers"
+    exit 0
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+STUB
+    chmod +x "$root/bin/gh"
+}
+
+# 領域行の detail（severity より後ろ）に部分文字列が含まれるか検証する（[phase] 導出根拠検証用）。
+#   assert_area_detail <area> <substring> <desc>
+assert_area_detail() {
+    local area="$1" substr="$2" desc="$3"
+    local line
+    line="$(printf '%s\n' "$OUT" | grep -E "^\[$area\][[:space:]]")"
+    if [[ -z "$line" ]]; then
+        fail "${desc}（領域 [$area] の行が出力にない）"
+        return
+    fi
+    if [[ "$line" == *"$substr"* ]]; then
+        pass "${desc}（[$area] detail に '$substr' を含む）"
+    else
+        fail "${desc}（[$area] detail に '$substr' を含まない / line='$line'）"
+    fi
 }
 
 # gh を含まない最小 PATH bin を構築する（[gh] の command -v gh 不在分岐を再現）。
@@ -505,6 +556,287 @@ assert_area config ERROR "config あり + rc2（dasel 不在）は [config] ERRO
 assert_rc 2 "dasel 不在（依存不足）は総合 exit 2"
 
 # ------------------------------------------------------------
+echo "== [phase]: フェーズ導出（data-model §5.1 first-match） =="
+
+echo "-- state 不在 → [phase] OK（define フォールバック） --"
+mk phase_no_state
+install_gh_stub "$ROOT" 0 ""
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase OK "state 不在は [phase] OK（define フォールバック）"
+assert_area_detail phase "define" "state 不在の [phase] 根拠が define"
+assert_rc 0 "state 不在の [phase] は総合 exit 0"
+
+echo "-- define_completed=false + pending → [phase] OK（define） --"
+mk phase_define
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase OK "define_completed=false は [phase] OK（define）"
+assert_area_detail phase "define" "define_completed=false の [phase] 根拠が define"
+assert_rc 0 "define の [phase] は総合 exit 0"
+
+echo "-- define_completed=true + 未完了 work item → [phase] OK（develop） --"
+mk phase_develop
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase OK "define_completed=true + 未完了は [phase] OK（develop）"
+assert_area_detail phase "develop" "develop 導出の根拠"
+assert_rc 0 "develop の [phase] は総合 exit 0"
+
+echo "-- define_completed=true + 全 done → [phase] OK（release 可能） --"
+mk phase_release
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase OK "全 done は [phase] OK（release 可能）"
+assert_area_detail phase "release 可能" "release 可能 導出の根拠"
+assert_rc 0 "release 可能の [phase] は総合 exit 0"
+
+echo "-- complete（merge_approved=true + pr_number + gh merged）→ [phase] OK（complete） --"
+mk phase_complete
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true | .release.merge_approved = true | .release.pr_number = 42' \
+    "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+install_gh_stub_full "$ROOT" 0 "42" "true"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase OK "merge_approved + PR merged は [phase] OK（complete）"
+assert_area_detail phase "complete" "complete 導出の根拠"
+assert_rc 0 "complete の [phase] は総合 exit 0"
+
+echo "-- 異常: merge_approved=true × PR 未 merged → [phase] WARN（complete 非導出） --"
+mk phase_merge_unmerged
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true | .release.merge_approved = true | .release.pr_number = 42' \
+    "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+install_gh_stub_full "$ROOT" 0 "42" "false"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase WARN "merge_approved=true × 未 merged は [phase] WARN"
+assert_rc 0 "merge_approved × 未 merged は総合 exit 0"
+
+echo "-- 異常: merge_approved=true × pr_number=null → [phase] WARN --"
+mk phase_merge_nullpr
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true | .release.merge_approved = true' \
+    "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+install_gh_stub_full "$ROOT" 0 "" "false"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase WARN "merge_approved=true × pr_number=null は [phase] WARN"
+assert_rc 0 "merge_approved × pr_number=null は総合 exit 0"
+
+echo "-- 異常: merge_approved=true × pr_number=0（不正 PR 番号）→ [phase] WARN --"
+mk phase_merge_pr_zero
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true | .release.merge_approved = true | .release.pr_number = 0' \
+    "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+install_gh_stub_full "$ROOT" 0 "" "true"   # gh は使われない（pr_number=0 で検証弾き）
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase WARN "merge_approved=true × pr_number=0 は [phase] WARN（0 は不正 PR 番号）"
+assert_rc 0 "merge_approved × pr_number=0 は総合 exit 0"
+
+echo "-- 異常: merge_approved=true × gh 不可（未認証）→ [phase] WARN --"
+mk phase_merge_gh_unavail
+make_valid_state "$ROOT/.aidlc/state.json"
+jq '.define_completed = true | .release.merge_approved = true | .release.pr_number = 42' \
+    "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+install_gh_stub_full "$ROOT" 1 "42" "true"   # auth rc1 → GH_AVAILABLE=0（complete 確認不能）
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase WARN "merge_approved=true × gh 不可は [phase] WARN（complete 確認不能）"
+assert_rc 0 "merge_approved × gh 不可は総合 exit 0"
+
+echo "-- 異常: define_completed=false × done work item 矛盾 → [phase] WARN（安全側 define） --"
+mk phase_contradiction
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area phase WARN "define_completed=false × done は [phase] WARN（矛盾/安全側 define）"
+assert_area_detail phase "define" "矛盾時も define 側へ倒す"
+assert_rc 0 "矛盾は総合 exit 0"
+
+echo "-- 領域間ゲート: work item invalid → [phase] WARN + [trace] WARN + exit 1（レビュー#3） --"
+mk phase_trace_gate
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+# 必須キー欠落（status なし）で work-item-validate rc1 → work-items ERROR → WORK_ITEMS_INVALID=1。
+cat > "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-bad.md" <<'EOF'
+---
+id: 001
+size: tiny
+risk: low
+assigned: null
+dependencies: []
+---
+
+# bad
+
+## Goal
+g
+## Scope
+s
+## Acceptance Criteria
+a
+## Traceability
+t
+## Size / Risk
+sr
+## Dependencies
+d
+EOF
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area work-items ERROR "invalid work item は [work-items] ERROR"
+assert_area phase WARN "work item invalid で [phase] WARN（ゲート）"
+assert_area trace WARN "work item invalid で [trace] WARN（ゲート）"
+assert_rc 1 "work item invalid は総合 exit 1（work-items ERROR）"
+
+echo "-- size enum 不正 → [work-items] ERROR + [phase]/[trace] WARN + exit 1（レビュー#3） --"
+mk phase_trace_size_bad
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 huge pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area work-items ERROR "size enum 不正は [work-items] ERROR"
+assert_area phase WARN "size enum 不正で [phase] WARN（ゲート）"
+assert_area trace WARN "size enum 不正で [trace] WARN（ゲート）"
+assert_rc 1 "size enum 不正は総合 exit 1"
+
+echo "-- 領域間ゲート: state invalid（破損/schema 不正）→ [state] ERROR + [phase]/[trace] WARN + exit 1（codex premerge / STATE_DERIVABLE gate） --"
+mk phase_state_invalid_gate
+make_valid_state "$ROOT/.aidlc/state.json"
+# schema_version を削除 → state-validate rc1（invalid）だが define_completed 等は読める状態にする。
+# 修正前は [phase] が破損 state から OK define を導出してしまう（[state] ERROR と矛盾）。
+jq 'del(.schema_version)' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area state ERROR "schema_version 欠落は [state] ERROR"
+assert_area phase WARN "state invalid で [phase] WARN（STATE_DERIVABLE ゲート / 破損 state から phase 導出しない）"
+assert_area trace WARN "state invalid で [trace] WARN（STATE_DERIVABLE ゲート）"
+assert_rc 1 "state invalid は総合 exit 1（state ERROR）"
+
+echo "-- 領域間ゲート: 未対応 schema_version（warn:*）→ [state] WARN + [phase]/[trace] WARN + exit 0（codex premerge R2 / STATE_DERIVABLE gate） --"
+mk phase_state_unsupported_schema_gate
+make_valid_state "$ROOT/.aidlc/state.json"
+# 未対応 schema_version（構造検証は短絡）→ state WARN。define_completed 等は読めるが構造未保証のため導出不可。
+jq '.schema_version = "9.9"' "$ROOT/.aidlc/state.json" > "$ROOT/.aidlc/state.json.tmp"
+mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
+assert_area state WARN "未対応 schema_version は [state] WARN"
+assert_area phase WARN "未対応 schema で [phase] WARN（STATE_DERIVABLE ゲート / 未検証 schema から導出しない）"
+assert_area trace WARN "未対応 schema で [trace] WARN（STATE_DERIVABLE ゲート）"
+assert_rc 0 "未対応 schema_version は総合 exit 0（ERROR ではない）"
+
+# ------------------------------------------------------------
+echo "== [trace]: design 要否整合（data-model §8 size×depth_level） =="
+
+echo "-- design 必須（normal×standard）× design あり → [trace] OK --"
+mk trace_required_present
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items" "$ROOT/.aidlc/cycles/v3.0.0/designs"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+: > "$ROOT/.aidlc/cycles/v3.0.0/designs/001-foo.md"
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace OK "design 必須 × 存在は [trace] OK"
+assert_rc 0 "design 充足は総合 exit 0"
+
+echo "-- design 必須（normal×standard）× design 欠落 → [trace] WARN --"
+mk trace_required_missing
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace WARN "design 必須 × 欠落は [trace] WARN"
+assert_rc 0 "design 欠落は総合 exit 0（WARN 止まり）"
+
+echo "-- design 不要（tiny）→ [trace] OK --"
+mk trace_not_required
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=standard
+assert_area trace OK "tiny は design 不要で [trace] OK"
+assert_rc 0 "design 不要は総合 exit 0"
+
+echo "-- normal × comprehensive × design 欠落 → [trace] WARN（必須） --"
+mk trace_comprehensive
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=comprehensive
+assert_area trace WARN "normal × comprehensive は design 必須（欠落で WARN）"
+assert_rc 0 "comprehensive design 欠落は総合 exit 0"
+
+echo "-- risky × minimal（不正組み合わせ）→ [trace] WARN --"
+mk trace_risky_minimal
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 risky pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=minimal
+assert_area trace WARN "risky × minimal は [trace] WARN（不正組み合わせ）"
+assert_rc 0 "risky × minimal は総合 exit 0"
+
+echo "-- depth_level 未設定（read-config rc1）→ standard フォールバック（normal 欠落で WARN） --"
+mk trace_depth_unset
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 normal pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_RC=1
+assert_area trace WARN "depth_level 未設定は standard フォールバック（normal 欠落で WARN）"
+assert_rc 0 "depth_level 未設定は総合 exit 0"
+
+echo "-- depth_level enum 外 → standard フォールバック + [trace] WARN（レビュー#2） --"
+mk trace_depth_enum_bad
+make_valid_state "$ROOT/.aidlc/state.json"
+mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
+make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
+git_init_clean "$ROOT"
+run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH" DOCTOR_TEST_READCONFIG_OUT=deep
+assert_area trace WARN "depth_level enum 外は [trace] WARN（standard フォールバック + 警告）"
+assert_area_detail trace "enum 外" "enum 外の警告根拠"
+assert_rc 0 "depth_level enum 外は総合 exit 0"
+
+# ------------------------------------------------------------
 echo "== 全領域 OK 正常系 → exit 0 =="
 mk all_ok
 make_valid_state "$ROOT/.aidlc/state.json"
@@ -520,6 +852,8 @@ assert_area work-items OK "正常系 [work-items] OK"
 assert_area git OK "正常系 [git] OK"
 assert_area gh OK "正常系 [gh] OK"
 assert_area pr OK "正常系 [pr] OK"
+assert_area phase OK "正常系 [phase] OK（define）"
+assert_area trace OK "正常系 [trace] OK（tiny = design 不要）"
 assert_area scripts OK "正常系 [scripts] OK"
 assert_area parse-guard OK "正常系 [parse-guard] OK"
 assert_rc 0 "全領域 OK は総合 exit 0"
