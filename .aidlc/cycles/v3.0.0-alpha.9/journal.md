@@ -24,3 +24,5 @@
 - release completed: v3.0.0-alpha.9 (PR #743 merged into v3.0.0 / merge commit 5785d0f5 / adapted merge)
 - release: premerge レビュー（codex）で高1中2 → design drift 修正 / state.json を PR 反映 / #3 は reflect phase の phase-ordering として非ブロッカー。merge 承認は semi_auto auto-approve
 - dogfooding 発見: v3 release Step 3-4 hard gate は「統合ブランチに required CI あり」前提。本リポジトリ CI は全て branches:[main] トリガーで v3.0.0 宛て PR に required check 0 件 → hard gate と不整合。網羅的ローカル検証を代替根拠に adapted merge（ユーザー承認）。reflect で Issue 起票予定
+- dogfooding 発見（実バグ）: doctor [phase] の complete 判定が gh 存在しない --json merged を使用（gh 2.95.0）→ merged PR でも complete 非導出。gh stub モックでテスト検出漏れ
+- reflect completed: v3.0.0-alpha.9（KPT + Try1/#744・Try2/#745 起票。Try3 は任意で未起票）
