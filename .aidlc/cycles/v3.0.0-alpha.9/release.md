@@ -62,4 +62,4 @@ merge_blocker_any: false
 ## Merge 記録
 
 - merge_approved: true（2026-07-03 / semi_auto auto-approve / merge_blocker_any=false）
-- merged: 未記録（Step 4 で記録）
+- merged: true（2026-07-03 / PR #743 / merge commit 5785d0f5798f7da53e88f000e79f6260ce2db311 → v3.0.0）

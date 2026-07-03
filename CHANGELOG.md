@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-alpha.9] - 2026-07-03
+
+AI-DLC v3 フルリニューアルの **Phase 7-a**（Epic #736）セルフドッグフーディング。本サイクル自体を v3 スキル（`skills/aidlc-v3`）の define → develop → release フローで駆動し、実 work item として v3 診断コマンド `doctor` の `[trace]` 領域に trace chain 後段検証を追加。read-only / 自動修正なしを維持。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.9` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.9` に更新する。
+
+### Added
+
+- **doctor `[trace]` 後段検証拡充（Epic #736 / Phase 7-a）**: `doctor.sh` の `diagnose_trace`（従来は `data-model.md §8` の size×depth_level で design 要否を判定し `designs/<id>-<slug>.md` 存在を確認）に trace chain 後段の 3 検証を追加。(1) cycle の `intent.md` 存在、(2) work item 本文 `## Traceability` の Intent refs / Acceptance refs / Verification が非空かつ `{{` プレースホルダ未残存（健全性 / 見出し完全一致 + 再入リセット）、(3) `journal.md` 存在 + `status: done` work item の develop 完了記録の完全一致確認（部分一致誤マッチ防止）。ヘルパー `_trace_field_ok` / `_trace_traceability_healthy` / `_trace_journal_has_record` を新設。本文解析は共有パーサ（`fm_extract_body` / `fm_scalar`）+ bash 組込みのみで raw grep/sed/awk を使わず parse-guard clean を維持。read-only・WARN 止まり（exit 0）・領域数 11 は不変（`[trace]` 内の検証深化）。`test-doctor.sh` に後段 8 ケース + codex review 指摘 2 件の回帰テストを追加
+
+### Notes
+
+- 本サイクルは v3 リニューアル Phase 7-a のセルフドッグフーディング。define/develop の AI 読込手順ファイル数（v3 各 1 / v2 7・5+）・develop work item 成果物数（v3 4 / v2 ~8）・フロー内承認ゲート数（v3 2 / v2 3+）で v2 比の削減を測定。詳細は `.aidlc/cycles/v3.0.0-alpha.9/journal.md`
+- **既知の統合ギャップ**: v3 release フロー Step 3-4 hard gate は統合ブランチに required CI がある前提だが、本リポジトリ CI は全て `branches:[main]` トリガーで `v3.0.0` 宛て PR に required check が付かない。網羅的ローカル検証を代替根拠に adapted merge した（reflect で Issue 起票予定）
+
+---
+
 ## [3.0.0-alpha.8] - 2026-07-02
 
 AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）必須 follow-up。v3 診断コマンド `doctor`（`skills/aidlc-v3/scripts/doctor.sh`）に `[phase]`（フェーズ導出の整合診断）と `[trace]`（design 必須 work item の design ファイル存在診断）の 2 領域を追加し、shallow 9 領域から完全 11 領域へ拡張。read-only / 自動修正なしを維持。#741 をクローズ。v2 (`skills/aidlc`) には非影響。

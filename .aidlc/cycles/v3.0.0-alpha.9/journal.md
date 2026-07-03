@@ -21,3 +21,6 @@
 - レビュー: codex (gpt-5.5) code review。1回目 中2件（journal 部分一致 / Traceability Notes 誤検出）→ 修正 + 回帰テスト → 2回目 0件で auto_approved
 - dogfooding 測定③（develop 開始時 AI 読込手順ファイル数）: v3 = 1（develop.md / review 時に review-routing・review-flow を参照）
 - dogfooding 測定④（develop work item 成果物数）: 4（work-item 状態遷移 / designs/001 / reviews/001 / journal）。v2 Construction は ~8（domain-model / logical-design / plan / code / test / review-summary / history / progress 等）
+- release completed: v3.0.0-alpha.9 (PR #743 merged into v3.0.0 / merge commit 5785d0f5 / adapted merge)
+- release: premerge レビュー（codex）で高1中2 → design drift 修正 / state.json を PR 反映 / #3 は reflect phase の phase-ordering として非ブロッカー。merge 承認は semi_auto auto-approve
+- dogfooding 発見: v3 release Step 3-4 hard gate は「統合ブランチに required CI あり」前提。本リポジトリ CI は全て branches:[main] トリガーで v3.0.0 宛て PR に required check 0 件 → hard gate と不整合。網羅的ローカル検証を代替根拠に adapted merge（ユーザー承認）。reflect で Issue 起票予定
