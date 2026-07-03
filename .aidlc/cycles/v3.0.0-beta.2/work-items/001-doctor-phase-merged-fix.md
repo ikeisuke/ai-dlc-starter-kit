@@ -1,6 +1,6 @@
 ---
 id: "001"
-status: pending
+status: done
 size: tiny
 risk: low
 assigned: null
