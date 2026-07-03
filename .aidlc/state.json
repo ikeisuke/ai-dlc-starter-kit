@@ -4,8 +4,8 @@
   "define_completed": true,
   "release": {
     "pr_number": 743,
-    "ready": false,
-    "merge_approved": false
+    "ready": true,
+    "merge_approved": true
   },
-  "updated_at": "2026-07-03T01:14:33Z"
+  "updated_at": "2026-07-03T01:20:42Z"
 }

@@ -61,5 +61,5 @@ merge_blocker_any: false
 
 ## Merge 記録
 
-- merge_approved: 未記録（Step 3 で記録）
+- merge_approved: true（2026-07-03 / semi_auto auto-approve / merge_blocker_any=false）
 - merged: 未記録（Step 4 で記録）
