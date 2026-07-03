@@ -22,7 +22,7 @@
 
 1. **Traceability 健全性検証**（work item 単位 / ループ内）:
    - `body="$(fm_extract_body "$f")"` で本文を取得。
-   - ヘルパー `_trace_traceability_healthy <body>`: `## Traceability` セクション内の `Intent refs:` / `Acceptance refs:` / `Verification:` の 3 フィールドが、いずれも「空白除去後に非空」かつ「`{{` プレースホルダを含まない」なら健全（return 0）。1 つでも欠ければ不備（return 1）。
+   - ヘルパー `_trace_traceability_healthy <body>`: `## Traceability` セクション内の `Intent refs:` / `Acceptance refs:` / `Verification:` の 3 フィールドが、いずれも「空白除去後に非空」かつ「`{{` プレースホルダを含まない」なら健全（return 0）。1 つでも欠ければ不備（return 1）。セクション開始条件は正規見出しの**完全一致** `## Traceability` に限定し（`## Traceability Notes` 等の別セクションを本物として集計しない）、正規セクション再入時にフィールドフラグをリセットして前段セクションの値で false OK にしない（codex review 指摘 #2 反映）。
    - 不備 work item の basename を `trace_bad_list` に集約。
 
 2. **done 集約**（work item 単位 / ループ内 / journal 整合用）:
@@ -33,7 +33,7 @@
 
 4. **journal 整合検証**（cycle 単位 / ループ後）:
    - `[[ ! -f "$CYCLE_DIR/journal.md" ]]` → `journal_missing=1`。
-   - 存在時は `journal_txt="$(cat "$CYCLE_DIR/journal.md")"` を取得し、`done_list` の各 basename（`.md` 除去）が journal 本文に含まれるか bash グロブ照合（`[[ "$journal_txt" == *"$name"* ]]`）。未記録の basename を `journal_uncovered_list` に集約。
+   - 存在時は `journal_txt="$(<"$CYCLE_DIR/journal.md")"` を取得し、`done` work item の各 basename（`.md` 除去）についてヘルパー `_trace_journal_has_record <journal_txt> <name>` で `- develop completed: <name>` 記録行の値を**完全一致**照合する（部分一致で `001-foo` が `001-foobar` に誤マッチして記録漏れを見逃さないよう、記録行から値を抽出して比較 / codex review 指摘 #1 反映）。未記録の basename を `journal_uncovered_list` に集約。
 
 ### 結果集約（単一 report）
 
