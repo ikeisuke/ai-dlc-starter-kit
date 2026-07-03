@@ -79,4 +79,4 @@ premerge（codex / 高 1 件）・integration（codex / 中 1 件）の指摘は
 <!-- merge 記録は release Step 3/4 で追記する（テンプレート生成時点では未記録）。 -->
 
 - merge_approved: true（2026-07-04 / semi_auto 自動承認: merge_blocker_any=false）
-- merged: 未記録（Step 4 で記録）
+- merged: true（2026-07-03T16:27:35Z / merge commit c0b3f09a02092b09fa09b81a5098a5a0b01b2f37 / merge method: merge）

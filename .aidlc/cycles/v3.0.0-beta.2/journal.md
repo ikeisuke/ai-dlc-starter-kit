@@ -21,3 +21,5 @@
 - check-cycle-phase-completion.sh に v3-flat 判定を追加（#747）。構造判別は opt-in シグナル（work-items/ の存在 / 曖昧構造は exit 2 fail-closed）、完了条件は data-model §5.1 評価順 4 + release 記録（release.md + pr_number）。state.json / frontmatter の読取は v3 安全境界スクリプト（state-read.sh / work-item-status.sh）へ委譲
 - 検証: bats 24 ケース pass（既存 v2 16 ケース回帰含む）/ 実 v2.6.6 exit 0 / 実 beta.2 は item_status_pending を正しく報告 / alpha.9 + 相当 state で v3:complete exit 0 / shellcheck 新規指摘なし / parse-guard clean。AC-5（実 PR での CI job 成功）は release フェーズの最終 head で確認する
 - code review（codex 外部 CLI / required / 2 Round）: R1 フィクスチャ未追跡 → staging で解消 / R2 「develop 途中はゲートが block」→ by-design（release 最終 head で充足 / design §6）。unresolved_count=0 → auto_approved
+- release completed: v3.0.0-beta.2 (PR #748 merged)
+- release 詳細: bats 731 全 pass / premerge・integration review（codex）は「release.md 未 commit で CI ゲート exit 1」の同一論点のみ → release.md + state.json commit で解消（v3:complete exit 0 = AC-4 充足）/ deploy review は risky なしで skipped / semi_auto 自動承認 → hard gate（required 5 件 pass + CLEAN）→ merge commit c0b3f09a

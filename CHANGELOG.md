@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-beta.2] - 2026-07-04
+
+v3 ベータの既知バグと CI 非互換を解消し、v3 サイクルが `cycle/*` 命名の main 宛て PR で自走できる状態にする（#744 / #747）。本サイクル自体を v3 スキル（`/aidlc-v3`）の define → develop → release フローで駆動（セルフドッグフーディング継続）。v2（`/aidlc`）には非影響。
+
+### Fixed
+
+- **doctor `[phase]` merged 判定修正 + gh stub 忠実化（#744）**: `doctor.sh` の `[phase]` complete 判定が gh に存在しない `--json merged` フィールドを使い常に失敗するバグを修正し、PR merged 確認を `--json state`（`.state == "MERGED"`）ベースへ変更。併せて `test-doctor.sh` の gh stub（`install_gh_stub_full`）を実 gh の JSON フィールド（`state` / `mergedAt`）に忠実化し、フィールド名不正を検出できなかったテスト忠実性ギャップを解消
+
+### Added
+
+- **cycle-phase-completion-check の v3-flat 構造対応（#747）**: `bin/check-cycle-phase-completion.sh` に v3-flat 構造（`intent.md` / `work-items/` + リポジトリ直下 `state.json`）の完了判定を追加し、`cycle/*` 命名の v3 サイクル main 宛て PR が CI を通過できるようにする。構造判別は opt-in シグナル方式（`work-items/` の存在 / 曖昧構造は exit 2 fail-closed）、state.json / frontmatter の読取は v3 安全境界スクリプトへ委譲。v2 サイクル向け既存判定は非影響で維持
+
+### Notes
+
+- #745（release hard gate の required CI 0 件時フォールバック方針）は Phase 7 前の後続サイクルへ defer
+
+---
+
 ## [3.0.0-beta.1] - 2026-07-03
 
 AI-DLC v3 フルリニューアルを **ベータ（preview）として初めて `main` に反映**する。v3（`skills/aidlc-v3` = `/aidlc-v3`）を v2（`skills/aidlc` = `/aidlc`）と**共存**させ、v2 側は無変更・既定のまま。実ユーザーからのフィードバックを得るソフトローンチであり、フル本流化（`/aidlc` の v3 置換）は後続（Phase 7）で行う。
