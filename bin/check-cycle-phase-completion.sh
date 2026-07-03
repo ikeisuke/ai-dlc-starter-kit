@@ -3,9 +3,12 @@
 #
 # cycle/* PR の 3 Phase（Inception / Construction / Operations）完了状態を CI で検証する CLI。
 # Unit 001 / Issue #672 / v2.5.6
+# Issue #747 / v3.0.0-beta.2: v3-flat 構造（work-items/ + リポジトリ直下 state.json）の
+#   完了判定を追加。構造判別は opt-in シグナル（<cycle>/work-items/ の存在）で行う。
 #
 # 入力契約: bare cycle ID（例: v2.5.6 / waf/v1.0.0）。`cycle/` prefix を含む値は reject。
-# 詳細は .aidlc/cycles/v2.5.6/design-artifacts/logical-designs/unit_001_*.md 参照。
+# 詳細は .aidlc/cycles/v2.5.6/design-artifacts/logical-designs/unit_001_*.md および
+# .aidlc/cycles/v3.0.0-beta.2/designs/002-cycle-check-v3-flat.md 参照。
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,19 +16,36 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=../skills/aidlc/scripts/lib/validate.sh
 . "${REPO_ROOT}/skills/aidlc/scripts/lib/validate.sh"
 
+# v3 の state.json / work item frontmatter の読取は v3 の安全境界スクリプトへ委譲する
+# （生 jq / grep / sed / awk パースを本 CLI に足さない）。
+readonly V3_STATE_READ="${REPO_ROOT}/skills/aidlc-v3/scripts/state-read.sh"
+readonly V3_WORK_ITEM_STATUS="${REPO_ROOT}/skills/aidlc-v3/scripts/work-item-status.sh"
+
 usage() {
     cat <<'USAGE'
 Usage: check-cycle-phase-completion.sh <cycle> [--pr-number N] [--help]
 
-Verify that all 3 phases (Inception / Construction / Operations) are complete
-for the given cycle.
+Verify that the given cycle is complete before merging its PR.
+
+Structure detection (opt-in signal):
+  <cycle_dir>/work-items/ exists  -> v3-flat evaluation (state.json +
+                                     work item frontmatter + release.md)
+  otherwise                       -> v2 evaluation (Inception / Construction /
+                                     Operations progress artifacts)
+  both work-items/ and inception/ -> ambiguous structure, exit 2
 
 Arguments:
   <cycle>           bare cycle ID (e.g. v2.5.6, waf/v1.0.0)
                     NOTE: must NOT include the leading 'cycle/' prefix
   --pr-number N     expected PR number (positive integer); when given, the
-                    Operations phase additionally verifies pr_number value match
+                    Operations phase (v2) / release record (v3) additionally
+                    verifies pr_number value match
   --help            print this message and exit 0
+
+Environment:
+  AIDLC_CYCLES_BASE cycles base directory override (tests)
+  AIDLC_STATE_FILE  v3 state.json path override (tests);
+                    default: <repo>/.aidlc/state.json
 
 Exit codes:
   0  all 3 phases complete
@@ -341,6 +361,128 @@ evaluate_operations() {
     return 0
 }
 
+# Evaluate v3-flat cycle completion (opt-in signal: work-items/ directory).
+# CI gate semantics: "release-ready + release record" (data-model.md §5.1
+# evaluation order 4, plus release.md / release.pr_number). Merged state is NOT
+# required because this check runs before merge; merged verification belongs to
+# the release Step 3-4 hard gate and doctor [phase].
+# $1: cycle ID
+# $2: cycle directory path
+# $3: expected_pr_number (empty = not specified)
+# stdout: PhaseCompletionStatus message
+# return: 0 complete, 1 incomplete, 2 system error
+evaluate_v3_flat() {
+    local cycle="$1" cycle_dir="$2" expected_pr="${3:-}"
+    local state_file="${AIDLC_STATE_FILE:-${REPO_ROOT}/.aidlc/state.json}"
+
+    if [[ ! -f "${state_file}" ]]; then
+        echo "v3:incomplete:reason=state_json_missing"
+        return 1
+    fi
+
+    local rc value
+
+    rc=0
+    value="$("${V3_STATE_READ}" current_cycle "${state_file}" 2>/dev/null)" || rc=$?
+    case "${rc}" in
+        0) ;;
+        2)
+            echo "error:v3-state-read-failed:field=current_cycle:detail=system"
+            return 2
+            ;;
+        *)
+            echo "v3:incomplete:reason=state_unreadable:field=current_cycle"
+            return 1
+            ;;
+    esac
+    if [[ "${value}" != "${cycle}" ]]; then
+        echo "v3:incomplete:reason=current_cycle_mismatch:expected=${cycle}:actual=${value}"
+        return 1
+    fi
+
+    rc=0
+    value="$("${V3_STATE_READ}" define_completed "${state_file}" 2>/dev/null)" || rc=$?
+    case "${rc}" in
+        0) ;;
+        2)
+            echo "error:v3-state-read-failed:field=define_completed:detail=system"
+            return 2
+            ;;
+        *)
+            echo "v3:incomplete:reason=state_unreadable:field=define_completed"
+            return 1
+            ;;
+    esac
+    if [[ "${value}" != "true" ]]; then
+        echo "v3:incomplete:reason=define_not_completed:actual=${value}"
+        return 1
+    fi
+
+    # All work items must be done / withdrawn (data-model.md §5.1 order 4).
+    local wi_dir="${cycle_dir}/work-items"
+    if [[ -z "$(find "${wi_dir}" -maxdepth 1 -type f -name '*.md' -print -quit 2>/dev/null)" ]]; then
+        echo "v3:incomplete:reason=no_work_items"
+        return 1
+    fi
+
+    local wi_file wi_basename status_out status
+    while IFS= read -r wi_file; do
+        wi_basename="$(basename "${wi_file}" .md)"
+        rc=0
+        status_out="$("${V3_WORK_ITEM_STATUS}" --read "${wi_file}" 2>/dev/null)" || rc=$?
+        case "${rc}" in
+            0) ;;
+            2)
+                echo "error:v3-work-item-read-failed:item=${wi_basename}:detail=system"
+                return 2
+                ;;
+            *)
+                echo "v3:incomplete:reason=work_item_malformed:item=${wi_basename}"
+                return 1
+                ;;
+        esac
+        status="${status_out#status:}"
+        case "${status}" in
+            done|withdrawn) ;;
+            *)
+                echo "v3:incomplete:reason=item_status_pending:item=${wi_basename}:status=${status}"
+                return 1
+                ;;
+        esac
+    done < <(find "${wi_dir}" -maxdepth 1 -type f -name '*.md' | sort)
+
+    # Release record: release.md artifact + recorded PR number.
+    if [[ ! -f "${cycle_dir}/release.md" ]]; then
+        echo "v3:incomplete:reason=release_md_missing"
+        return 1
+    fi
+
+    rc=0
+    value="$("${V3_STATE_READ}" release.pr_number "${state_file}" 2>/dev/null)" || rc=$?
+    case "${rc}" in
+        0) ;;
+        2)
+            echo "error:v3-state-read-failed:field=release.pr_number:detail=system"
+            return 2
+            ;;
+        *)
+            echo "v3:incomplete:reason=state_unreadable:field=release.pr_number"
+            return 1
+            ;;
+    esac
+    if [[ ! "${value}" =~ ^[1-9][0-9]*$ ]]; then
+        echo "v3:incomplete:reason=pr_number_not_recorded:actual=${value}"
+        return 1
+    fi
+    if [[ -n "${expected_pr}" ]] && [[ "${value}" != "${expected_pr}" ]]; then
+        echo "v3:incomplete:reason=pr_number_mismatch:expected=${expected_pr}:actual=${value}"
+        return 1
+    fi
+
+    echo "v3:complete"
+    return 0
+}
+
 main() {
     local cycle="" expected_pr=""
 
@@ -402,6 +544,18 @@ main() {
     if [[ ! -d "${cycle_dir}" ]]; then
         echo "error:cycle-not-found:${cycle_dir}"
         return 2
+    fi
+
+    # Structure detection (opt-in signal): a v3-flat cycle carries work-items/.
+    # Ambiguity (both v3 work-items/ and v2 inception/ present) is fail-closed.
+    if [[ -d "${cycle_dir}/work-items" ]]; then
+        if [[ -d "${cycle_dir}/inception" ]]; then
+            echo "error:ambiguous-cycle-structure:${cycle_dir}:detail=both-v2-and-v3-signals-present"
+            return 2
+        fi
+        local v3_rc=0
+        evaluate_v3_flat "${cycle}" "${cycle_dir}" "${expected_pr}" || v3_rc=$?
+        return "${v3_rc}"
     fi
 
     # Fail-fast: stop on first incomplete phase.

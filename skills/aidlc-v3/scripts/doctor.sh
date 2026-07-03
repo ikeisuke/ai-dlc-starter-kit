@@ -390,9 +390,9 @@ diagnose_phase() {
     # 渡す前に正整数を必須検証する（gh 引数注入余地の排除 / 不一致は complete 非導出 + WARN）。
     if [[ "$merge_approved" == "true" ]]; then
         if [[ "$pr_number" =~ ^[1-9][0-9]*$ && "$GH_AVAILABLE" -eq 1 ]]; then
-            local merged
-            merged="$(gh pr view "$pr_number" --json merged --jq '.merged' 2>/dev/null)" || merged=""
-            if [[ "$merged" == "true" ]]; then
+            local pr_state
+            pr_state="$(gh pr view "$pr_number" --json state --jq '.state' 2>/dev/null)" || pr_state=""
+            if [[ "$pr_state" == "MERGED" ]]; then
                 report phase OK "complete（merge_approved=true + PR #${pr_number} merged）"
                 return
             fi

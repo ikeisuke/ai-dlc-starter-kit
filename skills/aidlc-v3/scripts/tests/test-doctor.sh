@@ -320,11 +320,14 @@ STUB
     chmod +x "$root/bin/gh"
 }
 
-# gh stub（[phase] complete 確認用 / auth + pr list + pr view --json merged を制御）。
-#   install_gh_stub_full <root> <auth_rc> <pr_numbers> <pr_view_merged>
-#     pr_view_merged: `gh pr view <n> --json merged --jq '.merged'` が返す値（true/false 等）
+# gh stub（[phase] complete 確認用 / auth + pr list + pr view --json state を制御）。
+#   install_gh_stub_full <root> <auth_rc> <pr_numbers> <pr_view_state>
+#     pr_view_state: `gh pr view <n> --json state --jq '.state'` が返す値（MERGED / OPEN / CLOSED）
+#   実 gh 忠実化（#744）: pr view の --json に実 gh に存在しないフィールド（例: merged）が
+#   指定された場合、実 gh と同様に unknown JSON field エラー（exit 1）を返す。
+#   これによりフィールド名不正が stub 経由のテストで検出可能になる。
 install_gh_stub_full() {
-    local root="$1" auth_rc="$2" pr_numbers="$3" pr_view_merged="$4"
+    local root="$1" auth_rc="$2" pr_numbers="$3" pr_view_state="$4"
     cat > "$root/bin/gh" <<STUB
 #!/usr/bin/env bash
 case "\$1" in
@@ -333,8 +336,21 @@ case "\$1" in
     ;;
   pr)
     if [ "\$2" = "view" ]; then
-      # gh pr view <n> --json merged --jq '.merged'
-      echo "$pr_view_merged"
+      # gh pr view <n> --json <fields> --jq '...'
+      json_fields=""
+      expect_json=0
+      for arg in "\$@"; do
+        if [ "\$expect_json" = 1 ]; then json_fields="\$arg"; expect_json=0; continue; fi
+        [ "\$arg" = "--json" ] && expect_json=1
+      done
+      IFS=',' read -r -a fields <<< "\$json_fields"
+      for f in "\${fields[@]}"; do
+        case "\$f" in
+          state|mergedAt) : ;;
+          *) echo "unknown JSON field: \\"\$f\\"" >&2; exit 1 ;;
+        esac
+      done
+      echo "$pr_view_state"
       exit 0
     fi
     # gh pr list --state open --json number --jq '...'
@@ -677,7 +693,7 @@ jq '.define_completed = true | .release.merge_approved = true | .release.pr_numb
 mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
-install_gh_stub_full "$ROOT" 0 "42" "true"
+install_gh_stub_full "$ROOT" 0 "42" "MERGED"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
 assert_area phase OK "merge_approved + PR merged は [phase] OK（complete）"
@@ -692,7 +708,7 @@ jq '.define_completed = true | .release.merge_approved = true | .release.pr_numb
 mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny "done"
-install_gh_stub_full "$ROOT" 0 "42" "false"
+install_gh_stub_full "$ROOT" 0 "42" "OPEN"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
 assert_area phase WARN "merge_approved=true × 未 merged は [phase] WARN"
@@ -706,7 +722,7 @@ jq '.define_completed = true | .release.merge_approved = true' \
 mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
-install_gh_stub_full "$ROOT" 0 "" "false"
+install_gh_stub_full "$ROOT" 0 "" "OPEN"
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
 assert_area phase WARN "merge_approved=true × pr_number=null は [phase] WARN"
@@ -720,7 +736,7 @@ jq '.define_completed = true | .release.merge_approved = true | .release.pr_numb
 mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
-install_gh_stub_full "$ROOT" 0 "" "true"   # gh は使われない（pr_number=0 で検証弾き）
+install_gh_stub_full "$ROOT" 0 "" "MERGED"   # gh は使われない（pr_number=0 で検証弾き）
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
 assert_area phase WARN "merge_approved=true × pr_number=0 は [phase] WARN（0 は不正 PR 番号）"
@@ -734,7 +750,7 @@ jq '.define_completed = true | .release.merge_approved = true | .release.pr_numb
 mv "$ROOT/.aidlc/state.json.tmp" "$ROOT/.aidlc/state.json"
 mkdir -p "$ROOT/.aidlc/cycles/v3.0.0/work-items"
 make_valid_work_item "$ROOT/.aidlc/cycles/v3.0.0/work-items/001-foo.md" 001 tiny pending
-install_gh_stub_full "$ROOT" 1 "42" "true"   # auth rc1 → GH_AVAILABLE=0（complete 確認不能）
+install_gh_stub_full "$ROOT" 1 "42" "MERGED"   # auth rc1 → GH_AVAILABLE=0（complete 確認不能）
 git_init_clean "$ROOT"
 run_doctor "$DOCTOR" "$ROOT" PATH="$ROOT/bin:$PATH"
 assert_area phase WARN "merge_approved=true × gh 不可は [phase] WARN（complete 確認不能）"
