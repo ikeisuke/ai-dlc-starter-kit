@@ -42,7 +42,9 @@ Unit完了時に中間コミットを1つにまとめるsquashスクリプト。
 
 Required:
   --cycle <CYCLE>         サイクル名（例: v1.15.0）
-  --message <MESSAGE>     squash後のコミットメッセージ（--message-fileと排他）
+  --message <MESSAGE>     squash後のコミットメッセージ（--message-fileと排他）。
+                          複数回指定可（git commit -m 準拠: 1個目=件名、
+                          2個目以降=空行区切りの本文段落として段落結合）。
   --message-file <PATH>   コミットメッセージをファイルから読み込み（--messageと排他）
   --vcs <git>              使用するVCS種類
 
@@ -90,7 +92,13 @@ parse_args() {
                     echo "Error: --message requires a value" >&2
                     exit 1
                 fi
-                MESSAGE="$2"
+                # 複数 --message を git commit -m 準拠で段落結合（1 個目=件名、
+                # 2 個目以降=空行区切りの本文段落）。単一指定は従来同値（後方互換）。
+                if [[ -z "$MESSAGE" ]]; then
+                    MESSAGE="$2"
+                else
+                    MESSAGE="${MESSAGE}"$'\n\n'"$2"
+                fi
                 shift 2
                 ;;
             --message-file)
@@ -688,6 +696,83 @@ extract_co_authors_for_range() {
     fi
 }
 
+# --- コミットメッセージ合成（複数 --message 段落結合 / Co-Authored-By 重複排除） ---
+
+# normalize_coauthor_key: Co-Authored-By 行を dedup 比較キーへ正規化する純関数。
+# 引数: $1 = 1 行
+# 出力: stdout に正規化キー。Co-Authored-By 行でなければ空文字を出力。
+# 正規化: ①行全体 trim ②トレーラ名 'Co-Authored-By:' を case-insensitive 化
+#         ③コロン直後の連続空白を単一空白に畳む ④値部は前後 trim。
+# 注: bash 3.2 互換のため小文字化は tr を使用（${var,,} は使わない）。
+normalize_coauthor_key() {
+    local line="$1"
+    # 前後 trim
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    # Co-Authored-By: 行判定（case-insensitive）
+    local lower
+    lower=$(printf '%s' "$line" | tr '[:upper:]' '[:lower:]')
+    if [[ "$lower" != co-authored-by:* ]]; then
+        return 0
+    fi
+    # 値部（最初のコロン以降）を trim
+    local value="${line#*:}"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf 'co-authored-by: %s' "$value"
+}
+
+# compose_full_message: message 本文に co_authors を結合し Co-Authored-By 重複を排除する純関数。
+# 通常経路（squash_git）と retroactive 経路（build_commit_message_file）の唯一の合成点。
+# 引数: $1 = message（段落結合済みコミット本文）, $2 = co_authors（改行区切りの
+#       Co-Authored-By 行群 / 空文字可）
+# 出力: stdout に最終コミットメッセージ（末尾改行なし）。
+# 契約: グローバル変数を読まない・書かない（純関数）。ファイル出力時の末尾改行付与は
+#       呼び出し側責務。message 側既出 + co_authors 内部重複を dedup 比較キーで一意化し、
+#       出力は採用行の原文を保持する。
+compose_full_message() {
+    local message="$1"
+    local co_authors="$2"
+
+    if [[ -z "$co_authors" ]]; then
+        printf '%s' "$message"
+        return 0
+    fi
+
+    # message 側に既出の Co-Authored-By 正規化キーを seen に収集（前後を改行で囲んで保持）
+    local seen=$'\n'
+    local line key
+    while IFS= read -r line; do
+        key=$(normalize_coauthor_key "$line")
+        [[ -z "$key" ]] && continue
+        seen="${seen}${key}"$'\n'
+    done <<< "$message"
+
+    # co_authors を走査し、未出のみ残余に採用（採用と同時に seen へ蓄積 → 内部重複も排除）
+    local remainder=""
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        key=$(normalize_coauthor_key "$line")
+        if [[ -n "$key" ]]; then
+            if [[ "$seen" == *$'\n'"$key"$'\n'* ]]; then
+                continue
+            fi
+            seen="${seen}${key}"$'\n'
+        fi
+        if [[ -z "$remainder" ]]; then
+            remainder="$line"
+        else
+            remainder="${remainder}"$'\n'"${line}"
+        fi
+    done <<< "$co_authors"
+
+    if [[ -z "$remainder" ]]; then
+        printf '%s' "$message"
+    else
+        printf '%s\n\n%s' "$message" "$remainder"
+    fi
+}
+
 # --- コミット数取得（pipefail安全） ---
 
 get_target_count() {
@@ -714,11 +799,9 @@ squash_git() {
     local co_authors="$3"
     local target_count="$4"
 
-    # 最終コミットメッセージの組み立て
-    local full_message="$message"
-    if [[ -n "$co_authors" ]]; then
-        full_message="${message}"$'\n\n'"${co_authors}"
-    fi
+    # 最終コミットメッセージの組み立て（唯一の合成点 compose_full_message へ委譲）
+    local full_message
+    full_message=$(compose_full_message "$message" "$co_authors")
 
     if [[ "$target_count" -eq 1 ]]; then
         # 1件: メッセージ整形のみ（amend）
@@ -809,11 +892,11 @@ build_commit_message_file() {
     msg_file=$(mktemp)
     TMPFILES+=("$msg_file")
 
-    if [[ -n "$co_authors" ]]; then
-        printf '%s\n\n%s\n' "$message" "$co_authors" > "$msg_file"
-    else
-        printf '%s\n' "$message" > "$msg_file"
-    fi
+    # 唯一の合成点 compose_full_message へ委譲（通常経路と挙動を統一）。
+    # ファイル出力のため末尾改行は本関数側で付与する。
+    local composed
+    composed=$(compose_full_message "$message" "$co_authors")
+    printf '%s\n' "$composed" > "$msg_file"
 
     echo "$msg_file"
 }

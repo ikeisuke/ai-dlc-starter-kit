@@ -1,0 +1,11 @@
+{
+  "schema_version": "3.0",
+  "current_cycle": "v3.0.0-alpha.9",
+  "define_completed": true,
+  "release": {
+    "pr_number": 743,
+    "ready": true,
+    "merge_approved": true
+  },
+  "updated_at": "2026-07-03T01:20:42Z"
+}

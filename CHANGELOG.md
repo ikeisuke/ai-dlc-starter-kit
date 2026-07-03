@@ -7,6 +7,181 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-beta.1] - 2026-07-03
+
+AI-DLC v3 フルリニューアルを **ベータ（preview）として初めて `main` に反映**する。v3（`skills/aidlc-v3` = `/aidlc-v3`）を v2（`skills/aidlc` = `/aidlc`）と**共存**させ、v2 側は無変更・既定のまま。実ユーザーからのフィードバックを得るソフトローンチであり、フル本流化（`/aidlc` の v3 置換）は後続（Phase 7）で行う。
+
+> **注**: 本エントリは v3 alpha 系列（alpha.1〜alpha.9）を積み上げた統合ブランチ `v3.0.0` を `main` に反映するもの。各 alpha エントリの「`main` への反映は行わない」注記は、本 beta.1 で `main` へ反映されることをもって更新される（`metadata.version` を `3.0.0-beta.1` に更新）。
+
+### Added
+
+- **v3 ベータ同梱（`skills/aidlc-v3` = `/aidlc-v3`）**: フェーズ進行を会話履歴の推論ではなく `state.json` + work item frontmatter から明示導出する新設計の v3 オーケストレーター（`define` / `develop` / `release` / `reflect` + 補助 `status` / `doctor`）をベータとして `main` に反映。alpha.1〜alpha.9 の実装（RFC/data-model 固定・skeleton・define/develop/release/reflect/status/doctor・doctor 11 領域完全診断 + `[trace]` 後段検証・frontmatter 安全境界）を含む。v2（`/aidlc`）とは共存し非影響
+
+### Notes
+
+- **v2 は既定・安定版のまま**（`/aidlc`）。v3 は opt-in の preview（`/aidlc-v3`）
+- **既知の制約（beta）**: v2 → v3 migration は未実装（v3 は new-cycle-only 推奨）/ doctor のフェーズ complete 判定の gh フィールド不整合（#744）/ v3 サイクルの release フロー hard gate と CI トリガーの不整合（#745）
+- README に v3 ベータの案内・opt-in・既知制約を追記
+
+---
+
+## [3.0.0-alpha.9] - 2026-07-03
+
+AI-DLC v3 フルリニューアルの **Phase 7-a**（Epic #736）セルフドッグフーディング。本サイクル自体を v3 スキル（`skills/aidlc-v3`）の define → develop → release フローで駆動し、実 work item として v3 診断コマンド `doctor` の `[trace]` 領域に trace chain 後段検証を追加。read-only / 自動修正なしを維持。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.9` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.9` に更新する。
+
+### Added
+
+- **doctor `[trace]` 後段検証拡充（Epic #736 / Phase 7-a）**: `doctor.sh` の `diagnose_trace`（従来は `data-model.md §8` の size×depth_level で design 要否を判定し `designs/<id>-<slug>.md` 存在を確認）に trace chain 後段の 3 検証を追加。(1) cycle の `intent.md` 存在、(2) work item 本文 `## Traceability` の Intent refs / Acceptance refs / Verification が非空かつ `{{` プレースホルダ未残存（健全性 / 見出し完全一致 + 再入リセット）、(3) `journal.md` 存在 + `status: done` work item の develop 完了記録の完全一致確認（部分一致誤マッチ防止）。ヘルパー `_trace_field_ok` / `_trace_traceability_healthy` / `_trace_journal_has_record` を新設。本文解析は共有パーサ（`fm_extract_body` / `fm_scalar`）+ bash 組込みのみで raw grep/sed/awk を使わず parse-guard clean を維持。read-only・WARN 止まり（exit 0）・領域数 11 は不変（`[trace]` 内の検証深化）。`test-doctor.sh` に後段 8 ケース + codex review 指摘 2 件の回帰テストを追加
+
+### Notes
+
+- 本サイクルは v3 リニューアル Phase 7-a のセルフドッグフーディング。define/develop の AI 読込手順ファイル数（v3 各 1 / v2 7・5+）・develop work item 成果物数（v3 4 / v2 ~8）・フロー内承認ゲート数（v3 2 / v2 3+）で v2 比の削減を測定。詳細は `.aidlc/cycles/v3.0.0-alpha.9/journal.md`
+- **既知の統合ギャップ**: v3 release フロー Step 3-4 hard gate は統合ブランチに required CI がある前提だが、本リポジトリ CI は全て `branches:[main]` トリガーで `v3.0.0` 宛て PR に required check が付かない。網羅的ローカル検証を代替根拠に adapted merge した（reflect で Issue 起票予定）
+
+---
+
+## [3.0.0-alpha.8] - 2026-07-02
+
+AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）必須 follow-up。v3 診断コマンド `doctor`（`skills/aidlc-v3/scripts/doctor.sh`）に `[phase]`（フェーズ導出の整合診断）と `[trace]`（design 必須 work item の design ファイル存在診断）の 2 領域を追加し、shallow 9 領域から完全 11 領域へ拡張。read-only / 自動修正なしを維持。#741 をクローズ。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.8` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.8` に更新する。
+
+### Added
+
+- **doctor `[phase]` / `[trace]` 領域実装 + 契約テスト（#741）**: `doctor.sh` に `diagnose_phase`（`data-model.md §5.1` の first-match フェーズ導出を code 化し、導出フェーズと根拠を出力。`complete` は `release.merge_approved=true` かつ gh による read-only PR merged 確認成功時のみ導出、確認不能時はフォールバック + WARN 併記）と `diagnose_trace`（`data-model.md §8` の size×depth_level マトリクスで design 要否を判定し、design 必須 work item の `designs/<id>-<slug>.md` 存在を確認。欠落 / 不正組み合わせは WARN で exit 0 維持）を追加。両領域を順序実行ブロックに組み込み、9 領域 → 11 領域へ拡張。`test-doctor.sh` を各導出ケース・異常系 WARN 分岐・trace 各ケースで拡張（Unit 001 / ストーリー 1・2・3）
+
+### Changed
+
+- **doctor 完全診断の SoT ドキュメント反映（#741）**: `docs/v3/doctor.md` / `workflow.md` / `v3-renewal-plan.md` の doctor 診断領域記述を shallow 9 領域から完全 11 領域構成へ更新し、`[phase]` / `[trace]` の診断内容・severity・exit code 集約規則を SoT に反映（Unit 002）
+
+---
+
+## [3.0.0-alpha.7] - 2026-06-29
+
+AI-DLC v3 フルリニューアルの **Phase 6**（Epic #736）。`skills/aidlc-v3` に reflect（振り返り）と doctor（診断）を実装し status を拡充して、`define → develop → release → reflect` の v3 単独フルサイクル完走を可能にする。あわせて #735（`squash-unit.sh` の複数 `--message` footgun）を修正し、alpha.4 で実装済みの #733 をクローズ。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.7` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.7` に更新する。
+
+### Added
+
+- **reflect フロー実装（`skills/aidlc-v3/steps/reflect.md` / `templates/reflect.md` / `SKILL.md`）**: v3 の振り返りフェーズを新規実装。`define → develop → release` 済みサイクルに対し KPT ベースの振り返りと Try の Issue 化（`gh issue create` / `gh_status=available` 時のみ）を行う。frontmatter の生パースは `lib/frontmatter.sh` に委譲（grep/sed/awk 直書き禁止）。`reflect` コマンドを公開し、回帰テストを追加。設計 SoT: `docs/v3/workflow.md §3.4` / `docs/v3/data-model.md §7・§10`（Unit 002 / ストーリー 2）
+- **doctor v1 実装（`skills/aidlc-v3/steps/doctor.md` ほか）**: v3 環境の shallow 診断コマンドを新規実装。9 領域（config / state / cycle / work-items / git / gh / pr / scripts + parse-guard）を診断し、`[phase]` / `[trace]` 領域は alpha.8 へ defer（follow-up #741）。段階スコープを SoT に反映し、alpha.4 で実装済みの #733 をクローズ（Unit 003 / ストーリー 4）
+
+### Changed
+
+- **`squash-unit.sh` 複数 `--message` 段落結合修正（#735）**: 複数 `--message` 指定時に subject が失われる footgun を修正。複数メッセージを段落結合し、Co-Authored-By を重複排除する挙動に変更（Unit 001 / ストーリー 1）
+- **`status` 出力拡充（`skills/aidlc-v3/steps/status.md`）**: `/aidlc-v3 status` の出力を `docs/v3/workflow.md §3.5` の出力例に揃え、残作業・次の推奨コマンド・導出根拠を含む現在地表示に拡充。実行手順化と回帰テスト（`test-status.sh`）を追加（Unit 004 / ストーリー 3）
+
+---
+
+## [3.0.0-alpha.6] - 2026-06-27
+
+AI-DLC v3 フルリニューアルの **Phase 5（release フロー）**。`skills/aidlc-v3` に release フェーズを実装し、`define → develop` 済みサイクルを統合ブランチへ安全に取り込めるようにする。`steps/release.md`（Step 1–4: リリース準備ゲート / PR 整備 / Merge 承認・実行 / Post-merge cleanup）、`templates/release.md`、release-level review ルーティング、release state 書き込み、全 Step の回帰テストを実装。`SKILL.md` の `release` コマンドを「予約」から「実装済み」に公開フリップ。設計 SoT: `docs/v3/workflow.md §3.3` / `docs/v3/data-model.md §3・§5・§8`。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.6` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.6` に更新する。
+
+### Added
+
+- **release フロー骨格 + リリース準備ゲート（`skills/aidlc-v3/steps/release.md`）**: release フェーズの Step 1–4 章立て骨格を新規作成し、Step 1「リリース準備」を実装。全 work item の frontmatter `status` が `done` / `withdrawn` であることを `state-read.sh` / `work-item-validate.sh`（read-only）で検出し、未完了が残る場合は一覧提示して停止。`define_completed: false` / state.json 不在時は release に入らず define/develop へ案内。git status / CI・test 状態確認の挙動（dirty/test 失敗/CI 失敗=停止、CI 未実行=警告継続）を明記（Unit 001 / ストーリー 1）
+- **PR 整備 + release.md テンプレート + review ルーティング（`skills/aidlc-v3/steps/release.md` / `templates/release.md`）**: Step 2「PR 整備」を実装。PR 未作成時は作成・`early_pr` 時は本文更新のみの分岐、`release.pr_number` の state.json 書き込み・検証。`templates/release.md` を新規作成（PR 概要 / work item 完了一覧 / review 結果サマリ / CI 状態 / merge 記録）。review 結果サマリは perspective ごと（premerge / integration / deploy）の未解決指摘数・最高重要度・merge blocker 有無を機械可読に記録（Unit 002→003 データ契約）。release-level review ルーティング（premerge 常時 / integration: done 2 件以上 / deploy: risky done 1 件以上）を既存 reviewing スキルへ委譲（Unit 002 / ストーリー 2・3）
+- **Merge 承認・実行 + Post-merge cleanup（`skills/aidlc-v3/steps/release.md`）**: Step 3「Merge 承認 + 実行」を実装。PR ready 化 + `release.ready` 書き込み、`release.merge_approved` を merge 前の最終コミットで記録し commit + push 後に `gh pr merge`。merge 承認ゲート（manual=明示確認 / semi_auto=CI green・高重要度未解決指摘なし・未 merged 充足で自動）。Step 4「Post-merge」で統合先ブランチへ switch・merge 済み feature branch 削除・`journal.md` 追記・tag/changelog（opt-in）を実装（Unit 003 / ストーリー 4・5）
+- **release フロー回帰テスト（`skills/aidlc-v3/scripts/tests/`）**: state 書き込み契約・Step 1 ゲート・review ルーティング条件・post-merge opt-in 分岐の検証を追加。既存 v3 テストの green 維持を確認（Unit 004 / ストーリー 6）
+
+### Changed
+
+- **`release` コマンド公開フリップ（`skills/aidlc-v3/SKILL.md`）**: `release` コマンドを「予約」から「実装済み」に更新し、ルーティング先を `steps/release.md` に設定。express ラッパ（work item 1 つ・risky なし時の `define → develop → release` 連続実行）が release まで到達する記述を整合（Unit 004 / ストーリー 6）
+
+---
+
+## [3.0.0-alpha.5] - 2026-06-27
+
+AI-DLC v3 フルリニューアルの **Phase 4（develop normal/risky 分岐）**。`/aidlc-v3 develop` を tiny 専用から、work item の `size`（tiny/normal/risky）× cycle の `depth_level` に応じて設計・レビュー・テストプラン・rollback note の厚みを変える分岐へ拡張。`develop.md` の「normal/risky 未サポート停止」を解除し、`data-model.md` §8 マトリクスを単一の判定結果として後続 Step（設計・レビュー）の実行可否を決める分岐基盤・design テンプレート生成・review routing・全マトリクス回帰テストを実装。tiny フローは非回帰。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.5` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.5` に更新する。
+
+### Added
+
+- **size×depth_level 分岐基盤（`skills/aidlc-v3/steps/develop.md`）**: `size != tiny` 停止ブロックを分岐に置換し、`depth_level`（未設定時 `standard`）を解決して §8 マトリクスから成果物・レビュー要否を決定。`normal + minimal` が実装 + テストで end-to-end 完走、`risky + minimal` はエラー停止（mutation/副作用なし）、`tiny + comprehensive` は短い理由記録を追加（tiny + {minimal,standard} は非回帰）（Unit 001 / ストーリー 1）
+- **design テンプレート + Step 2 設計生成（`skills/aidlc-v3/templates/design.md` / `steps/develop.md`）**: design 本体 + 条件付きセクション（`## Risk Analysis` / `## Test Plan` / `## Rollback Note`）を depth_level 別に生成し `designs/<id>-<slug>.md` へ出力。Design 承認ゲートを発火（Unit 002 / ストーリー 2）
+- **review routing + Step 5 レビュー実行（`skills/aidlc-v3/steps/develop.md`）**: size×depth_level に応じて既存 `reviewing-construction-code` / `reviewing-construction-design` へルーティングし、結果を `reviews/<id>-<slug>.md` に perspective 別セクションで記録。5R 上限・Defer 戦略（`OUT_OF_SCOPE` / `TECHNICAL_BLOCKER` の自動 Issue 起票）を適用（Unit 003 / ストーリー 3）
+- **全マトリクス回帰テスト（`skills/aidlc-v3/scripts/tests/test-develop-flow.sh`）**: §8 全有効組合せ（tiny/normal × {minimal,standard,comprehensive} + risky × {standard,comprehensive}）の検証、`risky + minimal` エラー停止検証、design/review の生成・スキップ検証、外部レビュー CLI のモック化、既存テスト緑の確認（Unit 004 / ストーリー 4）
+
+### Changed
+
+- **develop ワークフロー記述更新（`docs/v3/workflow.md`）**: develop フローの size 分岐に関する記述を Phase 4 実装に整合（Unit 001–003）
+
+---
+
+## [3.0.0-alpha.4] - 2026-06-24
+
+AI-DLC v3 フルリニューアルの **frontmatter パース安全境界の共有ライブラリ集約**。振り返り #733 の T1/T2'/T4/T6 に対応し、`skills/aidlc-v3/` の frontmatter パース（スカラー抽出 / dependencies 配列 / frontmatter ブロック抽出 + malformed guard）を `scripts/lib/` の単一共有ライブラリへ集約。寛容な line ベース regex が malformed YAML を通すバリデーションクラスバグの反復再発を構造的に断つ。conformance test による受理/拒否境界の固定、禁止パースパターンの CI 機械検出、CycleResolver 明示指定優先の回帰テストを含む。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.4` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.4` に更新する。
+
+### Added
+
+- **共有 frontmatter parser ライブラリ（`skills/aidlc-v3/scripts/lib/`）**: スカラー抽出 / dependencies 配列パース / frontmatter ブロック抽出 + malformed guard / 拒否理由標準化を単一ライブラリに集約（Unit 001 / T1）
+- **conformance test suite（受理/拒否 fixture）**: 移行が既存の受理/拒否境界を壊さないことを保証するテストを追加し、3 consumer を同一 fixture で検証。#733 既知 malformed クラスを拒否 fixture として明示固定（Unit 001 / T2'）
+- **禁止パースパターンの CI 機械検出（`skills/aidlc-v3/scripts/`）**: 個別 consumer スクリプトへの frontmatter 構造解釈の禁止パターン（`grep`/`sed`/`awk`/permissive `jq`）混入を機械検出し、GitHub Actions のジョブで PR を fail させる。`lib/` / `tests/` は allowlist 除外、`state-*.sh` の JSON/jq は検出対象外（Unit 002 / T4）
+- **CycleResolver 明示指定優先の回帰テスト（`skills/aidlc-v3/scripts/tests/`）**: `state.json` の `current_cycle`（明示指定）が git 履歴・周辺ファイル名・ディレクトリ走査順に影響されないことを固定し、#733 P4 クラスの再発を防止（Unit 003 / T6）
+
+### Changed
+
+- **3 consumer の共有 parser 移行（`work-item-validate.sh` / `work-item-next.sh` / `work-item-status.sh`）**: 個別パース実装を撤去し共有ライブラリ source へ移行。「個別 consumer での frontmatter 構造解釈禁止」規約を文書化（Unit 001 / T1）
+
+---
+
+## [3.0.0-alpha.3] - 2026-06-14
+
+AI-DLC v3 フルリニューアルの **Phase 3（define + develop tiny フロー実行実装）**。alpha.2 で「読める手順」として固定した `skills/aidlc-v3/` を実行実装へ進める。`/aidlc-v3 define` で v3 cycle（intent / work-items / `.aidlc/state.json` / journal）を実生成し、`develop` の tiny フローを実装。依存解決 `work-item-next.sh`、state safety hardening（schema_version 互換性検証 + writer ガード / #731 解消）、`/aidlc-v3` 起動有効化（marketplace 登録）を含む。v2 (`skills/aidlc`) には非影響。本流化（v3→v2 置換）・marketplace version の v3.0.0 化は Phase 7 へ defer する。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.3` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.3` に更新する。
+
+### Added
+
+- **v3 define フロー実行実装（`skills/aidlc-v3/steps/define.md` / `scripts/state-init.sh` 等）**: `/aidlc-v3 define` で intent / work-items / `.aidlc/state.json` / journal を実生成するフローを実装（Unit 001）
+- **work item 依存解決（`skills/aidlc-v3/scripts/work-item-next.sh`）**: 依存関係を解決して次に着手する work item を選定するスクリプトとテストを追加（Unit 002）
+- **v3 develop tiny フロー実行実装（`skills/aidlc-v3/steps/develop.md` / `scripts/work-item-status.sh` 等）**: `/aidlc-v3 develop` の tiny フロー（work item の実装・状態遷移）を実装（Unit 003）
+- **`/aidlc-v3` 起動有効化（`.claude-plugin/marketplace.json`）**: plugins に `./skills/aidlc-v3` を追加して `/aidlc-v3` 起動を有効化し、起動構造を統合検証（`scripts/tests/test-activation.sh`）（Unit 005）
+
+### Changed
+
+- **state-validate.sh / state-write.sh の schema_version 互換性ガード（#731）**: 未知 `schema_version` を WARN 化し、state-write.sh に未知バージョンへの更新防止ガードを追加（Unit 004）
+
+---
+
+## [3.0.0-alpha.2] - 2026-06-11
+
+AI-DLC v3 フルリニューアルの **Phase 2（aidlc-v3 skeleton）**。alpha.1 で `docs/v3/*.md` に確定した設計を、v2 (`skills/aidlc`) と共存する `skills/aidlc-v3/` の最初の骨組みとして具現化する。SKILL.md ルーティング・define/status のステップ手順書・`state.json` 操作スクリプト・成果物テンプレートを整備し、各フローの実行ロジック実装は Phase 3 以降へ defer する。v2 (`skills/aidlc`) には非影響。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.2` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.2` に更新する。
+
+### Added
+
+- **aidlc-v3 SKILL.md（`skills/aidlc-v3/SKILL.md`）**: define/develop/release/reflect/status/doctor の 6 コマンドルーティング、express モード、旧名エイリアス、引数なし実行のスケルトンを定義（Unit 003）
+- **define / status ステップ手順書（`skills/aidlc-v3/steps/define.md` / `steps/status.md`）**: define フロー手順と status 出力仕様を文書化（Unit 003）
+- **state 操作スクリプト（`skills/aidlc-v3/scripts/state-read.sh` / `state-write.sh` / `state-validate.sh`）**: `state.json` の読み取り・書き込み・検証スクリプト基盤とテスト（`tests/test-state-scripts.sh`）を整備（Unit 001）
+- **v3 成果物テンプレート（`skills/aidlc-v3/templates/intent.md` / `work-item.md` / `journal.md`）**: Intent・work item・journal の成果物テンプレートを追加（Unit 002）
+
+---
+
+## [3.0.0-alpha.1] - 2026-06-10
+
+AI-DLC v3 フルリニューアルの **Phase 1（RFC / data model 固定）**。`docs/v3-renewal-plan.md` を入力に、v3 の設計判断を確定する RFC 群と state schema・work item template の初版を `docs/v3/` 配下に文書化する docs-only サイクル。実行可能コードは生成せず、配布物（`skills/` / `bin/` / `scripts/` / `config/`）への変更も行わない。本 alpha.1 は v3 リニューアル全体の最初の段階であり、alpha.1（RFC / data model 固定）→ alpha.2（skeleton）→ alpha.3（define + develop tiny）… と段階的に進め、全 alpha 完走後に `v3.0.0` を `main` へマージする。
+
+> **注**: 本リリースは統合ベースブランチ `v3.0.0` 向けの pre-release であり、`main` への反映および `v3.0.0-alpha.1` タグの付与は行われない（`auto-tag.yml` は `main` push 時のみ発火）。`metadata.version` は v3 リニューアル進行の可視化のため `v3.0.0` 統合ブランチ上で `3.0.0-alpha.1` に更新する。
+
+### Added
+
+- **v3 RFC（`docs/v3/rfc.md`）**: v3 の設計原則 7 件、core / extension 境界、削減目標、設計判断 6 件を確定（Unit 001 / DG-1 コマンド名 `develop` 統一含む）
+- **v3 ワークフロー（`docs/v3/workflow.md`）**: 6 コマンド体系・各フェーズ詳細・引数なしルーティング・フェーズ導出ロジックのスナップショットを文書化（Unit 002）
+- **v3 データモデル（`docs/v3/data-model.md`）**: ディレクトリ構造・`state.json` schema 初版・frontmatter 規約・フェーズ導出ロジック SoT（§5）・work item template を確定（Unit 003）
+- **v3 移行方針（`docs/v3/migration.md`）**: 移行モード・v2 → v3 データ変換方針・非互換点・GitHub Release 統合・EOL 条件を文書化（Unit 004）
+
+---
+
 ## [2.6.6] - 2026-05-20
 
 `aidlc-retrospective` skill の T 中心リファクタ + 本質的振り返り化を実装する patch サイクル。集約 Issue 起票を既定で廃止し T 件数分のループ起票に切り替えつつ、`aggregate_issue_enabled` フラグ（既定 `false`）で旧動作を保持する後方互換構造で patch リリース妥当性を担保。あわせてセルフレビュー観点（表面的 Try 起票防止）と一次情報三層検証 helper を skill 内に組み込む。
