@@ -7,6 +7,24 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-beta.1] - 2026-07-03
+
+AI-DLC v3 フルリニューアルを **ベータ（preview）として初めて `main` に反映**する。v3（`skills/aidlc-v3` = `/aidlc-v3`）を v2（`skills/aidlc` = `/aidlc`）と**共存**させ、v2 側は無変更・既定のまま。実ユーザーからのフィードバックを得るソフトローンチであり、フル本流化（`/aidlc` の v3 置換）は後続（Phase 7）で行う。
+
+> **注**: 本エントリは v3 alpha 系列（alpha.1〜alpha.9）を積み上げた統合ブランチ `v3.0.0` を `main` に反映するもの。各 alpha エントリの「`main` への反映は行わない」注記は、本 beta.1 で `main` へ反映されることをもって更新される（`metadata.version` を `3.0.0-beta.1` に更新）。
+
+### Added
+
+- **v3 ベータ同梱（`skills/aidlc-v3` = `/aidlc-v3`）**: フェーズ進行を会話履歴の推論ではなく `state.json` + work item frontmatter から明示導出する新設計の v3 オーケストレーター（`define` / `develop` / `release` / `reflect` + 補助 `status` / `doctor`）をベータとして `main` に反映。alpha.1〜alpha.9 の実装（RFC/data-model 固定・skeleton・define/develop/release/reflect/status/doctor・doctor 11 領域完全診断 + `[trace]` 後段検証・frontmatter 安全境界）を含む。v2（`/aidlc`）とは共存し非影響
+
+### Notes
+
+- **v2 は既定・安定版のまま**（`/aidlc`）。v3 は opt-in の preview（`/aidlc-v3`）
+- **既知の制約（beta）**: v2 → v3 migration は未実装（v3 は new-cycle-only 推奨）/ doctor のフェーズ complete 判定の gh フィールド不整合（#744）/ v3 サイクルの release フロー hard gate と CI トリガーの不整合（#745）
+- README に v3 ベータの案内・opt-in・既知制約を追記
+
+---
+
 ## [3.0.0-alpha.9] - 2026-07-03
 
 AI-DLC v3 フルリニューアルの **Phase 7-a**（Epic #736）セルフドッグフーディング。本サイクル自体を v3 スキル（`skills/aidlc-v3`）の define → develop → release フローで駆動し、実 work item として v3 診断コマンド `doctor` の `[trace]` 領域に trace chain 後段検証を追加。read-only / 自動修正なしを維持。v2 (`skills/aidlc`) には非影響。

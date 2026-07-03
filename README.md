@@ -1,6 +1,6 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-3.0.0--alpha.8-blue.svg)](./.claude-plugin/marketplace.json)
+[![Version](https://img.shields.io/badge/version-3.0.0--beta.1-blue.svg)](./.claude-plugin/marketplace.json)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
@@ -10,6 +10,21 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 - **AI-DLC とは**: AI を「支援ツール」ではなく、開発プロセスの「中心的な協働者」として位置づける新しいソフトウェア開発方法論
 - **3つのフェーズ**: Inception（起動）→ Construction（構築）→ Operations（運用）
+
+## v3 ベータ版について（preview）
+
+**v3.0.0-beta.1** より、次世代の AI-DLC **v3** を **ベータ（preview）** として同梱しています。既存の v2 とは**共存**し、v2 側の破壊的変更はありません。
+
+- **`/aidlc`（v2）**: 従来どおりの安定版・既定。挙動は変わりません
+- **`/aidlc-v3`（v3 beta）**: フェーズ進行を会話履歴の推論ではなくリポジトリ内の `state.json` + work item frontmatter から**明示的に導出**する新設計。`define → develop → release → reflect` の軽量フローを提供します（opt-in / preview）
+
+### 既知の制約（beta）
+
+- v2 → v3 の **migration は未実装**です。v3 は **新規サイクルでの利用**を推奨します（new-cycle-only）
+- 一部の診断・CI 統合に既知の課題があります（doctor のフェーズ判定 [#744]、release フローの hard gate [#745]）
+- 本番運用は v2（`/aidlc`）を、試用・フィードバックは v3（`/aidlc-v3`）を推奨します
+
+フィードバックは Issue でお寄せください。
 
 ## インストール
 
@@ -37,7 +52,8 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 | スキル | 用途 |
 |--------|------|
-| `aidlc` | AI-DLCオーケストレーター（メインスキル） |
+| `aidlc` | AI-DLCオーケストレーター（メインスキル / v2 安定版） |
+| `aidlc-v3` | AI-DLC v3 オーケストレーター（**beta / preview** / `/aidlc-v3`） |
 | `aidlc-setup` | 環境セットアップ・アップグレード |
 | `aidlc-migrate` | v1→v2マイグレーション |
 | `aidlc-feedback` | AI-DLCへのフィードバック送信 |
