@@ -2,7 +2,7 @@
 
 - **ステータス**: Accepted（Unit 003 設計フェーズ承認済 / 2026-06-10）
 - **対象サイクル**: v3.0.0-alpha.1
-- **位置づけ**: v3 の状態管理（ディレクトリ構造・state.json schema・work item template・フェーズ導出ロジック）の設計正本。**フェーズ導出ロジックの Single Source of Truth（SoT）**
+- **位置づけ**: v3 の状態管理（ディレクトリ構造・state.json schema・work item template・フェーズ導出ロジック・config.toml schema）の設計正本。**フェーズ導出ロジックの Single Source of Truth（SoT）**
 - **入力**: `docs/v3/rfc.md`（Unit 001 確定 RFC: DG-6 state format = ハイブリッド）、`docs/v3/workflow.md`（Unit 002: 導出結果の参照元）、`docs/v3-renewal-plan.md`（データモデルセクション）
 - **SoT 境界**: フェーズ導出ロジックの正本は本書（§5）。`workflow.md`（§2.3 ルーティング / §3.5 status / §3.6 doctor）は導出**結果**を参照し、導出規則そのものは再定義しない
 - **スコープ外**: validator / state 操作スクリプトの実装（後続フェーズ）/ migration のデータ変換マッピング（`migration.md`・Unit 004）/ state format の選定理由（`rfc.md` DG-6）
@@ -18,7 +18,7 @@ v3 はフェーズ進行を会話履歴の推論ではなく、リポジトリ�
 
 この分散により、複数人が異なる work item を並行作業しても `state.json` がコンフリクトしない。フェーズを表す `current_phase` は状態として保持せず、`state.json` + work item frontmatter から常に導出する（§5）。
 
-本書はディレクトリ構造（§2）、state.json schema（§3）、work item frontmatter / テンプレート（§4）、フェーズ導出ロジック（§5 / SoT）、破損・不正・矛盾時の扱い（§6）、journal 形式（§7）、size × depth_level マトリクス（§8）、整合方針（§9）、成果物一覧（§10）を定義する。
+本書はディレクトリ構造（§2）、state.json schema（§3）、work item frontmatter / テンプレート（§4）、フェーズ導出ロジック（§5 / SoT）、破損・不正・矛盾時の扱い（§6）、journal 形式（§7）、size × depth_level マトリクス（§8）、整合方針（§9）、成果物一覧（§10）、config.toml schema（§11）を定義する。
 
 ---
 
@@ -287,7 +287,7 @@ doctor が検知する破損パターンと復帰可否の**方針**を定める
 
 **`depth_level` の保存場所**: `depth_level` は `.aidlc/config.toml` の設定キー（enum: `minimal` / `standard` / `comprehensive`、未設定時の既定値は `standard`）。サイクル単位で固定し、サイクル途中では変更しない。`size` が work item frontmatter（§4）に保存されるのに対し、`depth_level` は config.toml 側に置くため、成果物要否を判定する側（doctor / 後続 Unit 004 migration / validator）は **work item frontmatter の `size` × config.toml の `depth_level`** の組で本表を参照する。
 
-> 注: v3 の config.toml キー全体の終端設計（キー数削減・キーパス命名）は本書のスコープ外（RFC §6 で別途確定予定）。本節は size × depth_level マトリクスが参照する `depth_level` の保存場所・enum・既定値のみを確定する。
+> 注: v3 の config.toml キー全体の終端設計（キー数削減・キーパス命名）は **§11（config.toml schema）で確定済み**である。本節は size × depth_level マトリクスが参照する `depth_level` の保存場所・enum・既定値を確定し、§11 のキー #1（`rules.depth_level.level`）と整合する。
 
 | | depth_level: minimal | depth_level: standard | depth_level: comprehensive |
 |---|---|---|---|
@@ -320,3 +320,33 @@ doctor が検知する破損パターンと復帰可否の**方針**を定める
 | reflect | `reflect.md` | Issue 作成 |
 
 **review 成果物の保存先（develop と release の区別）**: `reviews/*.md` は **develop の work item レビュー（perspective = design / code）**の成果物のみを格納する（要否は §8）。release フェーズで実行される release-level review（perspective = premerge〔常時〕/ integration〔複数 work item 完了時〕/ deploy〔risky 時〕、`workflow.md` §3.3 / §6.1）の結果は **`release.md` に集約**し、`reviews/*.md` には残さない（PR コメント等は補助）。これにより release review が work item 単位の `reviews/*.md` と混在しない。
+
+---
+
+## 11. config.toml schema（v3 終端キー集合）
+
+**本節が v3 `.aidlc/config.toml` の終端キー集合（キー名 / 型 / 既定値 / 用途）の唯一の正本である**（RFC §6.4 の委譲先 / v3.0.0-beta.3 work item 001 で確定）。v2 → v3 のキー変換**規則**は `migration.md` §3.1 が定義し、schema 本体は本節のみが定義する（SoT 二重定義回避）。
+
+### 11.1 キー集合（8 キー）
+
+キーパス命名は v2 互換の `[rules.<domain>]` 階層を維持する（リネームなし / 削減のみ）。v3 skeleton・doctor・共有 review 資産が既に v2 パス（`rules.depth_level.level` 等）を読んでおり、維持により migration の retained キーは identity mapping となる。
+
+| # | キー | 型 | 既定値 | 用途 |
+|---|------|----|--------|------|
+| 1 | `rules.depth_level.level` | string enum（`minimal` / `standard` / `comprehensive`） | `"standard"` | size × depth_level マトリクス（§8）の cycle 側入力 |
+| 2 | `rules.automation.mode` | string enum（`manual` / `semi_auto`） | `"manual"` | 承認ゲートの自動承認制御（`workflow.md` §5） |
+| 3 | `rules.reviewing.mode` | string enum（`required` / `recommend` / `disabled`） | `"recommend"` | review 処理パス選択（routing_review_mode） |
+| 4 | `rules.reviewing.tools` | array of string | `["codex"]` | review ツール優先順位（フォールバック順序） |
+| 5 | `rules.reviewing.exclude_patterns` | array of string | `[]` | review 時の機密情報除外パターン |
+| 6 | `rules.release.changelog` | bool | `false` | release の changelog 追記 opt-in |
+| 7 | `rules.release.version_tag` | bool | `false` | release の tag 作成 opt-in（extension 相当 / 既定 off / RFC DG-5 整合） |
+| 8 | `rules.release.required_ci_zero_fallback` | bool | `false` | required CI 0 件時の release hard gate フォールバック opt-in（#745） |
+
+### 11.2 採用基準・整合
+
+- **採用基準**: v3 フェーズフロー（steps）または委譲先共有資産が現に参照する**挙動制御キー**のみを残す。v2 の情報フィールド・v2 固有機能キー（feedback / retrospective / git 細粒度制御 / inception / linting / cycle / version_check / construction / documentation / github 等の 27 キー）は終端集合に含めない（v2 34 − 維持 7 = drop 27 / v3 新規 1 を加えて終端 8）。
+- **RFC §6 整合**: 本節により RFC §6.4 の終端値の揺れ（8 か 12 か）は **8 で確定**する（削減率 34 → 8 = ~76% / RFC §6.2 と整合）。
+- **未知キーの扱い**: v3 は本節にないキーを**無視する**（エラーにしない / `migration.md` 非互換点 #3 と整合。migration 実行時は警告を出す）。
+- **`required_ci_zero_fallback` の発動形態**: config フラグは**経路の解放**のみを担い、実際のフォールバック発動時には別途**ユーザー承認 + release.md / journal への記録**を必須とする（既定 `false` = 現行 fail-closed 挙動不変。承認手順の詳細は release フロー側で定義する / #745）。
+- **共存期間の注記**: v3 が一時的に委譲する v2 共有資産（`review-flow.md` / `review-routing.md` 等）が参照する v2-only キー（例: `rules.reviewing.codex_bot_account`）は本 schema に含めない。不在時は各資産の文書化された既定値へフォールバックし、review 統合（9→1 `aidlc-review`）で解消する。
+- **defaults.toml 実体化**: 本 schema を既定値として持つ v3 defaults.toml の実体ファイルはローダー実装側（本流化フェーズ）で配置する。本節は schema 定義のみを確定する。

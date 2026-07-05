@@ -12,3 +12,9 @@
 - 付随: beta.2 で解消済みの #744 / #747 を close（PR #748 merged 根拠のコメント付き）
 - 実行経路: `/aidlc-v3 i`（Skill 起動 / plugin cache 366bcc657a50）。単文字 `i` は旧名 inception = define と解釈
 - 前サイクル state.json（beta.2 / complete 導出・PR #748 merged 確認済み）を削除して state-init.sh で再生成（create-only 仕様のため / beta.2 サイクルの precedent に準拠）
+
+## 2026-07-05
+
+- develop completed: 001-v3-config-schema-final
+- matrix_case: normal_standard（design: simple / review: code）。design 承認: semi_auto auto 承認 / code review: codex 2R（R1 指摘 1 件低→resolved / R2 clean）auto_approved
+- 確定内容: v3 config.toml 終端キー集合 = 8 キーを data-model.md §11 に新設（SoT 一意化）。キーパスは v2 互換 `[rules.<domain>]` 維持 / 維持 7 キー identity + 新規 1（`rules.release.required_ci_zero_fallback` / 既定 false）+ drop 27（警告）。002 の opt-in 発動形態は「config フラグ + 発動時ユーザー承認の二段」で確定。RFC §6.4 の終端値の揺れ（8 か 12 か）は 8 で確定。migration.md §8 SoT ギャップ注記を解消し §3.1 キーマッピング表を新設（参照は RFC §6.4 → data-model §11 ← migration §3.1 の一方向）

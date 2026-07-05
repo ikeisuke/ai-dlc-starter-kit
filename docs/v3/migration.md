@@ -5,7 +5,7 @@
 - **位置づけ**: v2 → v3 移行の**方針**正本。移行モード・データ変換マッピング・非互換点・推奨モード・条件付き EOL との関係を確定する
 - **入力**: `docs/v3/rfc.md`（Unit 001: DG-3 条件付き EOL / DG-5 GitHub 前提 / §4.3 core-extension 分類 / §5.7 v2 共存方針 / §7 引き継ぎマトリクス）、`docs/v3/data-model.md`（Unit 003: 変換先ディレクトリ構造 / state.json schema / work item frontmatter の正本）、`docs/v3/workflow.md`（Unit 002: コマンド名 develop / フェーズコマンド体系）、`docs/v3-renewal-plan.md`（v2 → v3 移行セクション）
 - **SoT 境界**: 変換先 schema（ディレクトリ構造 / state.json / work item frontmatter）の正本は `data-model.md`。本書は変換**規則**のみを定義し、変換先 schema を再定義しない
-- **スコープ外**: migration スクリプトの実装（引数仕様 / 終了コード / 実体コードは後続フェーズ）/ v3 config.toml キー終端設計（8 キーの具体集合・命名。§8 の SoT ギャップ参照）/ v2 EOL の運用実行・告知掲載・メンテナンスモード運用の実施作業（条件付き EOL の方針記述のみ本書スコープ）
+- **スコープ外**: migration スクリプトの実装（引数仕様 / 終了コード / 実体コードは後続フェーズ）/ v3 config.toml キー終端設計の schema 定義本体（正本は `data-model.md` §11。本書は §3.1 で変換規則のみを定義する）/ v2 EOL の運用実行・告知掲載・メンテナンスモード運用の実施作業（条件付き EOL の方針記述のみ本書スコープ）
 
 ---
 
@@ -42,9 +42,44 @@ consumer は本書の移行モード比較（§2）・データ変換マッピ�
 | `progress.md` | `.aidlc/state.json` | パース + schema 生成（`define_completed` / `release` 状態を導出） | `data-model.md` §3 |
 | `history/*.md` | `.aidlc/cycles/<cycle>/journal.md` | 要約統合（追記型の軽量形式に集約） | `data-model.md` §7 |
 | `operations/release_notes.md` | `.aidlc/cycles/<cycle>/release.md` | パスコピー | `data-model.md` §2 |
-| `.aidlc/config.toml`（v2: 多数キー） | `.aidlc/config.toml`（v3: 削減キー集合） | キーマッピング + 不要キー警告（§8 の SoT ガード参照） | （終端 schema 未確定 / §8） |
+| `.aidlc/config.toml`（v2: 34 キー） | `.aidlc/config.toml`（v3: 8 キー） | キーマッピング（§3.1）+ 不要キー警告 | `data-model.md` §11 |
 
-**config 変換の扱い**: 本書は config について「v2 キー → v3 キーの対応方針」と「v3 で未サポートになった v2 キーを**警告する**（エラーにはしない / 非互換点 #3 と整合）挙動」のみを記述する。v3 config の 8 キー終端集合は本書では確定しない（理由は §8 参照）。
+**config 変換の扱い**: 本書は config について「v2 キー → v3 キーの対応規則（§3.1）」と「v3 で未サポートになった v2 キーを**警告する**（エラーにはしない / 非互換点 #3 と整合）挙動」のみを記述する。v3 config の 8 キー終端集合（キー名 / 型 / 既定値 / 用途）の正本は `data-model.md` §11 である（§8 参照）。
+
+### 3.1 config キーマッピング（v2 → v3）
+
+変換先 schema の正本は `data-model.md` §11。本節は `best-effort` および new-cycle-only の「v2 config 読み込み → v3 config 生成」に適用する変換規則のみを定義する。
+
+**維持キー（7 キー / identity mapping）**: 以下はキーパス・型・既定値とも v2 から不変で引き継ぐ。
+
+| v2 キー | v3 キー |
+|---------|---------|
+| `rules.depth_level.level` | 同一（identity） |
+| `rules.automation.mode` | 同一（identity） |
+| `rules.reviewing.mode` | 同一（identity） |
+| `rules.reviewing.tools` | 同一（identity） |
+| `rules.reviewing.exclude_patterns` | 同一（identity） |
+| `rules.release.changelog` | 同一（identity） |
+| `rules.release.version_tag` | 同一（identity） |
+
+**v3 新規キー（1 キー）**: `rules.release.required_ci_zero_fallback` は v2 に対応キーがない（migration では生成時に既定 `false` を適用し、v2 側から値を引き継がない）。
+
+**ドロップキー（27 キー / 変換せず警告）**: 以下は v3 に変換先がなく、検出時に**警告する**（エラーにしない / 非互換点 #3 と整合）。
+
+| v2 テーブル | ドロップされるキー |
+|------------|------------------|
+| `[rules.feedback]` | `enabled` / `upstream_repo` / `open_in_browser` |
+| `[rules.reviewing]` | `codex_bot_account` |
+| `[rules.depth_level]` | `history_level` |
+| `[rules.construction]` | `max_retry` |
+| `[rules.linting]` | `enabled` / `command` |
+| `[rules.cycle]` | `mode` / `git_tracked` |
+| `[rules.version_check]` | `enabled` |
+| `[rules.git]` | `commit_on_unit_complete` / `commit_on_phase_complete` / `branch_mode` / `unit_branch_enabled` / `squash_enabled` / `merge_method` / `draft_pr` / `ai_author` / `ai_author_auto_detect` |
+| `[rules.documentation]` | `language` |
+| `[rules.github]` | `milestone_enabled` |
+| `[rules.inception]` | `dedup_lookback_cycles` |
+| `[rules.retrospective]` | `feedback_mode` / `feedback_max_per_cycle` / `auto_issue_creation` / `aggregate_issue_enabled` |
 
 ## 4. v2 との非互換点
 
@@ -100,6 +135,6 @@ RFC §7 引き継ぎマトリクスが本書（migration.md / Unit 004）に渡�
 ## 8. RFC / data-model.md との整合（SoT 二重定義回避）
 
 - **変換先 schema の SoT**: データ変換の変換先（ディレクトリ構造 / state.json / work item frontmatter）は `data-model.md`（Unit 003）が正本である。本書は変換規則のみを定義し、schema 本体を再定義しない。各変換行に変換先正本（`data-model.md` §N）を併記している（§3）。
-- **config 変換の SoT ガード**: v3 `config.toml` のキー終端設計（34 → 8 のキー集合・命名）は、RFC §6.4 が「`data-model.md` で確定」と委譲し、`data-model.md` §8 が「RFC §6 で別途確定予定」と差し戻しており、現時点でどの確定文書にも存在しない（既知の SoT ギャップ）。このため本書は config 変換について「キーマッピング方針 + 不要キー警告の挙動」のみを記述し、8 キーの具体集合を**新規定義しない**。終端 schema が未確定である事実をここに注記し、確定は別途（RFC §6 / `data-model.md` の `defaults.toml` 設計）に委ねる。`data-model.md` §8 が確定済みの `depth_level`（保存場所 / enum / 既定値）のみは確定参照してよい。
+- **config 変換の SoT**: v3 `config.toml` のキー終端設計（34 → 8 のキー集合・命名）は **`data-model.md` §11（config.toml schema）が正本として確定済み**である（v3.0.0-beta.3 work item 001 で、RFC §6.4 と `data-model.md` §8 の相互委譲による SoT ギャップを解消）。本書は schema 本体を再定義せず、変換**規則**（維持キーの identity mapping / 新規キーの既定値適用 / ドロップキーの警告）のみを §3.1 に定義する。参照方向は RFC §6.4 → `data-model.md` §11 ← 本書 §3.1 の一方向であり循環しない。
 - **コマンド名整合**: 本書は `develop` を正本とし、`build` 表記は使用しない（RFC DG-1 / `workflow.md`）。
 - **core/extension 境界整合**: 非互換点 §4 の #9 / #10 は DG-5（Projects は廃止、Milestone 自動管理・GitHub Release/version_tag 自動作成は extension）と整合する。core は extension 不在でも成立する。
