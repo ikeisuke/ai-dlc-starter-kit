@@ -1,6 +1,6 @@
 ---
 id: "002"
-status: pending
+status: done
 size: normal
 risk: medium
 assigned: null

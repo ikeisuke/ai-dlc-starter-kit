@@ -336,11 +336,55 @@ gh pr view <N> --json state,headRefName,baseRefName,headRefOid,statusCheckRollup
    等）は使わない。判定は次を**両方**行う:
    - `gh pr checks <N> --required`（**必須確認**）で required check を列挙し、**count > 0 かつ全件 pass** を確認する。required が
      0 件（必須 CI 未設定）・pending・取得不能は **fail-closed で停止**（無検証 merge を防ぐ / `mergeStateStatus=CLEAN` だけでは required 0 件を検出できないため）。
+     ただし **required 0 件**（空集合として正常取得できた場合に限る）は、後述「required CI 0 件フォールバック（opt-in）」の
+     条件をすべて満たす場合のみフォールバック充足として扱える。
    - 補強として `gh pr view <N> --json mergeStateStatus,statusCheckRollup` で `mergeStateStatus == CLEAN`（`BLOCKED`/`UNSTABLE`/`BEHIND`/`DIRTY` は不可）かつ `statusCheckRollup` 各 entry が `SUCCESS` を確認する。
 
-いずれか未充足（CI `FAILURE`/未完了/pending/取得不能 / required 0 件 / PR identity 不一致 / PR が `MERGED`）→ **停止**（ユーザー確認でも bypass 不可）。
+いずれか未充足（CI `FAILURE`/未完了/pending/取得不能 / required 0 件〔フォールバック非充足時〕 / PR identity 不一致 / PR が `MERGED`）→ **停止**（ユーザー確認でも bypass 不可）。
 
 充足時、確認した `headRefOid` を **`<final_head_sha>`** として保持し、3-5 の merge に渡す（TOCTOU 防止）。
+
+#### required CI 0 件フォールバック（opt-in / #745）
+
+base ブランチに required CI が構成されていない環境（required check 0 件）向けの opt-in 経路。**既定は無効**であり、
+無効時の挙動（required 0 件 = fail-closed 停止）は従来と完全に同一である。フォールバックが緩和するのは上記条件 3 の
+「required count > 0」要求**のみ**で、CI `FAILURE`・pending・取得不能・PR identity 不一致・`MERGED` への停止は
+フラグ値に関わらず **bypass 不可のまま**維持する。
+
+**適用条件（すべて必須 / 1 つでも欠ければ従来どおり停止）**:
+
+1. `.aidlc/config.toml` の `rules.release.required_ci_zero_fallback == true`（`docs/v3/data-model.md` §11 キー #8 /
+   既定 `false`。読取失敗・不正値は安全側 `false` として扱う）。
+2. 上記条件 1・2（PR OPEN / head・base identity / `headRefOid` 一致）は**フォールバックでも不変で必須**。
+3. required check の列挙が**空集合として正常取得**できた（「0 件」と確定できる場合のみ。コマンドエラー・取得不能・
+   pending は 0 件と区別し、従来どおり停止）。
+4. `mergeStateStatus == CLEAN` かつ `statusCheckRollup` が**空または全 entry SUCCESS**（non-required check の失敗・
+   pending が 1 件でもあればフォールバック不可）。
+
+**発動手順**:
+
+1. **ローカル検証（代替根拠）**: merge 対象と同一内容（3-3 push 後の final head のワーキングツリー）に対して、
+   リポジトリに存在する検証を実行し全件 pass を確認する（存在するものを実行する汎用論理 / 特定リポジトリ判定を埋めない）:
+   - cycle 内 done work item の Traceability「Verification」に列挙された test command / manual check
+   - プロジェクト標準の検証資産（テストスイート / lint / 構文チェック等、リポジトリに定義がある場合）
+   実行結果（コマンドと pass/fail）を記録し、**1 件でも fail があればフォールバック不成立**（停止）。
+   **少なくとも 1 件の検証（test command または manual check）が実行・記録され pass していることをフォールバック
+   成立の必須条件とする**。検証資産が 1 件も存在しない場合はフォールバック不成立（**停止** / 無検証 merge の経路を
+   開かない）。この場合は base ブランチへの CI トリガー追加、または work item Traceability への manual check
+   追記（次回 release で代替根拠になる）を案内する。
+2. **ユーザー明示承認（automation_mode 非依存）**: `automation_mode == semi_auto` でも**自動承認しない**。
+   `AskUserQuestion` で「required CI 0 件の観測事実（取得コマンドと結果）/ ローカル検証の実行結果一覧 / 無 CI での
+   merge となる旨のリスク」を提示し、明示承認を得る。拒否 → フォールバック不成立（従来どおり停止。base ブランチへの
+   CI トリガー追加等の環境側対処を案内する）。
+3. **記録 + 再評価**: 承認後、`release.md` 成果物の「CI 状態」に required 0 件の観測を、「Merge 記録」に
+   `required_ci_zero_fallback` 発動行（観測事実 / ローカル検証サマリ / ユーザー承認）を追記し、3-3 と同様に
+   feature branch へ commit + push する（head 更新）。その後 **3-4 冒頭から再実行**する。
+4. **再実行時の判定**: 適用条件（1〜4）を再充足し、かつ最終 head に発動記録が含まれる場合、条件 3 を
+   「フォールバック充足」とみなし `<final_head_sha>` を保持して 3-5 へ進む（**再承認は求めない**: 記録 commit が
+   承認の証跡であり、`headRefOid` 一致で対象の同一性を担保する）。再実行で required check が出現した場合
+   （base 側で CI が構成された等）→ 通常経路（required 全 pass 要求）で判定する（発動記録は残るが無害）。
+
+> フォールバック発動時は、Step 4-2 の journal 追記（release completed 行）に fallback 発動を 1 行含める。
 
 ### 3-5. merge 実行
 
