@@ -44,6 +44,28 @@ teardown() {
   [[ "$output" == *"error:dirty-worktree"* ]]
 }
 
+@test "v3-preflight: error when state-init.sh cannot be resolved" {
+  setup_v2v3_environment
+  export AIDLC_STATE_INIT_SCRIPT="${TEST_TMPDIR}/missing/state-init.sh"
+  run run_v3_preflight
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"error:state-init-not-found"* ]]
+}
+
+@test "v3-preflight: error when state-validate.sh missing next to state-init.sh" {
+  setup_v2v3_environment
+  mkdir -p "${TEST_TMPDIR}/fake-scripts"
+  cat > "${TEST_TMPDIR}/fake-scripts/state-init.sh" << 'SH'
+#!/usr/bin/env bash
+exit 0
+SH
+  chmod +x "${TEST_TMPDIR}/fake-scripts/state-init.sh"
+  export AIDLC_STATE_INIT_SCRIPT="${TEST_TMPDIR}/fake-scripts/state-init.sh"
+  run run_v3_preflight
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"error:state-validate-not-found"* ]]
+}
+
 @test "v3-preflight: error when v1 markers present (v1→v2 first)" {
   setup_v2v3_environment
   mkdir -p "${TEST_TMPDIR}/docs"

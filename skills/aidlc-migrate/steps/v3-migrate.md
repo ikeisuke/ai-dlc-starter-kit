@@ -23,7 +23,8 @@ scripts/migrate-v3-preflight.sh
 - exit 1（`error:config-not-found` / `error:already-v3` / `error:dirty-worktree` /
   `error:v1-markers-present`）→ エラー内容を提示して**終了**（書き込みなし）。
   `v1-markers-present` の場合は v1→v2 migration（steps/01〜03）を先に完了するよう案内する。
-- exit 2（git リポジトリ外 / jq 不在）→ 環境エラーを提示して**終了**。
+- exit 2（git リポジトリ外 / jq 不在 / `state-init.sh`・`state-validate.sh` 解決不可）→
+  環境エラーを提示して**終了**（Step 5 が依存するスクリプトの解決可能性も適用前にここで検証される）。
 
 ## Step 1: 片方向移行警告の明示
 
@@ -108,7 +109,8 @@ scripts/migrate-v3-preflight.sh
    stdout `status:generated:count=<n>`（exit 0）を確認する。
 
 3. state.json を初期化する。`state-init.sh` は以下の 2 候補を順に解決して実行する
-   （前者が現行配置 / 後者は v3 本流化後の配置。存在した方を使う）:
+   （前者が現行配置 / 後者は v3 本流化後の配置。存在した方を使う。解決可能性は
+   Step 0 の preflight が適用前に検証済み）:
 
    - `<スキルベースディレクトリ>/../aidlc-v3/scripts/state-init.sh`
    - `<スキルベースディレクトリ>/../aidlc/scripts/state-init.sh`

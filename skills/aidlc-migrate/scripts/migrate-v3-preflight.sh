@@ -13,7 +13,11 @@
 # 終了コード:
 #   0: 前提チェック通過
 #   1: 前提条件エラー（config 不在 / v3 移行済み / dirty worktree / v1 マーカー残存）
-#   2: システムエラー（git リポジトリ外 / jq 不在）
+#   2: システムエラー（git リポジトリ外 / jq 不在 / state-init.sh・state-validate.sh 解決不可）
+#
+# 環境変数:
+#   AIDLC_STATE_INIT_SCRIPT: state-init.sh の解決候補を単一パスに固定する明示 override
+#                            （未設定時は steps/v3-migrate.md Step 5 と同じ 2 候補を順に解決）
 #
 # 手順方針の正本: docs/v3/migration.md §6
 #
@@ -34,6 +38,34 @@ echo "warn:one-way-migration:v2→v3 移行は片方向であり、適用後の 
 # jq の存在確認（state-init.sh が依存）
 if ! command -v jq >/dev/null 2>&1; then
   echo "error:jq-not-found" >&2
+  exit 2
+fi
+
+# state-init.sh の解決確認（Step 5 の state.json 初期化が依存）。
+# config 置換後に state 初期化が依存不備で失敗する部分適用状態を防ぐため、適用前に検証する。
+# 候補は steps/v3-migrate.md Step 5 の 2 候補解決と同一に保つ。
+_preflight_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_preflight_state_init_candidates=(
+  "${_preflight_script_dir}/../../aidlc-v3/scripts/state-init.sh"
+  "${_preflight_script_dir}/../../aidlc/scripts/state-init.sh"
+)
+if [ -n "${AIDLC_STATE_INIT_SCRIPT:-}" ]; then
+  _preflight_state_init_candidates=("${AIDLC_STATE_INIT_SCRIPT}")
+fi
+_preflight_state_init_resolved=""
+for _preflight_cand in "${_preflight_state_init_candidates[@]}"; do
+  if [ -f "${_preflight_cand}" ] && [ -x "${_preflight_cand}" ]; then
+    _preflight_state_init_resolved="${_preflight_cand}"
+    break
+  fi
+done
+if [ -z "${_preflight_state_init_resolved}" ]; then
+  echo "error:state-init-not-found:state-init.sh を解決できない（実行可能な候補なし）" >&2
+  exit 2
+fi
+_preflight_state_validate="$(dirname "${_preflight_state_init_resolved}")/state-validate.sh"
+if [ ! -f "${_preflight_state_validate}" ] || [ ! -x "${_preflight_state_validate}" ]; then
+  echo "error:state-validate-not-found:state-init.sh と同ディレクトリに実行可能な state-validate.sh がない" >&2
   exit 2
 fi
 
