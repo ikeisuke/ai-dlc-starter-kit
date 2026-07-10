@@ -54,7 +54,7 @@ consumer は本書の移行モード比較（§2）・データ変換マッピ�
 
 ### 3.1 config キーマッピング（v2 → v3）
 
-変換先 schema の正本は `data-model.md` §11。本節は `best-effort` および new-cycle-only の「v2 config 読み込み → v3 config 生成」に適用する変換規則のみを定義する。
+変換先 schema の正本は `data-model.md` §11。本節は「v2 config 読み込み → v3 config 生成」に適用する変換規則のみを定義する（config 生成は §2 注記のとおり `new-cycle-only` / `archive-only` / `best-effort` の**全モード共通**処理であり、本規則も全モードに適用される）。
 
 **維持キー（7 キー / identity mapping）**: 以下はキーパス・型・既定値とも v2 から不変で引き継ぐ。
 

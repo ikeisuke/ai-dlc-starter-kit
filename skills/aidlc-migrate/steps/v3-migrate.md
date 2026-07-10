@@ -108,8 +108,10 @@ scripts/migrate-v3-preflight.sh
 
    stdout `status:generated:count=<n>`（exit 0）を確認する。
 
-3. state.json を初期化する。`state-init.sh` は以下の 2 候補を順に解決して実行する
-   （前者が現行配置 / 後者は v3 本流化後の配置。存在した方を使う。解決可能性は
+3. state.json を初期化する。`state-init.sh` の解決規則は preflight
+   （`migrate-v3-preflight.sh`）と同一契約とする: 環境変数 `AIDLC_STATE_INIT_SCRIPT` が
+   設定されている場合はそのパスを唯一の候補とし、未設定時は以下の 2 候補を順に解決して
+   実行する（前者が現行配置 / 後者は v3 本流化後の配置。存在した方を使う。解決可能性は
    Step 0 の preflight が適用前に検証済み）:
 
    - `<スキルベースディレクトリ>/../aidlc-v3/scripts/state-init.sh`
