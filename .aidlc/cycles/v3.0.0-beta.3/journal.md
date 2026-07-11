@@ -27,3 +27,11 @@
 - develop completed: 003-migrate-v2-to-v3-core
 - matrix_case: risky_standard（design: full + Rollback Note / review: code_security）。design 承認: manual 承認（semi_auto だが design 承認ポイントは review_not_executed フォールバックでユーザー承認）/ code+security review: codex 3R（R1 指摘 3 件〔security: path-traversal 中 2・出力インジェクション低 1〕→ path-guard 統合等で resolved / R2 指摘 1 件低〔target ディレクトリ誤動作〕→ resolved / R3 clean）auto_approved
 - 確定内容: v2→v3 migration を既存 aidlc-migrate 拡張で実装（新規スキルにしない / SKILL.md に世代ルーティング新設）。new-cycle-only（必須）+ archive-only を steps/v3-migrate.md（人間ゲート 2 箇所 / 片方向警告 / commit しない）+ scripts/migrate-v3-{preflight,config,archive-index}.sh で提供。best-effort は選択時に書き込みゼロで安全中断。archive index 仕様を確定（.aidlc/v2-archive.md / work-items/ 非保有を archive 判定 / 冪等再生成）。state.json 初期化は state-init.sh 再利用（aidlc-v3 → aidlc の 2 候補解決）とし、define.md 4-3 に state.json 初期化済み resume 経路を追記して衝突解消。検証: tests/migration/ 78 pass（新規 29 / 世代差 fixtures 3 種）/ shellcheck・parse-guard・bash-substitution・skill-references・markdownlint green / 実 v2 config での new-cycle-only e2e 実行確認
+
+## 2026-07-11
+
+- release completed: v3.0.0-beta.3 (PR #750 merged)
+- 実行経路: `/aidlc-v3 o`（単文字 `o` は旧名 operations = release と解釈）。Step 1 リリース準備（全 work item done / bats 913 pass / clean worktree）→ Step 2 PR 整備（PR #750 draft 作成 / release.pr_number 記録 / release-level review 3 perspective / release.md 生成）→ Step 3 merge 承認 + 実行（semi_auto 自動承認: merge_blocker_any=false / hard gate: required 5 件全 pass + CLEAN + head 一致 / --match-head-commit merge）→ Step 4 post-merge
+- release-level review（codex / required）: premerge 2R（R1 指摘 1 件中〔release 成果物未コミット〕→ resolved）/ integration 3R（R1 指摘 1 件中〔archive-only 定義乖離疑い → 検証の結果 migration.md §2 の表現誤読誘発と判断し明確化〕→ R2 指摘 1 件低〔§3.1 適用対象欠落〕→ R3 clean）/ deploy 3R（R1 指摘 2 件中〔preflight state-init 未検証 → 解決検証 + テスト 2 件追加 / プレビュー API 不一致 → 事実誤認と確認〕→ R2 指摘 1 件低〔override 解決契約不一致 → Step 5 に明記〕→ R3 clean）。指摘対応コミット: c421ade9 / 9d545a3f
+- gh pr edit はトークンスコープ（read:org 要求）で失敗するため gh api PATCH フォールバックで PR 本文更新
+- tag: skip（version_tag=false）/ changelog: 追記（changelog=true）

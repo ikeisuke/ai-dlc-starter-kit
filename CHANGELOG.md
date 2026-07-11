@@ -7,6 +7,23 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-beta.3] - 2026-07-11
+
+Phase 7 本流化（7-e）の残り前提である release hard gate の required CI 0 件フォールバック（#745 / 7-d 残り）と v2 → v3 migration 実装（7-c）を完成させ、v3 を本流化可能な状態にする（Epic #736）。本サイクルも v3 スキル（`/aidlc-v3`）の define → develop → release フローで駆動（セルフドッグフーディング継続）。
+
+### Added
+
+- **v3 config.toml 終端キー集合の確定（SoT ギャップ解消）**: v3 config.toml の 8 キー schema（キー名 / 型 / 既定値 / 用途）を `docs/v3/data-model.md` §11 に新設し唯一の正本とする。維持 7 キー identity + 新規 1 キー（`rules.release.required_ci_zero_fallback` / 既定 false）+ drop 27 キー（警告のみ）。`migration.md` §8 の SoT ギャップ注記を解消し §3.1 キーマッピング表を新設
+- **release hard gate の required CI 0 件フォールバック（#745）**: v3 release フロー Step 3-4 hard gate に opt-in フォールバックを明文化。適用条件 = config フラグ true + PR identity 不変 + required 0 件の正常取得 + CLEAN/rollup 健全。発動 = ローカル検証（最低 1 件 pass 必須）+ ユーザー明示承認（semi_auto でも自動承認しない）+ release.md 記録。既定 false = 現行 fail-closed 不変
+- **v2 → v3 migration 実装（new-cycle-only + archive-only / Epic #736 7-c）**: `aidlc-migrate` を世代ルーティング化し v2→v3 フローを追加（`steps/v3-migrate.md` + `scripts/migrate-v3-{preflight,config,archive-index}.sh`）。人間確認ゲート 2 箇所 / 片方向移行警告 / 未サポートキーは警告のみ / best-effort は書き込みゼロで安全中断。preflight は state-init.sh / state-validate.sh の解決可能性を適用前検証（部分適用状態の防止）。テスト: v2 config 世代差 fixtures 3 種を含む tests/migration/ 80 pass
+
+### Notes
+
+- best-effort モードの実データ変換（units → work-items / progress → state.json / history → journal 等）は後続サイクルへ defer（Epic #736 に注記）
+- 7-e フル本流化（`skills/aidlc-v3` → `skills/aidlc` 置換 / README 刷新 / GA 化）は本サイクルに含まない
+
+---
+
 ## [3.0.0-beta.2] - 2026-07-04
 
 v3 ベータの既知バグと CI 非互換を解消し、v3 サイクルが `cycle/*` 命名の main 宛て PR で自走できる状態にする（#744 / #747）。本サイクル自体を v3 スキル（`/aidlc-v3`）の define → develop → release フローで駆動（セルフドッグフーディング継続）。v2（`/aidlc`）には非影響。
