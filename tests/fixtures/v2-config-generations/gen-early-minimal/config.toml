@@ -1,0 +1,15 @@
+# AI-DLC プロジェクト設定（初期 v2 世代の最小構成 fixture）
+# 維持キーのうち rules.reviewing.mode のみ明示。他は未設定（v3 既定値フォールバック検証用）。
+
+starter_kit_version = "2.0.0"
+
+[project]
+name = "sample-project"
+type = "general"
+
+[rules.reviewing]
+mode = "recommend"
+
+[rules.git]
+commit_on_unit_complete = true
+commit_on_phase_complete = true

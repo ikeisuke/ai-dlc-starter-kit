@@ -1,0 +1,31 @@
+# AI-DLC プロジェクト設定（未知キー・不正値混入 fixture）
+# - rules.depth_level.level: enum 外の値（フォールバック検証）
+# - rules.reviewing.tools: 複数行 array（単一行のみ対応 → フォールバック検証）
+# - rules.release.required_ci_zero_fallback: v3 新規キーが v2 側に存在（引き継がない検証）
+# - rules.custom / future.section: 未知・カスタムキー（警告のみでエラーにしない検証）
+
+starter_kit_version = "2.9.9"
+
+[rules.depth_level]
+level = "ultra"
+
+[rules.automation]
+mode = "semi_auto"
+
+[rules.reviewing]
+mode = "required"
+tools = [
+  "codex",
+  "claude"
+]
+
+[rules.release]
+changelog = true
+version_tag = false
+required_ci_zero_fallback = true
+
+[rules.custom]
+my_special_flag = true
+
+[future.section]
+key = "value"

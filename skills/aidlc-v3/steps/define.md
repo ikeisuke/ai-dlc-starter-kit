@@ -131,6 +131,13 @@ scripts/state-init.sh "<cycle>"
 - `current_cycle` が許容文字集合外 / 既存 state.json がある場合は exit 1。
 - jq 未導入・依存不備等は exit 2。
 
+**state.json 初期化済み環境での resume 経路**: `.aidlc/state.json` が既に存在し、その
+`current_cycle` が Step 2 で確定した cycle と一致し、かつ `define_completed` が `false` の
+場合（例: v2→v3 migration が state.json を初期化済みの環境）、本 4-3 を skip して 4-4 に
+進む（`scripts/state-read.sh current_cycle` / `scripts/state-read.sh define_completed` で
+確認する）。`current_cycle` が不一致の場合は両方の値を提示して**停止**する（上書きしない /
+ユーザーが state.json か cycle 識別子のどちらかを見直してから再実行する）。
+
 ### 4-4. define 完了マーク（single-actor moment）
 
 4-2 の検証ゲートを全 work item が通過した場合のみ、`scripts/state-write.sh` で

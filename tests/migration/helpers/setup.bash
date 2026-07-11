@@ -153,6 +153,39 @@ setup_v1_with_manifest() {
   run_detect > "${MANIFEST_FILE}"
 }
 
+# --- v2→v3 migration helpers ---
+
+V2_GEN_FIXTURES_DIR="${FIXTURES_DIR}/v2-config-generations"
+
+# v2→v3 用のテスト環境（v2 config のみ / state.json なし / clean worktree）
+# $1 = v2 config 世代 fixture 名（既定: gen-2.5.5-full）
+setup_v2v3_environment() {
+  local gen="${1:-gen-2.5.5-full}"
+  TEST_TMPDIR="$(mktemp -d /tmp/aidlc-test-XXXXXX)"
+  export AIDLC_PROJECT_ROOT="${TEST_TMPDIR}"
+
+  mkdir -p "${TEST_TMPDIR}/.aidlc"
+  cp "${V2_GEN_FIXTURES_DIR}/${gen}/config.toml" "${TEST_TMPDIR}/.aidlc/config.toml"
+
+  git -C "${TEST_TMPDIR}" init --quiet
+  git -C "${TEST_TMPDIR}" -c user.email=test@example.com -c user.name=test \
+    -c commit.gpgsign=false add -A
+  git -C "${TEST_TMPDIR}" -c user.email=test@example.com -c user.name=test \
+    -c commit.gpgsign=false commit --quiet -m "init v2 environment"
+}
+
+run_v3_preflight() {
+  AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-v3-preflight.sh"
+}
+
+run_v3_config() {
+  AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-v3-config.sh" "$@"
+}
+
+run_v3_archive_index() {
+  AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${SCRIPTS_DIR}/migrate-v3-archive-index.sh" "$@"
+}
+
 # --- Utility helpers ---
 
 save_json_to_file() {
