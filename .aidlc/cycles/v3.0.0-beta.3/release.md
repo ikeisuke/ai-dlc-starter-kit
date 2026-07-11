@@ -77,4 +77,4 @@ merge_blocker_any: false
 <!-- merge 記録は release Step 3/4 で追記する（テンプレート生成時点では未記録）。 -->
 
 - merge_approved: true（2026-07-11 / semi_auto 自動承認: merge_blocker_any=false / release.ready=true 記録済み）
-- merged: 未記録（Step 4 で記録）
+- merged: true（2026-07-11T05:32:41Z / merge commit a99df4cbc63b8b79bbe33714243d67e7b0dcae13 / merge method: merge / --match-head-commit a75cd5ae）
