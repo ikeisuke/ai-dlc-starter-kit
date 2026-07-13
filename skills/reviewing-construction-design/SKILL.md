@@ -1,7 +1,7 @@
 ---
 name: reviewing-construction-design
 description: Reviews design artifacts for quality, pattern application, and API design. Use when performing design reviews in Construction Phase.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---

@@ -1,7 +1,7 @@
 ---
 name: reviewing-construction-plan
 description: Reviews construction plans for architecture consistency and implementation feasibility. Use when reviewing implementation plans before approval.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---

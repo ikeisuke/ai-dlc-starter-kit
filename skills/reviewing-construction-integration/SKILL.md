@@ -1,7 +1,7 @@
 ---
 name: reviewing-construction-integration
 description: Reviews integration completeness including design-implementation consistency, review/test coverage, and completion criteria. Use when performing integration review in Construction Phase.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
