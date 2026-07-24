@@ -166,7 +166,7 @@ bin/migrate-issue-524.sh
 | モード | デフォルト適用 | 挙動 |
 |--------|--------------|------|
 | `--strict` | apply 系（`setup-github-project.sh` / `gh-project-cli.sh ensure-* sync-items` apply / `migrate-issue-524.sh` apply / `probe-github-project.sh`） | スコープ不足 → exit 2（fatal） |
-| `--soft` | 参照系（`audit-github-project.sh` / Inception 統合 / dry-run 単独） | スコープ不足 → exit 0 + warn のみ + `.aidlc/cache/gh-project-last-run.json` に記録 |
+| `--soft` | 参照系（`audit-github-project.sh` / dry-run 単独。v2 当時は Inception 統合も該当） | スコープ不足 → exit 0 + warn のみ + `.aidlc/cache/gh-project-last-run.json` に記録 |
 
 CI で監査を fail-fast したい場合は `bin/audit-github-project.sh --strict` を明示。
 

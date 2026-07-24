@@ -1,28 +1,22 @@
 # AI-DLC Starter Kit
 
-[![Version](https://img.shields.io/badge/version-3.0.0--beta.1-blue.svg)](./.claude-plugin/marketplace.json)
+[![Version](https://img.shields.io/badge/version-3.0.0--rc.1-blue.svg)](./.claude-plugin/marketplace.json)
 
 AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始められるスターターキット
 
 ## 概要
 
-このリポジトリには、AWS が提唱する AI-DLC 方法論の日本語リソースとプロンプトテンプレートが含まれています。
+このリポジトリには、AWS が提唱する AI-DLC 方法論の日本語リソースと、Claude Code 向けのスキルプラグイン実装が含まれています。
 
 - **AI-DLC とは**: AI を「支援ツール」ではなく、開発プロセスの「中心的な協働者」として位置づける新しいソフトウェア開発方法論
-- **3つのフェーズ**: Inception（起動）→ Construction（構築）→ Operations（運用）
+- **v3 のサイクル**: `define`（定義）→ `develop`（実装）→ `release`（リリース）の 3 フェーズ + 任意の `reflect`（振り返り）
 
-## v3 ベータ版について（preview）
+## v3 について（RC）
 
-**v3.0.0-beta.1** より、次世代の AI-DLC **v3** を **ベータ（preview）** として同梱しています。既存の v2 とは**共存**し、v2 側の破壊的変更はありません。
+**v3.0.0-rc.1** より、`/aidlc` は **v3** を起動します（本流化済み）。v3 は、フェーズ進行を会話履歴の推論ではなく、リポジトリ内の `.aidlc/state.json` + work item frontmatter から**明示的に導出**する新設計です。セッションを跨いでも `/aidlc` の実行だけで現在地から再開できます。
 
-- **`/aidlc`（v2）**: 従来どおりの安定版・既定。挙動は変わりません
-- **`/aidlc-v3`（v3 beta）**: フェーズ進行を会話履歴の推論ではなくリポジトリ内の `state.json` + work item frontmatter から**明示的に導出**する新設計。`define → develop → release → reflect` の軽量フローを提供します（opt-in / preview）
-
-### 既知の制約（beta）
-
-- v2 → v3 の **migration は未実装**です。v3 は **新規サイクルでの利用**を推奨します（new-cycle-only）
-- 一部の診断・CI 統合に既知の課題があります（doctor のフェーズ判定 [#744]、release フローの hard gate [#745]）
-- 本番運用は v2（`/aidlc`）を、試用・フィードバックは v3（`/aidlc-v3`）を推奨します
+- **v2 を使い続けたい場合**: v2 実装一式は [v2-maintenance ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v2-maintenance)に保全されています
+- **v2 から v3 へ移行する場合**: `/aidlc-migrate` が v2→v3 マイグレーション（new-cycle-only / 旧成果物は残置）を実行します
 
 フィードバックは Issue でお寄せください。
 
@@ -32,11 +26,12 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) がインストール済みであること
 - Git がインストール済みであること
+- [jq](https://jqlang.github.io/jq/) がインストール済みであること（`state.json` 操作に使用）
 - （推奨）[dasel](https://github.com/TomWright/dasel) がインストール済みであること（設定ファイル操作に使用）
 
 ### インストール手順
 
-1. Claude Codeでマーケットプレイスを追加:
+1. Claude Code でマーケットプレイスを追加:
 
 ```text
 /plugin marketplace add ikeisuke/ai-dlc-starter-kit
@@ -52,81 +47,84 @@ AI-DLC (AI-Driven Development Lifecycle) を使った開発をすぐに始めら
 
 | スキル | 用途 |
 |--------|------|
-| `aidlc` | AI-DLCオーケストレーター（メインスキル / v2 安定版） |
-| `aidlc-v3` | AI-DLC v3 オーケストレーター（**beta / preview** / `/aidlc-v3`） |
-| `aidlc-setup` | 環境セットアップ・アップグレード |
-| `aidlc-migrate` | v1→v2マイグレーション |
-| `aidlc-feedback` | AI-DLCへのフィードバック送信 |
-| `reviewing-inception-intent` | Intent承認前レビュー |
-| `reviewing-inception-stories` | ストーリー承認前レビュー |
-| `reviewing-inception-units` | Unit定義承認前レビュー |
+| `aidlc` | AI-DLC v3 オーケストレーター（メインスキル / `/aidlc`） |
+| `aidlc-migrate` | v2→v3 マイグレーション |
+| `aidlc-feedback` | AI-DLC へのフィードバック送信 |
 | `reviewing-construction-plan` | 計画承認前レビュー |
 | `reviewing-construction-design` | 設計レビュー |
 | `reviewing-construction-code` | コード+セキュリティレビュー |
 | `reviewing-construction-integration` | 統合レビュー |
 | `reviewing-operations-deploy` | デプロイ計画レビュー |
 | `reviewing-operations-premerge` | PRマージ前レビュー |
-| `squash-unit` | Unit完了時のコミットスカッシュ |
-| `write-history` | 履歴ファイルへの記録 |
 
-3. 対象プロジェクトのルートディレクトリで `/aidlc-setup` を実行:
+3. 対象プロジェクトのルートに `.aidlc/config.toml` を作成:
 
-```text
-/aidlc-setup
+```toml
+[rules.depth_level]
+level = "standard"  # minimal / standard / comprehensive
+
+[rules.automation]
+mode = "manual"     # manual / semi_auto
 ```
 
-セットアップウィザードがプロジェクト情報の入力を案内し、`.aidlc/config.toml` と必要なディレクトリ構造を自動生成します。
+すべてのキーにはデフォルト値があるため、空ファイルでも動作します。設定キーの全リファレンス（v3 終端 8 キー）は [docs/configuration.md](docs/configuration.md) を参照してください。
 
-### アップグレード（v1 → v2）
+4. `/aidlc define` を実行してサイクルを開始:
 
-v1 から v2 へのアップグレードは、マイグレーションスキルで自動化されています:
+```text
+/aidlc define
+```
+
+対話形式で目的・スコープ・受け入れ基準（Intent）と work item を確定し、`.aidlc/` 配下にサイクル成果物と `state.json` を初期化します。
+
+### v2 からの移行（v2 → v3）
+
+v2（`.aidlc/config.toml` があり `state.json` が無い環境）からの移行は、マイグレーションスキルで自動化されています:
 
 ```text
 /aidlc-migrate
 ```
 
-移行では以下が実行されます:
-- v1 の `docs/aidlc/` → v2 の `skills/aidlc/` への構成移行
-- `.aidlc/config.toml` の設定移行
-- 既存サイクルデータの保持
+- **new-cycle-only（推奨）**: 旧成果物は変換せず残置し、v3 は新規サイクルから開始します
+- **archive-only**: 残置に加えて、旧成果物の所在を示す index を生成します
+- 実データ変換（best-effort）は未サポートです（選択時は書き込みなしで安全に中断します）
+- v1 環境を検出した場合は書き込みを行わず、v2-maintenance ブランチでの v1→v2 移行を案内します
 
-### v1 ブランチについて
+### v1 / v2 ブランチについて
 
-v1 系を引き続き使用したい場合は、[v1 ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v1)を参照してください。v1 ブランチはメンテナンスモードであり、新機能の追加は行われません。
+| 系統 | 参照先 | 状態 |
+|------|--------|------|
+| v1 | [v1 ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v1) | メンテナンスモード（新機能追加なし） |
+| v2 | [v2-maintenance ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v2-maintenance) | 保全ブランチ（v2 実装一式を取得可能） |
 
 ## リポジトリ構成
 
 ```text
 ai-dlc-starter-kit/
-├── skills/                    # Claude Codeスキルプラグイン
-│   ├── aidlc/                 # メインスキル（オーケストレーター）
-│   │   ├── SKILL.md           # スキル定義・引数ルーティング
-│   │   ├── AGENTS.md          # マルチツールエントリポイント
-│   │   ├── CLAUDE.md          # Claude Code固有設定
-│   │   ├── steps/             # フェーズステップファイル
-│   │   │   ├── common/        # 共通ルール・ワークフロー
-│   │   │   ├── inception/     # Inception Phase（6ステップ）
-│   │   │   ├── construction/  # Construction Phase（4ステップ）
-│   │   │   ├── operations/    # Operations Phase（4ステップ）
-│   │   │   └── setup/         # Setup Phase（3ステップ）
-│   │   ├── scripts/           # ユーティリティスクリプト
-│   │   ├── templates/         # ドキュメントテンプレート
-│   │   └── config/            # デフォルト設定
-│   ├── aidlc-setup/           # アップグレードスキル
-│   └── squash-unit/           # コミットスカッシュスキル
+├── skills/                        # Claude Code スキルプラグイン
+│   ├── aidlc/                     # v3 オーケストレーター（メインスキル）
+│   │   ├── SKILL.md               # スキル定義・コマンドルーティング
+│   │   ├── steps/                 # フェーズ実行手順（define / develop / release / reflect / status / doctor）
+│   │   ├── scripts/               # state.json / work item 操作スクリプト
+│   │   ├── templates/             # 成果物テンプレート（intent / work-item / design 等）
+│   │   ├── guides/                # 補助ガイド
+│   │   └── config/                # デフォルト設定
+│   ├── aidlc-migrate/             # v2→v3 マイグレーション
+│   ├── aidlc-feedback/            # フィードバック送信
+│   ├── reviewing-common/          # レビュー共通基盤
+│   ├── reviewing-construction-*/  # 実装時レビュー（plan / design / code / integration）
+│   └── reviewing-operations-*/    # リリース時レビュー（deploy / premerge）
 │
-├── .aidlc/                    # プロジェクト設定・サイクル成果物
-│   ├── config.toml            # プロジェクト設定
-│   ├── rules.md               # プロジェクト固有ルール
-│   ├── operations.md          # 運用引き継ぎ情報
-│   └── cycles/                # サイクル固有成果物
-│       └── {{CYCLE}}/         # サイクル識別子で管理
+├── .aidlc/                        # プロジェクト設定・サイクル成果物
+│   ├── config.toml                # プロジェクト設定
+│   ├── state.json                 # サイクル状態（フェーズ導出の正本データ）
+│   └── cycles/<cycle>/            # サイクル成果物（intent / work-items / designs / reviews / journal 等）
 │
 ├── docs/
-│   └── translations/          # AI-DLC ホワイトペーパーの日本語翻訳
+│   ├── v3/                        # v3 設計正本（workflow / data-model / migration / rfc）
+│   └── translations/              # AI-DLC ホワイトペーパーの日本語翻訳
 │
-└── prompts/
-    └── setup-prompt.md        # セットアッププロンプト（エントリーポイント）
+└── bin/                           # リポジトリ開発用スクリプト（CI チェック / GitHub Projects 連携）
 ```
 
 ## クイックスタート
@@ -140,205 +138,104 @@ ai-dlc-starter-kit/
 
 ### 2. プロジェクトをセットアップ
 
-対象プロジェクトのルートディレクトリで `/aidlc-setup` を実行します:
+対象プロジェクトのルートに `.aidlc/config.toml` を作成します（[インストール手順](#インストール手順) 3 参照）。ディレクトリ構造と `state.json` は `/aidlc define` が自動生成します。
+
+### 3. 開発サイクルを回す
+
+v3 のコマンド体系:
+
+| コマンド | 責務 | 状態変更 |
+|---------|------|---------|
+| `/aidlc define` | 目的・スコープ・完了条件・作業単位（work item）を決める（Intent 承認ゲート） | あり |
+| `/aidlc develop` | 次の work item を 1 件実装・検証・完了する（1 実行 = 1 work item） | あり |
+| `/aidlc release` | main に安全に取り込む（PR 整備・merge） | あり |
+| `/aidlc reflect` | 振り返り・改善 Issue 起票（任意実行） | なし |
+| `/aidlc status` | 現在地と次アクションを表示（読み取り専用） | なし |
+| `/aidlc doctor` | config / state / work item / git / gh 等の問題を診断（自動修正しない） | なし |
+
+引数なしの `/aidlc` は、`state.json` + work item frontmatter からフェーズを導出して適切なコマンドへ自動ルーティングします。迷ったら `/aidlc` だけで進められます。
 
 ```text
-/aidlc-setup
+/aidlc（引数なし）
+  ├─ state.json 不在        → define
+  └─ state.json 存在        → フェーズ導出
+        ├─ define 未完了     → define
+        ├─ work item 残あり  → develop
+        ├─ 全 work item 完了 → release
+        └─ merged + 承認済   → reflect（任意）
 ```
 
-セットアップウィザードがプロジェクト情報を対話形式で案内します。完了後、以下のディレクトリ構造が作成されます:
+#### develop の自動判定（size × depth_level）
 
-```text
-.aidlc/
-├── config.toml               # プロジェクト設定
-├── rules.md                  # プロジェクト固有ルール
-└── cycles/                   # サイクル固有成果物
+`develop` は work item の `size`（`tiny` / `normal` / `risky`）と設定の `depth_level`（`minimal` / `standard` / `comprehensive`）の組合せから、design 作成・レビュー実行の要否を自動判定します。小さな変更は軽く、リスクの高い変更は厚く扱います（正本: [docs/v3/data-model.md](docs/v3/data-model.md) §8）。
 
-skills/
-├── aidlc/                    # メインスキル
-├── aidlc-setup/              # アップグレードスキル
-└── squash-unit/              # コミットスカッシュスキル
-```
+#### express（連続実行）
 
-**重要**:
+define で生成された work item が 1 つ（`tiny` または `normal`）の場合のみ、`define → develop → release` を連続実行できます。`risky` を含む場合や複数 work item の場合は個別実行を案内します。
 
-- セットアップ完了後、`.aidlc/rules.md` をプロジェクトに合わせてカスタマイズしてください
-- 新サイクル開発時は新しい `CYCLE` で `/aidlc inception` を実行します
+#### 旧名エイリアス
 
-### 3. 開発を開始
+v2 のフェーズ名は後方互換エイリアスとして利用できます:
 
-各フェーズは**新しいセッション**で開始してください（コンテキストリセット）。
-
-簡略指示でフェーズを開始できます：
-
-| 指示 | 対応処理 |
-|------|----------|
-| 「インセプション進めて」 | Inception Phase |
-| 「コンストラクション進めて」 | Construction Phase |
-| 「オペレーション進めて」 | Operations Phase |
-
-または、スキルコマンドを直接実行：
-
-```text
-/aidlc inception
-```
-
-#### Inception Phase（要件定義）
-
-- 進捗管理ファイルで6ステップの進捗を管理
-- 対話形式でIntentを作成（不明点は質問）
-- ユーザーストーリー・Unit定義を作成
-- コンテキストリセット時は未完了ステップから自動再開
-
-#### Construction Phase（実装）
-
-- Unit依存関係に基づいて実行順を自動判断
-- Phase 1（設計）: コードは書かず、構造・責務・インターフェースを定義
-- Phase 2（実装）: 設計を参照してコード生成・テスト
-- 各Unit完了後に自動Gitコミット
-
-#### Operations Phase（デプロイ・運用）
-
-- デプロイ準備、CI/CD構築、監視設定
-- リリース後の運用
-- 完了後に自動Gitコミット
-
-#### 振り返り（retrospective / v2.6.0+）
-
-Operations Phase 完了後、任意のタイミングで以下を実行してサイクルの振り返り（KPT / 主因切り分け / Issue 起票）を行います:
-
-```bash
-/aidlc retrospective [対象サイクル]
-# 短縮形: /aidlc r
-# 例: /aidlc r v2.6.0
-# 例: /aidlc r            （カレントブランチ / 直近完了サイクルから自動推定）
-```
-
-- v2.6.0 以前は Operations Phase §1 に組み込まれていましたが、**v2.6.0 で独立スキル `aidlc-retrospective` へ移転**（破壊的変更）
-- `[rules.retrospective] feedback_mode = "disabled"` 設定時は本コマンドが exit 0 で抜けます（opt-out）
-
-### サイクル識別子について
-
-サイクル識別子（`CYCLE`）には2つの形式があります：
-
-| 形式 | 例 | 用途 |
-|------|-----|------|
-| バージョン番号 | `v1.0.0`, `v2.1.3` | 一般的なリリースサイクル |
-| 名前付きサイクル | `waf/v1.0.0`, `auth/v1.0.0` | 機能テーマごとにサイクルを分類したい場合 |
-
-**名前付きサイクル**は、複数の機能テーマを並行して管理する場合に便利です。`.aidlc/config.toml` の `[rules.cycle].mode` を `"named"` に設定すると、Inception Phase開始時に名前付きサイクルの作成・継続が案内されます。
-
-```toml
-[rules.cycle]
-mode = "named"  # "default"（デフォルト）, "named", "ask"
-```
-
-名前付きサイクルでは `.aidlc/cycles/{name}/vX.X.X/` のようなディレクトリ構造で成果物が管理されます。
+| 旧名 | v3 コマンド |
+|------|-----------|
+| `inception` | `define` |
+| `construction` | `develop` |
+| `operations` | `release` |
+| `retrospective` | `reflect` |
 
 ### 4. 次サイクルの開発
 
-Operations Phase 完了後、新しい `CYCLE` で `/aidlc inception` を実行してライフサイクルを継続します。
-
-- `.aidlc/rules.md` は全サイクル共通で引き継がれます
-- 前サイクルの `requirements/intent.md` を参照して改善点を反映
-
-## スキル構成
-
-### プラグイン同梱スキル
-
-`/plugin install aidlc@ikeisuke-ai-dlc-starter-kit` で以下のスキルがすべてインストールされます:
-
-| スキル | 用途 |
-|--------|------|
-| `aidlc` | AI-DLCオーケストレーター（メインスキル） |
-| `aidlc-setup` | 環境セットアップ・アップグレード・v1→v2移行 |
-| `aidlc-feedback` | AI-DLC Starter Kit へのフィードバック送信 |
-| `aidlc-migrate` | v1→v2 マイグレーション |
-| `aidlc-retrospective` | サイクル振り返り（KPT / Issue 起票 / mirror）— v2.6.0+ で Operations §1 から独立スキルへ分離 |
-| `reviewing-inception-*` | Inception成果物レビュー（intent/stories/units） |
-| `reviewing-construction-*` | Construction成果物レビュー（plan/design/code/integration） |
-| `reviewing-operations-*` | Operations成果物レビュー（deploy/premerge） |
-| `squash-unit` | Unit完了時のコミットスカッシュ |
-| `write-history` | 履歴ファイルへの記録 |
-
-### オプションスキル（別途インストール）
-
-以下のスキルは [claude-skills](https://github.com/ikeisuke/claude-skills) リポジトリで提供されています。未インストールでも開発フローに影響はありません。
-
-```text
-/plugin marketplace add ikeisuke/claude-skills
-/plugin install tools@ikeisuke-skills
-```
-
-| スキル | 用途 |
-|--------|------|
-| `session-title` | ターミナルタブのタイトル・バッジ設定（macOS） |
-| `suggest-permissions` | 許可設定の自動提案・監査 |
+release（+ 任意の reflect）完了後、新しいサイクル識別子で `/aidlc define` を実行してライフサイクルを継続します。前サイクルの `journal.md` / `reflect.md` は次の define の入力として自動参照されます。
 
 ## 主要な機能
 
-### エクスプレスモード
+### 明示的な状態管理
 
-`start express` コマンドで有効化されるフェーズ連続実行モード。Inception → Construction をコンテキストリセットなしで連続実行し、AIが自律的に最後まで走り切ります。depth_level に依存せず、Unit の複雑度判定（4項目: 受け入れ基準の明確さ、依存関係の複雑さ、技術的リスク、変更影響範囲）に基づいて適用可否を判定します。
+フェーズを会話履歴からの推論ではなく `.aidlc/state.json` + work item frontmatter から導出します。コンテキストリセットやセッション切替の後も、`/aidlc` の実行だけで現在地から正確に再開できます。
 
-### 対話形式による開発
+### size × depth_level マトリクス
 
-AIが独自判断をせず、不明点は質問して明確化。ユーザーとの対話を通じて要件や設計を策定します。
-
-### 進捗管理の一元化
-
-全フェーズで `progress.md` を自動管理。コンテキストオーバーフロー時も未完了ステップから自動再開できます。
-
-### Unit依存関係の自動管理
-
-Inception Phase で定義した依存関係を解析し、実行可能な Unit を自動判断。複数候補がある場合は優先度と見積もりを提示します。
-
-### 設計と実装の分離
-
-Phase 1（設計）ではコードを書かず構造・責務・インターフェースを定義。Phase 2（実装）で設計を参照してコード生成。レビューしやすい設計書を作成します。
-
-### AIレビュー統合
-
-外部AIツール（Codex、Claude CLI、Gemini CLI）によるコード・アーキテクチャ・セキュリティレビューを統合。レビュー種別ごとの専門スキルで品質を確保します。
-
-### スクリプト化基盤
-
-`skills/aidlc/scripts/` にユーティリティスクリプトを配置。環境情報取得、Issue操作、履歴書き込み、markdownlint実行等をスクリプト化し、AIエージェントの許可リスト運用を改善しています。
-
-### GitHub Projects 連携（v2.6.0+）
-
-バックログ管理を GitHub Projects (ProjectsV2) で動的管理化。`bin/setup-github-project.sh` で宣言的仕様（`config/github-project-spec.yaml`）に基づき Project / フィールド / ビュー / Item を冪等作成し、`bin/audit-github-project.sh` で `Item closed → Status=Done` workflow と spec 整合を監査します。Inception ステップ17 のバックログ確認で GitHub Projects を参照。詳細セットアップ手順は [docs/development/github-projects-setup.md](docs/development/github-projects-setup.md) を参照。
-
-### バックトラック機能
-
-フェーズ間を柔軟に行き来可能：
-
-- Inception ← Construction: Unit追加・拡張が必要な場合
-- Construction ← Operations: バグ修正が必要な場合
-
-### サンドボックス環境
-
-AIエージェントを隔離環境で安全に実行するには [jailrun](https://github.com/ikeisuke/jailrun) を参照してください。
-
-### コンテキスト効率
-
-各フェーズで必要最小限のファイルのみ読み込み、コンテキスト溢れを防止。長いセッションで中断しても自動再開できます。
+work item の大きさとプロジェクトの厳格度設定の組合せで、design / review の要否を自動判定します。`risky` な work item には design・セキュリティレビュー・Rollback Note を必須化し、`tiny` な work item は最小手続きで完了します。
 
 ### 人間の承認プロセス
 
-計画作成後・設計完了後に必ず承認を要求。承認なしで次のステップに進みません。
+Intent 承認・Design 承認などのゲートで人間の承認を要求します。`[rules.automation] mode = "semi_auto"` でフォールバック条件非該当時の自動承認に切り替えられます。
 
-### 自動Gitコミット
+### work item 単位の自動 Git コミット
 
-セットアップ完了時、Inception Phase完了時、各Unit完了時、Operations Phase完了時に自動でGitコミットを作成します。
+1 実行 = 1 work item で、実装・状態遷移・journal 追記を 1 コミットに集約します。履歴が work item 単位で追跡できます。
+
+### AI レビュー統合
+
+外部 AI ツール（Codex、Claude CLI、Gemini CLI）によるコード・セキュリティ・設計レビューを統合。レビュー種別ごとの専門スキル（`reviewing-*`）で品質を確保し、develop のレビュー結果はサイクル成果物（`reviews/`）に、release のレビュー結果は `release.md` に記録されます。
+
+### 診断コマンド
+
+`/aidlc doctor` が config / state / cycle / work item / git / gh / スクリプトの問題を読み取り専用で診断します。`/aidlc status` でいつでも現在地と次アクションを確認できます。
 
 ### カスタマイズ
 
-- `.aidlc/rules.md` にプロジェクト固有のルール（コーディング規約、セキュリティ要件等）を記述可能
-- `.aidlc/config.toml` で各種設定（バックログモード、レビューモード、squash等）を制御
-- `PROJECT_TYPE` でプラットフォーム固有の注意事項を自動表示
+`.aidlc/config.toml` で depth_level・automation mode・レビューモード等を制御します。設定は 4 階層（スキル同梱デフォルト → ユーザー共通 → プロジェクト → ローカル）でマージされます。詳細は [docs/configuration.md](docs/configuration.md) を参照してください。
+
+### GitHub Projects 連携
+
+本リポジトリ自身のバックログ管理を GitHub Projects (ProjectsV2) で動的管理化。`bin/setup-github-project.sh` で宣言的仕様（`config/github-project-spec.yaml`）に基づき Project / フィールド / ビュー / Item を冪等作成し、`bin/audit-github-project.sh` で spec 整合を監査します。詳細は [docs/development/github-projects-setup.md](docs/development/github-projects-setup.md) を参照してください。
+
+### サンドボックス環境
+
+AI エージェントを隔離環境で安全に実行するには [jailrun](https://github.com/ikeisuke/jailrun) を参照してください。
 
 ## ドキュメント
+
+### v3 設計ドキュメント
+
+| ドキュメント | 内容 |
+|------------|------|
+| [docs/v3/workflow.md](docs/v3/workflow.md) | v3 ワークフロー全体像（コマンド体系・承認ゲート） |
+| [docs/v3/data-model.md](docs/v3/data-model.md) | データモデル（state.json / work item / フェーズ導出規則） |
+| [docs/v3/migration.md](docs/v3/migration.md) | v2→v3 マイグレーション仕様 |
+| [docs/configuration.md](docs/configuration.md) | 設定ファイルリファレンス |
 
 ### AI-DLC 翻訳文書
 
@@ -357,19 +254,18 @@ AIエージェントを隔離環境で安全に実行するには [jailrun](http
 
 ### その他
 
-- [セットアッププロンプト](prompts/setup-prompt.md) - 環境セットアップ用（エントリーポイント）
 - [CHANGELOG.md](CHANGELOG.md) - バージョンごとの変更履歴
 
 ## 設計原則
 
-1. **会話の反転** - AIが作業計画を提示し、人間が承認・判断する
-2. **対話による明確化** - AIが独自判断をせず、不明点は質問
-3. **設計技法の統合** - DDD・BDD・TDDをAIが自動適用
-4. **短サイクル反復** - 各フェーズを短いサイクルで反復
-5. **人間との共創** - リスク管理や重要判断は人間が担当
+1. **会話の反転** - AI が作業計画を提示し、人間が承認・判断する
+2. **明示的な状態導出** - フェーズは会話履歴の推論ではなく、リポジトリ内の状態から導出する
+3. **対話による明確化** - AI が独自判断をせず、不明点は質問
+4. **リスクに応じた厚み** - size × depth_level で手続きの重さを変える
+5. **短サイクル反復** - define → develop → release を短いサイクルで反復
 6. **冪等性の保証** - 各ステップで既存成果物を確認し、差分のみ更新
 7. **コンテキスト効率** - 必要最小限のファイルのみ読み込み
-8. **自動コミット** - 重要なタイミングで自動的にGitコミットを作成
+8. **work item 単位のコミット** - 追跡可能な粒度で自動的に Git コミットを作成
 
 ## 関連リンク
 
