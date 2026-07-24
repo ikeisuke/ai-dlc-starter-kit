@@ -15,7 +15,7 @@ scripts/read-config.sh --keys <key1> [key2] ...
 ```
 
 - 終了コード: 0=値あり、1=キー不在、2=エラー
-- `.local` の値は上書き、配列は完全置換。詳細は `guides/config-merge.md` を参照
+- `.local` の値は上書き、配列は完全置換
 
 ### dasel 呼び出し規約（CLI v3）
 
@@ -29,19 +29,19 @@ scripts/read-config.sh --keys <key1> [key2] ...
 
 **公開 API スクリプト層としての位置付け**:
 
-`scripts/read-config.sh` は AI-DLC スターターキット内の **公開 API スクリプト** として位置付けられ、`.aidlc/rules.md` の「スキル間依存ルール」が禁じる「他スキル内部実装への依存」には該当しない（`.aidlc/rules.md` 本体に例外規定済み）。これにより、aidlc-feedback / aidlc-setup / aidlc-migrate / reviewing-* など全スキルから参照可。`scripts/lib/*` 等は引き続き内部実装として扱う。
+`scripts/read-config.sh` は AI-DLC スターターキット内の **公開 API スクリプト** として位置付けられ、`.aidlc/rules.md` の「スキル間依存ルール」が禁じる「他スキル内部実装への依存」には該当しない（`.aidlc/rules.md` 本体に例外規定済み）。これにより、aidlc-feedback / aidlc-migrate / reviewing-* など全スキルから参照可。`scripts/lib/*` 等は引き続き内部実装として扱う。
 
 **呼び出し記法**:
 
 | 用途 | 記法 |
 |------|------|
 | AI 手順内コマンド（aidlc スキル内プロンプト `.md`） | `bash scripts/read-config.sh <key>`（SKILL.md パス解決でスキルベースディレクトリ相対を絶対化） |
-| AI 手順内コマンド（他スキル：aidlc-feedback / aidlc-setup / aidlc-migrate / reviewing-* など） | `bash skills/aidlc/scripts/read-config.sh <key>`（リポジトリルート相対の絶対参照。各スキル配下に `scripts/read-config.sh` は存在しないため、aidlc プラグイン内のパスを直接指定する） |
+| AI 手順内コマンド（他スキル：aidlc-feedback / aidlc-migrate / reviewing-* など） | `bash skills/aidlc/scripts/read-config.sh <key>`（リポジトリルート相対の絶対参照。各スキル配下に `scripts/read-config.sh` は存在しないため、aidlc プラグイン内のパスを直接指定する） |
 | 検証コマンド（人間 / CI） | `bash skills/aidlc/scripts/read-config.sh <key>`（リポジトリルート相対の絶対参照） |
 
 **dasel 直接呼び出しの例外**:
 
-`read-config.sh` 自身が動作不能な低レイヤー（bootstrap 内部・stdlib 系）、または `read-config.sh` が必須前提とする `.aidlc/config.toml` 自身の存在検証段階（aidlc-setup の早期判定）でのみ、dasel CLI を直接呼んでよい。その場合、以下の **2 形式のみ許容** する:
+`read-config.sh` 自身が動作不能な低レイヤー（bootstrap 内部・stdlib 系）、または `read-config.sh` が必須前提とする `.aidlc/config.toml` 自身の存在検証段階でのみ、dasel CLI を直接呼んでよい。その場合、以下の **2 形式のみ許容** する:
 
 - `cat <file> | dasel -i toml '<key>'`
 - `dasel -i toml '<key>' < <file>`
@@ -67,13 +67,14 @@ AI エージェントが誤生成しがちな anti-pattern を以下に列挙す
 
 ## フェーズ固有のルール
 
-- **Inception Phase**: Intent作成は対話形式、Unit定義では依存関係を明確化
-- **Construction Phase**: 設計と実装を分離（Phase 1で設計、Phase 2で実装）
-- **Operations Phase**: デプロイ前にチェックリスト確認、ロールバック手順必須
+- **define**: intent 作成は対話形式、work item 分割では依存関係を明確化
+- **develop**: 1 実行 = 1 work item。design が必要な組合せ（normal/risky の standard 以上）は設計と実装を分離
+- **release**: PR 整備・レビュー・merge の手順は `steps/release.md` に従い、ロールバック方針を明確化
 
 ## Gitコミットのルール
 
-コミットタイミング、メッセージフォーマット、Co-Authored-By設定は `steps/common/commit-flow.md` を参照。
+develop は work item 単位で最終 commit を 1 つに集約する（`steps/develop.md` Step 6）。
+コミットメッセージは `develop: <id>-<slug> <要約>` / `define:` / `release:` 等のフェーズプレフィックスを用いる。
 
 ## バックログ管理【重要】
 
@@ -91,9 +92,9 @@ AI エージェントが誤生成しがちな anti-pattern を以下に列挙す
 
 改善提案を行う場合は**必ずバックログに登録**すること。口頭提案のみは禁止。
 
-1. **スコープチェック**: Intent「含まれるもの」に該当する場合は現サイクル内で処理（バックログに外出ししない）
+1. **スコープチェック**: Intent「含むもの」に該当する場合は現サイクル内で処理（バックログに外出ししない）
    - **例外**: 「スコープ保護ルール」に基づきユーザーが明示的にOUT_OF_SCOPEを承認した場合は、Intent内要件であってもバックログ登録を許可する（ユーザー承認済みのスコープ縮小）
-2. 該当しない場合: GitHub Issueに記録（`guides/backlog-management.md` 参照）
+2. 該当しない場合: GitHub Issueに記録（`gh issue create --body-file <file>`）
 
 ### 適用場面の違い
 
@@ -128,22 +129,22 @@ Intentの「含まれるもの」に記載された要件を制限・除外す�
 
 **保持必須の情報**:
 
-- **現在のサイクル**: 例: `v1.9.1`
-- **現在のフェーズ**: `Inception` / `Construction` / `Operations`
-- **作業中のUnit**: Unit名と番号（例: `Unit 005: コンテキスト情報保持`）
-- **Unitの進行状況**: 現在のステップ（例: `Phase 2: 実装 - ステップ4`）
-- **完了済みUnit**: 完了したUnit番号のリスト
+- **現在のサイクル**: 例: `v3.1.0`
+- **現在のフェーズ**: `define` / `develop` / `release` / `reflect`
+- **作業中の work item**: id と slug（例: `002-v3-mainline-replacement`）
+- **進行状況**: 現在の Step（例: `develop Step 3: 実装`）
+- **完了済み work item**: done になった id のリスト
 - **次に実行すべきアクション**: 中断時の継続ポイント
-- **automation_mode**: `semi_auto` または `manual`（コンパクション後に `read-config.sh` で再取得。詳細は `common/compaction.md` を参照）
+- **automation_mode**: `semi_auto` または `manual`（コンパクション後に `read-config.sh` で再取得）
 
 **保持形式の例**:
 
 ```text
 [AI-DLC Context]
-- Cycle: v1.9.1
-- Phase: Construction
-- Current Unit: 005 (コンテキスト情報保持) - Phase 2 実装中
-- Completed Units: 001
-- Next Action: AGENTS.md への変更完了後、テスト実行
+- Cycle: v3.1.0
+- Phase: develop
+- Current work item: 002 (v3-mainline-replacement) - Step 3 実装中
+- Completed work items: 001
+- Next Action: 実装完了後、Step 4 検証
 - Automation Mode: semi_auto
 ```

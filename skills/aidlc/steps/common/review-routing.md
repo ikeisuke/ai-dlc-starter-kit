@@ -5,7 +5,7 @@ AI レビューの判定テーブル集（スキル名・focus・処理パス・
 ## 1. 論理インターフェース契約
 
 ```text
-Input  ReviewRoutingInput: caller_context (§3 の 9 種) / review_mode (required|recommend|disabled) /
+Input  ReviewRoutingInput: caller_context (§3 の 6 種) / review_mode (required|recommend|disabled) /
                            automation_mode (manual|semi_auto) / configured_tools[] / available_tools[] /
                            tools_runtime_status (ok|cli_runtime_error|cli_output_parse_error)
 
@@ -36,9 +36,6 @@ Output ReviewRoutingDecision:
 | 設計レビュー | `reviewing-construction-design` | architecture |
 | コード生成後 | `reviewing-construction-code` | code, security |
 | 統合とレビュー | `reviewing-construction-integration` | code |
-| Intent 承認前 | `reviewing-inception-intent` | inception |
-| ストーリー承認前 | `reviewing-inception-stories` | inception |
-| Unit 定義承認前 | `reviewing-inception-units` | inception |
 | デプロイ計画承認前 | `reviewing-operations-deploy` | architecture |
 | PR マージ前 | `reviewing-operations-premerge` | code, security |
 

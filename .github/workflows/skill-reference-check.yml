@@ -55,7 +55,7 @@ jobs:
         if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-test-isolation.sh
 
-      - name: Check frontmatter parse guard (forbidden parse patterns in aidlc-v3 consumers)
+      - name: Check frontmatter parse guard (forbidden parse patterns in aidlc consumers)
         if: steps.detect.outputs.should_skip != 'true'
         run: bash bin/check-frontmatter-parse-guard.sh
 

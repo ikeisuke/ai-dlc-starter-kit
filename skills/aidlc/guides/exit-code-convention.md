@@ -72,25 +72,17 @@ AI-DLC シェルスクリプトの終了コード規約を定義する。
 
 ## 参考実装
 
-`bin/migrate-config.sh` を参考実装とする:
+実装パターンの要点:
 
-- `_has_warnings` フラグで警告状態を追跡
-- 処理中に警告が発生したら `_has_warnings=true` を設定
-- 警告があっても処理完了なら `exit 0`（警告内容は stdout の `warn:*` で通知）
+- 警告状態はフラグ（例: `_has_warnings`）で追跡し、警告があっても処理完了なら `exit 0`（警告内容は stdout の `warn:*` / `status:warning` で通知）
 - エラーメッセージは `>&2` で標準エラー出力に出力
 
 ## 準拠状況
 
 | スクリプト | 準拠状態 | 備考 |
 |-----------|---------|------|
-| migrate-config.sh | 準拠 | 参考実装。v1.27.3 で警告時 exit 2→exit 0 修正 |
 | read-config.sh | 準拠 | 0=値あり, 1=キー不在, 2=エラー |
-| post-merge-sync.sh | 準拠 | |
+| state-read.sh / state-write.sh / state-validate.sh / state-init.sh | 準拠 | 0=成功, 1=入力/前提エラー, 2=システムエラー |
+| work-item-next.sh / work-item-status.sh / work-item-validate.sh | 準拠 | 同上 |
+| doctor.sh | 準拠 | 総合 exit code は本規約から導出 |
 | update-version.sh | 準拠 | |
-| issue-ops.sh | 準拠 | |
-| migrate-backlog.sh | 準拠 | |
-| pr-ops.sh | 準拠 | |
-| check-issue-templates.sh | 準拠 | |
-| aidlc-setup.sh | 準拠 | |
-| squash-unit.sh | 準拠 | v1.27.3 で exit 2→exit 1 修正 |
-| post-merge-cleanup.sh | 準拠 | 警告時 exit 0 + status:warning |

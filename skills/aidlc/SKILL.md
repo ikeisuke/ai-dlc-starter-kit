@@ -1,318 +1,112 @@
 ---
 name: aidlc
-description: >
-  AI-DLC（AI-Driven Development Lifecycle）の統合オーケストレーター。
-  フェーズ（inception/construction/operations）の開始・継続、セットアップ、エクスプレスモード、フィードバック送信を統一的に実行する。
-  Use when the user says "インセプション進めて", "start inception",
-  "コンストラクション進めて", "start construction",
-  "オペレーション進めて", "start operations",
-  "start express", "start setup", "AIDLCフィードバック", "aidlc feedback",
-  "start migrate", "aidlc migrate", "aidlc version".
-argument-hint: "<action> [追加コンテキスト]"
+description: >-
+  AI-DLC v3（AI-Driven Development Lifecycle）のオーケストレーター。
+  define / develop / release / reflect の 4 フェーズコマンドと status / doctor の
+  補助コマンド、連続実行ラッパ express、旧名エイリアス（inception / construction /
+  operations / retrospective）を統一的にルーティングする。
+  define / develop（normal / risky 含む）/ release / reflect の各フェーズフローと
+  status / doctor の補助コマンドを実装済み（doctor は shallow scope）。
 ---
 
-# AI-DLC オーケストレーター
+# AI-DLC v3 オーケストレーター
 
-AI-DLCは、AIを開発の中心に据えた開発手法。Inception（要件定義）→ Construction（実装）→ Operations（運用）の3フェーズで開発を推進する。
+AI-DLC v3 は、フェーズ進行を会話履歴の推論ではなく、リポジトリ内の `state.json` +
+work item frontmatter への**明示的な状態書き込みから導出**する（RFC DG-6）。
 
-## 前提ガード
+> **本ファイルの位置づけ（v3.0.0-rc.1 / 本流化済み）**: 本 SKILL.md は
+> ルーティングの骨組みである。実体の手順ファイルとして `steps/define.md` / `steps/status.md` /
+> `steps/develop.md`（`tiny` / `normal` / `risky`）/ `steps/release.md`（Step 1–4）/ `steps/reflect.md`（Step 0–4）/
+> `steps/doctor.md`（出力仕様 / `scripts/doctor.sh` が実行実装）が存在する。
+> doctor は shallow scope（8 領域 + parse-guard）を実装済みで、`[phase]` / `[trace]` は後続バージョンへ defer する。
+> 起動表面は `/aidlc`（v3.0.0-rc.1 で本流化 = 旧 `skills/aidlc-v3` を `skills/aidlc` へ置換済み）。
+> 旧 v2 実装は `v2-maintenance` branch に保全されている。
 
-### 非AIDLCプロジェクトガード
+## コマンド体系
 
-`.aidlc/config.toml` が存在しない場合、通常フェーズ（inception/construction/operations）の実行は行わない。
-`/aidlc setup` のみ許可し、ユーザーにセットアップを案内する:
+### フェーズコマンド
+
+`define` / `develop` / `release` は状態を進行させ承認ゲートを持つ。`reflect` は例外で、**状態を変更せず
+（`state.json` 非変更）明示の承認ゲートを持たない**（任意実行 / 人間関与は Step 2 KPT 編集・Step 3 Issue 化確認）。
+
+| コマンド | 責務 | 旧フェーズ | 実体 |
+|---------|------|-----------|------|
+| `define` | 目的・スコープ・完了条件・作業単位（work item）を決める | Inception | `steps/define.md` |
+| `develop` | 次の work item を実装・検証・完了する（1 実行 = 1 work item） | Construction | `steps/develop.md`（`tiny` / `normal` / `risky`） |
+| `release` | main に安全に取り込む（PR 整備・merge） | Operations | `steps/release.md`（Step 1–4） |
+| `reflect` | 振り返り、改善 Issue を作る（任意実行 / state 非変更・ゲートなし） | Retrospective | `steps/reflect.md`（Step 0–4） |
+
+### 補助コマンド（状態を変更しない）
+
+| コマンド | 責務 | 実体 |
+|---------|------|------|
+| `status` | `state.json` + frontmatter からフェーズを導出し現在地・次アクションを表示（**読み取り専用**） | `steps/status.md` |
+| `doctor` | config / state / cycle / work-items / git / gh / pr / scripts / parse-guard の問題を診断（**自動修正しない**） | `steps/doctor.md` + `scripts/doctor.sh`（shallow scope。`[phase]` / `[trace]` は後続バージョンへ defer） |
+
+### コマンド名規約（RFC DG-1）
+
+- Construction 相当のコマンド名は **`develop`** で確定する。`build` / `implement` は
+  採用せず、**エイリアスにもしない**（`build` は compile を連想させるため不採用）。
+
+## 旧名エイリアス（後方互換 / RFC DG-1）
+
+旧フルネームのみを後方互換エイリアスとして維持する。
+
+| 旧名 | v3 コマンド |
+|------|-----------|
+| `inception` | `define` |
+| `construction` | `develop` |
+| `operations` | `release` |
+| `retrospective` | `reflect` |
+
+不採用動詞（`build` / `implement` 等）はエイリアスに含めない。
+
+## express（連続実行ラッパ）
+
+`express` は独立コマンドではなく、フェーズコマンドの連続実行ラッパである。
+
+- define で生成される work item が **1 つ（`tiny` または `normal`）の場合のみ**、
+  `define` → `develop` → `release` を連続実行する。
+- work item が **複数**になった場合は define 完了後に終了し、`develop` / `release`
+  を個別実行するよう案内する。
+- **`risky` work item を含む場合は連続実行しない**（承認・レビューの厚みが必要なため
+  個別実行へ案内）。
+
+## 引数なし実行のルーティング
+
+`/aidlc`（引数なし）は `state.json` + work item frontmatter から**フェーズを導出**し、
+対応するフェーズコマンドへ自動ルーティングする。
 
 ```text
-AI-DLC環境が未セットアップです。
-「start setup」または `/aidlc setup` でセットアップを開始してください。
+/aidlc（引数なし）
+  ├─ state.json 不在        → define
+  └─ state.json 存在        → フェーズ導出（正本: docs/v3/data-model.md §5）
+        ├─ define 未完了     → define
+        ├─ work item 残あり  → develop
+        ├─ 全 work item 完了 → release
+        └─ merged + 承認済   → reflect（任意）
 ```
 
-## 不変ルール【絶対遵守】
+> **フェーズ導出ロジックの正本（SoT）は `docs/v3/data-model.md` §5**。本 SKILL.md は
+> 導出**結果**を参照してルーティングを記述し、導出規則そのものを再定義しない（上図は
+> 非規範サマリであり、評価順序・`complete` 最優先などの正確な規則は data-model §5 を参照）。
 
-以下はautomation_modeや過去の経験に関わらず、常に遵守する:
+## コアルール参照
 
-1. **ステップファイルの読み込みは省略不可**: 「ステップ4: フェーズステップ読み込み」に列挙された全ファイルを必ずReadツールで読み込む。「内容を覚えている」「前回と同じ」は省略理由にならない
-   - **フェーズインデックス併用時**: 「フェーズステップ読み込み」の対象がフェーズインデックスファイル（`steps/{phase}/index.md`）である場合、インデックス読み込み＋インデックスの「ステップ読み込み契約」テーブル経由で必要な詳細ファイルを読み込む流れ全体が「ステップファイル読み込み」の一形態である。インデックスのみロードして詳細ファイル読み込みを省略することは禁止
-2. **semi_autoの範囲**: ゲート承認の自動化のみ。ステップファイル読み込み・AIレビュー・progress.md管理の省略権限は含まない
-3. **review_mode=requiredの厳守**: この設定時、AIレビューのスキップはバグである。成果物の承認前に必ずreview-flow.mdに従ってレビューを実施する
-4. **コンパクション復帰時**: 前セッションの記憶に依存せず、ステップファイルを必ず再読み込みする
+v3 の共通開発ルール（コミット規約・レビューフロー・終了コード規約等）への参照ポイント。
 
-## 実行判断・対話規約
+- レビューの処理パス選択・フォールバック: `steps/common/review-routing.md`
+- 反復レビュー・指摘対応・Defer・機密マスク: `steps/common/review-flow.md`
+- 終了コード規約: `guides/exit-code-convention.md`
+- Bash ツール安全パターン: `steps/common/bash-tool-safety.md`（規約 SoT はリポジトリルート `CLAUDE.md`）
 
-### 質問と実行の判断基準【重要】
+## パス解決
 
-実行前に以下の2条件を確認する:
+`scripts/` / `templates/` / `steps/` で始まるパスは、本 SKILL.md と同じ**スキルベース
+ディレクトリ**からの相対パスとして解決する（例: `scripts/state-read.sh`、
+`templates/work-item.md`、`steps/define.md`）。step ファイルからの単純相対参照
+（`steps/templates/...` のような解釈）は行わない。
 
-1. **要件を1文で言い換えられるか**
-2. **実装アプローチが1つに絞れるか**
-
-両方Yesなら直接実行。どちらかNoなら質問する。
-
-#### 質問フロー
-
-1. 質問の数と概要を先に提示
-2. 1問ずつ詳細を質問し、回答を待つ
-3. 回答に基づく追加質問が発生した場合は明示して質問
-
-#### 確認が必要な場面
-
-- 破壊的操作（データ削除、force push等）
-- 機密情報の取り扱い
-
-これらの確認は「AskUserQuestion使用ルール」セクションでは主に「ユーザー選択」として扱う。
-
-#### 不明点の記録
-
-独自の判断をせず、不明点はドキュメントに `[Question]` / `[Answer]` タグで記録する。
-
-#### 情報提示ルール
-
-ユーザーに判断を求める際は、判断に必要な情報を**質問の前に**提示すること:
-
-- Issue選択時: タイトルだけでなく本文の概要・受け入れ基準を提示
-- スコープ判断時: Intent「含まれるもの」の該当項目を引用
-- 技術選択時: 各選択肢のメリット・デメリットを提示
-- 差分確認時: `git diff` の要約を提示
-
-### 承認プロセス【重要】
-
-計画・設計等の成果物はユーザーの承認を得てから次ステップへ進む。
-
-- `automation_mode=semi_auto`: フォールバック条件に該当しなければ自動承認（`rules-automation.md` のセミオートゲート仕様を参照）
-- `automation_mode=manual`: ユーザーの明示的な肯定返答が必要
-
-### AskUserQuestion使用ルール【重要】
-
-ユーザーとの対話場面を3種類に分類し、種別に応じた適切なツール使用を定義する。
-
-#### インタラクション種別と対応方法
-
-| 種別 | 説明 | 対応方法 | `semi_auto` での扱い | 具体例 |
-|------|------|---------|---------------------|--------|
-| ゲート承認 | フェーズ/ステップの進行承認。ステップファイルで「セミオートゲート判定」と定義された選択（Unit自動選択、ステップスキップ等）を含む | セミオートゲート仕様に従う | `auto_approved` / `fallback` で判定 | 「この設計で進めてよろしいですか？」「計画を承認しますか？」「どのUnitから着手しますか？」（semi_auto時は自動選択） |
-| ユーザー選択 | ゲート承認に該当しない選択場面（ステップファイルで「セミオートゲート判定」と定義されていないもの） | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`） | 「マージ方法を選んでください」「force pushしてよろしいですか？」「設定保存確認（`branch_mode` / `draft_pr` / `merge_method`）」 |
-| ユーザー選択（振り返り内容の決定） | Operations Phase §1 振り返りでの KPT / 主因切り分け / 格納先選択 / mirror 送信判断 / 起票実行確認。AI エージェントの `auto mode`（Claude Code 等）動作に関わらず適用される（auto mode 適用外） | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`）。実行時ガード（対話確認トークン検証）と併用 | 「この Keep を振り返り Issue に含めますか？」「この主因切り分けで進めてよいですか？」「この内容で Issue を起票しますか？」 |
-| 情報収集 | ユーザーからの自由入力やコンテキスト提供が必要な場面 | `AskUserQuestion` 必須 | 自動化対象外（常に `AskUserQuestion`） | 「今回取り組みたい内容は何ですか？」「追加コンテキストを教えてください」 |
-
-#### セミオートゲート仕様との関係
-
-- **ゲート承認のみ**がセミオートゲート仕様の対象。`automation_mode=semi_auto` 時にフォールバック条件に該当しなければ `auto_approved` となる
-- **ユーザー選択**と**情報収集**は `automation_mode` に関わらず常に `AskUserQuestion` ツールを使用する。テキスト出力のみで代替してはならない
-- 「ユーザー選択（振り返り内容の決定）」は AI エージェントの auto mode（Claude Code 等）動作に**関わらず**適用される。auto mode を理由とした AskUserQuestion 省略は禁止。Operations Phase §1 における具体的手順は `steps/operations/04-completion.md` §1.0.5 を参照
-
-#### 推奨・提案応答確保ルール
-
-推奨・提案を含むメッセージ表示時の応答確保基準。既存3種別の分類に変更を加えず、推奨・提案場面での適切な種別マッピングを規定する横断ルールである。
-
-| 条件 | 対応方法 | マッピング先種別 |
-|------|---------|----------------|
-| ユーザーアクションが後続処理の品質・正確性に影響する推奨 | `AskUserQuestion` で応答を待つ | ユーザー選択 |
-| 情報提供のみで後続処理に影響しない推奨 | テキスト出力で進行 | （対話不要） |
-
-- `automation_mode` に関わらず、「ユーザー選択」にマッピングされた推奨は常に `AskUserQuestion` を使用する
-- テキスト出力のみで推奨を表示し応答を待たない「投げっぱなし」は禁止
-
-#### 区切り判断での AskUserQuestion 禁止【重要】
-
-以下のような「次に何をするか」「ここで一度区切るか」を問う場面では `AskUserQuestion` を使用しない。
-ユーザーが `/clear` 等で即座にセッションを切り替えたい場合に、選択肢を 1 つ選ばないと進められず
-ブロッカーになるため。
-
-該当する場面:
-
-- Phase / Unit / ステップ完了後の「次に進む / 一旦休止 / コンテキストリセット」を問う場面
-- 進捗報告のみで作業継続を伴わない確認（「進めてよいですか？」を投げ続けない）
-- バックログ追加のみの指示への対応（「Issue 起票しました」の続行確認を求めない）
-- コンテキストリセット推奨のタイミングで「リセットして続ける / そのまま続ける」を問う場面
-- Unit 完了サマリ後の「次の Unit に進みますか？」を問う場面（semi_auto では自動継続 / manual では平文の案内のみ）
-
-代わりに以下のいずれかで対応する:
-
-- 推奨アクション（例: コンテキストリセット）を平文で提示し、続行可否はユーザー側に委ねる（メッセージはここで完結させる）
-- `automation_mode=semi_auto` で進むのが安全な場面なら、進行状況とロールバック手段を提示してそのまま続行する
-- 区切り情報（コンテキスト保持必須情報 / 再開コマンド / 現状サマリ）を提示してメッセージを終える
-
-**例外**:
-
-- 「ユーザー選択（振り返り内容の決定）」など、本セクション上位の表で `AskUserQuestion` 必須と明示されている対話（スキル仕様を優先する）
-- 破壊的操作（force push / リモートブランチ削除 / 機密情報の取り扱い等）の最終確認は引き続き `AskUserQuestion` を使用する
-
-## 引数処理
-
-### ARGUMENTSパーシング
-
-ARGUMENTS文字列を以下のルールでパースする:
-
-1. ARGUMENTSが空または未指定の場合:
-   - action = ブランチ名で判定（`cycle/*` なら `construction`、それ以外は `inception`）
-   - additional_context = （空）
-
-2. ARGUMENTSが指定されている場合:
-   - 先頭の空白区切りトークンを action として取得
-   - action が短縮形の場合、フル名に展開する: `inc`→`inception`, `con`→`construction`, `ops`→`operations`, `exp`→`express`, `i`→`inception`, `c`→`construction`, `o`→`operations`, `e`→`express`, `h`→`help`, `v`→`version`, `r`→`retrospective`
-   - action が有効値（`inception` / `construction` / `operations` / `setup` / `express` / `feedback` / `migrate` / `retrospective` / `help` / `version`）でない場合:
-     エラーメッセージ「`/aidlc [action]` の action には inception/construction/operations/setup/express/feedback/migrate/retrospective/help/version（短縮形: inc/con/ops/exp/r または i/c/o/e/h/v）のいずれかを指定してください」を表示して処理を中断
-   - action 以降の残りテキストから先頭の区切り空白（1つ）のみ除去し、残りを additional_context として設定（内部の空白は保持）
-
-パース完了後、`additional_context` をコンテキスト変数として保持する（空の場合は従来と同じ動作）。
-
-### 引数ルーティング
-
-| 引数 | 対応処理 |
-|------|----------|
-| `inception` (`inc` / `i`) / なし（cycleブランチ外） | Inception Phase |
-| `construction` (`con` / `c`) / なし（cycleブランチ上） | Construction Phase |
-| `operations` (`ops` / `o`) | Operations Phase |
-| `setup` | `/aidlc-setup` スキルに委譲 |
-| `express` (`exp` / `e`) | Inception Phase（エクスプレスモード有効） |
-| `feedback` | `/aidlc-feedback` スキルに委譲 |
-| `migrate` | `/aidlc-migrate` スキルに委譲 |
-| `retrospective` (`r`) | `/aidlc-retrospective` スキルに委譲（v2.6.0+ / Operations §1 から分離） |
-| `help` (`h`) | ヘルプ表示（アクション一覧） |
-| `version` (`v`) | バージョン表示 |
-
-引数なしの場合: ブランチ名が `cycle/*` なら construction、そうでなければ inception。
-
-**追加コンテキスト**: ARGUMENTSのパーシング結果として `additional_context` が設定されている場合、フェーズ実行中にコンテキスト変数として参照可能。空の場合は従来と同じ動作。
-
-### 独立フロー委譲
-
-`setup` / `migrate` / `feedback` / `retrospective` は独立スキルに委譲する。AI エージェントが Skill ツールで委譲先スキルを直接 invoke し、テキスト案内を介さず自動継続実行する（v2.6.5 / #717 / Unit 005 で規約化）。
-
-#### ブロック A: Skill ツール経由 invoke 規約 (primary)
-
-- **適用範囲（検証状況）**:
-  - **Claude Code**: 実証済み（必須適用）
-  - **Codex CLI**: Operations Phase 振り返り前段で検証予定（任意適用 / 検証結果は記録）
-  - **Gemini CLI**: 環境未整備、検証範囲外（記録のみ、規約の必須適用対象外）
-- AI エージェントは `/aidlc {action}`（`action ∈ {setup, migrate, feedback, retrospective}`）受信時、テキスト案内を介さず Skill ツールで `aidlc-{action}` スキルを invoke する
-- `additional_context`（`/aidlc {action} {ctx}` の `{ctx}` 部分）は委譲先スキルに **単一の生文字列としてそのまま透過渡し** する
-- **成功時出力契約（責務境界 固定）**:
-  - 最終応答主体: 委譲先スキル単独 (`aidlc-{action}` の出力)
-  - 親スキル責務: 委譲先 invoke のみ。invoke 後の追加メッセージ出力は禁止（二重応答抑止）
-  - 順序: 親スキル invoke → 委譲先応答（1 順序のみ / 「実行済み報告」も出力しない）
-
-#### ブロック B: フォールバック仕様 (Skill ツール利用不可時)
-
-- **発火条件**: (a) Skill ツール未提供 / (b) 1 回目呼び出しが構造的失敗（ツール not found / 権限エラー / 即時エラー応答）
-- **親スキル責務**: 1 回目呼び出し試行のみ。失敗時は再試行せず即フォールバックに降格
-- **fallback 出力**:
-  - `additional_context` 非空時: `「/aidlc-{action} {additional_context}」を実行してください。`（半角スペース 1 個区切り）
-  - `additional_context` 空時: `「/aidlc-{action}」を実行してください。`（余分なスペース / 末尾空白なし）
-- **復帰条件・タイミング**: 次ターン以降、ユーザーが再度 `/aidlc {action}` を入力した場合は通常通り `skill_tool` モード（ブロック A）から開始する。フォールバック降格は **その 1 ターン内のみの局所的判定**
-
-#### ブロック C: 委譲先テーブル
-
-| action | 委譲先スキル |
-|--------|------------|
-| `setup` | `/aidlc-setup` |
-| `migrate` | `/aidlc-migrate` |
-| `feedback` | `/aidlc-feedback` |
-| `retrospective` | `/aidlc-retrospective` |
-
-## 実行フロー
-
-### 共通初期化フロー
-
-`inception` / `construction` / `operations` / `express` で実行する。
-
-1. **共通ステップ読み込み**: 以下のファイルを順に読み込む — `steps/common/rules-core.md`（共通開発ルール）→ `steps/common/preflight.md`（プリフライトチェック・実行）
-2. **プロジェクト情報確認**: `.aidlc/config.toml` の存在を確認。`.aidlc/rules.md` が存在すれば読み込む。セッションタイトルを設定（`tools:session-title` スキル使用）
-3. **セッション継続判定**: `steps/common/session-continuity.md` を読み込み、前回セッションの継続かを判定
-4. **フェーズステップ読み込み**: 引数に応じたフェーズステップを読み込む
-
-| フェーズ | 読み込み対象 |
-|---------|-------------|
-| inception | `steps/inception/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード。`06-backtrack.md` はバックトラック発動時のみ） |
-| construction | `steps/construction/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード） |
-| operations | `steps/operations/index.md`（フェーズインデックス。詳細ステップはインデックス内「ステップ読み込み契約」テーブル経由で必要時ロード） |
-
-### Expressモード
-
-引数 `express` でInception Phase開始後、`.aidlc/config.toml` の `[rules.automation]` を確認:
-
-- `automation_mode = "semi_auto"`: ゲート自動承認、Unit自動選択
-- `automation_mode = "full_auto"`: 全自動（ユーザー確認なし）
-
-Inception完了後 → Construction Phase → Operations Phase と自動遷移。各フェーズ完了時に次のフェーズステップを読み込んで継続する。
-
-## 補助フロー
-
-### ワークフロー共通ステップ
-
-フェーズ実行中に必要に応じて読み込む:
-
-| ステップ | ファイル | タイミング |
-|---------|---------|-----------|
-| コミットフロー | `steps/common/commit-flow.md` | コミット時 |
-| レビューフロー | `steps/common/review-flow.md` | AIレビュー時 |
-| コンテキストリセット | `steps/common/context-reset.md` | セッション切り替え時 |
-
-## ユーティリティ
-
-### ヘルプ表示
-
-`help` アクション時に以下を表示して処理を終了する。共通初期化フローは実行しない。
-
-```text
-AI-DLC オーケストレーター - 利用可能なアクション:
-
-| アクション | 短縮形 | 説明 |
-|-----------|--------|------|
-| inception | inc, i | 要件定義（Intent・ストーリー・Unit定義） |
-| construction | con, c | 実装（設計・コーディング・テスト） |
-| operations | ops, o | 運用（デプロイ・リリース・PR管理） |
-| setup | - | AI-DLC環境の初期セットアップ |
-| express | exp, e | エクスプレスモード（Inception→Construction自動遷移） |
-| feedback | - | AI-DLCへのフィードバック送信 |
-| migrate | - | v1→v2マイグレーション |
-| retrospective | r | サイクル振り返り（KPT / Issue 起票 / Operations §1 から分離 / v2.6.0+） |
-| help | h | このヘルプを表示 |
-| version | v | スキルバージョンを表示 |
-
-使い方: /aidlc <action> [追加コンテキスト]
-例: /aidlc ops   （Operations Phase開始）
-例: /aidlc con 前回のセッションで設計レビューまで完了
-例: /aidlc r v2.6.0   （v2.6.0 サイクルの振り返りを起動）
-```
-
-### バージョン表示
-
-`version` アクション時に以下を実行する。共通初期化フローは実行しない。
-
-#### 実行手順
-
-1. **base dir 解決**: SKILL.md 冒頭の `Base directory for this skill:` 行から `{base}` の絶対パスを取得する
-2. **CLI 実行**: `bash {base}/scripts/lib/version.sh` を引数省略で実行（v2.6.3 以降、引数省略時はスクリプト位置から marketplace.json を自己解決する）
-3. **正規化と表示**: stdout を取得し、前後空白トリム + 先頭 `v` プレフィックス除去後に以下を表示
-
-   ```text
-   AI-DLC Starter Kit v{version}
-   ```
-
-4. **フォールバック**: 上記コマンドが exit 非 0 を返した場合、または stdout が空文字の場合は以下を表示
-
-   ```text
-   AI-DLC Starter Kit (version unknown)
-   ```
-
-#### 禁則【絶対遵守】
-
-- **内部知識からの推測禁止**: AI エージェントは Bash ツール呼び出しを行わずに学習データ等から version 文字列を推測出力してはならない。CLI 実行が失敗した場合は必ず `(version unknown)` フォールバックを使用する
-- **base dir の組み立てミス防止**: `{base}` は SKILL.md 冒頭行から直接取得する。プラグインキャッシュパス（`~/.claude/plugins/...`）の構造を推測で再構築してはならない
-
-#### 注意: Bash ツール経由の zsh OOM 回避ルール
-
-AI エージェントが Bash ツール引数文字列にコマンド置換構文（`$(...)` / backtick）を含めると、zsh `command_not_found_handler` の無限再帰により OOM クラッシュを誘発する既知のクラスバグがある（Issue #697 / 関連 #688）。本ルールは Bash ツール経由のあらゆる外部スクリプト呼び出しに適用される。
-
-- **規約本文 SoT**: [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン)
-- **運用例 SoT**: [`steps/common/bash-tool-safety.md`](./steps/common/bash-tool-safety.md)
-- `/aidlc v` 経路固有の経緯（zsh 手動 source 等）は `scripts/lib/version.sh` 冒頭コメント + Issue #688 を参照
-
-## 制約事項
-
-- **ドキュメント読み込み制限**: `.aidlc/cycles/{{CYCLE}}/` 配下のファイルのみ読み込む。他サイクルのドキュメントは読まない
-- **テンプレート参照**: ドキュメント作成時は `templates/` を参照（スキルベースディレクトリからの相対パス）
-- **パス解決**: `steps/`、`scripts/`、`config/`、`templates/`、`guides/`、`references/` で始まるパスはスキルのベースディレクトリ（SKILL.mdと同じディレクトリ）からの相対パスとして解決する。`..` によるベースディレクトリ外への参照は **以下の例外を除き** 無効とする。ステップファイル内の相互参照（例: `steps/common/rules-core.md` を読み込んで）も同じルールに従う。Bashコマンドで `scripts/` 配下のスクリプトを実行する場合は、解決した絶対パスを使用すること
-  - **例外**（v2.6.1 Unit 001 / Issue #688）: `marketplace.json`（プラグインルート `.claude-plugin/marketplace.json`）への参照は `{SKILLベースディレクトリ}/../../.claude-plugin/marketplace.json` として解決する。これは `marketplace.json` が version SoT であり、スキルベースディレクトリ外に配置されているための限定的な例外である。「バージョン表示」アクション（`/aidlc v`）でのみ使用する
-- **SKILL.md本文制限**: 本文500行以内。詳細はステップファイルに分離
+- `scripts/`: `state-read.sh` / `state-write.sh` / `state-validate.sh` / `state-init.sh`（state.json 操作）/ `work-item-next.sh`（選定）/ `work-item-validate.sh`（work item 検証）/ `work-item-status.sh`（work item frontmatter status の read / 遷移）/ `lib/frontmatter.sh`（frontmatter パース安全境界）/ `doctor.sh`（環境診断 / 9 領域）/ `read-config.sh`（config.toml 読取の公開 API）
+- `templates/`: `intent.md` / `work-item.md` / `journal.md` / `release.md` / `reflect.md` / `design.md`（成果物テンプレート）
+- `steps/`: `define.md` / `status.md` / `develop.md` / `release.md` / `reflect.md` / `doctor.md`

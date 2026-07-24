@@ -18,3 +18,10 @@
 
 - develop completed: 001-v2-maintenance-branch
 - matrix_case: tiny_standard（design / review とも skip）。origin/main（2545af6b = beta.3 merge 後）から `v2-maintenance` branch を作成し remote へ push。skills/aidlc / reviewing-\* 等 v2 実装一式の包含と作成元 SHA（002 開始前の main）を検証済み
+
+## 2026-07-24
+
+- develop completed: 002-v3-mainline-replacement
+- matrix_case: risky_standard（design: full + Rollback Note / review: code_security）。design 承認: manual approved / review: codex パス 1・2 rounds（P2 1 件 = state-init.sh の `..` ガード不整合を修正して Round 2 clean）
+- 実施内容: `skills/aidlc-v3` → `skills/aidlc` 置換（同一パス残置原則 / 残置 v2 資産 14 ファイル）、v2 専用 8 スキル撤去、aidlc-migrate の v2→v3 専用化（v1 は v2-maintenance 案内）、marketplace `3.0.0-rc.1` 化（10 skills）、bin / CI workflows / tests の参照整合（defaults-sync 撤去・migration-tests 削減）、残置 md の発リンク閉包
+- 検証: v3 内部テスト 11 本 PASS / bats 113 件 pass / bin checks（skill-references / parse-guard / bash-substitution / test-isolation / size）全 exit 0 / markdownlint 0 issues / migrate preflight が候補 2（skills/aidlc/scripts/state-init.sh）解決で status:ok / `aidlc-v3` 残存は履歴（.aidlc / CHANGELOG / docs）と意図的参照のみ

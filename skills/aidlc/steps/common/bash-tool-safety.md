@@ -73,22 +73,7 @@ gh pr create --title "..." --body-file /tmp/aidlc-pr-body.md
 rm -f /tmp/aidlc-pr-body.md
 ```
 
-### スニペット 2: 履歴記録（write-history.sh）
-
-```bash
-# Write ツールで /tmp/aidlc-history-content.txt 作成済
-scripts/write-history.sh \
-    --cycle vX.Y.Z \
-    --phase construction \
-    --unit N \
-    --unit-name "..." \
-    --unit-slug "..." \
-    --step "..." \
-    --content-file /tmp/aidlc-history-content.txt
-rm -f /tmp/aidlc-history-content.txt
-```
-
-### スニペット 3: 外部 CLI レビュー（codex / claude）
+### スニペット 2: 外部 CLI レビュー（codex / claude）
 
 ```bash
 # Write ツールで /tmp/aidlc-review-prompt.md 作成済
@@ -140,10 +125,8 @@ CLAUDE.md ① セクション「file-based 経路の参考表」を経路ごと�
 
 | 用途 | 推奨経路 | 補足 |
 |------|---------|------|
-| 履歴記録 | `write-history.sh --content-file <file>` | `--content` は短文用 / 長文は file-based を必須化 |
 | PR 本文（作成） | `gh pr create --body-file <file>` | `--body` は短文用 |
-| PR 本文（編集） | `gh pr edit --body-file <file>` | `pr-ops.sh edit-body` 経由で REST PATCH fallback も使用可（v2.5.5 Unit 005） |
-| PR Ready 化 | `operations-release.sh pr-ready --body-file <file>` | v2.6.2 Unit 001 整備済 |
+| PR 本文（編集） | `gh pr edit --body-file <file>` | `--body` は短文用 |
 | Issue 起票 | `gh issue create --body-file <file>` | `--body` は短文用 |
 | 外部 CLI レビュー（codex） | `codex exec - < <file>` または `codex exec --json - < <file>` | stdin 経由（`-` は stdin を意味する codex CLI の慣習） |
 | 外部 CLI レビュー（claude） | wrapper script 経由でファイル → 引数展開 | claude CLI の直接 stdin 経路がない場合の代替 |
@@ -170,5 +153,3 @@ Markdown inline code は **コメント本文（PR 本文 / Issue 本文）に�
 - 規約 SoT: [`CLAUDE.md` § AI エージェント Bash ツール経由の安全パターン](../../../../CLAUDE.md#ai-エージェント-bash-ツール経由の安全パターン)
 - 最低限の防御: [`AGENTS.md` § Bash ツール経由の安全パターン](../../../../AGENTS.md#bash-ツール経由の安全パターン)
 - 関連 Issue: #697（primary）/ #688（CLOSED / v2.6.1 で `/aidlc v` 経路を個別解決済）
-- スキル仕様: [aidlc スキル § バージョン表示](../../SKILL.md#バージョン表示)（`/aidlc v` 経路の v2.6.1 個別対応）
-- 履歴記録: [write-history スキル](../../../write-history/SKILL.md)（`--content-file` を使用する場合）

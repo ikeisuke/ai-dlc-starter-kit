@@ -18,8 +18,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # v3 の state.json / work item frontmatter の読取は v3 の安全境界スクリプトへ委譲する
 # （生 jq / grep / sed / awk パースを本 CLI に足さない）。
-readonly V3_STATE_READ="${REPO_ROOT}/skills/aidlc-v3/scripts/state-read.sh"
-readonly V3_WORK_ITEM_STATUS="${REPO_ROOT}/skills/aidlc-v3/scripts/work-item-status.sh"
+readonly V3_STATE_READ="${REPO_ROOT}/skills/aidlc/scripts/state-read.sh"
+readonly V3_WORK_ITEM_STATUS="${REPO_ROOT}/skills/aidlc/scripts/work-item-status.sh"
 
 usage() {
     cat <<'USAGE'
