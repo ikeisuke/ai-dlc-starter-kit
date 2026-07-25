@@ -21,7 +21,7 @@ AI-DLC Starter Kit の変更履歴です。
 
 ### Removed
 
-v2 専用スキルを main から撤去した（実装一式は [v2-maintenance ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v2-maintenance) に保全済み）。v3 での代替は次のとおり:
+v2 専用スキルを配布（marketplace）または main から撤去した（`aidlc-retrospective` は非 marketplace スキルで main からのみ撤去。実装一式は [v2-maintenance ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v2-maintenance) に保全済み）。v3 での代替は次のとおり:
 
 | 撤去された v2 スキル | v3 での代替 |
 |---------------------|------------|
