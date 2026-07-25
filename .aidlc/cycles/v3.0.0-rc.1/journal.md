@@ -23,7 +23,7 @@
 
 - develop completed: 002-v3-mainline-replacement
 - matrix_case: risky_standard（design: full + Rollback Note / review: code_security）。design 承認: manual approved / review: codex パス 1・2 rounds（P2 1 件 = state-init.sh の `..` ガード不整合を修正して Round 2 clean）
-- 実施内容: `skills/aidlc-v3` → `skills/aidlc` 置換（同一パス残置原則 / 残置 v2 資産 14 ファイル）、v2 専用 8 スキル撤去、aidlc-migrate の v2→v3 専用化（v1 は v2-maintenance 案内）、marketplace `3.0.0-rc.1` 化（10 skills）、bin / CI workflows / tests の参照整合（defaults-sync 撤去・migration-tests 削減）、残置 md の発リンク閉包
+- 実施内容: `skills/aidlc-v3` → `skills/aidlc` 置換（同一パス残置原則 / 残置 v2 資産 14 ファイル）、v2 専用 8 スキル撤去、aidlc-migrate の v2→v3 専用化（v1 は v2-maintenance 案内）、marketplace `3.0.0-rc.1` 化（9 skills / 当初 10 と誤記・release 統合レビューで訂正）、bin / CI workflows / tests の参照整合（defaults-sync 撤去・migration-tests 削減）、残置 md の発リンク閉包
 - 検証: v3 内部テスト 11 本 PASS / bats 113 件 pass / bin checks（skill-references / parse-guard / bash-substitution / test-isolation / size）全 exit 0 / markdownlint 0 issues / migrate preflight が候補 2（skills/aidlc/scripts/state-init.sh）解決で status:ok / `aidlc-v3` 残存は履歴（.aidlc / CHANGELOG / docs）と意図的参照のみ
 - develop completed: 003-readme-docs-renewal
 - matrix_case: normal_standard（design: simple / review: code）。design 承認: semi_auto auto approved / review: codex パス 1・4 rounds（R1 4 件 + R2 2 件 + R3 1 件を修正、R4 clean / defer 1 件 = Issue #754 defaults.toml の required_ci_zero_fallback 未収載を OUT_OF_SCOPE 起票）

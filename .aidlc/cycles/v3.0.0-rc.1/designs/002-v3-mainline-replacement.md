@@ -115,7 +115,7 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
 ### D5. marketplace.json
 
 - `metadata.version`: `3.0.0-beta.2` → `3.0.0-rc.1`
-- `plugins[0].skills`: 16 → **10 エントリ**
+- `plugins[0].skills`: 16 → **9 エントリ**
 
 ```text
 ./skills/aidlc                            （= v3）
@@ -130,7 +130,8 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
 ```
 
 （`./skills/aidlc-v3` エントリ削除 = 旧 v2 の `./skills/aidlc` エントリが v3 実体を指す。
-撤去 6 スキルのエントリ削除。9 番目の `./skills/aidlc-feedback` を含め計 10）
+撤去スキルのエントリ削除で計 9。当初「10 エントリ」と記載していたが列挙どおり 9 が正
+〔release 統合レビュー指摘 #2 で訂正〕）
 
 ### D6. 残置 md の v2 固有記述の整理（発リンク閉包）
 
@@ -166,8 +167,8 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
 
 ### D8. tests/ の存続・撤去
 
-- **存続**: `tests/migration/`（migrate-v3-preflight / -v3-config / -v3-archive-index / path-traversal の
-  v3 該当分）、`tests/config-defaults/`、`tests/check-cycle-phase-completion.bats`（+ fixtures / パス更新）、
+- **存続**: `tests/migration/`（migrate-v3-preflight / -v3-config / -v3-archive-index）、
+  `tests/config-defaults/`、`tests/check-cycle-phase-completion.bats`（+ fixtures / パス更新）、
   `tests/feedback-route-resolution.bats`、v3 内部テスト `skills/aidlc/scripts/tests/` 全 11 本
 - **撤去**: retrospective 系全 bats（tests/retrospective\* + tests 直下 retrospective-\*.bats）、
   operations-\* 系、write-history-\* 系、predecessor-issue-\*、main-repo-health-check.bats、
@@ -177,6 +178,11 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
   e2e-full-flow の v1 経路分）、対応 fixtures（v1-structure / v2-config-generations /
   aidlc-migrate-prefs / retrospective\* / gh-pr-edit-fallback 等）
 - e2e-full-flow が v1→v2 と v2→v3 を跨ぐ場合は v2→v3 部分のみ存続させる（実装時に分割判断）
+- **設計変更（実装時 / release 統合レビュー指摘 #1 で追記）**: `migrate-path-traversal.bats` は当初
+  「v3 該当分を存続」としたが、テスト対象の大半（`migrate-apply-config.sh` / `migrate-apply-data.sh` /
+  `migrate-cleanup.sh` = v1→v2 系）が D4 で撤去されたため、テストファイルごと撤去した（復元検証で
+  12 件中 9 件が対象スクリプト不在で fail することを確認済み）。存続する `scripts/lib/path-guard.sh` の
+  symlink escape / 初期化異常 / `realpath -m` フォールバックの回帰テスト移植は Issue #757 で後続対応とする
 
 ### D9. 触れないもの（履歴の不変原則）
 
@@ -203,7 +209,7 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
 |----|---------|
 | `/aidlc` = v3 ルーティング | `skills/aidlc-v3` 不存在 + `skills/aidlc/SKILL.md` frontmatter `name: aidlc` + v3 steps 実在 + `skills/aidlc/scripts/tests/test-activation.sh` pass |
 | 旧 v2 実装が main に残存しない | D2 残置リスト以外の v2 ファイル不存在を確認 + `grep -r 'skills/aidlc-v3'` の残存が履歴（.aidlc/ / CHANGELOG / docs）のみ |
-| marketplace = rc.1 / 10 skills | jq で version / skills 配列検証 + `bin/check-marketplace-version.sh` |
+| marketplace = rc.1 / 9 skills | jq で version / skills 配列検証 + `bin/check-marketplace-version.sh` |
 | migration 経路維持 | `tests/migration/` v3 系 bats pass + 2 候補解決が候補 2（`skills/aidlc/scripts/state-init.sh`）で解決することの fixture 確認 |
 | CI 全 green | ローカルで bin checks（skill-references / frontmatter-parse-guard / bash-substitution / test-isolation / size）+ 存続 bats 全件 + v3 内部テスト 11 本 + shellcheck（変更 sh）+ `npx markdownlint-cli2` |
 
