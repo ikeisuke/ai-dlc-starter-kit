@@ -80,4 +80,5 @@ merge_blocker_any: false
 <!-- merge 記録は release Step 3/4 で追記する（テンプレート生成時点では未記録）。 -->
 
 - merge_approved: true（2026-07-26 / semi_auto 自動承認: merge_blocker_any = false）
-- merged: 未記録（Step 4 で記録）
+- merged: true（2026-07-26 / merge commit a3c12bb1 / merge method: merge / tag v3.0.0-rc.1 は auto-tag.yml が自動作成）
+- 補足: merge 前に main ruleset の stale required context（Defaults TOML Sync Check / D7 で job 撤去済み）を ruleset 11757623 から除去して hard gate を通過（required 4 件全 pass + CLEAN / --match-head-commit 11160c83）

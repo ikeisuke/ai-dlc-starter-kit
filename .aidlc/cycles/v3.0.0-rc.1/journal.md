@@ -29,3 +29,10 @@
 - matrix_case: normal_standard（design: simple / review: code）。design 承認: semi_auto auto approved / review: codex パス 1・4 rounds（R1 4 件 + R2 2 件 + R3 1 件を修正、R4 clean / defer 1 件 = Issue #754 defaults.toml の required_ci_zero_fallback 未収載を OUT_OF_SCOPE 起票）
 - 実施内容: README を v3 前提へ全面刷新（badge rc.1 / v3 コマンド体系・引数なしルーティング・express・旧名エイリアス / 初期導線 = config.toml 手動作成 → /aidlc define / v2-maintenance 参照案内 + /aidlc-migrate 導線 / v2 固有機能記述の撤去）、docs/configuration.md を v3 終端 8 キーのリファレンスへ全面改稿、docs/v3-renewal-plan.md の doctor 正本ポインタ更新、docs/development/github-projects-setup.md の v2 Inception 統合記述を歴史的注記化
 - 検証: markdownlint 0 issues / skill-reference-check no violations（74 files）/ README 残存 v2 表記 grep 0 件
+
+## 2026-07-26
+
+- release completed: v3.0.0-rc.1 (PR #755 merged)
+- release-level review（codex / required）: premerge 中1低1（中: stale v2 テスト撤去 2ee683da / 低: Issue #756）、integration 中1低1（中: D8 設計変更反映 + Issue #757 / 低: 件数誤記訂正 0668c663）、deploy 高1中2 → R2 で全件解消確認（494a97cb / 572e01b1: Rollback Note 配布モデル訂正・CHANGELOG rc.1 を merge 前 PR に同梱・破壊的変更対応表）。merge_blocker_any = false → semi_auto 自動承認
+- hard gate: main ruleset に撤去済み job の required context（Defaults TOML Sync Check）が残存し BLOCKED となったため、ruleset 11757623 から当該 context のみ除去（D7 の defaults-sync 撤去に伴う環境側後始末）。required 4 件（CodeQL / Skill Reference / Bash Substitution / Markdown Lint）全 pass + CLEAN を確認して merge 実行（--match-head-commit 11160c83）
+- tag `v3.0.0-rc.1` は auto-tag.yml が merge commit a3c12bb1 に自動作成（config version_tag = false のため手動 tag なし / 正規経路）。CHANGELOG は deploy 指摘 #2 対応で merge 前に同梱済みのため Step 4 での追記なし
