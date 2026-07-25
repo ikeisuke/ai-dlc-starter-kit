@@ -222,8 +222,13 @@ v1→v2 移行は「v2 実装を生成する経路」であり、v2 が main に
   frontmatter を `in_progress` に手動で戻し、journal に revert 記録を追記する
 - **main への影響時期**: main には release フェーズの PR merge まで一切影響しない。merge 後に
   致命問題が出た場合は revert PR で本流化前へ戻し、v2 は v2-maintenance から復元する
-- **配布物の切り戻し**: marketplace 配布はタグ / リリース単位のため、rc.1 タグ公開前なら consumer
-  影響ゼロ。公開後は `metadata.version` を戻した hotfix release を発行する（既存 consumer は旧
-  バージョン pin のまま影響を受けない）
+- **配布物の切り戻し**（release deploy レビュー指摘 #1 で訂正）: marketplace 配布は **main 追従**
+  （plugin update は main の最新 commit を取得する / tag 単位の pin ではない）ため、**PR merge 直後から
+  consumer 影響が始まる**。`auto-tag.yml` による rc.1 tag 自動作成は付随イベントであり配布開始点ではない
+  （config の `version_tag = false` は手動 tag の無効化であり、自動 tag が正規経路）。緊急時の基本手順:
+  本流化 commit の revert PR（v2 配布定義の復元を含む）→ `metadata.version` は**過去値へ戻さず単調増加の
+  hotfix version（例: `3.0.0-rc.2`）を発行** → 更新済み consumer は plugin 再 update で復旧する。
+  v3 で作成された consumer の `.aidlc/state.json` は v2 実装からは参照されないため削除不要
+  （保持したまま v3 復帰時に再利用できる）
 - **移行データの安全性**: 本 work item は consumer プロジェクトのデータ（`.aidlc/`）を一切変更しない
   ため、ロールバックにデータ復旧は不要

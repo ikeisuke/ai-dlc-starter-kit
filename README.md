@@ -90,6 +90,21 @@ v2（`.aidlc/config.toml` があり `state.json` が無い環境）からの移�
 - 実データ変換（best-effort）は未サポートです（選択時は書き込みなしで安全に中断します）
 - v1 環境を検出した場合は書き込みを行わず、v2-maintenance ブランチでの v1→v2 移行を案内します
 
+#### v2 から撤去されたスキルと v3 での代替
+
+v3 本流化に伴い、以下の v2 スキルは配布から撤去されました（実装は v2-maintenance ブランチに保全されています）:
+
+| 撤去された v2 スキル | v3 での代替 |
+|---------------------|------------|
+| `/aidlc-setup` | 廃止。`.aidlc/config.toml` を手動作成（空ファイル可 / 上記手順 3） |
+| `/aidlc-v3` | `/aidlc` に統合（本流化） |
+| `/squash-unit` | 個別スキル廃止。develop フローが work item 完了時にコミットを集約 |
+| `/write-history` | 個別スキル廃止。`journal.md` への追記は各フェーズフローが直接実施 |
+| `aidlc-retrospective` | `/aidlc reflect` |
+| `reviewing-inception-intent` / `-stories` / `-units` | 個別スキル廃止。Intent / work item の確認は define の承認ゲートで実施 |
+
+上記の代替で不足する v2 機能は v2-maintenance ブランチで継続利用できます。
+
 ### v1 / v2 ブランチについて
 
 | 系統 | 参照先 | 状態 |
