@@ -3,9 +3,9 @@
   "current_cycle": "v3.0.0-rc.1",
   "define_completed": true,
   "release": {
-    "pr_number": null,
+    "pr_number": 755,
     "ready": false,
     "merge_approved": false
   },
-  "updated_at": "2026-07-11T14:58:19Z"
+  "updated_at": "2026-07-25T22:07:37Z"
 }
