@@ -920,7 +920,7 @@ Suggested command: /aidlc define
 
 doctor は修正を自動実行しない。診断と推奨だけ出す。
 
-出力例（define_completed=true / develop シナリオ / 実出力形式は `doctor.sh` 準拠 / 正本は `skills/aidlc-v3/steps/doctor.md`）:
+出力例（define_completed=true / develop シナリオ / 実出力形式は `doctor.sh` 準拠 / 正本は `skills/aidlc/steps/doctor.md`）:
 
 ```text
 [config]      OK    rules.depth_level.level 取得 OK

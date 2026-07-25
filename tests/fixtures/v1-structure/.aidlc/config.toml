@@ -1,5 +1,0 @@
-[project]
-name = "test-project"
-
-[paths]
-aidlc_dir = "docs/aidlc"

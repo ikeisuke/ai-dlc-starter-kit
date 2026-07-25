@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # frontmatter パース禁止パターン検出スクリプト（Unit 002 / T4 / #733）
 #
-# skills/aidlc-v3/scripts/ の個別 consumer スクリプト（lib/ と tests/ を除く）に、
+# skills/aidlc/scripts/ の個別 consumer スクリプト（lib/ と tests/ を除く）に、
 # frontmatter 構造解釈の禁止パターン（生の grep / sed / awk / permissive jq）が
 # 混入していないかを機械検出する。Unit 001 で確立した共有 parser 境界
 # （lib/frontmatter.sh の fm_* 関数）からの逸脱を CI で自動的に弾く。
@@ -28,7 +28,7 @@
 
 set -euo pipefail
 
-DEFAULT_TARGET_DIR="skills/aidlc-v3/scripts"
+DEFAULT_TARGET_DIR="skills/aidlc/scripts"
 
 REPO_ROOT=""
 VERBOSE=false
@@ -42,7 +42,7 @@ show_usage() {
     cat <<EOF
 Usage: $(basename "$0") [target_dir] [options]
 
-skills/aidlc-v3/scripts/ の個別 consumer スクリプト（lib/ と tests/ を除く）に
+skills/aidlc/scripts/ の個別 consumer スクリプト（lib/ と tests/ を除く）に
 frontmatter 構造解釈の禁止パターン（生 grep/sed/awk/permissive jq）が混入していないか検出します。
 
 Arguments:

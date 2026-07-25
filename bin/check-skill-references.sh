@@ -41,10 +41,7 @@ EOF
 }
 
 # 除外パターン: META-001例外（メタ開発固有の正当な参照）
-# - guides/: マイグレーションガイド等のドキュメント内参照
-# - steps/inception/01-setup.md: STARTER_KIT_DEV判定・参照先ポリシーテーブル
-# - aidlc-migrate/: v1→v2マイグレーションスクリプト
-# - write-history/SKILL.md: 委譲スキルの注記
+# - guides/: ガイド文書内のパス例・準拠状況テーブル
 # - steps/common/review-flow.md: 規範記述（Round 4+ 新領域判定の境界条件テーブル / 列の記述ガイダンスのパス例）
 # - steps/common/rules-core.md: 公開 API スクリプト層の規約セクション（v2.6.1 Unit 004 / Issue #689）。
 #   `skills/aidlc/scripts/read-config.sh` を全スキルから参照可能な公開 API として明文化する規約記述を含む
@@ -53,53 +50,42 @@ EOF
 # - aidlc-feedback/SKILL.md: 公開 API スクリプト層への参照説明（v2.6.1 Unit 003 / Issue #690）。
 #   パス解決セクションで他スキル（aidlc プラグイン等）の scripts/ 参照例として
 #   `bash skills/aidlc/scripts/read-config.sh ...` を明示する
-# - aidlc-v3/steps/develop.md: 公開 API スクリプト層への正当な参照（v3.0.0-alpha.5 / Unit 001 / #736）。
-#   aidlc-v3 は config.toml 読取手段を持たないため、depth_level 解決に
-#   `bash skills/aidlc/scripts/read-config.sh rules.depth_level.level` をリポジトリルート相対の絶対参照として呼び出す
+# - aidlc/steps/develop.md: 公開 API スクリプト層への正当な参照（v3.0.0-alpha.5 / Unit 001 / #736）。
+#   depth_level 解決に `bash skills/aidlc/scripts/read-config.sh rules.depth_level.level` を
+#   リポジトリルート相対の絶対参照として呼び出す + review-routing.md / review-flow.md への委譲参照
 #   （rules-core.md の公開 API スクリプト層の規約に準拠 / aidlc-feedback と同パターン）
-# - aidlc-v3/steps/doctor.md: 公開 API スクリプト層への正当な参照（v3.0.0-alpha.7 / Unit 003 / #733）。
+# - aidlc/steps/doctor.md: 公開 API スクリプト層への正当な参照（v3.0.0-alpha.7 / Unit 003 / #733）。
 #   doctor の `[config]` 領域が `skills/aidlc/scripts/read-config.sh rules.depth_level.level` を
 #   wrap する出力仕様記述（develop.md と同じ公開 API スクリプト層パターン）
-# - aidlc-retrospective/: aidlc-retrospective スキル（v2.6.0 / Unit 005）。本体 aidlc プラグインの公開 API 層
-#   （retrospective-api.sh / cycle-resolver.sh）と templates/retrospective_template.md を `source` / 参照する設計上の単方向境界を持つ
-# - scripts/lib/retrospective-api.sh / scripts/lib/cycle-resolver.sh: AIDLC_BASE 解決の bootstrap で
+# - scripts/doctor.sh: doctor 実行実装。パス解決コメント + `[config]` 領域の read-config.sh wrap
+# - aidlc-migrate/: v2→v3 マイグレーションスキル（state-init.sh 2 候補解決の説明記述）
+# - scripts/lib/bootstrap.sh: AIDLC_BASE 解決の bootstrap で
 #   `skills/aidlc/scripts/lib` ディレクトリ存在チェックの文字列を含む（自己参照）
 EXCLUDE_PATTERNS=(
     "guides/"
-    "steps/inception/01-setup.md"
-    "steps/operations/04-completion.md"
     "steps/common/review-flow.md"
     "steps/common/rules-core.md"
     "aidlc-feedback/steps/feedback.md"
     "aidlc-feedback/SKILL.md"
-    "aidlc-v3/steps/develop.md"
-    "aidlc-v3/steps/doctor.md"
+    "aidlc/steps/develop.md"
+    "aidlc/steps/doctor.md"
     "aidlc-migrate/"
-    "aidlc-retrospective/"
-    "write-history/SKILL.md"
+    "scripts/doctor.sh"
     "scripts/lib/bootstrap.sh"
-    "scripts/lib/retrospective-api.sh"
-    "scripts/lib/cycle-resolver.sh"
     "scripts/tests/"
-    "scripts/ios-build-check.sh"
-    "scripts/get-default-branch.sh"
-    "templates/review_summary_template.md"
-    "install-kiro-agent/SKILL.md"
 )
 
 # 除外パターンに該当するか判定（パスセグメント単位で照合）
 is_excluded() {
     local rel_file="$1"
     case "$rel_file" in
-        */guides/*|*/steps/inception/01-setup.md|*/steps/operations/04-completion.md|\
+        */guides/*|\
         */steps/common/review-flow.md|*/steps/common/rules-core.md|\
         */aidlc-feedback/steps/feedback.md|*/aidlc-feedback/SKILL.md|\
-        */aidlc-v3/steps/develop.md|*/aidlc-v3/steps/doctor.md|\
-        */aidlc-migrate/*|*/aidlc-retrospective/*|*/write-history/SKILL.md|\
-        */scripts/lib/bootstrap.sh|*/scripts/lib/retrospective-api.sh|*/scripts/lib/cycle-resolver.sh|\
-        */scripts/tests/*|\
-        */scripts/ios-build-check.sh|*/scripts/get-default-branch.sh|\
-        */templates/review_summary_template.md|*/install-kiro-agent/SKILL.md)
+        */aidlc/steps/develop.md|*/aidlc/steps/doctor.md|\
+        */aidlc-migrate/*|\
+        */scripts/doctor.sh|*/scripts/lib/bootstrap.sh|\
+        */scripts/tests/*)
             return 0
             ;;
     esac

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # sync-reviewing-common.sh
 # 正本（skills/reviewing-common/reviewing-common-base.md）を
-# 9つのReviewingスキルの references/ にコピーする。
+# 6つのReviewingスキルの references/ にコピーする。
 
 SOURCE="skills/reviewing-common/reviewing-common-base.md"
 
@@ -12,9 +12,6 @@ TARGETS=(
   "skills/reviewing-construction-design/references/reviewing-common-base.md"
   "skills/reviewing-construction-integration/references/reviewing-common-base.md"
   "skills/reviewing-construction-plan/references/reviewing-common-base.md"
-  "skills/reviewing-inception-intent/references/reviewing-common-base.md"
-  "skills/reviewing-inception-stories/references/reviewing-common-base.md"
-  "skills/reviewing-inception-units/references/reviewing-common-base.md"
   "skills/reviewing-operations-deploy/references/reviewing-common-base.md"
   "skills/reviewing-operations-premerge/references/reviewing-common-base.md"
 )

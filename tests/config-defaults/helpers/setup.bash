@@ -13,7 +13,6 @@ HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TESTS_DIR="$(cd "${HELPERS_DIR}/../.." && pwd)"
 REPO_ROOT="$(cd "${TESTS_DIR}/.." && pwd)"
 FIXTURES_DIR="${REPO_ROOT}/tests/fixtures/config-defaults"
-TEMPLATE_PATH="${REPO_ROOT}/skills/aidlc-setup/templates/config.toml.template"
 EXAMPLE_PATH="${REPO_ROOT}/skills/aidlc/config/config.toml.example"
 DEFAULTS_PATH="${REPO_ROOT}/skills/aidlc/config/defaults.toml"
 READ_CONFIG_SCRIPT="${REPO_ROOT}/skills/aidlc/scripts/read-config.sh"
@@ -99,30 +98,6 @@ run_read_config_single() {
 # read-config.sh を --keys モードで実行し、複数キーを一括取得（key:value 形式）
 run_read_config_batch() {
   AIDLC_PROJECT_ROOT="${TEST_TMPDIR}" "${READ_CONFIG_SCRIPT}" --keys "$@"
-}
-
-# template は project プレースホルダ（例: [プロジェクト名]）を含む invalid TOML のため
-# dasel/aidlc_read_toml では構造解析できない。grep/awk ベースで section + leaf の存在検査を行う。
-
-# template に [section] というセクションヘッダが存在するか検査
-# 例: template_has_section "rules.linting"
-template_has_section() {
-  local section="$1"
-  grep -Fxq "[${section}]" "${TEMPLATE_PATH}"
-}
-
-# template の指定セクション内に指定葉キーの代入行が存在するか検査
-# 例: template_has_section_leaf "rules.git" "squash_enabled"
-template_has_section_leaf() {
-  local section="$1"
-  local leaf="$2"
-  awk -v sec="[${section}]" -v lf="${leaf}" '
-    BEGIN { in_section = 0; found = 0 }
-    $0 == sec { in_section = 1; next }
-    /^\[/ { in_section = 0 }
-    in_section && $0 ~ "^[[:space:]]*"lf"[[:space:]]*=" { found = 1; exit 0 }
-    END { exit (found ? 0 : 1) }
-  ' "${TEMPLATE_PATH}"
 }
 
 # example は valid TOML のため aidlc_read_toml で構造解析可能

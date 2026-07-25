@@ -6,13 +6,13 @@
 
 ## 実行手順
 
-**パス 1（外部 CLI）**: (1) レビュー前コミット → (2) 機密情報除外スキャン（`review-routing.md §2` の除外パターンで照合、`/`なし→ベース名、`/`あり→相対パス、ケースインセンシティブ。全除外 → パス 3、除外ファイルはパスのみ通知）→ (3) 反復レビュー（最大 5 回）: スキル呼び出し → 指摘あれば修正 → 再レビュー。**完了条件は単一仕様**で判定し、5 回後も残（`unresolved_count > 0`）で指摘対応判断フロー。
+**パス 1（外部 CLI）**: (1) 機密情報除外スキャン（`review-routing.md §2` の除外パターンで照合、`/`なし→ベース名、`/`あり→相対パス、ケースインセンシティブ。全除外 → パス 3、除外ファイルはパスのみ通知）→ (2) 反復レビュー（最大 5 回）: スキル呼び出し → 指摘あれば修正 → 再レビュー。**完了条件は単一仕様**で判定し、5 回後も残（`unresolved_count > 0`）で指摘対応判断フロー。commit の粒度・タイミングは呼び出し側フロー（develop / release）の規約に従う（本ファイルは commit 手順を規定しない）。
 
 **Codex セッション管理**: 初回後 session id を記録、2 回目以降 `codex exec resume <session-id>`。**エラー時**は `review-routing.md §6` の `fallback_policy` に従う（`cli_runtime_error` / `cli_output_parse_error` への対応ポリシー、`skip_reason_required=true` は下記バリデーション適用）。
 
 **パス 2（セルフ）**: 呼び出し形式は `review-routing.md §7`。反復上限・完了条件はパス 1 と同一（5R 上限 / 単一仕様による完了判定）。**パス 1 → パス 2 の遷移**は `review-routing.md §4` の ToolSelection 順序（`["codex", "self"]` 相当のリスト走査）の自然な延長として読める。`tools = ["codex"]` 設定の場合、暗黙シムにより末尾 self が補完されるため、外部 CLI 失敗時のセルフ降下は `fallback_to_self` ポリシーと等価に動作する（`recommend` モード）。
 
-**パス 3（ユーザー）**: レビュー前コミット → 成果物提示 → 承認要求。修正依頼 → 反映 → レビュー後コミット → 再提示。
+**パス 3（ユーザー）**: 成果物提示 → 承認要求。修正依頼 → 反映 → 再提示（commit 粒度は呼び出し側フローの規約に従う）。
 
 ### 完了条件の判定単一仕様
 
@@ -45,11 +45,11 @@
 
 **理由バリデーション**: 上記「スキップ理由バリデーション」と同じ（空文字不可、禁止パターン拒否）。
 
-**スコープ保護確認**（OUT_OF_SCOPE 時のみ）: `rules-core.md` の「スコープ保護ルール」に基づき、指摘対象が `.aidlc/cycles/{{CYCLE}}/requirements/intent.md` の「含まれるもの」に該当するかを判定。**本確認は AI とユーザーの意思決定責務境界として常時維持される**（`automation_mode` / 5R 化に関わらず削除対象外）。
+**スコープ保護確認**（OUT_OF_SCOPE 時のみ）: `rules-core.md` の「スコープ保護ルール」に基づき、指摘対象が `.aidlc/cycles/<cycle>/intent.md` の「含むもの」に該当するかを判定。**本確認は AI とユーザーの意思決定責務境界として常時維持される**（`automation_mode` / 5R 化に関わらず削除対象外）。
 
-- 該当 → `automation_mode` に関わらずユーザー確認（対象要件・指摘内容を提示して「スコープから除外してよろしいですか？」）。「はい」→ 履歴に `スコープ保護確認` 記録 → defer 自動 Issue 起票へ / 「いいえ」→ 「修正する」に戻る
+- 該当 → `automation_mode` に関わらずユーザー確認（対象要件・指摘内容を提示して「スコープから除外してよろしいですか？」）。「はい」→ レビュー記録に `スコープ保護確認` を記録 → defer 自動 Issue 起票へ / 「いいえ」→ 「修正する」に戻る
 - 非該当 → defer 自動 Issue 起票へ
-- 判定不能（「含まれるもの」不在・曖昧）→ ユーザー確認にフォールバック（安全側）
+- 判定不能（「含むもの」不在・曖昧）→ ユーザー確認にフォールバック（安全側）
 
 **判断完了後**: RESOLVE 選択あり → 反復レビューへ戻る / 全て defer（先送り） → レビュー完了処理（`review_detected=true` でセミオートゲートが `fallback(review_issues)`）。
 
@@ -59,7 +59,7 @@
 
 ### 機密情報マスク
 
-**マスク適用範囲**: Issue タイトル・本文に限らず、本フローで生成・更新されるすべての記録物（review-summary、`history/*.md`、warn 出力、`PENDING_MANUAL` 失敗ログ、コミットメッセージを含む）に同一マスクポリシーを適用する。
+**マスク適用範囲**: Issue タイトル・本文に限らず、本フローで生成・更新されるすべての記録物（レビュー記録（review-summary）、warn 出力、`PENDING_MANUAL` 失敗ログ、コミットメッセージを含む）に同一マスクポリシーを適用する。
 
 マスク対象:
 
@@ -138,14 +138,12 @@ Round 4 以降に発生した「新領域の指摘」は、千日手の予兆と
 | 元パス（glob） | 領域キー |
 |---------------|---------|
 | `skills/aidlc/scripts/lib/*` | `scripts/lib` |
-| `skills/aidlc/scripts/*`（lib 以下を除く） | `scripts` |
+| `skills/aidlc/scripts/tests/*` | `scripts/tests` |
+| `skills/aidlc/scripts/*`（lib / tests 以下を除く） | `scripts` |
 | `skills/aidlc/steps/common/*` | `steps/common` |
-| `skills/aidlc/steps/inception/*` | `steps/inception` |
-| `skills/aidlc/steps/construction/*` | `steps/construction` |
-| `skills/aidlc/steps/operations/*` | `steps/operations` |
+| `skills/aidlc/steps/*`（common 以下を除く） | `steps` |
 | `skills/aidlc/templates/*` | `templates` |
 | `skills/aidlc/config/*` | `config` |
-| `skills/aidlc/agents/*` | `agents` |
 | `skills/aidlc/guides/*` / `skills/aidlc/references/*` | `docs/skill` |
 | `skills/reviewing-*/**` | `skills/reviewing` |
 | `bin/*`（tests を除く） | `bin` |
@@ -188,11 +186,11 @@ Round 4 以降に発生した「新領域の指摘」は、千日手の予兆と
 
 ### 計画承認前レビューでの扱い（特例）
 
-計画承認前のレビューはレビューサマリ非生成（後述）のため、Round 4 に到達した場合の `K_old` / `K_new` / `K_diff` は `history/construction_unit{NN}.md` または `inception/{成果物名}-history.md` に手動で記録する運用とする。本サイクルでは計画承認前のサマリ非生成ルールを破らない。
+計画承認前のレビューはレビューサマリ非生成（後述）のため、Round 4 に到達した場合の `K_old` / `K_new` / `K_diff` は呼び出し側フローの記録先（レビュー記録が非生成の文脈では `journal.md`）に手動で記録する運用とする。計画承認前のサマリ非生成ルールを破らない。
 
 ## 設計レビュー特化の早期 defer ガイド（Unit 003 / #658 / v2.5.4+）
 
-**適用範囲**: 本ガイドは `caller_context = 設計レビュー`（`skills/aidlc/steps/common/review-routing.md` §3 CallerContext マッピング参照、対応する skill_name は `reviewing-construction-design`、focus は architecture）に限定して適用する。`計画承認前` / `コード生成後` / `統合とレビュー` / `Intent 承認前` / `ストーリー承認前` / `Unit 定義承認前` / `デプロイ計画承認前` / `PR マージ前` には適用しない。`caller_context` 列の文言が将来変更された場合は同 PR 内で本ガイドの適用判定も改訂する（変更連動ルール）。
+**適用範囲**: 本ガイドは `caller_context = 設計レビュー`（`skills/aidlc/steps/common/review-routing.md` §3 CallerContext マッピング参照、対応する skill_name は `reviewing-construction-design`、focus は architecture）に限定して適用する。`計画承認前` / `コード生成後` / `統合とレビュー` / `デプロイ計画承認前` / `PR マージ前` には適用しない。`caller_context` 列の文言が将来変更された場合は同 PR 内で本ガイドの適用判定も改訂する（変更連動ルール）。
 
 **発火タイミング**: 各 Round の `ReviewSession.is_completed()` 判定直後に評価する（既存「指摘対応判断フロー」セクションは「反復レビュー 5 回後に残指摘がある場合のみ実行」と限定されているため、本ガイドはそれとは独立に Round 1〜5 の各 Round 終了時に動作する）。
 
@@ -251,15 +249,15 @@ Round 4 以降に「設計仮説の根本見直し」（ドメインモデル全
 
 **既存千日手検出との関係**: 本早期 defer ガイドはより前倒しの予兆検出として機能し、既存「千日手検出（過去 5R 中 3R 連続同種）」を置き換えない。本ガイドの判定で defer 化されない場合に、5R 内で既存千日手検出が発動する。
 
-**履歴記録形式**: 本ガイドが反応した round の review-summary 末尾セクション（`## Round N OUT_OF_SCOPE 推奨アラート` / `## Round N 千日手予兆警告` / `## Round N 新規仮説追加判定` / `## Round N 漸進パターン警告` / `## Round N 早期 defer ガード吸収サマリ`）に判定結果・根拠・ユーザー選択結果を記録する。`history/construction_unit{NN}.md` には「設計レビュー早期 defer ガイド発動」イベントとして 1 行記録する。
+**履歴記録形式**: 本ガイドが反応した round の review-summary 末尾セクション（`## Round N OUT_OF_SCOPE 推奨アラート` / `## Round N 千日手予兆警告` / `## Round N 新規仮説追加判定` / `## Round N 漸進パターン警告` / `## Round N 早期 defer ガード吸収サマリ`）に判定結果・根拠・ユーザー選択結果を記録する。`journal.md` には「設計レビュー早期 defer ガイド発動」イベントとして 1 行記録する。
 
 ## レビュー完了時の共通処理
 
-パス 1/2 完了時: (1) シグナル生成（`review_detected`, `deferred_count`, `resolved_count`, `unresolved_count`、承認ポイント内有効）/ (2) レビュー後コミット【**v2.5.1 Unit 005 / #616 で三段階明示**: (2a) 修正コミット（コードベース変更を反映）→ (2b) 履歴記録（`/write-history` で `history/*.md` に AIレビュー完了等を追記）→ (2c) 履歴コミット（`history/*.md` のみ / `chore: [{{CYCLE}}] レビュー履歴追記` 等）/ (2c) 未実施のままマージ実行に進むと `operations-release.sh merge-pr` の pre-flight check が `pre-merge-uncommitted-detected` で exit 1 で停止する】/ (3) **レビューサマリ更新**【必須、計画承認前除く、未作成のまま次へ進まない】/ (4) セミオートゲート判定（`unresolved_count == 0` かつフォールバック非該当 → `auto_approved`）。
+パス 1/2 完了時: (1) シグナル生成（`review_detected`, `deferred_count`, `resolved_count`, `unresolved_count`、承認ポイント内有効）/ (2) **レビュー記録の更新**【必須、計画承認前除く、未作成のまま次へ進まない。記録先・commit 粒度は呼び出し側フローの規約に従う（develop Step 5.3 の `reviews/<id>-<slug>.md` 等）】/ (3) セミオートゲート判定（`unresolved_count == 0` かつフォールバック非該当 → `auto_approved`）。
 
-## レビューサマリファイル
+## レビュー記録（review-summary）
 
-計画承認前以外のレビュー完了時に生成・追記。テンプレート: `templates/review_summary_template.md`、既存時は `---` 後に追記。パス: Construction → `construction/units/{NNN}-review-summary.md`、Inception → `inception/{成果物名}-review-summary.md`。
+計画承認前以外のレビュー完了時に生成・追記する。本ファイルで「review-summary」と呼ぶ記録の実体・配置は呼び出し側フローが規定する（v3 develop / release では `.aidlc/cycles/<cycle>/reviews/<id>-<slug>.md` の perspective 別セクション）。以下の列記述・バックログ列の規約は記録テーブルの内容規約として適用する。
 
 **バックログ列の有効値**:
 
@@ -294,7 +292,7 @@ Round 4 以降に「設計仮説の根本見直し」（ドメインモデル全
 
 ## 履歴記録
 
-`/write-history` で記録する主要イベント: `AIレビュー完了` / `フォールバック`（機密情報マスク済み）/ `千日手判断` / `AIレビュー指摘対応判断` / `バックログ自動登録`（defer 自動 Issue 起票 + Round 4+ 新領域 backlog 化を含む）/ `AIレビュースキップ`。
+呼び出し側フローの記録先（レビュー記録 / `journal.md`）に記録する主要イベント: `AIレビュー完了` / `フォールバック`（機密情報マスク済み）/ `千日手判断` / `AIレビュー指摘対応判断` / `バックログ自動登録`（defer 自動 Issue 起票 + Round 4+ 新領域 backlog 化を含む）/ `AIレビュースキップ`。
 
 ## AI レビュー指摘の却下禁止【絶対遵守】
 
@@ -315,7 +313,7 @@ AI レビュワーの指摘をメインエージェントが自己判断で却�
 本ガードは **振り返り文脈のみ** に適用する:
 
 - retrospective Issue 本文（`retrospective` ラベル付き Issue）
-- Operations Phase §1 振り返り作業時の KPT / 主因切り分け / Try / §1.5 Step 5-3 mirror 候補本文
+- reflect（振り返り）作業時の KPT / 主因切り分け / Try / 改善 Issue 候補本文
 
 それ以外のレビュー文脈（コードレビュー指摘内容 / Plan / Design / 統合レビューサマリ等）は **適用対象外**。レビューワーは適用スコープ判定を「対象が振り返り文脈か」で行う。
 

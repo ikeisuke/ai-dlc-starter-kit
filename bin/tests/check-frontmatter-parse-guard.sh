@@ -181,7 +181,7 @@ assert_rc 0 "T-16 lib/ tests/ 除外" "$d"
 # --- T-17: stale 検出 — 既知 marker から marker を除去すると違反検出される ---
 # 実リポジトリの work-item-status.sh に付与された唯一の許可 marker が、marker 無しでは
 # 違反として検出されること（= marker が対応する検出候補に依然対応している）を検証する。
-status_src="$REPO_ROOT/skills/aidlc-v3/scripts/work-item-status.sh"
+status_src="$REPO_ROOT/skills/aidlc/scripts/work-item-status.sh"
 if [ -f "$status_src" ]; then
     d="$(fresh_dir)"
     # marker 行を除去したコピーを作る
@@ -347,7 +347,7 @@ assert_rc 1 "T-25e 条件付き {print} + marker は除外不可" "$d"
 
 # --- T-21: リポジトリ全体の許可 marker 集合固定（R-code#5）---
 # 現行で許可される allow marker は work-item-status.sh の 1 件のみ。それ以外が現れたら fail。
-expected_marker_file="skills/aidlc-v3/scripts/work-item-status.sh"
+expected_marker_file="skills/aidlc/scripts/work-item-status.sh"
 marker_files="$(cd "$REPO_ROOT" && grep -rl 'parse-guard: allow=' skills bin 2>/dev/null | grep -v 'bin/tests/check-frontmatter-parse-guard.sh' | grep -v 'bin/check-frontmatter-parse-guard.sh' | sort || true)"
 if [ "$marker_files" = "$expected_marker_file" ]; then
     PASS=$((PASS + 1)); echo "  ok   : T-21 リポジトリ全体の許可 marker 集合固定（status.sh の 1 件のみ）"

@@ -7,6 +7,45 @@ AI-DLC Starter Kit の変更履歴です。
 
 ---
 
+## [3.0.0-rc.1] - 2026-07-26
+
+`/aidlc` = v3 のフル本流化（Epic #736 7-e）を RC として `main` に反映する。v2 と v3 の共存期間を終了し、`skills/aidlc` が v3 実体となる。GA（v3.0.0）は RC 検証後の後続サイクル。
+
+> **配布に関する注意**: marketplace 配布は main 追従のため、本エントリの merge 時点で consumer の plugin update に v3 が反映される。tag `v3.0.0-rc.1` は `auto-tag.yml` が merge commit に対して自動作成する（自動 tag が正規経路）。
+
+### Changed (Breaking)
+
+- **`/aidlc` = v3 化（本流化置換）**: `skills/aidlc-v3` を `skills/aidlc` へ置換し、`/aidlc` 起動で v3（`define` / `develop` / `release` / `reflect` + 補助 `status` / `doctor`）がルーティングされる。旧フェーズ名（`inception` / `construction` / `operations` / `retrospective`）は後方互換エイリアスとして維持
+- **`aidlc-migrate` の v2→v3 専用化**: v1 環境検出時は書き込みを行わず v2-maintenance ブランチでの v1→v2 移行を案内する
+- **marketplace `3.0.0-rc.1` 化**: 配布スキルを 9 エントリに整理（`aidlc` / `aidlc-migrate` / `aidlc-feedback` / `reviewing-construction-{plan,design,code,integration}` / `reviewing-operations-{deploy,premerge}`）
+
+### Removed
+
+v2 専用スキルを配布（marketplace）または main から撤去した（`aidlc-retrospective` は非 marketplace スキルで main からのみ撤去。実装一式は [v2-maintenance ブランチ](https://github.com/ikeisuke/ai-dlc-starter-kit/tree/v2-maintenance) に保全済み）。v3 での代替は次のとおり:
+
+| 撤去された v2 スキル | v3 での代替 |
+|---------------------|------------|
+| `/aidlc-setup` | 廃止。`.aidlc/config.toml` を手動作成（空ファイル可 / README 手順参照） |
+| `/aidlc-v3` | `/aidlc` に統合（本流化） |
+| `/squash-unit` | 個別スキル廃止。develop フローが work item 完了時にコミットを集約する |
+| `/write-history` | 個別スキル廃止。`journal.md` への追記は各フェーズフローが直接行う |
+| `aidlc-retrospective` | `/aidlc reflect` |
+| `reviewing-inception-intent` / `-stories` / `-units` | 個別スキル廃止。Intent / work item の確認は define の承認ゲートで実施 |
+
+上記の代替で不足する v2 機能は v2-maintenance ブランチで継続利用できる。
+
+### Added
+
+- **v2-maintenance ブランチ**: 本流化置換前の main（beta.3 merge 後）から作成した v2 実装一式の保全ブランチ。撤去後も任意ファイルを選択復元できる
+- **README・docs の v3 刷新**: v3 コマンド体系・引数なしルーティング・express・旧名エイリアス・v2-maintenance 参照案内・`/aidlc-migrate` 導線を記載。`docs/configuration.md` を v3 終端 8 キーのリファレンスへ全面改稿
+
+### Notes
+
+- best-effort migration（progress / units / history の実データ変換）と v2 EOL 宣言は後続サイクルへ defer（Epic #736 に注記）
+- 残課題: `skills/aidlc/config` の v2 前提資産刷新（#756）/ `path-guard.sh` 回帰テスト移植（#757）
+
+---
+
 ## [3.0.0-beta.3] - 2026-07-11
 
 Phase 7 本流化（7-e）の残り前提である release hard gate の required CI 0 件フォールバック（#745 / 7-d 残り）と v2 → v3 migration 実装（7-c）を完成させ、v3 を本流化可能な状態にする（Epic #736）。本サイクルも v3 スキル（`/aidlc-v3`）の define → develop → release フローで駆動（セルフドッグフーディング継続）。

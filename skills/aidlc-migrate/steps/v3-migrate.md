@@ -111,8 +111,8 @@ scripts/migrate-v3-preflight.sh
 3. state.json を初期化する。`state-init.sh` の解決規則は preflight
    （`migrate-v3-preflight.sh`）と同一契約とする: 環境変数 `AIDLC_STATE_INIT_SCRIPT` が
    設定されている場合はそのパスを唯一の候補とし、未設定時は以下の 2 候補を順に解決して
-   実行する（前者が現行配置 / 後者は v3 本流化後の配置。存在した方を使う。解決可能性は
-   Step 0 の preflight が適用前に検証済み）:
+   実行する（前者は本流化前の旧共存配置 / 後者が現行配置（v3.0.0-rc.1 本流化済み）。
+   存在した方を使う。解決可能性は Step 0 の preflight が適用前に検証済み）:
 
    - `<スキルベースディレクトリ>/../aidlc-v3/scripts/state-init.sh`
    - `<スキルベースディレクトリ>/../aidlc/scripts/state-init.sh`
@@ -130,7 +130,7 @@ scripts/migrate-v3-preflight.sh
    `.aidlc/state.json` / `archive-only` 時は `.aidlc/v2-archive.md`）、drop 警告の一覧、
    片方向移行警告の再掲。
 2. 変更の commit はユーザーの責務であることを伝え、確認のうえ commit するよう案内する。
-3. 次アクションとして `/aidlc-v3 define` を案内する（state.json は初期化済みのため、
+3. 次アクションとして `/aidlc define` を案内する（state.json は初期化済みのため、
    define は `current_cycle` 一致 + `define_completed: false` の resume 経路で
    state 初期化を skip して進む）。
 
