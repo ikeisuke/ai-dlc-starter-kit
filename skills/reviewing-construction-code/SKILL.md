@@ -1,7 +1,7 @@
 ---
 name: reviewing-construction-code
 description: Reviews code for quality and security issues. Combines code quality review with security vulnerability detection. Use when reviewing code after generation in Construction Phase.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---

@@ -1,7 +1,7 @@
 ---
 name: reviewing-operations-premerge
 description: Reviews pull requests for overall quality before merging. Combines code quality and security checks at PR level. Use when performing pre-merge review in Operations Phase.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---

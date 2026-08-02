@@ -1,7 +1,7 @@
 ---
 name: reviewing-operations-deploy
 description: Reviews deployment plans for completeness, rollback procedures, and monitoring setup. Use when reviewing deployment plans before approval in Operations Phase.
-argument-hint: [レビュー対象ファイルまたはディレクトリ]
+argument-hint: "[レビュー対象ファイルまたはディレクトリ]"
 compatibility: Requires codex CLI, claude CLI, or gemini CLI. Runs in read-only/sandbox mode.
 allowed-tools: Bash(codex:*) Bash(claude:*) Bash(gemini:*)
 ---
